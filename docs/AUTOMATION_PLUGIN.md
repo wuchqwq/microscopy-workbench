@@ -131,11 +131,15 @@ axes control physical conversion; missing scale permits cycles/pixel and pixel
 periods, not fabricated nm/Angstrom spacing. HRTEM/ptychography FFT intensity is
 not generally comparable with SAED or kinematic simulated intensity.
 
-The first increment does **not** implement automatic global phase/orientation
-search, multiphase segmentation, twin-interface determination, dislocation/GPA,
-or registered adjacent-frame joint analysis. `image_compare` still supports
-explicit same-ROI frame observations. Sequence frame meanings stay metadata or
-user statements, not inferred physical depth or axial resolution. These gaps
+The [R2 sequence increment](SEQUENCE_PLUGIN.md) adds sourced frame context,
+bounded integer ROI correspondence, joint reflection evidence, saved-spectrum
+reuse and named-task recovery. Its [acceptance record](SEQUENCE_PLUGIN_ACCEPTANCE.md)
+separates numerical, protocol, browser and fresh model evidence. `image_compare`
+remains available for explicit same-ROI observations. Sequence meanings stay
+sourced statements, not inferred physical depth or axial resolution.
+
+Automatic global phase/orientation search, multiphase segmentation, twin-interface
+determination and dislocation/GPA remain outside this increment. Missing capabilities
 are reported instead of invoking an absent script or substituting a prompt.
 
 The pre-migration `hypothesis_explorer.py` and twin-feedback CLI recipes were not

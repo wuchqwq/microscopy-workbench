@@ -1,0 +1,350 @@
+{
+  "result": "PASS_SCIENCE_RECOVERY_AND_EXPLICIT_PANEL_REOPEN",
+  "scope": "Independent Windows audit of two actual fresh model sessions using installed package MCP and packaged Skill text; no developer-context or oracle access",
+  "loading": "isolated native package install/discovery plus explicit per-process installed MCP and project-local Skills; native plugin mode full model session NOT_TESTED",
+  "source": {
+    "filename": "synthetic-reconstructed-sequence.tiff",
+    "synthetic": true,
+    "seed": 314,
+    "shape_zyx": [
+      3,
+      120,
+      120
+    ],
+    "dtype": "uint16",
+    "sha256": "c7c68292970a0fb147e24dba727c3804914c5441b1ff9f6b659041198f738b8d",
+    "all_source_pixels_match_independent_generator_definition": true
+  },
+  "main_session": {
+    "exit_code": 0,
+    "elapsed_seconds": 203.414,
+    "tool_calls": 18,
+    "successful_calls": 16,
+    "failed_calls": 2,
+    "tools": {
+      "image_open": 1,
+      "analysis_create": 1,
+      "image_calibrate": 1,
+      "image_frame": 3,
+      "image_preview": 3,
+      "image_panel_current": 1,
+      "image_sequence_create": 1,
+      "image_region_correspondence": 1,
+      "image_joint_observations": 1,
+      "image_panel_open": 1,
+      "analysis_read": 2,
+      "analysis_update": 2
+    },
+    "returned_valid_png_blocks": 5,
+    "image_blocks": [
+      {
+        "tool": "image_preview",
+        "shape_yx": [
+          600,
+          600
+        ],
+        "sha256": "30752da4bab7e17b702dee18410cd64eb7e46f017354c4fe6b921a27c0988315"
+      },
+      {
+        "tool": "image_joint_observations",
+        "shape_yx": [
+          768,
+          768
+        ],
+        "sha256": "be6cf0ff6dab169d8e19feb0207568d259cd11071e952aa9d983e43cd3eae294"
+      },
+      {
+        "tool": "image_panel_open",
+        "shape_yx": [
+          512,
+          512
+        ],
+        "sha256": "8dab6b81fac90f0add4a96e66a8f81d99b63f7b3cce508d12b270a4ee4be205f"
+      },
+      {
+        "tool": "image_preview",
+        "shape_yx": [
+          400,
+          400
+        ],
+        "sha256": "b0a153005116dd5f93fa467ec7fdfd00d9f7b41867c253eac2f87f3fe927beee"
+      },
+      {
+        "tool": "image_preview",
+        "shape_yx": [
+          400,
+          400
+        ],
+        "sha256": "73c0577bf5bc9298c0a99d4e464219f40aa381dd6218aae21b67328852796d2f"
+      }
+    ],
+    "shell_or_ad_hoc_science_execution": false,
+    "refusals": [
+      {
+        "tool": "image_panel_current",
+        "reason": "No panel existed yet; the model subsequently opened the saved joint object."
+      },
+      {
+        "tool": "analysis_update",
+        "reason": "Sequence-source calibration wrapper mismatched the proposed single-frame experiment grid; guard refused. The model reread current context and saved sequence/correspondence/observations without duplicating calibration."
+      }
+    ]
+  },
+  "recovery_session": {
+    "exit_code": 0,
+    "elapsed_seconds": 64.52,
+    "tool_calls": 6,
+    "successful_calls": 5,
+    "failed_calls": 1,
+    "tools": {
+      "analysis_read": 1,
+      "list_mcp_resources": 1,
+      "image_info": 3,
+      "image_panel_current": 1
+    },
+    "returned_valid_png_blocks": 1,
+    "image_blocks": [
+      {
+        "tool": "image_info",
+        "shape_yx": [
+          768,
+          768
+        ],
+        "sha256": "be6cf0ff6dab169d8e19feb0207568d259cd11071e952aa9d983e43cd3eae294"
+      }
+    ],
+    "shell_or_ad_hoc_science_execution": false,
+    "refusals": [
+      {
+        "tool": "image_panel_current",
+        "reason": "No live registered Panel after the first model process exited. The read-only recovery did not reopen a panel."
+      }
+    ]
+  },
+  "agent_selected_roi": [
+    20,
+    20,
+    100,
+    100
+  ],
+  "agent_selected_correspondence_parameters": {
+    "mode": "estimate",
+    "max_shift": 6,
+    "min_correlation": 0.7,
+    "min_margin": 0.02
+  },
+  "agent_selected_fft_peak_parameters": {
+    "window": "hann",
+    "subtract_mean": true,
+    "max_peaks": 16,
+    "peak_options": {
+      "exclude_dc_radius_bins": 3,
+      "min_separation_bins": 3,
+      "refinement": "quadratic",
+      "threshold_rel": 0.1
+    },
+    "frequency_tolerance_cycles_per_pixel": 0.02
+  },
+  "independent_ncc": [
+    {
+      "frame_index": 0,
+      "best_shift_xy": [
+        -3,
+        2
+      ],
+      "direct_normalized_correlation": 1.0,
+      "next_separated_maximum_margin": 0.15572210431809885
+    },
+    {
+      "frame_index": 2,
+      "best_shift_xy": [
+        4,
+        -2
+      ],
+      "direct_normalized_correlation": 0.9870822305010895,
+      "next_separated_maximum_margin": 0.1516675407058392
+    }
+  ],
+  "numerical": [
+    {
+      "frame_index": 0,
+      "source_frame_index": 0,
+      "roi_xyxy": [
+        17,
+        22,
+        97,
+        102
+      ],
+      "raw_dtype": "uint16",
+      "raw_array_equal_to_source": true,
+      "fft_shape_yx": [
+        80,
+        80
+      ],
+      "fft_dtype": "complex128",
+      "fft_sha256": "0fda20f861533a61100a0fb038db3e84b4046e0ed61c226d2d778a0f185ec412",
+      "all_bin_direct_dft_max_absolute_error": 1.6362309570733497e-08,
+      "signed_calibration_measurements_checked": 8
+    },
+    {
+      "frame_index": 1,
+      "source_frame_index": 1,
+      "roi_xyxy": [
+        20,
+        20,
+        100,
+        100
+      ],
+      "raw_dtype": "uint16",
+      "raw_array_equal_to_source": true,
+      "fft_shape_yx": [
+        80,
+        80
+      ],
+      "fft_dtype": "complex128",
+      "fft_sha256": "0fda20f861533a61100a0fb038db3e84b4046e0ed61c226d2d778a0f185ec412",
+      "all_bin_direct_dft_max_absolute_error": 1.6362309570733497e-08,
+      "signed_calibration_measurements_checked": 8
+    },
+    {
+      "frame_index": 2,
+      "source_frame_index": 2,
+      "roi_xyxy": [
+        24,
+        18,
+        104,
+        98
+      ],
+      "raw_dtype": "uint16",
+      "raw_array_equal_to_source": true,
+      "fft_shape_yx": [
+        80,
+        80
+      ],
+      "fft_dtype": "complex128",
+      "fft_sha256": "18bdb6a31f514c0befea1bbd05e9019c0c219338612a9ea850d523258df24125",
+      "all_bin_direct_dft_max_absolute_error": 2.274769705780285e-08,
+      "signed_calibration_measurements_checked": 10
+    }
+  ],
+  "joint_observation_counts": {
+    "observed": 24,
+    "unmatched": 2
+  },
+  "extra_local_tone_observations": [
+    {
+      "frame_index": 2,
+      "frequency_cycles_per_pixel": [
+        -0.16717951776472528,
+        -0.0007572053274261137
+      ],
+      "d_spacing": 0.14953878476743976,
+      "d_spacing_unit": "nm",
+      "status": "unmatched"
+    },
+    {
+      "frame_index": 2,
+      "frequency_cycles_per_pixel": [
+        0.16717951776472528,
+        0.0007572053274261137
+      ],
+      "d_spacing": 0.14953878476743976,
+      "d_spacing_unit": "nm",
+      "status": "unmatched"
+    }
+  ],
+  "recovery_integrity": {
+    "existing_authoritative_files_unchanged": 182,
+    "new_authoritative_files": 0,
+    "new_fft_arrays": 0,
+    "context_revision": 2,
+    "saved_roles_active": [
+      "sequence",
+      "correspondence",
+      "observations"
+    ],
+    "current_live_panel": "NOT_AVAILABLE: no live registered Panel; no automatic reopen was attempted during read-only recovery"
+  },
+  "scientific_limits": [
+    "Synthetic reconstructed-sequence proxy, not experimental qualification",
+    "Known coordinate mapping is not proof of physical continuity",
+    "No depth spacing or axial resolution inferred",
+    "Detected/refined peaks remain hypothesized, not phase identification",
+    "Two unmatched conjugate peaks are not independent confirmations"
+  ],
+  "not_tested": [
+    "Native-plugin-mode complete model flow",
+    "Real experimental reconstructed sequences",
+    "Complex reconstruction component derivation",
+    "Mac/Linux client sessions",
+    "DM/GMS"
+  ],
+  "panel_reopen_session": {
+    "exit_code": 0,
+    "elapsed_seconds": 84.292,
+    "tool_calls": 5,
+    "successful_calls": 4,
+    "failed_calls": 1,
+    "tools": {
+      "analysis_read": 1,
+      "image_panel_current": 2,
+      "image_info": 1,
+      "image_panel_open": 1
+    },
+    "returned_valid_png_blocks": 3,
+    "image_blocks": [
+      {
+        "tool": "image_info",
+        "shape_yx": [
+          768,
+          768
+        ],
+        "sha256": "be6cf0ff6dab169d8e19feb0207568d259cd11071e952aa9d983e43cd3eae294"
+      },
+      {
+        "tool": "image_panel_open",
+        "shape_yx": [
+          512,
+          512
+        ],
+        "sha256": "8dab6b81fac90f0add4a96e66a8f81d99b63f7b3cce508d12b270a4ee4be205f"
+      },
+      {
+        "tool": "image_panel_current",
+        "shape_yx": [
+          512,
+          512
+        ],
+        "sha256": "8dab6b81fac90f0add4a96e66a8f81d99b63f7b3cce508d12b270a4ee4be205f"
+      }
+    ],
+    "shell_or_ad_hoc_science_execution": false,
+    "expected_refusals": [
+      {
+        "tool": "image_panel_current",
+        "reason": "No live panel before the explicitly authorized saved-result reopen."
+      }
+    ]
+  },
+  "panel_reopen_integrity": {
+    "same_saved_joint_evidence": true,
+    "saved_reference_fft_view_opened": true,
+    "image_and_sequence_table_returned_by_live_panel_current": true,
+    "source_shape_yx": [
+      120,
+      120
+    ],
+    "saved_fft_shape_yx": [
+      80,
+      80
+    ],
+    "source_frame_index": 1,
+    "scientific_annotations": 8,
+    "authoritative_science_context_files_unchanged": 181,
+    "new_scientific_objects_requests_or_contexts": 0,
+    "new_fft_arrays": 0,
+    "new_panel_presentation_receipt": true,
+    "live_panel_scope": "Actually queried while this fresh model session was running; no claim of persistence after client/job exit",
+    "human_browser_gestures": "NOT_TESTED by this model-session audit; separate real-browser acceptance applies"
+  }
+}

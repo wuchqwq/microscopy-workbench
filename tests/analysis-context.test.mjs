@@ -54,6 +54,19 @@ test('explicit current context survives a new store/core and keeps immutable his
   assert.equal(updated.parentHash, created.context.revisionHash);
 });
 
+test('sequence revision stales correspondence and observations while keeping saved single-frame spectra',async t=>{
+  const {core}=fixture(t);let {context}=await core.create({analysisId:'sequence-analysis'});
+  context=await add(core,context,{sequence:selection('sequence-v1'),fft:selection('saved-fft')});
+  context=await add(core,context,{correspondence:selection('mapped-roi-v1',{sequence:context.fingerprints.sequence})});
+  context=await add(core,context,{observations:selection('joint-v1',{sequence:context.fingerprints.sequence,correspondence:context.fingerprints.correspondence})});
+  const old=context;
+  context=await add(core,context,{sequence:selection('sequence-calibration-v2')});
+  assert.equal(context.slots.correspondence.status,'stale');assert.equal(context.slots.observations.status,'stale');
+  assert.equal(context.slots.fft.status,'active');assert.equal(context.fingerprints.fft,old.fingerprints.fft);
+  assert.equal((await core.read(context.analysisId,old.revision)).slots.observations.status,'active');
+  await assert.rejects(add(core,context,{observations:selection('wrong-new-current',{sequence:context.fingerprints.sequence,correspondence:context.fingerprints.correspondence})}),e=>e.code==='STALE_DEPENDENCY');
+});
+
 test('display revision leaves saved FFT, points, physical measurements, registration and comparison active', async t => {
   const f = fixture(t), before = await populated(f.core);
   const after = await add(f.core, before, {display: selection('display-gamma2', {fft: before.fingerprints.fft})});
