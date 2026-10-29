@@ -60,7 +60,7 @@ try{
  browser=await chromium.launch({headless:process.env.MICROSCOPY_BROWSER_HEADLESS!=='0',...(process.env.MICROSCOPY_CHROMIUM_EXECUTABLE?{executablePath:process.env.MICROSCOPY_CHROMIUM_EXECUTABLE}:{})});
  context=await browser.newContext({viewport:{width:1440,height:1000},deviceScaleFactor:1,acceptDownloads:true});page=await context.newPage();page.setDefaultTimeout(30000);
  page.on('pageerror',error=>report.page_errors.push(error.message));
- page.on('console',event=>{if(event.type()==='error'&&!event.location().url?.endsWith('/favicon.ico'))report.console_errors.push({text:event.text(),url:event.location().url});});
+ page.on('console',event=>{if(event.type()==='error'&&!event.location().url?.endsWith('/favicon.ico')){const text=event.text(),url=event.location().url,prior=report.console_errors.find(row=>row.text===text&&row.url===url);if(prior)prior.occurrences++;else report.console_errors.push({text,url,occurrences:1});}});
  page.on('response',response=>{const url=new URL(response.url());if(url.pathname.endsWith('.mjs')){if(response.status()===200)modules.add(url.pathname);else report.failed_modules.push({path:url.pathname,status:response.status()});}if(url.pathname.startsWith('/api/')&&response.status()>=400)report.api_failures.push({path:url.pathname,status:response.status()});});
  page.on('requestfailed',request=>{if(request.url().includes('.mjs'))report.failed_modules.push({url:request.url(),error:request.failure()?.errorText});});
  page.on('dialog',dialog=>dialog.dismiss());
@@ -92,7 +92,13 @@ try{
  await until(()=>panel.state().edit_state.gesture_active,'real pointer gesture lease');await page.mouse.up();
  await until(()=>panel.state().selection?.kind==='rectangle'&&!panel.state().edit_state.gesture_active&&!panel.state().draft_persistence.pending,'ROI gesture and coalesced persistence');
  const roi=structuredClone(panel.state().selection),journal=path.join(panel.journal,'current-selection.json');assert.deepEqual(read(journal).selection,roi);
- await page.locator('#toggle-settings').click();const gamma=page.locator('#gamma'),oldGamma=await gamma.inputValue();await gamma.focus();await gamma.press(Number(oldGamma)<2.9?'ArrowRight':'ArrowLeft');
+ await page.locator('#toggle-settings').click();const gamma=page.locator('#gamma'),oldGamma=await gamma.inputValue();
+ // The inspector animates and its advanced range is below the scroll fold.
+ // Native keyboard input must target a visible, focused control.
+ await gamma.scrollIntoViewIfNeeded();await gamma.focus();
+ const toneSignature=()=>page.locator('#base-canvas').evaluate(canvas=>{const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,values=[];for(let n=0;n<data.length;n+=Math.max(4,Math.floor(data.length/1024/4)*4))values.push(data[n]);return values.join(',');});
+ const originalTone=await toneSignature();await gamma.press(Number(oldGamma)<2.9?'ArrowRight':'ArrowLeft');assert.notEqual(await gamma.inputValue(),oldGamma);
+ await until(async()=>await toneSignature()!==originalTone,'real Gamma canvas preview');
  await until(()=>panel.state().edit_state.dirty&&!panel.state().draft_persistence.pending,'display draft persisted');assert.equal(read(journal).edit_state.dirty,true);assert.equal(panel.state().object.object_id,originalObject);
  await page.locator('#discard-local').click();await until(()=>!panel.state().edit_state.dirty&&!panel.state().draft_persistence.pending,'explicit local draft discard');await idle();assert.equal(await gamma.inputValue(),oldGamma);
  report.checks.push('Actual wheel zoom, pointer pan and ROI gesture retained source coordinates; draft/gesture state reached the journal and an explicit discard preserved the saved image');
@@ -110,6 +116,7 @@ try{
  const mark=structuredClone(panel.state().object.annotations.find(mark=>mark.annotation_id===markId)),markedObject=panel.state().object.object_id,objectCount=readdirSync(path.join(workspace,'objects')).length;
  await page.reload({waitUntil:'domcontentloaded'});await rendered();
  assert.equal(panel.state().object.object_id,markedObject);assert.equal(readdirSync(path.join(workspace,'objects')).length,objectCount,'Browser recovery created scientific objects');
+ if(!await page.locator('body').evaluate(body=>body.classList.contains('properties-open')))await page.locator('#toggle-properties').click();
  await page.locator('#existing').selectOption(markId);assert.equal(await page.locator('#mark-text').inputValue(),markText);assert.deepEqual(panel.state().object.annotations.find(value=>value.annotation_id===markId).anchor,mark.anchor);
  report.checks.push('Frozen Figure recipe imported through the browser; one new hypothesized annotation saved and recovered after a real page reload with its exact scientific anchor');
 
@@ -122,7 +129,11 @@ try{
  assert.notEqual(createHash('sha256').update(files['clean.png']).digest('hex'),createHash('sha256').update(files['annotated.png']).digest('hex'),'Saved annotation should appear in the real raster export');
  assert.deepEqual(recipe.source.anchors.find(value=>value.annotation_id===markId).anchor,mark.anchor);
  const svg=await page.evaluate(text=>{const document=new DOMParser().parseFromString(text,'image/svg+xml'),root=document.documentElement;return {invalid:Boolean(document.querySelector('parsererror')),unsafe:Boolean(document.querySelector('script,foreignObject')),text:root.textContent,width:root.getAttribute('width'),viewBox:root.getAttribute('viewBox')};},files['annotations.svg'].toString('utf8'));
- assert.equal(svg.invalid,false);assert.equal(svg.unsafe,false);assert.ok(svg.text.includes(markText));assert.equal(svg.width,'85mm');assert.deepEqual(svg.viewBox.split(/\s+/).map(Number),recipe.export.viewBox);
+ assert.equal(svg.invalid,false);assert.equal(svg.unsafe,false);assert.ok(svg.text.includes(markText));assert.equal(svg.width,'85mm');
+ // The frozen SVG serializer publishes three decimal display coordinates;
+ // the editable recipe retains the full layout value. This is display format,
+ // not a scientific coordinate or numerical acceptance tolerance.
+ assert.deepEqual(svg.viewBox.split(/\s+/).map(Number),recipe.export.viewBox.map(value=>Math.round(value*1000)/1000));
  await idle();await page.locator('#figure-dialog [aria-label="关闭出图设置"]').click();await page.screenshot({path:path.join(run,'compiled-panel.png')});
  report.checks.push('Real browser downloaded the four-file Figure ZIP; CRCs, SVG parsing/text/mapping, actual clean/annotated PNGs and the saved 300 dpi recipe agree');
  assert.deepEqual(report.page_errors,[]);assert.deepEqual(report.failed_modules,[]);assert.deepEqual(report.api_failures,[]);

@@ -14,9 +14,10 @@ Neither reference was moved. The stack remains unmerged for owner acceptance.
 | 6 | #22 | Structure worker, viewer alias/closure and typed browser initializer |
 | 7 | #23 | Panel producer/bridge, measurement records, Figure hydration and CLIs |
 | 8 | #24 | Browser/shared presentation, probes, evidence and Figure business |
-| 9 | Final app/completion PR | Application entry, raw wire versus scientific types, production-only compiler and unified acceptance |
+| 9 | #25 (integrated, targets main) | Application entry, raw wire versus scientific types, production-only compiler and unified acceptance |
 
-Each PR is based on the preceding branch, with no force push or automatic merge.
+PRs #18–#24 are stacked for small reviews. PR #25 targets main and includes the
+entire stack for one owner acceptance/merge, with no force push or automatic merge.
 Review recommendations identify exact heads; CI conclusions apply to those heads.
 The [completion guide](TYPESCRIPT_COMPLETE.md) records final source exceptions and
 integrated validation. Historical slice guides retain their scope and limits.

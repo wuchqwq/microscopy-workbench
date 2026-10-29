@@ -87,3 +87,34 @@ Native client plugin discovery, real specimens, GMS/instrument integration and
 macOS execution remain separate qualification scopes. Optional diffsims/real
 3Dmol WebGL is not established by the stub viewer protocol tests. No PR has been
 merged automatically and the frozen comparison branch has not moved.
+
+## Final integrated acceptance
+
+PASS on the frozen compiled production code (10d810a): full legacy continuation
+and real Chromium checks. The former compared all 34 tool schemas, original
+requests and two contexts, continued measurement -> reused atlas/hypotheses -> CAS,
+exported the old R3 field and restored the old Figure. The browser loaded all 12
+compiled business modules, exercised wheel/pan/ROI/draft persistence and explicit
+discard, imported the old Figure, saved/reloaded a new hypothesized annotation,
+and downloaded the four-file ZIP with CRC, SVG, PNG and 300 dpi recipe checks.
+Both preserved all 919 old file hashes and the exact 20-FFT set. All test-owned
+MCP/Python/Panel helpers were closed. No source/array reset or FFT recomputation
+was required.
+
+Browser page exceptions, module failures and API failures: zero. The old cursor
+inline-style CSP message remains (one category, 184 occurrences); the console
+is not claimed empty and no GUI/CSP redesign is mixed into this migration.
+New harness interactions explicitly open/scroll the existing controls, and the
+SVG check follows the original three-decimal display formatter; scientific
+coordinate assertions and numerical tolerances were not relaxed.
+
+The extra fresh-Agent attempt is NOT_TESTED: the CLI returned “MCP tool call
+requires approval, but approval policy is never” for analysis_read/image_result.
+No tool permissions were changed. This is distinct from the successful actual
+stdio/Python/Panel/copied-package tests and is not native plugin-discovery
+qualification.
+
+See [machine-readable results](TYPESCRIPT_ACCEPTANCE.json) and the
+[public synthetic browser screenshot](examples/ts-complete/compiled-panel.png).
+The final documentation/test-harness packaging pass checks that emitted runtime
+JS/Python bytes remain identical to the accepted code freeze.
