@@ -19,7 +19,7 @@ try{
  run(['-p','tsconfig.node.json','--outDir',staging]);
  // Unmigrated JS passes through byte-for-byte; migrated .mts has exactly one
  // emitted implementation. Never copy a checkout compatibility shim over it.
- const shims=new Set(['server.mjs','tools/plugin_server.mjs']);
+ const shims=new Set(['server.mjs','science-server.mjs','tools/plugin_server.mjs']);
  const copy=(relative)=>{
   const source=path.join(root,relative);
   if(!existsSync(source))return;

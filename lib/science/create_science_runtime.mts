@@ -9,20 +9,25 @@ import {createImagePanelModule} from '../tools/image_panel_module.mjs';
 import {createStructureModule} from '../tools/structure_module.mjs';
 import {createExecutionModule} from '../tools/execution_module.mjs';
 import {createAnalysisContextModule} from '../tools/analysis_context_module.mjs';
+import type {RegistryModule} from '../runtime/contracts.mjs';
+import type {Environment} from '../../tools/plugin_server.mjs';
+import type {ScientificProviders} from '../analysis_context_bindings.mjs';
+export interface ScienceRuntimeOptions {env?:Environment;coordinator?:ExecutionCoordinator;}
 
-function absoluteDirectory(value, setting) {
+
+function absoluteDirectory(value:unknown, setting:string) {
   if(typeof value!=='string'||!value.trim()||!path.isAbsolute(value)) {
     throw new Error(setting+' must be an absolute directory path');
   }
   return path.resolve(value);
 }
-function enabledFlag(env,key,defaultValue='0') {
+function enabledFlag(env:Environment,key:string,defaultValue='0') {
   const value=env[key]??defaultValue;
   if(!['0','1'].includes(value))throw new Error(key+' must be 0 or 1');
   return value==='1';
 }
 
-export function createScienceRuntime({env=process.env,coordinator=new ExecutionCoordinator()}={}){
+export function createScienceRuntime({env=process.env,coordinator=new ExecutionCoordinator()}:ScienceRuntimeOptions={}){
   // Explicit opt-in for optional components; the image route is always present.
   const imageDirectory=absoluteDirectory(
     env.MICROSCOPY_IMAGE_WORKSPACE??path.join(os.homedir(),'.microscopy-core','images'),
@@ -36,9 +41,9 @@ export function createScienceRuntime({env=process.env,coordinator=new ExecutionC
   const image=createImageModule({workspaceOptions:{
     workspace:imageDirectory,python:env.MICROSCOPY_PYTHON||'python3',coordinator,
   }});
-  const modules=[image];
+  const modules:RegistryModule[]=[image];
   if(panel)modules.push(createImagePanelModule({imageWorkspace:image.workspace}));
-  const providers={image:image.workspace};
+  const providers:ScientificProviders={image:image.workspace};
   if(structureDirectory){
     const structure=createStructureModule({
       workspaceOptions:{workspace:structureDirectory,imageWorkspacePath:imageDirectory,python:env.MICROSCOPY_STRUCTURE_PYTHON||env.MICROSCOPY_PYTHON||'python3',coordinator},
