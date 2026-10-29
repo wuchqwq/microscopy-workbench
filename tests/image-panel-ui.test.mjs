@@ -566,16 +566,6 @@ test('directly reopened ROI explicitly requests a fresh full-frame display inste
 test('human workflow: result tabs expose one result type without changing the scientific object',async()=>{
  const h=await harness();await h.click('results-tab-profile');assert.equal(h.$('results-profile').hidden,false);assert.equal(h.$('results-measurements').hidden,true);assert.equal(h.$('numeric-data').open,true);await h.click('results-tab-measurements');assert.equal(h.$('numeric-data').open,false);assert.equal(h.calls.length,0);
 });
-test('a baked scientific-preview scale bar is not duplicated by the SVG overlay; clean visible bars retain their halo',async()=>{
- for(const [baked,visible]of [[true,true],[false,true],[false,false]]){
-  const initial=fixture();initial.effective_display={...initial.object.display,scale_bar:baked};initial.object.scale_bar={visible,length:.5,unit:'nm',image_endpoints_xyxy:[12,80,62,80]};
-  const before=copy(initial.object),h=await harness(initial);h.flush();const overlay=h.$('annotation-layer').innerHTML;
-  if(!baked&&visible){assert.match(overlay,/data-part="scale-bar-halo"/);assert.match(overlay,/data-part="scale-bar-line"/);assert.match(overlay,/0.5 nm/);}
-  else assert.doesNotMatch(overlay,/data-part="scale-bar/,'an existing PNG bar or unavailable physical bar cannot be drawn again');
-  assert.equal(h.calls.length,0,'layer selection must not create another render or scientific request');assert.deepEqual(h.inspect().state.object,before);
- }
-});
-
 test('ordinary complex display switches an explicit component and retains the same scientific ROI and marks',async()=>{
  const first=fixture();first.object.dtype='complex64';first.effective_display={...first.object.display,component:'real'};
  const h=await harness(first);assert.equal(h.$('complex-display').hidden,false);assert.match(h.$('identity').textContent,/复数图像/);assert.doesNotMatch(h.$('identity').textContent,/FFT/);assert.match(h.$('complex-display-current').textContent,/实部/);
@@ -592,4 +582,14 @@ test('complex component switching refuses an unsaved display draft without disca
 test('scalar images and produced FFTs do not acquire ordinary-complex component controls',async()=>{
  const h=await harness();assert.equal(h.$('complex-display').hidden,true);await h.click('apply-complex-component');assert.equal(h.calls.length,0);
  const spectrum=fixture();spectrum.object.dtype='complex128';spectrum.object.kind='fft_view';spectrum.object.panels=[{domain:'frequency',source_object_id:sourceId,fft_shape_yx:[96,128],fft_rect_xyxy:[0,0,128,96],image_rect_xyxy:[0,0,128,96]}];const f=await harness(spectrum);assert.equal(f.$('complex-display').hidden,true);assert.match(f.$('identity').textContent,/FFT/);assert.equal(f.calls.length,0);
+});
+
+test('a baked scientific-preview scale bar is not duplicated by the SVG overlay; clean visible bars retain their halo',async()=>{
+ for(const [baked,visible]of [[true,true],[false,true],[false,false]]){
+  const initial=fixture();initial.effective_display={...initial.object.display,scale_bar:baked};initial.object.scale_bar={visible,length:.5,unit:'nm',image_endpoints_xyxy:[12,80,62,80]};
+  const before=copy(initial.object),h=await harness(initial);h.flush();const overlay=h.$('annotation-layer').innerHTML;
+  if(!baked&&visible){assert.match(overlay,/data-part="scale-bar-halo"/);assert.match(overlay,/data-part="scale-bar-line"/);assert.match(overlay,/0.5 nm/);}
+  else assert.doesNotMatch(overlay,/data-part="scale-bar/,'an existing PNG bar or unavailable physical bar cannot be drawn again');
+  assert.equal(h.calls.length,0,'layer selection must not create another render or scientific request');assert.deepEqual(h.inspect().state.object,before);
+ }
 });
