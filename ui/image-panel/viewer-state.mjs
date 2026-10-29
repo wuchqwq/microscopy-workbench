@@ -8,6 +8,11 @@ export function zoomAt(view, point, factor, {min=.1,max=16}={}) {
   return {scale,x:point[0]-(point[0]-view.x)*ratio,y:point[1]-(point[1]-view.y)*ratio};
 }
 export function panBy(view,dx,dy){return {...view,x:view.x+dx,y:view.y+dy};}
+export function fitViewport(imageSize,viewportSize,{padding=24,min=.1,max=16}={}){
+  if(![...imageSize,...viewportSize].every(v=>Number.isFinite(v)&&v>0))throw new Error('Invalid viewport size');
+  const scale=Math.max(min,Math.min(max,...viewportSize.map((v,i)=>(v-2*padding)/imageSize[i])));
+  return {scale,x:(viewportSize[0]-imageSize[0]*scale)/2,y:(viewportSize[1]-imageSize[1]*scale)/2};
+}
 export function relatedViewport(view,previous,next,viewportSize){
   if(!previous||!next)return null;
   if(previous.frame_identity&&next.frame_identity&&previous.frame_identity.frame_object_id!==next.frame_identity.frame_object_id)return null;

@@ -1,0 +1,150 @@
+{
+  "schema": "gui-polish-independent-public-check-v1",
+  "status": "PASS",
+  "run": "gui-polish-r1",
+  "source": "Public synthetic three-frame uint16 periodic TIFF; no specimen data",
+  "source_sha256": "b0683c65ea241866d7a21a9a5fbe125f56b7cdff2cbf9c46f9524608e0a25a83",
+  "calibration": {
+    "x": 0.02,
+    "y": 0.02,
+    "unit": "nm/pixel",
+    "basis": "Explicit synthetic fixture statement; not experimental metrology",
+    "uncertainty": "unknown"
+  },
+  "scientific_invariance": {
+    "objects_before_after": [
+      17,
+      17
+    ],
+    "completed_requests_before_after": [
+      17,
+      17
+    ],
+    "existing_file_count_unchanged": 55,
+    "exact_paths_sizes_and_sha256_inventory_equal": true,
+    "FFT_count_before_after": [
+      1,
+      1
+    ],
+    "FFT_data_sha256": "1083171533fcb44b0d63a14acbc3f5934117f876e3dc052115c6c2cd9deff844",
+    "FFT_matches_independent_original_TIFF_NumPy_reference": true,
+    "scientific_measurement_and_profile_records_unchanged": true,
+    "new_scientific_operations_during_GUI_polish": 0
+  },
+  "checked_exports": [
+    {
+      "artifact": "after-2x2-no-legend.zip",
+      "sha256": "078c7fee389d34e58b3678c054083abb0c6a06fd6c2e9bb1168a9d9fa6ccc794",
+      "layout": "2x2",
+      "font_pt": 9,
+      "PNG_size": [
+        2126,
+        1844
+      ],
+      "nominal_DPI": 300,
+      "titles": [
+        "Original",
+        "ROI",
+        "FFT",
+        "Intensity profile"
+      ],
+      "ROI_outlines": true,
+      "legend_visible": false,
+      "legend_count": 0,
+      "ROI_frame_source_calibration_bindings_verified": true,
+      "ROI_source_edges_xyxy": [
+        [
+          16,
+          16,
+          112,
+          80
+        ]
+      ],
+      "ROI_painted_behind_saved_bar_and_labels": true,
+      "baseline_slot_refs_recipes_and_anchors_unchanged_except_titles": true,
+      "embedded_PNG_bytes_match_saved_assets": true,
+      "saved_profile_values_and_svg_polyline_verified": true,
+      "peak_candidate_status": "hypothesized"
+    },
+    {
+      "artifact": "after-2x2-final.zip",
+      "sha256": "5c6421cf51c5d8c07fe83593a0788d100330f98b14f2267be62795ab861fd215",
+      "layout": "2x2",
+      "font_pt": 9,
+      "PNG_size": [
+        2126,
+        1844
+      ],
+      "nominal_DPI": 300,
+      "titles": [
+        "Original",
+        "ROI",
+        "FFT",
+        "Intensity profile"
+      ],
+      "ROI_outlines": true,
+      "legend_visible": true,
+      "legend_count": 1,
+      "ROI_frame_source_calibration_bindings_verified": true,
+      "ROI_source_edges_xyxy": [
+        [
+          16,
+          16,
+          112,
+          80
+        ]
+      ],
+      "ROI_painted_behind_saved_bar_and_labels": true,
+      "baseline_slot_refs_recipes_and_anchors_unchanged_except_titles": true,
+      "embedded_PNG_bytes_match_saved_assets": true,
+      "saved_profile_values_and_svg_polyline_verified": true,
+      "peak_candidate_status": "hypothesized"
+    },
+    {
+      "artifact": "after-1x3.zip",
+      "sha256": "66a5fe95a6af54dbab015bb6997f4110e81308fe9a48eedcf38cce29a7edbf7e",
+      "layout": "1x3",
+      "font_pt": 9,
+      "PNG_size": [
+        2126,
+        653
+      ],
+      "nominal_DPI": 300,
+      "titles": [
+        "Original",
+        "ROI",
+        "FFT"
+      ],
+      "ROI_outlines": true,
+      "legend_visible": true,
+      "legend_count": 1,
+      "ROI_frame_source_calibration_bindings_verified": true,
+      "ROI_source_edges_xyxy": [
+        [
+          16,
+          16,
+          112,
+          80
+        ]
+      ],
+      "ROI_painted_behind_saved_bar_and_labels": true,
+      "baseline_slot_refs_recipes_and_anchors_unchanged_except_titles": true,
+      "embedded_PNG_bytes_match_saved_assets": true,
+      "saved_profile_values_and_svg_polyline_verified": null,
+      "peak_candidate_status": "hypothesized",
+      "profile_check": "NOT_APPLICABLE_no_profile_slot"
+    }
+  ],
+  "retained_first_pass_failure": {
+    "artifact": "after-2x2.zip",
+    "issue": "ROI bottom edge painted over scale-bar text; science and coordinates were correct",
+    "final_fix": "ROI outline now paints before saved bar/annotation overlays; edge coordinates unchanged",
+    "original_artifact_retained": true
+  },
+  "limits": [
+    "Actual browser actions were performed by the parent; independent oracle verified saved artifacts and science without provider calls.",
+    "These public synthetic checks do not establish experimental phase identification, native DM qualification, Mac acceptance or model-client vision.",
+    "No full native/C++ regression was run for this display-only change."
+  ],
+  "presentation_rounding": "SVG values serialize to 0.001 display units; science arrays, coordinates and records are checked independently without relaxed scientific tolerances."
+}

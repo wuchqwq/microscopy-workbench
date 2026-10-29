@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto';
 import {deflateSync} from 'node:zlib';
 import {resolveComposition} from '../lib/figure_composer_assets.mjs';
 import {makeFigureRecipe} from '../ui/image-panel/figure-export.mjs';
+import {renderCompositionSVG} from '../ui/image-panel/figure-composer.mjs';
 
 const A='a'.repeat(32),B='b'.repeat(32),C='c'.repeat(32),F='f'.repeat(32),P='d'.repeat(32),T='e'.repeat(32);
 const clone=v=>structuredClone(v),sha=v=>createHash('sha256').update(v).digest('hex');
@@ -30,6 +31,26 @@ function fixture(){
  const ports={async readState(id){calls.push(['state',id]);assert.ok(states.has(id),'missing saved image');return clone(states.get(id));},async readObject(id){calls.push(['object',id]);assert.ok(objects.has(id),'missing saved object');return clone(objects.get(id));},write(){assert.fail('resolver must never write');}};
  return {recipe,ports,states,objects,calls,source,base,profile,image,line,bytes};
 }
+function roiFixture(){
+ const f=fixture(),R='8'.repeat(32),Q='9'.repeat(32),bytes=png(48,56),digest=sha(bytes),rect=[16,24,64,80],mapping={...clone(f.source.panels[0]),source_rect_xyxy:rect,image_rect_xyxy:[0,0,48,56]},source={...clone(f.source),object_id:R,parent_object_id:F,source_shape_yx:[96,96],shape_yx:[56,48],scale_bar:{visible:false},panels:[mapping],files_sha256:{'data.npy':'4'.repeat(64),'preview.png':digest},display:{...clone(f.source.display),scale_bar:false}},base={...clone(source),object_id:Q,parent_object_id:R};
+ for(const value of [source,base]){f.objects.set(value.object_id,value);f.states.set(value.object_id,{object:clone(value),effective_display:clone(value.display),frame_identity:clone(f.states.get(A).frame_identity),clean_png_base64:bytes.toString('base64'),clean_png_sha256:digest});}
+ const slot={kind:'image',title:'ROI',source_object_id:R,recipe:makeFigureRecipe(f.states.get(R),{preset:'real-space',mode:'figure',legend:false,scaleBar:false}),asset:{object_id:Q,clean_png_sha256:digest},scale_bar:null};
+ f.recipe.roiOutlines=true;f.recipe.showLegend=true;f.recipe.slots=[f.image,slot,f.line];return {...f,R,Q};
+}
+test('ROI outlines obtain one read-only original frame proof and map a verified crop onto its full image',async()=>{
+ const f=roiFixture(),before=clone(f.recipe),panels=await resolveComposition(f.recipe,f.ports);
+ assert.equal(panels[0].spatial_source.object_id,F);assert.equal(panels[0].spatial_source.array_sha256,'1'.repeat(64));assert.deepEqual(panels[1].spatial_source,panels[0].spatial_source);assert.deepEqual(panels[1].state.object.panels[0].source_rect_xyxy,[16,24,64,80]);assert.equal(f.calls.filter(([kind,id])=>kind==='object'&&id===F).length,1,'original source evidence is cached, never recalculated');
+ const rendered=renderCompositionSVG({recipe:f.recipe,panels});assert.equal(rendered.roi_outline_count,1);assert.match(rendered.svg,/<rect x="16" y="24" width="48" height="56" fill="none" stroke="#79d9ee"/);assert.deepEqual(f.recipe,before);
+});
+test('ROI source proof rejects mismatched frame, shape, hash or source-pixel rectangle without scientific writes',async()=>{
+ for(const change of ['frame','shape','hash','dtype','rect']){const f=roiFixture();if(change==='frame')f.objects.get(F).frame_index=1;if(change==='shape')f.objects.get(F).shape_yx=[95,96];if(change==='hash')f.objects.get(F).files_sha256['data.npy']='bad';if(change==='dtype')f.objects.get(F).dtype='float32';if(change==='rect'){f.states.get(f.R).object.panels[0].source_rect_xyxy=[16,24,65,80];f.states.get(f.Q).object.panels[0].source_rect_xyxy=[16,24,65,80];f.recipe.slots[1].recipe=makeFigureRecipe(f.states.get(f.R),f.recipe.slots[1].recipe.preferences);}await assert.rejects(resolveComposition(f.recipe,f.ports),/ROI source/);assert.ok(f.calls.every(([kind])=>['object','state'].includes(kind)));}
+});
+test('another valid frame can be composed but cannot be outlined on the first original',async()=>{
+ const f=roiFixture(),G='7'.repeat(32),second={...clone(f.objects.get(F)),object_id:G,frame_index:1,files_sha256:{'data.npy':'5'.repeat(64)}};f.objects.set(G,second);
+ for(const id of [f.R,f.Q]){const saved=f.states.get(id);saved.object.panels[0].source_object_id=G;saved.frame_identity={frame_object_id:G,source_object_id:T,frame_index:1};f.objects.get(id).panels[0].source_object_id=G;}
+ f.states.get(f.R).object.parent_object_id=G;f.objects.get(f.R).parent_object_id=G;f.recipe.slots[1].recipe=makeFigureRecipe(f.states.get(f.R),f.recipe.slots[1].recipe.preferences);
+ const panels=await resolveComposition(f.recipe,f.ports),result=renderCompositionSVG({recipe:f.recipe,panels});assert.equal(result.roi_outline_count,0);assert.doesNotMatch(result.svg,/source-roi-outline/);assert.equal(result.roi_outline_diagnostics,'no_verified_original_roi_pair');
+});
 
 test('hydrates every slot in saved order using only bounded read ports and retains source/science records',async()=>{
  const f=fixture(),before=clone(f.recipe),panels=await resolveComposition(f.recipe,f.ports);

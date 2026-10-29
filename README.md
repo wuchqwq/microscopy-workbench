@@ -69,3 +69,6 @@ classes or silently fall back after a failed native operation.
 
 Saved images and profiles can be arranged as 2×2 or 1×3 paper figures; see
 [Figure Composer](docs/FIGURE_COMPOSER.md) for export and layout recovery.
+The [GUI / Figure polish notes](docs/GUI_FIGURE_POLISH.md) show source-coordinate
+ROI outlines, compact optional legends and the fit/focus controls with actual
+before/after browser evidence.

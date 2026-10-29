@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash,webcrypto} from 'node:crypto';
 import {deflateSync} from 'node:zlib';
-import {makeImageSlot,makeProfileSlot,validateComposition,compositionDimensions,compositionLegendLayout,renderCompositionSVG,buildCompositionBundle} from '../ui/image-panel/figure-composer.mjs';
+import {makeImageSlot,makeProfileSlot,validateComposition,defaultCompositionTitle,compositionDimensions,compositionLegendLayout,renderCompositionSVG,buildCompositionBundle} from '../ui/image-panel/figure-composer.mjs';
 import {makeFigureRecipe} from '../ui/image-panel/figure-export.mjs';
 const clone=value=>JSON.parse(JSON.stringify(value)),id=value=>value.toString(16).padStart(32,'0');
 function png(width,height){
@@ -28,6 +28,59 @@ function composition(layout='2x2'){
  const panels=layout==='2x2'?[image(0),image(1),image(2),profile()]:[image(0),image(1),profile()];
  return {recipe:{schema:'microscopy-figure-composition-v1',layout,font_pt:8,slots:panels.map(panel=>panel.slot)},panels};
 }
+function roiComposition(){
+ const original=image(0),roi=image(1),line=profile(),frame={frame_object_id:id(20),frame_index:0,source_object_id:id(50)},source={object_id:id(20),shape_yx:[48,64],dtype:'uint16',array_sha256:'f'.repeat(64),frame_identity:frame};
+ for(const [panel,rect]of [[original,[0,0,64,48]],[roi,[16,12,48,36]]]){
+  panel.state.frame_identity=clone(frame);panel.state.object.source_shape_yx=[48,64];panel.state.object.dtype='uint16';panel.state.object.panels[0].source_object_id=id(20);panel.state.object.panels[0].source_rect_xyxy=rect;panel.state.object.annotations[0].anchor.source_object_id=id(20);panel.state.object.annotations[0].anchor.coordinates=[19,29];panel.spatial_source=clone(source);
+  panel.slot=makeImageSlot(panel.state,{...preferences,legend:true},{...panel.slot.asset,panels:clone(panel.state.object.panels),scale_bar:null});
+ }
+ return {recipe:{schema:'microscopy-figure-composition-v1',layout:'1x3',font_pt:9,roiOutlines:true,showLegend:true,slots:[original.slot,roi.slot,line.slot]},panels:[original,roi,line]};
+}
+test('default titles use explicit view roles or verified extents without leaking engineering coordinates',()=>{
+ const input=roiComposition();assert.equal(defaultCompositionTitle(input.panels[0].state),'Original');assert.equal(defaultCompositionTitle(input.panels[1].state),'ROI');assert.equal(defaultCompositionTitle(input.panels[1].state,{role:'原图'}),'ROI','known cropped extent wins over a stale navigation role');
+ assert.equal(defaultCompositionTitle(image(0).state,{role:'ROI [10,20,42,44]'}),'ROI');assert.equal(defaultCompositionTitle({object:{kind:'fft'}}),'FFT');assert.equal(defaultCompositionTitle(profile().profile),'Intensity profile');
+ assert.equal(defaultCompositionTitle({object:{kind:'view',panels:[{domain:'spatial_pixels',source_rect_xyxy:[0,0,32,24]}]}}),'Image','unknown top-left crop cannot be named Original without shape or role');
+ assert.equal(defaultCompositionTitle({object:{kind:'view',panels:[]}},{role:'全帧（新显示）'}),'Original');
+});
+test('ROI outlines project exact saved source-pixel edges onto the full original, with an explicit show/hide switch',()=>{
+ const input=roiComposition(),before=clone(input),result=renderCompositionSVG(input);
+ assert.equal(result.roi_outline_count,1);assert.equal(result.roi_outline_diagnostics,'verified_saved_source');assert.match(result.svg,/data-part="source-roi-outline" data-roi-slot="1"/);assert.match(result.svg,/<rect x="8" y="6" width="16" height="12" fill="none" stroke="#79d9ee"/);assert.match(result.svg,/<title>ROI b<\/title>/);assert.deepEqual(input,before);
+ input.recipe.roiOutlines=false;const hidden=renderCompositionSVG(input);assert.equal(hidden.roi_outline_count,0);assert.equal(hidden.roi_outline_diagnostics,'disabled');assert.doesNotMatch(hidden.svg,/source-roi-outline/);
+ delete input.recipe.roiOutlines;assert.doesNotThrow(()=>validateComposition(input.recipe),'legacy recipes remain valid without new presentation flags');assert.equal(renderCompositionSVG(input).roi_outline_count,0);
+});
+test('source ROI outlines render below saved scientific annotations and scale bars without moving either layer',()=>{
+ const input=roiComposition(),original=input.panels[0],bar={visible:true,image_endpoints_xyxy:[8,18,24,18],length:.5,unit:'nm'};
+ original.scale_bar=clone(bar);original.slot.scale_bar=clone(bar);input.recipe.slots[0]=original.slot;
+ const before=clone(input),{svg}=renderCompositionSVG(input),firstPanel=svg.slice(svg.indexOf('data-part="saved-image"'),svg.indexOf('data-composition-slot="1"'));
+ const outline=firstPanel.indexOf('data-part="source-roi-outline"'),annotation=firstPanel.indexOf('data-part="geometry"'),scale=firstPanel.indexOf('data-part="scale-bar"');
+ assert.ok(outline>=0&&annotation>outline&&scale>annotation,'ROI location boxes must be painted before scientific annotations and the legible scale-bar overlay');
+ assert.match(firstPanel,/<rect x="8" y="6" width="16" height="12" fill="none" stroke="#79d9ee"/);assert.match(firstPanel,/data-part="scale-bar-line" d="M 8 18 H 24"/);assert.match(firstPanel,/>0.5 nm<\/text>/);
+ assert.deepEqual(input,before,'a layer-order adjustment cannot alter coordinates, scale values or saved sources');
+});
+test('ROI outlines use rendered source edges with nonzero display padding and signed anisotropic calibration',()=>{
+ const input=roiComposition(),calibration={calibration_id:id(88),revision:1,status:'active',coordinate_domain:'real_space',xy_scale:{x:.2,y:-.3,unit:'nm'}};
+ input.panels[0].state.object.panels[0].image_rect_xyxy=[4,3,28,21];
+ for(const panel of input.panels.slice(0,2)){panel.state.object.xy_calibration=clone(calibration);panel.slot.recipe=makeFigureRecipe(panel.state,panel.slot.recipe.preferences);}input.recipe.slots=input.panels.map(panel=>panel.slot);
+ const before=clone(input),result=renderCompositionSVG(input);assert.equal(result.roi_outline_count,1);assert.match(result.svg,/<rect x="10" y="7.5" width="12" height="9" fill="none" stroke="#79d9ee"/);assert.deepEqual(input,before);
+});
+test('ROI outlines never guess missing hashes, another frame/source, another calibration or a cropped context as Original',()=>{
+ for(const change of ['missing','hash','calibration','frame','not-full']){
+  const input=roiComposition();if(change==='missing')delete input.panels[0].spatial_source;if(change==='hash')input.panels[1].spatial_source.array_sha256='e'.repeat(64);
+  if(change==='calibration')input.panels[1].state.object.xy_calibration={calibration_id:id(88),revision:2,status:'active',xy_scale:{x:.2,y:-.3,unit:'nm'}};
+  if(change==='frame'){const roi=input.panels[1];roi.state.frame_identity={frame_object_id:id(21),frame_index:1,source_object_id:id(50)};roi.state.object.panels[0].source_object_id=id(21);roi.state.object.annotations[0].anchor.source_object_id=id(21);roi.spatial_source={...roi.spatial_source,object_id:id(21),frame_identity:clone(roi.state.frame_identity)};}
+  if(change==='not-full')input.panels[0].state.object.panels[0].source_rect_xyxy=[0,0,32,24];
+  for(const panel of input.panels.slice(0,2))panel.slot.recipe=makeFigureRecipe(panel.state,panel.slot.recipe.preferences);
+  input.recipe.slots=input.panels.map(panel=>panel.slot);const result=renderCompositionSVG(input);assert.equal(result.roi_outline_count,0,change);assert.equal(result.roi_outline_diagnostics,'no_verified_original_roi_pair');assert.doesNotMatch(result.svg,/source-roi-outline/);
+ }
+ const malformed=roiComposition();malformed.panels[1].spatial_source.array_sha256='not-a-hash';assert.throws(()=>renderCompositionSVG(malformed),/完整证据/);
+});
+test('compact optional legends stay outside images and preserve common fonts, full statuses and source identities',()=>{
+ const input=roiComposition(),before=clone(input),shown=renderCompositionSVG(input);assert.match(shown.svg,/data-part="panel-legend"/);assert.match(shown.svg,/candidate/);
+ const images=[...shown.svg.matchAll(/data-part="saved-image"[^>]*transform="translate\([^ ]+ ([^)]+)\) scale\(([^)]+)\)"><image width="(\d+)" height="(\d+)"/g)],legends=[...shown.svg.matchAll(/data-part="panel-legend" transform="translate\([^ ]+ ([^)]+)\)"/g)];assert.equal(images.length,legends.length);for(let i=0;i<images.length;i++)assert.ok(Number(legends[i][1])+1e-3>=Number(images[i][1])+Number(images[i][2])*Number(images[i][4]),'legend footer must not cover the image or its peaks');
+ input.recipe.showLegend=false;const hidden=renderCompositionSVG(input);assert.doesNotMatch(hidden.svg,/data-part="panel-legend"/);assert.equal(hidden.roi_outline_count,1);assert.deepEqual(hidden.recipe.slots,before.recipe.slots);assert.ok(input.panels.slice(0,2).every(panel=>panel.state.object.annotations[0].status==='hypothesized'));
+ const dimensions=compositionDimensions('1x3',9),legend=compositionLegendLayout([{label:'Experimental observation · candidate',shape:'circle',color:'#79d9ee'}],{width:dimensions.cellWidth,fontSize:dimensions.font});assert.equal(legend.fontSize,37.5);assert.ok(legend.padding<37.5*.65);assert.ok(legend.width<=dimensions.cellWidth);assert.ok(legend.height<37.5*(2*1.25+1.3),'compaction reduces footer padding/leading instead of font');
+ for(const flag of ['roiOutlines','showLegend'])assert.throws(()=>validateComposition({...before.recipe,[flag]:'true'}),/布尔/);
+});
 test('composition recipes keep only explicit bounded saved references and require every slot',()=>{
  const input=composition(),before=clone(input),recipe=validateComposition(input.recipe);assert.deepEqual(recipe,input.recipe);assert.notEqual(recipe,input.recipe);
  assert.equal(recipe.slots[0].asset.object_id,id(60));assert.equal(recipe.slots[3].object_id,id(100));assert.doesNotMatch(JSON.stringify(recipe),/clean_png_base64|"samples"|"value":\[/);
@@ -79,6 +132,23 @@ test('profile endpoint ticks align inward at 9pt without moving the actual 2.24n
  const d=compositionDimensions('2x2',9),profileLeft=d.margin+d.cellWidth+d.gap;
  assert.equal(Number(ticks[0][1]),Math.round((profileLeft+d.font*3.6)*1000)/1000);assert.equal(Number(ticks.at(-1)[1]),Math.round((profileLeft+d.cellWidth-d.font*.6)*1000)/1000,'text anchoring cannot change the endpoint position');
  assert.deepEqual(input,before);
+});
+test('million-scale and negative raw profile ticks remain inside their panel at the unchanged common font',()=>{
+ for(const layout of ['2x2','1x3'])for(const values of [[3300000,3400000,3500000,3600000],[-4290000000,-4200000000,-4100000000,-4000000000]]){
+  const input=composition(layout),profileIndex=input.panels.findIndex(panel=>panel.slot.kind==='profile');input.recipe.font_pt=9;input.panels[profileIndex].profile.samples.value=values;const before=clone(input),d=compositionDimensions(layout,9),slotLeft=d.margin+(profileIndex%d.columns)*(d.cellWidth+d.gap);
+  const {svg}=renderCompositionSVG(input),ticks=[...svg.matchAll(/<path d="M [^"]+ h 6" stroke="#273849"\/><text x="([^"]+)"[^>]*text-anchor="end" font-size="([^"]+)">([^<]*)<\/text>/g)];
+  assert.equal(ticks.length,4);for(const [,x,font,text]of ticks){assert.equal(Number(font),37.5);assert.ok(Number(x)-text.length*Number(font)*.6>=slotLeft,'complete raw tick text must fit before the axis; clipping a leading digit changes its apparent magnitude');}
+  assert.match(svg,new RegExp('>'+values[0]+'<'));assert.deepEqual(input,before,'layout changes cannot normalize, offset or rewrite raw samples');
+ }
+});
+
+test('high-baseline profile ticks stay distinct and constant axes retain the actual value',()=>{
+ for(const layout of ['2x2','1x3'])for(const values of [[19997000,19999000,20001000,20003000],[4294967292,4294967293,4294967294,4294967295],[-20000003,-20000002,-20000001,-20000000],[20000001,20000001,20000001,20000001]]){
+  const input=composition(layout),index=input.panels.findIndex(panel=>panel.slot.kind==='profile');input.panels[index].profile.samples.value=values;const before=clone(input);
+  const {svg}=renderCompositionSVG(input),labels=[...svg.matchAll(/<path d="M [^"]+ h 6" stroke="#273849"\/><text [^>]*>([^<]*)<\/text>/g)].map(match=>match[1]);
+  assert.equal(labels.length,values[0]===values.at(-1)?1:4);assert.equal(new Set(labels).size,labels.length,'different finite ticks must not be rounded to the same label');
+  assert.equal(labels[0],String(values[0]));assert.equal(labels.at(-1),String(values.at(-1)));assert.deepEqual(input,before,'formatting cannot alter saved samples or the scientific source');
+ }
 });
 test('saved recipe is restorable without embedding arrays and duplicate explicit views are not silently dropped',()=>{
  const input=composition();input.panels[1]=clone(input.panels[0]);input.recipe.slots[1]=clone(input.recipe.slots[0]);const before=clone(input),result=renderCompositionSVG(input),restored=renderCompositionSVG({recipe:JSON.parse(JSON.stringify(result.recipe)),panels:input.panels});assert.equal(restored.svg,result.svg);assert.equal((result.svg.match(/data-composition-slot="/g)??[]).length,4);assert.deepEqual(input,before);
