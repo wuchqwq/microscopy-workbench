@@ -9,6 +9,11 @@ export type ScientificCoordinateSpace = 'source_pixels' | 'source_array_indices'
 export type CoordinateArray<Space extends string, Sampling extends string = 'centres'> = number[] & {
   readonly [coordinateTag]: readonly [Space, Sampling];
 };
+export interface WirePanelBase {readonly source_object_id:string;readonly image_rect_xyxy:Rectangle;}
+export interface WireFrequencyPanel extends WirePanelBase {readonly domain:'frequency';readonly fft_shape_yx:XY;readonly fft_rect_xyxy?:Rectangle;}
+export interface WireSpatialPanel extends WirePanelBase {readonly domain:'spatial_pixels';readonly source_rect_xyxy:Rectangle;}
+export interface WireArrayPanel extends WirePanelBase {readonly domain:'source_array_indices';readonly source_rect_xyxy:Rectangle;}
+export type WirePanel=WireFrequencyPanel|WireSpatialPanel|WireArrayPanel;
 interface PanelBase {readonly source_object_id: ObjectId; readonly image_rect_xyxy: Rectangle;}
 export interface FrequencyPanel extends PanelBase {
   readonly domain: 'frequency'; readonly fft_shape_yx: XY; readonly fft_rect_xyxy?: Rectangle;
@@ -24,13 +29,19 @@ type SelectionOn<P extends Panel> = {
   coordinates: CoordinateArray<PanelSpace<P>, 'centres' | 'edges'>; panel: P;
 };
 export type Selection = SelectionOn<FrequencyPanel> | SelectionOn<SpatialPanel> | SelectionOn<ArrayPanel>;
+type WireSelectionOn<P extends WirePanel>={kind:SelectionKind;coordinate_space:P extends WireFrequencyPanel?'frequency_cycles_per_pixel':P extends WireSpatialPanel?'source_pixels':'source_array_indices';source_object_id:string;coordinates:readonly number[];panel:P;};
+export type WireSelection=WireSelectionOn<WireFrequencyPanel>|WireSelectionOn<WireSpatialPanel>|WireSelectionOn<WireArrayPanel>;
 interface TransformOptions {edges?: boolean; inverse?: boolean;}
 // Mirrors the public panels centre/edge contract; never infers a new grid.
 export function coordinateSpace(panel: FrequencyPanel): 'frequency_cycles_per_pixel';
 export function coordinateSpace(panel: SpatialPanel): 'source_pixels';
 export function coordinateSpace(panel: ArrayPanel): 'source_array_indices';
 export function coordinateSpace(panel: Panel): ScientificCoordinateSpace;
-export function coordinateSpace(panel: Panel): ScientificCoordinateSpace {
+export function coordinateSpace(panel:WireFrequencyPanel):'frequency_cycles_per_pixel';
+export function coordinateSpace(panel:WireSpatialPanel):'source_pixels';
+export function coordinateSpace(panel:WireArrayPanel):'source_array_indices';
+export function coordinateSpace(panel: WirePanel): ScientificCoordinateSpace;
+export function coordinateSpace(panel: WirePanel): ScientificCoordinateSpace {
   return ({frequency:'frequency_cycles_per_pixel',spatial_pixels:'source_pixels',source_array_indices:'source_array_indices'} as const)[panel.domain];
 }
 // Literal option overloads tie brands to runtime flags. A dynamically typed
@@ -49,7 +60,8 @@ export function transformCoordinates<P extends Panel>(values: readonly number[],
   options: {inverse?: false; edges?: boolean}): CoordinateArray<PanelSpace<P>, 'centres' | 'edges'>;
 export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
   options: TransformOptions): CoordinateArray<'display_pixels' | PanelSpace<P>, 'centres' | 'edges'>;
-export function transformCoordinates(values: readonly number[],panel: Panel,{edges=false,inverse=false}: TransformOptions={}): number[] {
+export function transformCoordinates(values:readonly number[],panel:WirePanel,options?:TransformOptions):number[];
+export function transformCoordinates(values: readonly number[],panel: WirePanel,{edges=false,inverse=false}: TransformOptions={}): number[] {
   if(!Array.isArray(values)||values.length%2||!values.every(Number.isFinite))throw new Error('Finite xy pairs required');
   const [left,top,right,bottom]=panel.image_rect_xyxy;
   const frequency=panel.domain==='frequency';
@@ -65,12 +77,12 @@ export function transformCoordinates(values: readonly number[],panel: Panel,{edg
     return frequency?(local+offset)/grid[axis]:local;
   });
 }
-export function panelAt<P extends Panel>(panels: readonly P[],x: number,y: number,{edges=false}: {edges?: boolean}={}): P {
+export function panelAt<P extends WirePanel>(panels: readonly P[],x: number,y: number,{edges=false}: {edges?: boolean}={}): P {
   const matches=panels.filter(p=>{const [l,t,r,b]=p.image_rect_xyxy;return x>=l&&y>=t&&x<=(edges?r:r-1)&&y<=(edges?b:b-1);});
   if(matches.length!==1)throw new Error('请在图像内部的单一数据区域选点或拖动，避开坐标轴和图外空白');
   return matches[0];
 }
-export function constrainSelectionDrag(panel: Panel,start: XY,end: XY,{kind,constrained=false}: {kind?: SelectionKind; constrained?: boolean}={}): {start: number[]; end: number[]} {
+export function constrainSelectionDrag(panel: WirePanel,start: XY,end: XY,{kind,constrained=false}: {kind?: SelectionKind; constrained?: boolean}={}): {start: number[]; end: number[]} {
   if(!constrained||!['rectangle','line','arrow'].includes(kind ?? ''))return {start:[...start],end:[...end]};
   const edges=kind==='rectangle',frequency=panel.domain==='frequency',grid=frequency?[panel.fft_shape_yx[1],panel.fft_shape_yx[0]]:null;
   const toGrid=(values: readonly number[])=>transformCoordinates(values,panel,{edges}).map((v,i)=>frequency?v*grid![i%2]+Math.floor(grid![i%2]/2)+(edges?.5:0):v);
@@ -92,7 +104,9 @@ export function constrainSelectionDrag(panel: Panel,start: XY,end: XY,{kind,cons
   const rendered=fromGrid([...first,...last]).map((v,i)=>Math.max(i%2?t:l,Math.min(i%2?b-(edges?0:1):r-(edges?0:1),v)));
   return {start:rendered.slice(0,2),end:rendered.slice(2)};
 }
-export function selectionFromDrag(panels: readonly Panel[],start: XY,end: XY,{kind='point'}: {kind?: SelectionKind}={}): Selection {
+export function selectionFromDrag(panels:readonly Panel[],start:XY,end:XY,options?:{kind?:SelectionKind}):Selection;
+export function selectionFromDrag(panels:readonly WirePanel[],start:XY,end:XY,options?:{kind?:SelectionKind}):WireSelection;
+export function selectionFromDrag(panels: readonly WirePanel[],start: XY,end: XY,{kind='point'}: {kind?: SelectionKind}={}): WireSelection {
   const edges=['rectangle','polygon'].includes(kind),p=panelAt(panels,...start,{edges});
   if(panelAt(panels,...end,{edges})!==p)throw new Error('Selection must stay in one source panel');
   let coords: readonly number[]=kind==='point'?start:[...start,...end];
@@ -106,7 +120,8 @@ export function selectionRectangle(selection: SelectionOn<FrequencyPanel>): Coor
 export function selectionRectangle(selection: SelectionOn<SpatialPanel>): CoordinateArray<'source_pixels', 'edges'>;
 export function selectionRectangle(selection: SelectionOn<ArrayPanel>): CoordinateArray<'source_array_indices', 'edges'>;
 export function selectionRectangle(selection: Selection): CoordinateArray<'fft_bins' | 'source_pixels' | 'source_array_indices', 'edges'>;
-export function selectionRectangle(selection: Selection): number[] {
+export function selectionRectangle(selection:WireSelection):number[];
+export function selectionRectangle(selection: WireSelection): number[] {
   if(selection.kind!=='rectangle')throw new Error('Draw a rectangle first');
   const p=selection.panel,c=selection.coordinates;
   // Explicit outward integer-bin/edge snapping. The UI shows this rectangle

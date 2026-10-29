@@ -7,10 +7,10 @@ export function workflowScope(state: WorkflowState | null | undefined){
 }
 // A display slider, selection and saved mark share ONE chronological action list.
 // This holds presentation/command references, never a second scientific image.
-export class UserActionHistory{
- declare limit: number;declare undoItems: HistoryEntry[];declare redoItems: HistoryEntry[];declare group: string | null;
+export class UserActionHistory<Entry extends HistoryEntry=HistoryEntry>{
+ declare limit: number;declare undoItems: Entry[];declare redoItems: Entry[];declare group: string | null;
  constructor(limit=80){this.limit=limit;this.undoItems=[];this.redoItems=[];this.group=null;}
- push(entry: HistoryEntry,{group=null}: {group?:string | null}={}){
+ push(entry: Entry,{group=null}: {group?:string | null}={}){
   if(canonical(entry.before)===canonical(entry.after))return false;
   const item=copy(entry),last=this.undoItems.at(-1);
   if(group&&this.group===group&&last?.kind===item.kind&&last.scope===item.scope)last.after=item.after;
@@ -19,7 +19,7 @@ export class UserActionHistory{
  }
  endGroup(){this.group=null;}
  peek(direction: string='undo'){return (direction==='undo'?this.undoItems:this.redoItems).at(-1)??null;}
- finish(direction: string,item: HistoryEntry){const from=direction==='undo'?this.undoItems:this.redoItems,to=direction==='undo'?this.redoItems:this.undoItems;if(from.at(-1)!==item)throw new Error('History changed before the action was accepted');from.pop();to.push(item);this.endGroup();}
+ finish(direction: string,item: Entry){const from=direction==='undo'?this.undoItems:this.redoItems,to=direction==='undo'?this.redoItems:this.undoItems;if(from.at(-1)!==item)throw new Error('History changed before the action was accepted');from.pop();to.push(item);this.endGroup();}
  reset(){this.undoItems.length=0;this.redoItems.length=0;this.endGroup();}
 }
 export function selectionActionReason(action: string,picked: PickedSelection | null | undefined,object: ViewObject={}){

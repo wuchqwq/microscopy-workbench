@@ -3,7 +3,7 @@ import type {ProbeResult,ProfileResult,ProfileSamples,NumericReply,ProbeState,Pr
 export type {ProbeResult,ProfileResult,ProfileSamples,ProbeState} from './data-probe-contracts.mjs';
 declare const Blob:BrowserBlobConstructor;declare const URL:BrowserURL;declare const performance:{now():number};
 type Environment=typeof globalThis & BrowserEnvironment;
-export interface DataProbesOptions {getState?:()=>ProbeState|null|undefined;api?:(url:string,body:Readonly<Record<string,unknown>>)=>Promise<ProbeResult>;onError?:(error:unknown)=>unknown;document?:BrowserDocument|null;interval?:number;setTimer?:(callback:()=>void,ms:number)=>unknown;clearTimer?:(id:unknown)=>void;now?:()=>number;}
+export interface DataProbesOptions {getState?:()=>ProbeState|null|undefined;api?:(url:'/api/probe',body:Readonly<Record<string,unknown>>)=>Promise<ProbeResult>;onError?:(error:unknown)=>unknown;document?:BrowserDocument|null;interval?:number;setTimer?:(callback:()=>void,ms:number)=>unknown;clearTimer?:(id:unknown)=>void;now?:()=>number;}
 // Scientific readouts from the same saved provider arrays used by MCP. Canvas
 // colors are never sampled and pointer motion creates no scientific records.
 import {tabularCell} from './measurement-workspace.mjs';

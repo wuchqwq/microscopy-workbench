@@ -1,7 +1,7 @@
 // Checked presentation contracts. Opaque scientific fields are never qualified
 // by a label/table projection; provider and HTTP guards remain authoritative.
-import type {Panel,Rectangle,XY} from './coordinates.mjs';
-export type DisplayPanel = Panel & {readonly source_rect_xyxy?:Rectangle;readonly fft_shape_yx?:XY;readonly fft_rect_xyxy?:Rectangle};
+import type {WirePanel,Rectangle,XY} from './coordinates.mjs';
+export type DisplayPanel = WirePanel & {readonly source_rect_xyxy?:Rectangle;readonly fft_shape_yx?:XY;readonly fft_rect_xyxy?:Rectangle};
 export interface ViewTransform {scale: number; x: number; y: number;}
 export interface CalibrationView {
  readonly calibration_id?: string; readonly revision?: unknown; readonly source_text?: unknown;
@@ -11,7 +11,7 @@ export interface CalibrationView {
 }
 export interface ScientificGridView {readonly source_rect_xyxy?: readonly number[];readonly [key: string]: unknown;}
 export interface AnnotationLabel {
- readonly text?: unknown; readonly offset?: readonly number[] | null; readonly font_size?: unknown;
+ measurement_object_id?:string;measurement_kind?:string;readonly text?: unknown; readonly offset?: readonly number[] | null; readonly font_size?: unknown;
  readonly important?: boolean; readonly leader?: boolean;readonly pinned?: boolean;readonly visible?: boolean;readonly figure_visible?: boolean;
 }
 export interface AnnotationPresentation {
@@ -29,8 +29,8 @@ export interface ViewObject {
  readonly scientific_grid_identity?: unknown;readonly dtype?: string;readonly xy_calibration?: CalibrationView;
  readonly [key: string]: unknown;
 }
-export interface ViewportSnapshot extends ViewObject {readonly object?: ViewObject;readonly frame_identity?: {readonly frame_object_id?: string};}
-export interface WorkflowState {readonly object?: ViewObject;readonly frame_identity?: {readonly frame_object_id?: string};readonly state_revision?: number;}
+export interface ViewportSnapshot extends ViewObject {readonly object?: ViewObject;readonly frame_identity?: {readonly frame_object_id?: string}|null;}
+export interface WorkflowState {readonly object?: ViewObject;readonly frame_identity?: {readonly frame_object_id?: string}|null;readonly state_revision?: number;}
 export interface PickedSelection {readonly panel?: {readonly domain?: string};readonly kind?: string;readonly coordinates?: readonly number[];}
 export interface HistoryEntry {kind: string;label: string;scope: string | undefined;before: unknown;after: unknown;}
 export interface SavedViewEntry {id: string;frame: string | null;scope?: string;role: string;freshSourceView?: boolean;}

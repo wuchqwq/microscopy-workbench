@@ -10,9 +10,10 @@ export interface FilePort {readonly size:number;text():Promise<string>;}
 export interface BlobPort {readonly size:number;arrayBuffer():Promise<ArrayBuffer>;}
 export interface BrowserElement extends Omit<PresentationElement,'querySelector'|'append'|'replaceChildren'|'onclick'|'onkeydown'|'onchange'|'classList'|'scrollIntoView'> {
  get textContent():string|null;set textContent(value:unknown);
- get value():string;set value(value:string|number);
+ get value():string;set value(value:unknown);
  readonly ownerDocument:BrowserDocument;id:string;className:string;title:string;src:string;alt:string;maxLength:number;open:boolean;
  width:number;height:number;readonly naturalWidth:number;readonly naturalHeight:number;
+ innerHTML:string;readonly children:Iterable<BrowserElement>;readonly tagName:string;
  readonly parentNode:BrowserElement|null;readonly options?:readonly BrowserElement[];readonly selectedOptions?:readonly BrowserElement[];readonly files?:readonly FilePort[];
  readonly style:{[key:string]:string};classList:{toggle(name:string,force?:boolean):boolean;add(...names:string[]):void;remove(...names:string[]):void;contains(name:string):boolean;};
  onchange:((event:BrowserEvent)=>unknown)|null;onclick:((event:BrowserEvent)=>unknown)|null;onkeydown:((event:BrowserEvent)=>unknown)|null;
@@ -25,7 +26,7 @@ export interface BrowserElement extends Omit<PresentationElement,'querySelector'
  addEventListener(name:string,listener:(event:BrowserEvent)=>unknown,options?:unknown):void;
  getBoundingClientRect():{left:number;top:number;width:number;height:number};setPointerCapture(id:number):void;releasePointerCapture(id:number):void;
  scrollIntoView(options?:{block:string}):void;focus():void;showModal():void;close():void;decode():Promise<void>;
- getContext(kind:'2d'):CanvasContext|null;toBlob(callback:(blob:BlobPort|null)=>void,type:string):void;
+ getContext(kind:'2d',options?:{willReadFrequently?:boolean}):CanvasContext|null;toBlob(callback:(blob:BlobPort|null)=>void,type:string):void;
 }
 export interface BrowserDocument extends Omit<PresentationDocument,'getElementById'|'createElement'> {
  getElementById(id:string):BrowserElement|null;createElement(tag:string):BrowserElement;createElementNS(namespace:string,tag:string):BrowserElement;

@@ -1,7 +1,7 @@
 import type {ViewObject,RenderedMark,CalibrationView,DisplayPanel,AnnotationPresentation,AnnotationLayoutOptions} from './presentation-contracts.mjs';
 import type {ProfileResult} from './data-probe-contracts.mjs';
 import type {ObjectId} from './coordinates.mjs';
-export interface ScientificAnchor {readonly source_object_id:ObjectId;readonly coordinate_space:string;readonly coordinates:readonly number[];}
+export interface ScientificAnchor {readonly source_object_id:string;readonly coordinate_space:string;readonly coordinates:readonly number[];}
 export interface FigureMark extends RenderedMark {readonly anchor?:ScientificAnchor;}
 export interface FigureObject extends ViewObject {
  readonly object_id:string;readonly kind?:string;readonly calibration_record?:CalibrationView;readonly calibration?:CalibrationView;

@@ -8,7 +8,7 @@ declare function setTimeout(callback: ()=>void, milliseconds: number): unknown;
 type PresentationEnvironment=typeof globalThis & PresentationHost;
 export interface MeasurementWorkspaceOptions {
  getState?: ()=>WorkflowState | null | undefined;
- api?: (url: string)=>PromiseLike<MeasurementResponse>;
+ api?: (url: `/api/measurements${string}`)=>PromiseLike<MeasurementResponse>;
  onSelect?: (entry: MeasurementEntry)=>unknown;
  onJump?: (entry: MeasurementEntry | null)=>unknown;
  onUpdate?: (entry: MeasurementEntry | null)=>unknown;
@@ -116,7 +116,7 @@ export class MeasurementWorkspace {
  select(id: string | undefined,{notify=true}: {notify?:boolean}={}){const entry=this.entries.find(e=>asRecord(e).object_id===id);if(!entry)return false;this.selectedId=id;if(['historical','history'].includes(entry.status as string)&&this.el('measurement-history'))this.el('measurement-history')!.checked=true;this.render();if(notify)this.run(()=>this.onSelect(entry));return true;}
  async refresh(){
   const state=this.getState!(),objectId=state?.object?.object_id,revision=state?.state_revision;if(!objectId)return false;const ticket=++this.ticket;
-  try{const next=await this.api!('/api/measurements?object_id='+encodeURIComponent(objectId));const latest=this.getState!();if(ticket!==this.ticket||latest?.object?.object_id!==objectId||latest?.state_revision!==revision||next.current?.object_id!==objectId)return false;
+  try{const next=await this.api!(('/api/measurements?object_id='+encodeURIComponent(objectId)) as `/api/measurements${string}`);const latest=this.getState!();if(ticket!==this.ticket||latest?.object?.object_id!==objectId||latest?.state_revision!==revision||next.current?.object_id!==objectId)return false;
    this.current=next.current;this.entries=next.entries??next.measurements??[];this.truncated=Boolean(next.truncated);if(this.selectedId&&!this.entries.some(e=>asRecord(e).object_id===this.selectedId))this.selectedId=null;this.checked=new Set([...this.checked].filter(id=>this.entries.some(e=>asRecord(e).object_id===id)));this.render();return true;
   }catch(error){if(ticket===this.ticket&&this.getState!()?.object?.object_id===objectId)this.onError(error);return false;}
  }
