@@ -106,6 +106,12 @@ export class DataProbes {
    if(kind==='profile'&&value.samples?.physical_distance&&!same(value.xy_calibration,state?.object?.xy_calibration))continue;
    if(this[kind]?.object_id!==value.object_id)this.renderResult(value);
   }
+  const recovery=state?.numeric_result_recovery;
+  for(const kind of ['statistics','profile']){
+   if(this[kind])continue;const label=kind==='profile'?'剖面':'统计',target=this.el(kind+'-summary');if(!target)continue;
+   if(recovery?.state==='legacy_missing_refs')target.textContent=`旧会话未保存${label}引用；原科学记录仍保留，未自动重算。`;
+   else if(recovery?.results?.[kind]?.state==='unavailable')target.textContent=`已保存${label}引用未能核对；图像仍可继续使用，未自动重算。`;
+  }
  }
  renderResult(result){
   const value=result?.last_operation??result;if(!value||!['statistics','profile'].includes(value.kind))return false;

@@ -12,6 +12,7 @@ import {validate} from '../lib/runtime/schema.mjs';
 import {figureDisplayParameters,readFigureRecipe,recipeIdentity} from '../ui/image-panel/figure-export.mjs';
 import {readImageMeasurements,writeMeasurementLink} from '../lib/image_measurement_records.mjs';
 import {framePreviewRecipe} from '../ui/image-panel/user-workflow.mjs';
+import {resolveComposition} from '../lib/figure_composer_assets.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const objectId=/^[a-f0-9]{32}$/;
@@ -41,13 +42,15 @@ export class StdioImageClient {
  async close(){if(this.child.exitCode===null)await new Promise(resolve=>{this.child.once('exit',resolve);this.child.stdin.end();});}
 }
 function originalMark(mark){if(!mark.anchor)fail('A legacy mark has no unique scientific anchor; replace it through MCP first');return {...Object.fromEntries(['annotation_id','kind','status','text','note','color','line_width','arrowhead_size','arrow_length','presentation'].filter(k=>mark[k]!==undefined).map(k=>[k,mark[k]])),...mark.anchor};}
-export async function createImagePanel({workspace,python,object_id,port=0,panel_id=null,client:givenClient,journalDirectory}={}){
+export async function createImagePanel({workspace,python,object_id,port=0,panel_id=null,client:givenClient,journalDirectory,numeric_result_refs}={}){
  if(!path.isAbsolute(workspace??'')||!path.isAbsolute(python??'')||!objectId.test(object_id??''))throw new Error('Explicit absolute workspace/python and existing object_id required');
  const token=randomBytes(24).toString('hex'),session=randomBytes(8).toString('hex');
  const journal=journalDirectory??path.join(workspace,'panel-journals',session);mkdirSync(journal,{recursive:true});
  const client=givenClient??new StdioImageClient({workspace,python});let tools,current,png,cleanPng=null,cleanHash=null,renderBaseId=null,sequence=0,selection=null,busy=Promise.resolve(),lastOperation=null,frameIdentity=null,effectiveDisplay=null,displaySourceObjectId=null,stateRevision=0,pendingResult=null,researchObservation=null,selectionTimer=null,selectionPersistenceError=null;
  const sources=new Map(),figureBars=new Map();
  const numericResults={statistics:null,profile:null};
+ const numericRecovery={state:numeric_result_refs===undefined?'not_requested':numeric_result_refs===null?'legacy_missing_refs':'pending',results:{}};
+ const numericResultRefs=()=>Object.fromEntries(['statistics','profile'].map(kind=>{const value=numericResults[kind];return [kind,objectId.test(value?.object_id??'')&&safeId.test(value?.request_id??'')?{object_id:value.object_id,request_id:value.request_id}:null];}));
  let editState={draft_revision:0,dirty:false,gesture_active:false,selection:null,annotation_edit:null,base_object_id:null};
  try{const init=await client.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-local-image-panel',version:'1'}});if(init.error)throw new Error(init.error.message);
  tools=(await client.rpc('tools/list')).result.tools;}catch(error){await client.close();throw error;}const names=new Set(tools.map(t=>t.name));
@@ -110,14 +113,33 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   return {kind:'unknown',label:'来源未声明',basis:'no supported explicit source declaration'};
  };
  const findFrameIdentity=async value=>{const original=value.object_id,declared=value.user_context?.data_meaning,visited=new Set();for(let n=0;n<64;n++){if(value.kind==='frame'){sources.set(original,describeSource(value,declared));return Number.isInteger(value.frame_index)?{frame_object_id:value.object_id,frame_index:value.frame_index,source_object_id:value.source_object_id}:null;}if(value.kind==='tiff_source'){sources.set(original,describeSource(value,declared));return null;}if(value.kind==='compare'||visited.has(value.object_id))return null;visited.add(value.object_id);const id=value.parent_object_id??value.base_object_id??value.source_object_id;if(!objectId.test(id??''))return null;value=(await journalCall('image_info',{object_id:id})).data;}return null;};
- try{await setCurrent(await displayObject(await journalCall('image_info',{object_id})));frameIdentity=await findFrameIdentity(current);}
+ try{
+  await setCurrent(await displayObject(await journalCall('image_info',{object_id})));frameIdentity=await findFrameIdentity(current);
+  if(numeric_result_refs!==undefined&&numeric_result_refs!==null){
+   let validContainer=true;try{fields(numeric_result_refs,['statistics','profile']);}catch{validContainer=false;}
+   for(const kind of ['statistics','profile']){
+    const reference=validContainer?numeric_result_refs[kind]:undefined;
+    if(validContainer&&reference==null){numericRecovery.results[kind]={state:'not_saved'};continue;}
+    try{
+     if(!validContainer)throw new Error('Saved numeric reference container is invalid');fields(reference,['object_id','request_id']);
+     if(!objectId.test(reference.object_id??'')||!safeId.test(reference.request_id??''))throw new Error('Saved numeric reference identity is invalid');
+     const value=(await journalCall('image_info',{object_id:reference.object_id})).data;
+     if(value.object_id!==reference.object_id||value.kind!==kind||value.request_id!==reference.request_id||value.state!=='completed')throw new Error('Saved numeric result does not match its original object, kind and completed request');
+     // Load the immutable record, not a new calculation. The existing panel
+     // grid/calibration checks decide whether it can be shown as current.
+     numericResults[kind]=value;numericRecovery.results[kind]={state:'loaded_saved_record',...reference};
+    }catch(error){numericRecovery.results[kind]={state:'unavailable',reason:error.message};}
+   }
+   numericRecovery.state=Object.values(numericRecovery.results).some(value=>value.state==='unavailable')?'partial':'completed';
+  }
+ }
  catch(error){await client.close();throw error;}
  const observationState=()=>researchObservation?{...structuredClone(researchObservation),current_view_relation:current.object_id===researchObservation.base_object_id?'same_saved_view':'different_saved_view_review_scope'}:null;
  const sourceIdentity=()=>sources.get(current.object_id)??describeSource(current,current.user_context?.data_meaning);
  const draftPersistence=()=>({pending:selectionTimer!==null,error:selectionPersistenceError});
  const draftAck=()=>({schema_version:1,panel_id,object_id:current.object_id,state_revision:stateRevision,edit_state:structuredClone(editState),selection,research_observation:observationState(),draft_persistence:draftPersistence()});
- const state=()=>({schema_version:1,panel_id,numeric_results:numericResults,backend:'external-image-workspace',state_revision:stateRevision,object:publicObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:'unsaved_draft',scientific_operation_complete:true}:null});
- function writeSelection(){if(!current)return;const temp=path.join(journal,`.selection-${randomBytes(6).toString('hex')}.json`);writeJournal(temp,{schema_version:1,object_id:current.object_id,state_revision:stateRevision,frame_identity:frameIdentity,selection,edit_state:editState,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id}:null,last_operation:lastOperation,research_observation:observationState(),updated_utc:new Date().toISOString()});renameSync(temp,path.join(journal,'current-selection.json'));selectionPersistenceError=null;}
+ const state=()=>({schema_version:1,panel_id,numeric_results:numericResults,numeric_result_recovery:numericRecovery,backend:'external-image-workspace',state_revision:stateRevision,object:publicObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:'unsaved_draft',scientific_operation_complete:true}:null});
+ function writeSelection(){if(!current)return;const temp=path.join(journal,`.selection-${randomBytes(6).toString('hex')}.json`);writeJournal(temp,{schema_version:1,object_id:current.object_id,state_revision:stateRevision,frame_identity:frameIdentity,selection,edit_state:editState,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id}:null,last_operation:lastOperation,numeric_result_refs:numericResultRefs(),research_observation:observationState(),updated_utc:new Date().toISOString()});renameSync(temp,path.join(journal,'current-selection.json'));selectionPersistenceError=null;}
  // Only the replaceable gesture handoff snapshot is coalesced. Scientific
  // request/response journals keep their original before-dispatch fsync path.
  function saveSelection({coalesce=false}={}){
@@ -312,6 +334,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   }catch(error){writeJournal(path.join(presentationDirectory,`${body.request_id}.response.json`),{presentation:{request_id:body.request_id,status:'failed',error:error.message}});throw error;}
  };
  const staticFiles=new Map([['/',['index.html','text/html; charset=utf-8']],['/app.mjs',['app.mjs','text/javascript; charset=utf-8']],['/coordinates.mjs',['coordinates.mjs','text/javascript; charset=utf-8']],['/style.css',['style.css','text/css; charset=utf-8']],['/viewer-state.mjs',['viewer-state.mjs','text/javascript; charset=utf-8']],['/viewer-render.mjs',['viewer-render.mjs','text/javascript; charset=utf-8']],['/annotation-presentation.mjs',['annotation-presentation.mjs','text/javascript; charset=utf-8']],['/figure-export.mjs',['figure-export.mjs','text/javascript; charset=utf-8']],['/measurement-workspace.mjs',['measurement-workspace.mjs','text/javascript; charset=utf-8']],['/data-probes.mjs',['data-probes.mjs','text/javascript; charset=utf-8']],['/user-workflow.mjs',['user-workflow.mjs','text/javascript; charset=utf-8']]]);
+ staticFiles.set('/figure-composer.mjs',['figure-composer.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{
@@ -329,8 +352,15 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    }
    if(req.method==='GET'&&url.pathname==='/api/revision'){res.end(JSON.stringify({state_revision:stateRevision,object_id:current.object_id,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id}:null,edit_state:{draft_revision:editState.draft_revision,dirty:editState.dirty,gesture_active:editState.gesture_active}}));return;}
    if(req.method==='GET'&&url.pathname==='/api/present'){res.end(JSON.stringify(presentationReceipt(url.searchParams.get('request_id'))));return;}
-   if(req.method!=='POST'||!['/api/action','/api/present','/api/probe'].includes(url.pathname))fail('Not found',404);if(req.headers.origin!==origin||!req.headers['content-type']?.startsWith('application/json'))fail('Same-origin JSON required',403);
-   let raw='',size=0;for await(const chunk of req){size+=chunk.length;if(size>64*1024)fail('Request exceeds 64 KiB',413);raw+=chunk;}let body;try{body=JSON.parse(raw);}catch{fail('Invalid JSON');}
+   if(req.method!=='POST'||!['/api/action','/api/present','/api/probe','/api/composition/resolve'].includes(url.pathname))fail('Not found',404);if(req.headers.origin!==origin||!req.headers['content-type']?.startsWith('application/json'))fail('Same-origin JSON required',403);
+   const requestLimit=url.pathname==='/api/composition/resolve'?512*1024:64*1024;
+   let raw='',size=0;for await(const chunk of req){size+=chunk.length;if(size>requestLimit)fail('Request exceeds bounded JSON limit',413);raw+=chunk;}let body;try{body=JSON.parse(raw);}catch{fail('Invalid JSON');}
+   if(url.pathname==='/api/composition/resolve'){
+    fields(body,['composition']);
+    const readObject=async id=>(await journalCall('image_info',{object_id:id})).data;
+    const readState=async id=>{const r=await journalCall('image_info',{object_id:id}),saved=await prepareCurrent(r);return {object:saved.object,effective_display:saved.display,frame_identity:await findFrameIdentity(saved.object),clean_png_base64:saved.clean,clean_png_sha256:saved.digest};};
+    const run=busy.then(()=>resolveComposition(body.composition,{readState,readObject}));busy=run.catch(()=>{});res.end(JSON.stringify({panels:await run}));return;
+   }
    if(url.pathname==='/api/probe'){
     fields(body,['expected_object_id','source_object_id','coordinate_space','coordinates','component']);
     if(body.expected_object_id!==current.object_id)fail('Probe belongs to a changed current image',409);

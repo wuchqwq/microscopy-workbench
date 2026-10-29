@@ -70,6 +70,12 @@ test('invalidated grid or calibration clears exact sample readout and its old pl
   assert.equal(f.calls.length,0,'invalidation and restore checks do not launch new science');
  }
 });
+test('legacy or refused numeric recovery is explained in the GUI while valid saved results and the image remain usable',()=>{
+ const f=fixture();f.setState({...f.state,numeric_result_recovery:{state:'legacy_missing_refs',results:{}}});f.instance.restoreSavedResults({statistics:null,profile:null});
+ assert.match(f.elements.get('profile-summary').textContent,/旧会话未保存剖面引用.*未自动重算/);assert.match(f.elements.get('statistics-summary').textContent,/旧会话未保存统计引用.*未自动重算/);
+ f.setState({...f.state,numeric_result_recovery:{state:'partial',results:{statistics:{state:'unavailable'},profile:{state:'loaded_saved_record'}}}});f.instance.restoreSavedResults({profile:profile()});
+ assert.match(f.elements.get('statistics-summary').textContent,/引用未能核对.*图像仍可继续使用/);assert.match(f.elements.get('profile-summary').textContent,/4 点/);assert.equal(f.instance.profile.object_id,B);assert.equal(f.state.object.object_id,A);assert.equal(f.calls.length,0);
+});
 
 test('default host timers retain their browser receiver',()=>{
  const set=globalThis.setTimeout,clear=globalThis.clearTimeout;let scheduled=0,cancelled=0;

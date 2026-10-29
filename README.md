@@ -66,3 +66,6 @@ The science provider owns scientific arrays and contexts. The DM provider owns
 live DM image IDs, sessions and native request state. Exchange explicit versioned
 numeric captures, axes/units/domain and provenance; never share private runtime
 classes or silently fall back after a failed native operation.
+
+Saved images and profiles can be arranged as 2×2 or 1×3 paper figures; see
+[Figure Composer](docs/FIGURE_COMPOSER.md) for export and layout recovery.

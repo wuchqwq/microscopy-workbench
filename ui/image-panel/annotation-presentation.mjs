@@ -161,7 +161,7 @@ export function renderAnnotationsSVG(layout,{width=layout.width,height=layout.he
  const bar=figureLayout.scaleBar;
  if(bar&&Number.isFinite(bar.x)&&Number.isFinite(bar.y)&&Number.isFinite(bar.length)&&bar.length>0){
   const color=colorValue(bar.color,COLORS.white),x=bar.x,y=bar.y,end=x+bar.length,barFont=bounded(bar.font_size,fs*scale,1,256)/scale;
-  content+=`<g data-part="scale-bar" fill="${xml(color)}" stroke="${xml(color)}"><path d="M ${number(x)} ${number(y)} H ${number(end)}" stroke-width="${number(3/scale)}"/><text x="${number((x+end)/2)}" y="${number(y-6/scale)}" text-anchor="middle" stroke="none" font-family="${fontFamily}" font-size="${number(barFont)}">${xml(bar.label??'')}</text></g>`;
+  content+=`<g data-part="scale-bar" fill="${xml(color)}" stroke="${xml(color)}"><path data-part="scale-bar-halo" d="M ${number(x)} ${number(y)} H ${number(end)}" stroke="#11151b" stroke-width="${number(5/scale)}"/><path data-part="scale-bar-line" d="M ${number(x)} ${number(y)} H ${number(end)}" stroke-width="${number(3/scale)}"/><text x="${number((x+end)/2)}" y="${number(y-6/scale)}" text-anchor="middle" stroke="#11151b" stroke-width="${number(2/scale)}" paint-order="stroke fill" stroke-linejoin="round" font-family="${fontFamily}" font-size="${number(barFont)}">${xml(bar.label??'')}</text></g>`;
  }
  return includeRoot?`<svg xmlns="http://www.w3.org/2000/svg" width="${number(width)}" height="${number(height)}" viewBox="0 0 ${number(layout.width)} ${number(layout.height)}" role="img" aria-label="Scientific annotations">${content}</svg>`:content;
 }
