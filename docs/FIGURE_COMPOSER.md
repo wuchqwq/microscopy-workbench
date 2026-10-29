@@ -45,6 +45,10 @@ before sharing private experimental data.
 
 ## Validation
 
+The table below retains the initial PR #1 evidence. A later complete browser
+workflow, scale-bar/tick fixes and backend-result recovery are documented in
+[round-2 research acceptance](RESEARCH_WORKFLOW_ACCEPTANCE.md).
+
 See [migration acceptance](MIGRATION_ACCEPTANCE.md) for the independent runtime,
 startup command, actual profile CSV and baseline browser workflow. Composer
 acceptance uses that public synthetic TIFF, its saved ROI and the same single

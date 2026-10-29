@@ -55,6 +55,13 @@ Start the [researcher inspector](RESEARCHER_DATA_INSPECTOR.md), then expand
    samples and source/result/request references. The last saved profile is
    recoverable after browser refresh while its panel is live.
 
+New Inspector snapshots additionally retain the latest profile and statistics
+references across backend restart. They are reloaded with `image_info`, without
+recomputation, and still require the same scientific grid and calibration.
+Legacy snapshots without references are explicitly reported as unavailable;
+no old receipt is retroactively fabricated. See the
+[actual round-2 restart acceptance](RESEARCH_WORKFLOW_ACCEPTANCE.md).
+
 The probe reuses one read-only Python process per configured ImageWorkspace and
 at most two immutable arrays within 128 MiB. It still validates original object
 and data hashes. It creates neither a new process nor an object/journal entry
