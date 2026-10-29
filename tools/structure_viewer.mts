@@ -3,6 +3,7 @@
 // Documented component APIs: https://3dmol.org/doc/GLViewer.html and
 // https://3dmol.org/doc/GLModel.html. The optional package is BSD-3-Clause.
 import http from 'node:http';
+import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import {randomBytes,timingSafeEqual,createHash} from 'node:crypto';
 import {readFileSync,lstatSync,realpathSync,openSync,writeFileSync,fsyncSync,closeSync,linkSync,unlinkSync} from 'node:fs';
 import path from 'node:path';
@@ -138,7 +139,7 @@ export async function createStructureViewer({structure,assetPath,port=0,onClosed
  return {url:'http://127.0.0.1:'+(server.address() as AddressInfo).port+'/#'+token,token,server,renderer,object_id:snapshot.object_id,snapshot_sha256:snapshotHash,close};
 }
 function writeNew(file:unknown,value:unknown){require(typeof file==='string'&&path.isAbsolute(file),'New absolute connection path required');const temp=file+'.'+randomBytes(8).toString('hex')+'.tmp',fd=openSync(temp,'wx');try{writeFileSync(fd,JSON.stringify(value));fsyncSync(fd);}finally{closeSync(fd);}try{linkSync(temp,file);}finally{unlinkSync(temp);}}
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+if(isDirectInvocation(import.meta.url)){
  const args:Record<string,string>={};for(let i=2;i<process.argv.length;i+=2){const key=process.argv[i],value=process.argv[i+1];require(['--snapshot','--asset','--connection-file','--port'].includes(key)&&value&&!Object.hasOwn(args,key),'Usage: --snapshot ABS_JSON --asset ABS_3DMOL_BUNDLE --connection-file ABS_NEW_JSON [--port 0]');args[key]=value;}
  const structure:unknown=JSON.parse(ordinary(args['--snapshot'],2*1024*1024).toString('utf8'));let viewer:Awaited<ReturnType<typeof createStructureViewer>>|undefined;
  try{viewer=await createStructureViewer({structure,assetPath:args['--asset'],port:Number(args['--port']??0),onClosed:record=>writeNew(args['--connection-file']+'.closed.json',record)});writeNew(args['--connection-file'],{schema_version:1,port:(viewer.server.address() as AddressInfo).port,token:viewer.token,pid:process.pid,object_id:viewer.object_id,snapshot_sha256:viewer.snapshot_sha256,renderer:viewer.renderer});}

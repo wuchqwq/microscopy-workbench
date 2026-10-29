@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawn,spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from 'node:fs';
+import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -32,12 +32,17 @@ function pythonRun(python,code,args=[]){
 }
 
 class Client{
- constructor(root,config,cwd){
+ constructor(root,config,cwd,{canonicalizeLegacyEntry=false}={}){
   const manifest=JSON.parse(readFileSync(path.join(root,'.mcp.json'),'utf8')).mcpServers.microscopy_workbench;
   assert.equal(manifest.command,'node');assert.equal(manifest.cwd,'.');
   const entry=path.resolve(root,manifest.args[0]);
   assert.ok(entry.startsWith(path.resolve(root)+path.sep));assert.ok(existsSync(entry));
-  this.child=spawn(process.execPath,[entry,...manifest.args.slice(1)],{cwd,stdio:['pipe','pipe','pipe'],windowsHide:true,env:{...process.env,MICROSCOPY_PLUGIN_CONFIG:config,MICROSCOPY_PANEL:'1',MICROSCOPY_EXECUTION_OBSERVABILITY:'1'}});
+  // Frozen JS uses string-equality argv/ESM direct-entry detection. On macOS
+  // os.tmpdir() can be /var/... while Node resolves ESM URLs as /private/var/...
+  // Launch the unmodified frozen baseline by its canonical path; the candidate
+  // stays on its original alias path and must independently prove the fix.
+  const launchEntry=canonicalizeLegacyEntry?realpathSync.native(entry):entry;
+  this.child=spawn(process.execPath,[launchEntry,...manifest.args.slice(1)],{cwd,stdio:['pipe','pipe','pipe'],windowsHide:true,env:{...process.env,MICROSCOPY_PLUGIN_CONFIG:config,MICROSCOPY_PANEL:'1',MICROSCOPY_EXECUTION_OBSERVABILITY:'1'}});
   this.next=0;this.pending=new Map();this.stderr='';let buffer='';
   this.child.stderr.on('data',chunk=>this.stderr=(this.stderr+chunk).slice(-4096));
   this.child.stdout.on('data',chunk=>{buffer+=chunk;let newline;while((newline=buffer.indexOf('\n'))>=0){
@@ -87,7 +92,7 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   const originalSource=hash(source);
   // An unrelated stable cwd catches package-relative path mistakes without
   // making a detached Panel inherit the directory this test must remove.
-  const old=new Client(frozen,config,tmpdir());clients.push(old);await old.rpc('initialize');
+  const old=new Client(frozen,config,tmpdir(),{canonicalizeLegacyEntry:true});clients.push(old);await old.rpc('initialize');
   const schema=(await old.rpc('tools/list')).result.tools;
   writeFileSync(path.join(directory,'frozen-tool-schema.json'),JSON.stringify(schema,null,2));
   const opened=await old.tool('image_open',{request_id:'frozen-open',source_path:source});

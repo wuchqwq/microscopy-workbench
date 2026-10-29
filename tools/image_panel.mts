@@ -1,6 +1,7 @@
 // Optional loopback gesture surface over the real image_* stdio MCP server.
 // It owns no scientific state: every saved revision is an existing tool object.
 import http from 'node:http';
+import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import type {ChildProcessWithoutNullStreams} from 'node:child_process';
 import type {AddressInfo} from 'node:net';
 import type {PanelMetadata as Metadata,PanelClient,ImageToolReply,PanelState,PanelSelection,PanelEditState,PanelFrameIdentity,PanelDraftAcknowledgment} from '../lib/image_panel_contracts.mjs';
@@ -426,7 +427,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  try{await new Promise<void>((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});saveSelection();}catch(caught){const error=caught as Error&{status?:number};await client.close();throw error;}
  return {server,client,url:`http://127.0.0.1:${(server.address() as AddressInfo).port}/#${token}`,token,journal,state,async close(){try{await new Promise<void>(resolve=>server.close(resolve as (error?:Error)=>void));saveSelection();}finally{if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}await client.close();}}};
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+if(isDirectInvocation(import.meta.url)){
  const options:Record<string,string>={};for(let i=2;i<process.argv.length;i+=2){const key=process.argv[i],value=process.argv[i+1];if(!(['--workspace','--python','--object','--port','--selection','--connection-file','--panel-id'] as readonly unknown[]).includes(key)||!value)throw new Error('Usage: node tools/image_panel.mjs --workspace ABS --python ABS --object ID [--port 0]; --selection ABS_CURRENT_SELECTION_JSON');options[key.slice(2)]=value;}
  if(options.selection){if(!path.isAbsolute(options.selection)||!existsSync(options.selection))throw new Error('Existing absolute selection record required');process.stdout.write(readFileSync(options.selection));}
  else {if(options['connection-file']&&(!path.isAbsolute(options['connection-file'])||!objectId.test(options['panel-id']??'')||existsSync(options['connection-file'])))throw new Error('Absolute new connection file and random panel ID required');const panel=await createImagePanel({workspace:options.workspace,python:options.python,object_id:options.object,port:Number(options.port??0),panel_id:options['panel-id']??null});if(options['connection-file']){if(!path.isAbsolute(options['connection-file'])||!objectId.test(options['panel-id']??''))throw new Error('Absolute new connection file and random panel ID required');const temporary=options['connection-file']+'.'+randomBytes(8).toString('hex')+'.tmp';try{writeJournal(temporary,{schema_version:1,panel_id:options['panel-id'],port:(panel.server.address() as AddressInfo).port,token:panel.token,pid:process.pid});linkSync(temporary,options['connection-file']);}finally{if(existsSync(temporary))unlinkSync(temporary);}}process.stdout.write(JSON.stringify({url:panel.url,selection_path:path.join(panel.journal,'current-selection.json')})+'\n');let closing=false;const close=async()=>{if(!closing){closing=true;await panel.close();}};process.on('SIGINT',close);process.on('SIGTERM',close);}
