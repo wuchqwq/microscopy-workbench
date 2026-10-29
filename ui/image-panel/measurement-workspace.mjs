@@ -40,7 +40,7 @@ export function inspectorDetails(current={}){
  const sourcePath=typeof source==='string'?source:source?.path??current.source_path;
  const dimensions=Array.isArray(current.shape_yx)?current.shape_yx.join(' × ')+' (Y × X)':'未知';
  const meaning=current.provenance?.data_meaning??current.user_context?.data_meaning??current.data_meaning;
- const sourceKind=['synthetic','synthetic_demo','合成演示'].includes(meaning)?'合成数据（显式声明）':({tiff:'独立 TIFF 固定来源',native_capture:'DM 原生数值捕获',imported_capture:'导入的受控数值捕获',unknown:'未知'})[current.source_kind]??current.source_kind??current.provenance_type??source?.kind??(sourcePath?'TIFF 固定来源；实验/模拟含义未声明':'未知');
+ const sourceKind=['synthetic','synthetic_demo','合成演示'].includes(meaning)?'合成数据（显式声明）':({tiff:'独立 TIFF 固定来源',dm4:'独立 DM4 固定来源；外部读取',native_capture:'DM 原生数值捕获',imported_capture:'导入的受控数值捕获',unknown:'未知'})[current.source_kind]??current.source_kind??current.provenance_type??source?.kind??(sourcePath?'文件固定来源；实验/模拟含义未声明':'未知');
  const domain=current.domain??current.array_domain;
  const domainText=({source_pixels:'实空间 / 原图像素坐标',spatial_pixels:'实空间 / 原图像素坐标',frequency_cycles_per_pixel:'倒空间 / cycles/pixel',frequency:'倒空间 / 原 FFT 频率',reciprocal:'倒空间',source_array_indices:'数值数组索引；物理域见标定',real_space:'实空间',reciprocal_space:'倒空间'})[domain]??domain??'未知';
  return [
