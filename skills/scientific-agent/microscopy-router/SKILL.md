@@ -43,6 +43,8 @@ whereas an unqualified `analysis_read` reads current references.
 
 - For viewing, ROI, local FFT, display or a corrected scale/point, read
   [microscopy-observe-revise](../microscopy-observe-revise/SKILL.md).
+- For automated multiscale regions, FFT peak tables and repeatable candidate
+  comparison, read [microscopy-automation](../microscopy-automation/SKILL.md).
 - For a CIF/XYZ, zone axis, reflection hypothesis or simulation comparison, read
   [crystallography-compare](../crystallography-compare/SKILL.md).
 

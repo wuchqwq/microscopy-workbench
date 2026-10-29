@@ -69,6 +69,8 @@ Annotations remain hypotheses, caller-confirmed statements or retracted marks.
 Short cyan arrows are display defaults; orange may distinguish an explicitly
 proposed second candidate, never a detected phase. Export numerical NPY and
 available PNG/parameters/provenance to a new directory with `image_export`.
+Its parent must already exist; do not assume an `exports` folder exists or fix a
+missing parent by repeatedly changing only the new directory's basename.
 
 Save request IDs first; recover through `image_result` after a stopped wait.
 See [validated call shapes](examples.json). Example scales are synthetic and

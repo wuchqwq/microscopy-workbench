@@ -1,0 +1,4 @@
+interface:
+  display_name: "Microscopy automation"
+  short_description: "Traceable local FFTs, peaks and candidate comparisons"
+  default_prompt: "Use $microscopy-automation to inspect this microscopy image, choose local FFT windows and compare explicit candidates while preserving revisions."

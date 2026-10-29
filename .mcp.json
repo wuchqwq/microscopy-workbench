@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "microscopy_workbench": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["tools/plugin_server.mjs"],
+      "cwd": ".",
+      "env_vars": ["MICROSCOPY_PLUGIN_CONFIG", "MICROSCOPY_PYTHON", "MICROSCOPY_IMAGE_WORKSPACE", "MICROSCOPY_CONTEXT_WORKSPACE", "MICROSCOPY_STRUCTURE_WORKSPACE", "MICROSCOPY_STRUCTURE_PYTHON", "MICROSCOPY_STRUCTURE_VIEWER_ASSET"],
+      "startup_timeout_sec": 20,
+      "tool_timeout_sec": 300
+    }
+  }
+}

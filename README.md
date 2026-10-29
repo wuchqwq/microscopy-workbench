@@ -19,6 +19,12 @@ Current [client setup](docs/CLIENT_SETUP.md) includes Windows and macOS/Linux
 configuration; the [Agent guide](README.agent.md) defines the independent tool
 boundary. Do not use the old combined DM registrar for this package.
 
+For repeatable Agent use, the [local automation plugin](docs/AUTOMATION_PLUGIN.md)
+packages the same MCP server with installable Skills. It adds bounded multiscale
+ROI/FFT batches, numerical peak observations, saved measurements and explicit
+candidate comparison, with GUI review and original-request recovery. It does not
+require a model for ordinary GUI use or claim automatic phase/defect identification.
+
 ## Install and test
 
 Use Node >=18 and a separate Python >=3.10 environment. Install
