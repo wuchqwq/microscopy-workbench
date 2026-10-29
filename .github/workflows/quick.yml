@@ -81,6 +81,10 @@ jobs:
       - run: python -B tests/image_spatial_atlas_test.py
       - run: python -B tests/image_domain_compare_test.py
       - run: python -B tests/image_feature_field_test.py
+      - run: python -B tests/image_spatial_domains_test.py
+      - run: npm run test:spatial-domains
+        env:
+          MICROSCOPY_PYTHON: python
       - run: node --test dist/tests/domain-measurement-binding.test.mjs
         env:
           MICROSCOPY_RUN_DOMAIN_BINDING_TEST: '1'

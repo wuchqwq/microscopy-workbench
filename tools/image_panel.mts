@@ -18,6 +18,7 @@ import {mkdirSync,writeFileSync,readFileSync,existsSync,openSync,fsyncSync,close
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import type {Selection} from '../ui/image-panel/coordinates.mjs';
+import {validateSpatialDomainEvidence} from '../ui/image-panel/evidence-contracts.mjs';
 import {selectionRectangle} from '../ui/image-panel/coordinates.mjs';
 import {annotationPresentation} from '../lib/image_workspace.mjs';
 import {validate} from '../lib/runtime/schema.mjs';
@@ -74,8 +75,9 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  tools=(((await client.rpc('tools/list')) as Metadata).result as Metadata).tools as Metadata[];}catch(caught){const error=caught as Error&{status?:number};await client.close();throw error;}const names=new Set(tools.map(t=>t.name));
  const journalCall=async(name:string,args:Metadata):Promise<NativeImageReply>=>{if(!names.has(name))fail('Tool unavailable: '+name);const write=name!=='image_info'&&name!=='image_result';if(write){args={...args,request_id:`panel-${session}-${++sequence}`};writeJournal(path.join(journal,`${args.request_id}.request.json`),{name,arguments:args});lastOperation={state:'submitted',tool:name,request_id:args.request_id,object_id:args.object_id};saveSelection();}try{const r=(await client.tool(name,args)) as NativeImageReply;if(write)writeJournal(path.join(journal,`${args.request_id}.response.json`),{object_id:r.data.object_id,request_id:args.request_id,state:r.data.state});return r;}catch(caught){const error=caught as Error&{status?:number};if(write)error.message+=` Original request_id=${args.request_id}; query image_result with this ID. Do not automatically repeat the operation.`;throw error;}};
  const displayObject=async(r:NativeImageReply):Promise<NativeImageReply>=>{
-  if((['spatial_atlas','local_signature_compare','feature_field'] as readonly unknown[]).includes(r.data.kind)){
+  if((['spatial_atlas','local_signature_compare','feature_field','spatial_field','domain_map'] as readonly unknown[]).includes(r.data.kind)){
    const evidence=r.data;
+   if(evidence.kind==='spatial_field'||evidence.kind==='domain_map')validateSpatialDomainEvidence(evidence);
    // A comparison may explicitly use an unverified R2 reference: that row
    // has no overview, but other saved rows can still have an exact FFT view.
    // Show one such view without changing the saved not-comparable evidence.
@@ -83,7 +85,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    const displayId=objectId.test(((evidence.overview_object_id??'' as string) as string))?evidence.overview_object_id:fallback;
    if(!objectId.test(((displayId??'' as string) as string)))fail('Spatial evidence has no saved source overview or observation view');
    const shown=await journalCall('image_info',{object_id:displayId});
-   return {...shown,domainEvidence:evidence,domainPng:evidence.kind==='feature_field'?r.png??null:null};
+   return {...shown,domainEvidence:evidence,domainPng:(['feature_field','spatial_field','domain_map'] as readonly unknown[]).includes(evidence.kind)?r.png??null:null};
   }
   if(r.data.kind==='joint_observations'){
    const evidence=r.data,frame=(evidence.frame_observations as Metadata[]|undefined)?.find(row=>row.frame_index===evidence.reference_index&&row.view_object_id);

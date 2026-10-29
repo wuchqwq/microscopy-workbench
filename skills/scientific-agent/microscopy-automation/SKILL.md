@@ -79,6 +79,45 @@ angles as hypotheses. Do not interpolate unmeasured pixels or call a feature
 field a phase map. Save the `field` context reference, export JSON/CSV/PNG with
 ordinary `image_export`, and reopen the saved field without FFT.
 
+## Sample a multiscale field and inspect candidate domains
+
+Use `image_spatial_field` when more than eight isolated windows are needed.
+Choose an explicit source-pixel sampling `rect`, square `window_sizes`,
+`stride_xy`, `max_windows` and pixel/physical coordinate domain. The bounded
+plan uses ordinary atlas batches; it rejects excess work before child FFTs,
+never silently clips/truncates the grid. Read the recorded full-window support,
+overlap, costs, FFT and measurement references. A larger window improves
+frequency sampling but can mix domains. Missing scale remains useful pixel data.
+
+Call `image_domain_map` with that saved field, an explicit positive tolerance
+in the field's reciprocal units and finite candidate angles. Read its zero-angle
+orientation-sensitive edge separately from the allowed-rotation geometry
+comparison. A rotated compatible lattice signature must not merge different
+orientations into one domain. Full antipodal vector assignments, unmatched
+families, unknown symmetry, mixed/low-signal windows and alternative angles
+remain evidence. Do not match by peak rank or region label, fit a hidden mirror
+or scale, or turn a connected signature candidate into a phase/twin/defect label.
+
+Open the saved result in Panel, inspect source supports, boundary **bands**,
+unknown mask and corresponding saved ROI/FFT. Bands and stride do not establish
+boundary localization precision. Unsampled locations remain unclassified;
+overlapping scales are correlated sensitivity observations. If a narrow region
+has no pure sampling window, report that limitation rather than absence.
+
+For a committed human peak correction, use `image_remeasure`, then
+`image_spatial_field` with unchanged sampling/settings, `previous_field_id` and
+sample-indexed `measurement_overrides`. Each override supplies the complete
+measurement list for that sample. Rebuild only the derived domain result; the
+old FFT objects remain unchanged. Save exact `experiment`, `spatial_field` and
+`domains` references in the named AnalysisContext, and export JSON/CSV/support
+NPY/PNG with `image_export`. Reconnection reads the context and original request;
+it does not repeat the sampling. See
+[multiscale details](../../../docs/MULTISCALE_DOMAINS.md).
+
+F1a supplies bounded observation and candidate relations. Active next-ROI
+selection, GPA and defect/twin inference are later capabilities, not implicit
+steps in this tool or reasons to force every image through the same sequence.
+
 ## Compare and return for correction
 
 For a reconstructed sequence, use `image_sequence_create` with 2–8 explicitly

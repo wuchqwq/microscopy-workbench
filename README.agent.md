@@ -1,5 +1,14 @@
 # Agent guide: independent microscopy science
 
+For [multiscale structural fields](docs/MULTISCALE_DOMAINS.md), use
+`image_spatial_field` with explicit sizes, stride and a window budget, then
+`image_domain_map` with a sourced reciprocal tolerance and explicit rotation
+hypotheses. Review saved candidate supports/unknowns in the Panel. Save the exact
+experiment, `spatial_field` and `domains` references in AnalysisContext; use
+`previous_field_id` plus committed measurement overrides to revise observations
+while preserving unchanged spectra. These tools provide candidate geometry,
+not phase or defect confirmation.
+
 Use this provider on Windows, macOS or Linux without DM/GMS or the old repository.
 Start with [client setup](docs/CLIENT_SETUP.md). Discover the actual `image_*`,
 optional `structure_*` and context tools from this connection. Missing optional

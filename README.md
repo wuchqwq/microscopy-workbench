@@ -31,6 +31,13 @@ sparse map. R2 sequence correspondences can supply the same evidence interface.
 Open a sampled window in the Panel, revise a peak, and reuse its unchanged FFT.
 See the [method baseline](docs/R3_METHOD_BASELINE.md) and [actual acceptance](docs/R3_ACCEPTANCE.md).
 
+For bounded multiscale spatial analysis, [F1a domain tools](docs/MULTISCALE_DOMAINS.md)
+compose up to 32 saved windows in ordinary atlas batches, compare neighboring
+full reciprocal signatures, and return candidate domain supports, boundary bands
+and unknown masks. Review each sampled ROI/FFT in the existing Panel, revise a
+measurement and recover the named analysis without repeating unchanged FFTs.
+These descriptive candidates retain their source, scale, calibration and limits.
+
 ## Build and run
 
 Source checkout (Node >=18): `npm ci`, `npm run typecheck`, `npm run build`.

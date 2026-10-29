@@ -7,6 +7,19 @@ const object=(properties: Readonly<Record<string,ArgumentSchema>>): ToolInputSch
 const make=(name: string,description: string,properties: Readonly<Record<string,ArgumentSchema>>,required: readonly string[]): ToolDefinition=>({name,description,inputSchema:{...object({...properties,request_id:{type:'string',pattern:'^[A-Za-z0-9_-]{1,64}$',description:'Save before submission; query image_result with the same ID after a timeout. Never automatically resubmit an unknown operation.'}}),required:[...required,'request_id']}});
 const index: ArgumentSchema={type:'integer',minimum:0,maximum:7};
 export const domainTools: ToolDefinition[]=[
+ make('image_spatial_field','Sample a bounded multiscale source-pixel grid through existing spatial atlases (at most8 windows per batch). Saves every window, scale, FFT, peak and measurement reference; no inferred phases or unsampled labels. Rejects an over-budget grid before scientific work. Select the same immutable source and previous_field_id to revise committed measurements and reuse unchanged FFTs.',{
+  object_id:id,rect:{type:'array',minItems:4,maxItems:4,items:{type:'integer',minimum:0}},
+  window_sizes:{type:'array',minItems:1,maxItems:4,items:{type:'integer',minimum:4,maximum:1024}},
+  stride_xy:{type:'array',minItems:2,maxItems:2,items:{type:'integer',minimum:1,maximum:4096}},
+  max_windows:{type:'integer',minimum:1,maximum:32},coordinate_domain:{type:'string',enum:['pixel','physical']},
+  window:{type:'string',enum:['none','hann']},subtract_mean:{type:'boolean'},max_peaks:{type:'integer',minimum:1,maximum:16},max_size:{type:'integer',minimum:256,maximum:1024},
+  peak_options:object({min_separation_bins:{type:'integer',minimum:1,maximum:32},exclude_dc_radius_bins:{type:'integer',minimum:0,maximum:64},threshold_rel:{type:'number',exclusiveMinimum:0,maximum:1},refinement:{type:'string',enum:['none','quadratic']}}),
+  previous_field_id:id,measurement_overrides:{type:'array',minItems:1,maxItems:32,items:{...object({sample_index:{type:'integer',minimum:0,maximum:31},measurement_object_ids:{type:'array',minItems:1,maxItems:16,items:id}}),required:['sample_index','measurement_object_ids']}},
+ },['object_id','window_sizes','stride_xy','max_windows','coordinate_domain']),
+ make('image_domain_map','Derive candidate connected structural domains and finite boundary support bands from a saved multiscale spatial field. Full antipodal reciprocal-vector geometry is matched at fixed scale: zero rotation tests orientation-sensitive agreement, while separate explicit rotation hypotheses test lattice-geometry compatibility. Missing/mixed/ambiguous samples stay unknown. No point group, phase, twin, dislocation or boundary precision is inferred. JSON/CSV/PNG export and saved-window GUI review are available.',{
+  object_id:id,tolerance:{type:'number',exclusiveMinimum:0,description:'Explicit vector-distance threshold in cycles/pixel or cycles/nm according to the saved field; not a confidence interval.'},
+  angles_degrees:{type:'array',minItems:1,maxItems:64,items:{type:'number',minimum:-180,maximum:180}},max_size:{type:'integer',minimum:256,maximum:1024},
+ },['object_id','tolerance','angles_degrees']),
  make('image_feature_field','Build a versioned sparse structural feature field from a saved spatial atlas, R2 joint observations or local signature comparison; no FFT is recomputed. Variable local reciprocal families, geometric periods and projected direction relations retain source-pixel windows, calibration, quality/ambiguity masks and original measurements. A heatmap shows sampled windows only, never phase labels, dense interpolation or learned embeddings. image_export saves JSON/CSV/PNG with provenance.',{
   object_id:id,coordinate_domain:{type:'string',enum:['pixel','physical']},display_feature:{type:'string',enum:['family_count','shortest_period']},max_size:{type:'integer',minimum:256,maximum:1024},
  },['object_id','coordinate_domain','display_feature']),
@@ -20,11 +33,11 @@ export const domainTools: ToolDefinition[]=[
   object_id:id,reference_index:index,target_indices:{type:'array',minItems:1,maxItems:7,items:index},angles_degrees:{type:'array',minItems:1,maxItems:64,items:{type:'number',minimum:-180,maximum:180}},coordinate_domain:{type:'string',enum:['pixel','physical']},tolerance:{type:'number',exclusiveMinimum:0,description:'Explicit distance tolerance in cycles/pixel for pixel mode or cycles/nm for physical mode; not uncertainty or a fitted scale.'},
  },['object_id','reference_index','angles_degrees','coordinate_domain','tolerance']),
 ];
-export const domainActions={image_spatial_atlas:'spatial_atlas',image_local_signature_compare:'local_signature_compare',image_feature_field:'feature_field'};
+export const domainActions={image_spatial_atlas:'spatial_atlas',image_local_signature_compare:'local_signature_compare',image_feature_field:'feature_field',image_spatial_field:'spatial_field',image_domain_map:'domain_map'};
 export const domainRecipes=Object.fromEntries(domainTools.map((tool): readonly [string,CompositionRecipe]=>[tool.name,{
  inputs:['Immutable frame/atlas/joint-evidence references with authoritative source/array/calibration hashes','Explicit ROI or finite rotation hypotheses and tolerance; pre-saved request identity'],
  outputs:['Immutable local reflection evidence and descriptive comparison; saved GUI views and numeric CSV/JSON','Unchanged source arrays and FFT identities; original-request recovery'],
  kind:'bounded-scientific-composition-write',
  gates:['Existing image-provider journal/dependency hashes remain authoritative','Physical comparison requires valid sourced signed XY calibration; no inferred units or material identity','A shared FFT conjugate pair or neighboring frame is not independent validation'],
- budgets:['1..8 ROIs; aggregate FFT <=4194304 pixels; <=16 peaks per ROI; <=64 explicit rotation hypotheses','No unknown-operation replay; partial child receipts remain queryable'],
+ budgets:['At most8 ROIs per atlas batch; multiscale field <=32 windows and aggregate FFT <=4194304 pixels; <=16 peaks per ROI; <=64 explicit rotation hypotheses','No unknown-operation replay; partial child receipts remain queryable'],
 }]));
