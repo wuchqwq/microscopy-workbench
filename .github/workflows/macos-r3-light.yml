@@ -1,0 +1,65 @@
+# One-time macOS qualification of the exact frozen post-TypeScript main.
+# Not a real-specimen, native plugin-discovery, or the owner's local-Mac test.
+name: macOS lightweight R3 baseline qualification
+on:
+  push:
+    branches:
+      - validation/macos-r3-349f201
+    paths:
+      - .github/workflows/macos-r3-light.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  macos-r3:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 349f2012b3a00c247f394e682f32b0f87ad64f40
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Assert exact science baseline and identify macOS runner
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "349f2012b3a00c247f394e682f32b0f87ad64f40"
+          uname -m
+          sw_vers
+          node --version
+          python --version
+      - name: Build strict TypeScript and run compiled Node tests
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run typecheck
+          npm test
+      - name: Install independent numerical Python
+        run: python -m pip install -r requirements-images.txt
+      - name: Numerical R3/float32 tests
+        run: |
+          python -B tests/image_float_tiff_test.py
+          python -B tests/image_spatial_atlas_test.py
+          python -B tests/image_domain_compare_test.py
+          python -B tests/image_feature_field_test.py
+      - name: Real MCP to Python, FFT, measurement, original request recovery and Panel HTTP
+        env:
+          MICROSCOPY_PYTHON: python
+        run: npm run test:science
+      - name: Relocated compiled plugin reads frozen JS workspace without FFT replay
+        env:
+          MICROSCOPY_PYTHON: python
+        run: npm run test:compiled:compat
+      - name: R3 feature field through actual compiled MCP / Python / Panel
+        env:
+          MICROSCOPY_PYTHON: python
+          MICROSCOPY_SMOKE_OUTPUT: ${{ runner.temp }}/macos-r3-field
+        run: |
+          npm run test:field
+          python -c "import json,os; p=os.path.join(os.environ['MICROSCOPY_SMOKE_OUTPUT'],'report.json'); r=json.load(open(p)); assert r['result']=='PASS',r; print('R3 actual MCP field PASS; sampled windows, numerical DFT, origin/FFT identity, Panel and recovery checked')"
