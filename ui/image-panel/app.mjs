@@ -6,6 +6,7 @@ import {buildFigureBundle,downloadBlob,makeFigureRecipe,readFigureRecipe,figureS
 import {MeasurementWorkspace,requiresMeasurementJump} from './measurement-workspace.mjs';
 import {DataProbes} from './data-probes.mjs';
 import {UserActionHistory,SavedViewHistory,workflowScope,selectionActionReason,measurementLabel} from './user-workflow.mjs';
+import {makeImageSlot,makeProfileSlot,validateComposition,renderCompositionSVG,buildCompositionBundle} from './figure-composer.mjs';
 const $=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d'),baseCanvas=$('base-canvas'),baseContext=baseCanvas.getContext('2d',{willReadFrequently:true}),marksCanvas=$('marks-canvas'),marksContext=marksCanvas.getContext('2d'),stage=$('image-stage'),viewport=$('viewport');
 const key='mcp-dm-panel-token',hash=location.hash.slice(1);if(hash){sessionStorage.setItem(key,hash);history.replaceState(null,'',location.pathname);}const token=sessionStorage.getItem(key);
 let state,image,basePixels,draft=null,drag=null,editCoordinates=null,busy=false,cleanBase=false,selectedId='',spaceDown=false,pending=null,orphanedDraft=false;
@@ -323,6 +324,34 @@ $('import-figure').onchange=guarded(async()=>{const file=$('import-figure').file
 $('load-recipe-text').onclick=guarded(()=>importRecipeText($('recipe-text').value));
 $('frame').onkeydown=event=>{if(event.key==='Enter')$('set-frame').onclick();};
 $('view-back').onclick=guarded(()=>navigateSavedView(savedViews.target(-1)));
+let composition={schema:'microscopy-figure-composition-v1',layout:'2x2',font_pt:8,slots:[]},compositionPanels=[],compositionRevision=0,compositionPreviewURL=null,compositionWorking=false;
+const compositionCopy=value=>JSON.parse(JSON.stringify(value));
+function compositionPreview(){
+ if(compositionPreviewURL){URL.revokeObjectURL(compositionPreviewURL);compositionPreviewURL=null;}
+ $('composer-preview').hidden=true;const required=composition.layout==='2x2'?4:3;
+ $('composer-export').disabled=compositionWorking||composition.slots.length!==required;
+ if(composition.slots.length!==required){$('composer-status').textContent=`已加入 ${composition.slots.length} 幅；此布局需要 ${required} 幅，不会静默丢弃多余子图。`;return;}
+ try{const result=renderCompositionSVG({recipe:composition,panels:compositionPanels.map((panel,i)=>({...panel,slot:composition.slots[i]}))});compositionPreviewURL=URL.createObjectURL(new Blob([result.svg],{type:'image/svg+xml'}));$('composer-preview').src=compositionPreviewURL;$('composer-preview').hidden=false;$('composer-status').textContent='预览使用已保存资产；布局、编号与字号不改变科学数组。';}
+ catch(error){$('composer-export').disabled=true;$('composer-status').textContent='预览未完成：'+error.message;}
+}
+function renderComposition(){
+ $('composer-layout').value=composition.layout;$('composer-font').value=composition.font_pt;const list=$('composer-slots');list.replaceChildren();
+ composition.slots.forEach((slot,i)=>{const row=document.createElement('li'),label=document.createElement('span'),title=document.createElement('input');label.textContent=String.fromCharCode(97+i)+` · ${slot.kind==='profile'?'保存剖面':'保存图像'}`;title.value=slot.title??'';title.maxLength=80;title.setAttribute('aria-label',`子图 ${String.fromCharCode(97+i)} 标题`);title.oninput=()=>{slot.title=title.value;compositionRevision++;compositionPreview();};row.append(label,title);
+  for(const [text,offset]of [['↑',-1],['↓',1],['移除',0]]){const button=document.createElement('button');button.textContent=text;button.type='button';button.disabled=compositionWorking||offset!==0&&(i+offset<0||i+offset>=composition.slots.length);button.setAttribute('aria-label',`${text}子图 ${String.fromCharCode(97+i)}`);button.onclick=()=>{if(compositionWorking)return;if(offset){[composition.slots[i],composition.slots[i+offset]]=[composition.slots[i+offset],composition.slots[i]];[compositionPanels[i],compositionPanels[i+offset]]=[compositionPanels[i+offset],compositionPanels[i]];}else{composition.slots.splice(i,1);compositionPanels.splice(i,1);}compositionRevision++;renderComposition();};row.append(button);}list.append(row);
+ });$('composer-add-image').disabled=compositionWorking||composition.slots.length>=4;$('composer-add-profile').disabled=compositionWorking||composition.slots.length>=4||!dataProbes.profile;compositionPreview();
+}
+function compositionGuard(callback){return async()=>{if(compositionWorking)return;compositionWorking=true;renderComposition();try{await callback();}catch(error){$('composer-status').textContent='图版未完成：'+error.message;message(error.message,true);}finally{const finalMessage=$('composer-status').textContent;compositionWorking=false;renderComposition();$('composer-status').textContent=finalMessage;}};}
+const composerButton=document.createElement('button');composerButton.id='composer-options';composerButton.textContent='组合图版';composerButton.title='复用保存图像和剖面，制作 2×2 或 1×3 图版';$('figure-options').parentNode?.append?.(composerButton);composerButton.onclick=()=>{renderComposition();$('composer-dialog').showModal();};
+$('composer-layout').onchange=()=>{if(compositionWorking)return;composition.layout=$('composer-layout').value;compositionRevision++;compositionPreview();};$('composer-font').oninput=()=>{if(compositionWorking)return;composition.font_pt=Number($('composer-font').value);compositionRevision++;compositionPreview();};
+$('composer-add-image').onclick=compositionGuard(async()=>{
+ if(dirty()||busy||drag||pending||state.pending_result)throw new Error('先保存当前显示和标注、结束手势，再加入保存版本');
+ const captured=compositionCopy(state),revision=historyDraft.revision,id=state.object.object_id,ticket=compositionRevision;busy=true;diagnostics();$('composer-status').textContent='正在读取保存版本的干净底图；不重算 FFT 或测量…';
+ try{await draftPublisher;const result=await api('/api/action',{expected_object_id:id,draft_revision:revision,action:'figure-base',params:{}});if(id!==state.object.object_id||historyDraft.revision!==revision||drag||ticket!==compositionRevision)throw new Error('捕获期间视图或图版已变化；没有覆盖新草稿，请完成后重试');const slot=makeImageSlot(captured,figureOptions(),result.figure_base,$('composer-title').value||savedViews.entries[savedViews.index]?.role||'图像');composition.slots.push(slot);compositionPanels.push({slot,state:captured,clean_png_base64:result.figure_base.clean_png_base64,scale_bar:slot.scale_bar});compositionRevision++;$('composer-title').value='';renderComposition();}
+ finally{busy=false;diagnostics();}
+});
+$('composer-add-profile').onclick=compositionGuard(async()=>{if(!dataProbes.profile)throw new Error('先在当前图像读取有效剖面；旧标定的曲线不能作为当前剖面加入');const profile=compositionCopy(dataProbes.profile),slot=makeProfileSlot(profile,$('composer-title').value||'强度剖面');composition.slots.push(slot);compositionPanels.push({slot,profile});compositionRevision++;$('composer-title').value='';renderComposition();});
+$('composer-export').onclick=compositionGuard(async()=>{const saved=compositionCopy(composition),ticket=compositionRevision;validateComposition(saved);$('composer-status').textContent='正在只读核对全部保存资产并导出…';const resolved=await api('/api/composition/resolve',{composition:saved});if(ticket!==compositionRevision)throw new Error('布局已改变，没有用旧结果覆盖它');const bundle=await buildCompositionBundle({recipe:saved,panels:resolved.panels});if(ticket!==compositionRevision)throw new Error('导出期间布局已改变，请重试当前版本');downloadBlob(bundle.blob,'microscopy-composition.zip');compositionPanels=resolved.panels;$('composer-status').textContent='已下载完整 composition.svg、composition.png 和可恢复 composition.json；未重新计算 FFT 或剖面。';});
+$('composer-import').onchange=compositionGuard(async()=>{const file=$('composer-import').files?.[0];if(!file)return;if(file.size>512*1024)throw new Error('布局 JSON 超过 512 KiB');const ticket=compositionRevision;$('composer-status').textContent='正在只读核对布局引用；不切换当前图像或覆盖草稿…';const saved=JSON.parse(await file.text());validateComposition(saved);const resolved=await api('/api/composition/resolve',{composition:saved});if(ticket!==compositionRevision)throw new Error('载入期间图版已变化，没有覆盖新布局');composition=saved;compositionPanels=resolved.panels;compositionRevision++;renderComposition();$('composer-status').textContent='已恢复布局及原保存资产；当前科学图像与未保存草稿保持原样。';});
 $('view-forward').onclick=guarded(()=>navigateSavedView(savedViews.target(1)));
 $('view-original').onclick=guarded(()=>navigateSavedView(savedViews.original(state)));
 for(const tab of ['measurements','statistics','profile']){

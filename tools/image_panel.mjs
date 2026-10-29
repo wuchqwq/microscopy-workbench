@@ -12,6 +12,7 @@ import {validate} from '../lib/runtime/schema.mjs';
 import {figureDisplayParameters,readFigureRecipe,recipeIdentity} from '../ui/image-panel/figure-export.mjs';
 import {readImageMeasurements,writeMeasurementLink} from '../lib/image_measurement_records.mjs';
 import {framePreviewRecipe} from '../ui/image-panel/user-workflow.mjs';
+import {resolveComposition} from '../lib/figure_composer_assets.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const objectId=/^[a-f0-9]{32}$/;
@@ -312,6 +313,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   }catch(error){writeJournal(path.join(presentationDirectory,`${body.request_id}.response.json`),{presentation:{request_id:body.request_id,status:'failed',error:error.message}});throw error;}
  };
  const staticFiles=new Map([['/',['index.html','text/html; charset=utf-8']],['/app.mjs',['app.mjs','text/javascript; charset=utf-8']],['/coordinates.mjs',['coordinates.mjs','text/javascript; charset=utf-8']],['/style.css',['style.css','text/css; charset=utf-8']],['/viewer-state.mjs',['viewer-state.mjs','text/javascript; charset=utf-8']],['/viewer-render.mjs',['viewer-render.mjs','text/javascript; charset=utf-8']],['/annotation-presentation.mjs',['annotation-presentation.mjs','text/javascript; charset=utf-8']],['/figure-export.mjs',['figure-export.mjs','text/javascript; charset=utf-8']],['/measurement-workspace.mjs',['measurement-workspace.mjs','text/javascript; charset=utf-8']],['/data-probes.mjs',['data-probes.mjs','text/javascript; charset=utf-8']],['/user-workflow.mjs',['user-workflow.mjs','text/javascript; charset=utf-8']]]);
+ staticFiles.set('/figure-composer.mjs',['figure-composer.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{
@@ -329,8 +331,15 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    }
    if(req.method==='GET'&&url.pathname==='/api/revision'){res.end(JSON.stringify({state_revision:stateRevision,object_id:current.object_id,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id}:null,edit_state:{draft_revision:editState.draft_revision,dirty:editState.dirty,gesture_active:editState.gesture_active}}));return;}
    if(req.method==='GET'&&url.pathname==='/api/present'){res.end(JSON.stringify(presentationReceipt(url.searchParams.get('request_id'))));return;}
-   if(req.method!=='POST'||!['/api/action','/api/present','/api/probe'].includes(url.pathname))fail('Not found',404);if(req.headers.origin!==origin||!req.headers['content-type']?.startsWith('application/json'))fail('Same-origin JSON required',403);
-   let raw='',size=0;for await(const chunk of req){size+=chunk.length;if(size>64*1024)fail('Request exceeds 64 KiB',413);raw+=chunk;}let body;try{body=JSON.parse(raw);}catch{fail('Invalid JSON');}
+   if(req.method!=='POST'||!['/api/action','/api/present','/api/probe','/api/composition/resolve'].includes(url.pathname))fail('Not found',404);if(req.headers.origin!==origin||!req.headers['content-type']?.startsWith('application/json'))fail('Same-origin JSON required',403);
+   const requestLimit=url.pathname==='/api/composition/resolve'?512*1024:64*1024;
+   let raw='',size=0;for await(const chunk of req){size+=chunk.length;if(size>requestLimit)fail('Request exceeds bounded JSON limit',413);raw+=chunk;}let body;try{body=JSON.parse(raw);}catch{fail('Invalid JSON');}
+   if(url.pathname==='/api/composition/resolve'){
+    fields(body,['composition']);
+    const readObject=async id=>(await journalCall('image_info',{object_id:id})).data;
+    const readState=async id=>{const r=await journalCall('image_info',{object_id:id}),saved=await prepareCurrent(r);return {object:saved.object,effective_display:saved.display,frame_identity:await findFrameIdentity(saved.object),clean_png_base64:saved.clean,clean_png_sha256:saved.digest};};
+    const run=busy.then(()=>resolveComposition(body.composition,{readState,readObject}));busy=run.catch(()=>{});res.end(JSON.stringify({panels:await run}));return;
+   }
    if(url.pathname==='/api/probe'){
     fields(body,['expected_object_id','source_object_id','coordinate_space','coordinates','component']);
     if(body.expected_object_id!==current.object_id)fail('Probe belongs to a changed current image',409);
