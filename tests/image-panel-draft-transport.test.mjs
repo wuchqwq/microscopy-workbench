@@ -76,7 +76,7 @@ test('normal helper closure flushes a pending latest draft snapshot and clears i
  await close();assert.equal(saved().edit_state.draft_revision,2);assert.equal(panel.state().draft_persistence.pending,false);
 }));
 
-test('automatic same-grid edit adoption preserves newer active draft and pending Agent result',async()=>fixture(async({act,post,panel,started,release,calls})=>{
+test('automatic same-grid edit adoption preserves newer active draft and pending Agent result',async()=>fixture(async({act,post,panel,started,release,calls,saved})=>{
  await act('draft',{draft_revision:1,dirty:true,gesture_active:false},{lightweight:true});
  const agent=await post('/api/present',{object_id:C,expected_object_id:A,draft_revision:1,request_id:'saved-agent-result'});
  assert.equal(JSON.parse(agent.raw).presentation.status,'queued');
@@ -86,7 +86,8 @@ test('automatic same-grid edit adoption preserves newer active draft and pending
  assert.equal(reply.data.object.object_id,B);assert.equal(reply.data.edit_state.base_object_id,B);
  assert.equal(reply.data.edit_state.draft_revision,2);assert.equal(reply.data.edit_state.gesture_active,true);
  assert.deepEqual(reply.data.edit_state.annotation_edit.coordinates,[10,6]);assert.deepEqual(reply.data.selection,selected);
- assert.equal(reply.data.pending_result.object_id,C);
+ assert.deepEqual(reply.data.pending_result,{object_id:C,request_id:'saved-agent-result',reason:'unsaved_draft',scientific_operation_complete:true});
+ assert.deepEqual(saved().pending_result,{object_id:C,request_id:'saved-agent-result'},'durable reference stays concise while the state protocol retains its completion/queue semantics');
  const next=await act('edit',{updates:[{annotation_id:'second',coordinates:[10,6]}],auto_commit:true});
  assert.equal(next.data.object.object_id,D);assert.equal(panel.state().pending_result.object_id,C);
  assert.equal(calls.filter(call=>call.name==='image_annotate').at(-1).args.object_id,B);

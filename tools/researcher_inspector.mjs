@@ -59,7 +59,7 @@ export async function startResearcherInspector(options,{createClient=args=>new S
   if(!objectId.test(result.data?.object_id??''))throw new Error('Operation has not returned a saved object. Recover original request '+request.arguments.request_id);
   durableNew(responseFile,{object_id:result.data.object_id,request_id:request.arguments.request_id});return result.data;
  };
- let bootstrap=createClient({workspace,python}),selected,previousDraft=false,resumed=false;
+ let bootstrap=createClient({workspace,python}),selected,previousDraft=false,resumed=false,numericResultRefs;
  try{
   const initialized=await bootstrap.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-researcher-inspector',version:'1'}});if(initialized.error)throw new Error(initialized.error.message);
   const pointer=path.join(directory,'latest-panel.json');
@@ -71,6 +71,7 @@ export async function startResearcherInspector(options,{createClient=args=>new S
    const selection=boundedJSON(selectionPath);if(!objectId.test(selection.object_id??''))throw new Error('Saved panel object identity is invalid');
    selected=(await bootstrap.tool('image_info',{object_id:selection.object_id})).data;
    previousDraft=Boolean(selection.edit_state?.dirty||selection.edit_state?.gesture_active);
+   numericResultRefs=Object.hasOwn(selection,'numeric_result_refs')?selection.numeric_result_refs:null;
   }else{
    const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
    const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:session.initial_frame-1});
@@ -80,9 +81,9 @@ export async function startResearcherInspector(options,{createClient=args=>new S
  const runId=randomBytes(16).toString('hex'),runDirectory=path.join(directory,'panels',runId),journalDirectory=path.join(runDirectory,'journal');mkdirSync(runDirectory,{recursive:true});
  durableNew(path.join(runDirectory,'run.json'),{schema_version:1,session_id:session.session_id,object_id:selected.object_id,created_utc:new Date().toISOString()});
  let panel;
- try{panel=await openPanel({workspace,python,object_id:selected.object_id,journalDirectory});replaceJSON(path.join(directory,'latest-panel.json'),{schema_version:1,session_id:session.session_id,run_id:runId});}
+ try{panel=await openPanel({workspace,python,object_id:selected.object_id,journalDirectory,numeric_result_refs:numericResultRefs});replaceJSON(path.join(directory,'latest-panel.json'),{schema_version:1,session_id:session.session_id,run_id:runId});}
  catch(error){if(panel)await panel.close();throw error;}
- return {panel,workspace,source_path:session.source_path,resumed,previous_unsaved_draft:previousDraft,
+ return {panel,workspace,source_path:session.source_path,resumed,previous_unsaved_draft:previousDraft,numeric_result_recovery:panel.state?.().numeric_result_recovery??{state:numericResultRefs===null?'legacy_missing_refs':'not_requested'},
   async close(){await panel.close();}};
 }
 
@@ -93,6 +94,8 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   process.stdout.write('Researcher Image Inspector — scientific backend active; no model session.\n'+instance.panel.url+'\n');
   process.stdout.write('Keep this process running. Ctrl+C closes the local panel normally. Reuse the same workspace to reopen saved results.\n');
   if(instance.previous_unsaved_draft)process.stderr.write('The previous session had an unsaved draft. Its original journal is retained; this window resumes only the last saved scientific object.\n');
+  if(instance.numeric_result_recovery.state==='legacy_missing_refs')process.stderr.write('Previous panel snapshot has no separate statistics/profile references. Old records are retained; no results were guessed or recalculated.\n');
+  else if(instance.numeric_result_recovery.state==='partial')process.stderr.write('Some saved statistics/profile references could not be verified. The image remains open; inspect numeric_result_recovery and do not repeat unknown requests automatically.\n');
   let closing=false;const close=async()=>{if(!closing){closing=true;await instance.close();}};process.on('SIGINT',close);process.on('SIGTERM',close);
  }catch(error){process.stderr.write(error.message+'\n');process.exitCode=1;}
 }
