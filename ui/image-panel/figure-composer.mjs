@@ -165,13 +165,14 @@ function imageSVG(panel,box,index,{showLegend=true,outlines=[]}={}){
 function profileSVG(panel,box){
  const model=panel.plot,range=model.range,fs=box.font,fmt=value=>Number.isFinite(value)?String(Number(value.toPrecision(4))):'未知';
  if(!range)return `<text x="${number(box.x+fs)}" y="${number(box.y+fs*2)}" font-size="${number(fs)}">没有有限的保存采样值</text>`;
- const left=box.x+fs*3.6,right=box.x+box.width-fs*.6,top=box.y+fs*1.4,bottom=box.y+box.height-fs*2.4;
+ const yTicks=profileTicks(range.ymin,range.ymax,4),yLabelWidth=Math.max(...yTicks.map(value=>[...fmt(value)].length))*.62;
+ const left=box.x+fs*Math.max(3.6,yLabelWidth+.5),right=box.x+box.width-fs*.6,top=box.y+fs*1.4,bottom=box.y+box.height-fs*2.4;
  if(right<=left||bottom<=top)fail('剖面坐标轴超出版面预算');
  const px=value=>range.xmax===range.xmin?(left+right)/2:left+(value-range.xmin)/(range.xmax-range.xmin)*(right-left),py=value=>range.ymax===range.ymin?(top+bottom)/2:bottom-(value-range.ymin)/(range.ymax-range.ymin)*(bottom-top);
  let body=`<g data-part="saved-profile" data-result-object-id="${panel.slot.object_id}"><path d="M ${number(left)} ${number(top)} V ${number(bottom)} H ${number(right)}" fill="none" stroke="#273849" stroke-width="1.5"/>`;
  const xTicks=profileTicks(range.xmin,range.xmax,4);
  for(const [index,value]of xTicks.entries()){const x=px(value),anchor=xTicks.length===1?'middle':index===0?'start':index===xTicks.length-1?'end':'middle';body+=`<path d="M ${number(x)} ${number(bottom)} v 6" stroke="#273849"/><text x="${number(x)}" y="${number(bottom+fs*1.25)}" text-anchor="${anchor}" font-size="${number(fs)}">${xml(fmt(value))}</text>`;}
- for(const value of profileTicks(range.ymin,range.ymax,4)){const y=py(value);body+=`<path d="M ${number(left-6)} ${number(y)} h 6" stroke="#273849"/><text x="${number(left-fs*.3)}" y="${number(y+fs*.3)}" text-anchor="end" font-size="${number(fs)}">${xml(fmt(value))}</text>`;}
+ for(const value of yTicks){const y=py(value);body+=`<path d="M ${number(left-6)} ${number(y)} h 6" stroke="#273849"/><text x="${number(left-fs*.3)}" y="${number(y+fs*.3)}" text-anchor="end" font-size="${number(fs)}">${xml(fmt(value))}</text>`;}
  for(const segment of model.segments){const points=segment.map(([x,y])=>[range.xmax===range.xmin?(left+right)/2:left+(x-64)/476*(right-left),range.ymax===range.ymin?(top+bottom)/2:bottom-(158-y)/136*(bottom-top)]);body+=`<polyline data-part="profile-values" points="${points.map(point=>point.map(number).join(',')).join(' ')}" fill="none" stroke="#207b91" stroke-width="2"/>`;}
  body+=`<text x="${number((left+right)/2)}" y="${number(box.y+box.height-fs*.25)}" text-anchor="middle" font-size="${number(fs)}">${xml('距离 ('+(model.xLabel??'未知单位')+')')}</text><text x="${number(left)}" y="${number(box.y+fs*.9)}" font-size="${number(fs)}">${xml((model.yLabel??'数值')+'（单位未标定）')}</text></g>`;
  return body;

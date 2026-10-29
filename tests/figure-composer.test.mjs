@@ -133,6 +133,14 @@ test('profile endpoint ticks align inward at 9pt without moving the actual 2.24n
  assert.equal(Number(ticks[0][1]),Math.round((profileLeft+d.font*3.6)*1000)/1000);assert.equal(Number(ticks.at(-1)[1]),Math.round((profileLeft+d.cellWidth-d.font*.6)*1000)/1000,'text anchoring cannot change the endpoint position');
  assert.deepEqual(input,before);
 });
+test('million-scale and negative raw profile ticks remain inside their panel at the unchanged common font',()=>{
+ for(const values of [[3300000,3400000,3500000,3600000],[-4290000000,-4200000000,-4100000000,-4000000000]]){
+  const input=composition();input.recipe.font_pt=9;input.panels[3].profile.samples.value=values;const before=clone(input),d=compositionDimensions('2x2',9),slotLeft=d.margin+d.cellWidth+d.gap;
+  const {svg}=renderCompositionSVG(input),ticks=[...svg.matchAll(/<path d="M [^"]+ h 6" stroke="#273849"\/><text x="([^"]+)"[^>]*text-anchor="end" font-size="([^"]+)">([^<]*)<\/text>/g)];
+  assert.equal(ticks.length,4);for(const [,x,font,text]of ticks){assert.equal(Number(font),37.5);assert.ok(Number(x)-text.length*Number(font)*.6>=slotLeft,'complete raw tick text must fit before the axis; clipping a leading digit changes its apparent magnitude');}
+  assert.match(svg,new RegExp('>'+values[0]+'<'));assert.deepEqual(input,before,'layout changes cannot normalize, offset or rewrite raw samples');
+ }
+});
 test('saved recipe is restorable without embedding arrays and duplicate explicit views are not silently dropped',()=>{
  const input=composition();input.panels[1]=clone(input.panels[0]);input.recipe.slots[1]=clone(input.recipe.slots[0]);const before=clone(input),result=renderCompositionSVG(input),restored=renderCompositionSVG({recipe:JSON.parse(JSON.stringify(result.recipe)),panels:input.panels});assert.equal(restored.svg,result.svg);assert.equal((result.svg.match(/data-composition-slot="/g)??[]).length,4);assert.deepEqual(input,before);
  const known=makeFigureRecipe(input.panels[0].state,preferences);assert.deepEqual(result.recipe.slots[0].recipe,known);
