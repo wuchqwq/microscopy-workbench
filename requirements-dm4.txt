@@ -1,0 +1,3 @@
+# Optional direct DM4 decoder. Independent image environment only, never GMS.
+# RosettaSciIO is GPL-3.0-or-later; this project does not vendor or bundle it.
+rosettasciio==0.15.0

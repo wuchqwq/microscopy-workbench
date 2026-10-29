@@ -22,7 +22,8 @@ node tools/researcher_inspector.mjs `
 令牌，不要公开它。工具不上传图像，不开放任意文件读取或脚本执行接口。
 
 支持范围沿用[像素图像工具](PIXEL_IMAGE_WORKFLOW.md)：普通灰度 `uint16` TIFF
-页，每次有界读取明确帧；这不是任意 TIFF 或 DM3/DM4 导入器。`--frame` 是人类
+页，每次有界读取明确帧；另可安装可选依赖直接打开[限定二维 DM4](DM4_DIRECT_IMPORT.md)，
+不需要启动 DM。它不是任意 TIFF 或 DM3/DM4 体数据导入器。`--frame` 是人类
 从 1 开始的帧号，后端仍记录从 0 开始的 `frame_index`。
 
 完成后在终端按 Ctrl+C 正常退出。保留整个工作区，之后运行：

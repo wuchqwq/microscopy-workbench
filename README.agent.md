@@ -9,6 +9,10 @@ The [no-model inspector](docs/RESEARCHER_DATA_INSPECTOR.md) uses the same saved
 arrays and measurement records. [Numerical inspection](docs/IMAGE_NUMERIC_INSPECTION.md)
 reads original values, not preview brightness. Keep coordinates, signed XY
 calibration, frame/ROI and FFT ancestry explicit; unknown scale stays pixel-based.
+For direct `.dm4`, use the [optional reader adapter](docs/DM4_DIRECT_IMPORT.md):
+open the scientific catalog, then select frame0 and an explicit dataset when
+ambiguous. Stored file calibration has source `dm_file_metadata`; it is neither
+user confirmation nor DM-native execution. Never analyze the RGB thumbnail.
 Save original request IDs before scientific writes and query original outcomes
 after timeout. Preserve data and existing user/client settings.
 

@@ -1,4 +1,4 @@
-"""Explicit external TIFF/pixel workspace; no DM imports or native fallback.
+"""Explicit external TIFF/DM4/pixel workspace; no live DM or native fallback.
 
 One JSON request on stdin produces one JSON result on stdout. Objects and
 request identities are durable and immutable after successful publication.
@@ -25,10 +25,12 @@ if __package__:
     from .image_annotation_updates import plan_annotation_updates
     from . import image_calibration as calibration
     from . import image_numeric as numeric
+    from . import image_dm as dmfile
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
     import image_numeric as numeric
+    import image_dm as dmfile
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -39,7 +41,8 @@ MAX_JSON_BYTES = 2 * 1024 * 1024
 REQUEST_ID = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 OBJECT_ID = re.compile(r"[a-f0-9]{32}\Z")
 FIELDS = {
-    "open": {"source_path"}, "frame": {"object_id", "frame_index"},
+    "open": {"source_path"}, "open_dm": {"source_path"},
+    "frame": {"object_id", "frame_index", "dataset_index"},
     "import_capture": {"source_path"},
     "view": {"object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar"},
     "compare": {"object_ids", "rect", "display_range", "gamma", "max_size"},
@@ -554,8 +557,8 @@ class Workspace:
             reference, _ = self.object(request["calibration_object_id"])
             record = reference.get("xy_calibration")
             need(type(record) is dict and (reference["kind"] == "calibration" or
-                 reference["kind"] == "frame" and record.get("source") == "native_dm_capture"),
-                 "calibration_object_id must be an explicit calibration result or its validated native-capture frame")
+                 reference["kind"] == "frame" and record.get("source") in ("native_dm_capture", "dm_file_metadata")),
+                 "calibration_object_id must be an explicit calibration result or its validated native-capture/DM-file frame")
             target = self.calibration_scope(request["object_id"], record["scope"], record.get("coordinate_domain", "real_space"),
                                             allow_unknown_reciprocal=bool(record.get("domain_declaration")))
             need(target == record["applies_to"], "Calibration belongs to a different immutable image/sequence", "CALIBRATION_SCOPE_MISMATCH")
@@ -820,24 +823,61 @@ class Workspace:
             metadata.update(kind="tiff_source", source_identity=identity, page_count=len(pages), pages=pages,
                             frame_axis_role="unspecified_sequence", pixel_data_loaded=False,
                             source_hash_method="streaming complete file SHA-256; no whole-volume pixel decode")
+        elif action == "open_dm":
+            path = absolute(request.get("source_path"), "source_path")
+            identity = source_identity(path)
+            catalog = dmfile.catalog_dm(path, MAX_PIXELS, MAX_ARRAY_BYTES)
+            need(len(canonical(catalog)) <= MAX_JSON_BYTES, "DM4 catalog exceeds metadata budget", "BUDGET_EXCEEDED")
+            check_source(identity)
+            metadata.update(kind="dm_source", source_identity=identity, source_file_format="dm4",
+                            dm_catalog=catalog, page_count=1, pixel_data_loaded=False,
+                            frame_axis_role="single_2d_dataset_not_depth",
+                            source_hash_method="streaming complete file SHA-256; lazy scientific catalog, no whole-volume pixel decode")
         elif action == "frame":
             parent, _, context = self.resolved(request.get("object_id"))
-            need(parent["kind"] == "tiff_source", "frame requires an opened TIFF source")
+            need(parent["kind"] in ("tiff_source", "dm_source"), "frame requires an opened TIFF or DM4 source")
             index = request.get("frame_index")
-            need(integer(index, 0, parent["page_count"] - 1), "frame_index must explicitly select an existing zero-based TIFF page")
-            check_source(parent["source_identity"])
-            with tifffile.TiffFile(parent["source_identity"]["path"]) as tiff:
-                page = tiff.pages[index]
-                need(page_info(page, index) == parent["pages"][index], "TIFF page metadata changed", "SOURCE_CHANGED")
-                values = page.asarray()
-            scalar_shape(values.shape, values.dtype)
-            check_source(parent["source_identity"])
-            save_array(directory, "data.npy", values)
-            metadata.update(kind="frame", parent_object_id=request["object_id"], source_object_id=parent["object_id"],
-                            frame_index=index, frame_axis_role="unspecified_sequence", shape_yx=list(values.shape),
-                            dtype=str(values.dtype), axes=["y", "x"], source_identity=parent["source_identity"],
-                            intensity_calibration_applied=False, intensity_semantics="raw pixel intensity",
-                            calibration={"status": "unknown", "unit": None}, user_context=context)
+            if parent["kind"] == "dm_source":
+                need(index == 0 and type(index) is int, "Initial DM4 import admits one scalar 2D plane; frame_index must be 0, not a depth")
+                need("dataset_index" not in request or integer(request["dataset_index"], 0, 63), "dataset_index must be an explicit zero-based integer in the scientific catalog")
+                check_source(parent["source_identity"])
+                values, dataset, selected = dmfile.selected_plane(parent["source_identity"]["path"], parent["dm_catalog"],
+                                                                  request.get("dataset_index"), MAX_PIXELS, MAX_ARRAY_BYTES)
+                scalar_shape(values.shape, values.dtype)
+                check_source(parent["source_identity"])
+                save_array(directory, "data.npy", values)
+                evidence = {"source_identity": parent["source_identity"], "source_reader": parent["dm_catalog"]["source_reader"],
+                            "dataset": dataset, "dataset_index": selected, "thumbnail_policy": parent["dm_catalog"]["thumbnail_policy"]}
+                write_new(directory / "dm-metadata.json", canonical(evidence) + b"\n")
+                applies_to = {"object_id": ident, "kind": "frame", "source_identity": parent["source_identity"],
+                              "frame_index": 0, "source_capture_files_sha256": None}
+                record, admission = calibration.dm_file_record(dataset, evidence, ident, applies_to)
+                metadata.update(kind="frame", origin="external_dm4_file", parent_object_id=request["object_id"],
+                                source_object_id=parent["object_id"], frame_index=0, dm_dataset_index=selected,
+                                frame_axis_role="single_2d_dataset_not_depth", shape_yx=list(values.shape),
+                                dtype=str(values.dtype), axes=["y", "x"], source_identity=parent["source_identity"],
+                                source_file_format="dm4", source_reader=parent["dm_catalog"]["source_reader"],
+                                dm_dataset=dataset, xy_calibration=record, calibration_admission=admission,
+                                array_domain=("reciprocal" if record and record["coordinate_domain"] == "reciprocal_space" else
+                                              "spatial" if record else "unspecified_image"),
+                                intensity_calibration_applied=False, intensity_semantics="raw stored pixel intensity; not electron counts",
+                                calibration=dataset["calibration_xy"], user_context=context)
+            else:
+                need("dataset_index" not in request, "dataset_index applies to DM4 sources, not TIFF pages")
+                need(integer(index, 0, parent["page_count"] - 1), "frame_index must explicitly select an existing zero-based TIFF page")
+                check_source(parent["source_identity"])
+                with tifffile.TiffFile(parent["source_identity"]["path"]) as tiff:
+                    page = tiff.pages[index]
+                    need(page_info(page, index) == parent["pages"][index], "TIFF page metadata changed", "SOURCE_CHANGED")
+                    values = page.asarray()
+                scalar_shape(values.shape, values.dtype)
+                check_source(parent["source_identity"])
+                save_array(directory, "data.npy", values)
+                metadata.update(kind="frame", parent_object_id=request["object_id"], source_object_id=parent["object_id"],
+                                frame_index=index, frame_axis_role="unspecified_sequence", shape_yx=list(values.shape),
+                                dtype=str(values.dtype), axes=["y", "x"], source_identity=parent["source_identity"],
+                                intensity_calibration_applied=False, intensity_semantics="raw pixel intensity",
+                                calibration={"status": "unknown", "unit": None}, user_context=context)
         elif action == "import_capture":
             capture = absolute(request.get("source_path"), "source_path")
             need(capture.is_dir() and not capture.is_symlink(), "source_path must be a saved capture directory")

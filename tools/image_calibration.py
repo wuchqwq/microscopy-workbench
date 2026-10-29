@@ -228,6 +228,48 @@ def physical_points(points, record):
     return result
 
 
+def dm_file_record(dataset, provenance, ident, applies_to):
+    """Bind actual DM4 dimension tags, not a reader's missing-tag defaults."""
+    axes = dataset.get("calibration_xy")
+    admission = {"status": "pixel_only", "source": "dm_file_metadata",
+                 "reason": "missing, inconsistent or unsupported raw DM4 XY dimension calibration"}
+    if type(axes) is not list or len(axes) != 2 or any(not a.get("usable") for a in axes):
+        return None, admission
+    kinds = [unit_kind(a.get("unit")) for a in axes]
+    if any(k is None for k in kinds) or kinds[0][0] != kinds[1][0]:
+        return None, admission
+    domain = kinds[0][0]
+    scales, zeros, observed = [], [], []
+    for axis, kind in zip(axes, kinds):
+        factor = UNITS[kind[1]] / UNITS[kinds[0][1]]
+        if domain == "reciprocal_space":
+            factor = 1. / factor
+        step, zero = axis["signed_scale"] * factor, axis["physical_pixel_zero"] * factor
+        if (not all(finite(v) for v in (factor, step, zero)) or step == 0 or not finite(1. / step)
+                or axis["physical_pixel_zero"] != 0 and zero == 0):
+            admission["reason"] = "DM4 unit conversion exceeds finite nonzero binary64 resolution"
+            return None, admission
+        scales.append(step); zeros.append(zero)
+        observed.append({**axis, "to_record_unit_factor": factor})
+    unit = ("1/" if domain == "reciprocal_space" else "") + kinds[0][1]
+    scale = validated_scale({"x": scales[0], "y": scales[1], "unit": unit}, domain)
+    record = {"calibration_id": ident, "revision": 1, "previous_calibration_id": None,
+              "status": "active", "scope": "image", "applies_to": applies_to,
+              "xy_scale": scale, "physical_zero_xy": zeros, "source": "dm_file_metadata",
+              "coordinate_domain": domain, "real_space_only": domain == "real_space",
+              "source_text": "Stored raw DM4 dimension tags read by RosettaSciIO from the exact hashed file; not a user statement or a live DM native call",
+              "uncertainty_status": "unknown; file metadata supplies no independent calibration uncertainty",
+              "original_file_metadata_modified": False, "value_unit_or_frame_depth_inferred": False,
+              "dm_file_axes": observed, "dm_file_provenance": provenance,
+              "verification_scope": "file/reader/array/axis consistency only; no independent metrological verification or phase identification"}
+    if domain == "reciprocal_space":
+        record.update(dc_index_xy=[a["raw_origin"] for a in axes],
+                      dc_identity_source="stored DM4 dimension origins identify physical zero; not an independently fitted diffraction centre")
+    admission.update(status="active", coordinate_domain=domain,
+                     reason="consistent raw DM4 dimension tags, signed scales and physical pixel-zero coordinates")
+    return record, admission
+
+
 def geometry(dx, dy, record, frequency=False):
     """Convert mathematical cycles/pixel, never radians, with signed XY axes."""
     require(finite(dx) and finite(dy), "Measurement displacement must be finite")
@@ -251,7 +293,8 @@ def geometry(dx, dy, record, frequency=False):
     result.update(physical_angle=length != 0,
                   physical_angle_degrees=math.degrees(math.atan2(y, x)) if length else None,
                   physical_vector_xy=[x, y],
-                  limitation=("Geometry based on validated saved native metadata; no independent metrological verification or phase identification" if record.get("source") == "native_dm_capture" else
+                  limitation=("Geometry based on stored DM4 file metadata; no independent metrological verification or phase identification" if record.get("source") == "dm_file_metadata" else
+                              "Geometry based on validated saved native metadata; no independent metrological verification or phase identification" if record.get("source") == "native_dm_capture" else
                               "Geometry based on a sourced user statement; no independent calibration verification or phase identification"))
     if frequency or reciprocal:
         period = 1. / length if length else None
