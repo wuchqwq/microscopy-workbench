@@ -1,0 +1,33 @@
+{
+  "status": "PASS_DISPLAY_P1_FIXED",
+  "original_FAIL_retained": "F:\\microscopy-workbench-evidence\\pr1-pr5-closeout-r1\\browser-exports\\dm4-2x2",
+  "corrected_directory": "F:\\microscopy-workbench-evidence\\pr1-pr5-closeout-r1\\browser-exports\\dm4-2x2-corrected",
+  "before_labels": [
+    "19990000",
+    "20000000",
+    "20000000",
+    "20000000"
+  ],
+  "after_labels": [
+    "19991000",
+    "19995000",
+    "19999000",
+    "20003000"
+  ],
+  "actual_tick_values": [
+    19991228.0,
+    19995228.0,
+    19999228.0,
+    20003228.0
+  ],
+  "label_policy": "Compact five significant digits; not exact full-integer tick values. Exact samples remain in CSV/table.",
+  "recipe_and_all_scientific_references_identical": true,
+  "entire_SVG_identical_except_four_Y_label_texts": true,
+  "profile_128_polyline_points_identical": true,
+  "PNG_size": [
+    2126,
+    1830
+  ],
+  "corrected_SVG_sha256": "bc416abca719d7f29cc5dde2a09dc43947fbe06cc95139e025f04b7f1b94bf81",
+  "original_SVG_sha256": "b745ca699fca93bd6ce29df3a4f2df0ad0562868b8c251d4d44b8b295addf4c4"
+}

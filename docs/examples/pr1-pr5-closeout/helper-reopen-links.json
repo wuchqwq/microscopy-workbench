@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "scope": "Old saved view -> new helper run linkage and original science/numeric reference verification; UI visibility checked separately",
+  "auxiliary_hash_limit": "Before snapshot deliberately excludes run/current-selection connection-state files; no retroactive byte-for-byte old auxiliary-file claim is made. Authoritative scientific journal/object zero-write is proved separately by after-helper-reopen.json.",
+  "workspaces": {
+    "tiff": {
+      "status": "PASS",
+      "old_panel_run": "07b79a0bf31b3755cd09dcf39ab46b1e",
+      "new_panel_run": "bfb1cb3fefdd5c73fde812f0c7796e19",
+      "old_saved_object_id": "ee9662ce35d04968a1fb453a2ad20713",
+      "new_initial_and_saved_object_id": "ee9662ce35d04968a1fb453a2ad20713",
+      "original_request_id": "panel-70ccaed7287aa2e1-17",
+      "same_frame_identity": true,
+      "same_calibration_object": "86297c8ea9454eb6a76742aa48e72752",
+      "component": null,
+      "numeric_refs_exactly_preserved": [
+        {
+          "kind": "statistics",
+          "object_id": "1a92f1e0fcd640288bce476e5a8229ca",
+          "request_id": "panel-70ccaed7287aa2e1-27"
+        },
+        {
+          "kind": "profile",
+          "object_id": "a029f1a0df8d435f896604f6c8232d59",
+          "request_id": "panel-70ccaed7287aa2e1-26"
+        }
+      ],
+      "old_selection_updated_utc": "2026-10-29T12:03:15.373Z",
+      "new_run_created_utc": "2026-10-29T12:09:58.517Z",
+      "last_operation_reset_to_null_is_not_a_scientific_recalculation": true
+    },
+    "dm4": {
+      "status": "PASS",
+      "old_panel_run": "d18592de2425728580b3d8e90e3cb859",
+      "new_panel_run": "fcddd5a789cbe931c6ad187694f7177a",
+      "old_saved_object_id": "0bd3207589dd49d5ac4d654ed778b05a",
+      "new_initial_and_saved_object_id": "0bd3207589dd49d5ac4d654ed778b05a",
+      "original_request_id": "panel-c6ac1c284426bb0f-4",
+      "same_frame_identity": true,
+      "same_calibration_object": "3c12b8d21037456597c400be375a4078",
+      "component": null,
+      "numeric_refs_exactly_preserved": [
+        {
+          "kind": "statistics",
+          "object_id": "8688a0e230e54837a152484a8ce02df7",
+          "request_id": "panel-c6ac1c284426bb0f-13"
+        },
+        {
+          "kind": "profile",
+          "object_id": "e8a62564ed104634b4274aa26dacb3f2",
+          "request_id": "panel-c6ac1c284426bb0f-12"
+        }
+      ],
+      "old_selection_updated_utc": "2026-10-29T12:06:02.591Z",
+      "new_run_created_utc": "2026-10-29T12:09:58.564Z",
+      "last_operation_reset_to_null_is_not_a_scientific_recalculation": true
+    },
+    "complex": {
+      "status": "PASS",
+      "old_panel_run": "2de56f7eadf1182bcdd8d681d69f59ec",
+      "new_panel_run": "33c6fdfac752229530236ad8ce99b0a8",
+      "old_saved_object_id": "bd86dd85ab6944adabbde34cf1046906",
+      "new_initial_and_saved_object_id": "bd86dd85ab6944adabbde34cf1046906",
+      "original_request_id": "panel-6f46cdc0d0996281-7",
+      "same_frame_identity": true,
+      "same_calibration_object": "c339070eead242b1a3e18a55b34d3798",
+      "component": "real",
+      "numeric_refs_exactly_preserved": [
+        {
+          "kind": "statistics",
+          "object_id": "d776bbe7b94e4e71a02fabce85dfc459",
+          "request_id": "panel-6f46cdc0d0996281-3"
+        },
+        {
+          "kind": "profile",
+          "object_id": "e1ff60ce0248438496614cea5e1d80b9",
+          "request_id": "panel-6f46cdc0d0996281-4"
+        }
+      ],
+      "old_selection_updated_utc": "2026-10-29T12:03:39.754Z",
+      "new_run_created_utc": "2026-10-29T12:09:58.631Z",
+      "last_operation_reset_to_null_is_not_a_scientific_recalculation": true
+    }
+  }
+}

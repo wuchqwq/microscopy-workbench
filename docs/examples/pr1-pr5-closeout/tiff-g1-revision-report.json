@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "checks": [
+    "g1 original object/request/hash/value retained",
+    "g2 original object/request/hash/value retained",
+    "g2 current anchor unchanged; no replacement measurement",
+    "g3 original object/request/hash/value retained",
+    "g3 current anchor unchanged; no replacement measurement",
+    "unique original FFT data hash unchanged; zero additional FFT",
+    "revised g1 uses same stable annotation; changed coordinates and independent period agree"
+  ],
+  "old_g1": {
+    "label": "g1",
+    "annotation_id": "mark-cacded0e62e2406cabae7fa2",
+    "annotation_anchor": {
+      "coordinate_space": "frequency_cycles_per_pixel",
+      "coordinates": [
+        0.12900765438152054,
+        0.002083844079431185
+      ],
+      "source_object_id": "fcedf64b2df64250b7e377286803c736"
+    },
+    "status": "hypothesized",
+    "object_id": "70f4699e42a24ca681b5bd47c0f2189e",
+    "request_id": "panel-70ccaed7287aa2e1-12",
+    "parent_object_id": "562e119032ad4656bb12eeed3752a6e8",
+    "points": [
+      [
+        0,
+        0
+      ],
+      [
+        0.12900765438152054,
+        0.002083844079431185
+      ]
+    ],
+    "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+    "d_spacing": 0.15500933997845837,
+    "unit": "nm",
+    "independent_period": 0.15500933997845837,
+    "independent_q_xy": [
+      6.450382719076027,
+      0.10419220397155926
+    ],
+    "object_sha256": "14b097aa6b67b1c9ec352b01df80a1e7edd06d23a12ed76acf7bb98ddf029746",
+    "request_sha256": "8f4c1db22ca3fac85d77069e5d274efaa94f4680ab31fb16ff7d73a1b2b230d9"
+  },
+  "new_g1": {
+    "object_id": "62140fdfac8b45b0b391af3a001307b9",
+    "request_id": "panel-70ccaed7287aa2e1-18",
+    "parent_object_id": "ee9662ce35d04968a1fb453a2ad20713",
+    "points": [
+      [
+        0,
+        0
+      ],
+      [
+        0.10808749421154425,
+        0.002083844079431185
+      ]
+    ],
+    "d_spacing": 0.1850009040648249,
+    "d_spacing_unit": "nm"
+  },
+  "new_g1_annotation_id": "mark-cacded0e62e2406cabae7fa2",
+  "independent_period": 0.1850009040648249,
+  "g2_g3_object_ids_unchanged": [
+    "84c69fc6437d4e60b63d83438a9d2f8b",
+    "b7569c873f3d4abe8f045e3215425f8c"
+  ]
+}

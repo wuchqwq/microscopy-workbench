@@ -1,0 +1,357 @@
+{
+  "schema": "microscopy-figure-composition-v1",
+  "layout": "1x3",
+  "font_pt": 8,
+  "roiOutlines": true,
+  "showLegend": true,
+  "slots": [
+    {
+      "kind": "image",
+      "title": "Imaginary",
+      "source_object_id": "cb6c8c6aedbc4ee7a342f8035658fcfe",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "cb6c8c6aedbc4ee7a342f8035658fcfe",
+        "source": {
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y",
+              "image_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "source_object_id": "c339070eead242b1a3e18a55b34d3798",
+              "source_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ]
+            }
+          ],
+          "frame": {
+            "frame_object_id": "c339070eead242b1a3e18a55b34d3798",
+            "frame_index": 0,
+            "source_object_id": "54a74889cb3840f0800c35ea53029af5",
+            "dataset_index": 0
+          },
+          "anchors": [],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": -0.03
+            }
+          }
+        },
+        "display_recipe": {
+          "display_range": [
+            -96,
+            94
+          ],
+          "range_source": "shared_raw_minmax",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "component": "imag",
+          "component_expression": "imag(z)",
+          "complex_data_unchanged": true,
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": {
+            "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+            "revision": 1,
+            "status": "active",
+            "source": "dm_file_metadata",
+            "coordinate_domain": "real_space"
+          }
+        },
+        "preferences": {
+          "preset": "real-space",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": false,
+            "simulation_B": false
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": false,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "3206468a125c4cd9bf9fdab655bdf4a2",
+        "clean_png_sha256": "bd6977327dffc5839b2779494feb495f6d36b702f4c5b246805c73dcfcf98b7b"
+      },
+      "scale_bar": {
+        "visible": true,
+        "length": 0.5,
+        "unit": "nm",
+        "source_length_pixels": 25,
+        "image_endpoints_xyxy": [
+          12,
+          83,
+          37,
+          83
+        ],
+        "axis": "x",
+        "signed_scale": 0.02,
+        "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+        "provenance": "dm_file_metadata",
+        "display_only": true
+      }
+    },
+    {
+      "kind": "image",
+      "title": "Power |z|²",
+      "source_object_id": "a0953de508594eef8c0d442f551bcff9",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "a0953de508594eef8c0d442f551bcff9",
+        "source": {
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y",
+              "image_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "source_object_id": "c339070eead242b1a3e18a55b34d3798",
+              "source_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ]
+            }
+          ],
+          "frame": {
+            "frame_object_id": "c339070eead242b1a3e18a55b34d3798",
+            "frame_index": 0,
+            "source_object_id": "54a74889cb3840f0800c35ea53029af5",
+            "dataset_index": 0
+          },
+          "anchors": [],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": -0.03
+            }
+          }
+        },
+        "display_recipe": {
+          "display_range": [
+            0,
+            13312.000000000002
+          ],
+          "range_source": "shared_raw_minmax",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "component": "power",
+          "component_expression": "abs(z)**2",
+          "complex_data_unchanged": true,
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": {
+            "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+            "revision": 1,
+            "status": "active",
+            "source": "dm_file_metadata",
+            "coordinate_domain": "real_space"
+          }
+        },
+        "preferences": {
+          "preset": "real-space",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": false,
+            "simulation_B": false
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": false,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "763580820f98486888b5b69aefee1b18",
+        "clean_png_sha256": "f116484c6f7c04550947dd84bf869705afcfe8596c9a81e0750f0d647d474ac4"
+      },
+      "scale_bar": {
+        "visible": true,
+        "length": 0.5,
+        "unit": "nm",
+        "source_length_pixels": 25,
+        "image_endpoints_xyxy": [
+          12,
+          83,
+          37,
+          83
+        ],
+        "axis": "x",
+        "signed_scale": 0.02,
+        "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+        "provenance": "dm_file_metadata",
+        "display_only": true
+      }
+    },
+    {
+      "kind": "image",
+      "title": "Real",
+      "source_object_id": "bd86dd85ab6944adabbde34cf1046906",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "bd86dd85ab6944adabbde34cf1046906",
+        "source": {
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y",
+              "image_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "source_object_id": "c339070eead242b1a3e18a55b34d3798",
+              "source_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ]
+            }
+          ],
+          "frame": {
+            "frame_object_id": "c339070eead242b1a3e18a55b34d3798",
+            "frame_index": 0,
+            "source_object_id": "54a74889cb3840f0800c35ea53029af5",
+            "dataset_index": 0
+          },
+          "anchors": [],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": -0.03
+            }
+          }
+        },
+        "display_recipe": {
+          "display_range": [
+            -64,
+            63
+          ],
+          "range_source": "shared_raw_minmax",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "component": "real",
+          "component_expression": "real(z)",
+          "complex_data_unchanged": true,
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": {
+            "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+            "revision": 1,
+            "status": "active",
+            "source": "dm_file_metadata",
+            "coordinate_domain": "real_space"
+          }
+        },
+        "preferences": {
+          "preset": "real-space",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": false,
+            "simulation_B": false
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": false,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "0b3042d090c84effa1b7bde9fc8b9c5c",
+        "clean_png_sha256": "dc42e4d1822426d3a8dd975172775cd318bebc920bdda06c702aa352fb3f3bfd"
+      },
+      "scale_bar": {
+        "visible": true,
+        "length": 0.5,
+        "unit": "nm",
+        "source_length_pixels": 25,
+        "image_endpoints_xyxy": [
+          12,
+          83,
+          37,
+          83
+        ],
+        "axis": "x",
+        "signed_scale": 0.02,
+        "calibration_id": "c339070eead242b1a3e18a55b34d3798",
+        "provenance": "dm_file_metadata",
+        "display_only": true
+      }
+    }
+  ]
+}

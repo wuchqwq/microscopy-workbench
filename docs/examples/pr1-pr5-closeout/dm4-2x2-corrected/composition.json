@@ -1,0 +1,642 @@
+{
+  "schema": "microscopy-figure-composition-v1",
+  "layout": "2x2",
+  "font_pt": 8,
+  "roiOutlines": true,
+  "showLegend": true,
+  "slots": [
+    {
+      "kind": "image",
+      "title": "Original",
+      "source_object_id": "ff5e0b72d5dd48b39c2f209b33254208",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "ff5e0b72d5dd48b39c2f209b33254208",
+        "source": {
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y",
+              "image_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "source_object_id": "3c12b8d21037456597c400be375a4078",
+              "source_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ]
+            }
+          ],
+          "frame": {
+            "frame_object_id": "3c12b8d21037456597c400be375a4078",
+            "frame_index": 0,
+            "source_object_id": "9684d8f506d14451b9c6ac4aa65bb2e7",
+            "dataset_index": 0
+          },
+          "anchors": [],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "3c12b8d21037456597c400be375a4078",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": -0.03
+            }
+          }
+        },
+        "display_recipe": {
+          "display_range": [
+            19991000,
+            20009000
+          ],
+          "range_source": "explicit",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": {
+            "calibration_id": "3c12b8d21037456597c400be375a4078",
+            "revision": 1,
+            "status": "active",
+            "source": "dm_file_metadata",
+            "coordinate_domain": "real_space"
+          }
+        },
+        "preferences": {
+          "preset": "real-space",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": false,
+            "simulation_B": false
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": false,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "5fbd02228f5d446b826bdc5042dfe960",
+        "clean_png_sha256": "593bdeda2fd50a7ac8f4fbd8c1c9d723dcd7e4587056423f2deb0189201f5466"
+      },
+      "scale_bar": {
+        "visible": true,
+        "length": 0.5,
+        "unit": "nm",
+        "source_length_pixels": 25,
+        "image_endpoints_xyxy": [
+          12,
+          83,
+          37,
+          83
+        ],
+        "axis": "x",
+        "signed_scale": 0.02,
+        "calibration_id": "3c12b8d21037456597c400be375a4078",
+        "provenance": "dm_file_metadata",
+        "display_only": true
+      }
+    },
+    {
+      "kind": "image",
+      "title": "ROI",
+      "source_object_id": "0bd3207589dd49d5ac4d654ed778b05a",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "0bd3207589dd49d5ac4d654ed778b05a",
+        "source": {
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "source_object_id": "3c12b8d21037456597c400be375a4078",
+              "source_rect_xyxy": [
+                16,
+                16,
+                112,
+                80
+              ],
+              "image_rect_xyxy": [
+                0,
+                0,
+                96,
+                64
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y"
+            }
+          ],
+          "frame": {
+            "frame_object_id": "3c12b8d21037456597c400be375a4078",
+            "frame_index": 0,
+            "source_object_id": "9684d8f506d14451b9c6ac4aa65bb2e7",
+            "dataset_index": 0
+          },
+          "anchors": [],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "3c12b8d21037456597c400be375a4078",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": -0.03
+            }
+          }
+        },
+        "display_recipe": {
+          "display_range": [
+            19991000,
+            20009000
+          ],
+          "range_source": "explicit",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": {
+            "calibration_id": "3c12b8d21037456597c400be375a4078",
+            "revision": 1,
+            "status": "active",
+            "source": "dm_file_metadata",
+            "coordinate_domain": "real_space"
+          }
+        },
+        "preferences": {
+          "preset": "real-space",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": false,
+            "simulation_B": false
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": false,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "8933c64d82dd46dc9b3a3ed76f2685ad",
+        "clean_png_sha256": "aeca7bfb44fa31b88438f3b6bbb2f0bca78fd8b4d5e02ea635ccc1fdbd5d4f57"
+      },
+      "scale_bar": {
+        "visible": true,
+        "length": 0.2,
+        "unit": "nm",
+        "source_length_pixels": 10,
+        "image_endpoints_xyxy": [
+          12,
+          51,
+          22,
+          51
+        ],
+        "axis": "x",
+        "signed_scale": 0.02,
+        "calibration_id": "3c12b8d21037456597c400be375a4078",
+        "provenance": "dm_file_metadata",
+        "display_only": true
+      }
+    },
+    {
+      "kind": "image",
+      "title": "FFT",
+      "source_object_id": "945aa82998284d50b36a5c13bd9a2c0f",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "945aa82998284d50b36a5c13bd9a2c0f",
+        "source": {
+          "panels": [
+            {
+              "bin_center_mapping": "fft_x=fft_rect_x0+(image_x-panel_left+0.5)*fft_rect_width/panel_width-0.5; analogous y",
+              "calibration_dependency": {
+                "calibration_id": "3c12b8d21037456597c400be375a4078",
+                "coordinate_domain": "real_space",
+                "revision": 1,
+                "source": "dm_file_metadata",
+                "status": "active"
+              },
+              "dc_bin_xy": [
+                48,
+                32
+              ],
+              "dc_visible": true,
+              "domain": "frequency",
+              "fft_rect_xyxy": [
+                0,
+                0,
+                96,
+                64
+              ],
+              "fft_shape_yx": [
+                64,
+                96
+              ],
+              "frequency_bounds_centers_xyxy": [
+                -0.5,
+                -0.5,
+                0.4895833333333333,
+                0.484375
+              ],
+              "frequency_coordinate_rule": "fx=(fft_x-floor(fft_width/2))/fft_width; fy=(fft_y-floor(fft_height/2))/fft_height",
+              "image_rect_xyxy": [
+                0,
+                0,
+                96,
+                64
+              ],
+              "physical_frequency_axes": [
+                {
+                  "axis": "fy",
+                  "calibration_id": "3c12b8d21037456597c400be375a4078",
+                  "convention": "original fftshift cycles/pixel divided by signed real-space axis scale; no2pi",
+                  "dc_index": 32,
+                  "numpy_axis": 0,
+                  "size": 64,
+                  "step": -0.5208333333333334,
+                  "unit": "cycles/nm",
+                  "value_at_index_zero": 16.666666666666668
+                },
+                {
+                  "axis": "fx",
+                  "calibration_id": "3c12b8d21037456597c400be375a4078",
+                  "convention": "original fftshift cycles/pixel divided by signed real-space axis scale; no2pi",
+                  "dc_index": 48,
+                  "numpy_axis": 1,
+                  "size": 96,
+                  "step": 0.5208333333333333,
+                  "unit": "cycles/nm",
+                  "value_at_index_zero": -24.999999999999996
+                }
+              ],
+              "source_object_id": "297c056ead8b4fbda0435aa06b85fc04",
+              "spatial_roi_mapping": "not performed; the FFT input spatial ROI is separate operation provenance",
+              "unit": "cycles/pixel"
+            }
+          ],
+          "frame": {
+            "frame_object_id": "3c12b8d21037456597c400be375a4078",
+            "frame_index": 0,
+            "source_object_id": "9684d8f506d14451b9c6ac4aa65bb2e7",
+            "dataset_index": 0
+          },
+          "anchors": [
+            {
+              "annotation_id": "mark-f040593af04248ddbc929055",
+              "kind": "point",
+              "anchor": {
+                "coordinate_space": "frequency_cycles_per_pixel",
+                "source_object_id": "297c056ead8b4fbda0435aa06b85fc04",
+                "coordinates": [
+                  0.12677974495481004,
+                  -0.000804754240435801
+                ]
+              },
+              "status": "hypothesized"
+            }
+          ],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "3c12b8d21037456597c400be375a4078",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": -0.03
+            }
+          }
+        },
+        "display_recipe": {
+          "constant_range": false,
+          "display_only": true,
+          "display_range": [
+            0.00001762436583338369,
+            15.317109530646615
+          ],
+          "gamma": 1,
+          "interpolation": "lanczos",
+          "max_size": 1024,
+          "quantitative": false,
+          "range_source": "shared_raw_minmax",
+          "representation": "log_amplitude",
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "upscale": false
+        },
+        "preferences": {
+          "preset": "diffraction",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": true,
+            "simulation_B": true
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": true,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [
+          {
+            "annotation_id": "mark-f040593af04248ddbc929055",
+            "presentation": {}
+          }
+        ],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "fe83fb24db5d4f6696f2ee05d3722e13",
+        "clean_png_sha256": "ac865d600144a022d446631c264f2ae26a6b474e07da4a734315c0cd1d321a03"
+      },
+      "scale_bar": null
+    },
+    {
+      "kind": "profile",
+      "title": "Intensity profile",
+      "object_id": "e8a62564ed104634b4274aa26dacb3f2",
+      "scientific_grid_identity": {
+        "source_grid_object_id": "3c12b8d21037456597c400be375a4078",
+        "shape_yx": [
+          64,
+          96
+        ],
+        "dtype": "uint32",
+        "array_sha256": "233c8222ca055e250f01de1bb458d1bad9a7e8da5d1ae72460678952154c5a9e",
+        "source_rect_xyxy": [
+          16,
+          16,
+          112,
+          80
+        ],
+        "coordinate_space": "source_pixels"
+      },
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "3c12b8d21037456597c400be375a4078",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-evidence\\pr1-pr5-closeout-r1\\audit\\input\\signed-uint32-pattern.dm4",
+            "sha256": "b6b823f7686b61eae65aeb70d3eeb33bea4bbd3c33001399a7650086d14dbc59",
+            "stat": {
+              "ctime_ns": "1793273516406499600",
+              "device": "17081883644722306211",
+              "inode": "281474979269118",
+              "mtime_ns": "1793273516406499600",
+              "size": 51349
+            }
+          }
+        },
+        "calibration_id": "3c12b8d21037456597c400be375a4078",
+        "coordinate_domain": "real_space",
+        "dm_file_axes": [
+          {
+            "axis": "x",
+            "coordinate_convention": "value(index)=(index-raw_origin)*signed_scale; raw origin is in pixels",
+            "dm_dimension": 0,
+            "numpy_axis": 1,
+            "physical_pixel_zero": -0.025,
+            "raw_origin": 1.25,
+            "raw_tags": {
+              "Origin": 1.25,
+              "Scale": 0.02,
+              "Units": "nm"
+            },
+            "reader_axis": {
+              "index_in_array": 1,
+              "name": "x",
+              "navigate": false,
+              "offset": -0.025,
+              "scale": 0.02,
+              "size": 128,
+              "units": "nm"
+            },
+            "signed_scale": 0.02,
+            "size": 128,
+            "to_record_unit_factor": 1,
+            "unit": "nm",
+            "usable": true
+          },
+          {
+            "axis": "y",
+            "coordinate_convention": "value(index)=(index-raw_origin)*signed_scale; raw origin is in pixels",
+            "dm_dimension": 1,
+            "numpy_axis": 0,
+            "physical_pixel_zero": -0.075,
+            "raw_origin": -2.5,
+            "raw_tags": {
+              "Origin": -2.5,
+              "Scale": -0.03,
+              "Units": "nm"
+            },
+            "reader_axis": {
+              "index_in_array": 0,
+              "name": "y",
+              "navigate": false,
+              "offset": -0.075,
+              "scale": -0.03,
+              "size": 96,
+              "units": "nm"
+            },
+            "signed_scale": -0.03,
+            "size": 96,
+            "to_record_unit_factor": 1,
+            "unit": "nm",
+            "usable": true
+          }
+        ],
+        "dm_file_provenance": {
+          "dataset": {
+            "axes": [
+              {
+                "index_in_array": 0,
+                "name": "y",
+                "navigate": false,
+                "offset": -0.075,
+                "scale": -0.03,
+                "size": 96,
+                "units": "nm"
+              },
+              {
+                "index_in_array": 1,
+                "name": "x",
+                "navigate": false,
+                "offset": -0.025,
+                "scale": 0.02,
+                "size": 128,
+                "units": "nm"
+              }
+            ],
+            "calibration_xy": [
+              {
+                "axis": "x",
+                "coordinate_convention": "value(index)=(index-raw_origin)*signed_scale; raw origin is in pixels",
+                "dm_dimension": 0,
+                "numpy_axis": 1,
+                "physical_pixel_zero": -0.025,
+                "raw_origin": 1.25,
+                "raw_tags": {
+                  "Origin": 1.25,
+                  "Scale": 0.02,
+                  "Units": "nm"
+                },
+                "reader_axis": {
+                  "index_in_array": 1,
+                  "name": "x",
+                  "navigate": false,
+                  "offset": -0.025,
+                  "scale": 0.02,
+                  "size": 128,
+                  "units": "nm"
+                },
+                "signed_scale": 0.02,
+                "size": 128,
+                "unit": "nm",
+                "usable": true
+              },
+              {
+                "axis": "y",
+                "coordinate_convention": "value(index)=(index-raw_origin)*signed_scale; raw origin is in pixels",
+                "dm_dimension": 1,
+                "numpy_axis": 0,
+                "physical_pixel_zero": -0.075,
+                "raw_origin": -2.5,
+                "raw_tags": {
+                  "Origin": -2.5,
+                  "Scale": -0.03,
+                  "Units": "nm"
+                },
+                "reader_axis": {
+                  "index_in_array": 0,
+                  "name": "y",
+                  "navigate": false,
+                  "offset": -0.075,
+                  "scale": -0.03,
+                  "size": 96,
+                  "units": "nm"
+                },
+                "signed_scale": -0.03,
+                "size": 96,
+                "unit": "nm",
+                "usable": true
+              }
+            ],
+            "dataset_index": 0,
+            "dm_data_type": 11,
+            "dtype": "uint32",
+            "eligible_scalar_2d": true,
+            "intensity_calibration_applied": false,
+            "intensity_semantics": "raw stored values; brightness calibration retained but not applied",
+            "raw_calibration": {
+              "Brightness": {
+                "Origin": 0,
+                "Scale": 1,
+                "Units": []
+              },
+              "Dimension": {
+                "TagGroup0": {
+                  "Origin": 1.25,
+                  "Scale": 0.02,
+                  "Units": "nm"
+                },
+                "TagGroup1": {
+                  "Origin": -2.5,
+                  "Scale": -0.03,
+                  "Units": "nm"
+                }
+              }
+            },
+            "reason": null,
+            "shape": [
+              96,
+              128
+            ],
+            "storage_dtype": "<u4",
+            "title": "SYNTHETIC public uint32 periodic field"
+          },
+          "dataset_index": 0,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-evidence\\pr1-pr5-closeout-r1\\audit\\input\\signed-uint32-pattern.dm4",
+            "sha256": "b6b823f7686b61eae65aeb70d3eeb33bea4bbd3c33001399a7650086d14dbc59",
+            "stat": {
+              "ctime_ns": "1793273516406499600",
+              "device": "17081883644722306211",
+              "inode": "281474979269118",
+              "mtime_ns": "1793273516406499600",
+              "size": 51349
+            }
+          },
+          "source_reader": {
+            "dataset_index_convention": "zero-based result of file_reader after its explicit Thumbnails-tag exclusion",
+            "mode": "external file decoding; not DigitalMicrograph native",
+            "name": "RosettaSciIO",
+            "version": "0.15.0"
+          },
+          "thumbnail_policy": "RosettaSciIO file_reader excludes ImageList entries identified by the file's Thumbnails tags; no first-image heuristic in this adapter"
+        },
+        "original_file_metadata_modified": false,
+        "physical_zero_xy": [
+          -0.025,
+          -0.075
+        ],
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "dm_file_metadata",
+        "source_text": "Stored raw DM4 dimension tags read by RosettaSciIO from the exact hashed file; not a user statement or a live DM native call",
+        "status": "active",
+        "uncertainty_status": "unknown; file metadata supplies no independent calibration uncertainty",
+        "value_unit_or_frame_depth_inferred": false,
+        "verification_scope": "file/reader/array/axis consistency only; no independent metrological verification or phase identification",
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.02,
+          "y": -0.03
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "schema": "microscopy-pr1-pr5-closeout-evidence-v1",
+  "status": "PASS_BOUNDED_SYNTHETIC",
+  "tested_feature_main": "b0b40c0d88f6adcaa4213f70a2ddd672f40ab0a0",
+  "tested_code_tree": "940fc6bd13955933d9bc69efa3d922b91514abe4",
+  "report_only_files_follow_tested_feature_main": true,
+  "environment": {
+    "os": "Windows 11",
+    "node": "v24.16.0",
+    "python": "Python 3.13.2",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "rosettasciio": "0.15.0",
+    "pillow": "12.3.0"
+  },
+  "final_main_node": {
+    "pass": 257,
+    "existing_opt_in_skip": 4,
+    "fail": 0
+  },
+  "final_main_mcp": [
+    {
+      "command": "npm test",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 8.825
+    },
+    {
+      "command": "npm run test:science",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 17.238
+    },
+    {
+      "command": "npm run test:dm4",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 17.354
+    },
+    {
+      "command": "npm run test:dm-planes",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 42.244
+    },
+    {
+      "command": "npm run test:complex",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 36.974
+    }
+  ],
+  "final_main_readers": [
+    {
+      "file": "dm4_import_test.py",
+      "cases": 5,
+      "exit_code": 0,
+      "process_elapsed_seconds": 56.3519203
+    },
+    {
+      "file": "dm_planes_test.py",
+      "cases": 6,
+      "exit_code": 0,
+      "process_elapsed_seconds": 89.4298042
+    },
+    {
+      "file": "dm_complex_test.py",
+      "cases": 4,
+      "exit_code": 0,
+      "process_elapsed_seconds": 80.0162492
+    }
+  ],
+  "actual_browser": {
+    "backend": "Chrome -> Panel HTTP -> MCP stdio -> independent Python",
+    "tiff": "PASS",
+    "dm4": "PASS_WITH_RETAINED_P1_AND_REEXPORT",
+    "complex": "PASS",
+    "sizes": [
+      [
+        1280,
+        800
+      ],
+      [
+        960,
+        800
+      ]
+    ],
+    "nd_selector": "CLI_MCP_ONLY_NOT_GUI"
+  },
+  "independent_science_checks": {
+    "tiff": 172,
+    "dm4": 47,
+    "complex": 46
+  },
+  "helper_reopen": {
+    "status": "PASS",
+    "unchanged_authoritative_file_counts": {
+      "tiff": 95,
+      "dm4": 55,
+      "complex": 43
+    },
+    "new_scientific_objects_or_requests": 0,
+    "unchanged_sources": true,
+    "old_auxiliary_byte_zero_write_not_claimed": true
+  },
+  "browser_fft_counts": {
+    "tiff": 1,
+    "dm4": 1,
+    "complex": 0
+  },
+  "p1": {
+    "commit": "3dc8dbc19ce9d5fb34ccaf95b564101eb3884255",
+    "status": "FIXED_AND_REAL_BROWSER_REEXPORTED",
+    "before_labels": [
+      19990000,
+      20000000,
+      20000000,
+      20000000
+    ],
+    "after_labels": [
+      19991000,
+      19995000,
+      19999000,
+      20003000
+    ],
+    "raw_tick_positions": [
+      19991228,
+      19995228,
+      19999228,
+      20003228
+    ],
+    "display_labels_are_compact_not_full_precision": true,
+    "same_recipe_and_curve_points": true
+  },
+  "not_tested": [
+    "real ADF in this round",
+    "real DM3 or volume specimens",
+    "real complex specimens",
+    "Mac device",
+    "live GMS/native",
+    "separate ordinary MCP model-client vision"
+  ],
+  "scope": "Public synthetic artifacts only; no exported NPY, private specimen pixels or credentials. Scientific journals remain authoritative in retained local workspaces.",
+  "files": {
+    "before-fix-not-for-use/dm4-duplicate-ticks.svg": {
+      "bytes": 30974,
+      "sha256": "b745ca699fca93bd6ce29df3a4f2df0ad0562868b8c251d4d44b8b295addf4c4"
+    },
+    "complex-1x3/composition.json": {
+      "bytes": 11711,
+      "sha256": "34879b70f0962be5471aeae54f59949de074fcaf744e2f619861dd7e06b4ff45"
+    },
+    "complex-1x3/composition.png": {
+      "bytes": 185619,
+      "sha256": "eb086dc35f7c5c76073074a9c579258d53e68528f7868f292a1ed6d5033ce92a"
+    },
+    "complex-1x3/composition.svg": {
+      "bytes": 16842,
+      "sha256": "cb418c0aaf3c02ac56d2f94dde276a8dd1ebf74ebd139c3ff48a8861e0733d7c"
+    },
+    "complex-imag-profile.csv": {
+      "bytes": 27380,
+      "sha256": "1cce0046869623a951e49c19e69bc40c0e40d9d31abdec7c3026165c8746b254"
+    },
+    "complex-real-display-imag-profile.png": {
+      "bytes": 89084,
+      "sha256": "d8169cc25b30f9c45cb904131a10bc61f6c6ee78953702424f45755a0ba8c88a"
+    },
+    "dm4-2x2-corrected/composition.json": {
+      "bytes": 21882,
+      "sha256": "2a5805e377d308d6bd9cdb6ce02d4e76619bc5a80ba0872d118d23772c4b2578"
+    },
+    "dm4-2x2-corrected/composition.png": {
+      "bytes": 920039,
+      "sha256": "3320447afe5d59fb42a7dafca34443ae2cdb77ea726e859665a3c62e34522f3a"
+    },
+    "dm4-2x2-corrected/composition.svg": {
+      "bytes": 30974,
+      "sha256": "bc416abca719d7f29cc5dde2a09dc43947fbe06cc95139e025f04b7f1b94bf81"
+    },
+    "dm4-corrected-2x2-browser-1280.png": {
+      "bytes": 80503,
+      "sha256": "12ea8ce3e40145fee313b60ef7486d753274ef5eb05a1dd98f292cdd3e0c1faa"
+    },
+    "dm4-corrected-artifact-report.json": {
+      "bytes": 1090,
+      "sha256": "57ab83e5ab8a2cf20ec8ad099fbac8b7f7b2e786f5d7400382faf4b5920da504"
+    },
+    "dm4-measurements.csv": {
+      "bytes": 875,
+      "sha256": "38cdd02d8b9a51f8f68ca17a4be9af970401371e9873c2e7ae848b0cdf341af4"
+    },
+    "dm4-profile.csv": {
+      "bytes": 27767,
+      "sha256": "ff8d35057b72f7c4373b75a3427e0b39e9e282e3ced4eeb359a7f8eae4c61ff7"
+    },
+    "helper-reopen-links.json": {
+      "bytes": 3738,
+      "sha256": "831a74a6a220dda0f2208e86755d590effa48e9197842e2ace44ccce2ddd9f5c"
+    },
+    "make_dm4_inputs.py": {
+      "bytes": 2180,
+      "sha256": "4d335ea135c4da2c93528bdd68b8eec994ce9cf0aefff510b75e9c534d082f1d"
+    },
+    "tiff-1x3/composition.json": {
+      "bytes": 14385,
+      "sha256": "f4509f4a7221754a67169d330010aad86f12861a27c48fe3dbffd868c6cd97a3"
+    },
+    "tiff-1x3/composition.png": {
+      "bytes": 426685,
+      "sha256": "1ed878d8924f76cd0b451d75a7ca7d06770a648a8ac1095f67f444a3825d2921"
+    },
+    "tiff-1x3/composition.svg": {
+      "bytes": 20719,
+      "sha256": "71e95a015c5dba468640fc31d781510d13b4a4dd26fab4b7317bf74294c69a14"
+    },
+    "tiff-1x3-browser-960.png": {
+      "bytes": 74422,
+      "sha256": "72b2f8749e26e1889113fee269d7085d2f9fc1c6252d5a9446840fae8532057b"
+    },
+    "tiff-2x2/composition.json": {
+      "bytes": 16583,
+      "sha256": "3c4e963c6b9236dbcdebc728b5fc94e2ffa3a2565ee2db3fbd60ab66c8e562e8"
+    },
+    "tiff-2x2/composition.png": {
+      "bytes": 919873,
+      "sha256": "a8d2a993468f84131886df0b64325abb4508985540de43be46e243fb7a21da77"
+    },
+    "tiff-2x2/composition.svg": {
+      "bytes": 27389,
+      "sha256": "b1656c53fb5a57f4e91c1aeac10083bdcfa00a05b630eacfe0607f0e936c26bb"
+    },
+    "tiff-2x2-browser-1280.png": {
+      "bytes": 83229,
+      "sha256": "37168c0f613d9a9e18dce5baafa1b96e76392e054afbfbe71ccc6a63868086e4"
+    },
+    "tiff-focus-draft-960.png": {
+      "bytes": 66653,
+      "sha256": "f51d2e5a74b2ac046e085b41454232d8d2604d4dbccf65dbdc378a1657d726a6"
+    },
+    "tiff-g1-revision-report.json": {
+      "bytes": 2242,
+      "sha256": "cddf90ad91dda62dda222a83a96ed802583452207462a0110b7352de880641ec"
+    },
+    "tiff-measurements.csv": {
+      "bytes": 1836,
+      "sha256": "d08952adbed1e8dc89c3e3bea32bb354bb60e4e596efa8f4e882ed4b60b16fa0"
+    },
+    "tiff-profile.csv": {
+      "bytes": 27259,
+      "sha256": "67b5cb353bdb4547e41f7b6711b7a9b83b8722a4bded3cb5df72c4992c247506"
+    },
+    "tiff-three-measurements-1280.png": {
+      "bytes": 88965,
+      "sha256": "dd6238a0d771b2ff5436a810bd34ebaa4fb94bf55a6e7601950fbbc4da3e4bf0"
+    }
+  }
+}

@@ -1,0 +1,483 @@
+{
+  "schema": "microscopy-figure-composition-v1",
+  "layout": "2x2",
+  "font_pt": 8,
+  "roiOutlines": true,
+  "showLegend": true,
+  "slots": [
+    {
+      "kind": "image",
+      "title": "Original",
+      "source_object_id": "65f329be0e2147e88db2a9d55e18c1b0",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "65f329be0e2147e88db2a9d55e18c1b0",
+        "source": {
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "source_object_id": "f29cad4705924241b5506a7302a6728f",
+              "source_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ],
+              "image_rect_xyxy": [
+                0,
+                0,
+                128,
+                96
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y"
+            }
+          ],
+          "frame": {
+            "frame_object_id": "f29cad4705924241b5506a7302a6728f",
+            "frame_index": 0,
+            "source_object_id": "e3e3524bbf904fd19ffcbab3bfaab804"
+          },
+          "anchors": [],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": 0.02
+            }
+          }
+        },
+        "display_recipe": {
+          "display_range": [
+            15000,
+            33000
+          ],
+          "range_source": "shared_raw_minmax",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": {
+            "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+            "revision": 1,
+            "status": "active",
+            "source": "user_statement_not_independently_verified",
+            "coordinate_domain": "real_space"
+          }
+        },
+        "preferences": {
+          "preset": "real-space",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": false,
+            "simulation_B": false
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": false,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "09f51c4a51c44459b2aad8ce3e788677",
+        "clean_png_sha256": "fdc9d6b8f6c64ded61341d16527a03d3ad49aa55fd2480f1e0dd22c9b4b68699"
+      },
+      "scale_bar": {
+        "visible": true,
+        "length": 0.5,
+        "unit": "nm",
+        "source_length_pixels": 25,
+        "image_endpoints_xyxy": [
+          12,
+          83,
+          37,
+          83
+        ],
+        "axis": "x",
+        "signed_scale": 0.02,
+        "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+        "provenance": "user_statement_not_independently_verified",
+        "display_only": true
+      }
+    },
+    {
+      "kind": "image",
+      "title": "ROI",
+      "source_object_id": "48ee426ee307423e99e0d9f672d11d1a",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "48ee426ee307423e99e0d9f672d11d1a",
+        "source": {
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "source_object_id": "f29cad4705924241b5506a7302a6728f",
+              "source_rect_xyxy": [
+                16,
+                16,
+                112,
+                80
+              ],
+              "image_rect_xyxy": [
+                0,
+                0,
+                96,
+                64
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y"
+            }
+          ],
+          "frame": {
+            "frame_object_id": "f29cad4705924241b5506a7302a6728f",
+            "frame_index": 0,
+            "source_object_id": "e3e3524bbf904fd19ffcbab3bfaab804"
+          },
+          "anchors": [],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": 0.02
+            }
+          }
+        },
+        "display_recipe": {
+          "display_range": [
+            15000,
+            33000
+          ],
+          "range_source": "explicit",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": {
+            "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+            "revision": 1,
+            "status": "active",
+            "source": "user_statement_not_independently_verified",
+            "coordinate_domain": "real_space"
+          }
+        },
+        "preferences": {
+          "preset": "real-space",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": false,
+            "simulation_B": false
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": false,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "f3d5fadc826e4e978a4a8f25c71048a6",
+        "clean_png_sha256": "aeca7bfb44fa31b88438f3b6bbb2f0bca78fd8b4d5e02ea635ccc1fdbd5d4f57"
+      },
+      "scale_bar": {
+        "visible": true,
+        "length": 0.2,
+        "unit": "nm",
+        "source_length_pixels": 10,
+        "image_endpoints_xyxy": [
+          12,
+          51,
+          22,
+          51
+        ],
+        "axis": "x",
+        "signed_scale": 0.02,
+        "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+        "provenance": "user_statement_not_independently_verified",
+        "display_only": true
+      }
+    },
+    {
+      "kind": "image",
+      "title": "FFT",
+      "source_object_id": "ee9662ce35d04968a1fb453a2ad20713",
+      "recipe": {
+        "schema": "mcp-dm-figure-v1",
+        "source_object_id": "ee9662ce35d04968a1fb453a2ad20713",
+        "source": {
+          "panels": [
+            {
+              "bin_center_mapping": "fft_x=fft_rect_x0+(image_x-panel_left+0.5)*fft_rect_width/panel_width-0.5; analogous y",
+              "calibration_dependency": {
+                "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+                "coordinate_domain": "real_space",
+                "revision": 1,
+                "source": "user_statement_not_independently_verified",
+                "status": "active"
+              },
+              "dc_bin_xy": [
+                48,
+                32
+              ],
+              "dc_visible": true,
+              "domain": "frequency",
+              "fft_rect_xyxy": [
+                0,
+                0,
+                96,
+                64
+              ],
+              "fft_shape_yx": [
+                64,
+                96
+              ],
+              "frequency_bounds_centers_xyxy": [
+                -0.5,
+                -0.5,
+                0.4895833333333333,
+                0.484375
+              ],
+              "frequency_coordinate_rule": "fx=(fft_x-floor(fft_width/2))/fft_width; fy=(fft_y-floor(fft_height/2))/fft_height",
+              "image_rect_xyxy": [
+                0,
+                0,
+                96,
+                64
+              ],
+              "physical_frequency_axes": [
+                {
+                  "axis": "fy",
+                  "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+                  "convention": "original fftshift cycles/pixel divided by signed real-space axis scale; no2pi",
+                  "dc_index": 32,
+                  "numpy_axis": 0,
+                  "size": 64,
+                  "step": 0.78125,
+                  "unit": "cycles/nm",
+                  "value_at_index_zero": -25
+                },
+                {
+                  "axis": "fx",
+                  "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+                  "convention": "original fftshift cycles/pixel divided by signed real-space axis scale; no2pi",
+                  "dc_index": 48,
+                  "numpy_axis": 1,
+                  "size": 96,
+                  "step": 0.5208333333333333,
+                  "unit": "cycles/nm",
+                  "value_at_index_zero": -24.999999999999996
+                }
+              ],
+              "source_object_id": "fcedf64b2df64250b7e377286803c736",
+              "spatial_roi_mapping": "not performed; the FFT input spatial ROI is separate operation provenance",
+              "unit": "cycles/pixel"
+            }
+          ],
+          "frame": {
+            "frame_object_id": "f29cad4705924241b5506a7302a6728f",
+            "frame_index": 0,
+            "source_object_id": "e3e3524bbf904fd19ffcbab3bfaab804"
+          },
+          "anchors": [
+            {
+              "annotation_id": "mark-cacded0e62e2406cabae7fa2",
+              "kind": "point",
+              "anchor": {
+                "coordinate_space": "frequency_cycles_per_pixel",
+                "source_object_id": "fcedf64b2df64250b7e377286803c736",
+                "coordinates": [
+                  0.10808749421154425,
+                  0.002083844079431185
+                ]
+              },
+              "status": "hypothesized"
+            },
+            {
+              "annotation_id": "mark-e4fdef3d93904278a40e54cc",
+              "kind": "point",
+              "anchor": {
+                "coordinate_space": "frequency_cycles_per_pixel",
+                "source_object_id": "fcedf64b2df64250b7e377286803c736",
+                "coordinates": [
+                  -0.12552096101985785,
+                  0.002083844079431185
+                ]
+              },
+              "status": "hypothesized"
+            },
+            {
+              "annotation_id": "mark-dfdf99e1157a433da85bc463",
+              "kind": "point",
+              "anchor": {
+                "coordinate_space": "frequency_cycles_per_pixel",
+                "source_object_id": "fcedf64b2df64250b7e377286803c736",
+                "coordinates": [
+                  0,
+                  0.06484432458936018
+                ]
+              },
+              "status": "hypothesized"
+            }
+          ],
+          "grid": null,
+          "calibration": {
+            "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+            "revision": 1,
+            "status": "active",
+            "coordinate_domain": "real_space",
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": 0.02
+            }
+          }
+        },
+        "display_recipe": {
+          "constant_range": false,
+          "display_only": true,
+          "display_range": [
+            0.00001762436583338369,
+            15.317109530646615
+          ],
+          "gamma": 1,
+          "interpolation": "lanczos",
+          "max_size": 1024,
+          "quantitative": false,
+          "range_source": "shared_raw_minmax",
+          "representation": "log_amplitude",
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "upscale": false
+        },
+        "preferences": {
+          "preset": "diffraction",
+          "mode": "analysis",
+          "layers": {
+            "experimental": true,
+            "simulation_A": true,
+            "simulation_B": true
+          },
+          "columns": "single",
+          "fontPt": 8,
+          "legend": true,
+          "scaleBar": true,
+          "letter": ""
+        },
+        "annotations": [
+          {
+            "annotation_id": "mark-cacded0e62e2406cabae7fa2",
+            "presentation": {}
+          },
+          {
+            "annotation_id": "mark-e4fdef3d93904278a40e54cc",
+            "presentation": {}
+          },
+          {
+            "annotation_id": "mark-dfdf99e1157a433da85bc463",
+            "presentation": {}
+          }
+        ],
+        "limitation": "Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged."
+      },
+      "asset": {
+        "object_id": "462d5491c5534f1ebdabbc656cad93b0",
+        "clean_png_sha256": "ac865d600144a022d446631c264f2ae26a6b474e07da4a734315c0cd1d321a03"
+      },
+      "scale_bar": null
+    },
+    {
+      "kind": "profile",
+      "title": "Intensity profile",
+      "object_id": "a029f1a0df8d435f896604f6c8232d59",
+      "scientific_grid_identity": {
+        "source_grid_object_id": "f29cad4705924241b5506a7302a6728f",
+        "shape_yx": [
+          64,
+          96
+        ],
+        "dtype": "uint16",
+        "array_sha256": "66cee2f2ac0598eb9139eaed5f6274ca7f929a25ab3f84926564eea32e1c088e",
+        "source_rect_xyxy": [
+          16,
+          16,
+          112,
+          80
+        ],
+        "coordinate_space": "source_pixels"
+      },
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": null,
+          "kind": "tiff_source",
+          "object_id": "e3e3524bbf904fd19ffcbab3bfaab804",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-evidence\\pr1-pr5-closeout-r1\\tiff-input\\periodic-sequence.tiff",
+            "sha256": "b0683c65ea241866d7a21a9a5fbe125f56b7cdff2cbf9c46f9524608e0a25a83",
+            "stat": {
+              "ctime_ns": "1793273496500521600",
+              "device": "17081883644722306211",
+              "inode": "281474979269079",
+              "mtime_ns": "1793273496502517200",
+              "size": 74320
+            }
+          }
+        },
+        "calibration_id": "86297c8ea9454eb6a76742aa48e72752",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "sequence",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "SYNTHETIC fixture: X/Y = 0.02 nm per source pixel; known ideal tones, not experimental calibration.",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.02,
+          "y": 0.02
+        }
+      }
+    }
+  ]
+}
