@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Generate explicit local connection files; never edit an Agent's real config.
 import path from 'node:path';
+import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {validatePluginSettings} from './plugin_server.mjs';
@@ -26,7 +27,7 @@ export function preparePlugin({python,workspace,output,structures=false,structur
   writeFileSync(path.join(destination,'codex.toml'),toml,{flag:'wx'});
   return {configuration:settingsFile,mcp:path.join(destination,'mcp.json'),codex:path.join(destination,'codex.toml'),server,skills:path.join(pluginRoot as string,'skills','scientific-agent')};
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+if(isDirectInvocation(import.meta.url)){
   try{
     const args=process.argv.slice(2),values:Record<string,unknown>={};
     for(let i=0;i<args.length;i++){
