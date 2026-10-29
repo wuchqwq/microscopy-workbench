@@ -52,18 +52,20 @@ required. The terminal prints a private loopback panel URL. Keep the process
 running and stop normally with Ctrl+C. The Image Panel uses this repository's
 independent server and the exact selected workspace, not a hidden DM server.
 
-For supported scalar 2D `.dm4`, install optional `requirements-dm4.txt` in the
+For supported real scalar `.dm3` / `.dm4` planes, install optional `requirements-dm4.txt` in the
 same independent environment and use the same entry point. Stored dtype and
 signed XY calibration are preserved; the file is read-only and DM need not
-run. See [direct DM4 import](docs/DM4_DIRECT_IMPORT.md) for dataset selection,
+run. See [direct DM3/DM4 import](docs/DM4_DIRECT_IMPORT.md) for dataset selection,
 reader licensing and the bounded support range.
 
 ## Scope and data
 
 Existing admitted uint16 TIFF / verified schema-1 captures, source/frame/ROI,
 FFT, calibrated measurements, editable annotations and scientific exports remain
-subject to their original guards. Optional bounded scalar 2D DM4 import is a
-later addition. Arbitrary DM3/DM4 volumes, reconstruction, unique phase
+subject to their original guards. Optional bounded scalar DM3/DM4 plane import is a
+later addition. Rank 3–6 sources require explicit plane axes and fixed indices;
+no navigation flattening or full-volume analysis is implied. Complex/packed
+DM arrays remain refused. Reconstruction, unique phase
 identification and remote DM transport remain outside this migration's scope.
 Saved native capture verification is a **read-only file-format adapter**, not a
 live DM dependency. Old file-workspace schemas and names are preserved so source

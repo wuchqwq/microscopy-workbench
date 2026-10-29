@@ -1,5 +1,7 @@
 # Direct DM4 import: bounded acceptance
 
+This is the original PR #3 acceptance; [the DM3/selected-plane follow-up](DM_FILE_PLANES_ACCEPTANCE.md) is recorded separately.
+
 Date: 2026-10-29. Base: `main@0fcbdcb`; this feature does not depend on the
 separate GUI/Figure polish PR. No GMS process, native plugin or DM ABI is used.
 

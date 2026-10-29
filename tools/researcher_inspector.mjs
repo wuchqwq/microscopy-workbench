@@ -6,7 +6,8 @@ import {mkdirSync,existsSync,realpathSync,statSync,openSync,writeFileSync,fsyncS
 import {StdioImageClient,createImagePanel} from './image_panel.mjs';
 
 const objectId=/^[a-f0-9]{32}$/;
-const HELP='node tools/researcher_inspector.mjs --source ABS_TIFF_OR_DM4 --workspace ABS_DIRECTORY --python ABS_PYTHON [--frame 1] [--dataset 1]. DM4 dataset numbers start at 1; omit only when exactly one eligible scientific 2D dataset exists. Reopen with the same workspace/python; source, initial frame and dataset may be omitted.';
+const HELP='node tools/researcher_inspector.mjs --source ABS_TIFF_OR_DM3_OR_DM4 --workspace ABS_DIRECTORY --python ABS_PYTHON [--frame 1] [--dataset 1] [--plane-axes Y,X --plane-indices 0,*,*]. DM dataset numbers start at 1; omit only when exactly one eligible scientific dataset exists. Reopen with the same workspace/python; source, initial frame and dataset may be omitted.';
+function validatePlaneOptions(options){const axes=options.plane_axes,indices=options.plane_indices;if((axes===undefined)!==(indices===undefined))throw new Error('Supply both plane selectors');if(axes!==undefined&&(!Array.isArray(axes)||axes.length!==2||axes.some(v=>!Number.isInteger(v)||v<0||v>5)||axes[0]===axes[1]||!Array.isArray(indices)||indices.length<2||indices.length>6||axes.some(v=>v>=indices.length)||indices.some((v,i)=>axes.includes(i)?v!==null:!Number.isSafeInteger(v)||v<0)))throw new Error('Invalid explicit DM plane selectors');}
 function durableNew(file,value){const fd=openSync(file,'wx');try{writeFileSync(fd,JSON.stringify(value,null,2)+'\n');fsyncSync(fd);}finally{closeSync(fd);}}
 function boundedJSON(file){if(statSync(file).size>1024*1024)throw new Error('Inspector record exceeds 1 MiB');return JSON.parse(readFileSync(file,'utf8'));}
 function replaceJSON(file,value){const temporary=file+'.'+randomBytes(6).toString('hex')+'.tmp';durableNew(temporary,value);try{renameSync(temporary,file);}finally{if(existsSync(temporary))unlinkSync(temporary);}}
@@ -14,22 +15,25 @@ function inside(root,file){const resolved=realpathSync(file),relative=path.relat
 
 export function parseResearcherArgs(argv){
  const options={};
- for(let i=0;i<argv.length;i+=2){const key=argv[i],value=argv[i+1];if(!['--source','--workspace','--python','--frame','--dataset'].includes(key)||!value||options[key.slice(2)]!==undefined)throw new Error(HELP);options[key.slice(2)]=value;}
+ for(let i=0;i<argv.length;i+=2){const key=argv[i],value=argv[i+1];if(!['--source','--workspace','--python','--frame','--dataset','--plane-axes','--plane-indices'].includes(key)||!value||options[key.slice(2).replaceAll('-','_')]!==undefined)throw new Error(HELP);options[key.slice(2).replaceAll('-','_')]=value;}
  for(const key of ['workspace','python'])if(!path.isAbsolute(options[key]??''))throw new Error('Explicit absolute '+key+' required. '+HELP);
- if(options.source!==undefined&&!path.isAbsolute(options.source))throw new Error('Source must be an absolute local TIFF/DM4 path');
+ if(options.source!==undefined&&!path.isAbsolute(options.source))throw new Error('Source must be an absolute local TIFF/DM3/DM4 path');
  if(options.frame!==undefined&&(!/^[1-9][0-9]*$/.test(options.frame)||!Number.isSafeInteger(Number(options.frame))))throw new Error('Frame is a human-facing integer starting at 1');
  if(options.frame!==undefined)options.frame=Number(options.frame);
- if(options.dataset!==undefined&&(!/^[1-9][0-9]*$/.test(options.dataset)||Number(options.dataset)>64))throw new Error('DM4 dataset is a human-facing integer from 1 through 64');
+ if(options.dataset!==undefined&&(!/^[1-9][0-9]*$/.test(options.dataset)||Number(options.dataset)>64))throw new Error('DM dataset is a human-facing integer from 1 through 64');
  if(options.dataset!==undefined)options.dataset=Number(options.dataset);
- return options;
+ if((options.plane_axes===undefined)!==(options.plane_indices===undefined))throw new Error('Supply both --plane-axes and --plane-indices');
+ if(options.plane_axes!==undefined){if(!/^[0-5],[0-5]$/.test(options.plane_axes))throw new Error('--plane-axes is two distinct zero-based original array axes Y,X');options.plane_axes=options.plane_axes.split(',').map(Number);if(options.plane_axes[0]===options.plane_axes[1])throw new Error('Plane axes must be distinct');if(!/^(?:[0-9]+|\*)(?:,(?:[0-9]+|\*)){1,5}$/.test(options.plane_indices))throw new Error('--plane-indices uses zero-based integers and * for the two plane axes');options.plane_indices=options.plane_indices.split(',').map(v=>v==='*'?null:Number(v));if(options.plane_indices.some(v=>v!==null&&!Number.isSafeInteger(v)))throw new Error('Plane index exceeds safe integer range');}
+ validatePlaneOptions(options);return options;
 }
 
 export async function startResearcherInspector(options,{createClient=args=>new StdioImageClient(args),openPanel=createImagePanel}={}){
- // The only file entry is the explicitly named TIFF or DM4. All later references are
+ // The only file entry is the explicitly named TIFF, DM3 or DM4. All later references are
  // provider objects or this launcher's own bounded journal within the workspace.
  const workspace=path.resolve(options.workspace),python=options.python;
  if(!path.isAbsolute(options.workspace??'')||!path.isAbsolute(python??''))throw new Error('Absolute workspace and external Python paths required');
- if(options.dataset!==undefined&&(!Number.isSafeInteger(options.dataset)||options.dataset<1||options.dataset>64))throw new Error('DM4 dataset must be an integer from 1 through 64');
+ if(options.dataset!==undefined&&(!Number.isSafeInteger(options.dataset)||options.dataset<1||options.dataset>64))throw new Error('DM dataset must be an integer from 1 through 64');
+ validatePlaneOptions(options);
  if(!existsSync(python)||!statSync(python).isFile())throw new Error('External Python executable does not exist');
  mkdirSync(workspace,{recursive:true});
  const directory=path.join(workspace,'researcher-inspector');mkdirSync(directory,{recursive:true});
@@ -40,11 +44,12 @@ export async function startResearcherInspector(options,{createClient=args=>new S
   if(options.source!==undefined&&realpathSync(options.source)!==session.source_path)throw new Error('Workspace is bound to a different source file; use a new workspace');
   if(options.frame!==undefined&&options.frame!==session.initial_frame)throw new Error('Initial frame differs; resume the saved view and use its frame navigation');
   if(options.dataset!==undefined&&options.dataset-1!==session.initial_dataset_index)throw new Error('Dataset differs from the saved startup; reopen without a selector or use a new workspace');
+  for(const key of ['plane_axes','plane_indices'])if(options[key]!==undefined&&JSON.stringify(options[key])!==JSON.stringify(session['initial_'+key]))throw new Error('Plane selection differs from the saved startup; use a new workspace');
  }else{
-  if(!path.isAbsolute(options.source??'')||!existsSync(options.source)||!statSync(options.source).isFile())throw new Error('First launch requires an explicit existing local TIFF or DM4 source');
+  if(!path.isAbsolute(options.source??'')||!existsSync(options.source)||!statSync(options.source).isFile())throw new Error('First launch requires an explicit existing local TIFF, DM3 or DM4 source');
   const initialFrame=options.frame??1;if(!Number.isSafeInteger(initialFrame)||initialFrame<1)throw new Error('Frame starts at 1');
-  const dm4=path.extname(options.source).toLowerCase()==='.dm4';if(options.dataset!==undefined&&!dm4)throw new Error('--dataset applies to DM4 sources only');if(dm4&&initialFrame!==1)throw new Error('Initial DM4 support reads a scalar 2D dataset; --frame must be 1');
-  session={schema_version:1,session_id:randomBytes(16).toString('hex'),workspace:realpathSync(workspace),source_path:realpathSync(options.source),initial_frame:initialFrame,...(options.dataset!==undefined?{initial_dataset_index:options.dataset-1}:{}),created_utc:new Date().toISOString()};
+  const dm=['.dm3','.dm4'].includes(path.extname(options.source).toLowerCase());if((options.dataset!==undefined||options.plane_axes!==undefined)&&!dm)throw new Error('Dataset/plane selectors apply to DM3/DM4 sources only');if(dm&&initialFrame!==1)throw new Error('DM selects explicit 2D planes, not an inferred depth frame; --frame must be 1');
+  session={schema_version:1,session_id:randomBytes(16).toString('hex'),workspace:realpathSync(workspace),source_path:realpathSync(options.source),initial_frame:initialFrame,...(options.dataset!==undefined?{initial_dataset_index:options.dataset-1}:{}),...(options.plane_axes!==undefined?{initial_plane_axes:options.plane_axes,initial_plane_indices:options.plane_indices}:{}),created_utc:new Date().toISOString()};
   durableNew(sessionPath,session);
  }
  const startup=path.join(directory,'startup');mkdirSync(startup,{recursive:true});
@@ -79,7 +84,7 @@ export async function startResearcherInspector(options,{createClient=args=>new S
    numericResultRefs=Object.hasOwn(selection,'numeric_result_refs')?selection.numeric_result_refs:null;
   }else{
    const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
-   const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:session.initial_frame-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{})});
+   const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:session.initial_frame-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{}),...(session.initial_plane_axes!==undefined?{plane_axes:session.initial_plane_axes,plane_indices:session.initial_plane_indices}:{})});
    selected=await call(bootstrap,'preview','image_preview',{object_id:frame.object_id});
   }
  }finally{await bootstrap.close();}
