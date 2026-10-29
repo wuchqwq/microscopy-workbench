@@ -1,12 +1,15 @@
+import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
+import type {ToolDefinition} from './runtime/contracts.mjs';
+import type {CompositionRecipe} from './image_provider_contracts.mjs';
 // Bounded cross-frame composition; authoritative science stays in the image worker.
-const id={type:'string',pattern:'^[a-f0-9]{32}$'};
-const requestId={type:'string',pattern:'^[A-Za-z0-9_-]{1,64}$'};
-const source={type:'string',minLength:1,maxLength:2000};
-const object=properties=>({type:'object',additionalProperties:false,properties});
-const make=(name,description,properties,required)=>({name,description,inputSchema:{...object({...properties,request_id:requestId}),required:[...required,'request_id']}});
-const frame={...object({object_id:id,label:{type:'string',minLength:1,maxLength:120}}),required:['object_id']};
-const peakOptions=object({min_separation_bins:{type:'integer',minimum:1,maximum:32},exclude_dc_radius_bins:{type:'integer',minimum:0,maximum:64},threshold_rel:{type:'number',exclusiveMinimum:0,maximum:1},refinement:{type:'string',enum:['none','quadratic']}});
-export const sequenceTools=[
+const id: ArgumentSchema={type:'string',pattern:'^[a-f0-9]{32}$'};
+const requestId: ArgumentSchema={type:'string',pattern:'^[A-Za-z0-9_-]{1,64}$'};
+const source: ArgumentSchema={type:'string',minLength:1,maxLength:2000};
+const object=(properties: Readonly<Record<string,ArgumentSchema>>): ToolInputSchema=>({type:'object',additionalProperties:false,properties});
+const make=(name: string,description: string,properties: Readonly<Record<string,ArgumentSchema>>,required: readonly string[]): ToolDefinition=>({name,description,inputSchema:{...object({...properties,request_id:requestId}),required:[...required,'request_id']}});
+const frame: ArgumentSchema={...object({object_id:id,label:{type:'string',minLength:1,maxLength:120}}),required:['object_id']};
+const peakOptions: ArgumentSchema=object({min_separation_bins:{type:'integer',minimum:1,maximum:32},exclude_dc_radius_bins:{type:'integer',minimum:0,maximum:64},threshold_rel:{type:'number',exclusiveMinimum:0,maximum:1},refinement:{type:'string',enum:['none','quadratic']}});
+export const sequenceTools: ToolDefinition[]=[
   make('image_sequence_create','Save an explicit ordered sequence of 2..8 existing real spatial frames and their source, array, calibration and grid identities. References only, no array copies. Axis meaning must be sourced; frame order/step does not establish physical depth or axial resolution. Read the immutable record using image_info and recover by original image_result request ID.',{
     frames:{type:'array',minItems:2,maxItems:8,items:frame},
     axis:{...object({meaning:{type:'string',enum:['time','reconstruction_depth','defocus','tilt','iteration','repeat','unknown']},source_text:source,step:{type:'number'},unit:{type:'string',minLength:1,maxLength:32}}),required:['meaning','source_text']},
@@ -24,7 +27,7 @@ export const sequenceTools=[
   },['correspondence_object_id']),
 ];
 export const sequenceActions={image_sequence_create:'sequence_create',image_region_correspondence:'region_correspondence',image_joint_observations:'joint_observations'};
-export const sequenceRecipes=Object.fromEntries(sequenceTools.map(tool=>[tool.name,{
+export const sequenceRecipes=Object.fromEntries(sequenceTools.map((tool): readonly [string,CompositionRecipe]=>[tool.name,{
   inputs:['Explicit immutable real-space frame/sequence/correspondence references','Sourced sequence meaning and coordinate mapping; pre-saved request ID'],
   outputs:['Immutable sequence/correspondence/joint-evidence object and original request receipts','Per-frame scientific source/grid/calibration and GUI-openable views; PNG is display only'],
   kind:'bounded-sequence-composition-write',

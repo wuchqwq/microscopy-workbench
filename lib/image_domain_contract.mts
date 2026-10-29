@@ -1,9 +1,12 @@
+import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
+import type {ToolDefinition} from './runtime/contracts.mjs';
+import type {CompositionRecipe} from './image_provider_contracts.mjs';
 // Composition of existing scientific operations; no independent analysis engine.
-const id={type:'string',pattern:'^[a-f0-9]{32}$'};
-const object=properties=>({type:'object',additionalProperties:false,properties});
-const make=(name,description,properties,required)=>({name,description,inputSchema:{...object({...properties,request_id:{type:'string',pattern:'^[A-Za-z0-9_-]{1,64}$',description:'Save before submission; query image_result with the same ID after a timeout. Never automatically resubmit an unknown operation.'}}),required:[...required,'request_id']}});
-const index={type:'integer',minimum:0,maximum:7};
-export const domainTools=[
+const id: ArgumentSchema={type:'string',pattern:'^[a-f0-9]{32}$'};
+const object=(properties: Readonly<Record<string,ArgumentSchema>>): ToolInputSchema=>({type:'object',additionalProperties:false,properties});
+const make=(name: string,description: string,properties: Readonly<Record<string,ArgumentSchema>>,required: readonly string[]): ToolDefinition=>({name,description,inputSchema:{...object({...properties,request_id:{type:'string',pattern:'^[A-Za-z0-9_-]{1,64}$',description:'Save before submission; query image_result with the same ID after a timeout. Never automatically resubmit an unknown operation.'}}),required:[...required,'request_id']}});
+const index: ArgumentSchema={type:'integer',minimum:0,maximum:7};
+export const domainTools: ToolDefinition[]=[
  make('image_feature_field','Build a versioned sparse structural feature field from a saved spatial atlas, R2 joint observations or local signature comparison; no FFT is recomputed. Variable local reciprocal families, geometric periods and projected direction relations retain source-pixel windows, calibration, quality/ambiguity masks and original measurements. A heatmap shows sampled windows only, never phase labels, dense interpolation or learned embeddings. image_export saves JSON/CSV/PNG with provenance.',{
   object_id:id,coordinate_domain:{type:'string',enum:['pixel','physical']},display_feature:{type:'string',enum:['family_count','shortest_period']},max_size:{type:'integer',minimum:256,maximum:1024},
  },['object_id','coordinate_domain','display_feature']),
@@ -18,7 +21,7 @@ export const domainTools=[
  },['object_id','reference_index','angles_degrees','coordinate_domain','tolerance']),
 ];
 export const domainActions={image_spatial_atlas:'spatial_atlas',image_local_signature_compare:'local_signature_compare',image_feature_field:'feature_field'};
-export const domainRecipes=Object.fromEntries(domainTools.map(tool=>[tool.name,{
+export const domainRecipes=Object.fromEntries(domainTools.map((tool): readonly [string,CompositionRecipe]=>[tool.name,{
  inputs:['Immutable frame/atlas/joint-evidence references with authoritative source/array/calibration hashes','Explicit ROI or finite rotation hypotheses and tolerance; pre-saved request identity'],
  outputs:['Immutable local reflection evidence and descriptive comparison; saved GUI views and numeric CSV/JSON','Unchanged source arrays and FFT identities; original-request recovery'],
  kind:'bounded-scientific-composition-write',
