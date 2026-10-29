@@ -1,22 +1,25 @@
+import type {RenderedMark,AnnotationLayout,AnnotationLayoutItem,AnnotationLegend,AnnotationLayoutOptions,FigureLayoutOptions,Box,LabelLayout,AnnotationPresentation} from './presentation-contracts.mjs';
+export type {AnnotationLayout,AnnotationLayoutOptions,FigureLayoutOptions} from './presentation-contracts.mjs';
 // Shared, deterministic presentation only. Input anchors and scientific values stay read-only.
 const SHAPES = new Set(['circle', 'square', 'double_circle', 'diamond', 'cross']);
-const COLORS = {white:'#f1f4f5',cyan:'#79d9ee',orange:'#efad79',amber:'#e5c46b',green:'#a1d2a1'};
-const CATEGORIES = {A:{color:'#79d9ee',shape:'circle',label:'Domain A'},B:{color:'#efad79',shape:'square',label:'Domain B'},shared:{color:'#f1f4f5',shape:'double_circle',label:'Shared'},unexplained:{color:'#e4e7eb',shape:'diamond',label:'Unexplained'}};
+const COLORS: {white:string;cyan:string;orange:string;amber:string;green:string} & Partial<Record<string,string>> = {white:'#f1f4f5',cyan:'#79d9ee',orange:'#efad79',amber:'#e5c46b',green:'#a1d2a1'};
+interface CategoryStyle {color:string;shape:string;label:string;}
+const CATEGORIES: {A:CategoryStyle;B:CategoryStyle;shared:CategoryStyle;unexplained:CategoryStyle} & Partial<Record<string,CategoryStyle>> = {A:{color:'#79d9ee',shape:'circle',label:'Domain A'},B:{color:'#efad79',shape:'square',label:'Domain B'},shared:{color:'#f1f4f5',shape:'double_circle',label:'Shared'},unexplained:{color:'#e4e7eb',shape:'diamond',label:'Unexplained'}};
 const PRESETS = new Set(['real-space', 'diffraction', 'multi-domain']);
-const finite = (value, fallback) => Number.isFinite(value) ? value : fallback;
-const bounded = (value, fallback, min, max) => Math.max(min,Math.min(max,finite(value,fallback)));
-const xml = value => String(value??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g,'�').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
-const number = value => String(Math.round(finite(value,0)*1000)/1000);
-const colorValue = (value, fallback) => COLORS[value] ?? (/^#[a-f\d]{3}(?:[a-f\d]{3})?$/i.test(String(value)) ? value : fallback);
+const finite = (value: unknown, fallback: number): number => Number.isFinite(value) ? value as number : fallback;
+const bounded = (value: unknown, fallback: number, min: number, max: number) => Math.max(min,Math.min(max,finite(value,fallback)));
+const xml = (value: unknown) => String(value??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g,'�').replace(/[&<>"']/g,c=>(({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'} as Record<string,string>)[c]));
+const number = (value: unknown) => String(Math.round(finite(value,0)*1000)/1000);
+const colorValue = (value: string | undefined, fallback: string): string => COLORS[value as string] ?? (/^#[a-f\d]{3}(?:[a-f\d]{3})?$/i.test(String(value)) ? value! : fallback);
 const subscripts = '₀₁₂₃₄₅₆₇₈₉';
 
-export function presentationText(value) {
+export function presentationText(value: unknown) {
  return String(value??'').replace(/\$([^$]*)\$/g,'$1').replace(/\\langle\b/g,'⟨').replace(/\\rangle\b/g,'⟩').replace(/\bg_\{(\d+)\}/g,'g$1').replace(/\s*\((?:hyp\.?|hypothesized|hypothesis)\)\s*/gi,' ').replace(/\bg_?(\d+)\b/g,(_,digits)=>'g'+[...digits].map(d=>subscripts[Number(d)]).join('')).replace(/\s+/g,' ').trim();
 }
 
 // Compact three/four index notation is unambiguous only for single digit indices.
 // Space-separated indices can contain multiple digits. No indices are inferred.
-function indices(body) {
+function indices(body: string) {
  const normalized=body.replace(/\\(?:bar|overline)\{(\d+)\}/g,'-$1').replace(/−/g,'-').trim();
  if(!/^[\d+\-\s,]+$/.test(normalized))return null;
  const tokens=/[\s,]/.test(normalized)?normalized.split(/[\s,]+/):normalized.match(/[+\-]?\d/g);
@@ -24,12 +27,12 @@ function indices(body) {
  return tokens;
 }
 
-export function crystallographicSVGText(value) {
+export function crystallographicSVGText(value: unknown) {
  const text=presentationText(value), groups=/(d_)?([({\[<⟨])((?:[\d+\-−\s,]|\\(?:bar|overline)\{\d+\})+)([)}\]>⟩])/g;
- const inline=value=>{let result='',cursor=0,match;const bars=/\\(?:bar|overline)\{(\d+)\}/g;while((match=bars.exec(value))){result+=xml(value.slice(cursor,match.index))+`<tspan text-decoration="overline">${xml(match[1])}</tspan>`;cursor=match.index+match[0].length;}return result+xml(value.slice(cursor));};
+ const inline=(value: string)=>{let result='',cursor=0,match;const bars=/\\(?:bar|overline)\{(\d+)\}/g;while((match=bars.exec(value))){result+=xml(value.slice(cursor,match.index))+`<tspan text-decoration="overline">${xml(match[1])}</tspan>`;cursor=match.index+match[0].length;}return result+xml(value.slice(cursor));};
  let result='',cursor=0,match;
- const renderGroup=(left,body,right)=>{
-  const expected={'(':')','{':'}','[':']','<':'>','⟨':'⟩'}[left],tokens=indices(body);
+ const renderGroup=(left: string,body: string,right: string)=>{
+  const expected=({'(':')','{':'}','[':']','<':'>','⟨':'⟩'} as Record<string,string>)[left],tokens=indices(body);
   if(expected!==right||!tokens)return xml(left+body+right);
   const separator=/[\s,]/.test(body)?' ':'';
   return xml(left==='<'?'⟨':left)+tokens.map(token=>token.startsWith('-')?`<tspan text-decoration="overline">${xml(token.slice(1))}</tspan>`:xml(token.replace(/^\+/,''))).join(separator)+xml(right==='>'?'⟩':right);
@@ -47,11 +50,11 @@ export function crystallographicSVGText(value) {
  return result+inline(text.slice(cursor));
 }
 
-function boxOverlap(a,b){return Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));}
-function labelExtent(text,fontSize){return {width:Math.max(fontSize*.7,[...text].reduce((sum,c)=>sum+(/[il1.,' ]/.test(c)?.32:/[MW@]/.test(c)?.86:.59),0)*fontSize),height:fontSize*1.25};}
-function candidates(anchor,extent,gap){const [x,y]=anchor,{width:w,height:h}=extent;return [[x+gap,y-h-gap],[x+gap,y+gap],[x-w-gap,y-h-gap],[x-w-gap,y+gap],[x-w/2,y-h-gap],[x-w/2,y+gap],[x+gap,y-h/2],[x-w-gap,y-h/2]];}
-function place(anchor,extent,gap,width,height,placed,points){
- let best=null;
+function boxOverlap(a: Box,b: Box){return Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));}
+function labelExtent(text: string,fontSize: number){return {width:Math.max(fontSize*.7,[...text].reduce((sum,c)=>sum+(/[il1.,' ]/.test(c)?.32:/[MW@]/.test(c)?.86:.59),0)*fontSize),height:fontSize*1.25};}
+function candidates(anchor: readonly number[],extent: Pick<Box,'width'|'height'>,gap: number){const [x,y]=anchor,{width:w,height:h}=extent;return [[x+gap,y-h-gap],[x+gap,y+gap],[x-w-gap,y-h-gap],[x-w-gap,y+gap],[x-w/2,y-h-gap],[x-w/2,y+gap],[x+gap,y-h/2],[x-w-gap,y-h/2]];}
+function place(anchor: readonly number[],extent: Pick<Box,'width'|'height'>,gap: number,width: number,height: number,placed: readonly Box[],points: readonly (readonly number[])[]){
+ let best: (Box & {score:number;overlap:number}) | null=null;
  for(const [cx,cy]of candidates(anchor,extent,gap)){
   const box={x:Math.max(0,Math.min(Math.max(0,width-extent.width),cx)),y:Math.max(0,Math.min(Math.max(0,height-extent.height),cy)),...extent};
   const overlap=placed.reduce((sum,other)=>sum+boxOverlap(box,other),0);
@@ -59,36 +62,36 @@ function place(anchor,extent,gap,width,height,placed,points){
   const score=overlap*4+pointPenalty+Math.abs(box.x-cx)+Math.abs(box.y-cy);
   if(!best||score<best.score)best={...box,score,overlap};
  }
- return best;
+ return best!;
 }
 
 /** Marks have already been transformed to render pixels by the caller. */
-export function layoutAnnotations(marks=[],options={}) {
- const preset=PRESETS.has(options.preset)?options.preset:'real-space',mode=options.mode==='figure'?'figure':'analysis';
+export function layoutAnnotations(marks: readonly RenderedMark[]=[],options: AnnotationLayoutOptions={}): AnnotationLayout {
+ const preset=PRESETS.has(options.preset as string)?options.preset!:'real-space',mode=options.mode==='figure'?'figure':'analysis';
  const scale=bounded(options.scale,1,.000001,1000000),width=bounded(options.width,1024,1,1000000),height=bounded(options.height,1024,1,1000000);
- const layers=options.layers??{},items=[],legendMap=new Map(),suggestedUpdates=[];let categorySimulation=false;
+ const layers=options.layers??{},items: AnnotationLayoutItem[]=[],legendMap=new Map<string,AnnotationLegend>(),suggestedUpdates: AnnotationLayout['suggestedUpdates']=[];let categorySimulation=false;
  const validMarks=marks.filter(mark=>mark&&Array.isArray(mark.coordinates)&&mark.coordinates.length>=2&&mark.coordinates.every(Number.isFinite));
  const anchors=validMarks.filter(mark=>mark.kind==='point').map(mark=>mark.coordinates.slice(0,2));
  let peakNumber=0;
  for(const mark of validMarks){
-  const p=mark.presentation??{},lp=p.label??{},category=CATEGORIES[p.category]?p.category:'none',categoryStyle=CATEGORIES[category];
-  const layer=['experimental','simulation_A','simulation_B'].includes(p.layer)?p.layer:'experimental';
+  const p=mark.presentation??{},lp=p.label??{},category=CATEGORIES[p.category as string]?p.category!:'none',categoryStyle=CATEGORIES[category];
+  const layer=['experimental','simulation_A','simulation_B'].includes(p.layer as string)?p.layer!:'experimental';
   const hidden=mark.status==='retracted'||mark.visibility==='outside_view';
   const layerVisible=layers[layer]!==false||category==='unexplained';
   const geometryVisible=!hidden&&layerVisible&&p.geometry_visible!==false;
   const id=mark.annotation_id??mark.id,selected=mode==='analysis'&&id===options.selectedId,hovered=mode==='analysis'&&id===options.hoverId;
   const baseColor=preset==='multi-domain'&&categoryStyle?categoryStyle.color:colorValue(mark.color,COLORS.white);
   const color=category==='unexplained'?CATEGORIES.unexplained.color:baseColor;
-  const shape=SHAPES.has(p.marker_shape)?p.marker_shape:layer!=='experimental'?'cross':categoryStyle&&preset==='multi-domain'?categoryStyle.shape:'circle';
+  const shape=SHAPES.has(p.marker_shape as string)?p.marker_shape!:layer!=='experimental'?'cross':categoryStyle&&preset==='multi-domain'?categoryStyle.shape:'circle';
   const radius=bounded(p.marker_radius,preset==='real-space'?3.5:5,.1,100)/scale,lineWidth=bounded(p.line_width,mark.kind==='arrow'?1.4:1,.05,32)/scale;
   const anchor=mark.coordinates.slice(0,2),hasManualOffset=Array.isArray(lp.offset)&&lp.offset.length===2&&lp.offset.every(Number.isFinite);
   if(mark.kind==='point')peakNumber++;
   const originalText=lp.text??mark.text??'',text=presentationText(originalText)||(lp.text===undefined&&mark.kind==='point'&&preset!=='real-space'?'g'+String(peakNumber).split('').map(d=>subscripts[Number(d)]).join(''):'');
   const fontSize=bounded(lp.font_size,preset==='real-space'?12:11,1,256)/scale,extent=labelExtent(text,fontSize),important=lp.important===true||mark.kind==='text';
-  const label={text,x:anchor[0],y:anchor[1],...extent,fontSize,leader:lp.leader!==false,pinned:lp.pinned===true,visible:!hidden&&layerVisible&&lp.visible!==false&&Boolean(text),offset:hasManualOffset?[...lp.offset]:null,important};
+  const label: LabelLayout={text,x:anchor[0],y:anchor[1],...extent,fontSize,leader:lp.leader!==false,pinned:lp.pinned===true,visible:!hidden&&layerVisible&&lp.visible!==false&&Boolean(text),offset:hasManualOffset?[...lp.offset!]:null,important};
   if(mode==='figure'&&lp.figure_visible===false)label.visible=false;
   if(preset==='real-space'&&text.length>22&&!important&&!selected&&!hovered)label.visible=false;
-  const item={id,mark,shape,color,radius,lineWidth,geometryVisible,selected,hovered,layer,category,anchor,coordinates:[...mark.coordinates],dash:layer==='experimental'?[]:[3/scale,2.5/scale],label};
+  const item: AnnotationLayoutItem={id,mark,shape,color,radius,lineWidth,geometryVisible,selected,hovered,layer,category,anchor,coordinates:[...mark.coordinates],dash:layer==='experimental'?[]:[3/scale,2.5/scale],label};
   items.push(item);
   if(!hidden&&layerVisible){
    const status=mark.status==='user_confirmed'?'user_confirmed':mark.status==='hypothesized'||/\((?:hyp\.?|hypothesized|hypothesis)\)/i.test(String(originalText))?'hypothesized':'';
@@ -100,16 +103,16 @@ export function layoutAnnotations(marks=[],options={}) {
   }
  }
  // Pinned labels have precedence; stable source order prevents hover-induced jumps.
- const placed=[];
+ const placed: Box[]=[];
  const ordered=[...items.filter(i=>i.label.pinned),...items.filter(i=>!i.label.pinned&&i.label.important),...items.filter(i=>!i.label.pinned&&!i.label.important)];
  for(const item of ordered){
   const {label,anchor}=item,lp=item.mark.presentation?.label??{},manual=label.offset&&(!options.arrange||label.pinned);
-  if(manual){label.x=anchor[0]+label.offset[0];label.y=anchor[1]+label.offset[1];}
+  if(manual){label.x=anchor[0]+label.offset![0];label.y=anchor[1]+label.offset![1];}
   else {
    const box=place(anchor,label,item.radius+4/scale,width,height,placed,anchors);
    label.x=box.x;label.y=box.y;label.offset=[label.x-anchor[0],label.y-anchor[1]];
    if(label.visible&&box.overlap>label.width*label.height*.1&&!label.important&&!item.selected&&!item.hovered)label.visible=false;
-   if(options.arrange&&!label.pinned&&(!lp.offset||label.offset.some((v,i)=>Math.abs(v-lp.offset[i])>.01)))suggestedUpdates.push({id:item.id,presentation:{...item.mark.presentation,label:{...lp,offset:[...label.offset],pinned:false}}});
+   if(options.arrange&&!label.pinned&&(!lp.offset||label.offset.some((v,i)=>Math.abs(v-lp.offset![i])>.01)))suggestedUpdates.push({id:item.id,presentation:{...item.mark.presentation,label:{...lp,offset:[...label.offset],pinned:false}}});
   }
   if(label.visible)placed.push(label);
  }
@@ -117,7 +120,7 @@ export function layoutAnnotations(marks=[],options={}) {
  return {items,legend:[...legendMap.values()],suggestedUpdates,mode,preset,scale,width,height};
 }
 
-function shapeSVG(shape,x,y,r,color,lineWidth,dash=''){
+function shapeSVG(shape: string,x: number,y: number,r: number,color: string,lineWidth: number,dash=''){
  const attrs=`fill="none" stroke="${xml(color)}" stroke-width="${number(lineWidth)}"${dash?` stroke-dasharray="${xml(dash)}"`:''}`;
  if(shape==='square')return `<rect x="${number(x-r)}" y="${number(y-r)}" width="${number(r*2)}" height="${number(r*2)}" ${attrs}/>`;
  if(shape==='diamond')return `<path d="M ${number(x)} ${number(y-r)} L ${number(x+r)} ${number(y)} L ${number(x)} ${number(y+r)} L ${number(x-r)} ${number(y)} Z" ${attrs}/>`;
@@ -125,7 +128,7 @@ function shapeSVG(shape,x,y,r,color,lineWidth,dash=''){
  return `<circle cx="${number(x)}" cy="${number(y)}" r="${number(r)}" ${attrs}/>`+(shape==='double_circle'?`<circle cx="${number(x)}" cy="${number(y)}" r="${number(r*1.55)}" ${attrs}/>`:'');
 }
 
-function geometrySVG(item){
+function geometrySVG(item: AnnotationLayoutItem){
  const {mark,color,lineWidth,radius,shape}=item,c=mark.kind==='arrow'&&mark.arrow_render_coordinates?.every(Number.isFinite)?mark.arrow_render_coordinates:item.coordinates;
  const dash=item.dash.map(number).join(' '),attrs=`fill="none" stroke="${xml(color)}" stroke-width="${number(lineWidth)}" stroke-linecap="round" stroke-linejoin="round"${dash?` stroke-dasharray="${dash}"`:''}`;
  if(mark.kind==='point')return shapeSVG(shape,c[0],c[1],radius,color,lineWidth,dash);
@@ -137,7 +140,7 @@ function geometrySVG(item){
 }
 
 /** SVG contains only escaped text and a fixed vocabulary of SVG elements/attributes. */
-export function renderAnnotationsSVG(layout,{width=layout.width,height=layout.height,includeRoot=true,interactive=false,figureLayout={}}={}) {
+export function renderAnnotationsSVG(layout: AnnotationLayout,{width=layout.width,height=layout.height,includeRoot=true,interactive=false,figureLayout={}}: {width?:number;height?:number;includeRoot?:boolean;interactive?:boolean;figureLayout?:FigureLayoutOptions}={}) {
  width=bounded(width,layout.width,1,1000000);height=bounded(height,layout.height,1,1000000);
  const scale=layout.scale??1,fontFamily='Arial, Helvetica, sans-serif';let content='';
  for(const item of layout.items){
