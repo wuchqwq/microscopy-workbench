@@ -50,9 +50,9 @@ export const STRUCTURE_INSTRUCTIONS='structure_* is an optional external ASE/dif
 const actions:Record<string,StructureAction|undefined>={structure_open:'open',structure_info:'get',structure_view:'view',structure_measure:'measure',structure_derive:'derive',structure_simulate:'simulate',structure_result:'result',structure_orient:'orient',structure_compare:'compare',structure_register:'register',structure_compare_batch:'compare_batch'};
 
 export class StructureWorkspace {
-  readonly workspace:string;readonly imageWorkspacePath:string|null;readonly python:string;readonly timeoutMs:number;
-  readonly workerPath:string;readonly spawn:SpawnStructureWorker;readonly coordinator:ExecutionCoordinator;
-  readonly resourceKey:string;readonly requestScope:ProviderScope;
+  declare readonly workspace:string;declare readonly imageWorkspacePath:string|null;declare readonly python:string;declare readonly timeoutMs:number;
+  declare readonly workerPath:string;declare readonly spawn:SpawnStructureWorker;declare readonly coordinator:ExecutionCoordinator;
+  declare readonly resourceKey:string;declare readonly requestScope:ProviderScope;
   constructor(options:StructureWorkspaceOptions);
   constructor({workspace,imageWorkspacePath=null,python=process.env.DM_STRUCTURE_PYTHON||'python',timeoutMs=180000,workerPath=fileURLToPath(new URL('../tools/structure_worker.py',import.meta.url)),spawnProcess=spawn,coordinator=new ExecutionCoordinator()}:Partial<StructureWorkspaceOptions>={}){
     if(!workspace||!path.isAbsolute(workspace))throw new Error('DM_STRUCTURE_WORKSPACE must be an absolute configured independent output directory');
@@ -93,8 +93,8 @@ export class StructureWorkspace {
       let child:ChildProcessWithoutNullStreams;try{child=this.spawn(this.python,['-B',this.workerPath],{windowsHide:true,stdio:['pipe','pipe','pipe'],env:{...process.env,MPLBACKEND:'Agg',NUMBA_NUM_THREADS:'1',OPENBLAS_NUM_THREADS:'1'}});}catch(error){finishWorker();reject(error);return;}
       let settled=false,bytes=0,stderr='';const chunks:Buffer[]=[],hint='Query structure_result with the original request_id; do not automatically resubmit.';
       const finish=<Value,>(fn:(value:Value)=>void,value:Value)=>{if(!settled){settled=true;fn(value);}};
-      child.stdout.on('data',part=>{bytes+=part.length;if(bytes>4*1024*1024)finish(reject,new Error('Structure response exceeds4MiB; '+hint));else chunks.push(part);});
-      child.stderr.on('data',part=>{if(stderr.length<8192)stderr+=part;});
+      child.stdout.on('data',(part:Buffer)=>{bytes+=part.length;if(bytes>4*1024*1024)finish(reject,new Error('Structure response exceeds4MiB; '+hint));else chunks.push(part);});
+      child.stderr.on('data',(part:Buffer)=>{if(stderr.length<8192)stderr+=part;});
       // A process/pipe error is not proof that a spawned worker is gone.
       // Only actual close releases the Coordinator resource/capacity slot.
       child.once('error',error=>finish(reject,new Error('Independent structure Python could not start: '+error.message)));
