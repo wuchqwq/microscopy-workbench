@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "server.mts",
+    "science-server.mjs",
+    "lib/**/*.mjs",
+    "lib/**/*.mts",
+    "tools/**/*.mjs",
+    "tools/**/*.mts",
+    "ui/**/*.mjs",
+    "tests/**/*.mjs"
+  ],
+  "exclude": [
+    "server.mjs",
+    "tools/plugin_server.mjs",
+    "dist",
+    "node_modules"
+  ]
+}

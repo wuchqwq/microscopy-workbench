@@ -31,6 +31,15 @@ sparse map. R2 sequence correspondences can supply the same evidence interface.
 Open a sampled window in the Panel, revise a peak, and reuse its unchanged FFT.
 See the [method baseline](docs/R3_METHOD_BASELINE.md) and [actual acceptance](docs/R3_ACCEPTANCE.md).
 
+## Build and run
+
+Source checkout (Node >=18): `npm ci`, `npm run typecheck`, `npm run build`.
+`npm start` and `npm test` use `dist/`; the source `server.mjs` and
+`tools/plugin_server.mjs` are compatibility launchers into that compiled runtime.
+Copy/install the complete `dist/` directory, including hidden plugin manifests,
+Python workers and Skills. The copied runtime needs no compiler or node_modules.
+See [incremental TypeScript migration](docs/TYPESCRIPT_MIGRATION.md).
+
 ## Install and test
 
 Use Node >=18 and a separate Python >=3.10 environment. Install
