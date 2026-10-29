@@ -42,6 +42,7 @@ For a rank 3–6 DM source, inspect the catalog and call `image_frame` with expl
 `plane_axes:[Y,X]` in original NumPy axis order and one `plane_indices` entry
 per axis (null on the two plane axes, fixed zero-based integers elsewhere).
 The returned `dm_plane_selection` is scientific provenance, not a depth or
-resolution inference. Complex DM inputs remain refused; never relabel them as
+resolution inference. nD complex and packed DM inputs remain refused. Ordinary
+2D complex inputs use the explicit component path above; never relabel them as
 a produced external FFT or discard their imaginary values. See the reader
-guide for the limited scalar-plane path and retained complex blocker.
+guide for scalar planes and the separately qualified complex scope.
