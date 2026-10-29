@@ -1,3 +1,4 @@
+import type {ShallowCompositionRecipe,ShallowCompositionSlot,ShallowImageSlot} from './figure-contracts.mjs';
 import type {FigureState,FigureObject,FigurePreferences,FigureBase,CompositionRecipe,CompositionSlot,CompositionPanel,ImageSlot,ProfileSlot,SpatialSource} from './figure-contracts.mjs';
 import type {ProfileResult} from './data-probe-contracts.mjs';
 import type {FigureMark} from './figure-contracts.mjs';
@@ -5,7 +6,7 @@ import type {AnnotationLegend,Box} from './presentation-contracts.mjs';
 import type {BrowserDocument,BrowserBlobConstructor,BrowserURL,BrowserImageConstructor,BrowserTextEncoderConstructor,BrowserEnvironment,BlobPort} from './browser-ports.mjs';
 export type {CompositionRecipe,CompositionSlot,CompositionPanel,ImageSlot,ProfileSlot} from './figure-contracts.mjs';
 declare const document:BrowserDocument;declare const Image:BrowserImageConstructor;declare const Blob:BrowserBlobConstructor;declare const URL:BrowserURL;declare const TextEncoder:BrowserTextEncoderConstructor;declare function atob(value:string):string;declare const crypto:{subtle:{digest(name:string,bytes:Uint8Array):Promise<ArrayBuffer>}};
-interface ResolvedImage {slot:ImageSlot;state:FigureState;marks:FigureMark[];base64:string;width:number;height:number;bytes:Uint8Array;spatialSource:SpatialSource|null;}
+interface ResolvedImage {slot:ShallowImageSlot;state:FigureState;marks:FigureMark[];base64:string;width:number;height:number;bytes:Uint8Array;spatialSource:SpatialSource|null;}
 interface ResolvedProfile {slot:ProfileSlot;profile:ProfileResult;plot:ReturnType<typeof profilePlot>;spatialSource?:never;state?:never;}
 type ResolvedPanel=ResolvedImage|ResolvedProfile;
 interface ROIOutline {roi_slot:number;source_rect_xyxy:readonly number[];coordinates:readonly number[];}
@@ -40,12 +41,13 @@ function validateSlot<T extends CompositionSlot>(slot:T):T{
  }
  boundedJSON(slot);return slot;
 }
-export function validateComposition(recipe:CompositionRecipe):CompositionRecipe{
+export function validateComposition(input:unknown):ShallowCompositionRecipe{
+ const recipe=input as CompositionRecipe;
  fields(recipe,['schema','layout','font_pt','slots','roiOutlines','showLegend']);
  const count=recipe.layout==='2x2'?4:recipe.layout==='1x3'?3:null;
  if(recipe.schema!==SCHEMA||count===null||typeof recipe.font_pt!=='number'||!Number.isFinite(recipe.font_pt)||recipe.font_pt<7||recipe.font_pt>12||!Array.isArray(recipe.slots)||recipe.slots.length!==count)fail('图版需要完整的 2×2（4 图）或 1×3（3 图）布局与 7–12 pt 字号');
  for(const key of ['roiOutlines','showLegend'])if(recipe[key as keyof CompositionRecipe]!==undefined&&typeof recipe[key as keyof CompositionRecipe]!=='boolean')fail('图版显示开关必须是明确布尔值');
- recipe.slots.forEach(validateSlot);return JSON.parse(boundedJSON(recipe));
+ recipe.slots.forEach(validateSlot);return JSON.parse(boundedJSON(recipe)) as ShallowCompositionRecipe;
 }
 export function defaultCompositionTitle(value:{kind?:string;profile?:ProfileResult;object?:FigureObject;panels?:FigureObject['panels'];source_shape_yx?:readonly number[]}|null|undefined,{role}:{role?:string}={}){
  if(value?.kind==='profile'||value?.profile?.kind==='profile')return 'Intensity profile';
@@ -78,7 +80,7 @@ function pngData(base64:unknown){
  if(!width||!height||width>2048||height>2048||width*height>1048576)fail('保存底图尺寸超过有界显示范围');
  return {bytes,width,height};
 }
-function hydrate(recipe:CompositionRecipe,panels:readonly CompositionPanel[]):ResolvedPanel[]{
+function hydrate(recipe:ShallowCompositionRecipe,panels:readonly CompositionPanel[]):ResolvedPanel[]{
  if(!Array.isArray(panels)||panels.length!==recipe.slots.length)fail('图版解析必须返回全部槽位，不能丢弃子图');
  return recipe.slots.map((slot,index)=>{
   const panel:CompositionPanel=panels[index];if(!record(panel)||!equalRecords(panel.slot,slot))fail('图版槽位的解析顺序或保存引用不匹配');
@@ -190,7 +192,7 @@ function profileSVG(panel:ResolvedProfile,box:PanelBox){
  body+=`<text x="${number((left+right)/2)}" y="${number(box.y+box.height-fs*.25)}" text-anchor="middle" font-size="${number(fs)}">${xml('距离 ('+(model.xLabel??'未知单位')+')')}</text><text x="${number(left)}" y="${number(box.y+fs*.9)}" font-size="${number(fs)}">${xml((model.yLabel??'数值')+'（单位未标定）')}</text></g>`;
  return body;
 }
-export function renderCompositionSVG({recipe,panels}:{recipe:CompositionRecipe;panels:readonly CompositionPanel[]}){
+export function renderCompositionSVG({recipe,panels}:{recipe:unknown;panels:readonly CompositionPanel[]}){
  const validated=validateComposition(recipe),resolved=hydrate(validated,panels),dimensions=compositionDimensions(validated.layout,validated.font_pt),d=dimensions;
  const outlines=sourceROIOutlines(resolved,validated.roiOutlines===true),outlineCount=[...outlines.values()].reduce((total,values)=>total+values.length,0);
  let content=`<rect width="${d.width}" height="${d.height}" fill="#ffffff"/>`;
@@ -203,14 +205,14 @@ export function renderCompositionSVG({recipe,panels}:{recipe:CompositionRecipe;p
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="180mm" height="${number(d.height_mm)}mm" viewBox="0 0 ${d.width} ${d.height}" font-family="Arial, Helvetica, sans-serif" fill="#17222e" role="img" aria-label="Microscopy figure composition"><metadata>${xml(JSON.stringify(validated))}</metadata>${content}</svg>`;
  return {svg,recipe:validated,...dimensions,roi_outline_count:outlineCount,roi_outline_diagnostics:validated.roiOutlines===true?(outlineCount?'verified_saved_source':'no_verified_original_roi_pair'):'disabled'};
 }
-async function verifyAssets(recipe:CompositionRecipe,panels:readonly CompositionPanel[]){
+async function verifyAssets(recipe:ShallowCompositionRecipe,panels:readonly CompositionPanel[]){
  if(!(globalThis as typeof globalThis & BrowserEnvironment).crypto?.subtle)fail('当前浏览器缺少安全的底图校验能力');
  for(let index=0;index<recipe.slots.length;index++)if(recipe.slots[index].kind==='image'){
   const bytes=pngData(panels[index].clean_png_base64).bytes,digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),value=>value.toString(16).padStart(2,'0')).join('');
-  if(digest!==(recipe.slots[index] as ImageSlot).asset.clean_png_sha256)fail('干净底图 SHA-256 与保存配方不一致');
+  if(digest!==(recipe.slots[index] as ShallowImageSlot).asset.clean_png_sha256)fail('干净底图 SHA-256 与保存配方不一致');
  }
 }
-export async function buildCompositionBundle({recipe,panels}:{recipe:CompositionRecipe;panels:readonly CompositionPanel[]}){
+export async function buildCompositionBundle({recipe,panels}:{recipe:unknown;panels:readonly CompositionPanel[]}){
  const rendered=renderCompositionSVG({recipe,panels});await verifyAssets(rendered.recipe,panels);
  const image=new Image(),url=URL.createObjectURL(new Blob([rendered.svg],{type:'image/svg+xml'}));
  try{

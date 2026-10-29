@@ -5,15 +5,18 @@ export type {FigureState,FigurePreferences,FigureRecipe,ScaleBarRecord} from './
 declare const document:BrowserDocument;declare const Image:BrowserImageConstructor;declare const Blob:BrowserBlobConstructor;declare const URL:BrowserURL;declare const TextEncoder:BrowserTextEncoderConstructor;
 declare function setTimeout(callback:()=>void,ms:number):unknown;
 interface DisplayInput extends Readonly<Record<string,unknown>> {readonly gamma?:number;readonly display_range?:readonly number[];readonly max_size?:number;readonly upscale?:boolean;readonly interpolation?:string;readonly representation?:string;readonly spectrum_axes?:boolean;readonly display_preset?:unknown;readonly display_preset_revision?:unknown;readonly frequency_rect?:readonly number[]|null;readonly spectrum_filter?:{readonly smooth_sigma_bins?:number;readonly background_sigma_bins?:number}|null;readonly scale_bar?:boolean;readonly component?:string;}
-export interface DisplayParameters {gamma:number;display_range:number[];max_size:number;upscale:boolean;interpolation:string;scale_bar?:boolean;component?:string;representation?:string;spectrum_axes?:boolean;spectrum_filter?:unknown;frequency_rect?:readonly number[];}
+export interface DisplayParameters extends Record<string,unknown> {gamma:number;display_range:number[];max_size:number;upscale:boolean;interpolation:string;scale_bar?:boolean;component?:string;representation?:string;spectrum_axes?:boolean;spectrum_filter?:unknown;frequency_rect?:readonly number[];}
 // Figure artifacts reuse a saved scalar rendering. Enlarging PNG adds no data.
 import {layoutAnnotations,renderAnnotationsSVG} from './annotation-presentation.mjs';
 import {equalRecords} from './viewer-state.mjs';
 const enc=new TextEncoder(),copy=<T,>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
-export function recipeIdentity(state:FigureState){const calibration=state.object.xy_calibration??state.object.calibration_record??state.object.calibration??null;return {panels:copy(state.object.panels??[]),frame:state.frame_identity??null,anchors:(state.object.annotations??[]).map(m=>({annotation_id:m.annotation_id,kind:m.kind,anchor:m.anchor??null,status:m.status})),grid:state.object.scientific_grid_identity??null,calibration:calibration?Object.fromEntries(['calibration_id','revision','status','coordinate_domain','xy_scale','scale','unit','dc_index_xy'].filter(k=>(calibration as Readonly<Record<string,unknown>>)[k]!==undefined).map(k=>[k,copy((calibration as Readonly<Record<string,unknown>>)[k])])):null};}
+export function recipeIdentity(state:{readonly object:Pick<FigureState['object'],'panels'|'annotations'|'xy_calibration'|'calibration_record'|'calibration'|'scientific_grid_identity'> & Readonly<Record<string,unknown>>;readonly frame_identity?:unknown}){const calibration=state.object.xy_calibration??state.object.calibration_record??state.object.calibration??null;return {panels:copy(state.object.panels??[]),frame:state.frame_identity??null,anchors:(state.object.annotations??[]).map(m=>({annotation_id:m.annotation_id,kind:m.kind,anchor:m.anchor??null,status:m.status})),grid:state.object.scientific_grid_identity??null,calibration:calibration?Object.fromEntries(['calibration_id','revision','status','coordinate_domain','xy_scale','scale','unit','dc_index_xy'].filter(k=>(calibration as Readonly<Record<string,unknown>>)[k]!==undefined).map(k=>[k,copy((calibration as Readonly<Record<string,unknown>>)[k])])):null};}
 // Only authoritative display controls are replayed; renderer provenance is
 // retained in display_recipe but is never sent back as processing parameters.
-export function figureDisplayParameters(display:DisplayInput|null|undefined,panels:readonly DisplayPanel[]|null|undefined){
+// Input is raw transport/recipe data. These local access views preserve native
+// operations; only the original checks below qualify the returned controls.
+export function figureDisplayParameters(input:unknown,panelInput:unknown){
+ const display=input as DisplayInput|null|undefined,panels=panelInput as readonly DisplayPanel[]|null|undefined;
  const bad=():never=>{throw new Error('图面配方缺少完整、有效的显示参数；请从原图版本重新导出');};
  if(!display||typeof display!=='object'||Array.isArray(display)||!Array.isArray(panels)||!panels!.length)bad();
  const {gamma,display_range:range,max_size:maximum,upscale,interpolation}=display!;
@@ -36,14 +39,15 @@ export function figureDisplayParameters(display:DisplayInput|null|undefined,pane
  return params;
 }
 export function makeFigureRecipe(state:FigureState,preferences:FigurePreferences):FigureRecipe{return {schema:'mcp-dm-figure-v1',source_object_id:state.object.object_id,source:recipeIdentity(state),display_recipe:copy(state.effective_display??state.object.display??{}),preferences:copy(preferences),annotations:(state.object.annotations??[]).filter(m=>m.annotation_id).map(m=>({annotation_id:m.annotation_id,presentation:copy(m.presentation??{})})),limitation:'Display recipe only. Enlarged PNG adds no measured resolution. Scientific arrays, anchors and confirmation states are unchanged.'};}
-export function readFigureRecipe(value:FigureRecipe|null|undefined,state:FigureState){
+export function readFigureRecipe(input:unknown,state:{readonly object:Pick<FigureState['object'],'panels'|'annotations'|'xy_calibration'|'calibration_record'|'calibration'|'scientific_grid_identity'> & Readonly<Record<string,unknown>>;readonly frame_identity?:unknown}){
+ const value=input as FigureRecipe|null|undefined;
  if(!value||value.schema!=='mcp-dm-figure-v1'||!equalRecords(value.source,recipeIdentity(state)))throw new Error('图面配方的科学锚点、标定或网格与当前图不一致；请先打开原图版本');
  if(!/^[a-f0-9]{32}$/.test(value.source_object_id??''))throw new Error('图面配方缺少原始显示版本');
  figureDisplayParameters(value.display_recipe,value.source.panels);
  if(!Array.isArray(value.annotations)||value.annotations.length>128||!value.preferences||!['real-space','diffraction','multi-domain'].includes(value.preferences.preset as string)||!['analysis','figure'].includes(value.preferences.mode as string))throw new Error('无效的图面配方');
  const known=new Set((state.object.annotations??[]).map(m=>m.annotation_id)),seen=new Set();
  if(value.annotations.length!==known.size)throw new Error('无效的图面配方：缺少完整或含重复的标签样式引用');
- return value.annotations.map(m=>{if(!known.has(m.annotation_id)||seen.has(m.annotation_id)||!m.presentation||typeof m.presentation!=='object'||Array.isArray(m.presentation))throw new Error('无效或重复的标签引用');seen.add(m.annotation_id);return {annotation_id:m.annotation_id,presentation:copy(m.presentation)};});
+ return value.annotations.map(m=>{if(!known.has(m.annotation_id)||seen.has(m.annotation_id)||!m.presentation||typeof m.presentation!=='object'||Array.isArray(m.presentation))throw new Error('无效或重复的标签引用');seen.add(m.annotation_id);return {annotation_id:m.annotation_id,presentation:copy(m.presentation) as Readonly<Record<string,unknown>>};});
 }
 export function figureScaleBar(record:ScaleBarRecord|null|undefined){if(!record?.visible||!Array.isArray(record.image_endpoints_xyxy)||!Number.isFinite(record.length)||(record.length as number)<=0||typeof record.unit!=='string')return null;const [x,y,x1]=record.image_endpoints_xyxy;if(![x,y,x1].every(Number.isFinite))return null;return {x,y,length:x1-x,label:`${record.length} ${record.unit}`,color:'#fff'};}
 export function figureDimensions(width:number,height:number,columns='single'){const outWidth=Math.round((columns==='double'?180:85)/25.4*300),outHeight=Math.round(outWidth*height/width);if(width<=0||height<=0||outHeight>8192||outWidth*outHeight>16000000)throw new Error('图面尺寸超过导出上限');return {width:outWidth,height:outHeight,width_mm:columns==='double'?180:85,dpi:300};}

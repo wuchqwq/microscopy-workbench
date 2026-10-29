@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 type Metadata=Record<string,unknown>;
 export interface CompositionReadPorts {readState?:(objectId:string)=>unknown|PromiseLike<unknown>;readObject?:(objectId:string)=>unknown|PromiseLike<unknown>;}
 export type ResolvedCompositionPanel = {slot:unknown;profile:Metadata}|{slot:unknown;state:{object:Metadata;effective_display:unknown;frame_identity:unknown};clean_png_base64:unknown;scale_bar:unknown;spatial_source?:{object_id:unknown;shape_yx:unknown;dtype:unknown;array_sha256:unknown;frame_identity:unknown};};
-interface SavedState {object:Metadata;effective_display:unknown;frame_identity:unknown;clean_png_base64:unknown;clean_png_sha256:unknown;}
+interface SavedState {object:Metadata & {object_id:string};effective_display:unknown;frame_identity:unknown;clean_png_base64:unknown;clean_png_sha256:unknown;}
 
 import {validateComposition} from '../ui/image-panel/figure-composer.mjs';
 import {readFigureRecipe,recipeIdentity,figureDisplayParameters} from '../ui/image-panel/figure-export.mjs';
@@ -78,9 +78,9 @@ export async function resolveComposition(value:unknown,{readState,readObject}:Co
  bounded(value,512*1024);const recipe=validateComposition(value);
  for(const slot of recipe.slots)if(slot.kind==='profile')grid(slot.scientific_grid_identity);
  need(typeof readState==='function'&&typeof readObject==='function','Read-only saved-object ports are required');
- const objects=new Map<string,Metadata>(),states=new Map<string,SavedState>();let reads=0,totalPNG=0;
+ const objects=new Map<string,Metadata & {object_id:string}>(),states=new Map<string,SavedState>();let reads=0,totalPNG=0;
  const budget=()=>need(++reads<=MAX_READS,'Composition saved-object reads exceed the bounded ancestry budget');
- const remember=(id:string,result:unknown)=>{need(record(result)&&result.object_id===id&&typeof result.kind==='string','Provider returned another or missing saved object');bounded(result);objects.set(id,copy(result));return objects.get(id)!;};
+ const remember=(id:string,result:unknown)=>{need(record(result)&&result.object_id===id&&typeof result.kind==='string','Provider returned another or missing saved object');bounded(result);objects.set(id,copy(result) as Metadata & {object_id:string});return objects.get(id)!;};
  const object=async(id:string):Promise<Metadata>=>{need(ID.test(id??''),'Invalid saved ancestry object ID');if(!objects.has(id)){budget();remember(id,await readObject(id));}return objects.get(id)!;};
  const state=async(id:string):Promise<SavedState>=>{
   if(!states.has(id)){
@@ -131,7 +131,7 @@ export async function resolveComposition(value:unknown,{readState,readObject}:Co
   need(Object.keys(science.arrays).length>0&&Object.values(science.arrays).every(hash=>SHA.test(hash as string))&&equalRecords(science,payload(assetPlane)),'Clean asset changed the scientific array or dtype/axes');
   const image=png(asset.clean_png_base64);totalPNG+=image.bytes.length;need(totalPNG<=4*MAX_PNG,'Composition PNG assets exceed their total budget');
   need(image.digest===slot.asset.clean_png_sha256&&asset.clean_png_sha256===image.digest,'Clean PNG digest differs from the saved asset reference');
-  let base=asset.object;if(base.render_base_object_id)base=await object((base.render_base_object_id as string));
+  let base:Metadata=asset.object;if(base.render_base_object_id)base=await object((base.render_base_object_id as string));
   const savedHash=(base.files_sha256 as Metadata)?.['unannotated.png']??(!(base.annotations as unknown[]|undefined)?.length?(base.files_sha256 as Metadata)?.['preview.png']:null);
   need(savedHash===image.digest&&equalRecords(base.panels,source.object.panels),'Clean PNG is not bound to its exact saved render');
   need(Array.isArray(base.panels)&&base.panels.length>=1&&base.panels.length<=4&&base.panels.every(p=>Array.isArray(p.image_rect_xyxy)&&p.image_rect_xyxy.length===4&&p.image_rect_xyxy.every(Number.isFinite)&&p.image_rect_xyxy[0]>=0&&p.image_rect_xyxy[1]>=0&&p.image_rect_xyxy[0]<p.image_rect_xyxy[2]&&p.image_rect_xyxy[1]<p.image_rect_xyxy[3]&&p.image_rect_xyxy[2]<=image.width&&p.image_rect_xyxy[3]<=image.height),'PNG dimensions disagree with the saved panel mapping');
