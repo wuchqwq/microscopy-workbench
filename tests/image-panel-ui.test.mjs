@@ -566,3 +566,12 @@ test('directly reopened ROI explicitly requests a fresh full-frame display inste
 test('human workflow: result tabs expose one result type without changing the scientific object',async()=>{
  const h=await harness();await h.click('results-tab-profile');assert.equal(h.$('results-profile').hidden,false);assert.equal(h.$('results-measurements').hidden,true);assert.equal(h.$('numeric-data').open,true);await h.click('results-tab-measurements');assert.equal(h.$('numeric-data').open,false);assert.equal(h.calls.length,0);
 });
+test('a baked scientific-preview scale bar is not duplicated by the SVG overlay; clean visible bars retain their halo',async()=>{
+ for(const [baked,visible]of [[true,true],[false,true],[false,false]]){
+  const initial=fixture();initial.effective_display={...initial.object.display,scale_bar:baked};initial.object.scale_bar={visible,length:.5,unit:'nm',image_endpoints_xyxy:[12,80,62,80]};
+  const before=copy(initial.object),h=await harness(initial);h.flush();const overlay=h.$('annotation-layer').innerHTML;
+  if(!baked&&visible){assert.match(overlay,/data-part="scale-bar-halo"/);assert.match(overlay,/data-part="scale-bar-line"/);assert.match(overlay,/0.5 nm/);}
+  else assert.doesNotMatch(overlay,/data-part="scale-bar/,'an existing PNG bar or unavailable physical bar cannot be drawn again');
+  assert.equal(h.calls.length,0,'layer selection must not create another render or scientific request');assert.deepEqual(h.inspect().state.object,before);
+ }
+});

@@ -108,3 +108,13 @@ test('editable SVG retains render map when output is enlarged and exports every 
  assert.match(svg,/data-part="label"/);assert.doesNotMatch(svg,/<svg[^>]*<svg|<image|<canvas|data-part="handles"/);
  assert.doesNotMatch(renderAnnotationsSVG(layout,{includeRoot:false,figureLayout:{legend:false}}),/<svg/);
 });
+test('scale bars retain dark contrast halos on a white image without moving endpoints, labels or fonts',()=>{
+ const bar={x:12,y:270,length:80,label:'0.5 nm',color:'#fff',font_size:12},before=structuredClone(bar);
+ for(const scale of [1,2]){
+  const layout=layoutAnnotations([],{...options,scale}),svg=renderAnnotationsSVG(layout,{figureLayout:{legend:false,scaleBar:bar}});
+  const halo=svg.match(/<path data-part="scale-bar-halo"[^>]*d="([^"]+)"[^>]*stroke="([^"]+)"[^>]*stroke-width="([^"]+)"/),line=svg.match(/<path data-part="scale-bar-line"[^>]*d="([^"]+)"[^>]*stroke-width="([^"]+)"/);
+  assert.ok(halo,'white imagery needs an explicit contrasting halo');assert.ok(line);assert.equal(halo[1],'M 12 270 H 92');assert.equal(line[1],halo[1]);assert.equal(halo[2],'#11151b');assert.ok(Number(halo[3])>Number(line[2]),'dark stroke remains visible beyond the white line on white pixels');
+  assert.match(svg,new RegExp(`font-size="${12/scale}"[^>]*>0.5 nm<`));assert.match(svg,/stroke="#11151b"[^>]*paint-order="stroke fill"/);
+ }
+ assert.deepEqual(bar,before);
+});
