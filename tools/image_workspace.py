@@ -829,7 +829,10 @@ class Workspace:
     def action(self, action, request, ident):
         remeasurement = None
         if action == "remeasure":
-            request, remeasurement = self.remeasurement(request)
+            # Reserve one level for the result being created.  Otherwise a
+            # chain at the limit can be committed successfully but cannot be
+            # validated as a committed measurement on the next read.
+            request, remeasurement = self.remeasurement(request, depth=1)
             action = "measure"
         directory = self.root / "objects" / ident
         directory.mkdir()
