@@ -10,10 +10,12 @@ specimen accuracy or calibrated statistical confidence.
 | Scope | Status | Evidence |
 | --- | --- | --- |
 | Analytic public fixture generator | PASS | Source cosine formulas, exact orientation matrix and piecewise boundary; float32 TIFF generated with no FFT. |
-| Strict compiled MCP → Python F1a numerical path | PASS, bounded scope | Windows `r2`: 18 windows, two scales, ordinary batches, field/map and seven controls. The complete smoke later failed at export; this row does not label that entire run successful. |
+| Strict compiled MCP → Python F1a workflow | PASS, qualified scopes | Windows `r2` numerical path plus separately recorded post-fix continuation; exact final compiled full workflow also passed Linux CI. The old Windows full-run failure remains below. |
 | Independent DFT / equal-budget uniform-window baseline | PASS | Every saved complex bin agreed within the unchanged `1e-7` absolute tolerance. Old uniform atlas arrays and measured vectors agreed exactly on the same 18 windows / 147,456 FFT pixels. |
 | Saved measurement correction / FFT reuse | PASS | A committed correction fed a new field/map; all 18 FFT IDs/hashes and the other 17 measurement lists were unchanged. |
-| Full export / named new-session recovery / Panel HTTP | FAIL / NOT_TESTED | Revised-field export completed in 117.314 s; revised-map export hit the unchanged 120 s deadline. Original request stayed incomplete. Later steps were not executed by that run. |
+| Post-fix export / named new-session recovery / Panel HTTP | PASS | New explicit export operations used distinct paths/IDs; both completed in about 80.6 s. Eighteen-row CSVs and numerical support masks matched their saved records; named context revision 3 and original field restored in a new MCP client. Panel returned two real PNG blocks, one byte-identical to the exported domain PNG. Original timed-out request stayed incomplete. |
+| Final compiled gap/context/recovery delta | PASS | Four 32-pixel windows with gaps: four unknown edges, no boundary or connecting domain merge, four FFTs only, unchanged source and FFT reuse; new-session named recovery. Revision-depth preflight is covered separately by the targeted Python tests. |
+| Exact final code CI | PASS | All seven jobs at `d14a6ca`, including compiled full F1a MCP workflow, 13 targeted Python tests and frozen old-JS scientific workspace/schema compatibility. |
 | Actual browser candidate navigation | NOT_TESTED | Computer Use stopped on URL-confidence validation; no alternate browser path was used. HTTP/image returns do not establish pointer gestures. |
 | New model/plugin-discovery loading | NOT_TESTED | No claim based on a Node protocol client. |
 | Real specimen accuracy / GPA / twin / dislocation / physical boundary uncertainty | NOT_TESTED | Outside this public synthetic F1a scope. |
@@ -88,7 +90,60 @@ Failure evidence remains in separate local run directories:
   was automatically submitted; the old request and absent target stay preserved.
 
 The complete `r2` smoke is **FAIL**. A focused repair and separately scoped
-formal continuation must supply export/recovery/Panel evidence before those
-scopes can be marked successful. The compiled `r2` numerical snapshot preceded
+formal continuation supplied the successful export/recovery/Panel evidence
+recorded below. The compiled `r2` numerical snapshot preceded
 the final depth/gap preflight guards; those guards do not change its no-gap,
-single-revision numerical path and need separate final qualification.
+single-revision numerical path and received separate final qualification.
+
+## Post-fix qualification and final code
+
+The export repair reuses a successfully deep-validated F1a snapshot within one
+operation, rechecking current file/journal identities when handing it to the
+provenance walk. It does not weaken ordinary reads or skip changed dependencies;
+payload, manifest and creator-parameter tamper tests reject. The 13-test file
+passed before the final creator-journal hardening; the two affected hardening
+tests passed again on the exact final code. Final CI also passed the full file.
+No worker deadline or numerical tolerance was increased.
+
+Explicit post-fix qualification used **different new export paths and request
+IDs**, after the old runner closed. Field/map exports completed in 80.571 s and
+80.637 s. A separate readback continuation verified JSON, 18 CSV rows per export,
+uint8 sampled/unknown support masks, source rectangles and measurement references.
+Its first readback harness had a test-label collision with provider `kind:export`;
+that failed report is retained. The corrected harness uses a separate
+`source_role` and rechecks existing exports without exporting again.
+
+The final Windows readback continuation passed in 237.901 s. It saved context
+`public-f1a-readback-20261030` at revision 3 through two legitimate CAS updates,
+opened Panel HTTP, inspected two actual MCP image blocks, and restored original
+field/current map in a fresh MCP client. Domain PNG SHA-256 was
+`f8867ed511e18de3c323b7f03cece7ad3964f1e06ce7509ee4b71aa2609ee9d3`, identical
+to the exported provider file. All original source and 18 FFT hashes remained
+unchanged. This continuation computed no FFT; the entire Windows acceptance
+workspace held 64 FFTs: 18 main, 18 explicit baseline and 28 control windows.
+The original timed-out export stayed `prepared` and its target stayed absent.
+
+The corrected point created five candidate components (three at scale 64, two
+at scale 128), versus four before correction. These are versioned local
+signature components, not a changed count of materials. The separate exact
+final-compile gap/depth/context tests and
+[seven-job CI run](https://github.com/wuchqwq/microscopy-workbench/actions/runs/40966544048)
+qualify final code `d14a6ca`, including a successful full compiled F1a smoke in a
+fresh Linux workspace. Initial CI failures at `76ef` were an overly exact
+whole-catalog test for legitimate additions and the harness kind-label collision;
+old schemas and old workspace bytes still receive strict compatibility checks.
+
+Remaining practical limits: large revised exports take about 80 s on this
+Windows setup; Panel opening took 91.550 s, while later current-state reads took
+70 ms. Unknown scale/startup and unresolved narrow structures remain explicit.
+Multiscale labels can overlap in the preview. Browser gestures, an actual new
+model's plugin use and real-specimen accuracy remain **NOT_TESTED**; actual HTTP
+and image evidence is not substituted for those scopes.
+
+Public evidence: [sanitized summary](examples/f1a/acceptance-summary.json),
+[domain CSV](examples/f1a/domain-map.csv),
+[field CSV](examples/f1a/spatial-field.csv). These preserve real exported rows;
+the summary is not an original immutable provider record. Complete original
+journals/reports and the untouched failure evidence remain local.
+
+![Exported synthetic domain preview; not a browser screenshot](examples/f1a/domain-map.png)

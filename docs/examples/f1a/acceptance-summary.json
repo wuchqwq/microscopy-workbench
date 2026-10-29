@@ -1,0 +1,337 @@
+{
+  "scope": "Public synthetic evidence summary, not original immutable provider objects or a browser screenshot",
+  "base_main": "3ac32f84487a7d89706cf670165427875eed40ba",
+  "final_code_ci": {
+    "head": "d14a6ca",
+    "result": "PASS",
+    "job_count": 7,
+    "run_url": "https://github.com/wuchqwq/microscopy-workbench/actions/runs/40966544048"
+  },
+  "windows": 18,
+  "sizes_pixels": [
+    64,
+    128
+  ],
+  "stride_xy": [
+    64,
+    64
+  ],
+  "fft_pixels_per_equal_budget_path": 147456,
+  "independent_all_bin_direct_dft_max_error": 2.2753733763361175e-10,
+  "unchanged_dft_tolerance": 1e-07,
+  "equal_budget_baseline": {
+    "scope": "same existing uniform sliding-window FFT/detector composition; equality baseline, not independent method",
+    "windows": 18,
+    "fft_pixels_each_path": 147456,
+    "all_arrays_and_vectors_equal": true,
+    "elapsed_ms": 30892.504199999996
+  },
+  "initial_candidate_components_by_scale": {
+    "64": 2,
+    "128": 2
+  },
+  "initial_neighbor_edges": {
+    "compatible": 16,
+    "different": 3,
+    "unknown": 5
+  },
+  "initial_boundary_bands": [
+    [
+      64,
+      0,
+      192,
+      64
+    ],
+    [
+      64,
+      64,
+      192,
+      128
+    ],
+    [
+      64,
+      128,
+      192,
+      192
+    ]
+  ],
+  "analytic_interface_source_x": 128,
+  "initial_unknown_sample_indices": [
+    13,
+    16
+  ],
+  "coverage": {
+    "meaning": "Union of observed window supports; overlap correlated, unknown includes unsampled/invalid support, not phase classification",
+    "sampled_pixel_count": 49152,
+    "sampled_support_fraction": 1.0,
+    "source_pixel_count": 49152,
+    "unknown_support_fraction": 0.5
+  },
+  "controls": [
+    {
+      "case": "single-A",
+      "boundary_count": 0,
+      "domain_count": 1,
+      "unknown_count": 0,
+      "sample_count": 4
+    },
+    {
+      "case": "single-A-shifted",
+      "boundary_count": 0,
+      "domain_count": 1,
+      "unknown_count": 0,
+      "sample_count": 4
+    },
+    {
+      "case": "single-B-rotated",
+      "boundary_count": 0,
+      "domain_count": 1,
+      "unknown_count": 0,
+      "sample_count": 4
+    },
+    {
+      "case": "constant-negative",
+      "boundary_count": 0,
+      "domain_count": 0,
+      "unknown_count": 4,
+      "sample_count": 4
+    },
+    {
+      "case": "seeded-noise",
+      "boundary_count": 0,
+      "domain_count": 0,
+      "unknown_count": 4,
+      "sample_count": 4
+    },
+    {
+      "case": "square-symmetry",
+      "boundary_count": 0,
+      "domain_count": 1,
+      "unknown_count": 0,
+      "sample_count": 4
+    },
+    {
+      "case": "narrow-B-strip",
+      "boundary_count": 0,
+      "domain_count": 1,
+      "unknown_count": 0,
+      "sample_count": 4
+    }
+  ],
+  "narrow_structure_limitation": "32px strip missed at64px windows and0.18 detector threshold; one dominant-signature candidate is not homogeneous-material proof",
+  "parameter_sensitivity": {
+    "original_tolerance": 0.003,
+    "alternative_tolerance": 0.001,
+    "original_boundaries": 3,
+    "alternative_boundaries": 3,
+    "scales": [
+      {
+        "sample_index": 0,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 1,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 2,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 3,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 4,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 5,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 6,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 7,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 8,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 9,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 10,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 11,
+        "size": 64,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 12,
+        "size": 128,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 13,
+        "size": 128,
+        "status": "ambiguous",
+        "families": 8
+      },
+      {
+        "sample_index": 14,
+        "size": 128,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 15,
+        "size": 128,
+        "status": "valid",
+        "families": 2
+      },
+      {
+        "sample_index": 16,
+        "size": 128,
+        "status": "ambiguous",
+        "families": 8
+      },
+      {
+        "sample_index": 17,
+        "size": 128,
+        "status": "valid",
+        "families": 2
+      }
+    ],
+    "interpretation": "Threshold and window support affect candidate evidence, not calibrated confidence"
+  },
+  "provider_reported_costs": {
+    "field": {
+      "worker_processes": 1,
+      "startup_seconds": null,
+      "compute_seconds": 39.266011699917726,
+      "render_and_write_seconds": 0.04399020003620535,
+      "total_worker_seconds": 39.31000189995393,
+      "window_count": 18,
+      "fft_pixels": 147456,
+      "new_fft_count": 18,
+      "reused_fft_count": 0
+    },
+    "domain_map": {
+      "worker_processes": 1,
+      "startup_seconds": null,
+      "compute_seconds": 20.667293500038795,
+      "render_and_write_seconds": 0.11598809994757175,
+      "total_worker_seconds": 20.783281599986367,
+      "window_count": 18,
+      "fft_pixels": 147456,
+      "new_fft_count": 0,
+      "reused_fft_count": 18
+    },
+    "interpretation": "Provider measures compute and render/write; startup_seconds remains unknown, not zero"
+  },
+  "postfix_export_tool_ms": [
+    80570.53,
+    80637.40190000001
+  ],
+  "postfix_readback": [
+    {
+      "kind": "field",
+      "csv_rows": 18,
+      "source_coordinates_measurement_refs_masks_exact": true,
+      "unknown_support_fraction": 0.5
+    },
+    {
+      "kind": "domains",
+      "csv_rows": 18,
+      "source_coordinates_measurement_refs_masks_exact": true,
+      "unknown_support_fraction": 0.5
+    }
+  ],
+  "panel_image_content": {
+    "blocks": 2,
+    "png_sha256": [
+      "1a9a84ab1e4b7dbd4f3ea09e0435d1b187abd602426a8f731893a383b58d5f54",
+      "f8867ed511e18de3c323b7f03cece7ad3964f1e06ce7509ee4b71aa2609ee9d3"
+    ],
+    "map_provider_png_sha256": "f8867ed511e18de3c323b7f03cece7ad3964f1e06ce7509ee4b71aa2609ee9d3"
+  },
+  "named_context": {
+    "name": "public-f1a-readback-20261030",
+    "revision": 3
+  },
+  "continuation_ms": 237900.8088,
+  "revised_candidate_components_by_scale": {
+    "64": 3,
+    "128": 2
+  },
+  "source_and_18_fft_hashes_unchanged": true,
+  "fft_object_count_after_acceptance": 64,
+  "full_windows_r2_result": "FAIL domain export deadline; retained",
+  "postfix_first_harness_result": "FAIL source-role key collision after both exports succeeded; retained",
+  "postfix_readback_recovery_result": "PASS",
+  "original_export_request_preserved_incomplete": true,
+  "original_operation_replayed": false,
+  "final_compiled_delta": {
+    "result": "PASS",
+    "scope": "Final compiled MCP/Python delta: gap refusal to connect, original query, unchanged FFT reuse, bounded rejection and packed-reference named context recovery",
+    "field": "e02d0121327d4438bfa35506c6f9d408",
+    "map": "138bac42292c4c47aa34e6798d43fb0e",
+    "windows": 4,
+    "fft_pixels": 4096,
+    "fft_objects": 4,
+    "new_fft_in_map": 0,
+    "edge_statuses": [
+      "unknown",
+      "unknown",
+      "unknown",
+      "unknown"
+    ],
+    "source_sha256": "998fae296f79b87d3d0ac5495bbbbddd173039a5519090add1468e09f05242eb",
+    "source_unchanged": true,
+    "browser": "NOT_TESTED"
+  },
+  "not_tested": [
+    "actual browser gestures: Computer Use URL-confidence stop; no alternate route",
+    "fresh model/native plugin discovery",
+    "real specimen accuracy",
+    "GPA/twin/dislocation inference",
+    "statistical/localization uncertainty"
+  ],
+  "files_sha256": {
+    "domain-map.png": "f8867ed511e18de3c323b7f03cece7ad3964f1e06ce7509ee4b71aa2609ee9d3",
+    "domain-map.csv": "e0b5e21f4b0466b0fa1cb3da65e9ca64466f65f61d3201d38c686c8b20dc6512",
+    "spatial-field.csv": "d86164910bb92c64264debf7598c657149034dcc50b003cd6070ec81f113ad8a"
+  }
+}

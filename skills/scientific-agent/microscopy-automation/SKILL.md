@@ -1,6 +1,6 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build sparse structural feature fields, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build bounded multiscale structural fields and candidate domains, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
 ---
 
 # Reusable microscopy observations
