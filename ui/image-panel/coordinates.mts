@@ -24,8 +24,7 @@ type SelectionOn<P extends Panel> = {
   coordinates: CoordinateArray<PanelSpace<P>, 'centres' | 'edges'>; panel: P;
 };
 export type Selection = SelectionOn<FrequencyPanel> | SelectionOn<SpatialPanel> | SelectionOn<ArrayPanel>;
-interface TransformOptions<E extends boolean, I extends boolean> {edges?: E; inverse?: I;}
-
+interface TransformOptions {edges?: boolean; inverse?: boolean;}
 // Mirrors the public panels centre/edge contract; never infers a new grid.
 export function coordinateSpace(panel: FrequencyPanel): 'frequency_cycles_per_pixel';
 export function coordinateSpace(panel: SpatialPanel): 'source_pixels';
@@ -34,10 +33,23 @@ export function coordinateSpace(panel: Panel): ScientificCoordinateSpace;
 export function coordinateSpace(panel: Panel): ScientificCoordinateSpace {
   return ({frequency:'frequency_cycles_per_pixel',spatial_pixels:'source_pixels',source_array_indices:'source_array_indices'} as const)[panel.domain];
 }
-export function transformCoordinates<P extends Panel, E extends boolean = false, I extends boolean = false>(
-  values: readonly number[], panel: P, options?: TransformOptions<E, I>
-): CoordinateArray<I extends true ? 'display_pixels' : PanelSpace<P>, E extends true ? 'edges' : 'centres'>;
-export function transformCoordinates(values: readonly number[],panel: Panel,{edges=false,inverse=false}: TransformOptions<boolean,boolean>={}): number[] {
+// Literal option overloads tie brands to runtime flags. A dynamically typed
+// option object keeps both possible spaces/sampling conventions in its result.
+export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
+  options: {inverse: true; edges: true}): CoordinateArray<'display_pixels', 'edges'>;
+export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
+  options: {inverse: true; edges?: false}): CoordinateArray<'display_pixels'>;
+export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
+  options: {inverse: true; edges?: boolean}): CoordinateArray<'display_pixels', 'centres' | 'edges'>;
+export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
+  options: {inverse?: false; edges: true}): CoordinateArray<PanelSpace<P>, 'edges'>;
+export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
+  options?: {inverse?: false; edges?: false}): CoordinateArray<PanelSpace<P>>;
+export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
+  options: {inverse?: false; edges?: boolean}): CoordinateArray<PanelSpace<P>, 'centres' | 'edges'>;
+export function transformCoordinates<P extends Panel>(values: readonly number[], panel: P,
+  options: TransformOptions): CoordinateArray<'display_pixels' | PanelSpace<P>, 'centres' | 'edges'>;
+export function transformCoordinates(values: readonly number[],panel: Panel,{edges=false,inverse=false}: TransformOptions={}): number[] {
   if(!Array.isArray(values)||values.length%2||!values.every(Number.isFinite))throw new Error('Finite xy pairs required');
   const [left,top,right,bottom]=panel.image_rect_xyxy;
   const frequency=panel.domain==='frequency';

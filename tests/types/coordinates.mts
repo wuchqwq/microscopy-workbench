@@ -27,3 +27,23 @@ const binEdges = selectionRectangle(selected);
 // @ts-expect-error snapped processing-bin edges are not reciprocal sample centres
 const wrongBins: typeof cycles = binEdges;
 void [wrongSpace, wrongSampling, wrongDirection, wrongIdentity, wrongSelection, missingGrid, wrongBins];
+
+// Option-dependent brands require actual option values. Explicit type arguments
+// must not claim inverse/edge behavior when runtime defaults would be used.
+// @ts-expect-error the old three-parameter API could falsely promise display output with no options
+transformCoordinates<FrequencyPanel, false, true>([10, 20], frequency);
+// @ts-expect-error a declared inverse option must actually be present
+transformCoordinates<FrequencyPanel, {inverse: true}>([10, 20], frequency, {});
+// @ts-expect-error a declared edge option must actually be present
+transformCoordinates<SpatialPanel, {edges: true}>([10, 20], spatial, {});
+declare const dynamicOption: boolean;
+const dynamicCoordinates = transformCoordinates([10, 20], frequency, {inverse: dynamicOption, edges: dynamicOption});
+const dynamicAllowed: CoordinateArray<'display_pixels' | 'frequency_cycles_per_pixel', 'centres' | 'edges'> = dynamicCoordinates;
+// @ts-expect-error a dynamic inverse choice cannot promise one coordinate space
+const falselyCertainSpace: CoordinateArray<'display_pixels', 'centres' | 'edges'> = dynamicCoordinates;
+// @ts-expect-error a dynamic edge choice cannot promise centre sampling
+const falselyCertainSampling: CoordinateArray<'display_pixels' | 'frequency_cycles_per_pixel'> = dynamicCoordinates;
+void [dynamicAllowed, falselyCertainSpace, falselyCertainSampling];
+
+// @ts-expect-error an explicitly widened option generic must not label inverse output as scientific input
+transformCoordinates<FrequencyPanel, {}>([10, 20], frequency, {inverse: true});
