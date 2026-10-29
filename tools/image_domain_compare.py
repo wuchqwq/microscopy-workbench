@@ -11,7 +11,6 @@ from pathlib import Path
 import sys
 
 import numpy as np
-import scipy
 
 try:
     from . import image_automation as automation
@@ -22,12 +21,11 @@ except ImportError:
     import image_joint as joint
     import image_calibration as calibration
 
-# This existing numerical module has only NumPy/SciPy and calibration imports;
-# importing it neither loads ASE/diffsims nor enables structure tools.
+# The numerical matcher is imported only when a comparison is evaluated; it
+# requires NumPy/SciPy and calibration, not ASE/diffsims or structure tools.
 ROOT = str(Path(__file__).resolve().parents[1])
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
-from crystallography.reflection_compare import assign_within_tolerance
 
 
 FIELDS = {"local_signature_compare": {
@@ -140,6 +138,7 @@ def _angle_class(angle):
 
 def compare_families(reference, target, angles, tolerance):
     """Exhaustive declared angles, bounded assignment and no selected winner."""
+    from crystallography.reflection_compare import assign_within_tolerance
     refs, targets = reference["families"], target["families"]
     adequate = noncollinear(refs) and noncollinear(targets)
     truncated = reference["quality"]["detection_truncated"] or target["quality"]["detection_truncated"]
@@ -354,6 +353,7 @@ def report_csv(result):
 
 
 def action(workspace, name, request, metadata, directory, api):
+    import scipy
     api.need(name == "local_signature_compare", "Unknown local signature operation")
     result = derive(workspace, request, api)
     pictures = []

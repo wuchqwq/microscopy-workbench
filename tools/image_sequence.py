@@ -6,7 +6,6 @@ original immutable frame objects; a correspondence is evidence, not a resample.
 import math
 
 import numpy as np
-from scipy.ndimage import maximum_filter
 
 try:
     from . import image_automation as automation
@@ -137,6 +136,7 @@ def estimate_translation(reference_values, target_values, rect, max_shift, minim
     # Most worker calls only inspect saved data. Do not import the signal stack
     # afresh for every Panel ancestry lookup; estimation alone requires it.
     from scipy import signal
+    from scipy.ndimage import maximum_filter
 
     x0, y0, x1, y1 = rect
     height, width = y1-y0, x1-x0
