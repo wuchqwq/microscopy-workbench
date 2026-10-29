@@ -95,6 +95,30 @@ class Automation(unittest.TestCase):
         child = self.root / "workspace" / "requests" / (child_request_id("invalid-rects","fft-0")+".json")
         self.assertFalse(child.exists(),"Validate complete batch before starting children")
 
+    def test_revision_limit_is_rejected_before_object_creation_and_last_result_recovers(self):
+        fft = self.call("fft", object_id=self.frame["object_id"], window="none", subtract_mean=True)
+        initial = self.call("measure", object_id=fft["object_id"], coordinate_space="frequency_cycles_per_pixel",
+                            points=[[0, 0], [.125, 0]])
+        last = initial
+        for index in range(1, 16):
+            last = self.call("remeasure", object_id=fft["object_id"], measurement_object_id=last["object_id"],
+                             points=[[0, 0], [.125, index / 10000]], source_text="Synthetic corrected point")
+        workspace_path = self.root / "workspace"
+        # A fresh workspace must validate the full original request chain, not
+        # merely trust the successful write response.
+        fresh = worker.Workspace(str(workspace_path), False)
+        validated, _ = fresh.committed_measurement(last["object_id"])
+        self.assertEqual(validated["points"], [[0, 0], [.125, .0015]])
+        self.assertEqual(self.call("result", query_request_id=last["request_id"])["object_id"], last["object_id"])
+        objects_before = {p.name for p in (workspace_path / "objects").iterdir()}
+        rejected = self.call("remeasure", ok=False, request_id="depth-limit", object_id=fft["object_id"],
+                             measurement_object_id=last["object_id"], points=[[0, 0], [.125, .002]],
+                             source_text="Synthetic correction beyond budget")
+        self.assertEqual(rejected["error"]["code"], "BUDGET_EXCEEDED")
+        self.assertEqual({p.name for p in (workspace_path / "objects").iterdir()}, objects_before)
+        self.assertEqual(self.call("result", ok=False, query_request_id="depth-limit"), rejected)
+        self.assertEqual(fresh.committed_measurement(last["object_id"])[0]["object_id"], last["object_id"])
+
     def test_export_missing_parent_is_not_existing_destination(self):
         missing = self.call("export",ok=False,object_id=self.frame["object_id"],output_dir=str(self.root/"missing"/"result"))
         self.assertEqual(missing["error"]["code"],"OUTPUT_PARENT_MISSING")

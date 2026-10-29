@@ -62,8 +62,13 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const displayObject=async r=>{
   if(['spatial_atlas','local_signature_compare','feature_field'].includes(r.data.kind)){
    const evidence=r.data;
-   if(!objectId.test(evidence.overview_object_id??''))fail('Spatial evidence has no saved source overview');
-   const shown=await journalCall('image_info',{object_id:evidence.overview_object_id});
+   // A comparison may explicitly use an unverified R2 reference: that row
+   // has no overview, but other saved rows can still have an exact FFT view.
+   // Show one such view without changing the saved not-comparable evidence.
+   const fallback=evidence.kind==='local_signature_compare'&&evidence.source_entries?.find(row=>objectId.test(row.view_object_id??''))?.view_object_id;
+   const displayId=objectId.test(evidence.overview_object_id??'')?evidence.overview_object_id:fallback;
+   if(!objectId.test(displayId??''))fail('Spatial evidence has no saved source overview or observation view');
+   const shown=await journalCall('image_info',{object_id:displayId});
    return {...shown,domainEvidence:evidence,domainPng:evidence.kind==='feature_field'?r.png??null:null};
   }
   if(r.data.kind==='joint_observations'){
