@@ -1,0 +1,22 @@
+import type {ViewObject,RenderedMark,CalibrationView,DisplayPanel,AnnotationPresentation,AnnotationLayoutOptions} from './presentation-contracts.mjs';
+import type {ProfileResult} from './data-probe-contracts.mjs';
+import type {ObjectId} from './coordinates.mjs';
+export interface ScientificAnchor {readonly source_object_id:ObjectId;readonly coordinate_space:string;readonly coordinates:readonly number[];}
+export interface FigureMark extends RenderedMark {readonly anchor?:ScientificAnchor;}
+export interface FigureObject extends ViewObject {
+ readonly object_id:string;readonly kind?:string;readonly calibration_record?:CalibrationView;readonly calibration?:CalibrationView;
+ readonly display?:Readonly<Record<string,unknown>>;readonly annotations?:readonly FigureMark[];readonly source_shape_yx?:readonly number[];
+}
+export interface FigureFrameIdentity {readonly frame_object_id?:string;readonly source_object_id?:string;readonly frame_index?:number;}
+export interface FigureState {readonly object:FigureObject;readonly frame_identity?:FigureFrameIdentity|null;readonly effective_display?:Readonly<Record<string,unknown>>|null;readonly figure_base?:FigureBase;}
+export interface FigureBase {readonly object_id:string;readonly clean_png_sha256:string;readonly clean_png_base64?:string;readonly panels?:readonly DisplayPanel[];readonly scale_bar?:ScaleBarRecord|null;}
+export interface ScaleBarRecord {readonly visible?:boolean;readonly image_endpoints_xyxy?:readonly number[];readonly length?:unknown;readonly unit?:unknown;}
+export interface FigurePreferences extends AnnotationLayoutOptions {columns?:string;fontPt?:unknown;legend?:boolean;scaleBar?:boolean;letter?:unknown;readonly [key:string]:unknown;}
+export interface FigureIdentity {panels:readonly DisplayPanel[];frame:FigureFrameIdentity|null;anchors:readonly {annotation_id?:string;kind:string;anchor:ScientificAnchor|null;status?:string}[];grid:unknown;calibration:Readonly<Record<string,unknown>>|null;}
+export interface FigureRecipe {schema:string;source_object_id:string;source:FigureIdentity;display_recipe:Readonly<Record<string,unknown>>;preferences:FigurePreferences;annotations:readonly {annotation_id?:string;presentation:AnnotationPresentation}[];limitation?:string;}
+export interface ImageSlot {kind:'image';title:string;source_object_id:string;recipe:FigureRecipe;asset:{object_id:string;clean_png_sha256:string};scale_bar:ScaleBarRecord|null;}
+export interface ProfileSlot {kind:'profile';title:string;object_id:string;scientific_grid_identity:unknown;xy_calibration:CalibrationView|null;}
+export type CompositionSlot=ImageSlot|ProfileSlot;
+export interface CompositionRecipe {schema:string;layout:string;font_pt:number;slots:CompositionSlot[];roiOutlines?:boolean;showLegend?:boolean;}
+export interface SpatialSource {object_id:string;shape_yx:readonly number[];dtype:string;array_sha256:string;frame_identity:FigureFrameIdentity;}
+export interface CompositionPanel {readonly slot:CompositionSlot;readonly state?:FigureState;readonly profile?:ProfileResult;readonly clean_png_base64?:string;readonly scale_bar?:ScaleBarRecord|null;readonly spatial_source?:SpatialSource;}

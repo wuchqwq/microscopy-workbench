@@ -1,3 +1,5 @@
+export type AnnotationSVGItem=Pick<import('./presentation-contracts.mjs').AnnotationLayoutItem,'id'|'shape'|'color'|'radius'|'lineWidth'|'geometryVisible'|'coordinates'|'dash'>&{mark:Pick<import('./presentation-contracts.mjs').RenderedMark,'kind'|'text'|'status'|'arrow_render_coordinates'>;label:Partial<import('./presentation-contracts.mjs').LabelLayout>&{text:string;visible:boolean};anchor?:number[];selected?:boolean};
+export type AnnotationSVGLayout=Pick<import('./presentation-contracts.mjs').AnnotationLayout,'width'|'height'|'scale'|'legend'|'mode'>&{items:AnnotationSVGItem[]};
 import type {RenderedMark,AnnotationLayout,AnnotationLayoutItem,AnnotationLegend,AnnotationLayoutOptions,FigureLayoutOptions,Box,LabelLayout,AnnotationPresentation} from './presentation-contracts.mjs';
 export type {AnnotationLayout,AnnotationLayoutOptions,FigureLayoutOptions} from './presentation-contracts.mjs';
 // Shared, deterministic presentation only. Input anchors and scientific values stay read-only.
@@ -128,7 +130,7 @@ function shapeSVG(shape: string,x: number,y: number,r: number,color: string,line
  return `<circle cx="${number(x)}" cy="${number(y)}" r="${number(r)}" ${attrs}/>`+(shape==='double_circle'?`<circle cx="${number(x)}" cy="${number(y)}" r="${number(r*1.55)}" ${attrs}/>`:'');
 }
 
-function geometrySVG(item: AnnotationLayoutItem){
+function geometrySVG(item: AnnotationSVGItem){
  const {mark,color,lineWidth,radius,shape}=item,c=mark.kind==='arrow'&&mark.arrow_render_coordinates?.every(Number.isFinite)?mark.arrow_render_coordinates:item.coordinates;
  const dash=item.dash.map(number).join(' '),attrs=`fill="none" stroke="${xml(color)}" stroke-width="${number(lineWidth)}" stroke-linecap="round" stroke-linejoin="round"${dash?` stroke-dasharray="${dash}"`:''}`;
  if(mark.kind==='point')return shapeSVG(shape,c[0],c[1],radius,color,lineWidth,dash);
@@ -140,20 +142,20 @@ function geometrySVG(item: AnnotationLayoutItem){
 }
 
 /** SVG contains only escaped text and a fixed vocabulary of SVG elements/attributes. */
-export function renderAnnotationsSVG(layout: AnnotationLayout,{width=layout.width,height=layout.height,includeRoot=true,interactive=false,figureLayout={}}: {width?:number;height?:number;includeRoot?:boolean;interactive?:boolean;figureLayout?:FigureLayoutOptions}={}) {
+export function renderAnnotationsSVG(layout: AnnotationSVGLayout,{width=layout.width,height=layout.height,includeRoot=true,interactive=false,figureLayout={}}: {width?:number;height?:number;includeRoot?:boolean;interactive?:boolean;figureLayout?:FigureLayoutOptions}={}) {
  width=bounded(width,layout.width,1,1000000);height=bounded(height,layout.height,1,1000000);
  const scale=layout.scale??1,fontFamily='Arial, Helvetica, sans-serif';let content='';
  for(const item of layout.items){
   const {label,anchor,mark}=item,id=xml(item.id),part=interactive?` data-annotation-id="${id}"`:'';
   if(item.geometryVisible)content+=`<g${part} data-part="geometry"><title>${xml([mark.text??label.text,mark.status].filter(Boolean).join(' · '))}</title>${geometrySVG(item)}</g>`;
   if(label.visible){
-   const near=[Math.max(label.x,Math.min(label.x+label.width,anchor[0])),Math.max(label.y,Math.min(label.y+label.height,anchor[1]))];
-   if(label.leader&&Math.hypot(near[0]-anchor[0],near[1]-anchor[1])>item.radius+3/scale)content+=`<path d="M ${number(anchor[0])} ${number(anchor[1])} L ${number(near[0])} ${number(near[1])}" fill="none" stroke="${xml(item.color)}" stroke-width="${number(.65/scale)}" opacity="0.78" pointer-events="none"/>`;
-   content+=`<g${part} data-part="label"${interactive?' style="cursor:move"':''}><title>${xml([mark.text??label.text,mark.status].filter(Boolean).join(' · '))}</title>${interactive?`<rect x="${number(label.x-2/scale)}" y="${number(label.y-2/scale)}" width="${number(label.width+4/scale)}" height="${number(label.height+4/scale)}" fill="transparent"/>`:''}<text x="${number(label.x)}" y="${number(label.y+label.fontSize)}" fill="${xml(item.color)}" font-family="${fontFamily}" font-size="${number(label.fontSize)}" font-weight="400" stroke="#11151b" stroke-width="${number(.6/scale)}" stroke-opacity="0.7" paint-order="stroke fill" stroke-linejoin="round">${crystallographicSVGText(label.text)}</text></g>`;
+   const near=[Math.max(label.x!,Math.min(label.x!+label.width!,anchor![0])),Math.max(label.y!,Math.min(label.y!+label.height!,anchor![1]))];
+   if(label.leader&&Math.hypot(near[0]-anchor![0],near[1]-anchor![1])>item.radius+3/scale)content+=`<path d="M ${number(anchor![0])} ${number(anchor![1])} L ${number(near[0])} ${number(near[1])}" fill="none" stroke="${xml(item.color)}" stroke-width="${number(.65/scale)}" opacity="0.78" pointer-events="none"/>`;
+   content+=`<g${part} data-part="label"${interactive?' style="cursor:move"':''}><title>${xml([mark.text??label.text,mark.status].filter(Boolean).join(' · '))}</title>${interactive?`<rect x="${number(label.x!-2/scale)}" y="${number(label.y!-2/scale)}" width="${number(label.width!+4/scale)}" height="${number(label.height!+4/scale)}" fill="transparent"/>`:''}<text x="${number(label.x!)}" y="${number(label.y!+label.fontSize!)}" fill="${xml(item.color)}" font-family="${fontFamily}" font-size="${number(label.fontSize!)}" font-weight="400" stroke="#11151b" stroke-width="${number(.6/scale)}" stroke-opacity="0.7" paint-order="stroke fill" stroke-linejoin="round">${crystallographicSVGText(label.text)}</text></g>`;
   }
   if(layout.mode==='analysis'&&item.selected&&item.geometryVisible){const r=3/scale;content+=`<g data-part="handles" pointer-events="none" fill="#11151b" stroke="${xml(item.color)}" stroke-width="${number(1/scale)}">`;for(let i=0;i<item.coordinates.length;i+=2)content+=`<rect x="${number(item.coordinates[i]-r)}" y="${number(item.coordinates[i+1]-r)}" width="${number(r*2)}" height="${number(r*2)}"/>`;content+='</g>';}
  }
- const fs=bounded(figureLayout.fontSize,layout.items.find(item=>item.label.text)?.label.fontSize??11/scale,1/scale,256/scale),padding=fs*.8;
+ const fs=bounded(figureLayout.fontSize,layout.items.find(item=>item.label.text)?.label.fontSize!??11/scale,1/scale,256/scale),padding=fs*.8;
  if(figureLayout.letter){content+=`<text data-part="panel-letter" x="${number(padding)}" y="${number(padding+fs*1.25)}" fill="#f1f4f5" font-family="${fontFamily}" font-size="${number(fs*1.25)}" font-weight="600" stroke="#11151b" stroke-width="${number(1/scale)}" paint-order="stroke fill">${xml(figureLayout.letter)}</text>`;}
  if(figureLayout.legend!==false&&figureLayout.showLegend!==false&&layout.legend.length){
   const font=bounded(figureLayout.legendFontSize,Math.min(fs,9/scale),1/scale,256/scale),gap=font*1.55,columns=figureLayout.legendColumns===2?2:1,columnWidth=columns===2?layout.width/2-padding:Math.max(...layout.legend.map(row=>labelExtent(row.label,font).width))+font*2.55,maxWidth=columnWidth*columns;
