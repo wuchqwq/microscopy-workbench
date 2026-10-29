@@ -2,12 +2,20 @@
 // It preserves scientific validation/errors and the separate viewer namespace.
 import {StructureWorkspace, structureTools, STRUCTURE_INSTRUCTIONS} from '../structure_workspace.mjs';
 import {attachStructureViewer, closeStructureViewer, structureViewerTools} from '../structure_viewer_client.mjs';
+import type {RegistryModule,ToolContract,RequestIdentityPolicy,ToolCallOptions} from '../runtime/contracts.mjs';
+import type {StructureWorkspaceOptions,StructureWorkspacePort,StructureArguments,ViewerCloseArguments} from '../structure_contracts.mjs';
+interface Recipe {inputs:string[];outputs:string[];kind:string;gates:string[];budgets:string[];requestId?:RequestIdentityPolicy;}
+export interface StructureModuleOptions {
+ structureWorkspace?:StructureWorkspacePort;workspaceOptions?:StructureWorkspaceOptions;viewerAssetPath?:string;
+ attachViewer?:typeof attachStructureViewer;closeViewer?:typeof closeStructureViewer;
+}
+
 
 const workerBudgets = [
   'StructureWorkspace: request <=256 KiB; worker response <=4 MiB; inline PNG <=2 MiB; configured worker deadline',
   'crystallography/structure_tools.py: <=4096 atoms; bounded source/object files and scientific manifests',
 ];
-const recipes = {
+const recipes:Record<string,Recipe> = {
   structure_compare_batch: {
     inputs: ['SimulationRef[]:1..3 explicit saved candidate simulations and trial transforms','MeasurementRef[]:1..32 committed image IDs in the configured image workspace','ScientificArrayRef:current image revision'],
     outputs: ['ComparisonBatchRef:parent journal and independently committed comparison child receipts','CandidateComparisonRef[]:hypothesized assignments, residuals and unmatched evidence references'],
@@ -87,7 +95,7 @@ const recipes = {
   },
 };
 
-function contract(name, workspace) {
+function contract(name:string, workspace:string):ToolContract {
   const recipe = recipes[name];
   if (!recipe) throw new Error(`Missing structure module contract for ${name}`);
   const query = recipe.requestId === 'none' || recipe.requestId === 'query';
@@ -107,7 +115,7 @@ function contract(name, workspace) {
   };
 }
 
-function viewerCloseContract(workspace) {
+function viewerCloseContract(workspace:string):ToolContract {
   return {
     backend: 'external-structure-workspace',
     inputs: ['ImageViewRef:exact saved structure_view alias', 'OperationReceipt:pre-saved independent viewer-close request_id'],
@@ -124,8 +132,8 @@ function viewerCloseContract(workspace) {
   };
 }
 
-export function createStructureModule({structureWorkspace, workspaceOptions, viewerAssetPath = process.env.DM_STRUCTURE_VIEWER_ASSET, attachViewer = attachStructureViewer, closeViewer = closeStructureViewer} = {}) {
-  const runtime = structureWorkspace ?? new StructureWorkspace(workspaceOptions);
+export function createStructureModule({structureWorkspace, workspaceOptions, viewerAssetPath = process.env.DM_STRUCTURE_VIEWER_ASSET, attachViewer = attachStructureViewer, closeViewer = closeStructureViewer}:StructureModuleOptions = {}):RegistryModule & {workspace:StructureWorkspacePort} {
+  const runtime = structureWorkspace ?? new StructureWorkspace(workspaceOptions!);
   if (!runtime || typeof runtime.call !== 'function') throw new TypeError('Structure module requires a StructureWorkspace-compatible call method');
   if (typeof attachViewer !== 'function' || typeof closeViewer !== 'function') throw new TypeError('Structure module requires its existing viewer attachment/close handlers');
   return {
@@ -134,7 +142,9 @@ export function createStructureModule({structureWorkspace, workspaceOptions, vie
     tools: [
       ...structureTools.map(definition => ({
         definition, contract: contract(definition.name, runtime.workspace),
-        execute: async (args, {signal} = {}) => {
+        execute: async (input:unknown, {signal}:ToolCallOptions = {}) => {
+          // ToolRegistry applies the unchanged definition before this adapter.
+          const args=input as StructureArguments;
           const result = await runtime.call(definition.name, args, signal);
           if (definition.name === 'structure_view' && args.interactive === true) {
             return attachViewer(result, {workspace: runtime.workspace, assetPath: viewerAssetPath, inspect: object_id => runtime.call('structure_info', {object_id, include_atoms: true}), signal});
@@ -142,7 +152,7 @@ export function createStructureModule({structureWorkspace, workspaceOptions, vie
           return result;
         },
       })),
-      ...structureViewerTools.map(definition => ({definition, contract: viewerCloseContract(runtime.workspace), execute: (args, {signal} = {}) => closeViewer(args, {workspace: runtime.workspace, signal})})),
+      ...structureViewerTools.map(definition => ({definition, contract: viewerCloseContract(runtime.workspace), execute: (args:unknown, {signal}:ToolCallOptions = {}) => closeViewer(args as ViewerCloseArguments, {workspace: runtime.workspace, signal})})),
     ],
   };
 }

@@ -8,6 +8,7 @@
     "tools/**/*.mjs",
     "tools/**/*.mts",
     "ui/**/*.mjs",
+    "ui/**/*.mts",
     "tests/**/*.mjs"
   ],
   "exclude": [
