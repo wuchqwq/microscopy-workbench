@@ -42,7 +42,19 @@ try{
  delete metadata.devDependencies;
  metadata.scripts={start:'node server.mjs',inspect:'node tools/researcher_inspector.mjs'};
  writeFileSync(path.join(staging,'package.json'),JSON.stringify(metadata,null,2)+'\n');
- writeFileSync(path.join(staging,'BUILD.json'),JSON.stringify({format:1,typescript:'5.9.3',migrated:['server.mts','tools/plugin_server.mts','lib/runtime/schema.mts','lib/runtime/contracts.mts','lib/runtime/tool_registry.mts','lib/runtime/stdio_mcp_server.mts','ui/image-panel/coordinates.mts']},null,2)+'\n');
+ const migrated=[];
+ const inventory=relative=>{
+  for(const entry of readdirSync(path.join(root,relative),{withFileTypes:true})){
+   const next=path.join(relative,entry.name);
+   if(entry.isDirectory())inventory(next);
+   else if(entry.isFile()&&entry.name.endsWith('.mts'))migrated.push(next.split(path.sep).join('/'));
+  }
+ };
+ for(const directory of ['lib','tools','ui'])inventory(directory);
+ for(const entry of readdirSync(root,{withFileTypes:true}))if(entry.isFile()&&entry.name.endsWith('.mts'))migrated.push(entry.name);
+ migrated.sort();
+ for(const source of migrated)if(!existsSync(path.join(staging,source.replace(/\.mts$/,'.mjs'))))throw new Error('Migrated runtime module was not emitted: '+source);
+ writeFileSync(path.join(staging,'BUILD.json'),JSON.stringify({format:1,typescript:'5.9.3',migrated},null,2)+'\n');
  renameSync(staging,output);
  console.log('Built dist/: standalone ESM runtime, Python workers, Panel, manifests and Skills.');
 }catch(error){rmSync(staging,{recursive:true,force:true});throw error;}
