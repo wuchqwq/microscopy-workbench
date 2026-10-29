@@ -14,10 +14,12 @@ also needs [structure requirements](../requirements-structure-tools.txt); option
 DM file reading needs [reader requirements](../requirements-dm4.txt). Never install
 these into GMS Python. No DM installation or old mcp-dm checkout is required.
 
-Use a clean source checkout for plugin installation and keep private specimens,
-scientific workspaces and connection settings outside it: local plugin clients
-can copy the entire selected source directory into their cache. From the checkout,
-generate a new local configuration directory:
+In a clean source checkout, run `npm ci`, `npm run typecheck` and `npm run build`
+once. Install or copy the **complete `dist/` directory** as the plugin root,
+including its hidden manifests and Skills. It runs on Node >=18 without
+TypeScript, npm installation or a build at startup. Keep private specimens,
+scientific workspaces and connection settings outside the package. From inside
+the built package, generate a new local configuration directory:
 
 ```sh
 node tools/prepare_plugin.mjs --python /absolute/venv/bin/python --workspace /absolute/scientific-workspace --output /absolute/new-connection --structures
@@ -32,13 +34,13 @@ science work. Retain the scientific workspace across sessions.
 
 ### Codex-compatible plugin
 
-The repository is a plugin root: [.codex-plugin/plugin.json](../.codex-plugin/plugin.json)
+The built package is a plugin root: [.codex-plugin/plugin.json](../.codex-plugin/plugin.json)
 declares the four scientific Skills and [.mcp.json](../.mcp.json) declares one
 local stdio provider. The included [marketplace](../.agents/plugins/marketplace.json)
-lets a compatible Codex client install it from this checkout:
+lets a compatible Codex client install it from the built package:
 
 ```sh
-codex plugin marketplace add /absolute/microscopy-workbench
+codex plugin marketplace add /absolute/microscopy-workbench/dist
 codex plugin add microscopy-workbench@microscopy-workbench-local
 ```
 

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "*.mts",
+    "lib/**/*.mts",
+    "tools/**/*.mts",
+    "ui/**/*.mts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "tests"
+  ]
+}

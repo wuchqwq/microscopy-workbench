@@ -6,18 +6,27 @@
   "name": "microscopy-core",
   "private": true,
   "scripts": {
-    "inspect": "node tools/researcher_inspector.mjs",
-    "start": "node server.mjs",
-    "test": "node --test --test-concurrency=2 tests/standalone-boundary.test.mjs tests/execution-coordinator.test.mjs tests/analysis-context.test.mjs tests/image-panel-ui.test.mjs tests/image-panel-drag-constraints.test.mjs tests/image-panel-viewport.test.mjs tests/image-panel-presentation.test.mjs tests/image-panel-figure-export.test.mjs tests/image-panel-presentation-transport.test.mjs tests/image-panel-draft-transport.test.mjs tests/image-panel-concurrency.test.mjs tests/image-panel-feedback.test.mjs tests/image-panel-data-inspector.test.mjs tests/image-panel-data-probes.test.mjs tests/data-probes-ui.test.mjs tests/measurement-workspace-ui.test.mjs tests/user-workflow.test.mjs tests/image-client-entry-env.test.mjs tests/packaged-entrypoints.test.mjs tests/figure-composer.test.mjs tests/figure-composer-assets.test.mjs tests/figure-composer-transport.test.mjs tests/figure-composer-ui.test.mjs tests/image-panel-numeric-recovery.test.mjs tests/dm4-import-contract.test.mjs tests/dm-complex-contract.test.mjs tests/plugin-package.test.mjs tests/candidate-batch-contract.test.mjs tests/sequence-contract.test.mjs tests/sequence-evidence-ui.test.mjs tests/domain-contract.test.mjs tests/domain-evidence-ui.test.mjs tests/domain-panel-transport.test.mjs tests/domain-measurement-binding.test.mjs",
-    "test:science": "node tests/standalone-science-smoke.mjs",
-    "test:dm4": "node tests/dm4-science-smoke.mjs",
-    "test:dm-planes": "node tests/dm-planes-science-smoke.mjs",
-    "test:complex": "node tests/dm-complex-science-smoke.mjs",
-    "test:automation": "node tests/automation-plugin-smoke.mjs",
-    "test:sequence": "node tools/smoke_sequence_plugin.mjs",
-    "test:domains": "node tools/smoke_domain_plugin.mjs",
-    "test:field": "node tools/smoke_feature_field.mjs"
+    "inspect": "node dist/tools/researcher_inspector.mjs",
+    "start": "node dist/server.mjs",
+    "test": "node --test --test-concurrency=2 dist/tests/standalone-boundary.test.mjs dist/tests/execution-coordinator.test.mjs dist/tests/analysis-context.test.mjs dist/tests/image-panel-ui.test.mjs dist/tests/image-panel-drag-constraints.test.mjs dist/tests/image-panel-viewport.test.mjs dist/tests/image-panel-presentation.test.mjs dist/tests/image-panel-figure-export.test.mjs dist/tests/image-panel-presentation-transport.test.mjs dist/tests/image-panel-draft-transport.test.mjs dist/tests/image-panel-concurrency.test.mjs dist/tests/image-panel-feedback.test.mjs dist/tests/image-panel-data-inspector.test.mjs dist/tests/image-panel-data-probes.test.mjs dist/tests/data-probes-ui.test.mjs dist/tests/measurement-workspace-ui.test.mjs dist/tests/user-workflow.test.mjs dist/tests/image-client-entry-env.test.mjs dist/tests/packaged-entrypoints.test.mjs dist/tests/figure-composer.test.mjs dist/tests/figure-composer-assets.test.mjs dist/tests/figure-composer-transport.test.mjs dist/tests/figure-composer-ui.test.mjs dist/tests/image-panel-numeric-recovery.test.mjs dist/tests/dm4-import-contract.test.mjs dist/tests/dm-complex-contract.test.mjs dist/tests/plugin-package.test.mjs dist/tests/candidate-batch-contract.test.mjs dist/tests/sequence-contract.test.mjs dist/tests/sequence-evidence-ui.test.mjs dist/tests/domain-contract.test.mjs dist/tests/domain-evidence-ui.test.mjs dist/tests/domain-panel-transport.test.mjs dist/tests/domain-measurement-binding.test.mjs dist/tests/runtime-stdio.test.mjs dist/tests/runtime-registry.test.mjs dist/tests/structure-viewer.test.mjs",
+    "test:science": "node dist/tests/standalone-science-smoke.mjs",
+    "test:dm4": "node dist/tests/dm4-science-smoke.mjs",
+    "test:dm-planes": "node dist/tests/dm-planes-science-smoke.mjs",
+    "test:complex": "node dist/tests/dm-complex-science-smoke.mjs",
+    "test:automation": "node dist/tests/automation-plugin-smoke.mjs",
+    "test:sequence": "node dist/tools/smoke_sequence_plugin.mjs",
+    "test:domains": "node dist/tools/smoke_domain_plugin.mjs",
+    "test:field": "node dist/tools/smoke_feature_field.mjs",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.shared.json && tsc -p tsconfig.types.json",
+    "build": "node scripts/build.mjs",
+    "pretest": "npm run build",
+    "test:compiled:compat": "node --test dist/tests/compiled-baseline-compat.test.mjs",
+    "test:runtime:parity": "node --test dist/tests/runtime-transport-parity.test.mjs"
   },
   "type": "module",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "devDependencies": {
+    "@types/node": "18.19.130",
+    "typescript": "5.9.3"
+  }
 }

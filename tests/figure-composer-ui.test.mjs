@@ -7,7 +7,7 @@ import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import * as composer from '../ui/image-panel/figure-composer.mjs';
 const copy=value=>JSON.parse(JSON.stringify(value)),id=n=>n.toString(16).padStart(32,'0');
-const source=readFileSync(new URL('../ui/image-panel/app.mjs',import.meta.url),'utf8'),start=source.indexOf('let composition='),end=source.indexOf("$('view-forward').onclick",start);
+const source=readFileSync(new URL('../ui/image-panel/app.mjs',import.meta.url),'utf8'),start=source.search(/\blet composition\s*=/u),end=source.indexOf("$('view-forward').onclick",start);
 assert.ok(start>=0&&end>start,'test must execute the actual composer handlers');
 function profile(n){return {kind:'profile',object_id:id(n),scientific_grid_identity:{source_object_id:id(99),array_sha256:'a'.repeat(64)},xy_calibration:null,component:'raw',distance_unit:'pixel',physical_distance_unit:null,samples:{coordinates_xy:[[0,0],[1,0]],indices_xy:[[0,0],[1,0]],distance:[0,1],physical_distance:null,value:[7,9]}};}
 function harness(count=3,layout='1x3',{initialRecipe,initialPanels,resolvePanels}={}){

@@ -27,3 +27,8 @@ private/
 runtime/
 !/lib/runtime/
 !/lib/runtime/*.mjs
+!/lib/runtime/*.mts
+
+# Compiled runtime and atomic build staging
+dist/
+.build/

@@ -1,0 +1,76 @@
+{
+  "format": 1,
+  "functional_baseline": "3790b3d57e427010f0a5cbfce8a31143a7883eef",
+  "production_source_freeze": "10d810a",
+  "checks": {
+    "typecheck_build": "PASS",
+    "compiled_node": {
+      "status": "PASS",
+      "pass": 295,
+      "skip": 5,
+      "fail": 0
+    },
+    "frozen_stdio_lifecycle": "PASS",
+    "independent_python_science": "PASS",
+    "frozen_legacy_workspace": {
+      "status": "PASS",
+      "objects_at_freeze": 286,
+      "historical_files_checked": 919,
+      "fft_count": 20,
+      "fft_replayed": false,
+      "tool_schemas": 34,
+      "contexts": 2,
+      "scope": [
+        "original requests and context history",
+        "measurement revision",
+        "reused atlas and hypotheses",
+        "CAS continuation",
+        "R3 field export",
+        "old Figure restoration",
+        "independent copied plugin and working directory"
+      ]
+    },
+    "real_chromium": {
+      "status": "PASS",
+      "compiled_modules": 12,
+      "page_errors": 0,
+      "failed_modules": 0,
+      "api_failures": 0,
+      "historical_files_checked": 919,
+      "fft_count": 20,
+      "scope": [
+        "wheel and pan",
+        "ROI and draft journal",
+        "Gamma canvas and explicit discard",
+        "old Figure import",
+        "annotation save and page-reload recovery",
+        "four-file Figure ZIP CRC/SVG/PNG/300dpi recipe"
+      ],
+      "retained_baseline_console_issue": "One existing cursor inline-style CSP message category, 184 occurrences; console is not claimed empty."
+    },
+    "fresh_agent": {
+      "status": "NOT_TESTED",
+      "attempted": true,
+      "reason": "CLI MCP calls require approval while that session approval policy is never; no permission settings changed."
+    }
+  },
+  "source_exceptions": [
+    "three startup/export shims",
+    "scripts/build.mjs",
+    "test and smoke harnesses"
+  ],
+  "unchanged": [
+    "Python and requirements",
+    "scientific admission and numerical tolerances",
+    "#13 recovery/depth preflight",
+    "#14 deferred imports",
+    "remote main and frozen baseline"
+  ],
+  "not_qualified": [
+    "native client plugin discovery",
+    "real specimens",
+    "GMS/instruments",
+    "macOS execution",
+    "optional diffsims and real 3Dmol WebGL"
+  ]
+}

@@ -15,7 +15,7 @@ test('action availability rejects rectangles/real-space points before measure an
 });
 test('frequency gamma/range cannot be inherited by spatial frame navigation; spatial fixed range is preserved',()=>{
  const display={gamma:2,display_range:[2,15],max_size:600};assert.deepEqual(framePreviewRecipe(state('fft','frequency').object,display),{max_size:600});assert.deepEqual(framePreviewRecipe(state().object,display),display);assert.deepEqual(framePreviewRecipe({},display),{max_size:600});
- const backend=readFileSync(new URL('../tools/image_panel.mjs',import.meta.url),'utf8');assert.match(backend,/framePreviewRecipe\(current,effectiveDisplay\)/);
+ const backend=readFileSync(new URL('../tools/image_panel.mjs',import.meta.url),'utf8');assert.match(backend,/framePreviewRecipe\(\s*current\s*,\s*effectiveDisplay\s*\)/);
 });
 test('view references return to saved objects, update same-grid annotations in place and retain back/forward',()=>{
  const h=new SavedViewHistory();h.remember(state(),{role:'原图'});h.remember(state('b'),{replace:true});assert.equal(h.entries.length,1);h.remember(state('fft','frequency'),{role:'FFT'});assert.equal(h.target(-1).id,'b');h.remember(state('b'));assert.equal(h.target(1).id,'fft');assert.equal(h.original(state('fft','frequency')).id,'b');assert.notEqual(workflowScope(state()),workflowScope(state('fft','frequency')));
