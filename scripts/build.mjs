@@ -42,7 +42,7 @@ try{
  delete metadata.devDependencies;
  metadata.scripts={start:'node server.mjs',inspect:'node tools/researcher_inspector.mjs'};
  writeFileSync(path.join(staging,'package.json'),JSON.stringify(metadata,null,2)+'\n');
- writeFileSync(path.join(staging,'BUILD.json'),JSON.stringify({format:1,typescript:'5.9.3',migrated:['server.mts','tools/plugin_server.mts','lib/runtime/schema.mts','ui/image-panel/coordinates.mts']},null,2)+'\n');
+ writeFileSync(path.join(staging,'BUILD.json'),JSON.stringify({format:1,typescript:'5.9.3',migrated:['server.mts','tools/plugin_server.mts','lib/runtime/schema.mts','lib/runtime/contracts.mts','lib/runtime/tool_registry.mts','lib/runtime/stdio_mcp_server.mts','ui/image-panel/coordinates.mts']},null,2)+'\n');
  renameSync(staging,output);
  console.log('Built dist/: standalone ESM runtime, Python workers, Panel, manifests and Skills.');
 }catch(error){rmSync(staging,{recursive:true,force:true});throw error;}

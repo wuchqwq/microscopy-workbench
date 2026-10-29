@@ -106,3 +106,8 @@ Native plugin-discovery/model loading, a new Agent continuation session, real
 specimens, GMS and macOS are NOT_TESTED in this first slice. Full R2/R3/Figure
 history parity and broader type coverage remain later-stage gates; this PR does
 not claim the whole application has migrated.
+
+The following [registry and stdio slice](TYPESCRIPT_RUNTIME.md) consumes shared
+runtime contracts and adds exact frozen-transport parity checks. It remains a
+separate reviewable PR; execution lifetime and AnalysisContext/CAS migration are
+subsequent scopes.
