@@ -4,13 +4,18 @@ import {ImageWorkspace, imageTools, IMAGE_INSTRUCTIONS} from '../image_workspace
 import {automationRecipes} from '../image_automation_contract.mjs';
 import {sequenceRecipes} from '../image_sequence_contract.mjs';
 import {domainRecipes} from '../image_domain_contract.mjs';
+import type {CompositionRecipe} from '../image_provider_contracts.mjs';
+import type {RegistryModule,RegistryTool,ToolContract} from '../runtime/contracts.mjs';
+import type {ImageWorkspaceOptions,ImageWorkspaceProvider} from '../image_workspace.mjs';
+interface ImageModuleOptions {imageWorkspace?:ImageWorkspaceProvider;workspaceOptions?:ImageWorkspaceOptions;}
+
 
 const workerBudgets = [
   'ImageWorkspace: request <=256 KiB; worker response <=4 MiB; inline PNG <=2 MiB',
   'tools/image_workspace.py: scalar plane <=4194304 pixels and <=64 MiB; source hash budget <=4 GiB; object JSON <=2 MiB',
 ];
 const immutable = 'tools/image_workspace.py validates immutable object/journal/file hashes; no live DM access or native fallback';
-const recipes = {
+const recipes: Readonly<Record<string,CompositionRecipe>> = {
   ...automationRecipes,
   ...sequenceRecipes,
   ...domainRecipes,
@@ -138,7 +143,7 @@ const recipes = {
   },
 };
 
-function contract(name, workspace) {
+function contract(name: string, workspace: string): ToolContract {
   const recipe = recipes[name];
   if (!recipe) throw new Error(`Missing image module contract for ${name}`);
   const query = recipe.requestId === 'none' || recipe.requestId === 'query';
@@ -158,13 +163,13 @@ function contract(name, workspace) {
   };
 }
 
-export function createImageModule({imageWorkspace, workspaceOptions} = {}) {
+export function createImageModule({imageWorkspace, workspaceOptions}: ImageModuleOptions = {}): RegistryModule & {workspace:ImageWorkspaceProvider} {
   const runtime = imageWorkspace ?? new ImageWorkspace(workspaceOptions);
   if (!runtime || typeof runtime.call !== 'function') throw new TypeError('Image module requires an ImageWorkspace-compatible call method');
   return {
     id: 'images', enabled: true, workspace: runtime,
     close:()=>runtime.close?.(),
     instructions: IMAGE_INSTRUCTIONS,
-    tools: imageTools.map(definition => ({definition, contract: contract(definition.name, runtime.workspace), execute: (args, {signal} = {}) => runtime.call(definition.name, args, signal)})),
+    tools: imageTools.map((definition): RegistryTool => ({definition, contract: contract(definition.name, runtime.workspace), execute: (args, {signal} = {}) => runtime.call(definition.name, args, signal)})),
   };
 }

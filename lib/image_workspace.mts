@@ -9,11 +9,27 @@ import {ImageProbeClient} from './image_probe_client.mjs';
 import {automationTools,automationActions} from './image_automation_contract.mjs';
 import {sequenceTools,sequenceActions} from './image_sequence_contract.mjs';
 import {domainTools,domainActions} from './image_domain_contract.mjs';
+import type {ArgumentSchema} from './runtime/schema.mjs';
+import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
+import type {ExecutionSpec,RecoverySpec,ExecutionWait,FrozenParameters,ProviderScope} from './runtime/execution_coordinator.mjs';
+import type {ImageProcess,SpawnImageProcess,ImageRequest,ImageWorkerPromise,MutableImageWorkerPromise} from './image_process_contracts.mjs';
+import type {ProbeRequest} from './image_probe_client.mjs';
 
-const id = {type:'string', minLength:1, maxLength:80, pattern:'^[A-Za-z0-9_-]+$'};
-const requestId = {...id, maxLength:64, description:'Save this ID before submission; query image_result after timeout/cancellation. Reusing it with different parameters is rejected.'};
-const annotationId = {...id, maxLength:64, description:'Stable label identity reused across overlay revisions; distinct from operation request_id and not an image_result query ID.'};
-export const annotationPresentation = {type:'object',additionalProperties:false,description:'Optional display-only style. Label offsets use base-render pixels and never change the scientific anchor, mark text or confirmation status. Sparse presentation and nested label patches retain omitted fields.',properties:{
+export interface ImageWorkspaceOptions {
+  workspace?: string; python?: string; timeoutMs?: number; workerPath?: string;
+  spawnProcess?: SpawnImageProcess; coordinator?: ExecutionCoordinator;
+}
+export interface ImageWorkspaceProvider {
+  readonly workspace: string; readonly requestScope: ProviderScope;
+  call(name: string,args: unknown,signal?: AbortSignal): ToolResult | PromiseLike<ToolResult>;
+  close?(): void;
+}
+
+
+const id: ArgumentSchema = {type:'string', minLength:1, maxLength:80, pattern:'^[A-Za-z0-9_-]+$'};
+const requestId: ArgumentSchema = {...id, maxLength:64, description:'Save this ID before submission; query image_result after timeout/cancellation. Reusing it with different parameters is rejected.'};
+const annotationId: ArgumentSchema = {...id, maxLength:64, description:'Stable label identity reused across overlay revisions; distinct from operation request_id and not an image_result query ID.'};
+export const annotationPresentation: ArgumentSchema = {type:'object',additionalProperties:false,description:'Optional display-only style. Label offsets use base-render pixels and never change the scientific anchor, mark text or confirmation status. Sparse presentation and nested label patches retain omitted fields.',properties:{
   marker_shape:{type:'string',enum:['circle','square','double_circle','diamond','cross']},
   marker_radius:{type:'number',minimum:4,maximum:12},line_width:{type:'number',minimum:.5,maximum:3},
   category:{type:'string',enum:['A','B','shared','unexplained','none']},layer:{type:'string',enum:['experimental','simulation_A','simulation_B']},
@@ -24,7 +40,7 @@ export const annotationPresentation = {type:'object',additionalProperties:false,
     measurement_kind:{type:'string',enum:['distance','period']}
   }}
 }};
-const annotationUpdates = {
+const annotationUpdates: ArgumentSchema = {
   type:'array',minItems:1,maxItems:100,
   description:'Sparse edits to existing annotation_id values on this exact view. Omitted marks/fields persist. Coordinates use the saved anchor source/frequency space, never the PNG or shortened arrow tail. Use status=retracted to hide a mark; no implicit additions.',
   items:{type:'object',additionalProperties:false,required:['annotation_id'],properties:{
@@ -40,21 +56,21 @@ const annotationUpdates = {
     arrow_length:{type:['integer','null'],minimum:4,maximum:128}
   }}
 };
-const rect = {type:'array',items:{type:'integer',minimum:0},minItems:4,maxItems:4,description:'Half-open source pixel edges [x0,y0,x1,y1], no clipping.'};
-const display = {display_range:{type:['array','null'],items:{type:'number'},minItems:2,maxItems:2,description:'Explicit display limits; image_preview inherits an existing view when omitted. New frames/comparisons or null use auto-range.'},gamma:{type:'number',minimum:0.05,maximum:20},max_size:{type:'integer',minimum:32,maximum:1024}};
-const metadata = {type:'object',additionalProperties:false,properties:{
+const rect: ArgumentSchema = {type:'array',items:{type:'integer',minimum:0},minItems:4,maxItems:4,description:'Half-open source pixel edges [x0,y0,x1,y1], no clipping.'};
+const display: Readonly<Record<string,ArgumentSchema>> = {display_range:{type:['array','null'],items:{type:'number'},minItems:2,maxItems:2,description:'Explicit display limits; image_preview inherits an existing view when omitted. New frames/comparisons or null use auto-range.'},gamma:{type:'number',minimum:0.05,maximum:20},max_size:{type:'integer',minimum:32,maximum:1024}};
+const metadata: ArgumentSchema = {type:'object',additionalProperties:false,properties:{
   research_observation:{type:'object',additionalProperties:false,required:['kind','source_text','authority'],properties:{kind:{type:'string',enum:['twinning_present']},source_text:{type:'string',minLength:1,maxLength:1000},authority:{type:'string',enum:['user_confirmed','synthetic_fixture']}}},
   reconstruction_type:{type:['string','null'],maxLength:500},data_meaning:{type:['string','null'],maxLength:500},frame_meaning:{type:['string','null'],maxLength:500},
   xy_scale:{type:['object','null'],additionalProperties:false,properties:{x:{type:'number'},y:{type:'number'},unit:{type:'string',maxLength:40},source:{type:'string',maxLength:1000}},required:['x','y','unit','source']},
   value_unit:{type:['string','null'],maxLength:100},
   frame_scale:{type:['object','null'],additionalProperties:false,properties:{origin:{type:'number'},step:{type:'number'},unit:{type:'string',maxLength:40},source:{type:'string',maxLength:1000}},required:['origin','step','unit','source']},
   source_text:{type:['string','null'],maxLength:2000}}};
-const make=(name,description,properties,required)=>({name,description,inputSchema:{type:'object',properties,required,additionalProperties:false}});
-const write=(name,description,properties,required)=>make(name,description,{...properties,request_id:requestId},[...required,'request_id']);
-const numericComponent={type:'string',enum:['raw','real','imag','amplitude','power'],description:'Scalar scientific arrays use raw; complex FFT requires explicit real/imag/amplitude/power. Never PNG brightness or electron counts.'};
-const numericSpace={type:'string',enum:['source_pixels','source_array_indices','frequency_cycles_per_pixel']};
-const numericPoints={type:'array',minItems:2,maxItems:2,items:{type:'array',minItems:2,maxItems:2,items:{type:'number'}}};
-export const imageTools=[
+const make=(name: string,description: string,properties: Readonly<Record<string,ArgumentSchema>>,required: readonly string[]): ToolDefinition=>({name,description,inputSchema:{type:'object',properties,required,additionalProperties:false}});
+const write=(name: string,description: string,properties: Readonly<Record<string,ArgumentSchema>>,required: readonly string[]): ToolDefinition=>make(name,description,{...properties,request_id:requestId},[...required,'request_id']);
+const numericComponent: ArgumentSchema={type:'string',enum:['raw','real','imag','amplitude','power'],description:'Scalar scientific arrays use raw; complex FFT requires explicit real/imag/amplitude/power. Never PNG brightness or electron counts.'};
+const numericSpace: ArgumentSchema={type:'string',enum:['source_pixels','source_array_indices','frequency_cycles_per_pixel']};
+const numericPoints: ArgumentSchema={type:'array',minItems:2,maxItems:2,items:{type:'array',minItems:2,maxItems:2,items:{type:'number'}}};
+export const imageTools: ToolDefinition[]=[
   ...automationTools,
   ...sequenceTools,
   ...domainTools,
@@ -78,10 +94,14 @@ export const imageTools=[
   make('image_result','Query the pre-saved request ID without re-executing an operation. A missing/pending/failed record is not success.',{request_id:requestId},['request_id']),
 ];
 export const IMAGE_INSTRUCTIONS='Explicit multi-source image tools use an independent Python environment and never connect to DM or replace a failed native operation. Choose source and frame IDs, use pixel ROI and fixed cross-frame display ranges. PNG is display only. Save request_id before every write; after cancellation query image_result. Unknown scale permits pixel exploration, but not nm/Angstrom spacings or physical depth. User context is revisable evidence. Validated native READ captures automatically activate sourced XY records when current axis units/domain agree; inspect calibration_admission and source. Use image_calibrate for user revisions with explicit scope/source_text and reciprocal_space for inverse-length calibration; never relabel real-space scale as diffraction calibration; legacy image_context.xy_scale is descriptive only. Sequence calibration follows selected frames; explicitly attach the record to an older saved FFT if needed. After calibration changes preview the new wrapper to redraw bars/physical frequency axes, then remeasure; old physical measurements/interpretations require review and old exports remain immutable. Physical FFT conversion divides cycles/pixel by signed axis scales, with no2pi; intensity units and physical depth remain separate. Optional crystallography is never required. For frequency zoom use image_preview frequency_rect in the original FFT bin grid; keep the full-spectrum reference and shared display range. Zoom never recomputes FFT, increases resolution, or re-centres DC. For an FFT figure, first try image_preview display_preset=fft_detail and inspect the returned image. Preserve the unfiltered texture/streaks; smoothing and background subtraction are optional explicit display treatments, never a default recipe. Use sparse short cyan arrows by default (3px wide, 6px head, maximum24px shaft); stop outside features. Use color=orange for an explicitly proposed second-phase candidate, keeping its hypothesized/user_confirmed/retracted status separate. Color never establishes a phase. Explicit styling overrides defaults; existing revisions keep their styles. Do not copy literature indices or physical scale onto uncalibrated data. Use image_center only to correct an established reciprocal scalar centre, never the mathematical DC of a saved external complex FFT. Use image_remeasure with the current wrapper and old measurement to reuse valid point anchors; only an originally explicit DC endpoint follows a centre correction. Source/frame/ROI/FFT grid must agree. A previously unknown scalar image can be explicitly declared reciprocal via image_calibrate declare_reciprocal=true with inverse scale and user source; known real-space or reconstruction meaning cannot be silently replaced.';
-const actions={...automationActions,...sequenceActions,...domainActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
+const actions: Readonly<Record<string,string>>={...automationActions,...sequenceActions,...domainActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
 
 export class ImageWorkspace {
-  constructor({workspace,python=process.env.DM_IMAGE_PYTHON||process.env.DM_ANALYSIS_PYTHON||'python',timeoutMs=120000,workerPath=fileURLToPath(new URL('../tools/image_workspace.py',import.meta.url)),spawnProcess=spawn,coordinator=new ExecutionCoordinator()}={}) {
+  declare readonly workspace: string; declare readonly python: string; declare readonly timeoutMs: number;
+  declare readonly workerPath: string; declare readonly spawnProcess: SpawnImageProcess;
+  declare readonly coordinator: ExecutionCoordinator; declare readonly resourceKey: string;
+  declare readonly requestScope: ProviderScope; declare readonly probeClient: ImageProbeClient;
+  constructor({workspace,python=process.env.DM_IMAGE_PYTHON||process.env.DM_ANALYSIS_PYTHON||'python',timeoutMs=120000,workerPath=fileURLToPath(new URL('../tools/image_workspace.py',import.meta.url)),spawnProcess=spawn,coordinator=new ExecutionCoordinator()}: ImageWorkspaceOptions={}) {
     if(!workspace||!path.isAbsolute(workspace)) throw new Error('DM_IMAGE_WORKSPACE must be an explicit absolute output directory');
     this.workspace=path.resolve(workspace);this.python=python;this.timeoutMs=timeoutMs;this.workerPath=workerPath;this.spawnProcess=spawnProcess;this.coordinator=coordinator;
     this.resourceKey='image-workspace:'+this.workspace;
@@ -90,72 +110,77 @@ export class ImageWorkspace {
   }
   // Compatibility drain for callers/tests; there is no second image queue.
   get queue(){return this.coordinator.whenIdle(this.resourceKey);}
-  inspectMeasurements({objectId,limit}={}) {return readImageMeasurements({workspace:this.workspace,objectId,limit});}
-  call(name,args,signal) {
+  inspectMeasurements({objectId,limit}: {objectId?: string;limit?: number}={}): unknown {const parameters={workspace:this.workspace,objectId,limit};return readImageMeasurements(parameters);}
+  call(name: string,input: unknown,signal?: AbortSignal): ExecutionWait<ToolResult> {
+    // Existing registry/worker admission validates arguments. Unknown scientific
+    // fields remain opaque; Coordinator still validates the actual request ID.
+    const args=input as Readonly<Record<string,unknown>>;
     const action=actions[name];if(!action)throw new Error('Unknown external image tool');
-    if(action==='probe')return this.coordinator.invoke({operation:name,requestId:null,parameters:args,resourceKeys:[],timeoutMs:Math.min(this.timeoutMs,10000),requestScope:this.requestScope,lane:'query'},
-      {start:parameters=>{const result=this.probeClient.call(parameters);return {result,closed:result.then(()=>{},()=>{}),requestStop:()=>{}};},messages:{queued:'Probe cancelled before submission',cancelled:'Stopped waiting for read-only probe',timeout:'Read-only probe timed out; no scientific write was submitted'}},{signal});
-    const payload={...args,action,workspace:this.workspace};
+    if(action==='probe')return this.coordinator.invoke<Readonly<Record<string,unknown>>,ToolResult>({operation:name,requestId:null,parameters:args,resourceKeys:[],timeoutMs:Math.min(this.timeoutMs,10000),requestScope:this.requestScope,lane:'query'},
+      {start:parameters=>{const result=this.probeClient.call(parameters as ProbeRequest);return {result,closed:result.then(()=>{},()=>{}),requestStop:()=>{}};},messages:{queued:'Probe cancelled before submission',cancelled:'Stopped waiting for read-only probe',timeout:'Read-only probe timed out; no scientific write was submitted'}},{signal});
+    const payload: ImageRequest={...args,action,workspace:this.workspace};
     if(action==='result'){payload.query_request_id=payload.request_id;delete payload.request_id;}
-    if(action==='open'&&['dm4','dm3'].includes(payload.source_kind)&&path.extname(payload.source_path??'').toLowerCase()!=='.'+payload.source_kind)throw new Error('Explicit DM source_kind must match the file extension');
+    if(action==='open'&&(['dm4','dm3'] as readonly unknown[]).includes(payload.source_kind)&&path.extname((payload.source_path??'') as string).toLowerCase()!=='.'+payload.source_kind)throw new Error('Explicit DM source_kind must match the file extension');
     if(action==='open'&&payload.source_kind==='capture')payload.action='import_capture';
-    if(action==='open'&&(['dm4','dm3'].includes(payload.source_kind)||payload.source_kind===undefined&&['.dm4','.dm3'].includes(path.extname(payload.source_path??'').toLowerCase())))payload.action='open_dm';
+    if(action==='open'&&((['dm4','dm3'] as readonly unknown[]).includes(payload.source_kind)||payload.source_kind===undefined&&['.dm4','.dm3'].includes(path.extname((payload.source_path??'') as string).toLowerCase())))payload.action='open_dm';
     delete payload.source_kind;
     // The portable coordinator owns queue/wait/deadline mechanics only.
     // The existing worker remains authoritative for hashes, original IDs,
     // scientific admission and durable completion, including after restart.
     const readonly=action==='result'||action==='get';
-    const spec={operation:name,requestId:readonly?(action==='result'?args.request_id:null):args.request_id,
+    const spec: ExecutionSpec<ImageRequest>={operation:name,requestId:(readonly?(action==='result'?args.request_id:null):args.request_id) as string | null,
       parameters:payload,resourceKeys:readonly?[]:[this.resourceKey],timeoutMs:this.timeoutMs,
       requestScope:this.requestScope,lane:readonly?'query':'work'};
-    const start=accepted=>{const work=this.run(accepted);return {result:work,closed:work.workerDone,requestStop:work.requestStop};};
+    const start=(accepted: FrozenParameters<ImageRequest>)=>{const work=this.run(accepted);return {result:work,closed:work.workerDone,requestStop:work.requestStop};};
     const messages={queued:'Cancelled while queued; external operation was not started',
       cancelled:'Stopped waiting; external operation may still finish. Query image_result with the original request_id; do not automatically resubmit.',
       timeout:'External image time limit; state may be incomplete. Query image_result with the original request_id; do not automatically resubmit.'};
     return action==='result'
-      ? this.coordinator.recover(spec,{query:start,messages},{signal})
+      ? this.coordinator.recover(spec as RecoverySpec<ImageRequest>,{query:start,messages},{signal})
       : this.coordinator.invoke(spec,{start,messages},{signal});
   }
   close(){this.probeClient.close();}
-  run(payload) {
+  run(payload: Readonly<ImageRequest>): ImageWorkerPromise {
     const raw=JSON.stringify(payload);if(Buffer.byteLength(raw)>256*1024)throw new Error('Image request exceeds 256 KiB');
-    let finishWorker,child;
-    const workerDone=new Promise(resolve=>{finishWorker=resolve;});
-    const waiting=new Promise((resolve,reject)=>{
+    let finishWorker!: () => void,child: ImageProcess | undefined;
+    const workerDone=new Promise<void>(resolve=>{finishWorker=resolve;});
+    const waiting=new Promise<ToolResult>((resolve,reject)=>{
       try {child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
       catch(error){finishWorker();reject(error);return;}
-      let chunks=[],bytes=0,stderr='',settled=false;
+      let chunks: Buffer[]=[],bytes=0,stderr='',settled=false;
       const hint='Query image_result with the original request_id; do not automatically resubmit.';
-      const finish=(fn,value)=>{if(!settled){settled=true;fn(value);}};
-      child.stdout.on('data',chunk=>{bytes+=chunk.length;if(bytes>4*1024*1024){try{child.kill();}catch{}finish(reject,new Error('Image worker response exceeds 4 MiB. '+hint));}else chunks.push(chunk);});
-      child.stderr.on('data',chunk=>{stderr=(stderr+chunk.toString()).slice(-4096);});
-      child.once('error',err=>{
+      const finish=<Value,>(fn: (value: Value)=>void,value: Value)=>{if(!settled){settled=true;fn(value);}};
+      child!.stdout.on('data',chunk=>{bytes+=chunk.length;if(bytes>4*1024*1024){try{child!.kill();}catch{}finish(reject,new Error('Image worker response exceeds 4 MiB. '+hint));}else chunks.push(chunk);});
+      child!.stderr.on('data',chunk=>{stderr=(stderr+chunk.toString()).slice(-4096);});
+      child!.once('error',err=>{
         // An error can also mean kill failed while the child is still alive.
         // Only close releases the write queue, including after spawn failure.
-        finish(reject,new Error(child.pid ? 'External image process error: '+err.message+'. '+hint : 'Cannot start independent image Python (DM_IMAGE_PYTHON): '+err.message));
+        finish(reject,new Error(child!.pid ? 'External image process error: '+err.message+'. '+hint : 'Cannot start independent image Python (DM_IMAGE_PYTHON): '+err.message));
       });
-      child.stdin.on('error',err=>finish(reject,new Error('Image worker input failed: '+err.message+' '+hint)));
-      child.once('close',code=>{finishWorker();if(settled)return;try{
-        const reply=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      child!.stdin.on('error',err=>finish(reject,new Error('Image worker input failed: '+err.message+' '+hint)));
+      child!.once('close',code=>{finishWorker();if(settled)return;try{
+        const decoded: unknown=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        const reply=decoded as Record<string,unknown>;
         // A failed/incomplete composition remains an MCP error, but exposes its
         // bounded original child receipts for recovery without filesystem reads.
         if(code===0&&reply.ok===false&&payload.action==='result'&&reply.partial_results){
-          if(reply.request_id!==payload.query_request_id||reply.partial_results.parent_request_id!==payload.query_request_id)throw new Error('Partial recovery returned a different original request');
+          if(reply.request_id!==payload.query_request_id||(reply.partial_results as Record<string,unknown>).parent_request_id!==payload.query_request_id)throw new Error('Partial recovery returned a different original request');
           finish(resolve,{isError:true,content:[{type:'text',text:JSON.stringify(reply,null,2)}]});return;
         }
-        if(code!==0||reply.ok!==true)throw new Error((typeof reply.error==='object' ? `${reply.error.code}: ${reply.error.message}` : reply.error)||stderr||'Image operation failed');
-        const result=reply.result;if(!result||typeof result!=='object'||Array.isArray(result))throw new Error('Invalid image result');
+        if(code!==0||reply.ok!==true)throw new Error(((typeof reply.error==='object' ? `${(reply.error as Record<string,unknown>).code}: ${(reply.error as Record<string,unknown>).message}` : reply.error)||stderr||'Image operation failed') as string);
+        const outcome=reply.result;if(!outcome||typeof outcome!=='object'||Array.isArray(outcome))throw new Error('Invalid image result');
+        const result=outcome as Record<string,unknown>;
         if(result.backend!=='external-image-workspace'||result.state!=='completed')throw new Error('External image operation did not return a completed external result');
         if(payload.action==='get'){
           if(result.object_id!==payload.object_id)throw new Error('Image worker returned a different requested object identity');
         }else if(result.request_id!==(payload.action==='result'?payload.query_request_id:payload.request_id)){
           throw new Error('Image worker returned a different original request identity; '+hint);
         }
-        const content=[{type:'text',text:JSON.stringify(result,null,2)}];
+        const content: ToolContent[]=[{type:'text',text:JSON.stringify(result,null,2)}];
         if(result.image_path){
           // Python resolves Windows 8.3 aliases to long paths. Canonicalize
           // both sides through the native filesystem before containment checks.
-          const root=realpathSync.native(this.workspace),file=realpathSync.native(result.image_path),relative=path.relative(root,file);
+          const root=realpathSync.native(this.workspace),file=realpathSync.native(result.image_path as string),relative=path.relative(root,file);
           if(relative.startsWith('..')||path.isAbsolute(relative))throw new Error('Image result escapes workspace');
           if(statSync(file).size>2*1024*1024)throw new Error('PNG exceeds 2 MiB inline budget');
           const png=readFileSync(file);
@@ -164,8 +189,8 @@ export class ImageWorkspace {
         }
         finish(resolve,{content});
       }catch(err){finish(reject,err);}});
-      child.stdin.end(raw);
-    });
+      child!.stdin.end(raw);
+    }) as MutableImageWorkerPromise;
     waiting.workerDone=workerDone;waiting.requestStop=()=>child?.kill();return waiting;
   }
 }
