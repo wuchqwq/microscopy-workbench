@@ -1,7 +1,7 @@
 // Hand-solvable camera relationships; scientific coordinates are never edited.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {relatedViewport} from '../ui/image-panel/viewer-state.mjs';
+import {relatedViewport,fitViewport} from '../ui/image-panel/viewer-state.mjs';
 import {transformCoordinates} from '../ui/image-panel/coordinates.mjs';
 
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -9,6 +9,12 @@ const panel={domain:'spatial_pixels',source_object_id:'a'.repeat(32),source_rect
 const initial={object:{object_id:'b'.repeat(32),scientific_grid_identity:{array_sha256:'original-array',source_rect_xyxy:[20,12,220,112]},panels:[panel]},frame_identity:{frame_object_id:'f'.repeat(32)}};
 const camera={scale:2,x:-100,y:30},viewport=[800,600];
 const near=(actual,expected)=>{for(const key of ['scale','x','y'])assert.ok(Math.abs(actual[key]-expected[key])<1e-9,`${key}: ${actual[key]} versus ${expected[key]}`);};
+
+test('fit uses the available canvas beyond 2x without changing scientific coordinates',()=>{
+ const before=clone(initial),image=[128,96];
+ for(const size of [[1216,600],[896,600]]){const fitted=fitViewport(image,size);assert.ok(fitted.scale>2);assert.ok(image[0]*fitted.scale<=size[0]-48+1e-9);assert.ok(image[1]*fitted.scale<=size[1]-48+1e-9);assert.equal(fitted.x,(size[0]-image[0]*fitted.scale)/2);}
+ assert.equal(fitViewport([1,1],[1216,600]).scale,16);assert.throws(()=>fitViewport([0,96],[1216,600]));assert.deepEqual(initial,before);
+});
 
 test('new annotation or display object ID on the same scientific grid preserves the camera',()=>{
  const next=clone(initial);next.object.object_id='c'.repeat(32);next.object.kind='annotate';

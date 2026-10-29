@@ -28,19 +28,34 @@ function validateSlot(slot){
  boundedJSON(slot);return slot;
 }
 export function validateComposition(recipe){
- fields(recipe,['schema','layout','font_pt','slots']);
+ fields(recipe,['schema','layout','font_pt','slots','roiOutlines','showLegend']);
  const count=recipe.layout==='2x2'?4:recipe.layout==='1x3'?3:null;
  if(recipe.schema!==SCHEMA||count===null||typeof recipe.font_pt!=='number'||!Number.isFinite(recipe.font_pt)||recipe.font_pt<7||recipe.font_pt>12||!Array.isArray(recipe.slots)||recipe.slots.length!==count)fail('图版需要完整的 2×2（4 图）或 1×3（3 图）布局与 7–12 pt 字号');
+ for(const key of ['roiOutlines','showLegend'])if(recipe[key]!==undefined&&typeof recipe[key]!=='boolean')fail('图版显示开关必须是明确布尔值');
  recipe.slots.forEach(validateSlot);return JSON.parse(boundedJSON(recipe));
+}
+export function defaultCompositionTitle(value,{role}={}){
+ if(value?.kind==='profile'||value?.profile?.kind==='profile')return 'Intensity profile';
+ const object=value?.object??value??{},panels=object.panels??[];
+ if(object.kind==='profile')return 'Intensity profile';
+ if(['fft','fft_view'].includes(object.kind)||panels.some(panel=>panel.domain==='frequency'))return 'FFT';
+ if(role==='ROI'||/^ROI\s*\[/u.test(role??''))return 'ROI';
+ if(panels.length===1&&panels[0].domain==='spatial_pixels'){
+  const rect=panels[0].source_rect_xyxy,shape=object.source_shape_yx;
+  if(Array.isArray(rect)&&Array.isArray(shape)&&shape.length===2)return equalRecords(rect,[0,0,shape[1],shape[0]])?'Original':'ROI';
+  if(Array.isArray(rect)&&(rect[0]>0||rect[1]>0))return 'ROI';
+ }
+ if(['原图','全帧（新显示）','Original'].includes(role)||object.kind==='frame')return 'Original';
+ return 'Image';
 }
 export function makeImageSlot(state,preferences,base,title=''){
  if(!state?.object||!base||!equalRecords(base.panels,state.object.panels))fail('干净底图与保存视图的坐标映射不一致');
- const slot={kind:'image',title,source_object_id:state.object.object_id,recipe:makeFigureRecipe(state,preferences),asset:{object_id:base.object_id,clean_png_sha256:base.clean_png_sha256},scale_bar:base.scale_bar?.visible===true?copy(base.scale_bar):null};
+ const slot={kind:'image',title:title.trim()?title:defaultCompositionTitle(state),source_object_id:state.object.object_id,recipe:makeFigureRecipe(state,preferences),asset:{object_id:base.object_id,clean_png_sha256:base.clean_png_sha256},scale_bar:base.scale_bar?.visible===true?copy(base.scale_bar):null};
  return copy(validateSlot(slot));
 }
 export function makeProfileSlot(profile,title=''){
  if(profile?.kind!=='profile')fail('请选择已保存的剖面结果');profilePlot(profile);
- return copy(validateSlot({kind:'profile',title,object_id:profile.object_id,scientific_grid_identity:profile.scientific_grid_identity,xy_calibration:profile.xy_calibration??null}));
+ return copy(validateSlot({kind:'profile',title:title.trim()?title:defaultCompositionTitle(profile),object_id:profile.object_id,scientific_grid_identity:profile.scientific_grid_identity,xy_calibration:profile.xy_calibration??null}));
 }
 function pngData(base64){
  if(typeof base64!=='string'||!base64.length||base64.length>Math.ceil(MAX_PNG/3)*4||!/^[A-Za-z0-9+/]+={0,2}$/.test(base64))fail('干净底图编码无效或超过 2 MiB');
@@ -70,8 +85,31 @@ function hydrate(recipe,panels){
    if(mark.anchor){const matches=mappings.filter(p=>p.source_object_id===mark.anchor.source_object_id&&coordinateSpace(p)===mark.anchor.coordinate_space);if(matches.length!==1)return {...value,visibility:'outside_view'};value.coordinates=transformCoordinates(mark.anchor.coordinates,matches[0],{edges:['rectangle','polygon'].includes(mark.kind),inverse:true});}
    return value;
   });
-  return {slot,state,marks,base64:panel.clean_png_base64,...data};
+  let spatialSource=null;
+  if(panel.spatial_source!==undefined){
+   const source=panel.spatial_source;fields(source,['object_id','shape_yx','dtype','array_sha256','frame_identity']);
+   if(!ID.test(source.object_id??'')||!SHA.test(source.array_sha256??'')||typeof source.dtype!=='string'||!Array.isArray(source.shape_yx)||source.shape_yx.length!==2||!source.shape_yx.every(v=>Number.isSafeInteger(v)&&v>0)||source.shape_yx[0]*source.shape_yx[1]>4194304||!ID.test(source.frame_identity?.source_object_id??'')||!Number.isSafeInteger(source.frame_identity?.frame_index)||source.frame_identity.frame_index<0||!equalRecords(source.frame_identity,state.frame_identity)||source.object_id!==state.frame_identity?.frame_object_id||mappings.length!==1||mappings[0].domain!=='spatial_pixels'||mappings[0].source_object_id!==source.object_id)fail('ROI 轮廓缺少同一原始科学帧的完整证据');
+   const rect=mappings[0].source_rect_xyxy;
+   if(!Array.isArray(rect)||rect.length!==4||!rect.every(Number.isSafeInteger)||rect[0]<0||rect[1]<0||rect[0]>=rect[2]||rect[1]>=rect[3]||rect[2]>source.shape_yx[1]||rect[3]>source.shape_yx[0]||state.object.source_shape_yx!==undefined&&!equalRecords(source.shape_yx,state.object.source_shape_yx))fail('ROI 轮廓的源矩形与保存帧尺寸不一致');
+   spatialSource=copy(source);
+  }
+  return {slot,state,marks,base64:panel.clean_png_base64,spatialSource,...data};
  });
+}
+function sourceROIOutlines(resolved,enabled){
+ const result=new Map();if(!enabled)return result;
+ for(const [originalIndex,original]of resolved.entries()){
+  const source=original.spatialSource,panel=original.state?.object?.panels?.[0];
+  if(!source||!equalRecords(panel.source_rect_xyxy,[0,0,source.shape_yx[1],source.shape_yx[0]]))continue;
+  const calibration=original.state.object.xy_calibration??original.state.object.calibration_record??null;
+  for(const [roiIndex,roi]of resolved.entries()){
+   if(roiIndex===originalIndex||!roi.spatialSource||!equalRecords(roi.spatialSource,source)||!equalRecords(roi.state.object.xy_calibration??roi.state.object.calibration_record??null,calibration))continue;
+   const rect=roi.state.object.panels[0].source_rect_xyxy;if(equalRecords(rect,panel.source_rect_xyxy))continue;
+   const coordinates=transformCoordinates(rect,panel,{edges:true,inverse:true});
+   if(!result.has(originalIndex))result.set(originalIndex,[]);result.get(originalIndex).push({roi_slot:roiIndex,source_rect_xyxy:copy(rect),coordinates});
+  }
+ }
+ return result;
 }
 export function compositionDimensions(layout,fontPt=8){
  const columns=layout==='2x2'?2:layout==='1x3'?3:null;if(!columns||!Number.isFinite(fontPt)||fontPt<7||fontPt>12)fail('无效的图版布局或字号');
@@ -95,9 +133,10 @@ function wrapLegend(text,width,font){
 }
 export function compositionLegendLayout(entries,{width,fontSize}={}){
  if(!Array.isArray(entries)||!Number.isFinite(width)||!Number.isFinite(fontSize)||fontSize<=0||width<fontSize*4)fail('图例版面无效');
- const padding=fontSize*.65,textX=padding+fontSize*1.2,textWidth=width-padding-textX,lineHeight=fontSize*1.25,gap=fontSize*.35;let y=padding;
+ const padding=fontSize*.35,textX=padding+fontSize*1.05,textWidth=width-padding-textX,lineHeight=fontSize*1.18,gap=fontSize*.22;let y=padding;
  const rows=entries.map(entry=>{const lines=wrapLegend(entry.label,textWidth,fontSize),row={entry,lines,y};y+=lines.length*lineHeight+gap;return row;});
- return {rows,width,fontSize,padding,textX,textWidth,lineHeight,height:rows.length?y-gap+padding:0};
+ const occupied=rows.length?Math.min(width,textX+Math.max(...rows.flatMap(row=>row.lines.map(line=>legendTextWidth(line,fontSize))))+padding):0;
+ return {rows,width:occupied,fontSize,padding,textX,textWidth,lineHeight,height:rows.length?y-gap+padding:0};
 }
 function legendSVG(model){
  const {width,height,fontSize:font,padding,textX,lineHeight}=model;let svg=`<rect width="${number(width)}" height="${number(height)}" rx="3" fill="#11151b" fill-opacity="0.78"/>`;
@@ -109,16 +148,17 @@ function legendSVG(model){
   svg+=`<text data-part="legend-label" x="${number(textX)}" y="${number(y+font)}" fill="#f1f4f5" font-size="${number(font)}"><title>${xml(entry.label)}</title>${lines.map((line,i)=>`<tspan x="${number(textX)}" dy="${i?number(lineHeight):'0'}">${xml(line)}</tspan>`).join('')}</text>`;
  });return svg;
 }
-function imageSVG(panel,box,index){
+function imageSVG(panel,box,index,{showLegend=true,outlines=[]}={}){
  const {width,height,marks,slot}=panel,prefs=slot.recipe.preferences,baseScale=Math.min(box.width/width,box.height/height),probe=layoutAnnotations(marks,{...prefs,width,height,mode:'figure',scale:baseScale});
- const legend=compositionLegendLayout(prefs.legend?probe.legend:[],{width:box.width,fontSize:box.font}),legendHeight=legend.height;
+ const legend=compositionLegendLayout(showLegend&&prefs.legend?probe.legend:[],{width:box.width,fontSize:box.font}),legendHeight=legend.height;
  if(legendHeight>box.height*.65)fail('子图图例超过当前版面；请使用更简洁的保存图面');
  const available=box.height-legendHeight,scale=Math.min(box.width/width,available/height),x=box.x+(box.width-width*scale)/2,y=box.y+(available-height*scale)/2;
  const exportMarks=marks.map(mark=>({...mark,presentation:{...mark.presentation,label:{...mark.presentation?.label,font_size:box.font}}}));
  const annotations=layoutAnnotations(exportMarks,{...prefs,width,height,mode:'figure',scale});
  const bar=prefs.scaleBar?figureScaleBar(slot.scale_bar):null;
  const overlay=renderAnnotationsSVG(annotations,{includeRoot:false,figureLayout:{legend:false,scaleBar:bar,fontSize:box.font/scale}});
- let result=`<g data-part="saved-image" data-source-object-id="${slot.source_object_id}" transform="translate(${number(x)} ${number(y)}) scale(${number(scale)})"><image width="${width}" height="${height}" href="data:image/png;base64,${panel.base64}"/>${overlay}</g>`;
+ const roiSVG=outlines.map(outline=>{const [left,top,right,bottom]=outline.coordinates,geometry=`x="${number(left)}" y="${number(top)}" width="${number(right-left)}" height="${number(bottom-top)}"`;return `<g data-part="source-roi-outline" data-roi-slot="${outline.roi_slot}"><title>${xml('ROI '+String.fromCharCode(97+outline.roi_slot))}</title><rect ${geometry} fill="none" stroke="#11151b" stroke-width="${number(4/scale)}"/><rect ${geometry} fill="none" stroke="#79d9ee" stroke-width="${number(2/scale)}"/><text x="${number(left+box.font*.18/scale)}" y="${number(top+box.font/scale)}" fill="#79d9ee" stroke="#11151b" stroke-width="${number(1/scale)}" paint-order="stroke fill" font-size="${number(box.font/scale)}">${String.fromCharCode(97+outline.roi_slot)}</text></g>`;}).join('');
+ let result=`<g data-part="saved-image" data-source-object-id="${slot.source_object_id}" transform="translate(${number(x)} ${number(y)}) scale(${number(scale)})"><image width="${width}" height="${height}" href="data:image/png;base64,${panel.base64}"/>${roiSVG}${overlay}</g>`;
  if(legendHeight)result+=`<g data-part="panel-legend" transform="translate(${number(box.x)} ${number(box.y+box.height-legendHeight)})">${legendSVG(legend)}</g>`;
  return result;
 }
@@ -138,14 +178,16 @@ function profileSVG(panel,box){
 }
 export function renderCompositionSVG({recipe,panels}){
  const validated=validateComposition(recipe),resolved=hydrate(validated,panels),dimensions=compositionDimensions(validated.layout,validated.font_pt),d=dimensions;
+ const outlines=sourceROIOutlines(resolved,validated.roiOutlines===true),outlineCount=[...outlines.values()].reduce((total,values)=>total+values.length,0);
  let content=`<rect width="${d.width}" height="${d.height}" fill="#ffffff"/>`;
  resolved.forEach((panel,index)=>{
   const x=d.margin+(index%d.columns)*(d.cellWidth+d.gap),y=d.margin+Math.floor(index/d.columns)*(d.bodyHeight+d.headerHeight+d.gap),clip='panel-'+index;
-  content+=`<defs><clipPath id="${clip}"><rect x="${number(x)}" y="${number(y)}" width="${number(d.cellWidth)}" height="${d.headerHeight+d.bodyHeight}"/></clipPath></defs><g data-composition-slot="${index}" clip-path="url(#${clip})"><title>${xml(panel.slot.title)}</title><text data-part="panel-heading" x="${number(x)}" y="${number(y+d.font*1.15)}" font-size="${number(d.font)}" font-weight="600">${String.fromCharCode(97+index)}${panel.slot.title?'  '+xml(panel.slot.title):''}</text>`;
-  const box={x,y:y+d.headerHeight,width:d.cellWidth,height:d.bodyHeight,font:d.font};content+=panel.slot.kind==='image'?imageSVG(panel,box,index):profileSVG(panel,box);content+='</g>';
+  const title=panel.slot.title.trim()?panel.slot.title:defaultCompositionTitle(panel.slot.kind==='profile'?panel.profile:panel.state);
+  content+=`<defs><clipPath id="${clip}"><rect x="${number(x)}" y="${number(y)}" width="${number(d.cellWidth)}" height="${d.headerHeight+d.bodyHeight}"/></clipPath></defs><g data-composition-slot="${index}" clip-path="url(#${clip})"><title>${xml(title)}</title><text data-part="panel-heading" x="${number(x)}" y="${number(y+d.font*1.15)}" font-size="${number(d.font)}" font-weight="600">${String.fromCharCode(97+index)}${title?'  '+xml(title):''}</text>`;
+  const box={x,y:y+d.headerHeight,width:d.cellWidth,height:d.bodyHeight,font:d.font};content+=panel.slot.kind==='image'?imageSVG(panel,box,index,{showLegend:validated.showLegend!==false,outlines:outlines.get(index)??[]}):profileSVG(panel,box);content+='</g>';
  });
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="180mm" height="${number(d.height_mm)}mm" viewBox="0 0 ${d.width} ${d.height}" font-family="Arial, Helvetica, sans-serif" fill="#17222e" role="img" aria-label="Microscopy figure composition"><metadata>${xml(JSON.stringify(validated))}</metadata>${content}</svg>`;
- return {svg,recipe:validated,...dimensions};
+ return {svg,recipe:validated,...dimensions,roi_outline_count:outlineCount,roi_outline_diagnostics:validated.roiOutlines===true?(outlineCount?'verified_saved_source':'no_verified_original_roi_pair'):'disabled'};
 }
 async function verifyAssets(recipe,panels){
  if(!globalThis.crypto?.subtle)fail('当前浏览器缺少安全的底图校验能力');

@@ -575,3 +575,12 @@ test('a baked scientific-preview scale bar is not duplicated by the SVG overlay;
   assert.equal(h.calls.length,0,'layer selection must not create another render or scientific request');assert.deepEqual(h.inspect().state.object,before);
  }
 });
+
+test('focus and fit retain ROI, unsaved display, marks and history without provider calls',async()=>{
+ const h=await harness();h.draw('rectangle');h.$('gamma').value='1.4';h.$('gamma').oninput();h.flush();
+ const before=h.inspect(),calls=h.calls.length;h.$('viewport').width=1200;h.$('viewport').height=600;
+ await h.click('focus-image');assert.equal(h.$('focus-image').attributes['aria-pressed'],'true');assert.ok(h.inspect().view.scale>2);
+ await h.click('fit-canvas');assert.deepEqual(h.inspect().draft,before.draft);assert.deepEqual(h.inspect().state.object,before.state.object);assert.equal(h.$('gamma').value,'1.4');assert.equal(h.inspect().dirty,true);
+ await h.click('focus-image');assert.equal(h.$('focus-image').attributes['aria-pressed'],'false');assert.deepEqual(h.inspect().view,before.view);assert.equal(h.calls.length,calls);
+ await h.click('undo');assert.equal(Number(h.$('gamma').value),1);assert.deepEqual(h.inspect().draft,before.draft);
+});
