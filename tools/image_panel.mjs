@@ -48,6 +48,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const token=randomBytes(24).toString('hex'),session=randomBytes(8).toString('hex');
  const journal=journalDirectory??path.join(workspace,'panel-journals',session);mkdirSync(journal,{recursive:true});
  const client=givenClient??new StdioImageClient({workspace,python});let tools,current,png,cleanPng=null,cleanHash=null,renderBaseId=null,sequence=0,selection=null,busy=Promise.resolve(),lastOperation=null,frameIdentity=null,effectiveDisplay=null,displaySourceObjectId=null,stateRevision=0,pendingResult=null,researchObservation=null,selectionTimer=null,selectionPersistenceError=null;
+ let sequenceEvidence=null;
  const sources=new Map(),figureBars=new Map();
  const numericResults={statistics:null,profile:null};
  const numericRecovery={state:numeric_result_refs===undefined?'not_requested':numeric_result_refs===null?'legacy_missing_refs':'pending',results:{}};
@@ -57,6 +58,12 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  tools=(await client.rpc('tools/list')).result.tools;}catch(error){await client.close();throw error;}const names=new Set(tools.map(t=>t.name));
  const journalCall=async(name,args)=>{if(!names.has(name))fail('Tool unavailable: '+name);const write=name!=='image_info'&&name!=='image_result';if(write){args={...args,request_id:`panel-${session}-${++sequence}`};writeJournal(path.join(journal,`${args.request_id}.request.json`),{name,arguments:args});lastOperation={state:'submitted',tool:name,request_id:args.request_id,object_id:args.object_id};saveSelection();}try{const r=await client.tool(name,args);if(write)writeJournal(path.join(journal,`${args.request_id}.response.json`),{object_id:r.data.object_id,request_id:args.request_id,state:r.data.state});return r;}catch(error){if(write)error.message+=` Original request_id=${args.request_id}; query image_result with this ID. Do not automatically repeat the operation.`;throw error;}};
  const displayObject=async r=>{
+  if(r.data.kind==='joint_observations'){
+   const evidence=r.data,frame=evidence.frame_observations?.find(row=>row.frame_index===evidence.reference_index&&row.view_object_id);
+   if(!frame)fail('Joint observations have no saved reference-frame view');
+   const shown=await journalCall('image_info',{object_id:frame.view_object_id});
+   return {...shown,sequenceEvidence:{object_id:evidence.object_id,request_id:evidence.request_id,sequence_object_id:evidence.sequence_object_id,correspondence_object_id:evidence.correspondence_object_id,reference_index:evidence.reference_index,frame_observations:evidence.frame_observations,observations:evidence.observations}};
+  }
   let renderKind=r.data.kind,renderDtype=r.data.dtype;
   if(['tiff_source','dm_source'].includes(r.data.kind)||r.png&&r.data.kind!=='calibration')return r;
   if(r.data.kind==='calibration'){
@@ -92,9 +99,10 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    if(digest!==base.files_sha256[file]||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')fail('Clean PNG hash or format mismatch');
    clean=bytes.toString('base64');
   }else if(!r.data.annotations?.length){clean=r.png??null;digest=clean?createHash('sha256').update(Buffer.from(clean,'base64')).digest('hex'):null;}
-  return {object:r.data,png:r.png??null,clean,digest,baseId:base.object_id,display,displayId};
+  return {object:r.data,png:r.png??null,clean,digest,baseId:base.object_id,display,displayId,sequenceEvidence:r.sequenceEvidence};
  };
  const commitCurrent=(prepared,{annotationIds=[]}={})=>{
+  if(prepared.sequenceEvidence)sequenceEvidence=prepared.sequenceEvidence;
   current=prepared.object;png=prepared.png;cleanPng=prepared.clean;cleanHash=prepared.digest;renderBaseId=prepared.baseId;effectiveDisplay=prepared.display;displaySourceObjectId=prepared.displayId;selection=null;stateRevision++;
   // A saved drag is still the researcher's exact selection. Retain only the
   // explicitly edited mark; never infer a mark from array order or recency.
@@ -142,7 +150,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const sourceIdentity=()=>sources.get(current.object_id)??describeSource(current,current.user_context?.data_meaning);
  const draftPersistence=()=>({pending:selectionTimer!==null,error:selectionPersistenceError});
  const draftAck=()=>({schema_version:1,panel_id,object_id:current.object_id,state_revision:stateRevision,edit_state:structuredClone(editState),selection,research_observation:observationState(),draft_persistence:draftPersistence()});
- const state=()=>({schema_version:1,panel_id,numeric_results:numericResults,numeric_result_recovery:numericRecovery,backend:'external-image-workspace',state_revision:stateRevision,object:publicImageObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:'unsaved_draft',scientific_operation_complete:true}:null});
+ const state=()=>({schema_version:1,panel_id,sequence_evidence:sequenceEvidence,numeric_results:numericResults,numeric_result_recovery:numericRecovery,backend:'external-image-workspace',state_revision:stateRevision,object:publicImageObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:'unsaved_draft',scientific_operation_complete:true}:null});
  function writeSelection(){if(!current)return;const temp=path.join(journal,`.selection-${randomBytes(6).toString('hex')}.json`);writeJournal(temp,{schema_version:1,object_id:current.object_id,state_revision:stateRevision,frame_identity:frameIdentity,selection,edit_state:editState,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id}:null,last_operation:lastOperation,numeric_result_refs:numericResultRefs(),research_observation:observationState(),updated_utc:new Date().toISOString()});renameSync(temp,path.join(journal,'current-selection.json'));selectionPersistenceError=null;}
  // Only the replaceable gesture handoff snapshot is coalesced. Scientific
  // request/response journals keep their original before-dispatch fsync path.
@@ -339,6 +347,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  };
  const staticFiles=new Map([['/',['index.html','text/html; charset=utf-8']],['/app.mjs',['app.mjs','text/javascript; charset=utf-8']],['/coordinates.mjs',['coordinates.mjs','text/javascript; charset=utf-8']],['/style.css',['style.css','text/css; charset=utf-8']],['/viewer-state.mjs',['viewer-state.mjs','text/javascript; charset=utf-8']],['/viewer-render.mjs',['viewer-render.mjs','text/javascript; charset=utf-8']],['/annotation-presentation.mjs',['annotation-presentation.mjs','text/javascript; charset=utf-8']],['/figure-export.mjs',['figure-export.mjs','text/javascript; charset=utf-8']],['/measurement-workspace.mjs',['measurement-workspace.mjs','text/javascript; charset=utf-8']],['/data-probes.mjs',['data-probes.mjs','text/javascript; charset=utf-8']],['/user-workflow.mjs',['user-workflow.mjs','text/javascript; charset=utf-8']]]);
  staticFiles.set('/figure-composer.mjs',['figure-composer.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/sequence-evidence.mjs',['sequence-evidence.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{

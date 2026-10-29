@@ -1,8 +1,10 @@
 {
   "name": "microscopy-workbench",
-  "version": "0.2.0",
-  "description": "Local, reusable microscopy tools: multiscale observations, FFT peaks, scientific measurements, candidate comparisons and revisable GUI results.",
-  "author": {"name": "wuchqwq"},
+  "version": "0.3.0",
+  "description": "Reusable microscopy tools with sourced sequences, verifiable region correspondence and cross-frame FFT observations.",
+  "author": {
+    "name": "wuchqwq"
+  },
   "license": "MIT",
   "homepage": "https://github.com/wuchqwq/microscopy-workbench",
   "skills": "./skills/scientific-agent/",
@@ -11,6 +13,8 @@
   "interface": {
     "displayName": "Microscopy Workbench",
     "shortDescription": "Reusable scientific image analysis and candidate comparisons",
-    "defaultPrompt": ["Use Microscopy Workbench to inspect my image, choose local FFT windows, measure reflections and compare explicit structural candidates."]
+    "defaultPrompt": [
+      "Use Microscopy Workbench to inspect my image, choose local FFT windows, measure reflections and compare explicit structural candidates."
+    ]
   }
 }

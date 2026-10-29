@@ -1,6 +1,6 @@
 ---
 name: microscopy-automation
-description: Choose and revise multiscale microscopy ROIs, batch local FFTs, detect and measure Fourier peaks, compare explicit structural candidates, and return traceable results to the shared image panel. Works with independent supported TIFF/DM images; does not identify phases or defects by assertion.
+description: Choose and revise microscopy ROIs and FFT windows, detect and measure Fourier peaks, establish sourced cross-frame region correspondence, compare joint observations or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
 ---
 
 # Reusable microscopy observations
@@ -54,6 +54,43 @@ the numerical peak detector's input.
 
 ## Compare and return for correction
 
+For a reconstructed sequence, use `image_sequence_create` with 2–8 explicitly
+ordered saved real frame references. Keep source frame indices distinct from
+positions in this selected sequence. Supply the user's sequence meaning and its
+source; when unknown, record `unknown`. Time, nominal reconstruction depth,
+defocus and iteration are different axes. Omit step/unit unless sourced; a
+nominal depth step never establishes axial resolution.
+
+Choose a reference frame and half-open source-pixel ROI using the original image
+context. `image_region_correspondence` admits a sourced shared-grid statement,
+explicit integer translations, or bounded numerical translation estimation.
+Same image dimensions, labels or peak IDs do not establish correspondence.
+Inspect mapped rectangles, correlation candidates and the actual images.
+`AMBIGUOUS`, `UNVERIFIED`, `OUT_OF_VIEW`, `INCOMPATIBLE` and `UNMATCHED` are
+useful outcomes, not invitations to increase tolerance until a match appears.
+Periodic lattices may need a larger, distinctive source feature or an explicit
+researcher-supplied mapping. A coordinate mapping does not imply the same atoms
+or continuous structure through reconstruction depth.
+
+`image_joint_observations` delegates only comparable regions to the existing
+FFT/peak/measurement tools. Select window, mean subtraction, peak controls and
+wave-vector matching tolerance explicitly. Read matched, absent, ambiguous and
+extra reflections from the saved evidence; never join by `peak-1` or magnitude
+rank. Neighboring frames and conjugate peaks are not independent confirmations.
+Open the joint object with `image_panel_open` for its saved evidence table and
+per-frame original/ROI/FFT navigation, or show one of its exact saved views.
+Do not use the contact PNG as scientific input. Persist sequence, correspondence and joint
+observation references in the named AnalysisContext using provider alias `image`.
+
+Read those saved references after reconnecting. To revise detection or measured
+points, pass `previous_observations_id` to reuse unchanged spectra. A dragged GUI
+marker is a new observation: save its actual coordinates and ordinary
+`image_remeasure` result, then supply explicit `measurement_overrides`. The old
+detector peak table is historical; it does not follow a moved marker. Query the
+original joint request with `image_result` for partial child receipts, then query
+those child IDs if needed; never replay an unknown parent. Use ordinary tools
+for a single frame; a sequence is optional.
+
 For reference structures, use the sibling
 [crystallography-compare](../crystallography-compare/SKILL.md) Skill. Reuse existing
 `structure_open`, `structure_orient`, `structure_simulate` and the optional
@@ -81,10 +118,11 @@ batch is not a complete analysis.
 
 ## Actual scope
 
-This first increment supplies composable local observations and explicit
-candidate comparisons. It does not yet implement automatic global indexing,
-multi-phase segmentation, twin-interface determination, dislocation/GPA analysis,
-or registered adjacent-frame joint analysis. Report the particular gap instead
-of substituting a generic prompt or another algorithm. Existing `image_compare`
-can show 2–4 explicitly selected frames over the same ROI without asserting
-alignment, physical depth or unchanged structure.
+This package supplies composable local and bounded cross-frame observations
+and explicit candidate comparisons. It does not implement automatic global
+indexing, multi-phase segmentation, twin-interface determination, dislocation/GPA
+or ptychography reconstruction. Sequence FFT currently requires real spatial
+scientific arrays; do not silently take the real part of complex reconstruction
+data or quantize a float array to PNG/uint16. Report the specific unsupported
+entry instead. Existing `image_compare` can show explicitly selected frames
+without asserting alignment, physical depth or unchanged structure.

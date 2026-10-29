@@ -10,6 +10,12 @@ Its `microscopy-automation` Skill uses formal bounded region/FFT/peak/measuremen
 tools and existing candidate comparisons, retaining current references by a named
 AnalysisContext. No developer-session IDs or temporary scientific scripts are required.
 
+For reconstructed sequences, use the [cross-frame tools](docs/SEQUENCE_PLUGIN.md):
+save explicit frame order and sourced meaning, establish bounded ROI correspondence,
+then compose existing FFT/peak/measurement operations into joint evidence. Recover
+the named context and original requests after reconnecting; if no live Panel exists,
+open the saved joint object with `image_panel_open` rather than rerunning science.
+
 The [no-model inspector](docs/RESEARCHER_DATA_INSPECTOR.md) uses the same saved
 arrays and measurement records. [Numerical inspection](docs/IMAGE_NUMERIC_INSPECTION.md)
 reads original values, not preview brightness. Keep coordinates, signed XY
