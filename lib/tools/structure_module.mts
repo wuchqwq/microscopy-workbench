@@ -6,7 +6,7 @@ import type {RegistryModule,ToolContract,RequestIdentityPolicy,ToolCallOptions} 
 import type {StructureWorkspaceOptions,StructureWorkspacePort,StructureArguments,ViewerCloseArguments} from '../structure_contracts.mjs';
 interface Recipe {inputs:string[];outputs:string[];kind:string;gates:string[];budgets:string[];requestId?:RequestIdentityPolicy;}
 export interface StructureModuleOptions {
- structureWorkspace?:StructureWorkspacePort;workspaceOptions?:StructureWorkspaceOptions;viewerAssetPath?:string;
+ structureWorkspace?:StructureWorkspacePort;workspaceOptions?:StructureWorkspaceOptions;viewerAssetPath?:string|null;
  attachViewer?:typeof attachStructureViewer;closeViewer?:typeof closeStructureViewer;
 }
 
@@ -132,6 +132,11 @@ function viewerCloseContract(workspace:string):ToolContract {
   };
 }
 
+// Default construction preserves the concrete provider scope. Injected ports
+// keep their own shape rather than asserting that optional capabilities exist.
+export function createStructureModule(options?:Omit<StructureModuleOptions,'structureWorkspace'> & {structureWorkspace?:undefined}):RegistryModule & {workspace:StructureWorkspace};
+export function createStructureModule<T extends StructureWorkspacePort>(options:Omit<StructureModuleOptions,'structureWorkspace'> & {structureWorkspace:T}):RegistryModule & {workspace:T};
+export function createStructureModule(options:StructureModuleOptions):RegistryModule & {workspace:StructureWorkspacePort};
 export function createStructureModule({structureWorkspace, workspaceOptions, viewerAssetPath = process.env.DM_STRUCTURE_VIEWER_ASSET, attachViewer = attachStructureViewer, closeViewer = closeStructureViewer}:StructureModuleOptions = {}):RegistryModule & {workspace:StructureWorkspacePort} {
   const runtime = structureWorkspace ?? new StructureWorkspace(workspaceOptions!);
   if (!runtime || typeof runtime.call !== 'function') throw new TypeError('Structure module requires a StructureWorkspace-compatible call method');

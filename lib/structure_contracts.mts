@@ -40,7 +40,7 @@ export interface ViewerAttachment extends Record<string,unknown> {
  viewer_url:string|null; viewer_owner_view_object_id?:unknown;
 }
 export interface StructureViewerOptions {
- workspace?:string;assetPath?:string;inspect?:(objectId:string)=>unknown|PromiseLike<unknown>;signal?:AbortSignal;
+ workspace?:string;assetPath?:string|null;inspect?:(objectId:string)=>unknown|PromiseLike<unknown>;signal?:AbortSignal;
 }
 export interface ViewerCloseOptions {workspace?:string;signal?:AbortSignal;}
 export interface ViewerCloseArguments {object_id:string;request_id:string;}
