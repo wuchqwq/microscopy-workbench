@@ -134,8 +134,8 @@ test('profile endpoint ticks align inward at 9pt without moving the actual 2.24n
  assert.deepEqual(input,before);
 });
 test('million-scale and negative raw profile ticks remain inside their panel at the unchanged common font',()=>{
- for(const values of [[3300000,3400000,3500000,3600000],[-4290000000,-4200000000,-4100000000,-4000000000]]){
-  const input=composition();input.recipe.font_pt=9;input.panels[3].profile.samples.value=values;const before=clone(input),d=compositionDimensions('2x2',9),slotLeft=d.margin+d.cellWidth+d.gap;
+ for(const layout of ['2x2','1x3'])for(const values of [[3300000,3400000,3500000,3600000],[-4290000000,-4200000000,-4100000000,-4000000000]]){
+  const input=composition(layout),profileIndex=input.panels.findIndex(panel=>panel.slot.kind==='profile');input.recipe.font_pt=9;input.panels[profileIndex].profile.samples.value=values;const before=clone(input),d=compositionDimensions(layout,9),slotLeft=d.margin+(profileIndex%d.columns)*(d.cellWidth+d.gap);
   const {svg}=renderCompositionSVG(input),ticks=[...svg.matchAll(/<path d="M [^"]+ h 6" stroke="#273849"\/><text x="([^"]+)"[^>]*text-anchor="end" font-size="([^"]+)">([^<]*)<\/text>/g)];
   assert.equal(ticks.length,4);for(const [,x,font,text]of ticks){assert.equal(Number(font),37.5);assert.ok(Number(x)-text.length*Number(font)*.6>=slotLeft,'complete raw tick text must fit before the axis; clipping a leading digit changes its apparent magnitude');}
   assert.match(svg,new RegExp('>'+values[0]+'<'));assert.deepEqual(input,before,'layout changes cannot normalize, offset or rewrite raw samples');
