@@ -1,4 +1,4 @@
-# Microscopy Core
+# Microscopy Workbench
 
 Cross-platform microscopy image analysis and scientific interaction through MCP,
 with an optional local Image Panel. **Windows, macOS and Linux do not require
@@ -9,6 +9,11 @@ This is a migration candidate, not a newly qualified instrument integration.
 `MIGRATION_MANIFEST.json` identifies the exact reviewed source and recipe commits
 and every copied/generated file. The original repository retains historical Git
 attribution; this snapshot export does not rewrite or pretend to preserve blame.
+
+The display name is **Microscopy Workbench**. The initial import is recorded by
+`MIGRATION_MANIFEST.json`; later changes are ordinary Git commits. Internal
+`microscopy-core` package/server identity, environment variables, tool names,
+schemas and saved object/request IDs remain compatible with that import.
 
 Current [client setup](docs/CLIENT_SETUP.md) includes Windows and macOS/Linux
 configuration; the [Agent guide](README.agent.md) defines the independent tool
