@@ -27,6 +27,7 @@ export function selectionActionReason(action,picked,object={}){
  if(action==='select')return '';
  if(action==='roi')return kind==='rectangle'&&['spatial_pixels','frequency'].includes(domain)?'':'请选择可查看的实空间或 FFT 矩形 ROI';
  if(action==='statistics')return kind==='rectangle'&&['spatial_pixels','source_array_indices','frequency'].includes(domain)?'':'请选择矩形 ROI';
+ if(action==='fft'&&['complex64','complex128'].includes(object.dtype)&&!object.panels?.some(p=>p.domain==='frequency'))return '复数原图暂不支持 FFT；不会丢弃虚部或把显示幅值当作原数组';
  if(action==='fft')return kind==='rectangle'&&domain==='spatial_pixels'?'':'局部 FFT 需要实空间矩形 ROI';
  if(action==='profile')return ['line','arrow'].includes(kind)&&coords.length===4?'':'请画一条线以读取强度剖面';
  if(action==='measure'){
@@ -48,7 +49,7 @@ export function measurementLabel(picked,count){return picked?.kind==='point'&&['
 export function framePreviewRecipe(object,display){
  const spatial=object?.panels?.length>0&&object.panels.every(p=>p.domain==='spatial_pixels');
  if(!display)return {};
- return Object.fromEntries((spatial?['gamma','display_range','max_size']:['max_size']).filter(k=>display[k]!==undefined).map(k=>[k,copy(display[k])]));
+ return Object.fromEntries((spatial?['gamma','display_range','max_size','component']:['max_size',...(display.component!==undefined?['component']:[])]).filter(k=>display[k]!==undefined).map(k=>[k,copy(display[k])]));
 }
 export class SavedViewHistory{
  constructor(limit=40){this.limit=limit;this.entries=[];this.index=-1;}

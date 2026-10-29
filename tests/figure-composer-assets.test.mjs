@@ -106,6 +106,14 @@ test('malformed/oversized PNGs and maps outside actual IHDR dimensions are refus
  }
 });
 
+test('ordinary complex64 component profiles retain their complex source grid and explicit real value dtype',async()=>{
+ const f=fixture();
+ for(const id of [A,B,F]){f.objects.get(id).dtype='complex64';const state=f.states.get(id);if(state){state.object.dtype='complex64';state.object.display.component='imag';state.effective_display.component='imag';}}
+ f.profile.dtype='complex64';f.profile.component='imag';f.profile.value_dtype='float32';f.profile.scientific_grid_identity.dtype='complex64';
+ f.line.scientific_grid_identity=clone(f.profile.scientific_grid_identity);f.image.recipe=makeFigureRecipe(f.states.get(A),f.image.recipe.preferences);f.recipe.slots=[f.image,f.line,clone(f.image)];
+ const before=clone(f.profile),panels=await resolveComposition(f.recipe,f.ports);assert.equal(panels[1].profile.dtype,'complex64');assert.equal(panels[1].profile.value_dtype,'float32');assert.equal(panels[1].profile.component,'imag');assert.deepEqual(f.profile,before);
+ assert.doesNotThrow(()=>renderCompositionSVG({recipe:f.recipe,panels}));
+});
 test('profile values, finite sampling, exact grid/calibration and actual saved input bindings are required',async()=>{
  for(const change of ['values','coordinates','indices','wrong-in-bounds-index','sampled-coordinate','count','calibration','grid','unit','component','input-grid','input-calibration','missing-npy']){
   const f=fixture(),p=f.objects.get(P);

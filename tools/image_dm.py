@@ -13,6 +13,7 @@ import numpy as np
 MAX_DATASETS = 64
 MAX_DIMENSIONS = 6
 MAX_PLANE_CHUNKS = 4096
+COMPLEX_DTYPES = {"complex64", "complex128"}
 DTYPES = {"uint8", "uint16", "uint32", "int8", "int16", "int32", "float32", "float64"}
 
 
@@ -98,9 +99,9 @@ def open_dm(path, max_pixels, max_bytes):
             require(1 <= len(dictionaries) <= MAX_DATASETS, "DM4 scientific dataset count exceeds its metadata budget", "BUDGET_EXCEEDED")
             for entry in dictionaries:
                 item = api.ImageObject(entry, stream, order="C")
-                require(2 <= len(item.shape) <= MAX_DIMENSIONS and all(type(v) is int and v > 0 for v in item.shape) and np.dtype(item.dtype).name in DTYPES and not np.dtype(item.dtype).fields
+                require(2 <= len(item.shape) <= MAX_DIMENSIONS and all(type(v) is int and v > 0 for v in item.shape) and (np.dtype(item.dtype).name in DTYPES or len(item.shape) == 2 and np.dtype(item.dtype).name in COMPLEX_DTYPES) and not np.dtype(item.dtype).fields
                         and item.imdict.ImageData.DataType not in (5, 27, 28),
-                        "DM import supports real scalar 2D planes from rank 2..6 arrays; RGB without explicit thumbnail tags and complex/packed arrays are refused before decoding")
+                        "DM import supports real scalar planes or ordinary 2D complex64/complex128; RGB without explicit thumbnail tags, nD complex and packed arrays are refused before decoding")
         rows = reader(path, lazy=True, order="C", optimize=False)
     except DMFileError:
         raise
@@ -134,6 +135,10 @@ def open_dm(path, max_pixels, max_bytes):
             descriptor.update(eligible_scalar_plane=bool(options), plane_selection_required=True,
                               plane_axes_options=options, dimension_calibration=[_axis(row, shape, d) for d in range(len(shape))],
                               reason="Explicit plane_axes [output Y array axis, output X array axis] and plane_indices are required; no implicit navigation flattening" if options else "No 2D plane fits the decoded-plane or 4096 lazy-chunk budget")
+        if dtype.name in COMPLEX_DTYPES:
+            descriptor.update(eligible_complex_2d=bool(len(shape) == 2 and math.prod(shape) <= max_pixels and math.prod(shape) * dtype.itemsize <= max_bytes),
+                              reason="Ordinary complex 2D array; explicit real/imag/amplitude/power is required for display or numerical observation; no FFT/wave-domain inference",
+                              complex_components=["real", "imag", "amplitude", "power"])
         catalog.append(descriptor)
     return rows, {"source_reader": identity, "datasets": catalog,
                   "thumbnail_policy": "RosettaSciIO file_reader excludes ImageList entries identified by the file's Thumbnails tags; no first-image heuristic in this adapter"}
@@ -153,7 +158,7 @@ def _plane_selection(descriptor, plane_axes, plane_indices, max_pixels, max_byte
     ndim = len(shape)
     legacy = ndim == 2 and plane_axes is None and plane_indices is None
     if legacy:
-        require(descriptor["eligible_scalar_2d"], "Selected 2D DM dataset exceeds its plane budget", "BUDGET_EXCEEDED")
+        require(descriptor["eligible_scalar_2d"] or descriptor.get("eligible_complex_2d"), "Selected 2D DM dataset exceeds its plane budget", "BUDGET_EXCEEDED")
         return None
     require(type(plane_axes) is list and len(plane_axes) == 2 and all(type(v) is int and 0 <= v < ndim for v in plane_axes)
             and plane_axes[0] != plane_axes[1],
@@ -181,7 +186,7 @@ def _plane_selection(descriptor, plane_axes, plane_indices, max_pixels, max_byte
 def selected_plane(path, saved, dataset_index, max_pixels, max_bytes, plane_axes=None, plane_indices=None):
     rows, actual = open_dm(path, max_pixels, max_bytes)
     require(actual == saved, "DM dataset metadata or reader changed", "SOURCE_CHANGED")
-    eligible = [row["dataset_index"] for row in saved["datasets"] if row["eligible_scalar_2d"] or row.get("eligible_scalar_plane")]
+    eligible = [row["dataset_index"] for row in saved["datasets"] if row["eligible_scalar_2d"] or row.get("eligible_scalar_plane") or row.get("eligible_complex_2d")]
     if dataset_index is None:
         choices = "; ".join(str(row["dataset_index"]) + " (CLI --dataset " + str(row["dataset_index"] + 1) + "): " +
                             row["title"][:100] + " " + str(row["shape"]) + " " + row["dtype"]
@@ -191,8 +196,9 @@ def selected_plane(path, saved, dataset_index, max_pixels, max_bytes, plane_axes
                 "DATASET_SELECTION_REQUIRED")
         dataset_index = eligible[0]
     require(type(dataset_index) is int and dataset_index in eligible,
-            "dataset_index must identify an eligible bounded real scalar scientific dataset", "UNSUPPORTED_DATASET")
+            "dataset_index must identify an eligible bounded scientific dataset", "UNSUPPORTED_DATASET")
     descriptor = saved["datasets"][dataset_index]
+    require(not descriptor.get("eligible_complex_2d") or plane_axes is None and plane_indices is None, "Explicit axis reinterpretation for complex data is not qualified; ordinary stored 2D axes only")
     selection = _plane_selection(descriptor, plane_axes, plane_indices, max_pixels, max_bytes)
     if selection is None:
         # Preserve the old 2D read and descriptor exactly, including old saved

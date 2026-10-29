@@ -44,7 +44,7 @@ FIELDS = {
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
-    "view": {"object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar"},
+    "view": {"object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar", "component"},
     "compare": {"object_ids", "rect", "display_range", "gamma", "max_size"},
     "fft": {"object_id", "rect", "window", "subtract_mean", "max_size"},
     "annotate": {"object_id", "annotations", "updates"}, "context": {"object_id", "metadata"},
@@ -180,7 +180,7 @@ def load_array(path, allow_complex=False):
         scalar_shape(shape, dtype)
         need(source.tell() + int(np.prod(shape)) * dtype.itemsize == path.stat().st_size, "NPY payload size differs")
     values = np.load(path, allow_pickle=False)
-    need(values.dtype in tuple(np.dtype(name) for name in ("uint8", "uint16", "uint32", "int8", "int16", "int32", "float32", "float64", "complex128")) and
+    need(values.dtype in tuple(np.dtype(name) for name in ("uint8", "uint16", "uint32", "int8", "int16", "int32", "float32", "float64", "complex64", "complex128")) and
          (allow_complex or values.dtype.kind != "c"), "Unsupported scalar precision; uint64/int64 are not silently converted")
     need(np.isfinite(values).all(), "Nonfinite scientific pixels are not supported")
     return values
@@ -613,7 +613,7 @@ class Workspace:
     def scalar(self, ident):
         metadata, directory, context = self.resolved(ident)
         need(metadata["kind"] in ("frame", "view"), "Operation requires a scalar frame/view object, not a TIFF source, composite or complex spectrum")
-        return metadata, directory, context, load_array(directory / "data.npy")
+        return metadata, directory, context, load_array(directory / "data.npy", allow_complex=True)
 
     def measurement_operand(self, ident):
         """Resolve a selected revision without resurrecting an old measure's scale."""
@@ -639,7 +639,7 @@ class Workspace:
         spectral = parent["kind"] in ("fft", "fft_view")
         need(parent["kind"] in ("frame", "view", "fft", "fft_view"),
              "Measurement requires one scalar frame/view or saved external FFT")
-        values = load_array(directory / "data.npy", allow_complex=spectral)
+        values = load_array(directory / "data.npy", allow_complex=True)
         if spectral:
             source = parent.get("spectrum_object_id", parent["object_id"])
             bounds = None
@@ -865,6 +865,10 @@ class Workspace:
                                               "spatial" if record else "unspecified_image"),
                                 intensity_calibration_applied=False, intensity_semantics="raw stored pixel intensity; not electron counts",
                                 calibration=dataset["calibration_xy"], user_context=context)
+                if values.dtype.kind == "c":
+                    metadata.update(complex_semantics={"kind": "ordinary_complex_array", "components_preserved": ["real", "imag"],
+                                    "not_assumed_to_be_fft": True, "physical_wave_or_phase_unit_inferred": False},
+                                    intensity_semantics="raw stored complex samples; brightness calibration not applied; no wave/phase interpretation inferred")
                 if dataset.get("plane_selection") is not None:
                     metadata.update(dm_plane_selection=dataset["plane_selection"], frame_axis_role="explicit_2d_plane_selection_not_depth")
             else:
@@ -993,7 +997,8 @@ class Workspace:
                      "A real-space scale_bar cannot be drawn on a frequency spectrum; use spectrum_axes")
                 need(parent["kind"] in ("frame", "view", "fft", "fft_view"),
                      "preview requires a frame/view, comparison, annotated view or FFT")
-                values = load_array(parent_directory / "data.npy", allow_complex=spectral_view)
+                values = load_array(parent_directory / "data.npy", allow_complex=True)
+                need(not spectral_view or "component" not in request, "Saved FFT display uses representation; component selects ordinary complex images only")
                 need(spectral_view or "representation" not in request,
                      "representation is only valid for a saved complex FFT")
                 need(spectral_view or "spectrum_filter" not in request,
@@ -1128,6 +1133,7 @@ class Workspace:
                 roi = cut(values, rect)
                 metadata.update(source_rect_xyxy=rect, source_shape_yx=list(values.shape), rect_convention="half-open pixel edges [x0,y0,x1,y1]")
                 if action == "fft":
+                    need(roi.dtype.kind != "c", "FFT of an imported complex image is not qualified; its imaginary part is never discarded or replaced by display amplitude", "UNSUPPORTED_OPERATION")
                     window, subtract = request.get("window", "none"), request.get("subtract_mean", False)
                     need(window in ("none", "hann") and type(subtract) is bool, "FFT requires window none/hann and boolean subtract_mean")
                     work = roi.astype(np.float64)
@@ -1157,8 +1163,21 @@ class Workspace:
                                     physical_frequency_axes=calibration.frequency_axes(spectrum.shape, record))
                 else:
                     save_array(directory, "data.npy", roi)
-                    settings = display_options(request, [roi], parent.get("display"))
-                    image = render(roi, settings, (settings["max_size"], settings["max_size"]))
+                    old_display = dict(parent.get("display") or {})
+                    displayed = roi
+                    if roi.dtype.kind == "c":
+                        component = request.get("component", old_display.get("component"))
+                        need(component in ("real", "imag", "amplitude", "power"), "Complex image preview requires an explicit real/imag/amplitude/power component; source complex samples are unchanged", "COMPONENT_REQUIRED")
+                        if component != old_display.get("component"):
+                            old_display.pop("display_range", None)
+                        displayed = numeric.components(roi, component)
+                    else:
+                        need("component" not in request, "component is only valid for an ordinary complex image preview")
+                    settings = display_options(request, [displayed], old_display)
+                    if roi.dtype.kind == "c":
+                        settings.update(component=component, component_expression={"real":"real(z)", "imag":"imag(z)", "amplitude":"abs(z)", "power":"abs(z)**2"}[component], complex_data_unchanged=True)
+                        metadata["complex_semantics"] = parent.get("complex_semantics", {"kind":"ordinary_complex_array", "not_assumed_to_be_fft":True})
+                    image = render(displayed, settings, (settings["max_size"], settings["max_size"]))
                     metadata.update(dtype=str(roi.dtype), shape_yx=list(roi.shape), axes=["y", "x"], display=settings,
                                     array_domain=parent.get("array_domain", "spatial"),
                                     scientific_semantics=parent.get("scientific_semantics"),
@@ -1185,6 +1204,7 @@ class Workspace:
             ids = request.get("object_ids")
             need(type(ids) is list and 2 <= len(ids) <= 4 and len(set(ids)) == len(ids), "compare requires 2..4 distinct scalar object IDs")
             loaded = [self.scalar(ident) for ident in ids]
+            need(all(row[3].dtype.kind != "c" for row in loaded), "Comparison of imported complex images requires a qualified explicit component workflow; no implicit real cast", "UNSUPPORTED_OPERATION")
             shape = loaded[0][3].shape
             need(all(row[3].shape == shape for row in loaded), "Comparison requires equal source pixel shapes")
             grids = [(row[0].get("source_shape_yx", list(row[3].shape)),
@@ -1319,7 +1339,7 @@ class Workspace:
                 write_new(output / "preview.png", Path(image_object["image_path"]).read_bytes())
                 exported["preview.png"] = sha_file(output / "preview.png")
                 export_display = image_object.get("display") or scientific.get("display")
-            elif numeric_result:
+            elif numeric_result or scientific.get("dtype") in ("complex64", "complex128"):
                 export_display = None
             else:
                 values = load_array(source_directory / names[0])

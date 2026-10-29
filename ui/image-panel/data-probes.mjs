@@ -2,14 +2,15 @@
 // colors are never sampled and pointer motion creates no scientific records.
 import {tabularCell} from './measurement-workspace.mjs';
 const finite=value=>typeof value==='number'&&Number.isFinite(value);
-const componentNames={raw:'原始数值',real:'FFT 实部',imag:'FFT 虚部',amplitude:'FFT 幅值',power:'FFT 功率 |F|²'};
+const componentNames={raw:'原始数值',real:'实部',imag:'虚部',amplitude:'幅值',power:'功率 |z|²'};
+const componentName=value=>{const name=componentNames[value?.component]??'未知分量';return value?.coordinate_space==='frequency_cycles_per_pixel'&&value.component!=='raw'?'FFT '+name.replace('|z|','|F|'):name;};
 const numberText=value=>finite(value)?String(value):'未知';
 const canonical=value=>JSON.stringify(value??null,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]])):item);
 const same=(left,right)=>canonical(left)===canonical(right);
 function objectBinding(state){return {object_id:state?.object?.object_id,state_revision:state?.state_revision};}
 function sameBinding(state,binding){const now=objectBinding(state);return now.object_id===binding.object_id&&now.state_revision===binding.state_revision;}
 export function probeText(result){
- const component=componentNames[result?.component]??'未知分量',sample=result?.samples?.[0];
+ const component=componentName(result),sample=result?.samples?.[0];
  if(!sample)return '尚未读取原数组数值';
  const index=Array.isArray(sample.array_index_xy)?` · 原数组 [${sample.array_index_xy.join(', ')}]`:'';
  return `${component} ${numberText(sample.value)} · 坐标 [${(sample.point??[]).map(numberText).join(', ')}] ${result.coordinate_space==='frequency_cycles_per_pixel'?'cycles/pixel':'源数组坐标'}${index} · 最近邻；数值单位未声明`;
@@ -17,7 +18,7 @@ export function probeText(result){
 export function statisticsText(result){
  const stats=result?.statistics;if(!stats)return '选择 ROI 后读取原数组统计';
  const roi=result.source_rect_xyxy??result.frequency_rect;
- return `${componentNames[result.component]??'未知分量'}${roi?' · 保存 ROI '+JSON.stringify(roi):''} · n=${numberText(stats.sample_count)} · 均值 ${numberText(stats.mean)} · 标准差 ${numberText(stats.stddev)} · 最小 ${numberText(stats.minimum)} · 最大 ${numberText(stats.maximum)} · 数值单位未声明`;
+ return `${componentName(result)}${roi?' · 保存 ROI '+JSON.stringify(roi):''} · n=${numberText(stats.sample_count)} · 均值 ${numberText(stats.mean)} · 标准差 ${numberText(stats.stddev)} · 最小 ${numberText(stats.minimum)} · 最大 ${numberText(stats.maximum)} · 数值单位未声明`;
 }
 function profileData(result){
  const samples=result?.samples;
@@ -36,10 +37,10 @@ export function exportProfileCSV(result){
 export function profilePlot(result,{width=560,height=200}={}){
  const samples=profileData(result),physical=Array.isArray(samples.physical_distance),distance=physical?samples.physical_distance:samples.distance;
  const finitePairs=samples.value.map((value,index)=>[distance[index],value]).filter(([x,y])=>finite(x)&&finite(y));
- if(!finitePairs.length)return {segments:[],xLabel:physical?result.physical_distance_unit:result.distance_unit,yLabel:componentNames[result.component]??'数值',range:null};
+ if(!finitePairs.length)return {segments:[],xLabel:physical?result.physical_distance_unit:result.distance_unit,yLabel:componentName(result),range:null};
  const xs=finitePairs.map(pair=>pair[0]),ys=finitePairs.map(pair=>pair[1]),xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys),left=64,right=20,top=22,bottom=42;
  let segment=[],segments=[];for(let index=0;index<samples.value.length;index++){const x=distance[index],y=samples.value[index];if(!finite(x)||!finite(y)){if(segment.length)segments.push(segment);segment=[];continue;}segment.push([left+(x-xmin)/(xmax-xmin||1)*(width-left-right),height-bottom-(y-ymin)/(ymax-ymin||1)*(height-top-bottom)]);}if(segment.length)segments.push(segment);
- return {segments,xLabel:physical?result.physical_distance_unit:result.distance_unit,yLabel:componentNames[result.component]??'数值',range:{xmin,xmax,ymin,ymax}};
+ return {segments,xLabel:physical?result.physical_distance_unit:result.distance_unit,yLabel:componentName(result),range:{xmin,xmax,ymin,ymax}};
 }
 export function profileTicks(min,max,count=5){
  if(!finite(min)||!finite(max)||!Number.isInteger(count)||count<2||count>9)return [];

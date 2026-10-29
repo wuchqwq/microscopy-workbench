@@ -40,7 +40,7 @@ class NumericReader:
         if key not in self.cache:
             values = np.load(directory / 'data.npy', allow_pickle=False)
             require(values.ndim == 2 and values.size <= 4194304 and values.nbytes <= 64*1024*1024 and
-                    values.dtype in tuple(np.dtype(name) for name in ('uint8','uint16','uint32','int8','int16','int32','float32','float64','complex128')) and
+                    values.dtype in tuple(np.dtype(name) for name in ('uint8','uint16','uint32','int8','int16','int32','float32','float64','complex64','complex128')) and
                     values.flags.c_contiguous and list(values.shape) == parent.get('shape_yx') and str(values.dtype) == parent.get('dtype'),
                     'Scientific plane exceeds numeric observation budget or disagrees with saved shape/dtype')
             require(np.isfinite(values).all(), 'Nonfinite scientific values')
@@ -78,9 +78,9 @@ def components(values, component):
     elif component == 'imag':
         result = values.imag
     elif component == 'amplitude':
-        result = np.abs(values)
+        result = np.abs(values.astype(np.complex128, copy=False))
     else:
-        result = np.square(np.abs(values))
+        result = np.square(np.abs(values.astype(np.complex128, copy=False)))
     require(np.isfinite(result).all(), 'Numeric component is nonfinite')
     return result
 
@@ -114,7 +114,7 @@ def common(operand):
                 xy_calibration=operand['parent'].get('xy_calibration'),
                 user_context=operand['user_context'],
                 intensity_semantics=('raw stored scalar values; intensity unit not inferred' if operand['component'] == 'raw' else
-                                     'complex FFT '+operand['component']+'; not display brightness or electron counts'),
+                                     ('complex FFT ' if operand['spectral'] else 'complex array ')+operand['component']+'; not display brightness, inferred phase or electron counts'),
                 intensity_calibration_applied=False,
                 software_provenance=dict(python=platform.python_version(), numpy=np.__version__, numeric_helper_sha256=HELPER_SHA256),
                 computation='explicit external NumPy; DM not called', dm_called=False)
@@ -124,7 +124,7 @@ def probe(workspace, request, reader=None):
     require(type(request.get('points')) is list and 1 <= len(request['points']) <= 64, 'Probe batch must contain 1..64 points')
     operand = (reader or NumericReader()).operand(workspace, request)
     indices, sampled, values = sample(operand, request['points'])
-    return dict(object_id=request['object_id'], kind='probe', **common(operand),
+    return dict(object_id=request['object_id'], kind='probe', **({'value_dtype':str(values.dtype)} if operand['values'].dtype.kind == 'c' else {}), **common(operand),
                 sampling=dict(interpolation='nearest', line_width=1, tie_rule='floor(array_index+0.5)'),
                 samples=[dict(point=p, array_index_xy=i.tolist(), sampled_coordinate_xy=q.tolist(), value=v.item())
                          for p, i, q, v in zip(request['points'], indices, sampled, values)])
@@ -173,7 +173,7 @@ def profile(workspace, request):
         physical = np.linspace(0, physical_length, count).tolist()
     samples = dict(coordinates_xy=coordinates, indices_xy=indices.tolist(), sampled_coordinates_xy=sampled.tolist(),
                    distance=np.linspace(0, length, count).tolist(), value=values.tolist(), physical_distance=physical)
-    result = dict(**common(operand), points=points, samples=samples, length=length,
+    result = dict(**common(operand), points=points, samples=samples, **({'value_dtype':str(values.dtype)} if operand['values'].dtype.kind == 'c' else {}), length=length,
                   distance_unit='cycles/pixel' if operand['spectral'] else 'pixel', physical_distance_unit=unit,
                   sampling=dict(interpolation='nearest', line_width=1, sample_count=count, tie_rule='floor(array_index+0.5)',
                                 path='evenly spaced requested centre coordinates; nearest saved array sample, endpoints included'),

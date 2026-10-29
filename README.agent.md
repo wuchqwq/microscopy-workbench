@@ -16,6 +16,12 @@ user confirmation nor DM-native execution. Never analyze the RGB thumbnail.
 Save original request IDs before scientific writes and query original outcomes
 after timeout. Preserve data and existing user/client settings.
 
+For [ordinary complex 2D DM data](docs/DM_COMPLEX_IMAGES.md), choose an explicit
+`image_preview.component` before opening its panel; numeric observations also
+require their own explicit component. Preserve complex dtype and both parts in
+NPY. Do not infer FFT/wave/phase semantics or feed a displayed amplitude into
+an unqualified complex FFT/comparison. Packed and nD complex remain refused.
+
 [Panel usage](docs/LOCAL_IMAGE_PANEL.md), [annotation contracts](docs/IMAGE_ANNOTATIONS.md)
 and [reflection comparison](docs/REFLECTION_COMPARISON.md) describe the retained
 scientific behavior. Older copied technical examples mentioning `DM_IMAGE_*`
@@ -36,6 +42,7 @@ For a rank 3–6 DM source, inspect the catalog and call `image_frame` with expl
 `plane_axes:[Y,X]` in original NumPy axis order and one `plane_indices` entry
 per axis (null on the two plane axes, fixed zero-based integers elsewhere).
 The returned `dm_plane_selection` is scientific provenance, not a depth or
-resolution inference. Complex DM inputs remain refused; never relabel them as
+resolution inference. nD complex and packed DM inputs remain refused. Ordinary
+2D complex inputs use the explicit component path above; never relabel them as
 a produced external FFT or discard their imaginary values. See the reader
-guide for the limited scalar-plane path and retained complex blocker.
+guide for scalar planes and the separately qualified complex scope.

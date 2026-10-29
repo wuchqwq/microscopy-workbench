@@ -13,6 +13,7 @@ export function figureDisplayParameters(display,panels){
  const params={gamma,display_range:copy(range),max_size:maximum,upscale,interpolation},spectral=panels.every(p=>p.domain==='frequency');
  if(panels.some(p=>p.domain==='frequency')&&!spectral)bad();
  if(spectral){
+  if(display.component!==undefined)bad();
   if(!['log_amplitude','amplitude','power'].includes(display.representation)||display.scale_bar!==undefined||display.spectrum_axes!==undefined&&typeof display.spectrum_axes!=='boolean'||display.spectrum_axes===true&&maximum<256||display.display_preset!=null&&(display.display_preset!=='fft_detail'||display.display_preset_revision!==2))bad();
   const full=[0,0,panels[0].fft_shape_yx?.[1],panels[0].fft_shape_yx?.[0]],rect=display.frequency_rect===null?full:display.frequency_rect??panels[0].fft_rect_xyxy??full,shape=panels[0].fft_shape_yx;
   if(panels.length!==1||!Array.isArray(shape)||shape.length!==2||!shape.every(v=>Number.isSafeInteger(v)&&v>0)||!Array.isArray(rect)||rect.length!==4||!rect.every(v=>Number.isSafeInteger(v)&&v>=0)||rect[0]>=rect[2]||rect[1]>=rect[3]||rect[2]>shape[1]||rect[3]>shape[0])bad();
@@ -22,6 +23,7 @@ export function figureDisplayParameters(display,panels){
  }else{
   if(!panels.every(p=>['spatial_pixels','source_array_indices'].includes(p.domain))||typeof display.scale_bar!=='boolean'||['representation','spectrum_filter','spectrum_axes','frequency_rect'].some(k=>display[k]!==undefined))bad();
   params.scale_bar=display.scale_bar;
+  if(display.component!==undefined){if(!['real','imag','amplitude','power'].includes(display.component))bad();params.component=display.component;}
  }
  return params;
 }
