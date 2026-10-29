@@ -1,0 +1,15 @@
+{
+  "result": "PASS",
+  "scope": "Actual Chrome drag and CSV independently checked against saved provider records",
+  "source_unchanged": true,
+  "fft_unchanged": true,
+  "csv_rows": 3,
+  "p2_old_period_nm": 0.2,
+  "p2_new_period_nm": 0.13486381772971728,
+  "p2_new_fx_cycles_per_pixel": 0.18537218077351847,
+  "p3_p4_same_object_ids_and_values": true,
+  "all_marks_hypothesized": true,
+  "browser_history_rows": 6,
+  "browser_current_rows": 4,
+  "download_event_note": "CUA download waiter timed out; actual browser-generated CSV was found and independently verified, not regenerated."
+}
