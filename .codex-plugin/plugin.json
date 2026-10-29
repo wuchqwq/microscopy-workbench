@@ -1,7 +1,7 @@
 {
   "name": "microscopy-workbench",
-  "version": "0.3.0",
-  "description": "Reusable microscopy tools with sourced sequences, verifiable region correspondence and cross-frame FFT observations.",
+  "version": "0.4.0",
+  "description": "Reusable microscopy tools with spatial ROI spectra, candidate geometric relations and sourced cross-frame evidence.",
   "author": {
     "name": "wuchqwq"
   },

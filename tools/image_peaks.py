@@ -6,12 +6,11 @@ The workspace owns publication, calibration semantics and request recovery.
 import math
 
 import numpy as np
-import scipy
-from scipy.ndimage import maximum_filter, minimum_filter
 
 
 def detect(values, parameters, need):
     """3x3 local maxima, explicit DC mask and deterministic nonmaximum suppression."""
+    from scipy.ndimage import maximum_filter, minimum_filter
     maximum = parameters.get("max_peaks", 12)
     separation = parameters.get("min_separation_bins", 3)
     dc_radius = parameters.get("exclude_dc_radius_bins", 3)
@@ -104,6 +103,7 @@ def detect(values, parameters, need):
 
 
 def run(workspace, request, ident, directory, metadata, api):
+    import scipy
     parent, parent_directory, context = workspace.measurement_operand(request["object_id"])
     api.need(parent["kind"] in ("fft", "fft_view") and parent.get("array_domain") == "frequency",
              "image_peaks requires a saved external FFT; scalar diffraction and imported complex arrays are not supported", "UNSUPPORTED_OPERATION")

@@ -67,6 +67,30 @@ test('sequence revision stales correspondence and observations while keeping sav
   await assert.rejects(add(core,context,{observations:selection('wrong-new-current',{sequence:context.fingerprints.sequence,correspondence:context.fingerprints.correspondence})}),e=>e.code==='STALE_DEPENDENCY');
 });
 
+test('spatial atlas revisions stale only dependent candidates and retain existing spectra/history',async t=>{
+  const {core}=fixture(t);let {context}=await core.create({analysisId:'spatial-analysis'});
+  context=await add(core,context,{atlas:selection('atlas-v1'),fft:selection('saved-spectrum')});
+  context=await add(core,context,{domain_hypotheses:selection('geometry-v1',{atlas:context.fingerprints.atlas})});
+  const before=context;
+  context=await add(core,context,{display:selection('changed-display',{fft:context.fingerprints.fft})});
+  assert.equal(context.slots.domain_hypotheses.status,'active');
+  context=await add(core,context,{atlas:selection('atlas-point-correction')});
+  assert.equal(context.slots.domain_hypotheses.status,'stale');assert.equal(context.slots.fft.status,'active');
+  assert.equal(context.fingerprints.fft,before.fingerprints.fft);
+  assert.equal((await core.read(context.analysisId,before.revision)).slots.domain_hypotheses.status,'active');
+  const proposal=await core.commit({analysisId:context.analysisId,expectedRevision:before.revision,changes:{domain_hypotheses:selection('late-old-result',{atlas:before.fingerprints.atlas})},reason:'Late old calculation'});
+  assert.notEqual(proposal.state,'advanced');assert.equal((await core.read(context.analysisId)).revision,context.revision);
+});
+
+test('geometry correction stales a saved atlas as well as its comparison without staling FFT',async t=>{
+ const {core}=fixture(t);let {context}=await core.create({analysisId:'atlas-geometry'});
+ context=await add(core,context,{fft:selection('fixed-fft'),atlas:selection('old-atlas')});
+ context=await add(core,context,{domain_hypotheses:selection('old-match',{atlas:context.fingerprints.atlas})});
+ context=await add(core,context,{points:[selection('corrected-measure',{fft:context.fingerprints.fft})]});
+ assert.equal(context.slots.atlas.status,'stale');assert.equal(context.slots.domain_hypotheses.status,'stale');assert.equal(context.slots.fft.status,'active');
+ await assert.rejects(add(core,context,{domain_hypotheses:selection('old-match',{atlas:context.fingerprints.atlas})}),e=>e.code==='STALE_DEPENDENCY');
+});
+
 test('display revision leaves saved FFT, points, physical measurements, registration and comparison active', async t => {
   const f = fixture(t), before = await populated(f.core);
   const after = await add(f.core, before, {display: selection('display-gamma2', {fft: before.fingerprints.fft})});

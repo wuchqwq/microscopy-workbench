@@ -1,0 +1,581 @@
+{
+  "scope": "Public synthetic acceptance summary; original logs retained locally; not original immutable provider objects",
+  "field": {
+    "result": "PASS",
+    "runtime_ms": 455962.575,
+    "independent_oracle": {
+      "signed_source_preserved": true,
+      "all_bin_direct_dft": [
+        {
+          "region_index": 0,
+          "all_bin_direct_dft_max_error": 1.1657981144457453e-10
+        },
+        {
+          "region_index": 1,
+          "all_bin_direct_dft_max_error": 2.5964947499233707e-10
+        },
+        {
+          "region_index": 2,
+          "all_bin_direct_dft_max_error": 1.5713550585668738e-10
+        },
+        {
+          "region_index": 3,
+          "all_bin_direct_dft_max_error": 1.9383322075029737e-10
+        },
+        {
+          "region_index": 4,
+          "all_bin_direct_dft_max_error": 1.17629208455102e-11
+        },
+        {
+          "region_index": 5,
+          "all_bin_direct_dft_max_error": 3.369957659872075e-11
+        },
+        {
+          "region_index": 6,
+          "all_bin_direct_dft_max_error": 1.8965865300000864e-11
+        },
+        {
+          "region_index": 7,
+          "all_bin_direct_dft_max_error": 1.237829125734889e-10
+        }
+      ],
+      "primitive_fft_array_equal": true,
+      "analytic_pure_window_vectors_equal": true
+    },
+    "coverage": {
+      "sample_count": 8,
+      "sample_status_counts": {
+        "valid": 6,
+        "ambiguous": 2,
+        "insufficient_evidence": 0
+      },
+      "valid_sample_fraction": 0.75,
+      "undetermined_sample_fraction": 0.25,
+      "selected_roi_union_fraction": 1,
+      "valid_roi_support_union_fraction": 1,
+      "interpretation": "ROI support coverage only; overlap is correlated and no unobserved pixel receives an inferred feature or phase label"
+    },
+    "window_sensitivity": [
+      {
+        "sample_index": 0,
+        "window_role": "pure-A-128",
+        "width": 128,
+        "height": 128,
+        "center_xy": [
+          63.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.0078125,
+          0.0078125
+        ],
+        "analytic_A_support_fraction": 1,
+        "status": "valid",
+        "family_count": 2,
+        "shortest_period": 8.533333333333333
+      },
+      {
+        "sample_index": 1,
+        "window_role": "pure-B-128",
+        "width": 128,
+        "height": 128,
+        "center_xy": [
+          191.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.0078125,
+          0.0078125
+        ],
+        "analytic_A_support_fraction": 0,
+        "status": "valid",
+        "family_count": 2,
+        "shortest_period": 8.533333333333333
+      },
+      {
+        "sample_index": 2,
+        "window_role": "boundary-centered-128",
+        "width": 128,
+        "height": 128,
+        "center_xy": [
+          127.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.0078125,
+          0.0078125
+        ],
+        "analytic_A_support_fraction": 0.5,
+        "status": "ambiguous",
+        "family_count": 8,
+        "shortest_period": 8.533333333333333
+      },
+      {
+        "sample_index": 3,
+        "window_role": "boundary-shifted-128",
+        "width": 128,
+        "height": 128,
+        "center_xy": [
+          143.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.0078125,
+          0.0078125
+        ],
+        "analytic_A_support_fraction": 0.375,
+        "status": "valid",
+        "family_count": 4,
+        "shortest_period": 8.533333333333333
+      },
+      {
+        "sample_index": 4,
+        "window_role": "pure-A-64",
+        "width": 64,
+        "height": 64,
+        "center_xy": [
+          63.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.015625,
+          0.015625
+        ],
+        "analytic_A_support_fraction": 1,
+        "status": "valid",
+        "family_count": 2,
+        "shortest_period": 9.142857142857142
+      },
+      {
+        "sample_index": 5,
+        "window_role": "pure-B-64",
+        "width": 64,
+        "height": 64,
+        "center_xy": [
+          191.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.015625,
+          0.015625
+        ],
+        "analytic_A_support_fraction": 0,
+        "status": "valid",
+        "family_count": 2,
+        "shortest_period": 8.875203139603666
+      },
+      {
+        "sample_index": 6,
+        "window_role": "boundary-centered-64",
+        "width": 64,
+        "height": 64,
+        "center_xy": [
+          127.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.015625,
+          0.015625
+        ],
+        "analytic_A_support_fraction": 0.5,
+        "status": "ambiguous",
+        "family_count": 8,
+        "shortest_period": 6.4
+      },
+      {
+        "sample_index": 7,
+        "window_role": "boundary-shifted-96",
+        "width": 96,
+        "height": 96,
+        "center_xy": [
+          143.5,
+          63.5
+        ],
+        "fourier_sampling_cycles_per_pixel": [
+          0.010416666666666666,
+          0.010416666666666666
+        ],
+        "analytic_A_support_fraction": 0.3333333333333333,
+        "status": "valid",
+        "family_count": 6,
+        "shortest_period": 7.542472332656508
+      }
+    ],
+    "window_sensitivity_contrasts": [
+      {
+        "label": "pure_A_128_to64",
+        "sample_indices": [
+          0,
+          4
+        ],
+        "family_count_change": 0,
+        "shortest_period_change": 0.6095238095238091,
+        "interpretation": "Observed sampling/window dependence, not localization uncertainty or boundary-position accuracy"
+      },
+      {
+        "label": "pure_B_128_to64",
+        "sample_indices": [
+          1,
+          5
+        ],
+        "family_count_change": 0,
+        "shortest_period_change": 0.34186980627033314,
+        "interpretation": "Observed sampling/window dependence, not localization uncertainty or boundary-position accuracy"
+      },
+      {
+        "label": "boundary128_shift16",
+        "sample_indices": [
+          2,
+          3
+        ],
+        "family_count_change": -4,
+        "shortest_period_change": 0,
+        "interpretation": "Observed sampling/window dependence, not localization uncertainty or boundary-position accuracy"
+      },
+      {
+        "label": "boundary128_to64",
+        "sample_indices": [
+          2,
+          6
+        ],
+        "family_count_change": 0,
+        "shortest_period_change": -2.133333333333333,
+        "interpretation": "Observed sampling/window dependence, not localization uncertainty or boundary-position accuracy"
+      }
+    ],
+    "csv_readback": {
+      "row_count": 34,
+      "sample_count": 8,
+      "columns": [
+        "sample_index",
+        "index_kind",
+        "status",
+        "source_object_id",
+        "source_frame_index",
+        "source_dtype",
+        "source_array_sha256",
+        "x0",
+        "y0",
+        "x1",
+        "y1",
+        "center_x",
+        "center_y",
+        "coordinate_unit",
+        "period_unit",
+        "family_count",
+        "shortest_period",
+        "family_id",
+        "gx",
+        "gy",
+        "period",
+        "direction_angle_mod180",
+        "measurement_object_ids",
+        "fft_object_id",
+        "mapping_status",
+        "mapping_method",
+        "shift_x",
+        "shift_y",
+        "display_value",
+        "invalid_reasons"
+      ],
+      "centers_vectors_periods_provenance_roundtrip": true
+    },
+    "baseline_review": {
+      "baseline_three_primitive_tools_elapsed_ms": 32364.024399999995,
+      "baseline_scope": "One pure128px ROI, same provider primitives; not a speed comparison with8-region atlas. Original report.baseline.elapsed_ms also includes independent oracle verification.",
+      "controls": [
+        {
+          "display_value": null,
+          "status": "insufficient_evidence",
+          "family_count": 0
+        },
+        {
+          "display_value": null,
+          "status": "ambiguous",
+          "family_count": 4
+        }
+      ]
+    }
+  },
+  "fresh_agent": {
+    "result": "PASS_FRESH_MODEL_FIELD_SCOPE",
+    "scope": "Actual fresh Codex model called candidate MCP; independent artifact/log inspection. Not native plugin-mode model loading, browser interaction or experimental qualification.",
+    "model": {
+      "model": "gpt-6.1-sol",
+      "model_reasoning_effort": "ultra"
+    },
+    "elapsed_ms": 266046,
+    "call_outcomes": {
+      "total": 15,
+      "completed": 14,
+      "refused": 1
+    },
+    "source": {
+      "sha256": "a43f88f54f01cd6dd36eb26acbe73de023c7cd840d2f8bb4a7ffaa3509ef4b85",
+      "dtype": "float32",
+      "shape_yx": [
+        128,
+        256
+      ]
+    },
+    "atlas": {
+      "object_id": "e552a8b30c2341e9a3840fdf5e2c0e66",
+      "request_id": "fresh-boundary-20261030-atlas-05",
+      "rects": [
+        [
+          24,
+          32,
+          88,
+          96
+        ],
+        [
+          168,
+          32,
+          232,
+          96
+        ],
+        [
+          80,
+          16,
+          176,
+          112
+        ],
+        [
+          112,
+          48,
+          144,
+          80
+        ]
+      ],
+      "fft_parameters": {
+        "window": "hann",
+        "subtract_mean": true
+      },
+      "peak_parameters": {
+        "max_peaks": 12,
+        "min_separation_bins": 3,
+        "exclude_dc_radius_bins": 3,
+        "threshold_rel": 0.15,
+        "refinement": "quadratic"
+      }
+    },
+    "field": {
+      "object_id": "6d08dedcba744abcac251dfd109fe7d0",
+      "request_id": "fresh-boundary-20261030-field-06",
+      "coordinate_domain": "physical",
+      "display_feature": "family_count",
+      "period_unit": "nm",
+      "field_schema_version": 1,
+      "samples": [
+        {
+          "sample_index": 0,
+          "rect": [
+            24,
+            32,
+            88,
+            96
+          ],
+          "center_xy": [
+            55.5,
+            63.5
+          ],
+          "status": "valid",
+          "family_count": 2,
+          "shortest_period": 0.17066405360409376,
+          "display_value": 2,
+          "measurement_count": 4,
+          "invalid_reasons": []
+        },
+        {
+          "sample_index": 1,
+          "rect": [
+            168,
+            32,
+            232,
+            96
+          ],
+          "center_xy": [
+            199.5,
+            63.5
+          ],
+          "status": "valid",
+          "family_count": 2,
+          "shortest_period": 0.17066618933994218,
+          "display_value": 2,
+          "measurement_count": 4,
+          "invalid_reasons": []
+        },
+        {
+          "sample_index": 2,
+          "rect": [
+            80,
+            16,
+            176,
+            112
+          ],
+          "center_xy": [
+            127.5,
+            63.5
+          ],
+          "status": "valid",
+          "family_count": 4,
+          "shortest_period": 0.1703574479994039,
+          "display_value": 4,
+          "measurement_count": 8,
+          "invalid_reasons": []
+        },
+        {
+          "sample_index": 3,
+          "rect": [
+            112,
+            48,
+            144,
+            80
+          ],
+          "center_xy": [
+            127.5,
+            63.5
+          ],
+          "status": "insufficient_evidence",
+          "family_count": 1,
+          "shortest_period": 0.1620547040843644,
+          "display_value": null,
+          "measurement_count": 2,
+          "invalid_reasons": [
+            "Fewer than two numerically noncollinear reciprocal families"
+          ]
+        }
+      ]
+    },
+    "actual_valid_pngs": [
+      {
+        "tool": "image_preview",
+        "call_id": "item_6",
+        "valid_png": true,
+        "byte_length": 114620,
+        "width": 768,
+        "height": 384,
+        "sha256": "4c3b09ce46bf847956030b5d1baab26889ee628af7231c3e6e4c422f21fde6ef"
+      },
+      {
+        "tool": "image_spatial_atlas",
+        "call_id": "item_8",
+        "valid_png": true,
+        "byte_length": 104786,
+        "width": 768,
+        "height": 768,
+        "sha256": "aece0e8cf60e56a5adf9636582b0aff61f945360d330a20c24809d9907311ccf"
+      },
+      {
+        "tool": "image_feature_field",
+        "call_id": "item_9",
+        "valid_png": true,
+        "byte_length": 63150,
+        "width": 768,
+        "height": 290,
+        "sha256": "7c30314477cb8687ea21f7004ec198d580aec2a94e2c5624f3bff0cf682b6e49"
+      },
+      {
+        "tool": "image_info",
+        "call_id": "item_10",
+        "valid_png": true,
+        "byte_length": 63150,
+        "width": 768,
+        "height": 290,
+        "sha256": "7c30314477cb8687ea21f7004ec198d580aec2a94e2c5624f3bff0cf682b6e49"
+      },
+      {
+        "tool": "image_panel_open",
+        "call_id": "item_17",
+        "valid_png": true,
+        "byte_length": 29696,
+        "width": 256,
+        "height": 128,
+        "sha256": "8cc1bc6f620633d518514b809ecbc77d602f6daa9932e38ccff43c2cb29ddd94"
+      },
+      {
+        "tool": "image_panel_open",
+        "call_id": "item_17",
+        "valid_png": true,
+        "byte_length": 63150,
+        "width": 768,
+        "height": 290,
+        "sha256": "7c30314477cb8687ea21f7004ec198d580aec2a94e2c5624f3bff0cf682b6e49"
+      },
+      {
+        "tool": "image_panel_current",
+        "call_id": "item_19",
+        "valid_png": true,
+        "byte_length": 29696,
+        "width": 256,
+        "height": 128,
+        "sha256": "8cc1bc6f620633d518514b809ecbc77d602f6daa9932e38ccff43c2cb29ddd94"
+      },
+      {
+        "tool": "image_panel_current",
+        "call_id": "item_19",
+        "valid_png": true,
+        "byte_length": 63150,
+        "width": 768,
+        "height": 290,
+        "sha256": "7c30314477cb8687ea21f7004ec198d580aec2a94e2c5624f3bff0cf682b6e49"
+      }
+    ],
+    "fft_count": 4
+  },
+  "not_tested": [
+    "real specimen field accuracy",
+    "dense segmentation",
+    "phase/twin/dislocation conclusions",
+    "native plugin-discovery loading",
+    "Mac",
+    "GMS"
+  ],
+  "browser_revision": {
+    "result": "PASS",
+    "scope": "Actual Chrome drag -> original Panel MCP remeasure -> formal atlas/field tools; no direct numerical engine",
+    "old_atlas": "14fcdb915c06447c8b5489ce12a444ce",
+    "corrected_atlas": "578fcce931284aab87a28bf3f584f3da",
+    "field": "6a1fabaebdb24d30969ed91551817573",
+    "gui_measurement": "9246aaaa73714b35a4fc8b7b65b16066",
+    "points": [
+      [
+        0,
+        0
+      ],
+      [
+        -0.025376033057851244,
+        -0.05720557851239666
+      ]
+    ],
+    "d_spacing": 0.3994802459444198,
+    "d_spacing_unit": "nm",
+    "fft_ids_and_sha256_unchanged": [
+      [
+        "3fab90be03154958b99c0713121c4563",
+        "09bafd8638807d6ad8190613c06ec6a6fe0d2d39b253dbfd074ce2c2cdbcff6b"
+      ],
+      [
+        "71cf260599384d4b9af9c40d9c5d8716",
+        "2787c3cb219f10705191b90de1444e0c33f8f417f42f99e5528213a07486b664"
+      ],
+      [
+        "7128100d9b214aa59b576364fc2be391",
+        "41cf979846c389c586d2d2069cc45ec3e60bc5dfb894075a5a1c586ee4c8ac08"
+      ],
+      [
+        "05433343897a44e2bd3eedc415f2084e",
+        "68a4fbac674d1b7e61787ddd99d3e97c4cfe90263aefbb4854e564afd41a60c9"
+      ],
+      [
+        "4d96e116422945ceb73d831405461ea0",
+        "d3b187790261e7f25451a3c034756d462e95b01a14cdb1d6e0be345848f2d43f"
+      ],
+      [
+        "3830cdce693b4aa2b5b3a616ddbb876f",
+        "d3b187790261e7f25451a3c034756d462e95b01a14cdb1d6e0be345848f2d43f"
+      ]
+    ],
+    "other_regions_measurement_ids_unchanged": true
+  }
+}

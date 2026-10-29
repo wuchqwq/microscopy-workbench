@@ -51,3 +51,27 @@ jobs:
       - run: npm run test:complex
         env:
           MICROSCOPY_PYTHON: python
+  spatial-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-images.txt
+      - run: python -m pip install -r requirements-images.txt
+      - run: python -B tests/image_float_tiff_test.py
+      - run: python -B tests/image_spatial_atlas_test.py
+      - run: python -B tests/image_domain_compare_test.py
+      - run: python -B tests/image_feature_field_test.py
+      - run: node --test tests/domain-measurement-binding.test.mjs
+        env:
+          MICROSCOPY_RUN_DOMAIN_BINDING_TEST: '1'
+          MICROSCOPY_PYTHON: python

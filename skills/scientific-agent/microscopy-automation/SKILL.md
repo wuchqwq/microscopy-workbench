@@ -1,6 +1,6 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROIs and FFT windows, detect and measure Fourier peaks, establish sourced cross-frame region correspondence, compare joint observations or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build sparse structural feature fields, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
 ---
 
 # Reusable microscopy observations
@@ -51,6 +51,33 @@ it. Do not silently reuse another frame/ROI/calibration; do not repeatedly submi
 unknown requests to obtain a preferred result. Existing saved FFT arrays remain
 immutable. Display filtering is a separate explicit choice; it never supplies
 the numerical peak detector's input.
+
+For a spatial study use `image_spatial_atlas` on one saved full frame and 1–8
+explicit rectangles to retain overview, ROI, FFT and ordinary measurements
+together. `image_local_signature_compare` compares an atlas or saved R2 joint
+observation using an explicit reference, finite angle list, coordinate domain
+and tolerance. Pixel units are cycles/pixel; physical comparison requires sourced
+signed calibration and uses cycles/nm. Inspect all candidate rotations, unmatched
+families and quality limits; conjugates and overlapping windows are not independent
+evidence. A local signature is geometric evidence, not a segmented or identified
+phase. Keep symmetry alternatives and unknown uncertainty visible.
+
+For atlas corrections supply `previous_atlas_id` and explicit region-indexed
+`measurement_overrides` containing the complete revised measurement list; reuse
+unchanged spectra and compare the new atlas. Save references under `atlas` and
+`domain_hypotheses` in the named AnalysisContext. Read
+[spatial atlas details](../../../docs/SPATIAL_DOMAINS.md) for the workflow and
+synthetic acceptance scope. Do not turn partial matches into a phase map.
+
+When spatially localized structural descriptors are needed, use
+`image_feature_field` on saved atlas, R2 joint evidence or comparison. Choose
+pixel/physical coordinates and `family_count` or `shortest_period` for display.
+Read the returned image and sample table: they retain source windows, period /
+direction families, measurement IDs and validity masks. Missing scale is null;
+window width is sampling support, not boundary uncertainty. Keep comparison
+angles as hypotheses. Do not interpolate unmeasured pixels or call a feature
+field a phase map. Save the `field` context reference, export JSON/CSV/PNG with
+ordinary `image_export`, and reopen the saved field without FFT.
 
 ## Compare and return for correction
 
