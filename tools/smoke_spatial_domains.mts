@@ -139,13 +139,13 @@ print(json.dumps({'scope':'same existing uniform sliding-window FFT/detector com
   scales:rows(field.samples).map(s=>({sample_index:s.sample_index,size:s.scale_pixels,status:s.status,families:row(s.features).family_count})),interpretation:'Threshold and window support affect candidate evidence, not calibrated confidence'};
 
  const exports:Row[]=[];
- for(const [label,value]of [['field',revised],['domains',revisedMap]] as const){const e=await call('image_export',{object_id:value.object_id,output_dir:path.join(directory,label+'-export')});for(const [name,sha]of Object.entries(row(e.exported_files_sha256)))assert.equal(digest(path.join(text(e.output_dir),name)),sha);assert.ok(Object.keys(row(e.exported_files_sha256)).some(n=>n.endsWith('.csv')));exports.push({kind:label,...e});}
+ for(const [label,value]of [['field',revised],['domains',revisedMap]] as const){const e=await call('image_export',{object_id:value.object_id,output_dir:path.join(directory,label+'-export')});for(const [name,sha]of Object.entries(row(e.exported_files_sha256)))assert.equal(digest(path.join(text(e.output_dir),name)),sha);assert.ok(Object.keys(row(e.exported_files_sha256)).some(n=>n.endsWith('.csv')));exports.push({...e,source_role:label});}
  report.exports=exports;
  const exportInput=path.join(directory,'export-input.json');writeFileSync(exportInput,JSON.stringify({field:revised,domains:revisedMap,exports}));
  report.export_readback=JSON.parse(execute(['-c',String.raw`import json,sys,csv,pathlib,numpy as np
 p=json.load(open(sys.argv[1],encoding='utf8'));out=[]
 for item in p['exports']:
- key=item['kind'];obj=p[key];directory=pathlib.Path(item['output_dir']);prefix='spatial-field' if key=='field' else 'domain-map'
+ key=item['source_role'];obj=p[key];directory=pathlib.Path(item['output_dir']);prefix='spatial-field' if key=='field' else 'domain-map'
  saved=json.load(open(directory/(prefix+'.json'),encoding='utf8'));assert saved['samples']==obj['samples']
  table=list(csv.DictReader(open(directory/(prefix+'.csv'),encoding='utf-8-sig',newline='')));assert len(table)==len(obj['samples'])
  for r,s in zip(table,obj['samples']):

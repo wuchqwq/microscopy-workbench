@@ -108,12 +108,23 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   const existing=snapshot(workRoot),fftCount=()=>readdirSync(path.join(workspace,'requests')).map(name=>JSON.parse(readFileSync(path.join(workspace,'requests',name),'utf8'))).filter(row=>row.parameters?.action==='fft').length;
   assert.equal(fftCount(),1);
   const current=new Client(installed,config,tmpdir());clients.push(current);await current.rpc('initialize');
-  assert.deepEqual((await current.rpc('tools/list')).result.tools,schema,'All tool schemas and descriptions remain frozen-compatible');
+  const currentSchema=(await current.rpc('tools/list')).result.tools;
+  // F1a adds two tools and two optional context selections. Keep the frozen
+  // comparison exact for every pre-existing field; authorize only these named
+  // additive changes, never drop descriptions or weaken old scientific tests.
+  const additions=['image_spatial_field','image_domain_map'];
+  assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
+  const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
+  const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
+  for(const role of ['spatial_field','domains']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
+  assert.deepEqual(retainedSchema,schema,'All existing tool schemas and descriptions remain exact, with only the explicit additive F1a extension');
   assert.deepEqual(await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}}),{...refused,id:current.next},'Original-request error remains compatible');
   assert.deepEqual(await current.tool('image_result',{request_id:'frozen-fft'}),fft);
   assert.deepEqual(await current.tool('image_info',{object_id:measure.object_id}),await current.tool('image_result',{request_id:'frozen-measure'}));
   const restored=await current.tool('analysis_read',{analysis_id:'frozen-public-analysis'});
-  assert.deepEqual(restored.context,selected.context);
+  const retainedContext=structuredClone(restored.context);
+  for(const role of ['spatial_field','domains']){assert.equal(retainedContext.fingerprints[role],null,'Unselected added roles cannot relabel old science');delete retainedContext.fingerprints[role];}
+  assert.deepEqual(retainedContext,selected.context);
   const exported=await current.tool('image_export',{request_id:'compiled-export',object_id:fft.object_id,output_dir:path.join(directory,'new-export')});
   assert.equal(exported.state,'completed');
   const changed=await current.tool('image_remeasure',{request_id:'compiled-remeasure',object_id:fft.object_id,measurement_object_id:measure.object_id,points:[[0,0],[.125,.03125]],source_text:'Continue the frozen synthetic measurement'});
