@@ -37,6 +37,7 @@
       <div class="measurement-content">
         <details class="data-inspector"><summary>当前科学数据</summary><div id="data-inspector"></div></details>
         <details id="sequence-evidence" class="data-inspector" open hidden></details>
+        <details id="domain-evidence" class="data-inspector" open hidden></details>
         <div class="results-tabs" role="tablist" aria-label="数据结果类型"><button id="results-tab-measurements" role="tab" aria-controls="results-measurements" aria-selected="true">测量</button><button id="results-tab-statistics" role="tab" aria-controls="results-statistics" aria-selected="false">ROI 统计</button><button id="results-tab-profile" role="tab" aria-controls="results-profile" aria-selected="false">强度剖面</button></div>
         <section id="results-measurements" role="tabpanel" aria-labelledby="results-tab-measurements"><div class="results-toolbar"><label>排序 <select id="measurement-sort"><option value="newest">最新结果</option><option value="name">名称</option><option value="value">数值</option></select></label><label><input id="measurement-history" type="checkbox"> 包含历史版本</label><button id="measurement-update">更新选中测量</button><button id="measurement-jump" hidden>跳到结果原视图</button><button id="measurement-copy">复制选中行</button><button id="measurement-csv">CSV</button><button id="measurement-tsv">TSV</button></div>
         <div class="results-scroll"><table aria-label="科学测量结果"><thead><tr><th>选择</th><th>名称 / 类型</th><th>数值</th><th>单位</th><th>状态</th></tr></thead><tbody id="measurement-rows"></tbody></table></div>

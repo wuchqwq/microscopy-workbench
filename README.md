@@ -25,6 +25,12 @@ ROI/FFT batches, numerical peak observations, saved measurements and explicit
 candidate comparison, with GUI review and original-request recovery. It does not
 require a model for ordinary GUI use or claim automatic phase/defect identification.
 
+[Local structural fields](docs/SPATIAL_DOMAINS.md) link source windows, saved FFTs,
+reflection families and their period/direction measurements into a revisable
+sparse map. R2 sequence correspondences can supply the same evidence interface.
+Open a sampled window in the Panel, revise a peak, and reuse its unchanged FFT.
+See the [method baseline](docs/R3_METHOD_BASELINE.md) and [actual acceptance](docs/R3_ACCEPTANCE.md).
+
 ## Install and test
 
 Use Node >=18 and a separate Python >=3.10 environment. Install
@@ -66,7 +72,7 @@ reader licensing and the bounded support range.
 
 ## Scope and data
 
-Existing admitted uint16 TIFF / verified schema-1 captures, source/frame/ROI,
+Admitted uint16 and finite grayscale float32 TIFF / verified schema-1 captures, source/frame/ROI,
 FFT, calibrated measurements, editable annotations and scientific exports remain
 subject to their original guards. Optional bounded scalar DM3/DM4 plane import is a
 later addition. Rank 3–6 sources require explicit plane axes and fixed indices;

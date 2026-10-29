@@ -57,3 +57,5 @@ resolution inference. nD complex and packed DM inputs remain refused. Ordinary
 2D complex inputs use the explicit component path above; never relabel them as
 a produced external FFT or discard their imaginary values. See the reader
 guide for scalar planes and the separately qualified complex scope.
+
+R3 local evidence: `image_feature_field` saves a sparse, versioned local structure field (JSON/CSV/PNG) from an atlas, comparison or R2 observation without recomputing FFT; `image_spatial_atlas` composes existing ROI FFT/peak/measurement operations; `image_local_signature_compare` compares explicit in-plane rotation hypotheses using a saved atlas or R2 joint observations. See [SPATIAL_DOMAINS.md](docs/SPATIAL_DOMAINS.md). These are descriptive local reciprocal signatures, not automatic phase/twin/dislocation identification. TIFF admission now preserves finite grayscale float32 alongside uint16.

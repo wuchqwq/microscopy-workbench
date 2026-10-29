@@ -30,6 +30,9 @@ if __package__:
     from . import image_automation as automation
     from . import image_sequence as sequence
     from . import image_joint as joint
+    from . import image_spatial_atlas as spatial_atlas
+    from . import image_domain_compare as domain_compare
+    from . import image_feature_field as feature_field
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -39,6 +42,9 @@ else:
     import image_automation as automation
     import image_sequence as sequence
     import image_joint as joint
+    import image_spatial_atlas as spatial_atlas
+    import image_domain_compare as domain_compare
+    import image_feature_field as feature_field
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -52,6 +58,9 @@ FIELDS = {
     **automation.FIELDS,
     **sequence.FIELDS,
     **joint.FIELDS,
+    **spatial_atlas.FIELDS,
+    **domain_compare.FIELDS,
+    **feature_field.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
@@ -171,10 +180,10 @@ def scalar_shape(shape, dtype):
 def page_info(page, index):
     shape, dtype = tuple(page.shape), np.dtype(page.dtype)
     scalar_shape(shape, dtype)
-    need(dtype == np.dtype("uint16") and page.samplesperpixel == 1 and
-         int(page.photometric) in (0, 1), "TIFF requires ordinary 2D grayscale uint16 pages; RGB/palette/other dtypes are unsupported", "UNSUPPORTED_LAYOUT")
-    return {"frame_index": index, "shape_yx": list(shape), "dtype": "uint16", "axes": ["y", "x"],
-            "decoded_bytes": int(np.prod(shape)) * 2, "photometric_code": int(page.photometric),
+    need(dtype in (np.dtype("uint16"), np.dtype("float32")) and page.samplesperpixel == 1 and
+         int(page.photometric) in (0, 1), "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported", "UNSUPPORTED_LAYOUT")
+    return {"frame_index": index, "shape_yx": list(shape), "dtype": str(dtype), "axes": ["y", "x"],
+            "decoded_bytes": int(np.prod(shape)) * dtype.itemsize, "photometric_code": int(page.photometric),
             "compression_code": int(page.compression)}
 
 
@@ -472,6 +481,12 @@ class Workspace:
             sequence.validate_references(self, metadata, sys.modules[__name__])
         if metadata.get("kind") in joint.FIELDS:
             joint.validate_references(self, metadata, sys.modules[__name__])
+        if metadata.get("kind") in spatial_atlas.FIELDS:
+            spatial_atlas.validate_references(self, metadata, sys.modules[__name__])
+        if metadata.get("kind") in domain_compare.FIELDS:
+            domain_compare.validate_references(self, metadata, sys.modules[__name__])
+        if metadata.get("kind") in feature_field.FIELDS:
+            feature_field.validate_references(self, metadata, sys.modules[__name__])
         return metadata, directory
 
     def resolved(self, ident):
@@ -802,7 +817,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py")}})
+                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py")}})
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")
@@ -834,6 +849,12 @@ class Workspace:
             metadata = sequence.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in joint.FIELDS:
             metadata = joint.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in spatial_atlas.FIELDS:
+            metadata = spatial_atlas.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in domain_compare.FIELDS:
+            metadata = domain_compare.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in feature_field.FIELDS:
+            metadata = feature_field.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action == "open":
             path = absolute(request.get("source_path"), "source_path")
             identity = source_identity(path)
@@ -903,6 +924,7 @@ class Workspace:
                     page = tiff.pages[index]
                     need(page_info(page, index) == parent["pages"][index], "TIFF page metadata changed", "SOURCE_CHANGED")
                     values = page.asarray()
+                need(np.isfinite(values).all(), "TIFF scientific pixels must be finite", "NONFINITE_DATA")
                 scalar_shape(values.shape, values.dtype)
                 check_source(parent["source_identity"])
                 save_array(directory, "data.npy", values)
@@ -1343,13 +1365,14 @@ class Workspace:
                 context = scientific.get("user_context")
             source_directory = self.root / "objects" / scientific["object_id"]
             record = metadata.get("xy_calibration")
-            if image_object.get("image_path"):
+            feature_result = scientific["kind"] == "feature_field"
+            if image_object.get("image_path") and not feature_result:
                 need(scientific.get("display_calibration_id") == (record["calibration_id"] if record else None),
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
             numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv")]
-            need(names, "Export requires actual scientific arrays; a TIFF metadata handle/context-only record is not pixel data")
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv")]
+            need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")
             need(output.parent.is_dir(),
@@ -1730,9 +1753,13 @@ def _execute(request):
                 workspace.object(saved["response"]["object_id"])
             elif saved.get("parameters", {}).get("action") == "joint_observations":
                 return {**saved["response"], "partial_results": joint.recovery(workspace, saved, sys.modules[__name__])}
+            elif saved.get("parameters", {}).get("action") == "spatial_atlas":
+                return {**saved["response"], "partial_results": spatial_atlas.recovery(workspace, saved, sys.modules[__name__])}
             return saved["response"]
         if saved.get("parameters", {}).get("action") == "joint_observations":
             return {**pending(ident), "partial_results": joint.recovery(workspace, saved, sys.modules[__name__])}
+        if saved.get("parameters", {}).get("action") == "spatial_atlas":
+            return {**pending(ident), "partial_results": spatial_atlas.recovery(workspace, saved, sys.modules[__name__])}
         return pending(ident)
     normalized = {**request, "workspace": str(workspace.root)}
     fingerprint = hashlib.sha256(canonical(normalized)).hexdigest()
