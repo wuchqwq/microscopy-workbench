@@ -4,8 +4,8 @@ Recorded 2026-10-30 on Windows. This record covers public synthetic data and
 actual MCP/Python execution. It distinguishes numerical/protocol acceptance,
 a fresh model's tool use, and browser interaction. The final browser navigation
 and corrected-anchor workflow passed within the scope recorded below. The
-separately gated actual binding test remains **PENDING** in this revision;
-the preceding Windows run exceeded its 240-second bound and is not a pass.
+separately gated actual binding test also passed on Windows and Linux CI.
+The preceding Windows run exceeded its 240-second bound and is not a pass.
 
 ## Integration base and issue status
 
@@ -32,7 +32,8 @@ or issue closure.
 | `verification-fresh-agent.json` | **PASS_FRESH_MODEL_FIELD_SCOPE** | Actual new Codex model used candidate MCP and the packaged Skill on a separate public input; independently audited provider artifacts and tool logs. |
 | Final Chrome navigation and scientific-anchor correction after the alias repair | **PASS, limited scope** | Field hotspot → saved FFT → original image → reload; actual pointer drag → new ordinary measurement → revised atlas/field; unchanged other observations and all six FFT hashes. Earlier failure remains recorded below. |
 | Final lightweight `npm test` | **279 PASS / 5 SKIP** | Four existing opt-in skips plus the separately gated actual binding test; skipped tests are not passes. |
-| Separately enabled actual binding test | **PENDING; prior TIMEOUT retained** | The Windows run exceeded 240 seconds during repeated display refreshes, without completing all assertions. A final bounded run is audited separately from the default lightweight suite. |
+| Separately enabled actual binding test | **PASS; prior TIMEOUT retained** | Windows: 359.584 s, exit 0; Linux CI: 30.684 s. Four scenarios (five TAP records including the parent): two actual remeasurements, three refused bindings without new requests/objects, unchanged source/FFT/old manifests and links. |
+| GitHub lightweight CI at implementation `e694e5f` | **PASS** | Node smoke, independent DM-file reader checks and spatial-evidence job. This does not qualify a real GMS host or Linux GUI. |
 | R3 native plugin-discovery loading / full native-plugin model mode | **NOT_TESTED** | Explicit temporary MCP + packaged Skill loading is the fresh-model evidence. Earlier R2 native discovery is not qualification of this R3 loading mode. |
 | Real specimen accuracy, dense phase segmentation, Mac/Linux client qualification, GMS | **NOT_TESTED** | No such qualification follows from these synthetic Windows runs. |
 
@@ -196,7 +197,29 @@ atlas/field algorithms were unchanged by this GUI binding repair.
 
 This establishes the exercised hotspot/navigation/reload and one corrected-alias
 drag/revision path. It does not extend the fresh-model snapshot, qualify every
-browser gesture or replace the separately pending actual binding-test result.
+browser gesture or replace the separate HTTP/MCP binding regression.
+
+The final dedicated binding regression used actual Panel HTTP → MCP stdio →
+Python for two successive corrections and three refusal cases: an unrelated
+measurement label, coordinates without an exact saved ancestor, and ambiguous
+duplicate aliases. Refusals created neither request nor scientific object.
+The complete Windows run took `359.584 s` (exit 0, no failed/cancelled tests);
+the same implementation passed Linux CI in `30.684 s`. Both checked unchanged
+original measurement/link bytes and TIFF/FFT hashes, with exactly one FFT and
+two remeasurement journal records. This is protocol evidence, separate from
+the Chrome gestures above.
+
+Earlier harness runs are retained locally: one incorrectly inspected the
+projected Panel response instead of the saved full measurement record, and
+the 240-second Windows run timed out before all checks completed. The fixture
+now writes ordinary immutable records through one worker process; later edits
+still exercise the actual Panel/MCP path. The final run omitted only an unused
+label save after the second remeasurement and used an explicit 420-second test
+bound. No scientific assertion or tolerance was weakened. Slow repeated display
+refreshes on this Windows environment remain a practical limitation; the timing
+difference alone does not establish their root cause.
+
+Implementation CI: [run 40926220926](https://github.com/wuchqwq/microscopy-workbench/actions/runs/40926220926).
 
 ## Environment and reproduction
 
