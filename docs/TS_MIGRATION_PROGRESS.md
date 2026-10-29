@@ -10,6 +10,7 @@ in small, reviewed, tested PRs, without merging or moving the baseline branch.
 | --- | --- | --- | --- |
 | Build and first production modules | #17 | `7ba5a35` | Strict build, coordinates, schema, plugin/default entry; independent review recommendation posted; all seven CI jobs pass. |
 | Core registry and MCP transport | #18 | `d3ecc0b` | Real registry/stdio contracts, exact frozen wire parity; all seven CI jobs pass. |
+| Execution lifetime and observations | #19 | `c22dedd` | Separate waiter/worker/closure states; independent trace/type review and all seven CI jobs pass. |
 
 Both PRs remain unmerged. Later branches will be stacked and their dependencies
 stated explicitly; published branch history will not be rewritten.

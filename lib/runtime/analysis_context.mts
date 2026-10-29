@@ -1,8 +1,7 @@
 // Revision-aware references only. Scientific providers remain authoritative for
 // arrays, calibration, calculations and original-operation journals.
 import {createHash, randomUUID} from 'node:crypto';
-import {ANALYSIS_ROLES} from './context_contracts.mjs';
-export {ANALYSIS_ROLES} from './context_contracts.mjs';
+export const ANALYSIS_ROLES = Object.freeze(['experiment', 'fft', 'display', 'calibration', 'center', 'points', 'measurements', 'reference', 'orientation', 'simulation', 'registration', 'comparison', 'sequence', 'correspondence', 'observations', 'atlas', 'domain_hypotheses', 'field'] as const);
 import type {AnalysisId,AnalysisRole,ContextRequestId,ScopedReference,ReferenceProof,ContextEntry,ContextSlots,ContextFingerprints,ContextFingerprintSlots,ContextSelectionView,StoredContextValue,ContextSnapshot,ContextRevisionRecord,ContextRequestRecord,ContextStorePort,ResolveReference,ValidateBindings,AnalysisContextOptions,ContextMutationResult,CreateContextOptions,CommitContextOptions} from './context_contracts.mjs';
 // Property and RegExp coercion remain native; these helpers assert no data shape.
 const field=(value: unknown,key: string): unknown=>value==null?undefined:(value as Record<string,unknown>)[key];

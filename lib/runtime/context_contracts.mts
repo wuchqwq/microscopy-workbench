@@ -1,5 +1,5 @@
 // Scoped, reference-only context contracts. Scientific arrays remain provider-owned.
-export const ANALYSIS_ROLES = Object.freeze(['experiment', 'fft', 'display', 'calibration', 'center', 'points', 'measurements', 'reference', 'orientation', 'simulation', 'registration', 'comparison', 'sequence', 'correspondence', 'observations', 'atlas', 'domain_hypotheses', 'field'] as const);
+import type {ANALYSIS_ROLES} from './analysis_context.mjs';
 export type AnalysisRole = (typeof ANALYSIS_ROLES)[number];
 declare const contextIdentity: unique symbol;
 export type AnalysisId = string & {readonly [contextIdentity]: 'analysis'};

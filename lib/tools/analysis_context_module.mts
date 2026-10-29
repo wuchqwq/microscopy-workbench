@@ -13,7 +13,7 @@ interface ProviderSelection {provider: 'image' | 'structure'; object_id: string;
 type ProviderSelections = Partial<{[Role in AnalysisRole]: Role extends 'points' | 'measurements' ? ProviderSelection[] | null : ProviderSelection | null}>;
 interface AnalysisArguments {
   analysis_id: string; request_id?: string; reason?: string; revision?: number;
-  expected_revision?: number; proposal_id?: string; selections: ProviderSelections;
+  expected_revision?: number; proposal_id?: string; selections?: ProviderSelections;
 }
 interface ContextModuleOptions {directory?: string; providers?: ScientificProviders; store?: ContextStorePort;}
 type Binding = ReturnType<typeof createScientificContextBindings>;
@@ -52,7 +52,7 @@ export function createAnalysisContextModule({directory,providers,store=new FileC
   const entries=(value: PlanningEntry | PlanningEntry[] | null | undefined): PlanningEntry[]=>value===null||value===undefined?[]:Array.isArray(value)?value:[value];
   async function selectedChanges(context: AnalysisContext,binding: Binding,args: AnalysisArguments): Promise<ContextChanges> {
     const base=await context.read(args.analysis_id,args.expected_revision),slots: PlanningSlots=structuredClone(base.slots),changes: MutableChanges={};
-    const selections=structuredClone(args.selections);
+    const selections=structuredClone(args.selections!);
     if(!Object.keys(selections).length)throw new Error('Select at least one explicit context role');
     // Resolve once per call; the core uses these same verified cached provider
     // proofs. No unverified caller hashes or private arbitrary file paths.
@@ -66,7 +66,7 @@ export function createAnalysisContextModule({directory,providers,store=new FileC
     // of demanding that the caller manually duplicate a selection. Explicitly
     // supplied pairs are validated as supplied, never silently reconciled.
     for(const [changed,paired] of [['center','calibration'],['calibration','center']] as const) {
-      if(Object.hasOwn(args.selections,changed)&&!Object.hasOwn(args.selections,paired)&&selections[changed]&&base.slots[paired]&&scalar(slots,changed)!.proof.roles.includes(paired)) {
+      if(Object.hasOwn(args.selections!,changed)&&!Object.hasOwn(args.selections!,paired)&&selections[changed]&&base.slots[paired]&&scalar(slots,changed)!.proof.roles.includes(paired)) {
         slots[paired]=structuredClone(slots[changed]);selections[paired]=structuredClone(selections[changed]);
       }
     }
