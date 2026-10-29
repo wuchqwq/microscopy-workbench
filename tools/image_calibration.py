@@ -229,11 +229,14 @@ def physical_points(points, record):
 
 
 def dm_file_record(dataset, provenance, ident, applies_to):
-    """Bind actual DM4 dimension tags, not a reader's missing-tag defaults."""
+    """Bind actual DM3/DM4 dimension tags, not a reader's missing-tag defaults."""
     axes = dataset.get("calibration_xy")
+    file_format = "DM3" if str(provenance.get("source_identity", {}).get("path", "")).lower().endswith(".dm3") else "DM4"
     admission = {"status": "pixel_only", "source": "dm_file_metadata",
-                 "reason": "missing, inconsistent or unsupported raw DM4 XY dimension calibration"}
+                 "reason": "missing, inconsistent or unsupported raw " + file_format + " XY dimension calibration"}
     if type(axes) is not list or len(axes) != 2 or any(not a.get("usable") for a in axes):
+        if type(axes) is list and any(a.get("coordinate_role_issue") for a in axes):
+            admission["reason"] = "Selected file axis is explicitly spectroscopic; raw calibration retained without treating wavelength/energy as spatial distance"
         return None, admission
     kinds = [unit_kind(a.get("unit")) for a in axes]
     if any(k is None for k in kinds) or kinds[0][0] != kinds[1][0]:
@@ -257,7 +260,7 @@ def dm_file_record(dataset, provenance, ident, applies_to):
               "status": "active", "scope": "image", "applies_to": applies_to,
               "xy_scale": scale, "physical_zero_xy": zeros, "source": "dm_file_metadata",
               "coordinate_domain": domain, "real_space_only": domain == "real_space",
-              "source_text": "Stored raw DM4 dimension tags read by RosettaSciIO from the exact hashed file; not a user statement or a live DM native call",
+              "source_text": "Stored raw " + file_format + " dimension tags read by RosettaSciIO from the exact hashed file; not a user statement or a live DM native call",
               "uncertainty_status": "unknown; file metadata supplies no independent calibration uncertainty",
               "original_file_metadata_modified": False, "value_unit_or_frame_depth_inferred": False,
               "dm_file_axes": observed, "dm_file_provenance": provenance,
@@ -293,7 +296,7 @@ def geometry(dx, dy, record, frequency=False):
     result.update(physical_angle=length != 0,
                   physical_angle_degrees=math.degrees(math.atan2(y, x)) if length else None,
                   physical_vector_xy=[x, y],
-                  limitation=("Geometry based on stored DM4 file metadata; no independent metrological verification or phase identification" if record.get("source") == "dm_file_metadata" else
+                  limitation=("Geometry based on stored DM file metadata; no independent metrological verification or phase identification" if record.get("source") == "dm_file_metadata" else
                               "Geometry based on validated saved native metadata; no independent metrological verification or phase identification" if record.get("source") == "native_dm_capture" else
                               "Geometry based on a sourced user statement; no independent calibration verification or phase identification"))
     if frequency or reciprocal:
