@@ -1,0 +1,1341 @@
+{
+  "acceptance_inputs": {
+    "entry_pr46": "e6f1301a29cb0d4e6d5e6a4b5856e2cdf6b3169a",
+    "gui_stack_pr50": "a158b1ac58af7d3b6e68d9e95afb17becaedfe2c"
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "path": ".github/workflows/quick.yml",
+      "sha256": "7f8ecf96d028552edc25ef642819ce3a1b68608e222f26d5bc7ccfcfeb97a9cf",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "d3b85ddb482e8323910f8fc42f65fb463e5beb24",
+        "kind": "template",
+        "path": "migration/templates/shared/.github/workflows/quick.yml"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": ".gitignore",
+      "sha256": "b1bda8a30d7b6add37de2275d2b172232bd1a4ffcc03aa1ba7d19f038301c450",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "5c6398490c37d93867737b8a5998d3aa67b0f209",
+        "kind": "template",
+        "path": "migration/templates/shared/.gitignore"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "AGENTS.md",
+      "sha256": "ee1495f6cc16f646f4ec4c13cb8a1c560289bd130febcc3506cd24ba3b9564bf",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "26bd1b0ec2d34aa5376bd1e5864db7b179517d14",
+        "kind": "template",
+        "path": "migration/templates/core/AGENTS.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "LICENSE",
+      "sha256": "d908cf79185b2e638af8e540e189a08f202263b1ba7a12e6711a377cb2d7d279",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "708f5a1dbd9cf85c6e79bd23642fd49f346c1667",
+        "kind": "copied",
+        "path": "LICENSE"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "README.agent.md",
+      "sha256": "a7f1c7984dbf402f14f30ede8b0c3fa91a53deab96f3ae9420b393628feeb73b",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "b521f775a0aa58dda1b4c99fea6d29f91a8898c1",
+        "kind": "template",
+        "path": "migration/templates/core/README.agent.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "README.md",
+      "sha256": "98d155c94d59e0f25874bd4a59c97744a86b6a7622208c417ad023c584ee78c9",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "2b7bcc9b885421bde67d1e3596f8f7c76f46b803",
+        "kind": "template",
+        "path": "migration/templates/core/README.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/__init__.py",
+      "sha256": "71f56a1a5932a3b9dd31c18ec2c2faa24c0c3760285d13ed3def828410563013",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "76b8a94f5da99e541aa4b4adb80fd8b8986df028",
+        "kind": "copied",
+        "path": "crystallography/__init__.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/__main__.py",
+      "sha256": "2db735bfe99160f93d220fbb8e86b21343399b96af4b15a3da889122d049ebed",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "edae3c5791535fe8bea34aad65ade461ab8eed4c",
+        "kind": "copied",
+        "path": "crystallography/__main__.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/analysis_revision.py",
+      "sha256": "5801dc8c607659eb282fbedcb455b0b96d8787155fddea48abd8c5f79f4154d5",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "2dcd83befa844eb2ad9a21649be7acbfcaa3b278",
+        "kind": "copied",
+        "path": "crystallography/analysis_revision.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/capture.py",
+      "sha256": "39aa73561d20cec9d5b611529c08de1cf63f4b5b83fb1d45857044d08cf92dfd",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "8a507b42ec9911ed3b4048f3560c6479adbc8934",
+        "kind": "copied",
+        "path": "crystallography/capture.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/detection.py",
+      "sha256": "32ec22238365278724afddd97ab3307a02baaf98fa81d51b24eb1d57791e4312",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "b40f813ec763205200f9a0759648be72c64c401f",
+        "kind": "copied",
+        "path": "crystallography/detection.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/geometry.py",
+      "sha256": "e102bfc139b9805f35e4e14acbc651621644f6ee7265e6a00f49b01db51b9f92",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "4092fe92b786ec44ed07d1ab3cf6bbc1c111644d",
+        "kind": "copied",
+        "path": "crystallography/geometry.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/hexagonal.py",
+      "sha256": "627389cf7941c0015c7bb2750913fea180ec8e4e5c34f2495b27a777ba3a685e",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "1984e630b0bf427aedabbbb75081bd55a2075fac",
+        "kind": "copied",
+        "path": "crystallography/hexagonal.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/indexing.py",
+      "sha256": "cabd73b9937959e42989b9518ecd425a3baacf9d3c0e90c0c4dff54c98b843f7",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "1bcbfc586152fd18864930feb302d2dfa4daecd7",
+        "kind": "copied",
+        "path": "crystallography/indexing.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/orientation.py",
+      "sha256": "3a5f6f80708213c9daa9aab0dc90025e60033fc1701635e84bf2ec3ec28eefd2",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "0137ff580016ebb9e1e8c57c9c06a1393696f157",
+        "kind": "copied",
+        "path": "crystallography/orientation.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/reflection_compare.py",
+      "sha256": "127b5bb14aa6ff03761be057b29c55b554b9ad532b30dc126ec2aa691ad62fbe",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "82286bb1fbf6116a6dcf6c9edef4034537b84b0e",
+        "kind": "copied",
+        "path": "crystallography/reflection_compare.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/registration_proposal.py",
+      "sha256": "1ab3c541fc62fb2d989810acdd0c11b87f3c3dae652b8ad0ecb842733eeb6367",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "cab2ca25c260bff75a179d23dee2b6350504a5a1",
+        "kind": "copied",
+        "path": "crystallography/registration_proposal.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/structure_tools.py",
+      "sha256": "94d8b07539f1beb561619686849a0cc4f6747680f732f2ab6e78a76f62e58136",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "a2cc2444293429b394acd20117c6f46ca1b6a561",
+        "kind": "copied",
+        "path": "crystallography/structure_tools.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/structures.py",
+      "sha256": "507b66d4e89a4a4f6549c4e012aa0eaf3b150a300c3342c78005150cf6f3cf0f",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "aee3adaa3fb04b9600f3aa052a6a36d0b3a783db",
+        "kind": "copied",
+        "path": "crystallography/structures.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "crystallography/workflow.py",
+      "sha256": "996f2f857baca1227770c95b0e3de6a18a2cdd20d3179285d2fcbac914ec0e68",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "4f7ddd20838377235f3e2176cc6e65327cf7e17c",
+        "kind": "copied",
+        "path": "crystallography/workflow.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/ANALYSIS_CONTEXT.md",
+      "sha256": "b4b02b36f07237ed7d87d1de0d841f2e9571d2e6954d3cda94b41cb3d5afc9b6",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "72e7c9efb73f98cd052af46c861256e9777f67eb",
+        "kind": "copied",
+        "path": "docs/ANALYSIS_CONTEXT.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/CLIENT_SETUP.md",
+      "sha256": "ba59d71019f37f65272ec5a5b9c9ec657520cd590068f8906e6d1d6d12bf8b26",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "5d3ee0128ab9d94286fd816cc4b1dc7b2a4e1307",
+        "kind": "template",
+        "path": "migration/templates/core/docs/CLIENT_SETUP.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/CONSTRAINED_REGISTRATION.md",
+      "sha256": "9be3943a880eb5f913f5a444e5901e2a224ed34e84273173f892ce90a8eed7c5",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "071420bfe3e0a2950c0c5e921a1a42c71e336560",
+        "kind": "copied",
+        "path": "docs/CONSTRAINED_REGISTRATION.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/CONTINUING_DIFFRACTION.md",
+      "sha256": "76f9ee86eb4e763e141197c44a4ddd63beb68baac67eea6ed4bb5c0b63827202",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "5860a1f11b400b79311040b5f4a4ae46da45de55",
+        "kind": "copied",
+        "path": "docs/CONTINUING_DIFFRACTION.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/CRYSTALLOGRAPHY_DEPENDENCIES.md",
+      "sha256": "6781f4cde844a44cf5566fca22a5c49839b0c746b7e54f5e5ef502d98cbcdc67",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "435482054eb3da426ba2ad7b228d83846bb54581",
+        "kind": "copied",
+        "path": "docs/CRYSTALLOGRAPHY_DEPENDENCIES.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/CRYSTALLOGRAPHY_GATES.md",
+      "sha256": "0f6c6a4953de8859b163e1169a7b8a2c7d764eea20cc2a259943c87ca1b28218",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "7e41b3ca9d9049cfab163ff13e120ca23cc9f5dc",
+        "kind": "copied",
+        "path": "docs/CRYSTALLOGRAPHY_GATES.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/CRYSTALLOGRAPHY_VALIDATION.md",
+      "sha256": "7678bbeee5a6aaf274ced38ea3288d36a16c20429b087625e800c48acbe88aa6",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "e0a43f63bc33e8b8c3ac95bc0bbcd106fb246f32",
+        "kind": "copied",
+        "path": "docs/CRYSTALLOGRAPHY_VALIDATION.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/CRYSTALLOGRAPHY_WORKFLOW.md",
+      "sha256": "2315b70d3788bb6c4e49eefd400c677a7f9084b413b10f858ef8dcc14b2d260a",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "f0cd584deed49d64f9d670f3a5e935d712849e5f",
+        "kind": "copied",
+        "path": "docs/CRYSTALLOGRAPHY_WORKFLOW.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/EXECUTION_COORDINATOR.md",
+      "sha256": "be85d06a06d0b097afa6213eca47cfeed2f80faa96243ad99c8eba76e7c547de",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "2b715afadb7d64caa1f2421b95b8b08b71a49445",
+        "kind": "copied",
+        "path": "docs/EXECUTION_COORDINATOR.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/IMAGE_ANNOTATIONS.md",
+      "sha256": "f8f7a5f08f3f24292ccd5a2045e8adee99970cea533994ed779058b08f0b6435",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "254c7211652369cc51bf976894a6712e67f9895f",
+        "kind": "copied",
+        "path": "docs/IMAGE_ANNOTATIONS.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/IMAGE_NUMERIC_INSPECTION.md",
+      "sha256": "7028906b9c76689f575e2df0b32354ed5afeb0d9fcd7c5699fa7ca84367c09cc",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "579f828d0a85776b7b86be91b914732433ffcca3",
+        "kind": "copied",
+        "path": "docs/IMAGE_NUMERIC_INSPECTION.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/LOCAL_IMAGE_PANEL.md",
+      "sha256": "dc517ea3c5b0974242f326f4a4d32544806d3cd36a84d4d348aeeba4aa5f6558",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "2fb49ff7bd518fcb39082cd0b50fbc51cac9099c",
+        "kind": "copied",
+        "path": "docs/LOCAL_IMAGE_PANEL.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/PIXEL_IMAGE_WORKFLOW.md",
+      "sha256": "efcadc5d4c9266e5b97d9ab8959e3c9b86fea3b3c84c7e611314bb0f7ded30c5",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "bfae32148b854c7d4713ba74bd1d99b18ecefd87",
+        "kind": "copied",
+        "path": "docs/PIXEL_IMAGE_WORKFLOW.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/PUBLICATION_ANNOTATIONS.md",
+      "sha256": "ed4f175ad3a475d3941df968319380a166f6a6df55fc221a4d1040c9c7075d87",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "a6ba13c4ebf88a43f5959a5ac940214f8d843759",
+        "kind": "copied",
+        "path": "docs/PUBLICATION_ANNOTATIONS.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/REFLECTION_COMPARISON.md",
+      "sha256": "5857738580f65f12208a625ced377a1720680372b8965b3bc19d57f6a6892c25",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "e284c1ddaff7e5ae0330ecc266ff3e90cb632345",
+        "kind": "copied",
+        "path": "docs/REFLECTION_COMPARISON.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/RESEARCHER_DATA_INSPECTOR.md",
+      "sha256": "093f07519d5b2d1fbd0ee151b7fd0e5af8694f12bc65ec6af7cc281fac319d47",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ee8b56fe65d24241185a99de24541f345ee07c96",
+        "kind": "copied",
+        "path": "docs/RESEARCHER_DATA_INSPECTOR.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/STRUCTURE_DIFFRACTION_TOOLS.md",
+      "sha256": "3ac697928ba24d609e82de99a7b1ea4aa92ece4fdbbea771ee3d59a64c03b299",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "29b657811ed907e0938c1fb45ad4d2553a7b87c6",
+        "kind": "copied",
+        "path": "docs/STRUCTURE_DIFFRACTION_TOOLS.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/STRUCTURE_ORIENTATION.md",
+      "sha256": "54ae90a21955942904da6b6e184c9562da1df2176577126d29e0c10871879d06",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "a875c17cf80f03d0bd7e99a3defd420ddd9ed460",
+        "kind": "copied",
+        "path": "docs/STRUCTURE_ORIENTATION.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/STRUCTURE_VIEWER_LIFECYCLE.md",
+      "sha256": "dbc3d3e927b0b70c41d5c9c1616cef2eca3fb963ba6ef548f74488f1394e3275",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "9f87b4b0ce200d14d1909d577434fc0a011034a9",
+        "kind": "copied",
+        "path": "docs/STRUCTURE_VIEWER_LIFECYCLE.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/examples/researcher-inspector/canvas-results.png",
+      "sha256": "e80533e0169b7c8338bbde7719adf110c164c692eca8f841dbb987e59e9dda24",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "3a4fac3520e560cf02ed0eb0360832aff72154b7",
+        "kind": "copied",
+        "path": "docs/examples/researcher-inspector/canvas-results.png"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/examples/researcher-inspector/measurements.csv",
+      "sha256": "b18961ab2e1634f20f41aa16421416cb317bc610d0b8a4ccb9e668f803cd0d1d",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "1ddfed2c15d305f8201fc8690397870dc59b276b",
+        "kind": "copied",
+        "path": "docs/examples/researcher-inspector/measurements.csv"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/examples/researcher-inspector/profile-workspace.png",
+      "sha256": "cf127358863d773c9166bb3220fe6a5bfb62010efda0ff34659ef2b1e7947980",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "3ac97742d170a86d83441b2b0850b7e6394cfa16",
+        "kind": "copied",
+        "path": "docs/examples/researcher-inspector/profile-workspace.png"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "docs/examples/researcher-inspector/profile.csv",
+      "sha256": "376a9013027417c73d28f629c5a4c0054dd6735119360f27afe9a45e15c09bcf",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "7d5d4c65b40b5320f74243b39b1e6bd4cc4199ac",
+        "kind": "copied",
+        "path": "docs/examples/researcher-inspector/profile.csv"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "examples/make_microscopy_trial.py",
+      "sha256": "bbf44843b9ec18a2447faf4bd1d7f18079a956fe848f423e85d8cebedb245692",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "8010765d3c6b2bb1c87e6f8b8795c85d91f628f9",
+        "kind": "copied",
+        "path": "examples/make_microscopy_trial.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/analysis_context_bindings.mjs",
+      "sha256": "56702350842da75da7418b9da5669857ad7fbc718be70824ce96d8081159dc99",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "728b200be0c80e09c7cb3c17f0bb8d074d983113",
+        "kind": "copied",
+        "path": "lib/analysis_context_bindings.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/image_measurement_records.mjs",
+      "sha256": "5b7f59d888cf5e6fb698384126c3ae4a9fe6b1e221a3f0dcba1d68b2e8f81354",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "62a0318c0933af888fd3b7fefda3ab4a2e2d87f3",
+        "kind": "copied",
+        "path": "lib/image_measurement_records.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/image_panel_mcp.mjs",
+      "sha256": "801004c8e14075d23ec9ee381bfe4e2e5f9796b7b109406f8a180df5ce31e0d6",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ad63dc62d2254809ce60b582569fd0cb65079d27",
+        "kind": "copied",
+        "path": "lib/image_panel_mcp.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/image_probe_client.mjs",
+      "sha256": "4afa84ac641f8d983f8b539572789d94061483554f75b87d0ee50a8a87933a0d",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "86bddcf27cf7e59062c8b1db8d282796e58a0ef3",
+        "kind": "copied",
+        "path": "lib/image_probe_client.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/image_workspace.mjs",
+      "sha256": "bf579748b53224459381a20462166de2c013c306f6a7152e4b5f1937f160e364",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "7f24b9eb9aa498090c69234c7c4013bbfcffc5b1",
+        "kind": "copied",
+        "path": "lib/image_workspace.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/runtime/analysis_context.mjs",
+      "sha256": "2a89a50ea3358bc6b72a6abe61877fb390ebc360e4f251833d05e8fdce5ae1b1",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "3df305a926e94f6f1bfd07c6abd42862ce0d0b54",
+        "kind": "copied",
+        "path": "lib/runtime/analysis_context.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/runtime/execution_coordinator.mjs",
+      "sha256": "f93be6cc40dbde5d412c655ff973d036e41c0063c344416115bfde7c143f2f4a",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ad7adf16f14a5276b77c6178720282713bc78c05",
+        "kind": "copied",
+        "path": "lib/runtime/execution_coordinator.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/runtime/file_context_store.mjs",
+      "sha256": "07c5a40f96d177c3cf385488338b1820a7289eee797c07a4f5606e2509c7500b",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "aed451674fa19c9243f90fb38fa5b765d1bf7d6f",
+        "kind": "copied",
+        "path": "lib/runtime/file_context_store.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/runtime/schema.mjs",
+      "sha256": "b641f7b01a1be008ddb3f0344bfe2c523b77c4b53293bf21820d13fb55101ab4",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "42f5b7215340a00bbce1d7a88dbf558974e5b48f",
+        "kind": "copied",
+        "path": "lib/runtime/schema.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/runtime/stdio_mcp_server.mjs",
+      "sha256": "01dc0493679ea788e158a1d692e6d89eef871f09ecf02a6328c93facd7dfa30f",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "86fe8d95d80e0b7ce39b4a664a192905530c2552",
+        "kind": "copied",
+        "path": "lib/runtime/stdio_mcp_server.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/runtime/tool_registry.mjs",
+      "sha256": "f6fddb1f2c3360bf298f58c20c8b9fbe0214b9fee8ec98c9524c7792125631f4",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "5b77e343484c0fac855ea674198fdc981e75d1b5",
+        "kind": "copied",
+        "path": "lib/runtime/tool_registry.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/science/create_science_runtime.mjs",
+      "sha256": "9fd845b27e4f65b27d68de8d4de21393187362e53c970671dd0e625b83c3faca",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "51ee6ca8839cc9610572cdaf309e8ca9d79cf5a0",
+        "kind": "copied",
+        "path": "lib/science/create_science_runtime.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/structure_viewer_client.mjs",
+      "sha256": "0613ead0cc5c5de5bb291f021f259f4f9ad5f21ee93fc1a06dc38f24bb79f31b",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "65e430a89b38a269cde8481761a2123c5044c71e",
+        "kind": "copied",
+        "path": "lib/structure_viewer_client.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/structure_workspace.mjs",
+      "sha256": "f4c7d78682294971d1f111b1f389bc1cdd3f52faf714b6dbcb2c08ae20130857",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "0d6e96698d2f16f31bf9c9af46907116df28ab74",
+        "kind": "copied",
+        "path": "lib/structure_workspace.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/tools/analysis_context_module.mjs",
+      "sha256": "81087920b0959bccffd92c3b88be8048d4740cb31acc18bdcb37a5595cba5859",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "9b7246b7ef0c138c49000cb2afe154a42b18fc58",
+        "kind": "copied",
+        "path": "lib/tools/analysis_context_module.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/tools/execution_module.mjs",
+      "sha256": "e677ab15c351997287c718d75e30099187b2f74811a2fae9bba4d729a03b86ca",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "e468ba0bb3242799ea6d035da23107a73fe20a73",
+        "kind": "copied",
+        "path": "lib/tools/execution_module.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/tools/image_module.mjs",
+      "sha256": "4919d2de5aad7934b9a59e01374a485c6be0f8583b4b954f4960c3bd7a3eb8ba",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "f4ae1d05e49ab10695fa64539da3eadbc46ecc92",
+        "kind": "copied",
+        "path": "lib/tools/image_module.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/tools/image_panel_module.mjs",
+      "sha256": "f8d7752e7c2c940445d2aad86989ea0a8f780cca498ea6b699cd41c43f94114c",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "4b58e9fcff63dd7b0b792d11bc579aec007bac30",
+        "kind": "copied",
+        "path": "lib/tools/image_panel_module.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "lib/tools/structure_module.mjs",
+      "sha256": "f66b53c749cca060666aaa8247a48db376729526de25b765445947d6f7afe206",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "5bc15bb2a8ddfa9d4e04b77a3f61fa2d8ee9f445",
+        "kind": "copied",
+        "path": "lib/tools/structure_module.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "package.json",
+      "sha256": "32e3f2a215866fa4a102b814285da617da7f56cc6850436b392d6fba829551f0",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "kind": "generated",
+        "path": "tools/prepare_repository_split.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "requirements-crystallography.txt",
+      "sha256": "d88f8cb9183ff27cadc8bc132a1deae559b1680886b85b91ad5a92c25599ba35",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "9ed9c1610cd9d3f9b879e4793f967e37f9172886",
+        "kind": "copied",
+        "path": "requirements-crystallography.txt"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "requirements-images.txt",
+      "sha256": "0e2e7391b3fd9ce5a6ee9ab6aaf20811a781c101af90097f6e8f42418e84e3dd",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "72ff77b62bef43295834248c705300bd6cfd52b7",
+        "kind": "copied",
+        "path": "requirements-images.txt"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "requirements-structure-tools.txt",
+      "sha256": "b7adc59f65e750b4df087641276873035f5320040d9c69dfa4264bd6973c1721",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "87dbe9762ebe9872d231ec5b3adb06e571e87d7e",
+        "kind": "copied",
+        "path": "requirements-structure-tools.txt"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "science-server.mjs",
+      "sha256": "16f263c855769fef5888338c4733ea2cba0dfd776c8709ce809f1ff0eeb48e6a",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ddaf776ccb72fa4d2bad77cc6646fefdd4e190e6",
+        "kind": "copied",
+        "path": "science-server.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "server.mjs",
+      "sha256": "264d6875d89293dca3ed3b4e712877bcd644a076699d315dcc9638b7cdeb60e4",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "aaa1b9748938934df319fd15db2e7c69bec8ca51",
+        "kind": "template",
+        "path": "migration/templates/core/server.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/materials-project-reference/SKILL.md",
+      "sha256": "1fe157efe4357eb27762ef045b81339b42f0cea066fe7acbf93102430c946c24",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ee4cea7eb11d3db2d687ae359b09749086912af0",
+        "kind": "copied",
+        "path": "skills/materials-project-reference/SKILL.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/materials-project-reference/examples.json",
+      "sha256": "763e405141d7837827961ababaedcfc4bd0b071b4b6b8bac748df0870a1bcf13",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "0d51beef2e2046e381f2dd43e010e2a8db553408",
+        "kind": "copied",
+        "path": "skills/materials-project-reference/examples.json"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/materials-project-reference/references/connection.md",
+      "sha256": "006353eb61126676cb1c17b7e37ab512a4f7d441169656d69cea408c1e950038",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ae56161f3408cd0181d83063b5cc78de76079415",
+        "kind": "copied",
+        "path": "skills/materials-project-reference/references/connection.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/materials-project-reference/scripts/save_reference.py",
+      "sha256": "f298942e12a87b26c7fd4a2b3d7058653bb4b4c75bc7361cae16883bc1108754",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "de43f751f260ccd0f840e92e501c11e7565702be",
+        "kind": "copied",
+        "path": "skills/materials-project-reference/scripts/save_reference.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/scientific-agent/crystallography-compare/SKILL.md",
+      "sha256": "293d568bf6d2a8c43dbf849875d6f75f2a58373bb42de754ba2f3de54d55a26b",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "e28c82b8deb44e84197d59b59dd27ec462b1e5fc",
+        "kind": "copied",
+        "path": "skills/scientific-agent/crystallography-compare/SKILL.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/scientific-agent/crystallography-compare/examples.json",
+      "sha256": "afdc5e4df5a5660335f80abc4f27ba1b73fbe1735dd6b9d1d7889fa8dad8387b",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "9d6b0d42cd6ac472dfa86b7abe325920ced15b6e",
+        "kind": "copied",
+        "path": "skills/scientific-agent/crystallography-compare/examples.json"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/scientific-agent/microscopy-observe-revise/SKILL.md",
+      "sha256": "5a0d30992dc1d2ac8520bc076e085edd226154e2875245a928dd37a12ecaaddc",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "6f7e6044a040f8ede899d2405ea0e78b9f19836c",
+        "kind": "copied",
+        "path": "skills/scientific-agent/microscopy-observe-revise/SKILL.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/scientific-agent/microscopy-observe-revise/examples.json",
+      "sha256": "68ad859f5ec13be1e8654f522fffd4b266e89c659273cb0e96d316fa850683b1",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "2a2805b4f145ecfe3196268d226edc71f47a57d3",
+        "kind": "copied",
+        "path": "skills/scientific-agent/microscopy-observe-revise/examples.json"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/scientific-agent/microscopy-router/SKILL.md",
+      "sha256": "45943df208ccf17440b4114cbde03f7b8dec7b6b9cb2de69e603a8ac039d1ac7",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "107edd6d82674269539438377f9d6f6230b420d8",
+        "kind": "copied",
+        "path": "skills/scientific-agent/microscopy-router/SKILL.md"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "skills/scientific-agent/microscopy-router/examples.json",
+      "sha256": "d7842a3a329b45e0e8df8e6a0f0d6eeed8cc84b39f2cd831aa8816efc90e041b",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "900a628c766a76e7fbf73662b47c7864f598b3dc",
+        "kind": "copied",
+        "path": "skills/scientific-agent/microscopy-router/examples.json"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/analysis-context.test.mjs",
+      "sha256": "c2b2305f99a09df9733ed62af67a34fc612e54fa589fb16c4b69fc5a61ca2bf3",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "dde67bf9fba7bb18fea509c63258b1290ccc763b",
+        "kind": "copied",
+        "path": "tests/analysis-context.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/data-probes-ui.test.mjs",
+      "sha256": "88a0ee518e154ee04e406e55f44f1dbe29e826137b37da077944a1327563db77",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "d1eea1bfe9f3e3219eb6195fe5bc19fb3ff55e40",
+        "kind": "copied",
+        "path": "tests/data-probes-ui.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/execution-coordinator.test.mjs",
+      "sha256": "613b6ab3dbd7ee9e7b72f858512993377b01b306d9ae3197c1682b5b347ca2ae",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "88bc41cd95b64163f84fbd69a56baea84c983d20",
+        "kind": "copied",
+        "path": "tests/execution-coordinator.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-client-entry-env.test.mjs",
+      "sha256": "2f2a42da4ec383b8919360c57a3fdca456857e415d9a69afb09176f6f1167a8b",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "a3633be1b9fea7b1aece1fb45567a6fadeb50ec3",
+        "kind": "template",
+        "path": "migration/templates/core/image-client-entry-env.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-concurrency.test.mjs",
+      "sha256": "feacec293158d6b8efe8cc31088d0295203aba46e0d81fd65716254462faa1e7",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "c3af7119bb3ab46820a6a09ca59a9101cb535249",
+        "kind": "copied",
+        "path": "tests/image-panel-concurrency.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-data-inspector.test.mjs",
+      "sha256": "c68d86d769db28a8fd186b828f448ce1ca372fc34bedd77cfc3fcbdfa034c8d8",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "cb9dff5c6866fdc7ccb6503def61810761f455d7",
+        "kind": "copied",
+        "path": "tests/image-panel-data-inspector.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-data-probes.test.mjs",
+      "sha256": "52ef40a868dc4fa79694ffdf3f1fe8b57885bd525bd6bb16ac30e3f90a299ddf",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "3ad46f02e31a2c2d26a46f9e4fc83930fb69c816",
+        "kind": "copied",
+        "path": "tests/image-panel-data-probes.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-draft-transport.test.mjs",
+      "sha256": "fbca3eeaec8ebd2bbcbab8fe702a3c7642b6448c900df069e3d761a238262131",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "961e5338e3a6f026bb032cebf4026fb0d7dca2b3",
+        "kind": "copied",
+        "path": "tests/image-panel-draft-transport.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-drag-constraints.test.mjs",
+      "sha256": "787d1500e4e3589349a17e95deaf61b4dfe4dad8e95d8b8a1f1d0edc456b3432",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "c869d82b34d85cc37c833a4876a30624780a2822",
+        "kind": "copied",
+        "path": "tests/image-panel-drag-constraints.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-feedback.test.mjs",
+      "sha256": "b476d47af07ff05cddabb70deabe3a5f39d49716042e2558a7fc6029b00fd84d",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "d32b946714ef95d270fc9e6a367b3a34a346a856",
+        "kind": "copied",
+        "path": "tests/image-panel-feedback.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-figure-export.test.mjs",
+      "sha256": "4a311102242fef2918ba505bea9ac444849290ab84c29c6418d861e47dc03bef",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "5f82f6249df48f8725772a0f5bc2a061e841e851",
+        "kind": "copied",
+        "path": "tests/image-panel-figure-export.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-presentation-transport.test.mjs",
+      "sha256": "2cd546bbd388eb37c65842ce470e0dcbabd6fc90565e991bf5a662a7de1b76ea",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "e6ac2296666d2f8a40031fbda31998e4911eacc5",
+        "kind": "copied",
+        "path": "tests/image-panel-presentation-transport.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-presentation.test.mjs",
+      "sha256": "810f4b323c8c98f0a5e288569dce09d97ab8d8f156eb7ecdfd3ce3b4d58bbcef",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "e9341b7025291e278ad97d1a3cb1225923d2c3d8",
+        "kind": "copied",
+        "path": "tests/image-panel-presentation.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-ui.test.mjs",
+      "sha256": "5ce9bb239404314461377ad0981d18bf24b31652b6cf397c28682528a54417a5",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "7c5f305e7f2848541375160a88d1700083a874ce",
+        "kind": "copied",
+        "path": "tests/image-panel-ui.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/image-panel-viewport.test.mjs",
+      "sha256": "c070acf973cfcb7a2d22391c8f1e6faf9c52bb40bed1ad08ec45c487974a745e",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "e50c5fb3d8727fff8707b6a651fa3b4b9e013d88",
+        "kind": "copied",
+        "path": "tests/image-panel-viewport.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/measurement-workspace-ui.test.mjs",
+      "sha256": "2a53787b598ff6f60e0c0b89a89ba25ffbc0aa89a692b2a08998c84a056fb71e",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "c4e1ff76bfdb030ce7d7cf841985ebb3510feacd",
+        "kind": "copied",
+        "path": "tests/measurement-workspace-ui.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/packaged-entrypoints.test.mjs",
+      "sha256": "4e6ebd2abab92165b814241a8d8e434f9954b249ce9d0ce4e4c3eef631e8d5a0",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "0f3963b79797c128d6ed4c68c37c28882b71841f",
+        "kind": "template",
+        "path": "migration/templates/shared/tests/packaged-entrypoints.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/standalone-boundary.test.mjs",
+      "sha256": "083a33e64e970920be4f4666fa1e63616dcc2ea4204c6627dcb1fbff7370cd38",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "ecc7aef085181d63fa319ecb41c67a4cc34dc9d2",
+        "kind": "template",
+        "path": "migration/templates/shared/tests/standalone-boundary.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/standalone-science-smoke.mjs",
+      "sha256": "eeedc5da5c56954864e057f1d58e27d185a287891d9f3bdb4d98805aae74b098",
+      "source": {
+        "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+        "git_blob": "950db2435620f5e8aee1cfc0531dbc6bb672047d",
+        "kind": "template",
+        "path": "migration/templates/core/standalone-science-smoke.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tests/user-workflow.test.mjs",
+      "sha256": "7ff9562af77253d4af7466e2ff0c4a0f981062544f527781bbd37d5ab0af070b",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "5e887841a1fd48b841b7fa185ad74906b7db2bbd",
+        "kind": "copied",
+        "path": "tests/user-workflow.test.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/image_annotation_updates.py",
+      "sha256": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "9fed174efbb205b7cf9689d8f144b9a63a6a5594",
+        "kind": "copied",
+        "path": "tools/image_annotation_updates.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/image_calibration.py",
+      "sha256": "92be4fecaf54778027899ce2a0aa30b9eb88c2b579b330f300473bfdda6c2817",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "d21ce56c647fc2893ef49ce2b117ed1c1862f760",
+        "kind": "copied",
+        "path": "tools/image_calibration.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/image_numeric.py",
+      "sha256": "d4f3f573ac65bb94ae1ce5708355bea70c6511cc57507e3426e07733f052667c",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "f494413f096c2fcdce9cd9fc81bd1e5b0f846d9e",
+        "kind": "copied",
+        "path": "tools/image_numeric.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/image_panel.mjs",
+      "sha256": "a2e4a0be8c6276b17cfbf5237b58515e602be93194abc012a7f4e3c4e59c3ad0",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ed4b2b849590d5803609278f05ba79d190e78092",
+        "kind": "adapted",
+        "launcher_adaptation": {
+          "applied": true,
+          "commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+          "git_blob": "27a132aa1050c1cac419c7a850f1deb27b8252e8",
+          "path": "migration/image-panel-environment.json"
+        },
+        "path": "tools/image_panel.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/image_probe.py",
+      "sha256": "bb5da7cdefc72a83ae8d04c89ecd705b64ffb01046f219731b387b92fd850e03",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "700954981902fd01fb19f20a0e052c600a7b453d",
+        "kind": "copied",
+        "path": "tools/image_probe.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/image_workspace.py",
+      "sha256": "040e8ed31e51f610e46d47f0f3e7bdda7baa062631faf5b7398b80121d06c042",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "1caf0238e994db00ad38428876daebfeccf57d39",
+        "kind": "copied",
+        "path": "tools/image_workspace.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/researcher_inspector.mjs",
+      "sha256": "07849118bbba50ab247df163ac077f8322bbc1448a60a2cbe73c7c36f11ab2ed",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "230cfb52860ab648bd3949b6043f04a5458198aa",
+        "kind": "copied",
+        "path": "tools/researcher_inspector.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/structure_viewer.mjs",
+      "sha256": "8447d1812da617dd134c3e434124df1b39138b8297bf5ddeb5f7155473cffd50",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "436792a70e098c28570784c32a586a610430e1b7",
+        "kind": "copied",
+        "path": "tools/structure_viewer.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/structure_worker.py",
+      "sha256": "6285b89947b2b52afa58bb23b309b1184157af4a15c9cedb02a7929492cf7f67",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "bc1c30d38e0fc7434ec7b27b524d042977356e35",
+        "kind": "copied",
+        "path": "tools/structure_worker.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "tools/verify_native_region.py",
+      "sha256": "26ed384999c4d0dfb1d2bcbd7bd048e7e1064268fdaa3ff89d1e4ed5b18796b8",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "15746fdc41ff20062ad1c9a6fdb9e28c56b90253",
+        "kind": "copied",
+        "path": "tools/verify_native_region.py"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/annotation-presentation.mjs",
+      "sha256": "17eeb4119fa83772b31452e751b5abed7e5bc1f7d9dc7e0979256422923bff9f",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "b5e8fa47b9042193e9097c0ef0c4db66635c3e1d",
+        "kind": "copied",
+        "path": "ui/image-panel/annotation-presentation.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/app.mjs",
+      "sha256": "e68ecf898fc79b1aafce93629fca218864373dc803f434bd12ea6a6856cae514",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "040951e37f940e445504d4da9068cbdc5887e285",
+        "kind": "copied",
+        "path": "ui/image-panel/app.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/coordinates.mjs",
+      "sha256": "2d30b08bfc1b6acd4978c521a3fc4c7159e69a9053c684ae5196a153e354a0bc",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "560d6f6da13152fa208acba2eb93e1e3409466ff",
+        "kind": "copied",
+        "path": "ui/image-panel/coordinates.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/data-probes.mjs",
+      "sha256": "708bfd5d870128e48b5a6f5d3d36898c4e7c73480d5168967b48e1f98b7f4eaf",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "ce413eaaf37d74a72e6e98bd9ae06097d08e9161",
+        "kind": "copied",
+        "path": "ui/image-panel/data-probes.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/figure-export.mjs",
+      "sha256": "945728e905f17a99ea8a797c995e0d6cdbf1412c9b8d0c92f0f16a4528d12700",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "4c6ac739bfeae001f14d4e31ecda2887f86d7392",
+        "kind": "copied",
+        "path": "ui/image-panel/figure-export.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/index.html",
+      "sha256": "7661ac0addfc3b0be2f2a90741cc68df8f4d3ae8d228ff45cce0add1ba0107f5",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "36a0d507977c21b34b6aa3f171ac75b2b318346e",
+        "kind": "copied",
+        "path": "ui/image-panel/index.html"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/measurement-workspace.mjs",
+      "sha256": "9e7ab09ce0f1724ec5f9d80e886dc61cfca363238f43352b1bff009c96deacb0",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "c880c979de82a643c2c91976fa7cb0303bd042f3",
+        "kind": "copied",
+        "path": "ui/image-panel/measurement-workspace.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/style.css",
+      "sha256": "bdb63d5a389e716502db72a7fbb8107885fd4751c4a6a93634ce50652d13e63d",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "bb59f60c099c7505b809245993198cd2d030537a",
+        "kind": "copied",
+        "path": "ui/image-panel/style.css"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/user-workflow.mjs",
+      "sha256": "18a1ec4720252a47d93af8fef54340958188417aac3162e038b92daba97b9b67",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "98c7e7ddcb0182ed363b85d8e94012b0d5dd7c87",
+        "kind": "copied",
+        "path": "ui/image-panel/user-workflow.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/viewer-render.mjs",
+      "sha256": "d86f2ac3e6c5bbd7cb84ace5e03251e0574ef853f1496641a39ac38f420891d4",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "444a3e722cc7361c94d91b083e1a5a34b11a1a63",
+        "kind": "copied",
+        "path": "ui/image-panel/viewer-render.mjs"
+      }
+    },
+    {
+      "mode": "100644",
+      "path": "ui/image-panel/viewer-state.mjs",
+      "sha256": "21b71051d4243c778bd967c3c9457ea8db9d014571907817dcaafbeed2fa9ba2",
+      "source": {
+        "commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+        "git_blob": "cc19880dd276aa3c818d1ac15f0fe8ac20cd6ef8",
+        "kind": "copied",
+        "path": "ui/image-panel/viewer-state.mjs"
+      }
+    }
+  ],
+  "ownership_manifest_git_blob": "bfc97699ecdc4c5f2b9cd4940d14e95aa81d74ff",
+  "profile": "microscopy-core",
+  "recipe_commit": "97ff8a79bec18eb7547ab8f643fea3d4a4150e94",
+  "schema_version": 1,
+  "scope": "Source-bound migration candidates, not completed installation, host qualification or repository publication. Numerical kernels copied unchanged; the exact-match panel launcher adaptation is separately recorded. Original repository is retained for history.",
+  "source_commit": "ebec25ebd75f15d87f3289de4d280ba480d351dc",
+  "source_repository": "wuchqwq/mcp-dm",
+  "source_tree": "cf25470a73697c2490c756a84e7176efe3b49e10"
+}
