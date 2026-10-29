@@ -5,6 +5,11 @@ Start with [client setup](docs/CLIENT_SETUP.md). Discover the actual `image_*`,
 optional `structure_*` and context tools from this connection. Missing optional
 modules are not permission to call a peer DM provider or invent a capability.
 
+For reusable Agent automation, load the [local MCP + Skills plugin](docs/AUTOMATION_PLUGIN.md).
+Its `microscopy-automation` Skill uses formal bounded region/FFT/peak/measurement
+tools and existing candidate comparisons, retaining current references by a named
+AnalysisContext. No developer-session IDs or temporary scientific scripts are required.
+
 The [no-model inspector](docs/RESEARCHER_DATA_INSPECTOR.md) uses the same saved
 arrays and measurement records. [Numerical inspection](docs/IMAGE_NUMERIC_INSPECTION.md)
 reads original values, not preview brightness. Keep coordinates, signed XY

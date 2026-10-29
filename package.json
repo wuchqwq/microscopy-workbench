@@ -8,11 +8,12 @@
   "scripts": {
     "inspect": "node tools/researcher_inspector.mjs",
     "start": "node server.mjs",
-    "test": "node --test --test-concurrency=2 tests/standalone-boundary.test.mjs tests/execution-coordinator.test.mjs tests/analysis-context.test.mjs tests/image-panel-ui.test.mjs tests/image-panel-drag-constraints.test.mjs tests/image-panel-viewport.test.mjs tests/image-panel-presentation.test.mjs tests/image-panel-figure-export.test.mjs tests/image-panel-presentation-transport.test.mjs tests/image-panel-draft-transport.test.mjs tests/image-panel-concurrency.test.mjs tests/image-panel-feedback.test.mjs tests/image-panel-data-inspector.test.mjs tests/image-panel-data-probes.test.mjs tests/data-probes-ui.test.mjs tests/measurement-workspace-ui.test.mjs tests/user-workflow.test.mjs tests/image-client-entry-env.test.mjs tests/packaged-entrypoints.test.mjs tests/figure-composer.test.mjs tests/figure-composer-assets.test.mjs tests/figure-composer-transport.test.mjs tests/figure-composer-ui.test.mjs tests/image-panel-numeric-recovery.test.mjs tests/dm4-import-contract.test.mjs tests/dm-complex-contract.test.mjs",
+    "test": "node --test --test-concurrency=2 tests/standalone-boundary.test.mjs tests/execution-coordinator.test.mjs tests/analysis-context.test.mjs tests/image-panel-ui.test.mjs tests/image-panel-drag-constraints.test.mjs tests/image-panel-viewport.test.mjs tests/image-panel-presentation.test.mjs tests/image-panel-figure-export.test.mjs tests/image-panel-presentation-transport.test.mjs tests/image-panel-draft-transport.test.mjs tests/image-panel-concurrency.test.mjs tests/image-panel-feedback.test.mjs tests/image-panel-data-inspector.test.mjs tests/image-panel-data-probes.test.mjs tests/data-probes-ui.test.mjs tests/measurement-workspace-ui.test.mjs tests/user-workflow.test.mjs tests/image-client-entry-env.test.mjs tests/packaged-entrypoints.test.mjs tests/figure-composer.test.mjs tests/figure-composer-assets.test.mjs tests/figure-composer-transport.test.mjs tests/figure-composer-ui.test.mjs tests/image-panel-numeric-recovery.test.mjs tests/dm4-import-contract.test.mjs tests/dm-complex-contract.test.mjs tests/plugin-package.test.mjs tests/candidate-batch-contract.test.mjs",
     "test:science": "node tests/standalone-science-smoke.mjs",
     "test:dm4": "node tests/dm4-science-smoke.mjs",
     "test:dm-planes": "node tests/dm-planes-science-smoke.mjs",
-    "test:complex": "node tests/dm-complex-science-smoke.mjs"
+    "test:complex": "node tests/dm-complex-science-smoke.mjs",
+    "test:automation": "node tests/automation-plugin-smoke.mjs"
   },
   "type": "module",
   "version": "0.1.0"

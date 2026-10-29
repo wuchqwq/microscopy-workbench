@@ -38,6 +38,8 @@ jobs:
       - run: python -B tests/dm4_import_test.py
       - run: python -B tests/dm_planes_test.py
       - run: python -B tests/dm_complex_test.py
+      - run: python -B tests/image_peaks_test.py
+      - run: python -B tests/image_automation_test.py
       - run: npm run test:dm4
         env:
           MICROSCOPY_PYTHON: python

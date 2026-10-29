@@ -26,11 +26,15 @@ if __package__:
     from . import image_calibration as calibration
     from . import image_numeric as numeric
     from . import image_dm as dmfile
+    from . import image_peaks as peaks
+    from . import image_automation as automation
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
     import image_numeric as numeric
     import image_dm as dmfile
+    import image_peaks as peaks
+    import image_automation as automation
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -41,12 +45,14 @@ MAX_JSON_BYTES = 2 * 1024 * 1024
 REQUEST_ID = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 OBJECT_ID = re.compile(r"[a-f0-9]{32}\Z")
 FIELDS = {
+    **automation.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
     "view": {"object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar", "component"},
     "compare": {"object_ids", "rect", "display_range", "gamma", "max_size"},
     "fft": {"object_id", "rect", "window", "subtract_mean", "max_size"},
+    "peaks": {"object_id", "max_peaks", "min_separation_bins", "exclude_dc_radius_bins", "threshold_rel", "refinement", "max_size"},
     "annotate": {"object_id", "annotations", "updates"}, "context": {"object_id", "metadata"},
     "measure": {"object_id", "points", "coordinate_space"}, "export": {"object_id", "output_dir"},
     "statistics": {"object_id", "rect", "frequency_rect", "component"},
@@ -454,6 +460,8 @@ class Workspace:
             for name, digest in metadata["exported_files_sha256"].items():
                 need(Path(name).name == name and (output / name).is_file() and not (output / name).is_symlink() and
                      sha_file(output / name) == digest, "Exported immutable file changed", "CORRUPT_OBJECT")
+        if metadata.get("kind") in automation.FIELDS:
+            automation.validate_references(self, metadata, sys.modules[__name__])
         return metadata, directory
 
     def resolved(self, ident):
@@ -784,7 +792,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py")}})
+                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py")}})
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")
@@ -810,7 +818,9 @@ class Workspace:
                 metadata["xy_calibration"] = inherited["xy_calibration"]
             if inherited.get("calibration_review"):
                 metadata["calibration_review"] = inherited["calibration_review"]
-        if action == "open":
+        if action in automation.FIELDS:
+            metadata = automation.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action == "open":
             path = absolute(request.get("source_path"), "source_path")
             identity = source_identity(path)
             pages = []
@@ -961,6 +971,8 @@ class Workspace:
                                                 "pixel_anchor_policy": ("new centre reference; saved peak anchors and old measurements remain unchanged; remeasure the explicit DC endpoint" if action == "centre" else "scale-only revision preserves saved point coordinates"),
                                                 "old_exports_immutable": True},
                             next_step="image_preview on this wrapper to redraw physical scale/axes; image_measure to calculate geometry with the selected record")
+        elif action == "peaks":
+            metadata = peaks.run(self, request, ident, directory, metadata, sys.modules[__name__])
         elif action in ("statistics", "profile"):
             metadata.update(parent_object_id=request["object_id"])
             if action == "statistics":
@@ -1326,7 +1338,10 @@ class Workspace:
             need(names, "Export requires actual scientific arrays; a TIFF metadata handle/context-only record is not pixel data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")
-            need(output.parent.is_dir() and not output.exists() and not output.is_symlink(), "output_dir must be a new explicit directory with an existing parent", "OUTPUT_EXISTS")
+            need(output.parent.is_dir(),
+                 "output_dir parent directory does not exist. Choose a new child under an existing directory, for example this configured image workspace: " + str(self.root),
+                 "OUTPUT_PARENT_MISSING")
+            need(not output.exists() and not output.is_symlink(), "output_dir already exists or is linked; choose a new directory without overwriting", "OUTPUT_EXISTS")
             resolved_parent = output.parent.resolve()
             need(not any(resolved_parent == self.root / name or self.root / name in resolved_parent.parents for name in ("objects", "requests")),
                  "Export cannot be written inside immutable object/request storage")

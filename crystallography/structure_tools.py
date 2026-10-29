@@ -40,6 +40,7 @@ FIELDS = {
     "derive": {"object_id", "repeat", "rotation_deg_xyz", "orientation_id"},
     "orient": {"object_id", "zone_axis_uvw", "in_plane_direction_uvw", "in_plane_rotation_deg"},
     "compare": {"object_id", "measurement_paths", "experimental_kind", "registration", "registration_object_id", "max_residual_inv_angstrom", "correspondences", "current_image_object_id", "analysis_mode", "previous_comparison_id", "source_change_basis"},
+    "compare_batch": {"measurement_object_ids", "image_workspace", "candidates", "experimental_kind", "max_residual_inv_angstrom", "current_image_object_id"},
     "register": {"object_id", "measurement_paths", "experimental_kind", "current_image_object_id", "fit_correspondences", "validation_correspondences", "screen_axes", "confirmation", "max_residual_inv_angstrom"},
     "simulate": {"object_id", "voltage_kv", "euler_rzxz_deg", "orientation_id", "reciprocal_radius_inv_angstrom",
                  "max_excitation_error_inv_angstrom", "size", "sigma_pixels", "with_direct_beam", "native_float32"},
@@ -504,6 +505,22 @@ class StructureWorkspace:
         for name, digest in metadata.get("files_sha256", {}).items():
             need(Path(name).name == name and name not in (".", "..", "object.json"), "Unsafe structure file name", "CORRUPT_OBJECT")
             need(sha(read_bytes(directory / name, 8 * MAX_BYTES)) == digest, "Stored structure/scientific file changed", "CORRUPT_OBJECT")
+        if metadata.get("kind") == "compare_batch":
+            receipts = metadata.get("child_receipts")
+            need(type(receipts) is list and len(receipts) <= 3, "Invalid comparison batch receipts", "CORRUPT_OBJECT")
+            for receipt in receipts:
+                need(type(receipt) is dict and type(receipt.get("object_id")) is str and ID.fullmatch(receipt["object_id"]),
+                     "Invalid comparison child identity", "CORRUPT_OBJECT")
+                child_directory = self.root / "objects" / receipt["object_id"]
+                need(child_directory.is_dir() and not child_directory.is_symlink() and
+                     child_directory.resolve().parent == (self.root / "objects"),
+                     "Comparison child is outside the configured workspace", "CORRUPT_OBJECT")
+                # Inspect kind first to prevent a forged cyclic batch reference.
+                need(json_file(child_directory / "object.json").get("kind") == "compare", "Batch child is not a comparison", "CORRUPT_OBJECT")
+                child, _ = self.object(receipt["object_id"])
+                need(child["request_id"] == receipt["request_id"] and
+                     sha(read_bytes(child_directory / "object.json", 8 * MAX_BYTES)) == receipt["object_manifest_sha256"],
+                     "Comparison batch child identity changed", "CORRUPT_OBJECT")
         return metadata, directory
 
     def structure(self, ident):
@@ -565,7 +582,10 @@ class StructureWorkspace:
         directory.mkdir()
         metadata = {"object_id": ident, "request_id": request["request_id"], "kind": action,
                     "created_utc": datetime.now(timezone.utc).isoformat(), "parameters": {k: v for k, v in request.items() if k not in ("workspace", "action", "request_id")}}
-        if action == "open":
+        if action == "compare_batch":
+            from crystallography.compare_batch import run
+            metadata.update(run(self, request, execute))
+        elif action == "open":
             atoms, raw, parser_warnings = load_structure(request.get("source_path"))
             extension = Path(request["source_path"]).suffix.lower()
             write_new(directory / ("source" + extension), raw)
@@ -714,7 +734,7 @@ class StructureWorkspace:
                                              "scipy": importlib.metadata.version("scipy"),
                                              **({"diffsims": importlib.metadata.version("diffsims"), "diffpy.structure": importlib.metadata.version("diffpy.structure")} if action == "simulate" else {}),
                                              "module_sha256": sha(Path(__file__).read_bytes()),
-                                             "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py")}},
+                                             "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py") + (("compare_batch.py",) if action == "compare_batch" else ())}},
                         files_sha256={file.name: sha(file.read_bytes()) for file in directory.iterdir() if file.is_file()},
                         manifest_path=str(directory / "object.json"))
         if (directory / "preview.png").is_file():

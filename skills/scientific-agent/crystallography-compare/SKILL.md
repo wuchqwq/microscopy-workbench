@@ -25,20 +25,20 @@ Compare saved un-rasterized reflections/HKL with committed experimental
 measurements. An HRTEM/ptychography FFT and a SAED pattern do not share a general
 intensity interpretation. Prefer geometric residuals; a similar PNG is no phase
 proof. Keep unmatched reflections, alternative candidates and model limitations.
-For 1–3 explicit candidates with unknown HKL, the optional local batch recipe
-`tools/hypothesis_explorer.py` reuses these same scientific tools with bounded
-low-index zones and polar-angle trials; it produces a static overlay/table and
-prospective observation target. See [Hypothesis Explorer](../../../docs/HYPOTHESIS_EXPLORER.md)
-for the executed synthetic example and configuration. This is a CLI recipe,
-not a newly advertised MCP tool or global orientation search. Keep all points
-used to select candidates/roll/HKL labeled search evidence, not held-out validation.
+The old pre-migration hypothesis-explorer and twin-feedback scripts are not
+included in this provider. Do not call missing scripts or imply an automatic
+orientation/HKL search exists. `structure_compare_batch`, when advertised, compares
+explicit saved simulation candidates through the same `structure_compare`
+checks; inspect its schema and use explicit experimental registration. It does
+not search all phases or discover twin laws. Keep points used to select a
+candidate/roll/HKL labeled search evidence, not held-out validation.
 When the researcher corrects a single-domain explanation with "there is twinning",
 save only that scoped presence statement via `image_context` metadata.research_observation
 (or read its saved reference from `image_panel_current`). Do not confirm a twin
-law or HKL on their behalf. The optional [FCC twin feedback recipe](../../../docs/TWIN_FEEDBACK_LOOP.md)
-retains the initial comparison, tests constrained Sigma3 alternatives and returns
-A/B/shared/unexplained marks to the same Panel. Use `synthetic_fixture` for demo
-input, never impersonate human confirmation; remeasure after peak/scale changes.
+law or HKL on their behalf. Use `synthetic_fixture` for demo input, never
+impersonate human confirmation; remeasure after peak/scale changes. Automated
+twin-interface, dislocation and geometric-phase analysis are not implemented by
+this Skill. Explicit candidate orientations can still be simulated and compared.
 The Agent may propose unconfirmed structures, orientations and reflection
 correspondences and test explicit geometric comparisons. Keep those proposals
 as hypotheses: do not assert `user_confirmed` merely to enter a registration
