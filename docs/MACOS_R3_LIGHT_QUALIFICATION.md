@@ -10,7 +10,18 @@ This page records a **platform smoke**, not an in-person MacBook test and not re
 - The first run used macOS 15.7.9 **arm64**, Node 22.23.2, Python 3.13.15. Typecheck/build succeeded; compiled Node: **294 PASS, 1 FAIL, 5 SKIP**. The failing test was the relocated MCP plugin catalog's **hard-coded 10 s timeout with empty captured stderr**. Python/R3 science steps were not reached in that run. This is not a successful Mac platform qualification.
 - Follow-up diagnostic [40959015883](https://github.com/wuchqwq/microscopy-workbench/actions/runs/40959015883): isolated packaged startup and full Node **both reproduced the 10 s empty-stderr catalog timeout**. Independent R3/float32 numerical tests **31 PASS**, and the actual MCP→Python standalone science/FFT/Panel HTTP smoke **PASS**. The old-JS-workspace → relocated compiled-plugin test failed with `MCP exited:` and empty stderr before R3-field smoke could run.
 - **Root-cause candidate:** macOS temporary paths commonly enter Node as `/var/folders/...` while ESM module URLs resolve the canonical `/private/var/folders/...`. The previous `path.resolve(process.argv[1])===fileURLToPath(import.meta.url)` guard silently omitted `runPluginCLI()` when the two strings differed, so the subprocess could exit with no stderr/stdout. It also affects the standalone/Panel/other guarded CLI entrypoints under aliased paths.
-- **Proposed fix under test:** compare both existing paths using `realpathSync.native` via a small strict-TS helper, use it for the compiled CLI entrypoints and legacy source shims, and add a deterministic Unix symlink alias regression. No Python or numerical code changed. Acceptance requires fresh Mac CI, not just the root-cause explanation.
+- **Validated fix:** compare canonical existing paths with `realpathSync.native` through a strict-TS helper, use it for compiled CLI entries and source shims, and add an ordinary Unix symlink regression. The frozen JS baseline remains byte-identical; the compatibility harness launches its old CLI through its canonical name while the candidate continues to exercise the noncanonical path.
+
+## Final independent hosted Mac qualification
+
+- **PASS:** [macOS arm64 run 40960860068](https://github.com/wuchqwq/microscopy-workbench/actions/runs/40960860068), post-fix candidate commit `a67f381f8ef78d56b3fd198c34f4406088529db8`.
+- macOS **15.7.9 / arm64**; Node **22.23.2**, Python **3.13.15**; NumPy 2.5.4, SciPy 1.18.1, Pillow 12.3.0, tifffile 2026.10.15.
+- Strict TS build; **296 Node PASS / 0 FAIL / 5 opt-in SKIP**; isolated startup 6 PASS; 31 independent Python R3/float32 tests PASS.
+- Actual MCP→Python science: signed calibration, original FFT and independent direct DFT, measurement, export, restart recovery and Panel loopback HTTP PASS.
+- Frozen JS workspace→copied compiled plugin: tool schema, original request/context, export/revision/Panel PASS; old files preserved, FFT not replayed.
+- Actual R3 feature-field composition from public synthetic data: window/scale controls, DFT, source/FFT hashes, R2 mapping, named recovery and Panel PASS.
+- Earlier failing runs remain visible and are **not** retroactively marked PASS. This is GitHub-hosted Apple Silicon macOS qualification, **not** an on-device GUI/real-specimen/native-plugin-mode test.
+
 
 ## What this scope validates when passing
 
@@ -25,11 +36,12 @@ This page records a **platform smoke**, not an in-person MacBook test and not re
 
 ## Optional on-device local smoke (not executed by this CI)
 
-From a clean source checkout of the pinned commit (do not move the frozen R3 branch):
+On your own Mac, use a **separate clean clone** of the merged fix on `main` (not the pre-fix commit `349f201` and not your active R3 development worktree):
 
 ```sh
 git fetch origin
-git switch -c local-mac-r3-smoke 349f2012b3a00c247f394e682f32b0f87ad64f40
+git switch main
+git pull --ff-only origin main
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-images.txt
 npm ci
