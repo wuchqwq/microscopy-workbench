@@ -3,14 +3,30 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
-import {mkdtempSync,readFileSync,writeFileSync,existsSync,rmSync,cpSync,readdirSync} from 'node:fs';
+import {mkdtempSync,readFileSync,writeFileSync,existsSync,rmSync,cpSync,readdirSync,symlinkSync} from 'node:fs';
 import {spawn} from 'node:child_process';
+import {pathToFileURL} from 'node:url';
+import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import {preparePlugin} from '../tools/prepare_plugin.mjs';
 import {resolvePluginEnvironment} from '../tools/plugin_server.mjs';
 import {createScienceRuntime} from '../lib/science/create_science_runtime.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=name=>JSON.parse(readFileSync(path.join(root,name),'utf8'));
 const temporary=()=>mkdtempSync(path.join(tmpdir(),'microscopy-plugin-'));
+
+test('canonical CLI identity survives macOS /var aliases and ordinary symlinks',{skip:process.platform==='win32'?'Symlink behavior qualified on Unix':false},()=>{
+  const base=temporary();
+  try {
+    const original=path.join(base,'real entry.mjs'),alias=path.join(base,'aliased entry.mjs'),unrelated=path.join(base,'different.mjs');
+    writeFileSync(original,'// synthetic existing module');
+    writeFileSync(unrelated,'// another module');
+    symlinkSync(original,alias);
+    assert.equal(isDirectInvocation(pathToFileURL(original).href,alias),true);
+    assert.equal(isDirectInvocation(pathToFileURL(original).href,original),true);
+    assert.equal(isDirectInvocation(pathToFileURL(original).href,unrelated),false);
+    assert.equal(isDirectInvocation(pathToFileURL(original).href,path.join(base,'missing.mjs')),false);
+  } finally {rmSync(base,{recursive:true,force:true});}
+});
 
 test('plugin paths resolve inside its installed root without shell interpolation',()=>{
   const manifest=read('.codex-plugin/plugin.json'),mcp=read('.mcp.json');
