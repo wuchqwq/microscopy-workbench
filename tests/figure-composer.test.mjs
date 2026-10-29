@@ -72,6 +72,14 @@ test('constant and missing profile samples remain saved data and never become in
  p.samples.value=[10,20,null,40];const rendered=renderCompositionSVG(input);assert.equal((rendered.svg.match(/data-part="profile-values"/g)??[]).length,2,'missing sample splits the curve instead of being replaced');assert.equal(p.samples.value[2],null);
  p.samples.physical_distance=[0,.2,.4,.6];p.physical_distance_unit='nm';assert.match(renderCompositionSVG(input).svg,/距离 \(nm\)/);assert.deepEqual(p.samples.physical_distance,[0,.2,.4,.6]);
 });
+test('profile endpoint ticks align inward at 9pt without moving the actual 2.24nm axis or saved samples',()=>{
+ const input=composition();input.recipe.font_pt=9;const p=input.panels[3].profile;p.samples.physical_distance=[0,.7466666666666667,1.4933333333333334,2.24];p.physical_distance_unit='nm';const before=clone(input);
+ const {svg}=renderCompositionSVG(input),ticks=[...svg.matchAll(/<path d="M [^"]+ v 6" stroke="#273849"\/><text x="([^"]+)"[^>]*text-anchor="([^"]+)" font-size="([^"]+)">([^<]*)<\/text>/g)];
+ assert.equal(ticks.length,4);assert.deepEqual(ticks.map(([,_,anchor])=>anchor),['start','middle','middle','end']);assert.ok(ticks.every(([,_,__,font])=>font==='37.5'));assert.equal(ticks.at(-1)[4],'2.24');
+ const d=compositionDimensions('2x2',9),profileLeft=d.margin+d.cellWidth+d.gap;
+ assert.equal(Number(ticks[0][1]),Math.round((profileLeft+d.font*3.6)*1000)/1000);assert.equal(Number(ticks.at(-1)[1]),Math.round((profileLeft+d.cellWidth-d.font*.6)*1000)/1000,'text anchoring cannot change the endpoint position');
+ assert.deepEqual(input,before);
+});
 test('saved recipe is restorable without embedding arrays and duplicate explicit views are not silently dropped',()=>{
  const input=composition();input.panels[1]=clone(input.panels[0]);input.recipe.slots[1]=clone(input.recipe.slots[0]);const before=clone(input),result=renderCompositionSVG(input),restored=renderCompositionSVG({recipe:JSON.parse(JSON.stringify(result.recipe)),panels:input.panels});assert.equal(restored.svg,result.svg);assert.equal((result.svg.match(/data-composition-slot="/g)??[]).length,4);assert.deepEqual(input,before);
  const known=makeFigureRecipe(input.panels[0].state,preferences);assert.deepEqual(result.recipe.slots[0].recipe,known);
