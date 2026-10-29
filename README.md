@@ -78,3 +78,8 @@ classes or silently fall back after a failed native operation.
 
 Saved images and profiles can be arranged as 2×2 or 1×3 paper figures; see
 [Figure Composer](docs/FIGURE_COMPOSER.md) for export and layout recovery.
+
+Ordinary 2D complex64/complex128 DM files retain both components and their raw
+NPY. Choose an explicit real/imag/amplitude/power display or numeric component;
+see [complex images](docs/DM_COMPLEX_IMAGES.md) for the qualified range and
+remaining processing/packed-format limits.

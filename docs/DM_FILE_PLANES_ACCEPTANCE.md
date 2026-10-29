@@ -4,6 +4,10 @@ This follows PR #3 at `5926f68`. The original DM4/ADF acceptance is retained;
 it is not retroactively relabelled as DM3 or volume qualification. No main
 merge, GMS operation, native ABI change or private specimen upload is involved.
 
+This historical record describes the real-plane increment at `186f3b1`.
+The later [ordinary 2D complex increment](DM_COMPLEX_IMAGES.md) has separate
+qualification; it does not rewrite the refusals or results recorded here.
+
 ## Researcher-visible increment
 
 - Open a supported real scalar DM3 with the same Inspector and image tools.

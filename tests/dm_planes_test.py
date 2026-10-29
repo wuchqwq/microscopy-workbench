@@ -151,10 +151,16 @@ class DMPlanes(unittest.TestCase):
             value = self.call("open_dm", success=False, source_path=str(path))
             self.assertEqual(value["error"]["code"], "UNSUPPORTED_LAYOUT")
             self.assertIn("little-endian", value["error"]["message"])
-        for name in ("complex.dm3", "complex.dm4"):
-            value = self.call("open_dm", success=False, source_path=str(self.fixture / name))
-            self.assertEqual(value["error"]["code"], "UNSUPPORTED_LAYOUT")
-            self.assertIn("complex", value["error"]["message"])
+        # Ordinary 2D types 3/13 now have their own qualified complex path;
+        # packed type 5 remains a distinct pre-decode refusal.
+        import struct
+        raw = bytearray((self.fixture / "complex.dm4").read_bytes())
+        marker = raw.index(b"%%%%", raw.rindex(b"DataType"))
+        raw[marker+20:marker+24] = struct.pack("<i", 5)
+        packed = self.fixture / "packed-complex.dm4"; packed.write_bytes(raw)
+        value = self.call("open_dm", success=False, source_path=str(packed))
+        self.assertEqual(value["error"]["code"], "UNSUPPORTED_LAYOUT")
+        self.assertIn("packed", value["error"]["message"])
         for original, renamed in (("volume.dm3", "wrong.dm4"), ("volume.dm4", "wrong.dm3")):
             shutil.copyfile(self.fixture / original, self.fixture / renamed)
             value = self.call("open_dm", success=False, source_path=str(self.fixture / renamed))

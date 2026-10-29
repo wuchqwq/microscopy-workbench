@@ -16,6 +16,12 @@ user confirmation nor DM-native execution. Never analyze the RGB thumbnail.
 Save original request IDs before scientific writes and query original outcomes
 after timeout. Preserve data and existing user/client settings.
 
+For [ordinary complex 2D DM data](docs/DM_COMPLEX_IMAGES.md), choose an explicit
+`image_preview.component` before opening its panel; numeric observations also
+require their own explicit component. Preserve complex dtype and both parts in
+NPY. Do not infer FFT/wave/phase semantics or feed a displayed amplitude into
+an unqualified complex FFT/comparison. Packed and nD complex remain refused.
+
 [Panel usage](docs/LOCAL_IMAGE_PANEL.md), [annotation contracts](docs/IMAGE_ANNOTATIONS.md)
 and [reflection comparison](docs/REFLECTION_COMPARISON.md) describe the retained
 scientific behavior. Older copied technical examples mentioning `DM_IMAGE_*`

@@ -25,7 +25,7 @@ saved view and does not repeat FFT. The optional reader is imported only for
 DM4. If absent, `MISSING_DEPENDENCY` identifies `requirements-dm4.txt`; TIFF and
 saved-capture tools remain available.
 
-The supported object is a **real scalar 2D plane**. A source can contain rank
+The real-data path supports a **real scalar 2D plane**. A source can contain rank
 2–6 arrays, but the tools do not process a whole volume as an image:
 
 - Admitted storage types: uint8/16/32, int8/16/32, float32/64, subject to the
@@ -38,9 +38,12 @@ The supported object is a **real scalar 2D plane**. A source can contain rank
   Existing downstream operation limits also remain in force.
 - RosettaSciIO excludes thumbnail entries identified by the file's explicit
   `Thumbnails` tags. This adapter does not assume the first image is science.
-  RGB without explicit thumbnail identification, complex/packed arrays and
+  RGB without explicit thumbnail identification, packed complex arrays and
   ranks outside 2–6 are rejected before pixel decoding; navigation data require an explicit
   bounded plane selection, described below.
+  Ordinary stored 2D complex64/complex128 has a separate explicit
+  [component path](DM_COMPLEX_IMAGES.md), with raw complex NPY preserved;
+  complex navigation volumes remain refused.
 - Exactly one eligible scientific dataset is selected automatically. For
   multiple datasets inspect the catalog and start a new workspace with
   `--dataset 1`, `--dataset 2`, etc. Names/shapes/dtypes are included in the
@@ -151,25 +154,19 @@ recomputing; changing selectors requires a new workspace or explicit new tool
 request. Old 2D DM4/TIFF requests add no new default selector fields, and prior
 DM4 catalogs and original request records continue to work.
 
-## Why direct complex data remain refused
+<a id="why-direct-complex-data-remain-refused"></a>
 
-The mature reader exposes ordinary complex64/complex128 DM types 3/13, but
-complex data are not automatically a Fourier transform: they may be a complex
-wave or another scientific object. The current provider admits complex128 only
-for its own produced FFT objects. Scalar `load_array` rejects complex data,
-`Workspace.scalar` has no component contract, and the real-input FFT path uses
-`roi.astype(float64)`. Simply adding complex dtypes would lose the imaginary
-part or invent FFT/DC semantics. The separate numeric reader also qualifies
-complex128 FFTs, not arbitrary complex64 spatial inputs.
+## Ordinary complex data and remaining packed limits
 
-This follow-up therefore keeps ordinary complex and packed types 5/27/28
-refused **before pixel decoding**. A subsequent increment needs immutable
-complex-plane domain/component semantics, real/imag/amplitude/power display and
-numeric probes, and exact complex NPY/export tests before opening that range.
-It must not label a spatial wave as a spectrum, infer radians, or discard an
-imaginary part. The vendor's packed-spectrum unpackers additionally need their
-own format/axis qualification. This is a concrete remaining contract gap, not
-an assertion that RosettaSciIO cannot read complex files.
+Ordinary 2D complex64/complex128 DM types 3/13 now have an explicit component
+path; see [ordinary complex images](DM_COMPLEX_IMAGES.md). Raw dtype/real/imag
+values and NPY remain intact; first preview/numeric observation requires
+`real`, `imag`, `amplitude` or `power`. Complex storage does not make a frame a
+provider-generated FFT or physical wavefunction. Ordinary complex nD, packed
+types 5/27/28, phase display and imported-complex FFT/compare remain refused.
+The real-input float64 processing path is guarded before any cast. The pinned
+vendor packed-spectrum unpackers still need independent format/axis/budget
+qualification.
 
 ## Reader choice and license
 
