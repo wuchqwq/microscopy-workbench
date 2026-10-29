@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 349f2012b3a00c247f394e682f32b0f87ad64f40
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
@@ -30,16 +30,26 @@ jobs:
       - name: Assert exact science baseline and identify macOS runner
         shell: bash
         run: |
-          test "$(git rev-parse HEAD)" = "349f2012b3a00c247f394e682f32b0f87ad64f40"
+          test "$(git merge-base HEAD 349f2012b3a00c247f394e682f32b0f87ad64f40)" = "349f2012b3a00c247f394e682f32b0f87ad64f40"
+          echo "candidate=$(git rev-parse HEAD)"
+          git diff --stat 349f2012b3a00c247f394e682f32b0f87ad64f40 HEAD -- lib tools ui tests package.json
           uname -m
           sw_vers
           node --version
           python --version
-      - name: Build strict TypeScript and run compiled Node tests
+      - name: Build strict TypeScript
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npm run typecheck
-          npm test
+          npm run build
+      - name: Isolated packaged-plugin tool catalog test
+        id: isolated
+        continue-on-error: true
+        run: node --test dist/tests/plugin-package.test.mjs
+      - name: Full compiled Node tests (collect failures without blocking science diagnostics)
+        id: node_suite
+        continue-on-error: true
+        run: npm test
       - name: Install independent numerical Python
         run: python -m pip install -r requirements-images.txt
       - name: Numerical R3/float32 tests
@@ -63,3 +73,9 @@ jobs:
         run: |
           npm run test:field
           python -c "import json,os; p=os.path.join(os.environ['MICROSCOPY_SMOKE_OUTPUT'],'report.json'); r=json.load(open(p)); assert r['result']=='PASS',r; print('R3 actual MCP field PASS; sampled windows, numerical DFT, origin/FFT identity, Panel and recovery checked')"
+      - name: Enforce both Node qualifications
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.isolated.outcome }}" = "success"
+          test "${{ steps.node_suite.outcome }}" = "success"
