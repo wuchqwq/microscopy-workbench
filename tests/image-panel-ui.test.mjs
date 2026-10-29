@@ -575,3 +575,21 @@ test('a baked scientific-preview scale bar is not duplicated by the SVG overlay;
   assert.equal(h.calls.length,0,'layer selection must not create another render or scientific request');assert.deepEqual(h.inspect().state.object,before);
  }
 });
+
+test('ordinary complex display switches an explicit component and retains the same scientific ROI and marks',async()=>{
+ const first=fixture();first.object.dtype='complex64';first.effective_display={...first.object.display,component:'real'};
+ const h=await harness(first);assert.equal(h.$('complex-display').hidden,false);assert.match(h.$('identity').textContent,/复数图像/);assert.doesNotMatch(h.$('identity').textContent,/FFT/);assert.match(h.$('complex-display-current').textContent,/实部/);
+ h.draw('rectangle');const selected=h.inspect().draft,second=copy(first);second.object.object_id='c'.repeat(32);second.effective_display.component='imag';second.effective_display.display_range=[-5,5];h.actionResult(second);h.$('complex-component').value='imag';await h.click('apply-complex-component');
+ assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'preview');assert.deepEqual(h.calls[0].params,{component:'imag',display_range:null});assert.deepEqual(h.inspect().draft.coordinates,selected.coordinates);assert.deepEqual(h.inspect().state.object.annotations,first.object.annotations);assert.match(h.$('complex-display-current').textContent,/虚部/);
+ await h.click('apply-complex-component');assert.equal(h.calls.length,1,'selecting the displayed component must not create another result');
+ const overlay=copy(first);overlay.object.kind='annotate';delete overlay.object.dtype;const a=await harness(overlay);assert.equal(a.$('complex-display').hidden,false,'saved component provenance keeps the control available on an annotation wrapper without copied dtype');a.draw('rectangle');assert.equal(a.$('fft').disabled,true);assert.match(a.$('fft').title,/不会丢弃虚部/);await a.click('fft');assert.equal(a.calls.length,0,'a wrapper cannot bypass the complex FFT qualification gate');
+});
+test('complex component switching refuses an unsaved display draft without discarding it or submitting a request',async()=>{
+ const first=fixture();first.object.dtype='complex128';first.effective_display={...first.object.display,component:'amplitude'};const h=await harness(first),before=h.inspect().state.object;
+ h.$('gamma').value='1.4';h.$('gamma').oninput();h.flush();h.$('complex-component').value='power';await h.click('apply-complex-component');
+ assert.equal(h.calls.length,0);assert.equal(h.$('gamma').value,'1.4');assert.equal(h.inspect().dirty,true);assert.deepEqual(h.inspect().state.object,before);assert.match(h.$('message').textContent,/先保存或撤销.*草稿/);
+});
+test('scalar images and produced FFTs do not acquire ordinary-complex component controls',async()=>{
+ const h=await harness();assert.equal(h.$('complex-display').hidden,true);await h.click('apply-complex-component');assert.equal(h.calls.length,0);
+ const spectrum=fixture();spectrum.object.dtype='complex128';spectrum.object.kind='fft_view';spectrum.object.panels=[{domain:'frequency',source_object_id:sourceId,fft_shape_yx:[96,128],fft_rect_xyxy:[0,0,128,96],image_rect_xyxy:[0,0,128,96]}];const f=await harness(spectrum);assert.equal(f.$('complex-display').hidden,true);assert.match(f.$('identity').textContent,/FFT/);assert.equal(f.calls.length,0);
+});

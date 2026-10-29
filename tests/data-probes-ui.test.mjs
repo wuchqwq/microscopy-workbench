@@ -37,7 +37,7 @@ test('profile CSV uses numerical backend samples, distinct units and complete pr
 });
 test('plot represents raw saved values and splits missing samples rather than inventing zeros',()=>{
  const model=profilePlot(profile());assert.deepEqual(model.segments.map(s=>s.length),[2,1]);assert.deepEqual(model.range,{xmin:0,xmax:3,ymin:10,ymax:40});assert.equal(model.xLabel,'pixel');assert.equal(model.yLabel,'原始数值');
- assert.match(statisticsText({component:'power',statistics:{sample_count:4,mean:12,stddev:3,minimum:2,maximum:18}}),/FFT 功率 \|F\|²/);assert.match(probeText({component:'real',samples:[{value:NaN}]}),/未知/);
+ const stats={component:'power',statistics:{sample_count:4,mean:12,stddev:3,minimum:2,maximum:18}};assert.match(statisticsText({...stats,coordinate_space:'frequency_cycles_per_pixel'}),/FFT 功率 \|F\|²/);assert.match(statisticsText({...stats,coordinate_space:'source_pixels'}),/^功率 \|z\|²/);assert.doesNotMatch(statisticsText(stats),/FFT/);assert.match(probeText({component:'real',samples:[{value:NaN}]}),/未知/);
 });
 test('saved statistics/profile cannot leak across scientific grids or silently keep an old physical scale',()=>{
  const f=fixture();assert.equal(f.instance.renderResult({kind:'statistics',parent_object_id:A,scientific_grid_identity:{...grid,array_sha256:'wrong'},statistics:{mean:100}}),false);assert.equal(f.instance.statistics,null);

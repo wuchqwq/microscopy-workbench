@@ -22,7 +22,7 @@ profile, annotations and exports use the same tools and saved scientific
 records as TIFF. Keep the terminal running; stop normally with Ctrl+C.
 Reopen using the same workspace and Python without `--source`; this reads the
 saved view and does not repeat FFT. The optional reader is imported only for
-DM4. If absent, `MISSING_DEPENDENCY` identifies `requirements-dm4.txt`; TIFF and
+DM3/DM4. If absent, `MISSING_DEPENDENCY` identifies `requirements-dm4.txt`; TIFF and
 saved-capture tools remain available.
 
 The real-data path supports a **real scalar 2D plane**. A source can contain rank

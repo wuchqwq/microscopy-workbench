@@ -64,12 +64,18 @@ Existing admitted uint16 TIFF / verified schema-1 captures, source/frame/ROI,
 FFT, calibrated measurements, editable annotations and scientific exports remain
 subject to their original guards. Optional bounded scalar DM3/DM4 plane import is a
 later addition. Rank 3–6 sources require explicit plane axes and fixed indices;
-no navigation flattening or full-volume analysis is implied. Complex/packed
-DM arrays remain refused. Reconstruction, unique phase
+no navigation flattening or full-volume analysis is implied. Ordinary 2D complex
+DM arrays require an explicit display/numeric component; packed and nD complex
+arrays remain refused. Reconstruction, unique phase
 identification and remote DM transport remain outside this migration's scope.
 Saved native capture verification is a **read-only file-format adapter**, not a
 live DM dependency. Old file-workspace schemas and names are preserved so source
 hashes, original IDs and recovery records are not invalidated by a rename.
+
+Ordinary 2D complex64/complex128 DM files retain both components and their raw
+NPY. Choose an explicit real/imag/amplitude/power display or numeric component;
+see [complex images](docs/DM_COMPLEX_IMAGES.md) for the qualified range and
+remaining processing/packed-format limits.
 
 The science provider owns scientific arrays and contexts. The DM provider owns
 live DM image IDs, sessions and native request state. Exchange explicit versioned
@@ -78,8 +84,3 @@ classes or silently fall back after a failed native operation.
 
 Saved images and profiles can be arranged as 2×2 or 1×3 paper figures; see
 [Figure Composer](docs/FIGURE_COMPOSER.md) for export and layout recovery.
-
-Ordinary 2D complex64/complex128 DM files retain both components and their raw
-NPY. Choose an explicit real/imag/amplitude/power display or numeric component;
-see [complex images](docs/DM_COMPLEX_IMAGES.md) for the qualified range and
-remaining processing/packed-format limits.

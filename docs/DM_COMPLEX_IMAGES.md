@@ -119,6 +119,47 @@ storage and the numerical assertion. A negative fixture initially changed the
 thumbnail's type; it now changes the actual scientific entry so packed rejection
 is tested directly. Earlier local failures are retained, not relabelled PASS.
 
-Actual browser evidence is reported separately by the PR. Real complex
+### Actual Windows Chrome acceptance
+
+The model-free Inspector was connected through Panel HTTP → MCP stdio → the
+independent Python worker. The input was a **synthetic** 96×128 complex64 DM4:
+`z(y,x)=(x-64)+i*(2*y-96)`, with X/Y scales `0.02 / -0.03 nm/px`, raw DM
+origins `1.25 / -2.5`, and physical pixel zero `[-0.025,-0.075] nm`.
+
+- PASS: amplitude view → unsaved Gamma edit → attempted imaginary switch
+  refused without losing the draft → undo → explicit imaginary display.
+  Imaginary limits became `[-96,94]`, rather than retaining amplitude limits.
+- PASS: drag ROI `[16,16,112,80)` in Chrome → view raw complex ROI → explicit
+  real display. Its limits became `[-48,47]`; the complex FFT action was
+  disabled with a specific explanation, and no FFT object was created.
+- PASS: GUI scientific export reopened independently as exact complex64,
+  shape `[64,96]`, both components equal to the known source slice. Negative
+  and positive imaginary values survived the real-only PNG display.
+- PASS: stop/reopen the Inspector and reload Chrome; the exact saved ROI view
+  ID, real component and limits were restored. This is helper-process recovery,
+  not GMS or computer-restart qualification.
+- Seven independent read-only numerical/export checks PASS, including source
+  SHA-256, raw values, signed scales/origins, component metadata and no FFT.
+- Related frontend tests: 73 PASS, zero failures/skips, including scalar and
+  generated-FFT compatibility and missing-dtype annotation wrappers.
+
+Actual Chrome screenshots (synthetic data only):
+
+![Imaginary display with explicit component](examples/complex/imaginary-display.png)
+![Saved real ROI display after helper reopen](examples/complex/reopened-real-controls.png)
+
+To reproduce without IDs, from this checkout:
+
+```sh
+python examples/make_complex_trial.py /absolute/new-fixture-directory
+node tools/researcher_inspector.mjs --source /absolute/new-fixture-directory/complex-field.dm4 --workspace /absolute/new-analysis --python /absolute/venv/python --component amplitude
+# Later: omit --source/--component and reopen the same --workspace.
+```
+
+The generator requires NumPy and this checkout's test fixture encoder; it is
+not a general-purpose DM writer. The destination must be new. On Windows use
+the independent environment's `Scripts/python.exe` and quote paths as needed.
+
+Real complex
 experimental files, Mac device use, live DM and physical wave/phase conclusions
 remain **NOT_TESTED**. Synthetic format support is not universal DM coverage.
