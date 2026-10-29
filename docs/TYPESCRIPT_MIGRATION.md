@@ -1,4 +1,7 @@
-# Incremental TypeScript migration — first runnable slice
+# TypeScript migration — original audit and first-slice evidence
+
+The full business-source migration now continues in [the completion guide](TYPESCRIPT_COMPLETE.md).
+The sections below retain the original first-PR audit and its bounded evidence.
 
 Tracks [#15](https://github.com/wuchqwq/microscopy-workbench/issues/15).
 The comparison remains the exact frozen R3 commit
