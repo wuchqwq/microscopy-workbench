@@ -45,6 +45,17 @@ export function profileTicks(min,max,count=5){
  if(!finite(min)||!finite(max)||!Number.isInteger(count)||count<2||count>9)return [];
  if(min===max)return [min];return Array.from({length:count},(_,i)=>min+(max-min)*i/(count-1));
 }
+// Formatting alone must not collapse different ticks on a high-baseline axis.
+// Keep the usual compact labels, increasing precision only when it is needed.
+export function profileTickLabels(values,minimumPrecision=4){
+ const distinct=new Set(values.filter(finite)).size;
+ if(distinct<=1)return values.map(numberText);
+ for(let precision=minimumPrecision;precision<=17;precision++){
+  const labels=values.map(value=>finite(value)?String(Number(value.toPrecision(precision))):'未知');
+  if(new Set(labels.filter((_label,index)=>finite(values[index]))).size===distinct)return labels;
+ }
+ return values.map(numberText);
+}
 export function profileReadout(result,index){
  const samples=profileData(result);if(!Number.isInteger(index)||index<0||index>=samples.value.length)return null;
  return {index,x:samples.physical_distance?.[index]??samples.distance[index],unit:result.physical_distance_unit??result.distance_unit,
@@ -127,7 +138,7 @@ export class DataProbes {
   if(this.el('profile-summary'))this.el('profile-summary').textContent=`${samples.value.length} 点 · ${componentNames[result.component]??'未知分量'} · 最近邻 · 线宽 ${result.sampling?.line_width??'未知'} px · 距离 ${result.physical_distance_unit??result.distance_unit??'未知'} · 数值单位未声明${samples.value.length>200?'；表格显示前 200 点，CSV 包含全部采样':''}`;
   const rows=[];if(body&&this.document){body.replaceChildren();for(let i=0;i<Math.min(200,samples.value.length);i++){const row=this.document.createElement('tr');row.tabIndex=0;row.dataset.sampleIndex=String(i);for(const v of [i,...samples.coordinates_xy[i],samples.physical_distance?.[i]??samples.distance[i],samples.value[i]]){const cell=this.document.createElement('td');cell.textContent=numberText(v);row.append(cell);}body.append(row);rows.push(row);}}
   if(!plot||!this.document)return;plot.replaceChildren();plot.setAttribute('viewBox','0 0 560 200');plot.setAttribute('tabindex','0');plot.setAttribute('aria-label','已保存剖面；左右方向键读取原始采样值');
-  const model=profilePlot(result),range=model.range,fmt=v=>finite(v)?String(Number(v.toPrecision(5))):'未知';
+  const model=profilePlot(result),range=model.range;
   const create=(tag,attributes,text)=>{const e=this.document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attributes))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;plot.append(e);return e;};
   create('path',{d:'M64 22V158H540',fill:'none',stroke:'#6c8496','stroke-width':1});
   const labelX=`距离 (${model.xLabel??'未知单位'})`,labelY=`${model.yLabel??'数值'}（单位未标定）`;
@@ -135,8 +146,9 @@ export class DataProbes {
   create('text',{x:64,y:12,fill:'#afc4ce','font-size':10},labelY);
   if(!range)return;
   const px=x=>64+(x-range.xmin)/(range.xmax-range.xmin||1)*476,py=y=>158-(y-range.ymin)/(range.ymax-range.ymin||1)*136;
-  for(const x of profileTicks(range.xmin,range.xmax)){const p=px(x);create('line',{x1:p,x2:p,y1:158,y2:162,stroke:'#7894a3'});create('text',{x:p,y:176,'text-anchor':'middle',fill:'#afc4ce','font-size':10},fmt(x));}
-  for(const y of profileTicks(range.ymin,range.ymax,4)){const p=py(y);create('line',{x1:60,x2:64,y1:p,y2:p,stroke:'#7894a3'});create('text',{x:57,y:p+3,'text-anchor':'end',fill:'#afc4ce','font-size':10},fmt(y));}
+  const xTicks=profileTicks(range.xmin,range.xmax),yTicks=profileTicks(range.ymin,range.ymax,4),xLabels=profileTickLabels(xTicks,5),yLabels=profileTickLabels(yTicks,5);
+  for(const [index,x]of xTicks.entries()){const p=px(x);create('line',{x1:p,x2:p,y1:158,y2:162,stroke:'#7894a3'});create('text',{x:p,y:176,'text-anchor':'middle',fill:'#afc4ce','font-size':10},xLabels[index]);}
+  for(const [index,y]of yTicks.entries()){const p=py(y);create('line',{x1:60,x2:64,y1:p,y2:p,stroke:'#7894a3'});create('text',{x:57,y:p+3,'text-anchor':'end',fill:'#afc4ce','font-size':10},yLabels[index]);}
   for(const segment of model.segments)create('polyline',{points:segment.map(p=>p.join(',')).join(' '),fill:'none',stroke:'#6bd6df','stroke-width':1.5});
   const cross=create('line',{x1:0,x2:0,y1:22,y2:158,stroke:'#c7d9df','stroke-dasharray':'3 3',visibility:'hidden'}),dot=create('circle',{r:3,fill:'#e8f5f7',visibility:'hidden'});let selected=0;
   const highlight=index=>{const r=profileReadout(result,index);if(!r)return;selected=index;for(let i=0;i<rows.length;i++)rows[i].setAttribute('aria-selected',String(i===index));

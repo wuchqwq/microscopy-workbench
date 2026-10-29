@@ -141,6 +141,15 @@ test('million-scale and negative raw profile ticks remain inside their panel at 
   assert.match(svg,new RegExp('>'+values[0]+'<'));assert.deepEqual(input,before,'layout changes cannot normalize, offset or rewrite raw samples');
  }
 });
+
+test('high-baseline profile ticks stay distinct and constant axes retain the actual value',()=>{
+ for(const layout of ['2x2','1x3'])for(const values of [[19997000,19999000,20001000,20003000],[4294967292,4294967293,4294967294,4294967295],[-20000003,-20000002,-20000001,-20000000],[20000001,20000001,20000001,20000001]]){
+  const input=composition(layout),index=input.panels.findIndex(panel=>panel.slot.kind==='profile');input.panels[index].profile.samples.value=values;const before=clone(input);
+  const {svg}=renderCompositionSVG(input),labels=[...svg.matchAll(/<path d="M [^"]+ h 6" stroke="#273849"\/><text [^>]*>([^<]*)<\/text>/g)].map(match=>match[1]);
+  assert.equal(labels.length,values[0]===values.at(-1)?1:4);assert.equal(new Set(labels).size,labels.length,'different finite ticks must not be rounded to the same label');
+  assert.equal(labels[0],String(values[0]));assert.equal(labels.at(-1),String(values.at(-1)));assert.deepEqual(input,before,'formatting cannot alter saved samples or the scientific source');
+ }
+});
 test('saved recipe is restorable without embedding arrays and duplicate explicit views are not silently dropped',()=>{
  const input=composition();input.panels[1]=clone(input.panels[0]);input.recipe.slots[1]=clone(input.recipe.slots[0]);const before=clone(input),result=renderCompositionSVG(input),restored=renderCompositionSVG({recipe:JSON.parse(JSON.stringify(result.recipe)),panels:input.panels});assert.equal(restored.svg,result.svg);assert.equal((result.svg.match(/data-composition-slot="/g)??[]).length,4);assert.deepEqual(input,before);
  const known=makeFigureRecipe(input.panels[0].state,preferences);assert.deepEqual(result.recipe.slots[0].recipe,known);
