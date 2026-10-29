@@ -1,0 +1,29 @@
+{
+  "before_seconds": {
+    "frame": 3.4826990999281406,
+    "view": 3.4897217999678105,
+    "joint": 5.262708600028418
+  },
+  "after": [
+    {
+      "label": "frame",
+      "wall_seconds": 2.033865400007926,
+      "returncode": 0,
+      "ok": true
+    },
+    {
+      "label": "view",
+      "wall_seconds": 1.9596975999884307,
+      "returncode": 0,
+      "ok": true
+    },
+    {
+      "label": "joint",
+      "wall_seconds": 2.9655958000803366,
+      "returncode": 0,
+      "ok": true
+    }
+  ],
+  "environment": "Windows11; independent Python3.13.2; same saved synthetic source objects; fresh Python subprocess per read; single samples, not an end-to-end browser latency claim",
+  "change": "Lazy scipy.signal import only; no validation cache or science changes"
+}

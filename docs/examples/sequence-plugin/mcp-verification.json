@@ -1,0 +1,74 @@
+{
+  "scope": "actual plugin MCP stdio, independent Python, Panel HTTP; model/browser gestures separate",
+  "checks": [
+    "Bounded numerical correspondence agrees exactly with independently generated integer shifts and full ROI coordinates",
+    "Every FFT bin matches direct DFT; dtype/source samples, signed anisotropic d-spacings and real local change independently checked",
+    "Changed observation uses a committed measurement revision; other frames and all complex FFTs are reused without recomputation",
+    "Unsourced identity, calibration mismatch, out-of-view and periodic ambiguity remain explicit; incomparable rows produce no FFT",
+    "Fresh client recovers by task name and original request; zero new science objects/FFTs, original source and spectrum hashes unchanged"
+  ],
+  "software": {
+    "node": "v24.16.0",
+    "python": {
+      "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "Pillow": "12.3.0",
+      "tifffile": "2026.10.15"
+    }
+  },
+  "numerical": [
+    {
+      "frame_index": 0,
+      "raw_dtype_preserved": true,
+      "raw_values_equal": true,
+      "all_bin_direct_dft_max_absolute_error": 3.883572485627232e-08,
+      "signed_anisotropic_spacing_checked": 4
+    },
+    {
+      "frame_index": 1,
+      "raw_dtype_preserved": true,
+      "raw_values_equal": true,
+      "all_bin_direct_dft_max_absolute_error": 3.883572485627232e-08,
+      "signed_anisotropic_spacing_checked": 4
+    },
+    {
+      "frame_index": 2,
+      "raw_dtype_preserved": true,
+      "raw_values_equal": true,
+      "all_bin_direct_dft_max_absolute_error": 3.98616908787154e-08,
+      "signed_anisotropic_spacing_checked": 6
+    }
+  ],
+  "references": {
+    "sequence": "b9a5b71cf7d64451896d519c75990cc8",
+    "correspondence": "981b19ea98da4dc88673babd83a349c2",
+    "observations": "c9f20019dbc54990895e052b6774f5a3",
+    "revised_observations": "03fec91051714e4593af6fe60b41b2af",
+    "context": "synthetic-sequence-trial",
+    "context_revision": 2
+  },
+  "source": {
+    "sha256": "ce1cdc59ab673b69ea6c0825fb79d0093df8d3c6e13c3b6d407a84736ae694df",
+    "frames": [
+      {
+        "object_id": "a082814c99524587a8a1cad5a98058f0",
+        "frame_index": 0,
+        "array_sha256": "dc0c2cc63d57a50096ef2a2f96ebc223d319d046e00cf04bb7581a8a2b7018e1"
+      },
+      {
+        "object_id": "59a254d6f0e142609ae1de613804b895",
+        "frame_index": 1,
+        "array_sha256": "9aa7aca7b3e8d11160e48381a2d0add4122ba15f52d833a9d4fa974407a49602"
+      },
+      {
+        "object_id": "ca1d97ac844b4cae9fe5bccf6ffb0ca6",
+        "frame_index": 2,
+        "array_sha256": "2d9b2cd5400d4d8b4719a02b501b6a487c440f35a4c8331bcb848d78bf7fda44"
+      }
+    ]
+  },
+  "result": "PASS",
+  "synthetic_only": true,
+  "full_report_preserved_locally": true
+}

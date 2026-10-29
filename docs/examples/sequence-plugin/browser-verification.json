@@ -1,0 +1,317 @@
+{
+  "result": "PASS",
+  "source_unchanged": true,
+  "fft_hashes": {
+    "6864e87bb0134114926c18825feae682": "a99a7b299730bc3e9525ad0ae86d4101d1ba5024e61817660269ccce9d78600d",
+    "796fe4f070ec463380877809a07ee4f0": "69bc480520d5d6758215aef61be379adc31e5653c51fc300d19cefaf454040eb",
+    "a4979711e4db43068c07e1a0ba2f379e": "a99a7b299730bc3e9525ad0ae86d4101d1ba5024e61817660269ccce9d78600d",
+    "f7b05b88206d443bad49b1e6caa63f09": "ae0aee1cd4746e378505d085e159ea2c3a2f32208e7c09b820a0e253d994a046"
+  },
+  "fft_count": 4,
+  "changed_measurements": [
+    "9353a0412c934a8392dc2b83e8f0c42f"
+  ],
+  "unchanged_other_frames": true,
+  "old_joint": "03fec91051714e4593af6fe60b41b2af",
+  "new_joint": "29cf06d96c5f46bf9934264e082aed01",
+  "table": [
+    {
+      "frame_index": 0,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "aff448c4154c469786821f72075fe3a6",
+      "measurement_object_id": "7752778cc8544bc7b1f8f4857a4b2015",
+      "candidate_measurement_object_ids": [
+        "7752778cc8544bc7b1f8f4857a4b2015"
+      ],
+      "frequency_cycles_per_pixel": [
+        -0.123,
+        0
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        -0.125,
+        0
+      ],
+      "residual_cycles_per_pixel": 0.0020000000000000018,
+      "d_spacing": 0.2032520325203252,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 0,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "6597fd6987e44261adcca6b0b2fb7881",
+      "measurement_object_id": "f38ce7bc38df415f9619d9662a64d4ab",
+      "candidate_measurement_object_ids": [
+        "f38ce7bc38df415f9619d9662a64d4ab"
+      ],
+      "frequency_cycles_per_pixel": [
+        0.125,
+        0
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0.125,
+        0
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.2,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 0,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "282df9358e414dbfa2bbc66b3e83d731",
+      "measurement_object_id": "b92d49c223764e5b90bb3a04ba71249d",
+      "candidate_measurement_object_ids": [
+        "b92d49c223764e5b90bb3a04ba71249d"
+      ],
+      "frequency_cycles_per_pixel": [
+        0,
+        0.08333333333333333
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0,
+        0.08333333333333333
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.36,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 0,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "b3cfb4679a284e5c883f873ffd9da9e2",
+      "measurement_object_id": "af45254387764bf28947de2a57ffd88a",
+      "candidate_measurement_object_ids": [
+        "af45254387764bf28947de2a57ffd88a"
+      ],
+      "frequency_cycles_per_pixel": [
+        0,
+        -0.08333333333333333
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0,
+        -0.08333333333333333
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.36,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 1,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "aff448c4154c469786821f72075fe3a6",
+      "measurement_object_id": "aff448c4154c469786821f72075fe3a6",
+      "candidate_measurement_object_ids": [
+        "aff448c4154c469786821f72075fe3a6"
+      ],
+      "frequency_cycles_per_pixel": [
+        -0.125,
+        0
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        -0.125,
+        0
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.2,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 1,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "6597fd6987e44261adcca6b0b2fb7881",
+      "measurement_object_id": "6597fd6987e44261adcca6b0b2fb7881",
+      "candidate_measurement_object_ids": [
+        "6597fd6987e44261adcca6b0b2fb7881"
+      ],
+      "frequency_cycles_per_pixel": [
+        0.125,
+        0
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0.125,
+        0
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.2,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 1,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "282df9358e414dbfa2bbc66b3e83d731",
+      "measurement_object_id": "282df9358e414dbfa2bbc66b3e83d731",
+      "candidate_measurement_object_ids": [
+        "282df9358e414dbfa2bbc66b3e83d731"
+      ],
+      "frequency_cycles_per_pixel": [
+        0,
+        0.08333333333333333
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0,
+        0.08333333333333333
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.36,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 1,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "b3cfb4679a284e5c883f873ffd9da9e2",
+      "measurement_object_id": "b3cfb4679a284e5c883f873ffd9da9e2",
+      "candidate_measurement_object_ids": [
+        "b3cfb4679a284e5c883f873ffd9da9e2"
+      ],
+      "frequency_cycles_per_pixel": [
+        0,
+        -0.08333333333333333
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0,
+        -0.08333333333333333
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.36,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 2,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "aff448c4154c469786821f72075fe3a6",
+      "measurement_object_id": "026610eec3244f3d9f809f69b7f3d1de",
+      "candidate_measurement_object_ids": [
+        "026610eec3244f3d9f809f69b7f3d1de"
+      ],
+      "frequency_cycles_per_pixel": [
+        -0.125,
+        0
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        -0.125,
+        0
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.2,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 2,
+      "status": "not_detected",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "6597fd6987e44261adcca6b0b2fb7881",
+      "measurement_object_id": null,
+      "candidate_measurement_object_ids": [],
+      "frequency_cycles_per_pixel": null,
+      "reference_frequency_cycles_per_pixel": [
+        0.125,
+        0
+      ],
+      "residual_cycles_per_pixel": null,
+      "d_spacing": null,
+      "d_spacing_unit": null
+    },
+    {
+      "frame_index": 2,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "282df9358e414dbfa2bbc66b3e83d731",
+      "measurement_object_id": "47d7af84574342c9b3586a7e92c7ce5d",
+      "candidate_measurement_object_ids": [
+        "47d7af84574342c9b3586a7e92c7ce5d"
+      ],
+      "frequency_cycles_per_pixel": [
+        0,
+        0.08333333333333333
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0,
+        0.08333333333333333
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.36,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 2,
+      "status": "observed",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": "b3cfb4679a284e5c883f873ffd9da9e2",
+      "measurement_object_id": "3d8cc8f0811a45799aabbba33d5e5798",
+      "candidate_measurement_object_ids": [
+        "3d8cc8f0811a45799aabbba33d5e5798"
+      ],
+      "frequency_cycles_per_pixel": [
+        0,
+        -0.08333333333333333
+      ],
+      "reference_frequency_cycles_per_pixel": [
+        0,
+        -0.08333333333333333
+      ],
+      "residual_cycles_per_pixel": 0,
+      "d_spacing": 0.36,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 2,
+      "status": "unmatched",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": null,
+      "measurement_object_id": "9353a0412c934a8392dc2b83e8f0c42f",
+      "candidate_measurement_object_ids": [],
+      "frequency_cycles_per_pixel": [
+        0.1417666627494878,
+        -0.008383332089671569
+      ],
+      "reference_frequency_cycles_per_pixel": null,
+      "residual_cycles_per_pixel": null,
+      "d_spacing": 0.176132382063942,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 2,
+      "status": "unmatched",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": null,
+      "measurement_object_id": "7f6c67ef0e63464eaaf7e2f461ee5aeb",
+      "candidate_measurement_object_ids": [],
+      "frequency_cycles_per_pixel": [
+        -0.16666666666666666,
+        0
+      ],
+      "reference_frequency_cycles_per_pixel": null,
+      "residual_cycles_per_pixel": null,
+      "d_spacing": 0.15000000000000002,
+      "d_spacing_unit": "nm"
+    },
+    {
+      "frame_index": 2,
+      "status": "unmatched",
+      "correspondence_status": "VERIFIED",
+      "reference_measurement_object_id": null,
+      "measurement_object_id": "9695067a69354820ad8fbb2250634e2f",
+      "candidate_measurement_object_ids": [],
+      "frequency_cycles_per_pixel": [
+        0.16666666666666666,
+        0
+      ],
+      "reference_frequency_cycles_per_pixel": null,
+      "residual_cycles_per_pixel": null,
+      "d_spacing": 0.15000000000000002,
+      "d_spacing_unit": "nm"
+    }
+  ],
+  "browser": "Actual Chrome, UI pointer drag; Panel HTTP -> MCP stdio -> Python; page reloaded and saved evidence verified",
+  "fft_count_before_equals_after": true,
+  "new_fft_arrays": 0
+}
