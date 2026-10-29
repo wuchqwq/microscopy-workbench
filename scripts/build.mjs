@@ -17,9 +17,19 @@ try{
  run(['-p','tsconfig.shared.json']);
  run(['-p','tsconfig.types.json']);
  run(['-p','tsconfig.node.json','--outDir',staging]);
- // Unmigrated JS passes through byte-for-byte; migrated .mts has exactly one
- // emitted implementation. Never copy a checkout compatibility shim over it.
+ // Business sources are all checked TypeScript. Only documented startup/test
+ // bootstraps remain JS. Never copy a source startup shim over emitted code.
  const shims=new Set(['server.mjs','science-server.mjs','tools/plugin_server.mjs']);
+ const javascriptExceptions=new Set([...shims,'tools/smoke_sequence_plugin.mjs','tools/smoke_domain_plugin.mjs','tools/smoke_feature_field.mjs']);
+ const sourceAudit=relative=>{
+  for(const entry of readdirSync(path.join(root,relative),{withFileTypes:true})){
+   const next=path.join(relative,entry.name),portable=next.split(path.sep).join('/');
+   if(entry.isDirectory())sourceAudit(next);
+   else if(entry.isFile()&&/\.[cm]?js$/.test(entry.name)&&!javascriptExceptions.has(portable))throw new Error('Unchecked business JavaScript: '+portable);
+  }
+ };
+ for(const directory of ['lib','tools','ui'])sourceAudit(directory);
+ for(const entry of readdirSync(root,{withFileTypes:true}))if(entry.isFile()&&/\.[cm]?js$/.test(entry.name)&&!javascriptExceptions.has(entry.name))throw new Error('Unchecked root JavaScript: '+entry.name);
  const copy=(relative)=>{
   const source=path.join(root,relative);
   if(!existsSync(source))return;

@@ -27,3 +27,11 @@ const qualifiedId:ObjectId=projected.source_object_id;
 // @ts-expect-error a UI projection cannot qualify a scientific selection
 const qualifiedSelection:Selection=projected;
 void [mixed,missingCamera,physicalScale,qualifiedId,qualifiedSelection];
+
+const draftAck=await api('/api/action',{expected_object_id:'saved-view',action:'draft',lightweight:true,params:{}});
+// @ts-expect-error lightweight acknowledgments never promise a full scientific snapshot
+draftAck.object;
+declare const unknownAction:Readonly<Record<string,unknown>>;
+const unqualifiedAction=await api('/api/action',unknownAction);
+// @ts-expect-error an unchecked action body cannot promise the state response
+unqualifiedAction.object;

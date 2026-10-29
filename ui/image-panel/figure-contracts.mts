@@ -19,7 +19,7 @@ export interface ProfileSlot {kind:'profile';title:string;object_id:string;scien
 export type CompositionSlot=ImageSlot|ProfileSlot;
 export interface CompositionRecipe {schema:string;layout:string;font_pt:number;slots:CompositionSlot[];roiOutlines?:boolean;showLegend?:boolean;}
 export interface SpatialSource {object_id:string;shape_yx:readonly number[];dtype:string;array_sha256:string;frame_identity:FigureFrameIdentity;}
-export interface CompositionPanel {readonly slot:CompositionSlot;readonly state?:FigureState;readonly profile?:ProfileResult;readonly clean_png_base64?:string;readonly scale_bar?:ScaleBarRecord|null;readonly spatial_source?:SpatialSource;}
+export interface CompositionPanel {readonly slot:CompositionSlot|ShallowCompositionSlot;readonly state?:FigureState;readonly profile?:ProfileResult;readonly clean_png_base64?:string;readonly scale_bar?:ScaleBarRecord|null;readonly spatial_source?:SpatialSource;}
 
 // Legacy composition admission checks containers and selected controls only.
 // These records are not a validated producer FigureRecipe or scientific proof.

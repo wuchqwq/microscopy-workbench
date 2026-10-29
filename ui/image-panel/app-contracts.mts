@@ -1,4 +1,4 @@
-import type {FigureState,FigureObject,FigureMark,ScientificAnchor,FigurePreferences,FigureBase,FigureRecipe,CompositionPanel} from './figure-contracts.mjs';
+import type {FigureState,FigureObject,FigureMark,ScientificAnchor,FigurePreferences,FigureBase,FigureRecipe,CompositionPanel,CompositionRecipe,CompositionSlot,ShallowCompositionSlot} from './figure-contracts.mjs';
 import type {AnnotationPresentation,AnnotationLabel,MeasurementRecord,CalibrationView,ViewTransform,DisplayPanel} from './presentation-contracts.mjs';
 import type {NumericReply,ProfileResult,ProbeResult} from './data-probe-contracts.mjs';
 import type {SequenceEvidence,DomainEvidence} from './evidence-contracts.mjs';
@@ -30,10 +30,12 @@ export interface SelectionSnapshot {draft:AppSelection|null;selectedId:string;}
 export interface LocalSnapshot extends SelectionSnapshot {editCoordinates:readonly number[]|null;labelDraft:AnnotationPresentation|null;fieldDirty:boolean;display:DisplayDraft;fields:{id:string;text:string;color:string;status:string};}
 export type AppHistoryEntry=({kind:'annotation';before:AnnotationEdit;after:AnnotationEdit}|{kind:'display';before:DisplayDraft;after:DisplayDraft}|{kind:'selection';before:SelectionSnapshot;after:SelectionSnapshot})&{label:string;scope:string|undefined};
 export interface MeasurementTarget {previousMeasurement?:string;id:string|undefined;submittedObject:string;savedObject:string;sequence:number;geometryRevision:number;anchor:AppAnchor;kind:SelectionKind;status?:string;panel:WirePanel;calibration:CalibrationView|null;numericLabel:AnnotationLabel|null|undefined;request_id?:string|null;}
-export interface DraftPublication extends Readonly<Record<string,unknown>> {expected_object_id:string;action:'draft';lightweight:boolean;params:Readonly<Record<string,unknown>>;urgent?:boolean;}
+export interface DraftPublication extends Readonly<Record<string,unknown>> {expected_object_id:string;action:'draft';lightweight:true;params:Readonly<Record<string,unknown>>;urgent?:boolean;}
 interface GestureSlots {pointerId?:number;start?:XY;end?:XY;originalStart?:XY;startClient?:XY;originalView?:ViewTransform;mark?:AppMark;p?:WirePanel;edges?:boolean;handle?:number;original?:readonly number[];before?:CompleteAnnotationEdit|null;previousEdit?:readonly number[]|null;originalOffset?:readonly number[];labelSize?:readonly number[];anchor?:readonly number[];selectionBefore?:SelectionSnapshot;blankSelect?:boolean;}
 export type DragState=(GestureSlots&{kind:'pan';pointerId:number;startClient:XY;originalView:ViewTransform})|(GestureSlots&{kind:'label';pointerId:number;start:XY;end:XY;originalOffset:readonly number[];labelSize:readonly number[];anchor:readonly number[]})|(GestureSlots&{kind:'edit';start:XY;end:XY;mark:AppMark;p:WirePanel;edges:boolean;handle:number;original:readonly number[];previousEdit:readonly number[]|null})|(GestureSlots&{kind:SelectionKind;start:XY;end:XY;originalStart:XY;p:WirePanel;selectionBefore:SelectionSnapshot;blankSelect:boolean});
 export interface ActionParams extends Readonly<Record<string,unknown>> {source_view?:boolean;}
+export type CompositionDraft=Omit<CompositionRecipe,'slots'>&{slots:(CompositionSlot|ShallowCompositionSlot)[]};
+export interface StatefulActionRequest extends Readonly<Record<string,unknown>> {action:string;lightweight?:false;}
 export interface AppDraftAck {object_id?:string;state_revision?:number;edit_state?:AppState['edit_state'];selection?:AppSelection|null;}
 export interface AppRevision {state_revision:number;object_id:string;pending_result?:AppState['pending_result'];}
 // The same-server remote port describes UI metadata only; numerical/calibration
@@ -43,7 +45,7 @@ export interface PanelBrowserAPI {
  (url:'/api/composition/resolve',body:Readonly<Record<string,unknown>>):Promise<{panels:CompositionPanel[]}>;
  (url:`/api/measurements${string}`,body?:Readonly<Record<string,unknown>>):Promise<import('./presentation-contracts.mjs').MeasurementResponse>;
  (url:'/api/action',body:DraftPublication):Promise<AppDraftAck>;
- (url:'/api/action',body:Readonly<Record<string,unknown>>):Promise<AppState>;
+ (url:'/api/action',body:StatefulActionRequest):Promise<AppState>;
  (url:'/api/state'):Promise<AppState>;
  (url:'/api/revision'):Promise<AppRevision>;
  (url:string,body?:Readonly<Record<string,unknown>>):Promise<unknown>;

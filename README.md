@@ -34,8 +34,9 @@ See the [method baseline](docs/R3_METHOD_BASELINE.md) and [actual acceptance](do
 ## Build and run
 
 Source checkout (Node >=18): `npm ci`, `npm run typecheck`, `npm run build`.
-`npm start` and `npm test` use `dist/`; the source `server.mjs` and
-`tools/plugin_server.mjs` are compatibility launchers into that compiled runtime.
+`npm start` and `npm test` use `dist/`. The source `server.mjs`,
+`science-server.mjs` and `tools/plugin_server.mjs` are compatibility launchers
+into that compiled runtime.
 Copy/install the complete `dist/` directory, including hidden plugin manifests,
 Python workers and Skills. The copied runtime needs no compiler or node_modules.
 See [incremental TypeScript migration](docs/TYPESCRIPT_MIGRATION.md).
@@ -65,7 +66,7 @@ No client settings, approval policy or Skills are changed automatically. Add
 For direct use without any model, run:
 
 ```sh
-node tools/researcher_inspector.mjs --source /absolute/input.tiff --workspace /absolute/new-workspace --python /absolute/venv/bin/python
+npm run inspect -- --source /absolute/input.tiff --workspace /absolute/new-workspace --python /absolute/venv/bin/python
 ```
 
 On Windows, supply the equivalent absolute paths; quoting paths with spaces is
