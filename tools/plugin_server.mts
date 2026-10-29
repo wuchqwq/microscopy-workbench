@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Plugin composition only: the scientific runtime, journals and tools stay shared.
 import path from 'node:path';
+import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import os from 'node:os';
 import {readFileSync,statSync,existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -74,4 +75,4 @@ export function runPluginCLI(args: string[]=process.argv.slice(2)): void {
     startPluginServer({settingsPath:args[1]});
   }catch(error){console.error('Microscopy Workbench plugin: '+(error instanceof Error?error.message:undefined));process.exitCode=1;}
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))runPluginCLI();
+if(isDirectInvocation(import.meta.url))runPluginCLI();
