@@ -1,5 +1,6 @@
 // Direct researcher entry: the same local MCP/scientific backend, no model.
 import path from 'node:path';
+import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import {fileURLToPath} from 'node:url';
 import {randomBytes} from 'node:crypto';
 import {mkdirSync,existsSync,realpathSync,statSync,openSync,writeFileSync,fsyncSync,closeSync,readFileSync,renameSync,unlinkSync} from 'node:fs';
@@ -110,7 +111,7 @@ export async function startResearcherInspector(options:ResearcherOptions,{create
   async close(){await panel.close();}};
 }
 
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+if(isDirectInvocation(import.meta.url)){
  let instance:Awaited<ReturnType<typeof startResearcherInspector>>;
  try{
   instance=await startResearcherInspector(parseResearcherArgs(process.argv.slice(2)));
