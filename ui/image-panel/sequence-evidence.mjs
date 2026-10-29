@@ -1,16 +1,26 @@
 // Read-only projection of authoritative saved joint observations. Navigation uses
 // existing draft-aware show, never triggers FFT or computes science in the UI.
+export function correspondenceEvidenceText(frame={},referenceIndex) {
+  if(frame.method==='reference_identity'||Number.isInteger(referenceIndex)&&frame.frame_index===referenceIndex)return '参考帧（无跨帧推断）';
+  if(frame.basis?.source==='user_statement_not_independently_verified')return '用户声明的坐标映射（未独立验证）';
+  if(frame.basis?.source==='bounded_numerical_estimate')return frame.status==='VERIFIED'?'有限范围数值对应（按设定阈值接受）':'有限范围数值估计（未接受对应）';
+  return '对应依据未知（不能视为独立验证）';
+}
+
 export function renderSequenceEvidence(container,evidence,{show,onError}={}) {
   if(!container)return;
   container.hidden=!evidence;
   if(!evidence){container.replaceChildren();return;}
   const doc=container.ownerDocument,make=(tag,text)=>{const el=doc.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
   const summary=make('summary','跨帧联合观测 · 保存证据');
-  const note=make('p','历史证据表不会随当前拖动自动改写。修订峰位后，由工具提交新测量并更新联合观测；相邻帧不等于独立置信样本。');
+  const note=make('p','VERIFIED 仅表示坐标映射可用于处理；各帧依据见下方，不证明物理同一性或连续结构。历史证据表不会随当前拖动自动改写。修订峰位后，由工具提交新测量并更新联合观测；相邻帧不等于独立置信样本。');
   note.className='help-text';
   const navigation=make('div');navigation.className='sequence-navigation';
+  const frames=new Map((evidence.frame_observations??[]).map(frame=>[frame.frame_index,frame]));
+  const basisText=frame=>correspondenceEvidenceText(frame,evidence.reference_index);
   for(const frame of evidence.frame_observations??[]) {
-    const row=make('div'),label=make('span',`序列位置 ${frame.frame_index+1} · ${frame.status} `);row.append(label);
+    const row=make('div'),label=make('span',`序列位置 ${frame.frame_index+1} · ${frame.status} · ${basisText(frame)} `);row.append(label);
+    row.title=[frame.basis?.source_text,frame.reason].filter(Boolean).join('；');
     for(const [title,key] of [['原图 / ROI 框','overview_object_id'],['ROI','roi_object_id'],['FFT / 测量','view_object_id']]) {
       if(!frame[key])continue;
       const button=make('button',title);button.type='button';button.setAttribute('aria-label',`序列位置 ${frame.frame_index+1} ${title}`);
@@ -19,11 +29,11 @@ export function renderSequenceEvidence(container,evidence,{show,onError}={}) {
     navigation.append(row);
   }
   const scroll=make('div');scroll.className='results-scroll';const table=make('table');table.setAttribute('aria-label','跨帧反射证据');
-  const head=make('thead'),header=make('tr');for(const name of ['序列位置','状态','fx / fy (cycles/px)','残差 (cycles/px)','周期 / 单位'])header.append(make('th',name));head.append(header);table.append(head);
+  const head=make('thead'),header=make('tr');for(const name of ['序列位置','观测状态','坐标对应依据','fx / fy (cycles/px)','残差 (cycles/px)','周期 / 单位'])header.append(make('th',name));head.append(header);table.append(head);
   const body=make('tbody'),format=value=>Number.isFinite(value)?Number(value).toPrecision(5):'—';
   for(const row of evidence.observations??[]) {
     const tr=make('tr');tr.title=`保存测量：${row.measurement_object_id??'未匹配'}；参考：${row.reference_measurement_object_id??'无'}`;
-    for(const text of [String(row.frame_index+1),row.status,row.frequency_cycles_per_pixel?.map(format).join(' / ')??'—',format(row.residual_cycles_per_pixel),Number.isFinite(row.d_spacing)?`${format(row.d_spacing)} ${row.d_spacing_unit}`:'—'])tr.append(make('td',text));body.append(tr);
+    for(const text of [String(row.frame_index+1),row.status,basisText(frames.get(row.frame_index)??{frame_index:row.frame_index}),row.frequency_cycles_per_pixel?.map(format).join(' / ')??'—',format(row.residual_cycles_per_pixel),Number.isFinite(row.d_spacing)?`${format(row.d_spacing)} ${row.d_spacing_unit}`:'—'])tr.append(make('td',text));body.append(tr);
   }
   table.append(body);scroll.append(table);container.replaceChildren(summary,note,navigation,scroll);
 }

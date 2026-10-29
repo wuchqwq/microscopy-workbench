@@ -61,8 +61,15 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(r.data.kind==='joint_observations'){
    const evidence=r.data,frame=evidence.frame_observations?.find(row=>row.frame_index===evidence.reference_index&&row.view_object_id);
    if(!frame)fail('Joint observations have no saved reference-frame view');
+   const correspondence=(await journalCall('image_info',{object_id:evidence.correspondence_object_id})).data;
+   if(correspondence.kind!=='region_correspondence'||correspondence.sequence_object_id!==evidence.sequence_object_id)fail('Joint evidence correspondence identity mismatch');
+   const frameEvidence=evidence.frame_observations.map(row=>{
+    const mapping=correspondence.rows.find(candidate=>candidate.frame_index===row.frame_index);
+    if(!mapping||mapping.selected_object_id!==row.selected_object_id||mapping.status!==row.status)fail('Joint evidence frame identity mismatch');
+    return {...row,method:mapping.method,basis:mapping.basis,reason:mapping.reason,shift_xy:mapping.shift_xy};
+   });
    const shown=await journalCall('image_info',{object_id:frame.view_object_id});
-   return {...shown,sequenceEvidence:{object_id:evidence.object_id,request_id:evidence.request_id,sequence_object_id:evidence.sequence_object_id,correspondence_object_id:evidence.correspondence_object_id,reference_index:evidence.reference_index,frame_observations:evidence.frame_observations,observations:evidence.observations}};
+   return {...shown,sequenceEvidence:{object_id:evidence.object_id,request_id:evidence.request_id,sequence_object_id:evidence.sequence_object_id,correspondence_object_id:evidence.correspondence_object_id,reference_index:evidence.reference_index,frame_observations:frameEvidence,observations:evidence.observations}};
   }
   let renderKind=r.data.kind,renderDtype=r.data.dtype;
   if(['tiff_source','dm_source'].includes(r.data.kind)||r.png&&r.data.kind!=='calibration')return r;

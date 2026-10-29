@@ -69,7 +69,10 @@ The table does not average frames or interpret intensity changes as a unique
 phase, twin, defect or independently replicated confidence.
 
 Opening the joint object in the existing Panel shows its saved evidence table
-and per-frame original/ROI/FFT navigation. Its individual saved views are also
+and per-frame original/ROI/FFT navigation. The Panel distinguishes the reference
+frame, user-declared mappings and bounded numerical correspondence alongside the
+unchanged status values; missing basis remains unknown. `VERIFIED` alone does
+not establish physical identity or continuity. Its individual saved views are also
 usable by Figure Composer. The contact image is display only. After a
 GUI correction, save the changed scientific anchor with an ordinary measurement
 revision and pass those measurement IDs as overrides. This avoids treating an
