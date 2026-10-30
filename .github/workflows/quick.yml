@@ -5,7 +5,38 @@ on:
 permissions:
   contents: read
 jobs:
+  changes:
+    name: Classify changes / documentation check
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      run_full_ci: ${{ steps.classify.outputs.run_full_ci }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test change classification
+        run: python3 -B tests/ci_scope_test.py
+      - name: Determine test scope
+        id: classify
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/ci_scope.sh >> "$GITHUB_OUTPUT"
+      - name: Check documentation whitespace
+        if: steps.classify.outputs.run_full_ci == 'false'
+        shell: bash
+        env:
+          COMPARISON_BASE: ${{ steps.classify.outputs.comparison_base }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git diff --check "$COMPARISON_BASE" "$HEAD_SHA"
+
   node-smoke:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -24,6 +55,8 @@ jobs:
       - run: node --check server.mjs
       - run: npm test
   dm4-reader:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -60,6 +93,8 @@ jobs:
         env:
           MICROSCOPY_PYTHON: python
   spatial-evidence:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -91,6 +126,8 @@ jobs:
           MICROSCOPY_PYTHON: python
 
   active-analysis:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -115,6 +152,8 @@ jobs:
       - run: node --test dist/tests/active-analysis-contract.test.mjs
 
   compiled-compatibility:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

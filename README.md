@@ -1,124 +1,92 @@
 # Microscopy Workbench
 
-Cross-platform microscopy image analysis and scientific interaction through MCP,
-with an optional local Image Panel. **Windows, macOS and Linux do not require
-DigitalMicrograph or the mcp-dm repository.** A compatible Agent may connect
-`microscopy-core` and the optional `mcp-dm` as two peer MCP servers.
+**From microscopy images to traceable structural evidence.**
 
-This is a migration candidate, not a newly qualified instrument integration.
-`MIGRATION_MANIFEST.json` identifies the exact reviewed source and recipe commits
-and every copied/generated file. The original repository retains historical Git
-attribution; this snapshot export does not rewrite or pretend to preserve blame.
+[English](README.md) · [简体中文](README.zh-CN.md)
 
-The display name is **Microscopy Workbench**. The initial import is recorded by
-`MIGRATION_MANIFEST.json`; later changes are ordinary Git commits. Internal
-`microscopy-core` package/server identity, environment variables, tool names,
-schemas and saved object/request IDs remain compatible with that import.
+Microscopy Workbench is an open-source, cross-platform workbench for scientific microscopy analysis. It combines numerical tools, persistent scientific records, and a local Image Panel. Through the **Model Context Protocol (MCP)** and installable **Skills**, compatible AI agents can use those same tools to organize an analysis—not replace its numerical or physical foundations.
 
-Current [client setup](docs/CLIENT_SETUP.md) includes Windows and macOS/Linux
-configuration; the [Agent guide](README.agent.md) defines the independent tool
-boundary. Do not use the old combined DM registrar for this package.
+The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, GMS, or the separate `mcp-dm` repository. **No AI model is needed** to inspect and measure images locally.
 
-For repeatable Agent use, the [local automation plugin](docs/AUTOMATION_PLUGIN.md)
-packages the same MCP server with installable Skills. It adds bounded multiscale
-ROI/FFT batches, numerical peak observations, saved measurements and explicit
-candidate comparison, with GUI review and original-request recovery. It does not
-require a model for ordinary GUI use or claim automatic phase/defect identification.
+![R3 local structural evidence in the Image Panel](docs/examples/r3/browser-field.png)
 
-[Local structural fields](docs/SPATIAL_DOMAINS.md) link source windows, saved FFTs,
-reflection families and their period/direction measurements into a revisable
-sparse map. R2 sequence correspondences can supply the same evidence interface.
-Open a sampled window in the Panel, revise a peak, and reuse its unchanged FFT.
-See the [method baseline](docs/R3_METHOD_BASELINE.md) and [actual acceptance](docs/R3_ACCEPTANCE.md).
+*R3 structural-field review in the local Panel, using a public synthetic test image. This is workflow evidence, not validation on real specimens.*
 
-For bounded multiscale spatial analysis, [F1a domain tools](docs/MULTISCALE_DOMAINS.md)
-compose up to 32 saved windows in ordinary atlas batches, compare neighboring
-full reciprocal signatures, and return candidate domain supports, boundary bands
-and unknown masks. Review each sampled ROI/FFT in the existing Panel, revise a
-measurement and recover the named analysis without repeating unchanged FFTs.
-These descriptive candidates retain their source, scale, calibration and limits.
+## What you can do
 
-[F4-lite active analysis](docs/ACTIVE_ANALYSIS.md) proposes bounded next ROI/scale
-observations with transparent priorities and reserved exploration. An Agent can
-select saved actions, append observations while retaining old FFTs, update the
-domain map, and stop on budget, quality, history or evidence limits. Proposals
-are inspectable suggestions; the scientific provider makes no hidden model call.
+- **Inspect microscopy data.** Open supported TIFF images and, with an optional reader, selected DM3/DM4 files. Preserve original arrays, data types, axes, signed calibration, and explicit frame/ROI selections. Selected complex and higher-dimensional inputs require an explicit component or plane.
+- **Measure reciprocal-space features.** Compute local FFTs, detect and refine peaks, measure reciprocal vectors and spacings, and compare explicit crystallographic candidates using optional structure tools.
+- **Build spatial structural evidence (R3).** Connect sampled image windows, saved spectra, reflection families, and local periodicity into a sparse, revisable feature field. Compare specified in-plane rotation hypotheses without silently assigning phases or defects.
+- **Examine saved sequences (R2).** Keep frame meaning and ROI correspondence explicit when comparing neighboring images or reconstructed outputs; frame indices are not assumed to be physical depth.
+- **Review, correct, and export.** Open source-linked measurements in the Image Panel, revise annotations or peaks, and create scientific exports and publication figures with Figure Composer.
+- **Resume reproducibly.** Scientific objects, request journals, source hashes, measurement dependencies, and named AnalysisContext references make it possible to continue a previous analysis without recomputing unchanged FFTs.
 
-## Build and run
+### How it fits together
 
-Source checkout (Node >=18): `npm ci`, `npm run typecheck`, `npm run build`.
-`npm start` and `npm test` use `dist/`. The source `server.mjs`,
-`science-server.mjs` and `tools/plugin_server.mjs` are compatibility launchers
-into that compiled runtime.
-Copy/install the complete `dist/` directory, including hidden plugin manifests,
-Python workers and Skills. The copied runtime needs no compiler or node_modules.
-See [incremental TypeScript migration](docs/TYPESCRIPT_MIGRATION.md).
-
-## Install and test
-
-Use Node >=18 and a separate Python >=3.10 environment. Install
-`requirements-images.txt` there. Run `npm test` for dependency-free Node checks.
-Set `MICROSCOPY_PYTHON` to the **absolute** environment interpreter, then run
-`npm run test:science` for a real synthetic TIFF/FFT/NPY/HTTP round trip.
-Missing Python dependencies cause failure, not a silently skipped acceptance.
-
-Run `node server.mjs` from an MCP client's stdio configuration with:
-
-| Variable | Meaning |
-| --- | --- |
-| `MICROSCOPY_PYTHON` | Absolute independent Python interpreter |
-| `MICROSCOPY_IMAGE_WORKSPACE` | Absolute scientific working directory |
-| `MICROSCOPY_CONTEXT_WORKSPACE` | Optional independent context directory |
-| `MICROSCOPY_STRUCTURE_WORKSPACE` | Optional structure directory |
-| `MICROSCOPY_STRUCTURE_PYTHON` | Optional structure interpreter |
-
-No client settings, approval policy or Skills are changed automatically. Add
-`requirements-structure-tools.txt` only for CIF/XYZ/ASE/diffsims. The optional
-3Dmol viewer asset still needs its existing explicit local configuration.
-
-For direct use without any model, run:
-
-```sh
-npm run inspect -- --source /absolute/input.tiff --workspace /absolute/new-workspace --python /absolute/venv/bin/python
+```text
+Researcher or optional AI Agent + Skills
+                    |
+            MCP server (TypeScript)
+                    |
+       Scientific tools (Python)
+                    |
+       Versioned scientific workspace
+             /                 \
+    Local Image Panel      Figure Composer
 ```
 
-On Windows, supply the equivalent absolute paths; quoting paths with spaces is
-required. The terminal prints a private loopback panel URL. Keep the process
-running and stop normally with Ctrl+C. The Image Panel uses this repository's
-independent server and the exact selected workspace, not a hidden DM server.
+The Agent, when present, chooses and combines available operations. Scientific calculations are performed by explicit tools; the researcher can inspect and correct their results. Optional native DigitalMicrograph support lives in a **separate peer MCP server**, not inside this cross-platform core. The repository split and source attribution are documented in [MIGRATION_MANIFEST.json](MIGRATION_MANIFEST.json).
 
-For supported real scalar `.dm3` / `.dm4` planes, install optional `requirements-dm4.txt` in the
-same independent environment and use the same entry point. Stored dtype and
-signed XY calibration are preserved; the file is read-only and DM need not
-run. See [direct DM3/DM4 import](docs/DM4_DIRECT_IMPORT.md) for dataset selection,
-reader licensing and the bounded support range.
+## Quick start — no Agent required
 
-## Scope and data
+Requires **Node.js 18+** and **Python 3.10+** in a separate scientific environment.
 
-Admitted uint16 and finite grayscale float32 TIFF / verified schema-1 captures, source/frame/ROI,
-FFT, calibrated measurements, editable annotations and scientific exports remain
-subject to their original guards. Optional bounded scalar DM3/DM4 plane import is a
-later addition. Rank 3–6 sources require explicit plane axes and fixed indices;
-no navigation flattening or full-volume analysis is implied. Ordinary 2D complex
-DM arrays require an explicit display/numeric component; packed and nD complex
-arrays remain refused. Reconstruction, unique phase
-identification and remote DM transport remain outside this migration's scope.
-Saved native capture verification is a **read-only file-format adapter**, not a
-live DM dependency. Old file-workspace schemas and names are preserved so source
-hashes, original IDs and recovery records are not invalidated by a rename.
+```bash
+git clone https://github.com/wuchqwq/microscopy-workbench.git
+cd microscopy-workbench
+npm ci
+npm run build
 
-Ordinary 2D complex64/complex128 DM files retain both components and their raw
-NPY. Choose an explicit real/imag/amplitude/power display or numeric component;
-see [complex images](docs/DM_COMPLEX_IMAGES.md) for the qualified range and
-remaining processing/packed-format limits.
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-images.txt
 
-The science provider owns scientific arrays and contexts. The DM provider owns
-live DM image IDs, sessions and native request state. Exchange explicit versioned
-numeric captures, axes/units/domain and provenance; never share private runtime
-classes or silently fall back after a failed native operation.
+npm run inspect -- --source /absolute/path/to/image.tiff \
+  --workspace /absolute/path/to/new-workspace \
+  --python /absolute/path/to/microscopy-workbench/.venv/bin/python
+```
 
-Saved images and profiles can be arranged as 2×2 or 1×3 paper figures; see
-[Figure Composer](docs/FIGURE_COMPOSER.md) for export and layout recovery.
-The [GUI / Figure polish notes](docs/GUI_FIGURE_POLISH.md) show source-coordinate
-ROI outlines, compact optional legends and the fit/focus controls with actual
-before/after browser evidence.
+Replace the example paths with real **absolute paths**. The inspector prints a private local Panel URL; keep its process running while using the Panel. On Windows, use `py -3 -m venv .venv` and `.venv\Scripts\python.exe`. See the [client setup guide](docs/CLIENT_SETUP.md) for platform-specific details and supported file types.
+
+For development checks, run `npm run typecheck`, `npm test`, and—after setting `MICROSCOPY_PYTHON` to the absolute interpreter path—`npm run test:science`.
+
+### Use it with an AI Agent
+
+Connect the compiled MCP server to a compatible client, or install the packaged MCP + Skills plugin. The same science tools and local Panel are available with or without an Agent. See [client setup](docs/CLIENT_SETUP.md), [automation plugin setup](docs/AUTOMATION_PLUGIN.md), and the [Agent guide](README.agent.md). No model provider, API keys, or approval settings are silently configured by this project.
+
+## Status and research roadmap
+
+**Available on `main`:** the cross-platform TypeScript/MCP runtime, Python science providers, local inspection and visualization, source-linked FFT/measurement workflows, sequence evidence (R2), and sparse spatial structural fields (R3).
+
+**Under review:** [F1a — multiscale structural fields and candidate domains (Draft PR #28)](https://github.com/wuchqwq/microscopy-workbench/pull/28) adds bounded multiscale sampling and candidate domain/boundary evidence. Its synthetic numerical tests have passed, but it is **not yet merged into `main`**, and the remaining GUI/browser scope must not be treated as verified.
+
+**Planned:** [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16) covers evidence-guided, budgeted follow-up analysis (F4-lite), then qualified GPA displacement/strain estimates and crystallographic defect evidence. The current roadmap does **not** include Encoder training or a foundation-model project.
+
+## Scientific scope
+
+This is **research software**, not an autonomous microscope controller or a universally validated phase-identification system. It does not currently perform ptychographic reconstruction, general automatic phase/twin/dislocation identification, or live instrument control. Missing calibration stays missing; local spectral agreement is not proof of a phase, a defect, or a three-dimensional structure. Successful synthetic tests do not imply accuracy on real specimens.
+
+Original scientific data remain separate from display images and annotations. Saved evidence retains provenance, units, hypotheses, and unknown/ambiguous states rather than converting them into confident-looking labels.
+
+## Documentation
+
+| Topic | Guide |
+| --- | --- |
+| Installation and MCP clients | [Client setup](docs/CLIENT_SETUP.md) · [Automation plugin](docs/AUTOMATION_PLUGIN.md) |
+| Local images and review | [Image Panel](docs/LOCAL_IMAGE_PANEL.md) · [Researcher inspector](docs/RESEARCHER_DATA_INSPECTOR.md) |
+| Structural and sequence evidence | [R3 local structural fields](docs/SPATIAL_DOMAINS.md) · [R2 sequences](docs/SEQUENCE_PLUGIN.md) |
+| Crystallography and publication | [Structure tools](docs/STRUCTURE_DIFFRACTION_TOOLS.md) · [Figure Composer](docs/FIGURE_COMPOSER.md) |
+| Verified scopes and migration | [R3 acceptance](docs/R3_ACCEPTANCE.md) · [TypeScript completion](docs/TYPESCRIPT_COMPLETE.md) |
+
+## License
+
+[MIT](LICENSE). Reproducible issues, scientific counterexamples, and focused pull requests are welcome.
