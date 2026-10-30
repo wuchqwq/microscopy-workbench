@@ -1,0 +1,10 @@
+{
+  "status": "NOT_TESTED",
+  "scope": "Actual Windows browser gestures",
+  "trusted_surface_check": "Read-only Chrome get_window_state after returned window selection",
+  "reason": "Computer Use has been stopped for this turn because it could not determine the current browser URL on Windows with enough confidence to enforce policy.",
+  "ui_input_sent": false,
+  "alternate_browser_controller": false,
+  "http_ui_gesture_fallback": false,
+  "continued_scope": "Independent code, formal scientific MCP, read-only protocol and new Agent qualification only"
+}

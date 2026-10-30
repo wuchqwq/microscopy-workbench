@@ -1,5 +1,10 @@
 # F4-lite closeout: integration checkpoint and handoff
 
+Issue #33 continues this checkpoint. Its implementation, measured results and
+remaining unqualified scopes are recorded in
+[F4_LITE_CLOSEOUT_ACCEPTANCE.md](F4_LITE_CLOSEOUT_ACCEPTANCE.md); the original
+integration findings and failure history below remain unchanged.
+
 This is an integration/review checkpoint, **not a completed scientific closeout**.
 It combines PR #31 at `66139080de49e79158da242f51537dcd87258916` with main at
 `562416cb56fb76034ebc219101ea86845ed5cea4` on a separate branch. PR #28, PR #31,

@@ -1,0 +1,27 @@
+{
+  "scope": "Intermediate validation optimization review on newly created temporary fixtures; no frozen workspace mutation",
+  "before_fix": {
+    "status": "FAIL",
+    "implementation": "Aggregate memo hit checked only its own record",
+    "counterexamples": [
+      "test_indirect_cached_field_hit_rechecks_its_fft_child_payload",
+      "test_indirect_cached_field_hit_rechecks_creator_journal_parameters"
+    ],
+    "observed_failure": "WorkspaceError not raised after descendant payload or creator-journal parameter mutation",
+    "scientific_acceptance_executed_on_this_artifact": false
+  },
+  "after_fix": {
+    "status": "PASS",
+    "correction": "Recheck the bounded descendant qualification-proof closure, not only the aggregate's own record",
+    "same_two_counterexamples_passed": 2,
+    "counterexample_seconds": 13.036,
+    "final_actual_python_cases_passed": 11,
+    "final_actual_python_seconds": 39.855,
+    "additional_direct_helper_negative": "PASS"
+  },
+  "limits": [
+    "The RED log remains preserved separately; it was not rewritten as green",
+    "Temporary-fixture integrity tests do not establish browser gestures or real specimen accuracy",
+    "No new scientific tolerances, native ABI or source-array interpretation were introduced"
+  ]
+}

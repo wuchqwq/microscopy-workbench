@@ -1,0 +1,405 @@
+{
+  "status": "PASS",
+  "baseline_commit": "f1ffbe82523e9d890974ce6e2354a7b4eb1f7136",
+  "map_object_id": "3e6ad2e45b9a4b17a68574e955b8c735",
+  "field_object_id": "bfe2892ce3a349149386e42dc1ad431e",
+  "runs": [
+    {
+      "label": "baseline-map-full",
+      "status": "PASS",
+      "mode": "full",
+      "import_seconds": 1.0214862000430003,
+      "profiled_request_seconds": 4.886297199991532,
+      "response_canonical_bytes": 68289,
+      "response_sha256": "a7d03f7758e7014905231000ef433f5c82d2fbddf7ab9237856a19566189e384",
+      "same_authoritative_baseline_record": null,
+      "dependency_calls": {
+        "image_workspace.py:read_json": {
+          "primitive_calls": 1072,
+          "total_calls": 1072,
+          "own_seconds": 0.007403000000000001,
+          "cumulative_seconds": 0.8817502
+        },
+        "image_workspace.py:sha_file": {
+          "primitive_calls": 1619,
+          "total_calls": 1619,
+          "own_seconds": 0.0293373,
+          "cumulative_seconds": 1.0113545000000002
+        },
+        "image_workspace.py:_object_record": {
+          "primitive_calls": 444,
+          "total_calls": 444,
+          "own_seconds": 0.042006,
+          "cumulative_seconds": 2.0896508000000003
+        },
+        "image_feature_field.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0002553,
+          "cumulative_seconds": 1.7952508
+        },
+        "image_spatial_atlas.py:validate_references": {
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "own_seconds": 0.0012064,
+          "cumulative_seconds": 1.9450105000000002
+        },
+        "image_automation.py:validate_references": {
+          "primitive_calls": 10,
+          "total_calls": 10,
+          "own_seconds": 0.0017664000000000002,
+          "cumulative_seconds": 0.7015653000000001
+        },
+        "image_domain_compare.py:compare_families": {
+          "primitive_calls": 8,
+          "total_calls": 8,
+          "own_seconds": 0.0006258,
+          "cumulative_seconds": 2.0255305000000003
+        },
+        "image_workspace.py:object": {
+          "primitive_calls": 1,
+          "total_calls": 444,
+          "own_seconds": 0.0140359,
+          "cumulative_seconds": 4.884542000000001
+        },
+        "image_spatial_domains.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 2,
+          "own_seconds": 0.0009838000000000002,
+          "cumulative_seconds": 4.8756655
+        }
+      },
+      "source_and_fft_unchanged": true
+    },
+    {
+      "label": "baseline-field-full",
+      "status": "PASS",
+      "mode": "full",
+      "import_seconds": 0.7965224999934435,
+      "profiled_request_seconds": 2.809812399907969,
+      "response_canonical_bytes": 46438,
+      "response_sha256": "8105a3866f58894fd39fc3edc7ab7f112cc9cfd13d6eefc65d0efa8f852ebb00",
+      "same_authoritative_baseline_record": null,
+      "dependency_calls": {
+        "image_workspace.py:_object_record": {
+          "primitive_calls": 441,
+          "total_calls": 441,
+          "own_seconds": 0.0424918,
+          "cumulative_seconds": 2.0740853
+        },
+        "image_workspace.py:object": {
+          "primitive_calls": 1,
+          "total_calls": 441,
+          "own_seconds": 0.013796500000000001,
+          "cumulative_seconds": 2.8083616
+        },
+        "image_workspace.py:read_json": {
+          "primitive_calls": 1064,
+          "total_calls": 1064,
+          "own_seconds": 0.007583,
+          "cumulative_seconds": 0.8738123000000001
+        },
+        "image_workspace.py:sha_file": {
+          "primitive_calls": 1606,
+          "total_calls": 1606,
+          "own_seconds": 0.0277926,
+          "cumulative_seconds": 0.9974794
+        },
+        "image_feature_field.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0003573,
+          "cumulative_seconds": 1.8034492000000002
+        },
+        "image_spatial_domains.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0003413,
+          "cumulative_seconds": 2.800348
+        },
+        "image_spatial_atlas.py:validate_references": {
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "own_seconds": 0.0011304000000000002,
+          "cumulative_seconds": 1.8951008
+        },
+        "image_automation.py:validate_references": {
+          "primitive_calls": 10,
+          "total_calls": 10,
+          "own_seconds": 0.0018585000000000001,
+          "cumulative_seconds": 0.6781524
+        }
+      },
+      "source_and_fft_unchanged": true
+    },
+    {
+      "label": "candidate-map-full",
+      "status": "PASS",
+      "mode": "full",
+      "import_seconds": 0.7875570999458432,
+      "profiled_request_seconds": 4.276600199984387,
+      "response_canonical_bytes": 68289,
+      "response_sha256": "a7d03f7758e7014905231000ef433f5c82d2fbddf7ab9237856a19566189e384",
+      "same_authoritative_baseline_record": true,
+      "dependency_calls": {
+        "image_workspace.py:read_json": {
+          "primitive_calls": 753,
+          "total_calls": 753,
+          "own_seconds": 0.0053156,
+          "cumulative_seconds": 0.6097478000000001
+        },
+        "image_workspace.py:sha_file": {
+          "primitive_calls": 1137,
+          "total_calls": 1137,
+          "own_seconds": 0.0202624,
+          "cumulative_seconds": 0.6977693
+        },
+        "image_workspace.py:_object_record": {
+          "primitive_calls": 283,
+          "total_calls": 323,
+          "own_seconds": 0.0312708,
+          "cumulative_seconds": 1.80041
+        },
+        "image_feature_field.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0002548,
+          "cumulative_seconds": 1.0485712
+        },
+        "image_spatial_domains.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 2,
+          "own_seconds": 0.0010328000000000002,
+          "cumulative_seconds": 4.2577742
+        },
+        "image_automation.py:validate_references": {
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "own_seconds": 0.0009075000000000001,
+          "cumulative_seconds": 0.4170242
+        },
+        "image_workspace.py:object": {
+          "primitive_calls": 1,
+          "total_calls": 283,
+          "own_seconds": 0.005829900000000001,
+          "cumulative_seconds": 4.2750239
+        },
+        "image_spatial_atlas.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0005844,
+          "cumulative_seconds": 1.1251139000000001
+        },
+        "image_domain_compare.py:compare_families": {
+          "primitive_calls": 8,
+          "total_calls": 8,
+          "own_seconds": 0.0007593000000000001,
+          "cumulative_seconds": 1.960612
+        }
+      },
+      "source_and_fft_unchanged": true
+    },
+    {
+      "label": "candidate-field-full",
+      "status": "PASS",
+      "mode": "full",
+      "import_seconds": 0.8246705000055954,
+      "profiled_request_seconds": 2.3438491000561044,
+      "response_canonical_bytes": 46438,
+      "response_sha256": "8105a3866f58894fd39fc3edc7ab7f112cc9cfd13d6eefc65d0efa8f852ebb00",
+      "same_authoritative_baseline_record": true,
+      "dependency_calls": {
+        "image_workspace.py:read_json": {
+          "primitive_calls": 745,
+          "total_calls": 745,
+          "own_seconds": 0.0056487,
+          "cumulative_seconds": 0.620394
+        },
+        "image_workspace.py:sha_file": {
+          "primitive_calls": 1124,
+          "total_calls": 1124,
+          "own_seconds": 0.020843800000000003,
+          "cumulative_seconds": 0.7185711
+        },
+        "image_workspace.py:object": {
+          "primitive_calls": 1,
+          "total_calls": 280,
+          "own_seconds": 0.0055582,
+          "cumulative_seconds": 2.3422650000000003
+        },
+        "image_workspace.py:_object_record": {
+          "primitive_calls": 280,
+          "total_calls": 320,
+          "own_seconds": 0.0326049,
+          "cumulative_seconds": 1.8454910000000002
+        },
+        "image_spatial_domains.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0004066,
+          "cumulative_seconds": 2.3271993
+        },
+        "image_automation.py:validate_references": {
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "own_seconds": 0.0008825,
+          "cumulative_seconds": 0.43253010000000003
+        },
+        "image_spatial_atlas.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0005315000000000001,
+          "cumulative_seconds": 1.2100730000000002
+        },
+        "image_feature_field.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0002816,
+          "cumulative_seconds": 1.044373
+        }
+      },
+      "source_and_fft_unchanged": true
+    },
+    {
+      "label": "candidate-map-compact",
+      "status": "PASS",
+      "mode": "compact",
+      "import_seconds": 0.8029016000218689,
+      "profiled_request_seconds": 4.300015099928714,
+      "response_canonical_bytes": 15981,
+      "response_sha256": "0be79e79f2c6cb5891bb43c12ce31b0da4b9c8de774c90d2103efa676b12e41d",
+      "same_authoritative_baseline_record": true,
+      "dependency_calls": {
+        "image_workspace.py:_object_record": {
+          "primitive_calls": 285,
+          "total_calls": 325,
+          "own_seconds": 0.0315166,
+          "cumulative_seconds": 1.7889415000000002
+        },
+        "image_workspace.py:read_json": {
+          "primitive_calls": 758,
+          "total_calls": 758,
+          "own_seconds": 0.0052832,
+          "cumulative_seconds": 0.6041677000000001
+        },
+        "image_workspace.py:sha_file": {
+          "primitive_calls": 1149,
+          "total_calls": 1149,
+          "own_seconds": 0.018942900000000002,
+          "cumulative_seconds": 0.6967135000000001
+        },
+        "image_workspace.py:object": {
+          "primitive_calls": 1,
+          "total_calls": 283,
+          "own_seconds": 0.0056256000000000006,
+          "cumulative_seconds": 4.2684397
+        },
+        "image_domain_compare.py:compare_families": {
+          "primitive_calls": 8,
+          "total_calls": 8,
+          "own_seconds": 0.0008558000000000001,
+          "cumulative_seconds": 2.0061075
+        },
+        "image_feature_field.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.00023700000000000001,
+          "cumulative_seconds": 1.023021
+        },
+        "image_automation.py:validate_references": {
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "own_seconds": 0.0008724000000000001,
+          "cumulative_seconds": 0.41070880000000004
+        },
+        "image_spatial_domains.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 2,
+          "own_seconds": 0.0009822000000000001,
+          "cumulative_seconds": 4.2504974
+        },
+        "image_spatial_atlas.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0005515,
+          "cumulative_seconds": 1.1000644000000002
+        }
+      },
+      "source_and_fft_unchanged": true
+    },
+    {
+      "label": "candidate-map-neighbors",
+      "status": "PASS",
+      "mode": "neighbors",
+      "import_seconds": 0.7992245999630541,
+      "profiled_request_seconds": 4.207777199917473,
+      "response_canonical_bytes": 11340,
+      "response_sha256": "5fcb295a52939d69ffda9895818a3c68ed599d16f686e24ca026b963804572ea",
+      "same_authoritative_baseline_record": true,
+      "dependency_calls": {
+        "image_workspace.py:_object_record": {
+          "primitive_calls": 284,
+          "total_calls": 324,
+          "own_seconds": 0.030367,
+          "cumulative_seconds": 1.7463678
+        },
+        "image_workspace.py:read_json": {
+          "primitive_calls": 756,
+          "total_calls": 756,
+          "own_seconds": 0.0052214,
+          "cumulative_seconds": 0.5920924000000001
+        },
+        "image_workspace.py:sha_file": {
+          "primitive_calls": 1143,
+          "total_calls": 1143,
+          "own_seconds": 0.0196578,
+          "cumulative_seconds": 0.6800921000000001
+        },
+        "image_workspace.py:object": {
+          "primitive_calls": 1,
+          "total_calls": 283,
+          "own_seconds": 0.0063033,
+          "cumulative_seconds": 4.1893029
+        },
+        "image_feature_field.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.000221,
+          "cumulative_seconds": 1.0080383000000002
+        },
+        "image_spatial_domains.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 2,
+          "own_seconds": 0.0008324000000000001,
+          "cumulative_seconds": 4.1710794
+        },
+        "image_spatial_atlas.py:validate_references": {
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "own_seconds": 0.0005243,
+          "cumulative_seconds": 1.0771018
+        },
+        "image_automation.py:validate_references": {
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "own_seconds": 0.0008533000000000001,
+          "cumulative_seconds": 0.40013990000000005
+        },
+        "image_domain_compare.py:compare_families": {
+          "primitive_calls": 8,
+          "total_calls": 8,
+          "own_seconds": 0.0005473,
+          "cumulative_seconds": 1.9699653000000001
+        }
+      },
+      "source_and_fft_unchanged": true
+    }
+  ],
+  "limits": [
+    "cProfile overhead included; imports separately measured; OS caches not reset",
+    "One instrumented request per mode; not a statistical benchmark",
+    "Only completed semantic reconstruction is reused; full transitive own proofs and exact creator journal bytes are rechecked",
+    "Full canonical response bytes identical; compact/page are tagged views, not replacements for full originals",
+    "MCP transport/image bytes and actual model usage are reported separately"
+  ]
+}
