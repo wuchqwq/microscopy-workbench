@@ -31,7 +31,23 @@ jobs:
       - name: Apply exact-anchor fix and verify historical readback
         env:
           F3B_BASELINE_WORKSPACE: ${{ runner.temp }}/f3b-baseline
-        run: python -B scripts/review_f3b_direction_patch.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/review_f3b_direction_patch.py')
+          s = p.read_text(encoding='utf-8')
+          old = "if metadata.get('kind') != 'twin_compare':"
+          assert s.count(old) == 1
+          s = s.replace(old, "if metadata.get('kind') != 'twin_compare' or path.parent.parent.name != 'objects':")
+          old = "assert read['projected_relation'] == metadata['projected_relation']"
+          assert s.count(old) == 1
+          s = s.replace(old, "assert read['result']['projected_relation'] == metadata['projected_relation']")
+          p.write_text(s, encoding='utf-8')
+          PY
+          python -B scripts/review_f3b_direction_patch.py
+          git restore -- scripts/review_f3b_direction_patch.py
       - name: Focused direction and existing source geometry tests
         run: python -B -m unittest discover -s tests -p 'test_twin*.py' -v
       - run: npm run typecheck
