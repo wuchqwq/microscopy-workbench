@@ -7,6 +7,11 @@ candidates. It does not identify a material, label a real defect automatically,
 recover a unique conventional three-dimensional Burgers vector, segment domains,
 or reconstruct a wave field. Source images, FFTs and GPA arrays remain unchanged.
 
+The qualified model is a simple **complete projected dislocation**. Partial
+dislocations, stacking faults and strongly overlapping domains are outside this
+first scope. Integer image-phase circulation must not be forced into that
+material model when its assumptions are unsupported.
+
 Read [the GPA convention](CLASSICAL_GPA.md) and
 [the validated F4/F2a integration-candidate boundary](F4_F2A_INTEGRATION.md) first. A complex
 reconstruction phase, diffraction intensity, rendered PNG or smooth strain map
