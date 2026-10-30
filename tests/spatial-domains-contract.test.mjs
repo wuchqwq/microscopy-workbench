@@ -15,8 +15,9 @@ test('bounded multiscale tools register and reject invalid contracts before prov
  const field={object_id:id,window_sizes:[32,64],stride_xy:[32,32],max_windows:32,coordinate_domain:'pixel',request_id:'spatial-field'};
  for(const patch of [{request_id:undefined},{window_sizes:[]},{window_sizes:[3]},{window_sizes:[1025]},{window_sizes:[4,8,16,32,64]},{stride_xy:[0,32]},{stride_xy:[32]},{max_windows:33},{coordinate_domain:'auto'},{measurement_overrides:[{sample_index:32,measurement_object_ids:[id]}]},{workspace:'other'}])await assert.rejects(registry.call('image_spatial_field',{...field,...patch}));
  const map={object_id:id,tolerance:.005,angles_degrees:[0,30],request_id:'map'};
- for(const patch of [{request_id:undefined},{tolerance:0},{tolerance:Infinity},{angles_degrees:[]},{angles_degrees:Array(65).fill(0)},{mirror:true},{phase:'diamond'}])await assert.rejects(registry.call('image_domain_map',{...map,...patch}));
+ for(const patch of [{request_id:undefined},{tolerance:0},{tolerance:Infinity},{angles_degrees:[]},{angles_degrees:Array(65).fill(0)},{neighbor_policy:'nearest-any-scale'},{mirror:true},{phase:'diamond'}])await assert.rejects(registry.call('image_domain_map',{...map,...patch}));
  assert.equal(calls.length,0);await registry.call('image_spatial_field',field);await registry.call('image_domain_map',map);assert.equal(calls.length,2);
+ await registry.call('image_domain_map',{...map,request_id:'map-support',neighbor_policy:'support_contact_v1'});assert.equal(calls[2].args.neighbor_policy,'support_contact_v1');
 });
 test('spatial field/domain context bindings reject source substitution and obsolete correction records',async()=>{
  const binding=createScientificContextBindings({providers:{}}),calibration={calibration_id:'scale',revision:1};

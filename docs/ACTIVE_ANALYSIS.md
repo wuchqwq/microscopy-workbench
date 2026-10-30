@@ -81,6 +81,43 @@ FFT output is not a demonstration that an active strategy is better.
 See [F4-lite acceptance](F4_LITE_ACCEPTANCE.md) for executed scopes, misses and
 remaining limitations. F1a's historical failures remain in its own record.
 
+## Bounded delivery and opt-in support graphs
+
+`image_spatial_field`, `image_field_extend`, `image_domain_map`,
+`image_analysis_candidates`, `image_info` and `image_result` accept optional
+`response_detail:"compact"`. Default/`"full"` retains the existing complete
+response. Compact delivery is explicitly tagged
+`evidence_format:"image-evidence-summary-v1"`, `authoritative_record:false`, and
+binds its original object/request with `manifest_sha256`; scientific settings,
+references, quality, budgets, stops and executable proposal actions remain
+inspectable. This delivery choice does not change a scientific request's
+journal parameters, identity, source arrays or original full receipt.
+Compact responses are text evidence and retain `preview_ref` instead of repeatedly inlining the PNG.
+Request an explicit full read-only image or inspect the Panel when a picture is needed; default full/Panel image content is unchanged.
+
+Read selected exact evidence with `image_evidence` using that `object_id` and
+`manifest_sha256`. Allowed `section` values are `summary`, `samples`, `actions`,
+`neighbors`, `domains`, `boundary_bands` and `increment_history`; `offset` is
+0–4096 and `limit` is 1–8. Detail delivery is bounded to 128 KiB and refuses
+excess instead of silently truncating it. It validates the original scientific
+record and dependencies; the projection is not a replacement authority. Expand
+only the rows needed for a decision rather than repeatedly requesting every
+full recursive field. Full original evidence remains available.
+
+If optional compact delivery reports `authoritative_record_state:"completed"`
+after a write, that scientific operation is already saved. Query its returned
+original request ID with full delivery or read bounded evidence; do not repeat
+the write to obtain a summary.
+
+For a new irregular domain map explicitly set
+`neighbor_policy:"support_contact_v1"`. It adds same-scale overlap and positive
+shared-edge support relations while retaining distinct gaps, corner contacts,
+scales and unknown measurements. Omitted/default `legacy_cardinal_v1` preserves
+historical maps. The explicit policy versions the graph interpretation; it does
+not improve the physical precision of a window-support band. See
+[bounded closeout acceptance](F4_LITE_CLOSEOUT_ACCEPTANCE.md) for actual scopes
+and the small GUI-to-science revision path.
+
 ## Reproduce the finite public acceptance
 
 Use an independent Python environment with the project's science dependencies;

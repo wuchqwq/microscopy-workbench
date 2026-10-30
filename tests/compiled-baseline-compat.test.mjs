@@ -112,12 +112,20 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // F1a/F4-lite add the explicitly enumerated tools and optional context selections. Keep the frozen
   // comparison exact for every pre-existing field; authorize only these named
   // additive changes, never drop descriptions or weaken old scientific tests.
-  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend'];
+  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence'];
   assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
   const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
+  // Presentation controls are explicitly additive and must never become a
+  // required scientific parameter or alter old full-return behavior.
+  for(const name of ['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_info','image_result']){
+    const tool=currentSchema.find(tool=>tool.name===name),detail=tool.inputSchema.properties.response_detail;
+    assert.equal(detail.type,'string');assert.deepEqual(detail.enum.slice().sort(),['compact','full']);
+    assert.ok(!tool.inputSchema.required.includes('response_detail'));
+  }
+  for(const name of ['image_info','image_result'])delete retainedSchema.find(tool=>tool.name===name).inputSchema.properties.response_detail;
   const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
   for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
-  assert.deepEqual(retainedSchema,schema,'All existing tool schemas and descriptions remain exact, with only the explicit additive F1a extension');
+  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except the named optional presentation controls and additive F1a/F4 tools');
   assert.deepEqual(await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}}),{...refused,id:current.next},'Original-request error remains compatible');
   assert.deepEqual(await current.tool('image_result',{request_id:'frozen-fft'}),fft);
   assert.deepEqual(await current.tool('image_info',{object_id:measure.object_id}),await current.tool('image_result',{request_id:'frozen-measure'}));

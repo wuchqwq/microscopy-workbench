@@ -29,9 +29,11 @@ except ImportError:
 FIELDS = {
     "spatial_field": {"object_id", "rect", "window_sizes", "stride_xy", "max_windows", "coordinate_domain",
                       "window", "subtract_mean", "peak_options", "max_peaks", "max_size", "previous_field_id", "measurement_overrides"},
-    "domain_map": {"object_id", "tolerance", "angles_degrees", "max_size"},
+    "domain_map": {"object_id", "tolerance", "angles_degrees", "max_size", "neighbor_policy"},
 }
 ALGORITHM = "bounded-window-neighbor-signatures-v1"
+LEGACY_NEIGHBORS = "legacy_cardinal_v1"
+CONTACT_NEIGHBORS = "support_contact_v1"
 LIMITATIONS = [
     "Candidate domains are connected sampled-window signatures, not identified phases, twins or defects",
     "Only measured window supports are displayed; no interpolation or classification of unobserved pixels",
@@ -226,8 +228,41 @@ def _neighbors(samples, irregular=False):
                 yield row, lookup[key]
 
 
+def _contact_geometry(left, right):
+    """Half-open scientific supports, not FFT-center proximity or label rank."""
+    r,s=left["rect_xyxy"],right["rect_xyxy"]
+    width=min(r[2],s[2])-max(r[0],s[0])
+    height=min(r[3],s[3])-max(r[1],s[1])
+    area=max(0,width)*max(0,height)
+    shared=height if width==0 and height>0 else width if height==0 and width>0 else 0
+    return {"support_relation":"overlap" if area>0 else "shared_edge" if shared>0 else "gap_unknown" if width<0 or height<0 else "corner_only",
+            "shared_edge_pixels":shared,"overlap_area_pixels":area}
+
+
+def _policy_neighbors(samples, irregular, policy):
+    if policy==LEGACY_NEIGHBORS:
+        yield from _neighbors(samples,irregular)
+        return
+    # Keep historical cardinal-gap evidence explicitly unknown, but never use
+    # it to connect support. Add every positive contact at the same scale; at
+    # <=32 windows this finite graph needs no nearest-center approximation.
+    pairs={}
+    for left,right in _neighbors(samples,irregular):
+        relation=_contact_geometry(left,right)["support_relation"]
+        if relation=="gap_unknown":
+            pairs[tuple(sorted((left["sample_index"],right["sample_index"])))] = (left,right)
+    for i,left in enumerate(samples):
+        for right in samples[i+1:]:
+            if left["scale_pixels"]!=right["scale_pixels"]:continue
+            if _contact_geometry(left,right)["support_relation"] in ("overlap","shared_edge"):
+                pairs[tuple(sorted((left["sample_index"],right["sample_index"])))] = (left,right)
+    for key in sorted(pairs):yield pairs[key]
+
+
 def _domain_result(workspace, request, api):
     angles, tolerance, size = _settings_domain(request, api)
+    policy=request.get("neighbor_policy",LEGACY_NEIGHBORS)
+    api.need(policy in (LEGACY_NEIGHBORS,CONTACT_NEIGHBORS),"neighbor_policy requires legacy_cardinal_v1 or support_contact_v1")
     parent, directory = qualified_field(workspace,request["object_id"],api)
     api.need(parent.get("kind") in ("spatial_field","field_extend"), "Domain map requires a saved multiscale or incremental spatial field")
     samples = copy.deepcopy(parent["samples"])
@@ -258,7 +293,7 @@ def _domain_result(workspace, request, api):
         sample["domain_unknown_reason"]="Conflicting finer signatures within this window support" if sample["sample_index"] in mixed else None
     graph = {s["sample_index"]:set() for s in samples if s["domain_status"] == "candidate"}
     edges, bands = [], []
-    for left, right in _neighbors(samples, parent["kind"]=="field_extend"):
+    for left, right in _policy_neighbors(samples, parent["kind"]=="field_extend",policy):
         a,b = left["sample_index"],right["sample_index"]
         r,s=left["rect_xyxy"],right["rect_xyxy"]
         gap=[max(0,r[0]-s[2],s[0]-r[2]),max(0,r[1]-s[3],s[1]-r[3])]
@@ -287,6 +322,7 @@ def _domain_result(workspace, request, api):
                       "overlap_area_pixels": max(0,min(left["rect_xyxy"][2],right["rect_xyxy"][2])-max(left["rect_xyxy"][0],right["rect_xyxy"][0]))*
                           max(0,min(left["rect_xyxy"][3],right["rect_xyxy"][3])-max(left["rect_xyxy"][1],right["rect_xyxy"][1])),
                       "independence":"Overlapping/adjacent windows are correlated; descriptive comparison, not held-out validation"})
+        if policy==CONTACT_NEIGHBORS:edges[-1].update(_contact_geometry(left,right))
     domains, assigned = [], {}
     for seed in sorted(graph):
         if seed in assigned:
@@ -316,6 +352,11 @@ def _domain_result(workspace, request, api):
               "display_feature":"domain_candidate","field_image":feature.preview_plan(workspace,visual,"domain_candidate","candidate",size,api),
               "interpretation_status":"hypothesized","uncertainty":None,"limitations":LIMITATIONS,
               "fft_recomputed":False,"scientific_data_changed":False,"interpolated":False}
+    # Old saved requests omit this option: retain their exact reconstructed
+    # metadata/CSV/masks, rather than silently changing a global graph rule.
+    if policy==CONTACT_NEIGHBORS:
+        result.update(algorithm_version="bounded-window-support-contact-signatures-v1",neighbor_policy=policy,
+                      neighbor_policy_meaning="Same-scale positive shared edges or overlap; cardinal support gaps stay unknown; no corner-only or cross-scale connections")
     comparison.check_report_budget(result,api)
     return result,parent
 

@@ -147,9 +147,11 @@ jobs:
       - run: python -m pip install -r requirements-images.txt
       - run: python -B tests/image_field_increment_test.py
       - run: python -B tests/image_active_analysis_test.py
+      - run: python -B tests/image_domain_neighbors_test.py
+      - run: python -B tests/image_evidence_test.py
       # The full fixed-budget comparison is a reproducible acceptance command,
       # not a per-commit benchmark. Keep CI bounded to provider and contract tests.
-      - run: node --test dist/tests/active-analysis-contract.test.mjs
+      - run: node --test dist/tests/active-analysis-contract.test.mjs dist/tests/image-evidence-contract.test.mjs
 
   compiled-compatibility:
     needs: changes

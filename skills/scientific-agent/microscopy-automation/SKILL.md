@@ -13,6 +13,20 @@ already done. Inspect the proposed source ROI, scale, inherited settings,
 heuristic reasons, exploration reservation and stopping rule. Scores are
 priorities, not probabilities or calibrated information gain.
 
+For iterative field/map/proposal calls and `image_info` / `image_result`, request
+`response_detail:"compact"` when the schema supports it. The returned summary is
+explicitly non-authoritative; retain its object ID and `manifest_sha256`. Use
+`image_evidence` with those exact values, a selected `section`, `offset` and
+`limit` (at most eight rows) to expand only the observations, neighbors or
+history needed for the current decision. Proposal actions remain executable in
+the compact result. Do not request every full recursive record merely to find
+one measurement. Full original receipts and provenance remain available when
+needed; a summary does not replace them or relax source/integrity checks.
+Compact delivery is text evidence; it does not repeatedly inline the preview PNG.
+To inspect an image, follow `preview_ref` with explicit full read-only delivery or use the Panel; default full images are unchanged.
+If compact delivery fails after `authoritative_record_state:"completed"`, the scientific write is already saved.
+Query its returned original request ID with full delivery; never resubmit that operation to obtain a summary.
+
 Choose 1–4 actions deliberately and call `image_field_extend` with the exact
 base field, saved candidate set and action IDs. Keep request IDs before writes.
 Use direct explicit rectangles only for a documented intended modification;
@@ -21,6 +35,19 @@ Existing observations must retain their FFT/peak/measurement references. Compute
 the updated `image_domain_map`, inspect new evidence and request the next
 proposal, or stop. This loop uses formal scientific tools; no runtime scripts,
 hidden model calls or developer-session identifiers are required.
+
+For a new irregular support graph, explicitly choose
+`neighbor_policy:"support_contact_v1"` to compare same-scale overlapping or
+positive-shared-edge windows. Positive gaps, corner-only contact, different
+scales and unknown/mixed evidence are distinct. Omitted/default policy preserves
+legacy cardinal maps; do not silently reinterpret a saved historical map.
+
+After a researcher moves a saved peak, read the actual saved Panel selection
+and measurement. Match its scientific FFT/ROI and stable `observation_key`, not
+its display row or peak label. Relay the complete revised measurement list with
+`image_field_extend(rects:[], measurement_overrides:...)`, then update the map
+and current references. Do not invent a measurement from the drawn PNG, silently
+reuse the old result, or recompute an unchanged FFT.
 
 Preserve some exploration when a field appears normal: shifted or smaller
 windows can test an unresolved narrow component. Do not spend every action on

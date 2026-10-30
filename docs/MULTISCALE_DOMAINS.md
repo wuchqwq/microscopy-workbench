@@ -51,6 +51,27 @@ unobserved strip.
 Candidate IDs are local to one saved map. Equal text labels in two revisions,
 scales or frames do not establish the same physical domain.
 
+### Opt-in support-contact graph
+
+`image_domain_map.neighbor_policy` may be `legacy_cardinal_v1` (the default)
+or `support_contact_v1`. Omitted options preserve the exact historical F1a
+grid/F4 cardinal-center graph and saved-map reconstruction. Nothing silently
+upgrades an old object.
+
+The new policy includes all pairs of same-scale observed windows with positive
+overlap area or a positive shared-edge length, including offset supports such
+as `[0,0,32,32]` and `[32,8,64,40]`. It records the policy/algorithm version,
+overlap area and shared-edge length. Existing cardinal pairs separated by a
+positive support gap remain explicitly unknown; corner-only contact and
+different scales do not connect. Masked, mixed and ambiguous reciprocal
+comparisons remain unknown. Dense or overlapping observations remain correlated
+support, not independent validation or improved boundary localization.
+
+This fixes a graph-coverage limitation. It does not establish that the earlier
+shifted narrow-strip miss was caused by that limitation or turn that recorded
+FAIL into a PASS. The policy does not change FFTs, peak detection, sampled masks,
+matching tolerances, the source array or the finite-support boundary meaning.
+
 ## Boundary bands and unknown support
 
 Candidate boundary bands retain the supports of differing adjacent windows.

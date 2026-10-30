@@ -5,6 +5,7 @@ request identities are durable and immutable after successful publication.
 Python >=3.10 with requirements-images.txt belongs outside GMS Python.
 """
 import hashlib
+import copy
 import io
 import json
 import math
@@ -36,6 +37,7 @@ if __package__:
     from . import image_spatial_domains as spatial_domains
     from . import image_field_increment as field_increment
     from . import image_active_analysis as active_analysis
+    from . import image_evidence as evidence
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -51,6 +53,7 @@ else:
     import image_spatial_domains as spatial_domains
     import image_field_increment as field_increment
     import image_active_analysis as active_analysis
+    import image_evidence as evidence
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -70,6 +73,7 @@ FIELDS = {
     **spatial_domains.FIELDS,
     **field_increment.FIELDS,
     **active_analysis.FIELDS,
+    **evidence.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
@@ -489,29 +493,105 @@ class Workspace:
             for name, digest in metadata["exported_files_sha256"].items():
                 need(Path(name).name == name and (output / name).is_file() and not (output / name).is_symlink() and
                      sha_file(output / name) == digest, "Exported immutable file changed", "CORRUPT_OBJECT")
+        if getattr(self, "_qualification_depth", 0):
+            self._observe_qualified_own_record(ident, metadata, directory, original)
         return metadata, directory
 
+    def _observe_qualified_own_record(self, ident, metadata, directory, original):
+        """Collect every successful own read, including direct helper reads.
+
+        Only completed object() validations may reuse these proofs. The exact
+        creator bytes are included because own metadata can stay unchanged while
+        an original journal's parameters are changed coherently.
+        """
+        journal = self.root / "requests" / (metadata["request_id"] + ".json")
+        need(journal.is_file() and not journal.is_symlink() and journal.stat().st_size <= MAX_JSON_BYTES,
+             "Qualified creator journal is missing, linked or oversized", "CORRUPT_OBJECT")
+        raw = journal.read_bytes()
+        need(len(raw) <= MAX_JSON_BYTES and strict_json(raw.decode("utf-8")) == original,
+             "Qualified creator journal changed after its own validation", "CORRUPT_OBJECT")
+        digest = hashlib.sha256(raw).hexdigest()
+        proof = self._qualification_own_proofs.get(ident)
+        if proof is not None:
+            need(metadata == proof["metadata"], "Qualified descendant changed during validation", "CORRUPT_OBJECT")
+            need(digest == proof["creator_journal_sha256"], "Qualified creator journal changed during validation", "CORRUPT_OBJECT")
+        else:
+            size = (directory / "object.json").stat().st_size + 64
+            if len(self._qualification_own_proofs) < 256 and self._qualification_bytes + size <= 8 * 1024 * 1024:
+                self._qualification_own_proofs[ident] = {"metadata": copy.deepcopy(metadata), "creator_journal_sha256": digest}
+                self._qualification_bytes += size
+            else:
+                # A partially recorded closure is never a memo authorization.
+                for frame in self._qualification_frames:
+                    frame["complete"] = False
+                return
+        for frame in self._qualification_frames:
+            frame["dependencies"].add(ident)
+        closure = self._qualification_snapshots.get(ident)
+        if closure is not None and ident not in self._qualification_rechecking:
+            # Direct _object_record helper handoffs must prove the same closure
+            # as object() memo hits; guard the whole finite set against recursive
+            # re-expansion while its own records are checked.
+            previous = self._qualification_rechecking
+            self._qualification_rechecking = previous | set(closure)
+            try:
+                for dependency in closure:
+                    if dependency != ident:
+                        self._object_record(dependency)
+            finally:
+                self._qualification_rechecking = previous
+
     def object(self, ident):
-        metadata, directory = self._object_record(ident)
-        if metadata.get("kind") in automation.FIELDS:
-            automation.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in sequence.FIELDS:
-            sequence.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in joint.FIELDS:
-            joint.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in spatial_atlas.FIELDS:
-            spatial_atlas.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in domain_compare.FIELDS:
-            domain_compare.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in feature_field.FIELDS:
-            feature_field.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in spatial_domains.FIELDS:
-            spatial_domains.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in field_increment.FIELDS:
-            field_increment.validate_references(self, metadata, sys.modules[__name__])
-        if metadata.get("kind") in active_analysis.FIELDS:
-            active_analysis.validate_references(self, metadata, sys.modules[__name__])
-        return metadata, directory
+        outer = getattr(self, "_qualification_depth", 0) == 0
+        if outer:
+            self._qualification_snapshots, self._qualification_bytes = {}, 0
+            self._qualification_own_proofs, self._qualification_frames = {}, []
+            self._qualification_rechecking = set()
+            # These legacy aggregate handoffs also belong to this qualification,
+            # never to a subsequent top-level call on a reused Workspace.
+            self._spatial_export_snapshots, self._spatial_export_journal_hashes = {}, {}
+        self._qualification_depth = getattr(self, "_qualification_depth", 0) + 1
+        frame = {"dependencies": set(), "complete": True}
+        self._qualification_frames.append(frame)
+        try:
+            # Even a repeated qualified descendant re-reads its creator journal,
+            # exact manifest and every own payload hash before any proof handoff.
+            metadata, directory = self._object_record(ident)
+            closure = self._qualification_snapshots.get(ident)
+            if closure is not None:
+                # _object_record has freshly checked this complete transitive
+                # own-proof closure. Only semantic reconstruction is reused.
+                return metadata, directory
+            if metadata.get("kind") in automation.FIELDS:
+                automation.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in sequence.FIELDS:
+                sequence.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in joint.FIELDS:
+                joint.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in spatial_atlas.FIELDS:
+                spatial_atlas.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in domain_compare.FIELDS:
+                domain_compare.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in feature_field.FIELDS:
+                feature_field.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in spatial_domains.FIELDS:
+                spatial_domains.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in field_increment.FIELDS:
+                field_increment.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in active_analysis.FIELDS:
+                active_analysis.validate_references(self, metadata, sys.modules[__name__])
+            # Cache completed qualifications only, bounded in count and bytes.
+            # Exceeding the budget falls back to ordinary recursive validation.
+            if frame["complete"] and ident in self._qualification_own_proofs:
+                self._qualification_snapshots[ident] = tuple(sorted(frame["dependencies"]))
+            return metadata, directory
+        finally:
+            self._qualification_frames.pop()
+            self._qualification_depth -= 1
+            if outer:
+                del self._qualification_snapshots, self._qualification_bytes
+                del self._qualification_own_proofs, self._qualification_frames
+                del self._qualification_rechecking
 
     def resolved(self, ident):
         context, xy_record, calibration_review, visited = None, None, None, set()
@@ -1773,11 +1853,13 @@ def _execute(request):
     action = request["action"]
     need(action in FIELDS and set(request) <= FIELDS[action] | {"workspace", "action", "request_id"}, "Unknown action/argument")
     canonical(request)
-    readonly = action in ("get", "result")
+    readonly = action in ("get", "result", "evidence")
     ident = request.get("request_id")
     if not readonly:
         need(type(ident) is str and REQUEST_ID.fullmatch(ident), "Write actions require a pre-saved request_id")
     workspace = Workspace(request.get("workspace"), not readonly)
+    if action == "evidence":
+        return {"ok": True, **evidence.detail(workspace, request, sys.modules[__name__])}
     if action == "get":
         metadata, _ = workspace.object(request.get("object_id"))
         return {"ok": True, "state": "completed", "backend": BACKEND, **metadata}
@@ -1863,7 +1945,35 @@ def pending(request_id):
 
 def execute(request):
     try:
-        response = _execute(request)
+        # Presentation is not a scientific request parameter or journal identity.
+        detail = request.get("response_detail", "full") if type(request) is dict else "full"
+        need(detail in ("full", "compact"), "response_detail requires full or compact")
+        scientific = {key: value for key, value in request.items() if key != "response_detail"} if type(request) is dict else request
+        need(detail == "full" or scientific.get("action") in evidence.COMPACT_ACTIONS, "Compact evidence is unavailable for this action")
+        response = _execute(scientific)
+        if response.get("ok") and detail == "compact":
+            try:
+                readonly_workspace = Workspace(scientific["workspace"], False)
+                response = {"ok": True, **evidence.summary(readonly_workspace, response, sys.modules[__name__])}
+            except Exception as error:
+                if getattr(error, "code", None) != "EVIDENCE_BUDGET_EXCEEDED":
+                    raise
+                # The write/query already returned a completed full record.
+                # A presentation refusal must not relabel that scientific state.
+                issue = {"code": getattr(error, "code", "EVIDENCE_PROJECTION_FAILED"), "message": str(error)[:2000]}
+                refusal = {"ok": False, "state": "projection_failed", "backend": BACKEND,
+                        "request_id": response["request_id"], "object_id": response["object_id"],
+                        "authoritative_record_state": "completed", "automatic_retry": False,
+                        "projection_error": issue, "error": issue,
+                        "original_result": {"tool": "image_result", "arguments": {"request_id": response["request_id"]}},
+                        "full_record": {"tool": "image_info", "arguments": {"object_id": response["object_id"]}}}
+                digest = getattr(error, "manifest_sha256", None)
+                if type(digest) is str and len(digest) == 64 and all(v in "0123456789abcdef" for v in digest):
+                    refusal["manifest_sha256"] = digest
+                    if getattr(error, "detail_section", None) in evidence.SECTIONS:
+                        refusal["bounded_evidence"] = {"tool": "image_evidence", "arguments": {"object_id": response["object_id"],
+                            "manifest_sha256": digest, "section": error.detail_section, "offset": 0, "limit": 1}}
+                return refusal
         if response.get("ok"):
             return {"ok": True, "result": {key: value for key, value in response.items() if key != "ok"}}
         return response
