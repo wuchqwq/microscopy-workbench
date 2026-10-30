@@ -313,11 +313,21 @@ recovery endpoint after timeout or cancellation; never resubmit an unknown
 side effect. Batch receipts retain child request IDs and outcomes. An incomplete
 batch is not a complete analysis.
 
+## Evidence-driven method continuation
+
+For a projected-topology question over already saved fixed_g GPA, use
+`image_method_plan`, `image_method_step` and `image_method_next` when advertised.
+The [cross-method guide](references/method-loop.md) describes sourced prerequisites,
+original request slots, all-attempt reservations and stopping. This is optional:
+ordinary tools remain directly callable, and domain/twin/multiframe selection
+is not automatically routed by this first increment. Do not run every method
+merely because it is available, or treat a smooth strain hotspot as a defect.
+
 ## Actual scope
 
 This package supplies composable local and bounded cross-frame observations
 and explicit candidate comparisons. It does not implement automatic global
-indexing, multi-phase segmentation, unique twin-interface determination, automatic dislocation analysis
+indexing, multi-phase segmentation, unique twin-interface determination, automatic material-dislocation identification
 or ptychography reconstruction. Classical GPA supports one explicit domain and a qualified saved FFT. Sequence FFT currently requires real spatial
 scientific arrays; do not silently take the real part of complex reconstruction
 data or quantize a float array to PNG/uint16. Report the specific unsupported

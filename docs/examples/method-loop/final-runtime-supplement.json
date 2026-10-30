@@ -1,0 +1,7 @@
+{
+  "result": "PASS",
+  "scope": "Final compiled MCP: r1 saved-plan/step compatibility and exhausted-call-cap rejection without step journal or scientific dispatch",
+  "created_root": "a81a85f0006a41a29969a0358e4711ec",
+  "new_scientific_children": 0,
+  "extra_forward_fft": 0
+}

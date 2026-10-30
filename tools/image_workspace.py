@@ -40,6 +40,7 @@ if __package__:
     from . import image_evidence as evidence
     from . import image_gpa as gpa
     from . import image_topology as topology
+    from . import image_method_loop as method_loop
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -58,6 +59,7 @@ else:
     import image_evidence as evidence
     import image_gpa as gpa
     import image_topology as topology
+    import image_method_loop as method_loop
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -80,6 +82,7 @@ FIELDS = {
     **evidence.FIELDS,
     **gpa.FIELDS,
     **topology.FIELDS,
+    **method_loop.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
@@ -588,6 +591,8 @@ class Workspace:
                 active_analysis.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in gpa.FIELDS:
                 gpa.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in method_loop.FIELDS:
+                method_loop.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in topology.FIELDS:
                 topology.validate_references(self, metadata, sys.modules[__name__])
             # Cache completed qualifications only, bounded in count and bytes.
@@ -995,6 +1000,8 @@ class Workspace:
             metadata = field_increment.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in active_analysis.FIELDS:
             metadata = active_analysis.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in method_loop.FIELDS:
+            metadata = method_loop.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action == "open":
             path = absolute(request.get("source_path"), "source_path")
             identity = source_identity(path)
@@ -1884,6 +1891,14 @@ def _execute(request):
     ident = request.get("request_id")
     if not readonly:
         need(type(ident) is str and REQUEST_ID.fullmatch(ident), "Write actions require a pre-saved request_id")
+        if action == "method_step":
+            if __package__:
+                from . import image_method_journal as method_journal
+            else:
+                import image_method_journal as method_journal
+            allowed = [method_journal.method_request_id(request.get("root_plan_id"), slot, sys.modules[__name__])
+                       for slot in range(1, method_journal.MAX_ATTEMPTS+1)]
+            need(ident in allowed, "Method request_id must use its root plan's deterministic slot1..8")
     workspace = Workspace(request.get("workspace"), not readonly)
     if action == "evidence":
         return {"ok": True, **evidence.detail(workspace, request, sys.modules[__name__])}
@@ -1925,6 +1940,17 @@ def _execute(request):
     normalized = {**request, "workspace": str(workspace.root)}
     fingerprint = hashlib.sha256(canonical(normalized)).hexdigest()
     journal = workspace.root / "requests" / (ident + ".json")
+    if action == "method_step" and not journal.exists():
+        root_id = request["root_plan_id"]
+        root, _ = workspace.object(root_id)
+        need(root.get("kind") == "method_plan" and root.get("root_plan_id") == root_id and
+             root.get("object_id") == root_id, "Method step requires its original immutable budget root")
+        attempts = method_journal.read_attempts(workspace, root_id, sys.modules[__name__])
+        need(len(attempts) < method_journal.MAX_ATTEMPTS, "Method attempt slots exhausted", "BUDGET_EXCEEDED")
+        need(len(attempts) < root["budget"]["method_calls"],
+             "Method call budget exhausted before submission; no new journal or child was created", "BUDGET_EXCEEDED")
+        expected = method_journal.method_request_id(root_id, len(attempts)+1, sys.modules[__name__])
+        need(ident == expected, "A new method request must use the next consecutive attempt slot")
     try:
         stream = journal.open("x+", encoding="utf-8")
     except FileExistsError:
@@ -1940,6 +1966,13 @@ def _execute(request):
             return previous["response"]
         return pending(ident)
     record = {"schema_version": 1, "request_id": ident, "state": "prepared", "parameters": normalized, "parameters_sha256": fingerprint}
+    # A method submission consumes its deterministic attempt slot even when
+    # preflight refuses it. Dispatch updates are fsynced before child work.
+    if action == "method_step":
+        import time
+        method_started = time.monotonic()
+        record["method_attempt"] = {"phase": "preflight", "reserved_cost": {
+            "method_calls": 1, "fft_pixels": 0, "gpa_band_pixels": 0, "topology_path_samples": 0}}
     with stream:
         def update():
             stream.seek(0)
@@ -1949,6 +1982,12 @@ def _execute(request):
             stream.flush()
             os.fsync(stream.fileno())
         update()
+        if action == "method_step":
+            def method_attempt_update(changes):
+                need(type(changes) is dict, "Method attempt update requires an explicit record")
+                record["method_attempt"].update(copy.deepcopy(changes))
+                update()
+            workspace.method_attempt_update = method_attempt_update
         try:
             metadata = workspace.action(action, normalized, uuid.uuid4().hex)
             response = {"ok": True, "state": "completed", "backend": BACKEND, "request_id": ident, **metadata}
@@ -1956,6 +1995,9 @@ def _execute(request):
         except Exception as error:
             response = failure(error, ident)
             record.update(state="failed", response=response)
+        finally:
+            if action == "method_step":
+                record["elapsed_ms"] = (time.monotonic()-method_started)*1000
         update()
         return response
 

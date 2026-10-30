@@ -1,0 +1,256 @@
+{
+  "status": "PASS",
+  "date": "2026-10-31",
+  "environment": {
+    "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "scikit_image": "0.26.0"
+  },
+  "scope": "Same-input Windows sequential before/after; actual MCP stdio/Python; no model in timed strategy driver. Single end-to-end run per version, three fresh-process reads per version. Not a universal speed or strategy claim.",
+  "historical_report_unchanged": true,
+  "historical_report_sha256": "897a85c4a2d8220df12067ef10fd3cf70675f762a0cef59db9ae48153e641c93",
+  "reports": [
+    {
+      "path": "analysis\\2026-10-31-f4-closeout\\mcp-before\\report.json",
+      "sha256": "272a26717f3ac905f381b4da8eea8676f07eae8b95b997e68e9280e29b63e22a",
+      "runtime_seconds": 229.78316220000002
+    },
+    {
+      "path": "analysis\\2026-10-31-f4-closeout\\mcp-after\\report.json",
+      "sha256": "5f05c1f970de9b86ee2258d0e52d423e9d24fc11bd42e5ca4ecfa6dd5a30e5a5",
+      "runtime_seconds": 144.2568901
+    }
+  ],
+  "read_medians_before_final": [
+    {
+      "import_seconds": 1.7749466999666765,
+      "execute_seconds": 1.583606099942699,
+      "serialize_seconds": 9.050010703504086e-05,
+      "import_plus_execute_seconds": 3.3113378999987617
+    },
+    {
+      "import_seconds": 0.8385285999393091,
+      "execute_seconds": 0.8367987000383437,
+      "serialize_seconds": 9.019998833537102e-05,
+      "import_plus_execute_seconds": 1.6371674998663366
+    }
+  ],
+  "instrumented_read_before_final": [
+    {
+      "object_id": "2c9942d0350a44a3be221134b1d568f6",
+      "hash_calls": 964,
+      "hash_bytes": 541427016,
+      "hash_seconds": 1.0879740989767015,
+      "response_bytes": 12574
+    },
+    {
+      "object_id": "2c9942d0350a44a3be221134b1d568f6",
+      "hash_calls": 534,
+      "hash_bytes": 280662884,
+      "hash_seconds": 0.6217319008428603,
+      "response_bytes": 12574
+    }
+  ],
+  "comparisons": [
+    {
+      "case": "positive",
+      "strategy": "active_saved_plan",
+      "before_seconds": 26.4265412,
+      "final_seconds": 15.7155623,
+      "scientific_calls_before": 2,
+      "scientific_calls_final": 2
+    },
+    {
+      "case": "positive",
+      "strategy": "fixed_additional_gpa_then_topology",
+      "before_seconds": 6.290872599999995,
+      "final_seconds": 5.039885599999998,
+      "scientific_calls_before": 2,
+      "scientific_calls_final": 2
+    },
+    {
+      "case": "smooth_hotspot",
+      "strategy": "active_saved_plan",
+      "before_seconds": 2.797219999999994,
+      "final_seconds": 1.6620659000000013,
+      "scientific_calls_before": 0,
+      "scientific_calls_final": 0
+    },
+    {
+      "case": "smooth_hotspot",
+      "strategy": "fixed_additional_gpa_then_topology",
+      "before_seconds": 5.927120900000002,
+      "final_seconds": 4.757237600000001,
+      "scientific_calls_before": 2,
+      "scientific_calls_final": 2
+    },
+    {
+      "case": "noise",
+      "strategy": "active_saved_plan",
+      "before_seconds": 2.772963699999993,
+      "final_seconds": 1.819292699999998,
+      "scientific_calls_before": 0,
+      "scientific_calls_final": 0
+    },
+    {
+      "case": "noise",
+      "strategy": "fixed_additional_gpa_then_topology",
+      "before_seconds": 5.984633699999991,
+      "final_seconds": 5.224256999999998,
+      "scientific_calls_before": 2,
+      "scientific_calls_final": 2
+    },
+    {
+      "case": "contrast_vortex",
+      "strategy": "active_saved_plan",
+      "before_seconds": 26.34804479999999,
+      "final_seconds": 16.45271979999999,
+      "scientific_calls_before": 2,
+      "scientific_calls_final": 2
+    },
+    {
+      "case": "contrast_vortex",
+      "strategy": "fixed_additional_gpa_then_topology",
+      "before_seconds": 5.780959700000007,
+      "final_seconds": 5.077141100000008,
+      "scientific_calls_before": 2,
+      "scientific_calls_final": 2
+    }
+  ],
+  "identical_scientific_arrays": [
+    {
+      "case": "positive",
+      "role": "source_fft",
+      "npy_files": 1,
+      "array_hashes_sha256": "4484533ca309213a428658a2c2f89a09ad6af9c5009faa2247e00a78ee336c70"
+    },
+    {
+      "case": "positive",
+      "role": "seed_gpa",
+      "npy_files": 19,
+      "array_hashes_sha256": "673e7fc4bfadfef259316262065d4b0b39469c73f554339dc3ca396e4ce2b8b9"
+    },
+    {
+      "case": "positive",
+      "role": "active_gpa",
+      "npy_files": 19,
+      "array_hashes_sha256": "36fb62e7ed1b5d61c85c78c7d2d6d2bd3747638f9fc3a69d1d19046af47ded75"
+    },
+    {
+      "case": "positive",
+      "role": "active_topology",
+      "npy_files": 14,
+      "array_hashes_sha256": "604c07e1096d5e44cedba75fe84861987fda51ef1eaa812d47716318237e7014"
+    },
+    {
+      "case": "positive",
+      "role": "fixed_followup_id",
+      "npy_files": 19,
+      "array_hashes_sha256": "36fb62e7ed1b5d61c85c78c7d2d6d2bd3747638f9fc3a69d1d19046af47ded75"
+    },
+    {
+      "case": "positive",
+      "role": "fixed_topology_id",
+      "npy_files": 14,
+      "array_hashes_sha256": "604c07e1096d5e44cedba75fe84861987fda51ef1eaa812d47716318237e7014"
+    },
+    {
+      "case": "smooth_hotspot",
+      "role": "source_fft",
+      "npy_files": 1,
+      "array_hashes_sha256": "85c30271edcf0f73d0fae611cb9a5141dd9c80bbf228704d066f94da90bd90af"
+    },
+    {
+      "case": "smooth_hotspot",
+      "role": "seed_gpa",
+      "npy_files": 19,
+      "array_hashes_sha256": "82ed257716aa33c99fccec653ec5b8a7e96f11d6fdb5c6e072a1deb99eb2e1c8"
+    },
+    {
+      "case": "smooth_hotspot",
+      "role": "fixed_followup_id",
+      "npy_files": 19,
+      "array_hashes_sha256": "f355543becffda99262034d3d7fb1a17e16344c26762c0d48b169590ebca516b"
+    },
+    {
+      "case": "smooth_hotspot",
+      "role": "fixed_topology_id",
+      "npy_files": 14,
+      "array_hashes_sha256": "5e5335a968f089d2dad97f6e0282f209fb8b24726d5321876ba7ded324843567"
+    },
+    {
+      "case": "noise",
+      "role": "source_fft",
+      "npy_files": 1,
+      "array_hashes_sha256": "05b6d5dbbfb091b9cad41ce87b32de9ae5a8b0ecf43b0c288688fdb85fbba4a0"
+    },
+    {
+      "case": "noise",
+      "role": "seed_gpa",
+      "npy_files": 19,
+      "array_hashes_sha256": "6b5d058cece56acb7d614cde28d2f4fb448a091c1055b6628fe43db469789ec5"
+    },
+    {
+      "case": "noise",
+      "role": "fixed_followup_id",
+      "npy_files": 19,
+      "array_hashes_sha256": "93af5dcc35fd0f8be58631028e83c56cc86511ca2fe9f6a40291aaaad901b8c9"
+    },
+    {
+      "case": "noise",
+      "role": "fixed_topology_id",
+      "npy_files": 14,
+      "array_hashes_sha256": "f8d1755e03abeba0fe84485157cf8ade5fda1a857c5215b6ee651846652005fd"
+    },
+    {
+      "case": "contrast_vortex",
+      "role": "source_fft",
+      "npy_files": 1,
+      "array_hashes_sha256": "4484533ca309213a428658a2c2f89a09ad6af9c5009faa2247e00a78ee336c70"
+    },
+    {
+      "case": "contrast_vortex",
+      "role": "seed_gpa",
+      "npy_files": 19,
+      "array_hashes_sha256": "673e7fc4bfadfef259316262065d4b0b39469c73f554339dc3ca396e4ce2b8b9"
+    },
+    {
+      "case": "contrast_vortex",
+      "role": "active_gpa",
+      "npy_files": 19,
+      "array_hashes_sha256": "36fb62e7ed1b5d61c85c78c7d2d6d2bd3747638f9fc3a69d1d19046af47ded75"
+    },
+    {
+      "case": "contrast_vortex",
+      "role": "active_topology",
+      "npy_files": 14,
+      "array_hashes_sha256": "604c07e1096d5e44cedba75fe84861987fda51ef1eaa812d47716318237e7014"
+    },
+    {
+      "case": "contrast_vortex",
+      "role": "fixed_followup_id",
+      "npy_files": 19,
+      "array_hashes_sha256": "36fb62e7ed1b5d61c85c78c7d2d6d2bd3747638f9fc3a69d1d19046af47ded75"
+    },
+    {
+      "case": "contrast_vortex",
+      "role": "fixed_topology_id",
+      "npy_files": 14,
+      "array_hashes_sha256": "604c07e1096d5e44cedba75fe84861987fda51ef1eaa812d47716318237e7014"
+    }
+  ],
+  "identical_npy_file_comparisons": 278,
+  "causes": [
+    "Seven actual MCP calls for positive active versus two for fixed, including plan/next and two child info reads.",
+    "Repeated full graph qualification, no numerical recomputation on plan reads.",
+    "SciPy ndimage eager import on saved-record/decision requests, moved into unchanged GPA computation functions.",
+    "Remaining immutable journal, semantic and full payload checks retained; no persistent/stat cache."
+  ],
+  "limits": [
+    "Active positive/contrast still slower than fixed.",
+    "No guarantee of universal strategy superiority.",
+    "Contrast-only vortex retains same image evidence; material cause remains unidentified.",
+    "Real worker interruption/GUI/experimental data not qualified here."
+  ]
+}
