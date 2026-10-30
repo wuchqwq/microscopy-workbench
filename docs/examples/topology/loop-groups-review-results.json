@@ -1,0 +1,245 @@
+{
+  "schema": "topology-loop-group-review-results-v1",
+  "validation_status": "PASS_LIMITED_SCOPE",
+  "fixture_provenance": "synthetic analytic Volterra saved wrapped phase arrays; not private specimen data",
+  "reviewed_baseline_head": "b68a4d3",
+  "baseline": {
+    "algorithm": "saved-wrapped-phase-rectangular-topology-v1",
+    "core_sha256": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+    "all_paths_valid": true,
+    "canonical_winding_integer": [
+      [
+        -1.0,
+        0.0,
+        -1.0
+      ],
+      [
+        -1.0,
+        0.0,
+        -1.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "status": "inconsistent_or_partial_evidence",
+    "projected_b_pixel_xy": null,
+    "defect": "remote zero loop incorrectly made valid local nested-loop evidence globally inconsistent"
+  },
+  "fixed": {
+    "algorithm": "saved-wrapped-phase-rectangular-topology-v2",
+    "core_sha256": "7727e456b7b5d7dbe8809a364d1c9842a50061f493604edc874e37161677edb0",
+    "status": "spatially_grouped_evidence",
+    "all_paths_valid": true,
+    "canonical_winding_integer": [
+      [
+        -1.0,
+        0.0,
+        -1.0
+      ],
+      [
+        -1.0,
+        0.0,
+        -1.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "top_level_projected_burgers": null,
+    "grouping": {
+      "policy": "strict_nesting_components_v1",
+      "group_count": 2,
+      "assignment_basis": "all supplied rectangle geometry before phase validity or winding",
+      "cross_group_constraints": "not_compared_or_fitted",
+      "inter_group_relations": [
+        {
+          "group_indices": [
+            0,
+            1
+          ],
+          "relation": "disjoint_support",
+          "overlapping_loop_pairs": []
+        }
+      ],
+      "group_membership_is_core_identity": false,
+      "nested_charge_variation_meaning": "annular net charge may differ; no single stable closure, not a physical contradiction"
+    },
+    "loop_groups": [
+      {
+        "loop_indices": [
+          0,
+          1
+        ],
+        "status": "projected_topological_evidence",
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "status": "stable_nonzero",
+            "canonical_winding_integers": [
+              -1,
+              -1
+            ],
+            "representative_winding_integer": -1
+          },
+          {
+            "reflection_index": 1,
+            "status": "stable_zero",
+            "canonical_winding_integers": [
+              0,
+              0
+            ],
+            "representative_winding_integer": 0
+          },
+          {
+            "reflection_index": 2,
+            "status": "stable_nonzero",
+            "canonical_winding_integers": [
+              -1,
+              -1
+            ],
+            "representative_winding_integer": -1
+          }
+        ],
+        "projected_b_pixel_xy": [
+          7.999999999999998,
+          2.6014143622661497e-16
+        ],
+        "redundancy_validated": true
+      },
+      {
+        "loop_indices": [
+          2
+        ],
+        "status": "insufficient_loop_stability",
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "status": "insufficient_nested_loops",
+            "canonical_winding_integers": [
+              0
+            ],
+            "representative_winding_integer": 0
+          },
+          {
+            "reflection_index": 1,
+            "status": "insufficient_nested_loops",
+            "canonical_winding_integers": [
+              0
+            ],
+            "representative_winding_integer": 0
+          },
+          {
+            "reflection_index": 2,
+            "status": "insufficient_nested_loops",
+            "canonical_winding_integers": [
+              0
+            ],
+            "representative_winding_integer": 0
+          }
+        ],
+        "projected_b_pixel_xy": null,
+        "redundancy_validated": false
+      }
+    ]
+  },
+  "exact_reproduction_inputs": {
+    "shape_yx": [
+      128,
+      128
+    ],
+    "cores": [
+      {
+        "xy": [
+          32.5,
+          32.5
+        ],
+        "b_pixel_xy": [
+          8,
+          0
+        ]
+      }
+    ],
+    "g_vectors_cycles_per_pixel": [
+      [
+        0.125,
+        0.0
+      ],
+      [
+        0.0,
+        0.125
+      ],
+      [
+        0.125,
+        0.125
+      ]
+    ],
+    "loops": [
+      [
+        8,
+        8,
+        64,
+        64
+      ],
+      [
+        16,
+        16,
+        56,
+        56
+      ],
+      [
+        80,
+        80,
+        120,
+        120
+      ]
+    ]
+  },
+  "preregistered_numerical_bounds": {
+    "winding_cycles_atol": 1e-08,
+    "burgers_pixel_xy_atol": 1e-10,
+    "rtol": 0
+  },
+  "provider_guards_unchanged": {
+    "maximum_condition": 100.0,
+    "integer_residual_tolerance_cycles": 1e-06,
+    "vector_residual_tolerance_cycles": 0.05,
+    "default_phase_step_limit_radians": "0.8*pi"
+  },
+  "regression_suite": {
+    "path": "tests/test_topology_loop_groups.py",
+    "command": "python -m unittest discover -s tests -p test_topology_loop_groups.py -v",
+    "tests_run": 7,
+    "parameterized_cases": 8,
+    "failures": 0,
+    "errors": 0,
+    "test_names": [
+      "test_annular_canceling_charge_is_local_single_closure_inconsistency",
+      "test_exact_user_repro_retains_local_evidence_and_remote_zero",
+      "test_intersecting_nonnested_rectangles_do_not_connect_groups",
+      "test_invalid_paths_preserve_geometry_and_unknown_without_poisoning_other_group",
+      "test_loop_order_does_not_change_geometry_groups_or_constraints",
+      "test_orientation_reversal_changes_raw_winding_not_group_b",
+      "test_separated_nested_groups_fit_independently_even_when_b_matches"
+    ]
+  },
+  "covered_behaviors": [
+    "exact 128x128 user reproduction retains local nested evidence and remote zero observation",
+    "two separated nested groups are fitted independently for equal or different Burgers vectors",
+    "loop reordering preserves geometry-defined groups and constraints",
+    "orientation reversal flips raw winding and preserves canonical group constraints",
+    "annular canceling charge invalidates only one stable-closure hypothesis; another group stays independently constrained",
+    "intersecting nonnested rectangles are not forcibly joined",
+    "invalid paths keep geometry groups and unknown public values; other group remains constrained"
+  ],
+  "not_established": [
+    "real specimen or image-to-GPA scientific validation",
+    "material dislocation or core identity",
+    "3D Burgers uniqueness or defect absence",
+    "native DM, browser, full regression suite, or full science suite acceptance"
+  ]
+}

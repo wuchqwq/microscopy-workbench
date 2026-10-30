@@ -1,0 +1,1059 @@
+{
+  "schema_version": 1,
+  "plugin": "microscopy-workbench",
+  "version": "0.6.0",
+  "runtime": {
+    "os": "Windows 11",
+    "node": "v24.16.0",
+    "python": "3.13.2",
+    "numpy": "2.5.4",
+    "tifffile": "2026.10.15",
+    "Pillow": "12.3.0",
+    "SciPy": "1.18.1"
+  },
+  "result": "PASS",
+  "science": {
+    "source": "Public analytic float32 TIFFs; no physical scale",
+    "initial_windows": 4,
+    "initial_scale_pixels": 64,
+    "additional_scale_pixels": 32,
+    "fft": {
+      "window": "none",
+      "subtract_mean": true
+    },
+    "peaks": {
+      "threshold_rel": 0.18,
+      "min_separation_bins": 2,
+      "exclude_dc_radius_bins": 3,
+      "refinement": "quadratic"
+    },
+    "map": {
+      "tolerance_cycles_per_pixel": 0.01,
+      "angles_degrees": [
+        0,
+        30,
+        45,
+        60,
+        90
+      ]
+    },
+    "independent_vector_tolerance_cycles_per_pixel": 0.025,
+    "seed": 20261030
+  },
+  "controls": [
+    {
+      "case": "single",
+      "peak_parameters": {
+        "exclude_dc_radius_bins": 3,
+        "max_peaks": 16,
+        "min_separation_bins": 2,
+        "refinement": "quadratic",
+        "threshold_rel": 0.18
+      },
+      "stopping": {
+        "stop": false,
+        "reason": "continue",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "window_budget_stop": {
+        "stop": true,
+        "reason": "budget_exhausted",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "user_stop": {
+        "stop": true,
+        "reason": "user_stop",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "unknown_fraction": 0,
+      "boundary_count": 0,
+      "lattice_status_counts": {
+        "compatible_signature": 4
+      }
+    },
+    {
+      "case": "noise",
+      "peak_parameters": {
+        "exclude_dc_radius_bins": 3,
+        "max_peaks": 4,
+        "min_separation_bins": 2,
+        "refinement": "quadratic",
+        "threshold_rel": 0.18
+      },
+      "stopping": {
+        "stop": true,
+        "reason": "data_quality_limited",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "window_budget_stop": {
+        "stop": true,
+        "reason": "budget_exhausted",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "user_stop": {
+        "stop": true,
+        "reason": "user_stop",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "unknown_fraction": 1,
+      "boundary_count": 0,
+      "lattice_status_counts": {
+        "not_comparable": 4
+      }
+    },
+    {
+      "case": "square",
+      "peak_parameters": {
+        "exclude_dc_radius_bins": 3,
+        "max_peaks": 16,
+        "min_separation_bins": 2,
+        "refinement": "quadratic",
+        "threshold_rel": 0.18
+      },
+      "stopping": {
+        "stop": false,
+        "reason": "continue",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "window_budget_stop": {
+        "stop": true,
+        "reason": "budget_exhausted",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "user_stop": {
+        "stop": true,
+        "reason": "user_stop",
+        "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+      },
+      "unknown_fraction": 0,
+      "boundary_count": 0,
+      "lattice_status_counts": {
+        "ambiguous": 4
+      }
+    }
+  ],
+  "trials": [
+    {
+      "case": "boundary",
+      "source_sha256": "26226d4b4227849f37341a7ead459157746c9c4148fa4eba66b23a5e141bd34b",
+      "budget_cap": {
+        "windows": 8,
+        "fft_pixels": 20480
+      },
+      "actual_matched_budget": {
+        "windows": 8,
+        "fft_pixels": 20480
+      },
+      "strategies": [
+        {
+          "strategy": "active",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 5,
+          "new_B_observations": 3,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 2,
+          "boundary_bands_intersecting_truth": 2,
+          "boundary_supports": [
+            [
+              0,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              128,
+              128
+            ]
+          ],
+          "unknown_fraction": 0,
+          "domain_count": 4,
+          "elapsed_ms": 104036.643,
+          "acceptance_only_negative_ms": 9084.6509,
+          "stop_reason": "budget_exhausted",
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              16,
+              48,
+              48,
+              80
+            ],
+            [
+              48,
+              16,
+              80,
+              48
+            ],
+            [
+              48,
+              48,
+              80,
+              80
+            ],
+            [
+              48,
+              80,
+              80,
+              112
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "23b673d994a04567a7d082cb58d43293",
+              "data_sha256": "902778a9da3b79bb728d20998931e5fb6dba09f200e45da5c5916f0f90243c36"
+            },
+            {
+              "object_id": "d4d765740a7f4e44b542f87046fc2264",
+              "data_sha256": "516bff6d50894e3e310008fab33bb463fff4ad469c3e2d094e566dfcfaa648e0"
+            },
+            {
+              "object_id": "4bc3d749a27547a9bc9e19c9d3f433e4",
+              "data_sha256": "dee37bfab3308b4699bc5d4984f4a7af4f945ffa9162abecc09bdb184f773d26"
+            },
+            {
+              "object_id": "2e0c71bbc6164393a24c718cb2a12636",
+              "data_sha256": "f3b410d9f38d3353263df8b6726656f2917d562c2e32e71de64d40a3d6ae0fa4"
+            }
+          ]
+        },
+        {
+          "strategy": "uniform",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 4,
+          "new_B_observations": 2,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 2,
+          "boundary_bands_intersecting_truth": 2,
+          "boundary_supports": [
+            [
+              0,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              128,
+              128
+            ]
+          ],
+          "unknown_fraction": 0,
+          "domain_count": 6,
+          "elapsed_ms": 51151.87110000002,
+          "acceptance_only_negative_ms": 0,
+          "stop_reason": null,
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              16,
+              16,
+              48,
+              48
+            ],
+            [
+              80,
+              16,
+              112,
+              48
+            ],
+            [
+              16,
+              80,
+              48,
+              112
+            ],
+            [
+              80,
+              80,
+              112,
+              112
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "b88e80eb9a3e4af19b6f08c53524d8b5",
+              "data_sha256": "902778a9da3b79bb728d20998931e5fb6dba09f200e45da5c5916f0f90243c36"
+            },
+            {
+              "object_id": "77ab500da1c54913907c7488e6bd8eaf",
+              "data_sha256": "516bff6d50894e3e310008fab33bb463fff4ad469c3e2d094e566dfcfaa648e0"
+            },
+            {
+              "object_id": "79b5f04b7f894f55859d83e9e50dfec8",
+              "data_sha256": "dee37bfab3308b4699bc5d4984f4a7af4f945ffa9162abecc09bdb184f773d26"
+            },
+            {
+              "object_id": "d3c34201475041049ca6d71befdfe746",
+              "data_sha256": "f3b410d9f38d3353263df8b6726656f2917d562c2e32e71de64d40a3d6ae0fa4"
+            }
+          ]
+        },
+        {
+          "strategy": "seeded_stratified",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 4,
+          "new_B_observations": 2,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 2,
+          "boundary_bands_intersecting_truth": 2,
+          "boundary_supports": [
+            [
+              0,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              128,
+              128
+            ]
+          ],
+          "unknown_fraction": 0,
+          "domain_count": 6,
+          "elapsed_ms": 51966.6948,
+          "acceptance_only_negative_ms": 0,
+          "stop_reason": null,
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              22,
+              32,
+              54,
+              64
+            ],
+            [
+              86,
+              13,
+              118,
+              45
+            ],
+            [
+              16,
+              73,
+              48,
+              105
+            ],
+            [
+              66,
+              96,
+              98,
+              128
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "a7b8d8a778214d6d84e00048b6e27940",
+              "data_sha256": "902778a9da3b79bb728d20998931e5fb6dba09f200e45da5c5916f0f90243c36"
+            },
+            {
+              "object_id": "f76a0b63dd1344ffa49b08d014506684",
+              "data_sha256": "516bff6d50894e3e310008fab33bb463fff4ad469c3e2d094e566dfcfaa648e0"
+            },
+            {
+              "object_id": "6a6b51a91d2b40948c859990cd50eb3e",
+              "data_sha256": "dee37bfab3308b4699bc5d4984f4a7af4f945ffa9162abecc09bdb184f773d26"
+            },
+            {
+              "object_id": "f5314cd00d724ec3b87648b3ea77cbf3",
+              "data_sha256": "f3b410d9f38d3353263df8b6726656f2917d562c2e32e71de64d40a3d6ae0fa4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "narrow-f1-crop",
+      "source_sha256": "1adcbe87cb820e2923f590f15582e4dcb6f2da888497f9c5ec635046055e86dd",
+      "budget_cap": {
+        "windows": 8,
+        "fft_pixels": 20480
+      },
+      "actual_matched_budget": {
+        "windows": 8,
+        "fft_pixels": 20480
+      },
+      "strategies": [
+        {
+          "strategy": "active",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 6,
+          "new_B_observations": 2,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 1,
+          "boundary_bands_intersecting_truth": 1,
+          "boundary_supports": [
+            [
+              16,
+              48,
+              80,
+              80
+            ]
+          ],
+          "unknown_fraction": 0,
+          "domain_count": 7,
+          "elapsed_ms": 116124.94170000002,
+          "acceptance_only_negative_ms": 9985.00079999998,
+          "stop_reason": "budget_exhausted",
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              48,
+              48,
+              80,
+              80
+            ],
+            [
+              16,
+              48,
+              48,
+              80
+            ],
+            [
+              0,
+              96,
+              32,
+              128
+            ],
+            [
+              48,
+              16,
+              80,
+              48
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "d0fcab3f8b7445c9bd8e871e898d5e9a",
+              "data_sha256": "2bba4d523d35bebe779fdbd184925726dd02896ae07cfb3f1db453e69d9443be"
+            },
+            {
+              "object_id": "a189c74b2ea24c6ca32db53b1a04f710",
+              "data_sha256": "082b147a5c2160542aeb5237f2bb9a413f4321c5b5521ffd1d0db83991af280b"
+            },
+            {
+              "object_id": "1bc97f727b864271b219ad4401627dd0",
+              "data_sha256": "67ee9a2a09aaf4c479168bae39bcf561d71c43429d88684c91a3f574a76d3487"
+            },
+            {
+              "object_id": "20ab2bab41eb4c17a4ff5e104ecfa939",
+              "data_sha256": "820ef8124d75c74f1128e0929619c01f168c351d944c9949a845a95089e5c186"
+            }
+          ]
+        },
+        {
+          "strategy": "uniform",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 4,
+          "new_B_observations": 0,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 0,
+          "boundary_bands_intersecting_truth": 0,
+          "boundary_supports": [],
+          "unknown_fraction": 0,
+          "domain_count": 8,
+          "elapsed_ms": 73808.04820000002,
+          "acceptance_only_negative_ms": 0,
+          "stop_reason": null,
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              16,
+              16,
+              48,
+              48
+            ],
+            [
+              80,
+              16,
+              112,
+              48
+            ],
+            [
+              16,
+              80,
+              48,
+              112
+            ],
+            [
+              80,
+              80,
+              112,
+              112
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "bf624ef8cc1a4e1e9c960c3ca1447ee5",
+              "data_sha256": "2bba4d523d35bebe779fdbd184925726dd02896ae07cfb3f1db453e69d9443be"
+            },
+            {
+              "object_id": "680831e7f6084d21991ede110be8dfdb",
+              "data_sha256": "082b147a5c2160542aeb5237f2bb9a413f4321c5b5521ffd1d0db83991af280b"
+            },
+            {
+              "object_id": "35a258941456475793be8799a7da10b5",
+              "data_sha256": "67ee9a2a09aaf4c479168bae39bcf561d71c43429d88684c91a3f574a76d3487"
+            },
+            {
+              "object_id": "632aff1b943343c690066ade7b075a2d",
+              "data_sha256": "820ef8124d75c74f1128e0929619c01f168c351d944c9949a845a95089e5c186"
+            }
+          ]
+        },
+        {
+          "strategy": "seeded_stratified",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 5,
+          "new_B_observations": 1,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 0,
+          "boundary_bands_intersecting_truth": 0,
+          "boundary_supports": [],
+          "unknown_fraction": 0,
+          "domain_count": 8,
+          "elapsed_ms": 74809.68430000002,
+          "acceptance_only_negative_ms": 0,
+          "stop_reason": null,
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              22,
+              32,
+              54,
+              64
+            ],
+            [
+              86,
+              13,
+              118,
+              45
+            ],
+            [
+              16,
+              73,
+              48,
+              105
+            ],
+            [
+              66,
+              96,
+              98,
+              128
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "1f03b93504d6474691ddbdd8c01eaad2",
+              "data_sha256": "2bba4d523d35bebe779fdbd184925726dd02896ae07cfb3f1db453e69d9443be"
+            },
+            {
+              "object_id": "4b0e5266428644728ace77cde50ba5a5",
+              "data_sha256": "082b147a5c2160542aeb5237f2bb9a413f4321c5b5521ffd1d0db83991af280b"
+            },
+            {
+              "object_id": "5ca32864334b4527aa01833098b7674b",
+              "data_sha256": "67ee9a2a09aaf4c479168bae39bcf561d71c43429d88684c91a3f574a76d3487"
+            },
+            {
+              "object_id": "bef9e9c8fe1644328856c95d67c4b6c7",
+              "data_sha256": "820ef8124d75c74f1128e0929619c01f168c351d944c9949a845a95089e5c186"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "narrow-offset-right",
+      "source_sha256": "5c8bef5056c89ab0fcfc26a8cfbcef54078b9d0e89f01901c2329ef2319f8ad0",
+      "budget_cap": {
+        "windows": 8,
+        "fft_pixels": 20480
+      },
+      "actual_matched_budget": {
+        "windows": 8,
+        "fft_pixels": 20480
+      },
+      "strategies": [
+        {
+          "strategy": "active",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 3,
+          "new_B_observations": 3,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 0,
+          "boundary_bands_intersecting_truth": 0,
+          "boundary_supports": [],
+          "unknown_fraction": 0.25,
+          "domain_count": 5,
+          "elapsed_ms": 135957.6176,
+          "acceptance_only_negative_ms": 11569.046600000001,
+          "stop_reason": "budget_exhausted",
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              16,
+              48,
+              48,
+              80
+            ],
+            [
+              80,
+              48,
+              112,
+              80
+            ],
+            [
+              48,
+              48,
+              80,
+              80
+            ],
+            [
+              48,
+              16,
+              80,
+              48
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "13804de91f734dc080278bd388ba8fec",
+              "data_sha256": "902778a9da3b79bb728d20998931e5fb6dba09f200e45da5c5916f0f90243c36"
+            },
+            {
+              "object_id": "c6ef279d4f8042538867ec5b598f1d0e",
+              "data_sha256": "74742a1939a8c74ed7a155cafbd5973362b250b7ebd6c2bc22ec466259a1cc00"
+            },
+            {
+              "object_id": "c0478eb5ac6e457fb80d799d0e58ee21",
+              "data_sha256": "dee37bfab3308b4699bc5d4984f4a7af4f945ffa9162abecc09bdb184f773d26"
+            },
+            {
+              "object_id": "836abf6e9aaa430e81312894af906aee",
+              "data_sha256": "da351b3c5846d5ded1d98f7bc688bdf6f35a28a122b97970f3202e3dd2964608"
+            }
+          ]
+        },
+        {
+          "strategy": "uniform",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 2,
+          "new_B_observations": 2,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 0,
+          "boundary_bands_intersecting_truth": 0,
+          "boundary_supports": [],
+          "unknown_fraction": 0.25,
+          "domain_count": 5,
+          "elapsed_ms": 88160.532,
+          "acceptance_only_negative_ms": 0,
+          "stop_reason": null,
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              16,
+              16,
+              48,
+              48
+            ],
+            [
+              80,
+              16,
+              112,
+              48
+            ],
+            [
+              16,
+              80,
+              48,
+              112
+            ],
+            [
+              80,
+              80,
+              112,
+              112
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "bdf0797517a7445f9a45174b5d7a768b",
+              "data_sha256": "902778a9da3b79bb728d20998931e5fb6dba09f200e45da5c5916f0f90243c36"
+            },
+            {
+              "object_id": "d9afd46de8ac42d09aa5f1fdc2d3e379",
+              "data_sha256": "74742a1939a8c74ed7a155cafbd5973362b250b7ebd6c2bc22ec466259a1cc00"
+            },
+            {
+              "object_id": "2e1b919d3c1848d5af684eead4d11846",
+              "data_sha256": "dee37bfab3308b4699bc5d4984f4a7af4f945ffa9162abecc09bdb184f773d26"
+            },
+            {
+              "object_id": "09831d145a174365aa3d3de6501c0486",
+              "data_sha256": "da351b3c5846d5ded1d98f7bc688bdf6f35a28a122b97970f3202e3dd2964608"
+            }
+          ]
+        },
+        {
+          "strategy": "seeded_stratified",
+          "total_windows": 8,
+          "total_fft_pixels": 20480,
+          "B_vector_evidence_count": 2,
+          "new_B_observations": 2,
+          "B_evidence_detected": true,
+          "B_evidence_missed": false,
+          "B_vector_false_positive_count": 0,
+          "boundary_count": 0,
+          "boundary_bands_intersecting_truth": 0,
+          "boundary_supports": [],
+          "unknown_fraction": 0.25,
+          "domain_count": 5,
+          "elapsed_ms": 85766.8737,
+          "acceptance_only_negative_ms": 0,
+          "stop_reason": null,
+          "initial_rects": [
+            [
+              0,
+              0,
+              64,
+              64
+            ],
+            [
+              64,
+              0,
+              128,
+              64
+            ],
+            [
+              0,
+              64,
+              64,
+              128
+            ],
+            [
+              64,
+              64,
+              128,
+              128
+            ]
+          ],
+          "added_rects": [
+            [
+              22,
+              32,
+              54,
+              64
+            ],
+            [
+              86,
+              13,
+              118,
+              45
+            ],
+            [
+              16,
+              73,
+              48,
+              105
+            ],
+            [
+              66,
+              96,
+              98,
+              128
+            ]
+          ],
+          "initial_spectra_preserved": [
+            {
+              "object_id": "96dab934005d48079658b471bd09e796",
+              "data_sha256": "902778a9da3b79bb728d20998931e5fb6dba09f200e45da5c5916f0f90243c36"
+            },
+            {
+              "object_id": "b88d3d5ea70e494092db76de1b500557",
+              "data_sha256": "74742a1939a8c74ed7a155cafbd5973362b250b7ebd6c2bc22ec466259a1cc00"
+            },
+            {
+              "object_id": "557afe5e390a47179529c0ed1c350d15",
+              "data_sha256": "dee37bfab3308b4699bc5d4984f4a7af4f945ffa9162abecc09bdb184f773d26"
+            },
+            {
+              "object_id": "b3387e18276b443b9a43327f2191c154",
+              "data_sha256": "da351b3c5846d5ded1d98f7bc688bdf6f35a28a122b97970f3202e3dd2964608"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": [
+    "Formal proposals execute explicit additions; matched scientific budgets and source/FFT identity are audited; original request and named context recover without new FFTs; exports and actual MCP PNGs returned"
+  ],
+  "measurement_revision": {
+    "new_fft_count": 0,
+    "old_measurement_manifest_unchanged": true
+  },
+  "actual_cost": {
+    "fft_objects": 84,
+    "fft_pixels_all_operations": 233472,
+    "formal_calls": 114,
+    "decision_ms": 160560.3158999998,
+    "elapsed_ms": 1172934.0903999999,
+    "worker_startup": "Not separated by this client; inclusive tool times are not additive provider phases"
+  },
+  "pngs": [
+    {
+      "file": "field.png",
+      "sha256": "f1723f59325bbbea9d1c8a3b5da17e359371ac39103e9c7c0ad8b0521b6cc019",
+      "meaning": "Actual exported provider preview; not a browser screenshot or input scientific values"
+    },
+    {
+      "file": "domains.png",
+      "sha256": "2490493f7d638718f9aa87b0b49c5453b763db4a6142c65ed58778da5d84afdf",
+      "meaning": "Actual exported provider preview; not a browser screenshot or input scientific values"
+    },
+    {
+      "file": "proposal.png",
+      "sha256": "a0719962c4f8e50302b60b4ff28facc64784ee88db3468c6499b95c698151276",
+      "meaning": "Actual saved first proposal preview; not a browser screenshot"
+    }
+  ],
+  "limits": [
+    "Vector detection is not phase identification or segmentation",
+    "Finite FFT windows are correlated; bands are support, not boundary uncertainty",
+    "F1a crop pixels are reproduced but this new benchmark uses preregistered quadratic refinement and different map hypotheses",
+    "No CPU isolation; elapsed time includes validation/render/protocol waits",
+    "No universal detection or speedup claim",
+    "Actual browser gestures, real specimen accuracy and native plugin discovery NOT_TESTED",
+    "Vector evidence can arise from a mixed support and does not establish a pure B window; narrow-offset-right boundary support was missed by all three strategies",
+    "Current-run acceptance_only_negative_ms is the failed provider-call time; filesystem assertion overhead remains included in elapsed_ms"
+  ]
+}

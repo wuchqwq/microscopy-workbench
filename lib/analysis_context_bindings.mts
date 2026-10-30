@@ -32,6 +32,18 @@ function requireMatch(ok: unknown,message: string): asserts ok {if(!ok)throw Obj
 const rows=(value: ContextEntry | ContextEntry[] | null | undefined): ContextEntry[]=>value===null||value===undefined?[]:Array.isArray(value)?value:[value];
 const active=(value: ContextEntry | ContextEntry[] | null | undefined)=>rows(value).filter(entry=>entry.status==='active');
 const recordDependency=(record: unknown)=>record?Object.fromEntries(['calibration_id','revision','status','source','coordinate_domain','centre_revision_id'].filter(key=>fields(record)[key]!==undefined).map(key=>[key,fields(record)[key]])):null;
+function spatialMeasurementBelongs(science: Record<string,unknown>,id: string): boolean {
+  // Context proofs have a16KiB budget. Pack only immutable16-byte object IDs;
+  // scientific arrays and authoritative request records stay in the provider.
+  if(Array.isArray(science.measurementIds))return science.measurementIds.includes(id);
+  const packed=science.measurementIdsBase64;
+  requireMatch(typeof packed==='string'&&packed.length<=10924,'Invalid bounded spatial measurement proof');
+  const bytes=Buffer.from(packed,'base64');
+  requireMatch(bytes.length%16===0&&bytes.length<=8192&&bytes.toString('base64')===packed,'Invalid spatial measurement identity encoding');
+  if(!/^[a-f0-9]{32}$/.test(id))return false;
+  const sought=Buffer.from(id,'hex');for(let i=0;i<bytes.length;i+=16)if(bytes.subarray(i,i+16).equals(sought))return true;
+  return false;
+}
 
 export function createScientificContextBindings({providers,signal}: ScientificBindingsOptions={}) {
   const cache=new Map<string | undefined, Promise<MetadataRead>>();
@@ -60,6 +72,23 @@ export function createScientificContextBindings({providers,signal}: ScientificBi
   }
   const relative=(ref: ScopedReferenceInput,objectId: string)=>({...ref,objectId});
   async function imageProof(ref: ScopedReferenceInput,top: MetadataRead): Promise<ProviderReferenceProof> {
+    if(top.value.kind==='analysis_candidates') {
+      requireMatch(typeof top.value.source_domain_map_id==='string'&&typeof top.value.field_object_id==='string','Active proposal lacks saved map/field identity');
+      return {manifestHash:top.manifestHash,kind:top.value.kind,roles:['active_plan'],scientific:{sourceId:top.value.source_domain_map_id,fieldId:top.value.field_object_id}};
+    }
+    if(top.value.kind==='spatial_field'||top.value.kind==='field_extend'||top.value.kind==='domain_map') {
+      const samples=top.value.samples;
+      requireMatch(Array.isArray(samples)&&samples.length>=1&&samples.length<=32,'Spatial field samples exceed the bounded provider contract');
+      const calibrations: unknown[]=[],measurementIds: string[]=[];
+      for(const sample of samples) {
+        requireMatch(sample!==null&&typeof sample==='object'&&!Array.isArray(sample),'Invalid spatial sample record');
+        const row=fields(sample),ids=row.measurement_object_ids;
+        requireMatch(Array.isArray(ids)&&ids.length<=16&&ids.every(value=>typeof value==='string'&&/^[a-f0-9]{32}$/.test(value)),'Invalid spatial measurement identities');
+        calibrations.push(recordDependency(row.xy_calibration));measurementIds.push(...ids);
+      }
+      const uniqueCalibrations=[...new Map(calibrations.map(value=>[canonical(value),value])).values()];
+      return {manifestHash:top.manifestHash,kind:top.value.kind,roles:[top.value.kind==='domain_map'?'domains':'spatial_field'],scientific:{manifestPath:top.manifestPath,sourceId:top.value.parent_object_id,calibrations:uniqueCalibrations,measurementIdsBase64:Buffer.from([...new Set(measurementIds)].join(''),'hex').toString('base64')}};
+    }
     const domainRole=({spatial_atlas:'atlas',local_signature_compare:'domain_hypotheses',feature_field:'field'} as Partial<Record<string,AnalysisRole>>)[top.value.kind as string];
     if(domainRole)return {manifestHash:top.manifestHash,kind:top.value.kind,roles:[domainRole],scientific:{manifestPath:top.manifestPath,sourceId:top.value.parent_object_id,sourceKind:top.value.source_kind??null,
       calibrations:((top.value.regions??[]) as unknown[]).map(row=>recordDependency(fields(row).xy_calibration)),measurementIds:((top.value.regions??[]) as unknown[]).flatMap(row=>fields(row).measurement_object_ids)}};
@@ -119,6 +148,23 @@ export function createScientificContextBindings({providers,signal}: ScientificBi
   async function validateBindings({slot,entry,slots: rawSlots}: BindingValidation) {
     const slots=rawSlots as BindingSlots,science=fields(entry.proof.scientific);
     if(entry.ref.provider==='external-image-workspace') {
+      if(slot==='active_plan') {
+        if(active(slots.domains).length)requireMatch(science.sourceId===slots.domains!.ref.objectId&&entry.dependsOn.domains,'Active proposal does not bind the selected domain map');
+        if(active(slots.spatial_field).length)requireMatch(science.fieldId===slots.spatial_field!.ref.objectId&&entry.dependsOn.spatial_field,'Active proposal uses a different current field');
+        return;
+      }
+      if(slot==='spatial_field'||slot==='domains') {
+        const sourceRole=slot==='spatial_field'?'experiment':'spatial_field';
+        if(active(slots[sourceRole]).length) {
+          requireMatch(science.sourceId===slots[sourceRole]!.ref.objectId,'Spatial field/domain candidate uses a different immutable source selection');
+          requireMatch(entry.dependsOn[sourceRole],'Spatial field/domain candidate must bind the selected source dependency');
+        }
+        if(slot==='spatial_field') {
+          for(const role of ['calibration','center'] as const)for(const selected of active(slots[role]))requireMatch((science.calibrations as unknown[]).length&&(science.calibrations as unknown[]).every(value=>same(value,fields(selected.proof.scientific).calibration)),'Spatial field uses a different selected calibration/centre revision');
+          for(const role of ['points','measurements'] as const)for(const selected of active(slots[role]))requireMatch(spatialMeasurementBelongs(science,selected.ref.objectId),'Spatial field does not include the selected corrected measurement');
+        }
+        return;
+      }
       if(['atlas','domain_hypotheses','field'].includes(slot)) {
         const sourceRole=slot==='atlas'?'experiment':science.sourceKind==='local_signature_compare'?'domain_hypotheses':science.sourceKind==='joint_observations'?'observations':'atlas';
         if(active(slots[sourceRole]).length){

@@ -1,0 +1,178 @@
+{
+  "status": "PASS",
+  "scope": "Actual fresh ephemeral consumer model + explicit MCP configuration/packaged Skill; independent new-client scientific readback",
+  "model": {
+    "model": "gpt-6.1-terra",
+    "model_reasoning_effort": "ultra"
+  },
+  "task": "fresh-active-input",
+  "calls": 18,
+  "successful_calls": 17,
+  "failed_calls": [
+    {
+      "tool": "image_panel_current",
+      "error": "错误: Expected exactly one live registered panel; found 0. Specify the retained panel_id."
+    }
+  ],
+  "actual_png_blocks": 14,
+  "initial_windows": 4,
+  "added_windows": 2,
+  "total_windows": 6,
+  "total_fft_pixels": 18432,
+  "selected_rects": [
+    [
+      16,
+      48,
+      48,
+      80
+    ],
+    [
+      80,
+      48,
+      112,
+      80
+    ]
+  ],
+  "added_observations": [
+    {
+      "rect_xyxy": [
+        16,
+        48,
+        48,
+        80
+      ],
+      "status": "valid",
+      "measured_vectors_xy": [
+        [
+          0,
+          0.23711727017159034
+        ],
+        [
+          0.1560815067261968,
+          0
+        ]
+      ],
+      "coordinate_unit": "cycles/pixel",
+      "analytic_B_support_fraction": 0,
+      "antipodal_vector_residuals": {
+        "A": [
+          0.00016849327380319412,
+          0.002742270171590344
+        ],
+        "B": [
+          0.09876802397724993,
+          0.14912164203857398
+        ]
+      },
+      "interpretation": "Post-session analytic comparison only; a mixed support is not a pure phase or boundary localization"
+    },
+    {
+      "rect_xyxy": [
+        80,
+        48,
+        112,
+        80
+      ],
+      "status": "valid",
+      "measured_vectors_xy": [
+        [
+          0.1250905637741634,
+          0.09409522230880113
+        ],
+        [
+          0.14067400914297368,
+          -0.19113487095374715
+        ],
+        [
+          0.157407846017108,
+          -1.973361474227886e-9
+        ]
+      ],
+      "coordinate_unit": "cycles/pixel",
+      "analytic_B_support_fraction": 0.75,
+      "antipodal_vector_residuals": {
+        "A": [
+          0.0011578460171096812,
+          0.14716958112427325
+        ],
+        "B": [
+          0.00035690368404472895,
+          0.0036352013350693137
+        ]
+      },
+      "interpretation": "Post-session analytic comparison only; a mixed support is not a pure phase or boundary localization"
+    }
+  ],
+  "stop": {
+    "stop": true,
+    "reason": "budget_exhausted",
+    "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion"
+  },
+  "initial_spectra_unchanged": true,
+  "original_request_recovered_by_model": true,
+  "new_client_name_and_original_id_recovery": true,
+  "current_context_revision": 6,
+  "current_roles_active": true,
+  "source_unchanged": true,
+  "user_config_unchanged": true,
+  "package_unchanged": true,
+  "source_sha256": "abf58aa19cdaa1afb6470c0c8a4581fcd0ade92aa600a042a8285a3e6d4cc87d",
+  "exports": [
+    {
+      "scientific_files": [
+        "sampled-support.npy",
+        "spatial-field.csv",
+        "spatial-field.json",
+        "unknown-support.npy",
+        "preview.png",
+        "provenance.json",
+        "manifest.json"
+      ],
+      "hashes_verified": true
+    }
+  ],
+  "usage": {
+    "input_tokens": 1212359,
+    "cached_input_tokens": 1118976,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3611,
+    "reasoning_output_tokens": 461
+  },
+  "limits": [
+    "No oracle, useful ROI, expected vectors or phase answer supplied to consumer",
+    "No shell/script/web/other-agent operation executed by consumer",
+    "True native plugin discovery and browser gestures NOT_TESTED",
+    "Finite geometry and budget stop are not material/defect identification"
+  ],
+  "model_elapsed_seconds": 221.177,
+  "source_shape_yx": [
+    160,
+    160
+  ],
+  "initial_sampling_rect_xyxy": [
+    0,
+    0,
+    128,
+    128
+  ],
+  "initial_spectra": [
+    {
+      "object_id": "4791bcbae1374f25ac7110eb0c86a011",
+      "data_sha256": "50647c01ab8c6b55bdd4dd64cb787dd91bcbb05d77f57433f4c5b27258020d65"
+    },
+    {
+      "object_id": "f588733225ba443ba3df12fd4d519edf",
+      "data_sha256": "d8c0b4ac897435e21d576d7fbf59c75f49daa73985f35f5ce66cc4c82a6e4895"
+    },
+    {
+      "object_id": "f649e47cbfd04c7499deb9e6b9570203",
+      "data_sha256": "50647c01ab8c6b55bdd4dd64cb787dd91bcbb05d77f57433f4c5b27258020d65"
+    },
+    {
+      "object_id": "13ad619648f643379388f6a2f77d4240",
+      "data_sha256": "d8c0b4ac897435e21d576d7fbf59c75f49daa73985f35f5ce66cc4c82a6e4895"
+    }
+  ],
+  "candidate_bundle_inventory_sha256": "54d1a44011a71c99d4dcfee6b6d21e6a8778a16b6f6ee62e1ce29e875aff5ff1",
+  "qualification": "One initial-panel-absence tool error was handled; native plugin discovery/browser gestures remain NOT_TESTED"
+}

@@ -1,0 +1,88 @@
+{
+  "status": "PASS",
+  "scope": "Fresh actual model on compact/bounded tools after saved formal scientific correction; separate browser qualification",
+  "model": {
+    "model": "gpt-6.1-terra",
+    "model_reasoning_effort": "ultra"
+  },
+  "elapsed_seconds": 284.448,
+  "calls": 21,
+  "successful_calls": 21,
+  "failed_calls": [],
+  "compact_calls": 8,
+  "full_delivery_calls": 0,
+  "bounded_evidence_calls": 3,
+  "bounded_sections": [
+    "neighbors",
+    "samples",
+    "neighbors"
+  ],
+  "png_blocks": 10,
+  "initial_windows": 3,
+  "added_windows": 2,
+  "total_windows": 5,
+  "total_fft_pixels": 8192,
+  "selected_rects": [
+    [
+      0,
+      32,
+      32,
+      64
+    ],
+    [
+      32,
+      32,
+      64,
+      64
+    ]
+  ],
+  "stop": {
+    "meaning": "Bounded policy decision under current observations/settings; no absence or physical recoverability conclusion",
+    "reason": "budget_exhausted",
+    "stop": true
+  },
+  "current_context_revision": 9,
+  "old_spectra_and_saved_measurements_unchanged": true,
+  "original_request_recovered_by_model": true,
+  "new_client_recovery": true,
+  "source_sha256": "29274f499842d25a1e1c844a41d6da40a6f5dc824a076ac9bdfc80d2017286e6",
+  "source_unchanged": true,
+  "config_unchanged": true,
+  "package_unchanged": true,
+  "export_hashes_verified": true,
+  "usage": {
+    "input_tokens": 741194,
+    "cached_input_tokens": 654080,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3965,
+    "reasoning_output_tokens": 385
+  },
+  "limits": [
+    "No oracle/useful ROI/phase answer supplied to consumer",
+    "New96px post-correction task differs from previous160px trial; raw usage is not an isolated speedup experiment",
+    "Unknown physical scale and candidate-only material interpretation retained",
+    "Native plugin discovery NOT_TESTED; browser qualification reported separately"
+  ],
+  "implementation_commit": "0a9545a1168d23e014189639081f97e4aafe5de1",
+  "analysis_id": "public-closeout-56619aff26",
+  "prior_revision_stage": "mcp-revise",
+  "browser_gestures": "NOT_TESTED: definitive Computer Use Windows URL safety stop; no UI input or alternate control path",
+  "initial_spectra": [
+    {
+      "object_id": "df66c4b8c2424ebf80a3e310155e771c",
+      "data_sha256": "309d9e45110d365425f6ac2d09fac589b417700a3042ea207ddf3f434cdc941c"
+    },
+    {
+      "object_id": "e1944078230b46099611ae4ec57e8a04",
+      "data_sha256": "307b50b8431a39e71742c1e1b358acc7e288257c3af07fee6448be6d96263b84"
+    },
+    {
+      "object_id": "f96bff317283471ba23de32512f0f7c2",
+      "data_sha256": "6401ce96cb4a200009f0017b21f9c53e7b4ff0b1f964bd81620f3f0ad45b1c58"
+    }
+  ],
+  "candidate_bundle_inventory_sha256": "189e45465f228395081c9d66ac5024448e10cc5ce42c3825f4c662b3cfb9fe5e",
+  "client_startup_notes": [
+    "Nonfatal model-catalog refresh timeout and unsupported PowerShell shell-snapshot warning retained in private logs; configured model proceeded, no model substitution or config modification"
+  ]
+}

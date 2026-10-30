@@ -9,6 +9,10 @@ import {ImageProbeClient} from './image_probe_client.mjs';
 import {automationTools,automationActions} from './image_automation_contract.mjs';
 import {sequenceTools,sequenceActions} from './image_sequence_contract.mjs';
 import {domainTools,domainActions} from './image_domain_contract.mjs';
+import {activeTools,activeActions} from './image_active_contract.mjs';
+import {gpaTools,gpaActions} from './image_gpa_contract.mjs';
+import {topologyTools,topologyActions} from './image_topology_contract.mjs';
+import {evidenceTools,evidenceActions,withCompactEvidence,compactEvidenceTools} from './image_evidence_contract.mjs';
 import type {ArgumentSchema} from './runtime/schema.mjs';
 import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
 import type {ExecutionSpec,RecoverySpec,ExecutionWait,FrozenParameters,ProviderScope} from './runtime/execution_coordinator.mjs';
@@ -71,9 +75,13 @@ const numericComponent: ArgumentSchema={type:'string',enum:['raw','real','imag',
 const numericSpace: ArgumentSchema={type:'string',enum:['source_pixels','source_array_indices','frequency_cycles_per_pixel']};
 const numericPoints: ArgumentSchema={type:'array',minItems:2,maxItems:2,items:{type:'array',minItems:2,maxItems:2,items:{type:'number'}}};
 export const imageTools: ToolDefinition[]=[
+  ...gpaTools,
+  ...topologyTools,
   ...automationTools,
   ...sequenceTools,
   ...domainTools,
+  ...activeTools,
+  ...evidenceTools,
   make('image_probe','Read up to64 original-array samples with a persistent read-only worker; no result object or request journal per probe. Nearest sample uses floor(index+0.5), with no clipping. Bind response to exact immutable object; physical/intensity units are not inferred.',{object_id:id,points:{...numericPoints,minItems:1,maxItems:64},coordinate_space:numericSpace,component:numericComponent},['object_id','points']),
   write('image_statistics','Save original-array ROI statistics: mean, population stddev(ddof0), minimum and maximum with binary64 reductions. Source rect and original FFT frequency_rect are distinct; complex component must be explicit. No display gamma/filter is applied.',{object_id:id,rect,frequency_rect:rect,component:numericComponent},['object_id']),
   write('image_profile','Save an evenly sampled straight width-one nearest-neighbor scientific profile, including original coordinates, sampled indices/values, calibrated path distance when sourced, NPY and CSV. No clipping, no inferred intensity unit; reciprocal path distance is not d-spacing.',{object_id:id,points:numericPoints,coordinate_space:numericSpace,component:numericComponent,sample_count:{type:'integer',minimum:2,maximum:4096},line_width:{type:'integer',enum:[1]},interpolation:{type:'string',enum:['nearest']}},['object_id','points']),
@@ -92,9 +100,9 @@ export const imageTools: ToolDefinition[]=[
   write('image_context','Record revisable user interpretation separately from storage units. Legacy metadata.xy_scale remains descriptive and is not applied to geometry; use image_calibrate for operational real-space XY. Never rewrites source metadata or relabels uint16 values as radians.',{object_id:id,metadata},['object_id','metadata']),
   write('image_export','Write scientific NPY or saved sparse feature JSON/CSV, available display PNG and provenance to a new output directory under an EXISTING parent. OUTPUT_PARENT_MISSING requires an existing parent, not merely another basename. Refuse overwrite; data handoff, not DM native SaveAs.',{object_id:id,output_dir:{type:'string',minLength:1}},['object_id','output_dir']),
   make('image_result','Query the pre-saved request ID without re-executing an operation. A missing/pending/failed record is not success.',{request_id:requestId},['request_id']),
-];
+].map(withCompactEvidence);
 export const IMAGE_INSTRUCTIONS='Explicit multi-source image tools use an independent Python environment and never connect to DM or replace a failed native operation. Choose source and frame IDs, use pixel ROI and fixed cross-frame display ranges. PNG is display only. Save request_id before every write; after cancellation query image_result. Unknown scale permits pixel exploration, but not nm/Angstrom spacings or physical depth. User context is revisable evidence. Validated native READ captures automatically activate sourced XY records when current axis units/domain agree; inspect calibration_admission and source. Use image_calibrate for user revisions with explicit scope/source_text and reciprocal_space for inverse-length calibration; never relabel real-space scale as diffraction calibration; legacy image_context.xy_scale is descriptive only. Sequence calibration follows selected frames; explicitly attach the record to an older saved FFT if needed. After calibration changes preview the new wrapper to redraw bars/physical frequency axes, then remeasure; old physical measurements/interpretations require review and old exports remain immutable. Physical FFT conversion divides cycles/pixel by signed axis scales, with no2pi; intensity units and physical depth remain separate. Optional crystallography is never required. For frequency zoom use image_preview frequency_rect in the original FFT bin grid; keep the full-spectrum reference and shared display range. Zoom never recomputes FFT, increases resolution, or re-centres DC. For an FFT figure, first try image_preview display_preset=fft_detail and inspect the returned image. Preserve the unfiltered texture/streaks; smoothing and background subtraction are optional explicit display treatments, never a default recipe. Use sparse short cyan arrows by default (3px wide, 6px head, maximum24px shaft); stop outside features. Use color=orange for an explicitly proposed second-phase candidate, keeping its hypothesized/user_confirmed/retracted status separate. Color never establishes a phase. Explicit styling overrides defaults; existing revisions keep their styles. Do not copy literature indices or physical scale onto uncalibrated data. Use image_center only to correct an established reciprocal scalar centre, never the mathematical DC of a saved external complex FFT. Use image_remeasure with the current wrapper and old measurement to reuse valid point anchors; only an originally explicit DC endpoint follows a centre correction. Source/frame/ROI/FFT grid must agree. A previously unknown scalar image can be explicitly declared reciprocal via image_calibrate declare_reciprocal=true with inverse scale and user source; known real-space or reconstruction meaning cannot be silently replaced.';
-const actions: Readonly<Record<string,string>>={...automationActions,...sequenceActions,...domainActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
+const actions: Readonly<Record<string,string>>={...topologyActions,...gpaActions,...automationActions,...sequenceActions,...domainActions,...activeActions,...evidenceActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
 
 export class ImageWorkspace {
   declare readonly workspace: string; declare readonly python: string; declare readonly timeoutMs: number;
@@ -114,7 +122,10 @@ export class ImageWorkspace {
   call(name: string,input: unknown,signal?: AbortSignal): ExecutionWait<ToolResult> {
     // Existing registry/worker admission validates arguments. Unknown scientific
     // fields remain opaque; Coordinator still validates the actual request ID.
-    const args=input as Readonly<Record<string,unknown>>;
+    const rawArgs=input as Readonly<Record<string,unknown>>;
+    if(rawArgs.response_detail!==undefined&&(!compactEvidenceTools.has(name)||!['full','compact'].includes(rawArgs.response_detail as string)))throw new Error('response_detail requires an eligible image tool and full or compact');
+    const detail=rawArgs.response_detail==='compact'?'compact':'full';
+    const args=Object.fromEntries(Object.entries(rawArgs).filter(([key])=>key!=='response_detail'));
     const action=actions[name];if(!action)throw new Error('Unknown external image tool');
     if(action==='probe')return this.coordinator.invoke<Readonly<Record<string,unknown>>,ToolResult>({operation:name,requestId:null,parameters:args,resourceKeys:[],timeoutMs:Math.min(this.timeoutMs,10000),requestScope:this.requestScope,lane:'query'},
       {start:parameters=>{const result=this.probeClient.call(parameters as ProbeRequest);return {result,closed:result.then(()=>{},()=>{}),requestStop:()=>{}};},messages:{queued:'Probe cancelled before submission',cancelled:'Stopped waiting for read-only probe',timeout:'Read-only probe timed out; no scientific write was submitted'}},{signal});
@@ -127,11 +138,11 @@ export class ImageWorkspace {
     // The portable coordinator owns queue/wait/deadline mechanics only.
     // The existing worker remains authoritative for hashes, original IDs,
     // scientific admission and durable completion, including after restart.
-    const readonly=action==='result'||action==='get';
+    const readonly=action==='result'||action==='get'||action==='evidence';
     const spec: ExecutionSpec<ImageRequest>={operation:name,requestId:(readonly?(action==='result'?args.request_id:null):args.request_id) as string | null,
       parameters:payload,resourceKeys:readonly?[]:[this.resourceKey],timeoutMs:this.timeoutMs,
       requestScope:this.requestScope,lane:readonly?'query':'work'};
-    const start=(accepted: FrozenParameters<ImageRequest>)=>{const work=this.run(accepted);return {result:work,closed:work.workerDone,requestStop:work.requestStop};};
+    const start=(accepted: FrozenParameters<ImageRequest>)=>{const work=this.run(accepted,detail);return {result:work,closed:work.workerDone,requestStop:work.requestStop};};
     const messages={queued:'Cancelled while queued; external operation was not started',
       cancelled:'Stopped waiting; external operation may still finish. Query image_result with the original request_id; do not automatically resubmit.',
       timeout:'External image time limit; state may be incomplete. Query image_result with the original request_id; do not automatically resubmit.'};
@@ -140,8 +151,8 @@ export class ImageWorkspace {
       : this.coordinator.invoke(spec,{start,messages},{signal});
   }
   close(){this.probeClient.close();}
-  run(payload: Readonly<ImageRequest>): ImageWorkerPromise {
-    const raw=JSON.stringify(payload);if(Buffer.byteLength(raw)>256*1024)throw new Error('Image request exceeds 256 KiB');
+  run(payload: Readonly<ImageRequest>,detail: 'full'|'compact'='full'): ImageWorkerPromise {
+    const raw=JSON.stringify(detail==='compact'?{...payload,response_detail:detail}:payload);if(Buffer.byteLength(raw)>256*1024)throw new Error('Image request exceeds 256 KiB');
     let finishWorker!: () => void,child: ImageProcess | undefined;
     const workerDone=new Promise<void>(resolve=>{finishWorker=resolve;});
     const waiting=new Promise<ToolResult>((resolve,reject)=>{
@@ -161,6 +172,17 @@ export class ImageWorkspace {
       child!.once('close',code=>{finishWorker();if(settled)return;try{
         const decoded: unknown=JSON.parse(Buffer.concat(chunks).toString('utf8'));
         const reply=decoded as Record<string,unknown>;
+        if(detail==='compact'&&reply.ok===false&&reply.state==='projection_failed'){
+          const original=reply.original_result as {tool?: unknown;arguments?: {request_id?: unknown}}|undefined;
+          const full=reply.full_record as {tool?: unknown;arguments?: {object_id?: unknown}}|undefined;
+          const issue=reply.projection_error as {code?: unknown;message?: unknown}|undefined;
+          const identity=payload.action==='get'?reply.object_id===payload.object_id:reply.request_id===(payload.action==='result'?payload.query_request_id:payload.request_id);
+          if(reply.backend!=='external-image-workspace'||reply.authoritative_record_state!=='completed'||reply.automatic_retry!==false||!identity||
+             typeof reply.object_id!=='string'||!/^[a-f0-9]{32}$/.test(reply.object_id)||typeof reply.request_id!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(reply.request_id)||
+             original?.tool!=='image_result'||original.arguments?.request_id!==reply.request_id||full?.tool!=='image_info'||full.arguments?.object_id!==reply.object_id||
+             issue?.code!=='EVIDENCE_BUDGET_EXCEEDED'||typeof issue.message!=='string'||Buffer.byteLength(JSON.stringify(reply))>16384)throw new Error('Invalid original scientific result identity in projection failure');
+          finish(resolve,{isError:true,content:[{type:'text',text:JSON.stringify(reply,null,2)}]});return;
+        }
         // A failed/incomplete composition remains an MCP error, but exposes its
         // bounded original child receipts for recovery without filesystem reads.
         if(code===0&&reply.ok===false&&payload.action==='result'&&reply.partial_results){
@@ -171,13 +193,14 @@ export class ImageWorkspace {
         const outcome=reply.result;if(!outcome||typeof outcome!=='object'||Array.isArray(outcome))throw new Error('Invalid image result');
         const result=outcome as Record<string,unknown>;
         if(result.backend!=='external-image-workspace'||result.state!=='completed')throw new Error('External image operation did not return a completed external result');
-        if(payload.action==='get'){
+        if(detail==='compact'&&(result.evidence_format!=='image-evidence-summary-v1'||result.authoritative_record!==false||result.inline_image!==false||typeof result.manifest_sha256!=='string'||!/^[a-f0-9]{64}$/.test(result.manifest_sha256)))throw new Error('Image worker did not return a manifest-bound compact evidence projection');
+        if(payload.action==='get'||payload.action==='evidence'){
           if(result.object_id!==payload.object_id)throw new Error('Image worker returned a different requested object identity');
         }else if(result.request_id!==(payload.action==='result'?payload.query_request_id:payload.request_id)){
           throw new Error('Image worker returned a different original request identity; '+hint);
         }
         const content: ToolContent[]=[{type:'text',text:JSON.stringify(result,null,2)}];
-        if(result.image_path){
+        if(result.image_path&&result.evidence_format!=='image-evidence-summary-v1'){
           // Python resolves Windows 8.3 aliases to long paths. Canonicalize
           // both sides through the native filesystem before containment checks.
           const root=realpathSync.native(this.workspace),file=realpathSync.native(result.image_path as string),relative=path.relative(root,file);

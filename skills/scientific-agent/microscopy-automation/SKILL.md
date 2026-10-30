@@ -1,9 +1,69 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build sparse structural feature fields, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build bounded multiscale structural fields and candidate domains or explicit single-domain classical GPA and conditional projected phase-winding evidence, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
 ---
 
 # Reusable microscopy observations
+
+## Budgeted active follow-up
+
+For an existing structural field, use `image_analysis_candidates` on its saved
+domain map. Supply explicit total window and FFT-pixel budgets, including work
+already done. Inspect the proposed source ROI, scale, inherited settings,
+heuristic reasons, exploration reservation and stopping rule. Scores are
+priorities, not probabilities or calibrated information gain.
+
+For iterative field/map/proposal calls and `image_info` / `image_result`, request
+`response_detail:"compact"` when the schema supports it. The returned summary is
+explicitly non-authoritative; retain its object ID and `manifest_sha256`. Use
+`image_evidence` with those exact values, a selected `section`, `offset` and
+`limit` (at most eight rows) to expand only the observations, neighbors or
+history needed for the current decision. Proposal actions remain executable in
+the compact result. Do not request every full recursive record merely to find
+one measurement. Full original receipts and provenance remain available when
+needed; a summary does not replace them or relax source/integrity checks.
+Compact delivery is text evidence; it does not repeatedly inline the preview PNG.
+To inspect an image, follow `preview_ref` with explicit full read-only delivery or use the Panel; default full images are unchanged.
+If compact delivery fails after `authoritative_record_state:"completed"`, the scientific write is already saved.
+Query its returned original request ID with full delivery; never resubmit that operation to obtain a summary.
+
+Choose 1–4 actions deliberately and call `image_field_extend` with the exact
+base field, saved candidate set and action IDs. Keep request IDs before writes.
+Use direct explicit rectangles only for a documented intended modification;
+do not silently replay duplicates, stale proposals or unknown operations.
+Existing observations must retain their FFT/peak/measurement references. Compute
+the updated `image_domain_map`, inspect new evidence and request the next
+proposal, or stop. This loop uses formal scientific tools; no runtime scripts,
+hidden model calls or developer-session identifiers are required.
+
+For a new irregular support graph, explicitly choose
+`neighbor_policy:"support_contact_v1"` to compare same-scale overlapping or
+positive-shared-edge windows. Positive gaps, corner-only contact, different
+scales and unknown/mixed evidence are distinct. Omitted/default policy preserves
+legacy cardinal maps; do not silently reinterpret a saved historical map.
+
+After a researcher moves a saved peak, read the actual saved Panel selection
+and measurement. Match its scientific FFT/ROI and stable `observation_key`, not
+its display row or peak label. Relay the complete revised measurement list with
+`image_field_extend(rects:[], measurement_overrides:...)`, then update the map
+and current references. Do not invent a measurement from the drawn PNG, silently
+reuse the old result, or recompute an unchanged FFT.
+
+Preserve some exploration when a field appears normal: shifted or smaller
+windows can test an unresolved narrow component. Do not spend every action on
+the highest anomaly. Quality-limited noise and repeated non-improvement should
+lead to a bounded stop, not endless refinement. Record misses and unsampled
+support; a uniform-looking candidate does not prove a homogeneous material.
+
+Save the current field/map/proposal under `spatial_field`, `domains` and
+`active_plan` in the named AnalysisContext, using the revision you just read.
+Promote the field before its dependent map and proposal; an old result is
+history until its bindings match the current selection.
+After reconnecting, query saved records and original outcomes before deciding
+what new work is necessary. A successful geometric comparison is still a
+candidate, and missing physical scale remains pixel based. The active tool guide
+and acceptance record are shipped in `docs/ACTIVE_ANALYSIS.md` and
+`docs/F4_LITE_ACCEPTANCE.md`.
 
 Use the installed plugin's actual MCP tools, not ad-hoc Python scripts. Inspect
 the advertised schemas. Keep internal object/request IDs yourself. A new input
@@ -79,6 +139,46 @@ angles as hypotheses. Do not interpolate unmeasured pixels or call a feature
 field a phase map. Save the `field` context reference, export JSON/CSV/PNG with
 ordinary `image_export`, and reopen the saved field without FFT.
 
+## Sample a multiscale field and inspect candidate domains
+
+Use `image_spatial_field` when more than eight isolated windows are needed.
+Choose an explicit source-pixel sampling `rect`, square `window_sizes`,
+`stride_xy`, `max_windows` and pixel/physical coordinate domain. The bounded
+plan uses ordinary atlas batches; it rejects excess work before child FFTs,
+never silently clips/truncates the grid. Read the recorded full-window support,
+overlap, costs, FFT and measurement references. A larger window improves
+frequency sampling but can mix domains. Missing scale remains useful pixel data.
+
+Call `image_domain_map` with that saved field, an explicit positive tolerance
+in the field's reciprocal units and finite candidate angles. Read its zero-angle
+orientation-sensitive edge separately from the allowed-rotation geometry
+comparison. A rotated compatible lattice signature must not merge different
+orientations into one domain. Full antipodal vector assignments, unmatched
+families, unknown symmetry, mixed/low-signal windows and alternative angles
+remain evidence. Do not match by peak rank or region label, fit a hidden mirror
+or scale, or turn a connected signature candidate into a phase/twin/defect label.
+
+Open the saved result in Panel, inspect source supports, boundary **bands**,
+unknown mask and corresponding saved ROI/FFT. Bands and stride do not establish
+boundary localization precision. Unsampled locations remain unclassified;
+overlapping scales are correlated sensitivity observations. If a narrow region
+has no pure sampling window, report that limitation rather than absence.
+
+For a committed human peak correction, use `image_remeasure`, then
+`image_spatial_field` with unchanged sampling/settings, `previous_field_id` and
+sample-indexed `measurement_overrides`. Each override supplies the complete
+measurement list for that sample. Rebuild only the derived domain result; the
+old FFT objects remain unchanged. Save exact `experiment`, `spatial_field` and
+`domains` references in the named AnalysisContext, and export JSON/CSV/support
+NPY/PNG with `image_export`. Reconnection reads the context and original request;
+it does not repeat the sampling. See
+[multiscale details](../../../docs/MULTISCALE_DOMAINS.md).
+
+F1a supplies bounded observation and candidate relations. For optional active
+next-ROI selection use [budgeted active follow-up](#budgeted-active-follow-up).
+GPA and defect/twin inference remain outside these tools; neither sampling mode
+is a reason to force every image through the same sequence.
+
 ## Compare and return for correction
 
 For a reconstructed sequence, use `image_sequence_create` with 2–8 explicitly
@@ -138,6 +238,76 @@ whose parent already exists. Do not assume an `exports` subfolder has been creat
 use a new child under a known existing configured workspace/output parent. A
 missing parent requires correcting that parent, not trying more filenames.
 
+## Single-domain classical GPA
+
+When the researcher requests lattice displacement/strain from one selected
+domain, inspect the actual `image_gpa`, `image_gpa_view` and `image_gpa_read`
+schemas. Use two explicit non-collinear reciprocal vectors in cycles/pixel on
+the exact saved FFT. Declare `source_domain: "real_space_lattice"` with an actual
+`source_domain_text` source or working assumption; unknown image metadata alone
+does not establish a lattice, and known reciprocal images remain refused.
+Supply a Gaussian `mask_sigma`, a half-open reference
+rectangle in that FFT's local spatial grid, `reference_mode` and a sourced
+`reference_text`. `fixed_g` preserves affine deformation relative to supplied
+waves; `fit_reference` zeroes the fitted reference lattice and cannot measure
+its absolute strain. Never silently choose a strain-free region.
+
+Inspect amplitude, validity masks and reference diagnostics with the resulting
+maps. `ux`/`uy` remain pixels unless calibration is sourced; unknown metric leaves
+tensors and rotation labeled image-coordinate. Finite strain is Green–Lagrange,
+`exy` is tensor shear, and polar rotation is stored in radians, displayed/read in
+explicitly labeled degrees. Read
+[classical GPA details](../../../docs/CLASSICAL_GPA.md) before interpreting the
+finite Eulerian displacement convention. A geometric phase may include
+sublattice/basis-image changes and pseudo-strain; it is not a ptychographic wave
+phase or material identification.
+
+Revise vectors/mask/reference/calibration with `previous_gpa_id`, preserving the
+old GPA and saved FFT. Use `image_gpa_view` for display-only range/component
+changes and `image_gpa_read` for bounded explicit local integer samples. Retain
+the provider result/request IDs; F2a adds no AnalysisContext GPA role, so do not
+put it in an unrelated slot. Reconnect via saved objects and original
+`image_result` requests, without a new FFT. Export to a fresh directory and retain
+NPY components, masks, report/table and provenance separately from the PNG.
+
+## Explicit projected phase-winding evidence
+
+For requested projected closure evidence, inspect `image_topology` and read
+[the sign and path contract](../../../docs/PROJECTED_TOPOLOGY.md). Supply exact
+saved `fixed_g` GPA objects on the same FFT/calibration/local grid with the same
+aperture width, a sourced `model_assumption_text`, and deliberate local
+rectangular loops. It reuses wrapped geometric phases; do not integrate a
+smooth strain map or globally unwrapped displacement. Keep phase-valid path
+support separate from a permitted masked core inside a loop. Use raw wrapped
+phase/amplitude/edge support, independently of GPA unwrapping validity. A hole on
+the path or a phase step reaching the fixed `0.8*pi` guard makes evidence unavailable.
+
+The positive image path runs east/south/west/north (visually clockwise with y
+down); `b_closure=integral(du_E)` and `w=-g dot b_closure`. Report this conditional
+projected closure convention, never a unique conventional 3D Burgers vector.
+Two directions only fit two closure components. At least three nonharmonic
+direction families and distinct nested loops add consistency checks, not real-defect
+proof. Retain noise/contrast artefacts, `g dot b=0` invisibility, opposite-sign
+cancellation, missing constraints and contrary evidence. Compare only explicit
+caller-supplied projected candidates; do not invent a lattice or phase.
+
+Read the saved algorithm version and each `loop_groups[]` entry in v2. Strict
+containment alone connects loops into groups, independently of validity or
+winding; it does not prove one core. Compare winding stability, directional fits and supplied candidates
+within each group. Different nested charges can mean added annular net charge
+and fail a single-closure assumption. Separate remote zero loops retain their
+own evidence; one loop lacks nested stability and never proves defect absence.
+Overlapping non-nested supports remain ambiguous. For multiple groups,
+`spatially_grouped_evidence` is only the overall container; top-level
+`projected_burgers` is null and `reflections`/`burgers_candidates` are empty.
+Report each group's status. Historical v1 objects
+retain their original global-loop semantics and must not be silently reinterpreted.
+
+Retain original request/result IDs and previous-result links for revisions,
+export masks/tables/report/provenance to a new directory, recover with
+`image_result`, and use `image_panel_open` only for the saved read-only preview.
+No source FFT/GPA rewrite, automatic segmentation or new context role follows.
+
 Before each write choose and retain `request_id`. Query the tool's advertised
 recovery endpoint after timeout or cancellation; never resubmit an unknown
 side effect. Batch receipts retain child request IDs and outcomes. An incomplete
@@ -147,8 +317,8 @@ batch is not a complete analysis.
 
 This package supplies composable local and bounded cross-frame observations
 and explicit candidate comparisons. It does not implement automatic global
-indexing, multi-phase segmentation, twin-interface determination, dislocation/GPA
-or ptychography reconstruction. Sequence FFT currently requires real spatial
+indexing, multi-phase segmentation, twin-interface determination, automatic dislocation analysis
+or ptychography reconstruction. Classical GPA supports one explicit domain and a qualified saved FFT. Sequence FFT currently requires real spatial
 scientific arrays; do not silently take the real part of complex reconstruction
 data or quantize a float array to PNG/uint16. Report the specific unsupported
 entry instead. Existing `image_compare` can show explicitly selected frames

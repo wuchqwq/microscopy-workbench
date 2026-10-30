@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "scope": "Final candidate Python provider readonly get and original-ID query; old graphs/payloads/source/FFT bytes preserved",
+  "trials": [
+    {
+      "scope": "F1a",
+      "status": "PASS",
+      "object_id": "98b36f3314e5457696bee0d9d7c377ac",
+      "sample_count": 4,
+      "algorithm_version": "bounded-window-neighbor-signatures-v1",
+      "legacy_policy_still_implicit": true,
+      "original_request_recovered": true,
+      "old_files_source_fft_hashes_unchanged": true,
+      "protected_file_count": 12,
+      "new_objects_or_requests": 0
+    },
+    {
+      "scope": "F4",
+      "status": "PASS",
+      "object_id": "8558ea74f86c484a8f41e7ec985697f1",
+      "sample_count": 8,
+      "algorithm_version": "bounded-window-neighbor-signatures-v1",
+      "legacy_policy_still_implicit": true,
+      "original_request_recovered": true,
+      "old_files_source_fft_hashes_unchanged": true,
+      "protected_file_count": 16,
+      "new_objects_or_requests": 0
+    }
+  ]
+}

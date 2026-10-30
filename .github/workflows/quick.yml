@@ -8,6 +8,7 @@ jobs:
   changes:
     name: Classify changes / documentation check
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     outputs:
       run_full_ci: ${{ steps.classify.outputs.run_full_ci }}
     steps:
@@ -15,6 +16,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Test change classification
+        run: python3 -B tests/ci_scope_test.py
       - name: Determine test scope
         id: classify
         shell: bash
@@ -22,43 +25,15 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          # Manual runs keep the original full-test behavior.
-          if [[ "$EVENT_NAME" != 'pull_request' ]]; then
-            echo 'run_full_ci=true' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          changed="$RUNNER_TEMP/microscopy-changed-paths"
-          # --no-renames ensures a code -> docs rename still checks the removed code path.
-          if ! git diff --name-only --no-renames -z "$BASE_SHA" "$HEAD_SHA" > "$changed"; then
-            echo '::warning::Could not inspect changed paths; running all checks.'
-            echo 'run_full_ci=true' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          run_full_ci=false
-          count=0
-          while IFS= read -r -d '' path; do
-            count=$((count + 1))
-            case "$path" in
-              docs/*.md) ;;
-              */*) run_full_ci=true ;;
-              README.md|README.*.md|CONTRIBUTING.md|CHANGELOG.md) ;;
-              *) run_full_ci=true ;;
-            esac
-          done < "$changed"
-          # Unknown or empty diffs run the complete checks. AGENTS, Skills,
-          # fixtures, workflows and configuration are intentionally not exempt.
-          if [[ "$count" -eq 0 ]]; then run_full_ci=true; fi
-          echo "run_full_ci=$run_full_ci" >> "$GITHUB_OUTPUT"
-          echo "PR files: $count; run full science CI: $run_full_ci"
+        run: bash scripts/ci_scope.sh >> "$GITHUB_OUTPUT"
       - name: Check documentation whitespace
         if: steps.classify.outputs.run_full_ci == 'false'
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          COMPARISON_BASE: ${{ steps.classify.outputs.comparison_base }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: git diff --check "$BASE_SHA" "$HEAD_SHA"
+        run: git diff --check "$COMPARISON_BASE" "$HEAD_SHA"
+
   node-smoke:
     needs: changes
     if: needs.changes.outputs.run_full_ci == 'true'
@@ -141,10 +116,133 @@ jobs:
       - run: python -B tests/image_spatial_atlas_test.py
       - run: python -B tests/image_domain_compare_test.py
       - run: python -B tests/image_feature_field_test.py
+      - run: python -B tests/image_spatial_domains_test.py
+      - run: npm run test:spatial-domains
+        env:
+          MICROSCOPY_PYTHON: python
       - run: node --test dist/tests/domain-measurement-binding.test.mjs
         env:
           MICROSCOPY_RUN_DOMAIN_BINDING_TEST: '1'
           MICROSCOPY_PYTHON: python
+
+  active-analysis:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-images.txt
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-images.txt
+      - run: python -B tests/image_field_increment_test.py
+      - run: python -B tests/image_active_analysis_test.py
+      - run: python -B tests/image_domain_neighbors_test.py
+      - run: python -B tests/image_evidence_test.py
+      # The full fixed-budget comparison is a reproducible acceptance command,
+      # not a per-commit benchmark. Keep CI bounded to provider and contract tests.
+      - run: node --test dist/tests/active-analysis-contract.test.mjs dist/tests/image-evidence-contract.test.mjs
+
+  classical-gpa:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements-images.txt
+            requirements-gpa.txt
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-gpa.txt
+      - run: python -B -m unittest discover -s tests -p 'test_image_gpa_*.py' -v
+      - run: npm run test:gpa
+        env:
+          MICROSCOPY_PYTHON: python
+
+  projected-topology:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements-images.txt
+            requirements-gpa.txt
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-gpa.txt
+      - run: python -B -m unittest discover -s tests -p 'test_*topology*.py' -v
+      - run: npm run test:topology
+        env:
+          MICROSCOPY_PYTHON: python
+
+  f4-gpa-integration:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements-images.txt
+            requirements-gpa.txt
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-gpa.txt
+      - run: npm run test:science
+        env:
+          MICROSCOPY_PYTHON: python
+      - run: npm run test:integration:f4-gpa
+        env:
+          MICROSCOPY_PYTHON: python
+          MICROSCOPY_INTEGRATION_REPORT: ${{ runner.temp }}/f4-gpa/report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: f4-gpa-integration-report
+          path: ${{ runner.temp }}/f4-gpa/report.json
+          if-no-files-found: warn
+          retention-days: 14
 
   compiled-compatibility:
     needs: changes

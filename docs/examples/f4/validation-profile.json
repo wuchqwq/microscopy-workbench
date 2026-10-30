@@ -1,0 +1,67 @@
+{
+  "result": "PASS",
+  "comparison_order": [
+    "A1",
+    "B1",
+    "B2",
+    "A2"
+  ],
+  "runs": [
+    {
+      "label": "A1",
+      "mode": "qualified",
+      "wall_seconds": 5.554012499982491,
+      "sha_file_calls": 1628,
+      "read_json_calls": 1074,
+      "object_calls": 444,
+      "_object_record_calls": 445,
+      "load_array_calls": 228
+    },
+    {
+      "label": "B1",
+      "mode": "unconditional",
+      "wall_seconds": 8.6328125,
+      "sha_file_calls": 3227,
+      "read_json_calls": 2136,
+      "object_calls": 885,
+      "_object_record_calls": 885,
+      "load_array_calls": 456
+    },
+    {
+      "label": "B2",
+      "mode": "unconditional",
+      "wall_seconds": 8.430408100015484,
+      "sha_file_calls": 3227,
+      "read_json_calls": 2136,
+      "object_calls": 885,
+      "_object_record_calls": 885,
+      "load_array_calls": 456
+    },
+    {
+      "label": "A2",
+      "mode": "qualified",
+      "wall_seconds": 5.332673899945803,
+      "sha_file_calls": 1628,
+      "read_json_calls": 1074,
+      "object_calls": 444,
+      "_object_record_calls": 445,
+      "load_array_calls": 228
+    }
+  ],
+  "canonical_bytes_equal": true,
+  "canonical_result_sha256": "b988328bf891f3056f62c3e60849ce62db8bab5dcec8f4ec917249752e27c316",
+  "source_sha256_equal": true,
+  "map_manifest_sha256_equal": true,
+  "workspace_file_stats_unchanged": true,
+  "qualified_mean_seconds": 5.443343199964147,
+  "unconditional_mean_seconds": 8.531610300007742,
+  "limitations": [
+    "OS filesystem caches are not isolated or reset",
+    "Python process and Workspace are fresh in each run",
+    "cProfile overhead is included in elapsed times",
+    "This is validation/proposal latency, not FFT performance or whole MCP/UI latency",
+    "Two repetitions per mode on one saved four-window map do not establish general performance",
+    "Inclusive validation and proposal only: no FFT, render, scientific publication, MCP transport or UI timing",
+    "No workspace modification; stat snapshots are not a full filesystem byte-for-byte before/after image"
+  ]
+}

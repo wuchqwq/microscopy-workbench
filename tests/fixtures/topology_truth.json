@@ -1,0 +1,209 @@
+{
+  "schema": "public-projected-topology-physics-v1",
+  "evidence_scope": "public_synthetic_analytic_oracle_not_material_validation",
+  "generator": "tools/create_topology_fixtures.py",
+  "axes": "array[y,x]; vector[x,y]; positive image loop E,S,W,N (screen clockwise)",
+  "shape_yx": [
+    256,
+    256
+  ],
+  "g_vectors_cycles_per_pixel": [
+    [
+      0.125,
+      0.0
+    ],
+    [
+      0.0,
+      0.125
+    ],
+    [
+      0.125,
+      0.125
+    ]
+  ],
+  "mask_sigma_cycles_per_pixel": 0.012,
+  "reference_rect_xyxy": [
+    56,
+    56,
+    88,
+    88
+  ],
+  "image_formula": "I(x)=sum_j A_j(x)*cos(2*pi*g_j dot (x-u(x)))",
+  "displacement_formula": "u=sum_k b_k*atan2(y-c_ky,x-c_kx)/(2*pi)+u_regular(x)",
+  "phase_formula": "phi_j=-2*pi*g_j dot u; w_j=-g_j dot sum(enclosed b) for positive image XY",
+  "core_amplitude_formula": "A_j=product_k tanh(r_k/2)**abs(g_j dot b_k)",
+  "tolerance_preregistration": "Fixed in source and manifest before first F3a physics test execution; do not widen after failure",
+  "preregistered_tolerances": {
+    "exact_winding_integer_max_abs_error": 1e-08,
+    "filtered_winding_integer_max_abs_error": 1e-06,
+    "burgers_pixel_xy_max_abs_error": 1e-06,
+    "candidate_reciprocal_cycle_residual_max_abs": 0.05,
+    "path_phase_step_limit_radians": 2.5132741228718345,
+    "core_taper_radius_pixels": 2.0,
+    "smooth_null_min_max_abs_displacement_gradient": 0.1
+  },
+  "nested_rects_xyxy": [
+    [
+      80,
+      80,
+      176,
+      176
+    ],
+    [
+      64,
+      64,
+      192,
+      192
+    ]
+  ],
+  "shifted_rect_xyxy": [
+    72,
+    68,
+    184,
+    188
+  ],
+  "exterior_rect_xyxy": [
+    40,
+    40,
+    72,
+    72
+  ],
+  "cases": {
+    "positive": {
+      "cores": [
+        [
+          [
+            128.5,
+            128.5
+          ],
+          [
+            8.0,
+            0.0
+          ]
+        ]
+      ],
+      "expected_winding": [
+        -1,
+        0,
+        -1
+      ]
+    },
+    "negative": {
+      "cores": [
+        [
+          [
+            128.5,
+            128.5
+          ],
+          [
+            -8.0,
+            0.0
+          ]
+        ]
+      ],
+      "expected_winding": [
+        1,
+        0,
+        1
+      ]
+    },
+    "opposite_pair": {
+      "cores": [
+        [
+          [
+            100.5,
+            128.5
+          ],
+          [
+            8.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            156.5,
+            128.5
+          ],
+          [
+            -8.0,
+            0.0
+          ]
+        ]
+      ],
+      "enclosing_net_winding": [
+        0,
+        0,
+        0
+      ],
+      "absence_claim_allowed": false
+    },
+    "invisible_reflection": {
+      "g": [
+        0,
+        0.125
+      ],
+      "b": [
+        8,
+        0
+      ],
+      "winding": 0,
+      "absence_claim_allowed": false
+    },
+    "smooth_hotspot_null": {
+      "u": "[3,-2]*exp(-((x-128)^2+(y-128)^2)/(2*12^2))",
+      "expected_winding": [
+        0,
+        0,
+        0
+      ]
+    },
+    "affine_null": {
+      "u": "[.04*(x-128)+.02*(y-128),-.03*(y-128)]",
+      "expected_winding": [
+        0,
+        0,
+        0
+      ]
+    },
+    "contrast_only_vortex": {
+      "formula": "I=Re sum_j C_j(x)*exp(i*2*pi*g_j dot x)",
+      "C_j": "A_j*exp(-i*(g_j dot [8,0])*atan2(y-128.5,x-128.5))",
+      "true_material_burgers_pixel_xy": [
+        0,
+        0
+      ],
+      "measured_winding": [
+        -1,
+        0,
+        -1
+      ],
+      "material_dislocation_confirmed": false
+    },
+    "noise": {
+      "rng": "numpy.default_rng",
+      "seed": 20261030,
+      "qualification": "selected path rejected by phase-step ambiguity; no universal noise detector claim"
+    },
+    "alias_limit": {
+      "qualification": "near-pi steps are rejected; unsampled aliasing with small discrete steps is not identifiable"
+    }
+  },
+  "metric": {
+    "default": "unknown: pixel Burgers components only",
+    "signed_calibration_example_nm_xy": [
+      0.02,
+      -0.035
+    ],
+    "known_positive_b_nm_xy": [
+      0.16,
+      0.0
+    ]
+  },
+  "limitations": [
+    "Continuum texture model, not an atomistic/multislice or real-specimen validation",
+    "Core taper is explicit; interior core masking does not alter path truth",
+    "Integer arithmetic closure is not measurement uncertainty or physical confidence",
+    "Zero net winding and g dot b=0 do not establish defect absence",
+    "Image contrast vortices, projection and undetected sampling aliasing can mimic topology"
+  ]
+}

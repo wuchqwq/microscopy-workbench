@@ -1,0 +1,280 @@
+{
+  "status": "PASS",
+  "baseline_commit": "f1ffbe82523e9d890974ce6e2354a7b4eb1f7136",
+  "scope": "Actual compiled MCP stdio readonly same immutable field/map/proposal + original request; compact includes one extra selected sample detail",
+  "experiments": [
+    {
+      "mode": "baseline",
+      "label": "A1",
+      "calls": [
+        {
+          "tool": "image_info",
+          "elapsed_ms": 3958.8043000000002,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5593.487600000001,
+          "stdout_wire_bytes": 169762,
+          "text_utf8_bytes": 106526,
+          "mcp_result_json_bytes": 169727,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5617.585000000001,
+          "stdout_wire_bytes": 146582,
+          "text_utf8_bytes": 82303,
+          "mcp_result_json_bytes": 146547,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_result",
+          "elapsed_ms": 3696.4347000000016,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        }
+      ],
+      "total_elapsed_ms": 18869.070600000003,
+      "total_stdout_wire_bytes": 576208,
+      "total_text_utf8_bytes": 325735
+    },
+    {
+      "mode": "full",
+      "label": "B1",
+      "calls": [
+        {
+          "tool": "image_info",
+          "elapsed_ms": 3486.416799999999,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5144.9843,
+          "stdout_wire_bytes": 169762,
+          "text_utf8_bytes": 106526,
+          "mcp_result_json_bytes": 169727,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5283.117999999999,
+          "stdout_wire_bytes": 146582,
+          "text_utf8_bytes": 82303,
+          "mcp_result_json_bytes": 146547,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_result",
+          "elapsed_ms": 3269.964,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        }
+      ],
+      "total_elapsed_ms": 17189.741800000003,
+      "total_stdout_wire_bytes": 576208,
+      "total_text_utf8_bytes": 325735
+    },
+    {
+      "mode": "compact",
+      "label": "C1",
+      "calls": [
+        {
+          "tool": "image_info",
+          "elapsed_ms": 2998.2822000000015,
+          "stdout_wire_bytes": 22088,
+          "text_utf8_bytes": 20239,
+          "mcp_result_json_bytes": 22053,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5035.8223,
+          "stdout_wire_bytes": 23423,
+          "text_utf8_bytes": 21462,
+          "mcp_result_json_bytes": 23388,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5344.103500000005,
+          "stdout_wire_bytes": 39867,
+          "text_utf8_bytes": 36619,
+          "mcp_result_json_bytes": 39832,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_result",
+          "elapsed_ms": 3303.8066000000035,
+          "stdout_wire_bytes": 22088,
+          "text_utf8_bytes": 20239,
+          "mcp_result_json_bytes": 22053,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_evidence",
+          "elapsed_ms": 3254.637300000002,
+          "stdout_wire_bytes": 15759,
+          "text_utf8_bytes": 14499,
+          "mcp_result_json_bytes": 15724,
+          "image_blocks": 0
+        }
+      ],
+      "total_elapsed_ms": 19939.7751,
+      "total_stdout_wire_bytes": 123225,
+      "total_text_utf8_bytes": 113058
+    },
+    {
+      "mode": "compact",
+      "label": "C2",
+      "calls": [
+        {
+          "tool": "image_info",
+          "elapsed_ms": 3045.1839000000036,
+          "stdout_wire_bytes": 22088,
+          "text_utf8_bytes": 20239,
+          "mcp_result_json_bytes": 22053,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5156.664299999997,
+          "stdout_wire_bytes": 23423,
+          "text_utf8_bytes": 21462,
+          "mcp_result_json_bytes": 23388,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5292.687900000004,
+          "stdout_wire_bytes": 39867,
+          "text_utf8_bytes": 36619,
+          "mcp_result_json_bytes": 39832,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_result",
+          "elapsed_ms": 3300.802100000001,
+          "stdout_wire_bytes": 22088,
+          "text_utf8_bytes": 20239,
+          "mcp_result_json_bytes": 22053,
+          "image_blocks": 0
+        },
+        {
+          "tool": "image_evidence",
+          "elapsed_ms": 3207.8061000000016,
+          "stdout_wire_bytes": 15759,
+          "text_utf8_bytes": 14499,
+          "mcp_result_json_bytes": 15724,
+          "image_blocks": 0
+        }
+      ],
+      "total_elapsed_ms": 20006.000600000007,
+      "total_stdout_wire_bytes": 123225,
+      "total_text_utf8_bytes": 113058
+    },
+    {
+      "mode": "full",
+      "label": "B2",
+      "calls": [
+        {
+          "tool": "image_info",
+          "elapsed_ms": 3376.7543000000005,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5271.337100000004,
+          "stdout_wire_bytes": 169762,
+          "text_utf8_bytes": 106526,
+          "mcp_result_json_bytes": 169727,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5478.299899999998,
+          "stdout_wire_bytes": 146582,
+          "text_utf8_bytes": 82303,
+          "mcp_result_json_bytes": 146547,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_result",
+          "elapsed_ms": 3322.192299999995,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        }
+      ],
+      "total_elapsed_ms": 17452.38799999999,
+      "total_stdout_wire_bytes": 576208,
+      "total_text_utf8_bytes": 325735
+    },
+    {
+      "mode": "baseline",
+      "label": "A2",
+      "calls": [
+        {
+          "tool": "image_info",
+          "elapsed_ms": 3751.9621000000043,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5597.754700000005,
+          "stdout_wire_bytes": 169762,
+          "text_utf8_bytes": 106526,
+          "mcp_result_json_bytes": 169727,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_info",
+          "elapsed_ms": 5688.365300000005,
+          "stdout_wire_bytes": 146582,
+          "text_utf8_bytes": 82303,
+          "mcp_result_json_bytes": 146547,
+          "image_blocks": 1
+        },
+        {
+          "tool": "image_result",
+          "elapsed_ms": 3782.8830000000016,
+          "stdout_wire_bytes": 129932,
+          "text_utf8_bytes": 68453,
+          "mcp_result_json_bytes": 129897,
+          "image_blocks": 1
+        }
+      ],
+      "total_elapsed_ms": 18823.232600000003,
+      "total_stdout_wire_bytes": 576208,
+      "total_text_utf8_bytes": 325735
+    }
+  ],
+  "full_response_exact_equality": true,
+  "old_payload_hashes_unchanged": true,
+  "no_new_scientific_objects_or_requests": true,
+  "limits": [
+    "Sequential same-host workload; OS caches not isolated; includes worker import/validation/I/O/PNG/MCP time",
+    "Wire counts are actual stdout chunks for each tool call, excluding initialization; text bytes exclude image blocks",
+    "Compact delivers a tagged summary and selected detail, not the entire original graph; full originals stay queryable",
+    "No fresh model usage is inferred from deterministic response bytes"
+  ],
+  "candidate_qualification": "Final support-contact/guarded-closure/text-only projection source; immutable input reused across all modes",
+  "comparison_note": "Compact includes an extra qualified selected-sample page: lower wire bytes is not an end-to-end speedup claim"
+}

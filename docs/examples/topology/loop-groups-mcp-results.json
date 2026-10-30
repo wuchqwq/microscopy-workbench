@@ -1,0 +1,707 @@
+{
+  "schema": "public-topology-loop-groups-mcp-results-v2",
+  "validation_status": "PASS_LIMITED_SCOPE",
+  "scope": "Actual MCP stdio continuation of exact captured public v1 FFT/GPA/topology, grouped v2 revision, scientific export and fresh-client recovery",
+  "fixture_provenance": "Public synthetic 256x256 real lattice texture with prescribed core (96.5,96.5), captured before the correction as exact saved FFT and two GPA records; no new FFT/GPA in this continuation",
+  "result": "PASS",
+  "runtime_ms": 34272.561299999994,
+  "formal_tool_calls": 9,
+  "legacy_preservation": {
+    "algorithm": "saved-wrapped-phase-rectangular-topology-v1",
+    "status": "inconsistent_or_partial_evidence",
+    "checked_original_file_count": 102,
+    "source_hash_unchanged": true
+  },
+  "counts": {
+    "before": {
+      "objects": 10,
+      "fft": 1,
+      "gpa": 2,
+      "topology": 2,
+      "exports": 2
+    },
+    "after": {
+      "objects": 12,
+      "fft": 1,
+      "gpa": 2,
+      "topology": 3,
+      "exports": 3
+    }
+  },
+  "counts_meaning": "Final r5 adds exactly one topology and one export receipt; unchanged FFT=1 and GPA=2. The starting topology/export totals include the original v1 object/export and retained r4 object/export.",
+  "grouped": {
+    "algorithm": "saved-wrapped-phase-rectangular-topology-v2",
+    "status": "spatially_grouped_evidence",
+    "interpretation_status": "hypothesized",
+    "libraries": {
+      "numpy": "2.2.6"
+    },
+    "shape_yx": [
+      256,
+      256
+    ],
+    "reflection_count": 3,
+    "loop_count": 3,
+    "g_vectors_cycles_per_pixel": [
+      [
+        0.125,
+        0
+      ],
+      [
+        0,
+        0.125
+      ],
+      [
+        0.125,
+        0.125
+      ]
+    ],
+    "calibration_nm_xy": [
+      0.02,
+      -0.03
+    ],
+    "coordinate_domain": "local_spatial_fft_pixel_centres",
+    "phase_source": "saved_phase_demodulated_wrapped_no_unwrap_or_fft",
+    "phase_convention": "phi=-2*pi*G*u; canonical positive_image_xy winding w gives G*b=-w",
+    "positive_loop_convention": "east_south_west_north_positive_shoelace_clockwise_on_y_down_image",
+    "physical_orientation_mapping": {
+      "signed_metric_determinant": -0.0006,
+      "signed_metric_determinant_sign": -1,
+      "positive_image_xy_has_positive_physical_xy_area": false,
+      "b_nm_convention": "S_times_b_pixel_for_same_positive_image_xy_circuit_no_orientation_renormalization"
+    },
+    "rect_convention": "half_open_xyxy_boundary_pixel_centres_closure_implicit",
+    "phase_step_limit_radians": 2.5132741228718345,
+    "integer_residual_tolerance_cycles": 1e-06,
+    "integer_residual_semantics": "arithmetic_closure_check_not_confidence_or_uncertainty",
+    "amplitude_floor_relative": 0.05,
+    "amplitude_normalization": "per_reflection_global_finite_non_edge_maximum_fixed_across_loops",
+    "amplitude_reference_maxima": [
+      0.4982167259295878,
+      0.5001111602992847,
+      0.498229868602475
+    ],
+    "amplitude_thresholds": [
+      0.024910836296479392,
+      0.025005558014964235,
+      0.02491149343012375
+    ],
+    "eligibility_semantics": "finite_phase_and_amplitude_above_floor_and_not_edge_invalid_on_path_only",
+    "total_path_samples": 628,
+    "maximum_path_samples": 16384,
+    "loops": [
+      {
+        "loop_index": 0,
+        "rect_xyxy": [
+          72,
+          72,
+          120,
+          120
+        ],
+        "orientation": "positive_image_xy",
+        "sample_count": 188,
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 0.04456755995478545,
+            "minimum_path_amplitude": 0.39222012111507754,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 1,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": 0,
+            "winding_integer": 0,
+            "canonical_winding_integer": 0,
+            "diagnostic_winding_cycles": 0,
+            "diagnostic_winding_integer": 0,
+            "diagnostic_canonical_winding_integer": 0,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 7.3420576626404e-05,
+            "minimum_path_amplitude": 0.49921737236621694,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 2,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 0.04456548596735388,
+            "minimum_path_amplitude": 0.3921137408471809,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          }
+        ],
+        "loop_id": "core_inner",
+        "group_index": 0
+      },
+      {
+        "loop_index": 1,
+        "rect_xyxy": [
+          60,
+          60,
+          132,
+          132
+        ],
+        "orientation": "positive_image_xy",
+        "sample_count": 284,
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 0.02901791142025445,
+            "minimum_path_amplitude": 0.4564468369866632,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 1,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": 0,
+            "winding_integer": 0,
+            "canonical_winding_integer": 0,
+            "diagnostic_winding_cycles": 0,
+            "diagnostic_winding_integer": 0,
+            "diagnostic_canonical_winding_integer": 0,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 2.68085850478883e-05,
+            "minimum_path_amplitude": 0.49988334898349296,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 2,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 0.02901415066585855,
+            "minimum_path_amplitude": 0.45641391235976625,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          }
+        ],
+        "loop_id": "core_outer",
+        "group_index": 0
+      },
+      {
+        "loop_index": 2,
+        "rect_xyxy": [
+          164,
+          164,
+          204,
+          204
+        ],
+        "orientation": "positive_image_xy",
+        "sample_count": 156,
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": 0,
+            "winding_integer": 0,
+            "canonical_winding_integer": 0,
+            "diagnostic_winding_cycles": 0,
+            "diagnostic_winding_integer": 0,
+            "diagnostic_canonical_winding_integer": 0,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 0.007321238130884922,
+            "minimum_path_amplitude": 0.4951399557549383,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 1,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": 0,
+            "winding_integer": 0,
+            "canonical_winding_integer": 0,
+            "diagnostic_winding_cycles": 0,
+            "diagnostic_winding_integer": 0,
+            "diagnostic_canonical_winding_integer": 0,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 2.211743282742873e-05,
+            "minimum_path_amplitude": 0.49998171802883784,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 2,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": 0,
+            "winding_integer": 0,
+            "canonical_winding_integer": 0,
+            "diagnostic_winding_cycles": 0,
+            "diagnostic_winding_integer": 0,
+            "diagnostic_canonical_winding_integer": 0,
+            "integer_residual_cycles": 0,
+            "maximum_abs_wrapped_step_radians": 0.0073141324752441506,
+            "minimum_path_amplitude": 0.4951914856078518,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          }
+        ],
+        "loop_id": "unrelated_zero",
+        "group_index": 1
+      }
+    ],
+    "reflections": [],
+    "projected_burgers": null,
+    "burgers_candidates": [],
+    "limitations": [
+      "Conditional image-phase topology does not confirm a material dislocation; contrast/noise vortices can produce the same winding",
+      "Wrapped sampled steps cannot rule out unsampled aliasing or guarantee detection of subpixel defects; near-pi rejection is only a conservative diagnostic",
+      "Zero net winding on these loops is not defect absence: g dot b invisibility and opposite-sign enclosed charges can cancel",
+      "Only net projected 2D circuit closure is constrained; no 3D Burgers uniqueness, resolved core location, slip system or material identification",
+      "Bandpass and finite-window effects, image contrast, calibration uncertainty and specimen/model validity are not quantified",
+      "Loop locations, sizes and vector choices are explicit user inputs; no adaptive loop or reflection selection is performed",
+      "Strict nesting groups are geometric test scopes, not proof that all paths enclose one core",
+      "Nested winding changes can reflect added or cancelling enclosed cores in the annulus; they invalidate only the group's single stable closure hypothesis",
+      "Separated groups retain separate observations and fits; overlapping nonnested support remains ambiguous and is not forced into one closure"
+    ],
+    "loop_groups": [
+      {
+        "group_index": 0,
+        "loop_indices": [
+          0,
+          1
+        ],
+        "strictly_nested_loop_pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "status": "projected_topological_evidence",
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "status": "stable_nonzero",
+            "valid_loop_indices": [
+              0,
+              1
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": true,
+            "stable": true,
+            "canonical_winding_integers": [
+              -1,
+              -1
+            ],
+            "representative_winding_integer": -1,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 1,
+            "status": "stable_zero",
+            "valid_loop_indices": [
+              0,
+              1
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": true,
+            "stable": true,
+            "canonical_winding_integers": [
+              0,
+              0
+            ],
+            "representative_winding_integer": 0,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 2,
+            "status": "stable_nonzero",
+            "valid_loop_indices": [
+              0,
+              1
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": true,
+            "stable": true,
+            "canonical_winding_integers": [
+              -1,
+              -1
+            ],
+            "representative_winding_integer": -1,
+            "invalid_loop_count": 0
+          }
+        ],
+        "projected_burgers": {
+          "stable_reflection_indices": [
+            0,
+            1,
+            2
+          ],
+          "rank": 2,
+          "condition_number": 1.7320508075688772,
+          "condition_number_limit": 100,
+          "b_pixel_xy": [
+            7.999999999999998,
+            2.6014143622661497e-16
+          ],
+          "constraint_residuals_cycles": [
+            -2.220446049250313e-16,
+            3.251767952832687e-17,
+            -2.220446049250313e-16
+          ],
+          "residual_tolerance_cycles": 0.05,
+          "compatible": true,
+          "redundancy_validated": true,
+          "direction_family_count": 3,
+          "direction_families_reflection_indices": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ]
+          ],
+          "leave_one_reflection_out": [
+            {
+              "held_out_reflection_index": 0,
+              "fit_rank": 2,
+              "fit_condition_number": 2.6180339887498953,
+              "held_out_residual_cycles": 0,
+              "compatible": true
+            },
+            {
+              "held_out_reflection_index": 1,
+              "fit_rank": 2,
+              "fit_condition_number": 2.618033988749895,
+              "held_out_residual_cycles": 3.05582315346454e-17,
+              "compatible": true
+            },
+            {
+              "held_out_reflection_index": 2,
+              "fit_rank": 2,
+              "fit_condition_number": 1,
+              "held_out_residual_cycles": 0,
+              "compatible": true
+            }
+          ],
+          "two_reflection_exact_fit_is_independent_validation": false,
+          "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness",
+          "b_nm_xy": [
+            0.15999999999999998,
+            -7.804243086798448e-18
+          ]
+        },
+        "burgers_candidates": [
+          {
+            "label": "b8x",
+            "b_pixel_xy": [
+              8,
+              0
+            ],
+            "predicted_winding_cycles": [
+              -1,
+              0,
+              -1
+            ],
+            "stable_constraint_residuals_cycles": [
+              0,
+              0,
+              0
+            ],
+            "matches_saved_constraints": true,
+            "uniqueness_status": "not_established_by_finite_projected_candidates",
+            "b_nm_xy": [
+              0.16,
+              0
+            ]
+          },
+          {
+            "label": "wrong8y",
+            "b_pixel_xy": [
+              0,
+              8
+            ],
+            "predicted_winding_cycles": [
+              0,
+              -1,
+              -1
+            ],
+            "stable_constraint_residuals_cycles": [
+              -1,
+              1,
+              0
+            ],
+            "matches_saved_constraints": false,
+            "uniqueness_status": "not_established_by_finite_projected_candidates",
+            "b_nm_xy": [
+              0,
+              -0.24
+            ]
+          }
+        ],
+        "interpretation_status": "hypothesized",
+        "stability_scope": "one net closure hypothesis across this strictly nested geometry component"
+      },
+      {
+        "group_index": 1,
+        "loop_indices": [
+          2
+        ],
+        "strictly_nested_loop_pairs": [],
+        "status": "insufficient_loop_stability",
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "status": "insufficient_nested_loops",
+            "valid_loop_indices": [
+              2
+            ],
+            "strictly_nested_valid_loop_pairs": [],
+            "consistent": true,
+            "stable": false,
+            "canonical_winding_integers": [
+              0
+            ],
+            "representative_winding_integer": 0,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 1,
+            "status": "insufficient_nested_loops",
+            "valid_loop_indices": [
+              2
+            ],
+            "strictly_nested_valid_loop_pairs": [],
+            "consistent": true,
+            "stable": false,
+            "canonical_winding_integers": [
+              0
+            ],
+            "representative_winding_integer": 0,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 2,
+            "status": "insufficient_nested_loops",
+            "valid_loop_indices": [
+              2
+            ],
+            "strictly_nested_valid_loop_pairs": [],
+            "consistent": true,
+            "stable": false,
+            "canonical_winding_integers": [
+              0
+            ],
+            "representative_winding_integer": 0,
+            "invalid_loop_count": 0
+          }
+        ],
+        "projected_burgers": {
+          "stable_reflection_indices": [],
+          "rank": 0,
+          "condition_number": null,
+          "condition_number_limit": 100,
+          "b_pixel_xy": null,
+          "constraint_residuals_cycles": null,
+          "residual_tolerance_cycles": 0.05,
+          "compatible": false,
+          "redundancy_validated": false,
+          "direction_family_count": 0,
+          "direction_families_reflection_indices": [],
+          "leave_one_reflection_out": [],
+          "two_reflection_exact_fit_is_independent_validation": false,
+          "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness",
+          "b_nm_xy": null
+        },
+        "burgers_candidates": [
+          {
+            "label": "b8x",
+            "b_pixel_xy": [
+              8,
+              0
+            ],
+            "predicted_winding_cycles": [
+              -1,
+              0,
+              -1
+            ],
+            "stable_constraint_residuals_cycles": [],
+            "matches_saved_constraints": false,
+            "uniqueness_status": "not_established_by_finite_projected_candidates",
+            "b_nm_xy": [
+              0.16,
+              0
+            ]
+          },
+          {
+            "label": "wrong8y",
+            "b_pixel_xy": [
+              0,
+              8
+            ],
+            "predicted_winding_cycles": [
+              0,
+              -1,
+              -1
+            ],
+            "stable_constraint_residuals_cycles": [],
+            "matches_saved_constraints": false,
+            "uniqueness_status": "not_established_by_finite_projected_candidates",
+            "b_nm_xy": [
+              0,
+              -0.24
+            ]
+          }
+        ],
+        "interpretation_status": "hypothesized",
+        "stability_scope": "one net closure hypothesis across this strictly nested geometry component"
+      }
+    ],
+    "grouping": {
+      "policy": "strict_nesting_components_v1",
+      "group_count": 2,
+      "assignment_basis": "all supplied rectangle geometry before phase validity or winding",
+      "cross_group_constraints": "not_compared_or_fitted",
+      "inter_group_relations": [
+        {
+          "group_indices": [
+            0,
+            1
+          ],
+          "relation": "disjoint_support",
+          "overlapping_loop_pairs": []
+        }
+      ],
+      "group_membership_is_core_identity": false,
+      "nested_charge_variation_meaning": "annular net charge may differ; no single stable closure, not a physical contradiction"
+    }
+  },
+  "checks": [
+    "Original request and image_info recover the exact captured v1 report, including its historical global-loop inconsistency; no rewrite or reinterpretation.",
+    "V2 preserves all three valid winding vectors, evaluates the same-core nested pair independently of the remote zero loop, exposes both group statuses and no global fitted vector/candidates.",
+    "Grouped v2 export verifies file hashes, group-tagged CSV rows, all nine valid scientific winding observations and overwrite refusal.",
+    "Fresh MCP client recovers exact v1 and v2 original-request/object reports; every captured historical file/source hash is unchanged and the only new objects are one topology and its export receipt, with no FFT/GPA added."
+  ],
+  "export": {
+    "hashes_verified": true,
+    "scientific_winding_shape": [
+      3,
+      3
+    ],
+    "all_nine_observations_valid": true,
+    "csv_rows": 9,
+    "csv_group_columns": [
+      "group_index",
+      "group_status"
+    ],
+    "overwrite_refused": true
+  },
+  "preview": {
+    "file": "loop-groups-mcp-preview.png",
+    "requested_max_size": 512,
+    "inspection": "Local PNG inspected: separate G0/G1 loop labels, wrapped phase/gray invalid border and global container title are readable. Per-group statuses are in JSON/CSV, not printed in the preview. No GUI/browser acceptance."
+  },
+  "retained_attempts": [
+    {
+      "attempt": "r1",
+      "result": "FAIL",
+      "boundary": "Before topology write: harness plugin config appended images to the path-bound workspace. Fixed by using the main scientific MCP entry point with its exact original workspace."
+    },
+    {
+      "attempt": "r2",
+      "result": "FAIL",
+      "boundary": "Before topology write: strict JS comparison distinguished Python JSON -0 from MCP wire 0. Complete reports are now compared after JSON wire normalization, with exact persisted-file hashes still required."
+    },
+    {
+      "attempt": "r3",
+      "result": "FAIL",
+      "boundary": "Before topology write: harness passed generated request_id to read-only image_info, whose schema disallows it. Fixed only read argument construction."
+    },
+    {
+      "attempt": "r4",
+      "result": "FAIL",
+      "boundary": "Group inference, export and fresh recovery passed; final harness object total omitted the ordinary export receipt. Corrected expected new object kinds to topology plus export. All written r4 objects/export and report retained. Its inherited 256px preview was clipped."
+    },
+    {
+      "attempt": "r5",
+      "result": "PASS",
+      "boundary": "Same scientific inputs and guards, deliberate new immutable v2 request with max_size512 for readable presentation; final exact new-kind and historical-byte checks pass."
+    }
+  ],
+  "not_tested": [
+    "new FFT/GPA qualification",
+    "browser/GUI/Panel gestures or computer use",
+    "fresh ordinary model session",
+    "real specimen/material defect accuracy",
+    "cancellation/lost-response/worker interruption injection",
+    "native DM/GMS/vendor/hardware",
+    "unique conventional 3D Burgers vector",
+    "automatic core or domain localization"
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "schema": "public-classical-gpa-mcp-acceptance-v1",
+  "status": "PASS_LIMITED_SYNTHETIC_SCOPE",
+  "scope": "Actual public MCP stdio/Python single-domain GPA, analytic finite affine fixture and Panel HTTP",
+  "started_utc": "2026-10-30T03:41:39.764Z",
+  "completed_utc": "2026-10-30T03:43:20.639Z",
+  "runtime_ms": 100876.56509999999,
+  "versions": {
+    "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "scikit_image": "0.26.0"
+  },
+  "checks": [
+    "Existing one FFT reused for unknown/known signed metric, fixed/fitted references and separate mask/reference GPA revisions; prior GPA immutable.",
+    "Saved arrays and exact MCP samples agree with independent finite-affine matrix algebra, signed anisotropic metric and fitted-reference zero; invalid edge sample is null.",
+    "GPA and GPA-view exports retain all array/mask/report/CSV/provenance hashes and NaN masks; existing output directory is refused.",
+    "Fresh MCP client recovers original GPA/view/sample request IDs without science objects or FFTs; actual Panel HTTP/state exposes the saved component."
+  ],
+  "analytic_oracle": {
+    "errors": {
+      "unknown_F_max_error": 4.671371692244186E-10,
+      "unknown_E_max_error": 3.723524821808155E-10,
+      "physical_F_max_error": 6.296196619626215E-10,
+      "physical_E_max_error": 3.8095915311231465E-10,
+      "physical_rotation_radian_max_error": 3.196295953605821E-10,
+      "physical_displacement_nm_max_error": 1.8576115645707603E-10,
+      "maskRevision_F_max_error": 4.4431677087564125E-10,
+      "maskRevision_E_max_error": 2.991393799334219E-10,
+      "referenceRevision_F_max_error": 6.296198284960752E-10,
+      "referenceRevision_E_max_error": 3.8095915311231465E-10,
+      "fitted_F_max_error": 6.621532110182531E-10,
+      "fitted_E_max_error": 3.934383929760088E-10
+    },
+    "expected_F_pixel": [
+      [
+        1.0239410681399632,
+        0.03683241252302027
+      ],
+      [
+        0.036832412523020226,
+        0.9797421731123388
+      ]
+    ],
+    "expected_F_physical": [
+      [
+        1.0239410681399632,
+        -0.027327273807402134
+      ],
+      [
+        -0.04964368644407074,
+        0.9797421731123388
+      ]
+    ],
+    "expected_E_physical": [
+      [
+        0.025459903313682974,
+        -0.038309765584863
+      ],
+      [
+        -0.038309765584863,
+        -0.01967924716568359
+      ]
+    ],
+    "expected_rotation_radians": -0.011137234406755422,
+    "finite_eulerian_relation": "H=I-F^-1",
+    "independent_target": "matrix algebra from prescribed image wavevectors; production GPA kernel not imported"
+  },
+  "source_integrity": {
+    "source_sha256": "206e45e6d6583176a25d26a6272f9888db618231aeab4a97816d8b0fe16f083c",
+    "fft_sha256": "8ddaa4bc66a195734b20a09e07b08b54e3f60fe8ef8af5fe99a4a7aad9b993d9",
+    "source_unchanged": true,
+    "fft_unchanged": true,
+    "forward_fft_count": 1
+  },
+  "panel": {
+    "http_status": 200,
+    "scope": "Actual Panel creation, static HTTP and authenticated state/PNG only; no browser or gestures"
+  },
+  "not_tested": [
+    "browser/GUI gestures",
+    "native DM/GMS/vendor/hardware",
+    "real specimen strain accuracy",
+    "compound-basis pseudo-strain removal",
+    "fresh ordinary model session using the Skill",
+    "F3 segmentation/defect analysis",
+    "ptychography"
+  ],
+  "attempt_history": [
+    {
+      "attempt": "r1",
+      "result": "FAIL",
+      "scope": "Smoke fixture used unsupported float64 TIFF; refused before GPA. Fixed fixture to supported float32, not science tolerance."
+    },
+    {
+      "attempt": "r2",
+      "result": "FAIL",
+      "scope": "Harness count assumed refused-export staging directories were published objects; analytic checks and exports passed first. Fixed count to published object.json only."
+    },
+    {
+      "attempt": "r3",
+      "result": "PASS",
+      "scope": "Actual MCP/Python, analytic arrays, immutable revisions, export/recovery and Panel HTTP; no browser gestures."
+    }
+  ]
+}

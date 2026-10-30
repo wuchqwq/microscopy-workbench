@@ -16,6 +16,25 @@ const packageRoot=path.basename(path.resolve(here))==='dist'?here:path.join(here
 const sourceRoot=path.basename(path.resolve(here))==='dist'?path.dirname(path.resolve(here)):here;
 const hash=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
 
+const GPA_ADDITIONS=['image_gpa','image_gpa_read','image_gpa_view','image_topology'];
+function assertCompatibleCatalog(current,frozen){
+ const additions=new Set(GPA_ADDITIONS);
+ assert.deepEqual(current.filter(tool=>additions.has(tool.name)).map(tool=>tool.name).sort(),GPA_ADDITIONS,
+  'Only the explicitly added GPA/topology tools may extend the frozen catalog');
+ assert.deepEqual(current.filter(tool=>!additions.has(tool.name)),frozen,
+  'Every frozen tool/schema/description and relative order must remain exactly compatible');
+}
+
+test('additive GPA catalog still rejects removed/modified legacy tools and unexpected additions',()=>{
+ const frozen=[{name:'image_fft',description:'frozen',inputSchema:{type:'object'}}];
+ const current=[...GPA_ADDITIONS.map(name=>({name})),...frozen];
+ assertCompatibleCatalog(current,frozen);
+ assert.throws(()=>assertCompatibleCatalog(current.slice(0,GPA_ADDITIONS.length),frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current.slice(0,GPA_ADDITIONS.length),{...frozen[0],description:'changed'}],frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current,{name:'unexpected_tool'}],frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current,{name:'image_gpa'}],frozen));
+});
+
 function snapshot(directory,prefix=''){
  const result={};
  for(const entry of readdirSync(directory,{withFileTypes:true})){
@@ -108,12 +127,31 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   const existing=snapshot(workRoot),fftCount=()=>readdirSync(path.join(workspace,'requests')).map(name=>JSON.parse(readFileSync(path.join(workspace,'requests',name),'utf8'))).filter(row=>row.parameters?.action==='fft').length;
   assert.equal(fftCount(),1);
   const current=new Client(installed,config,tmpdir());clients.push(current);await current.rpc('initialize');
-  assert.deepEqual((await current.rpc('tools/list')).result.tools,schema,'All tool schemas and descriptions remain frozen-compatible');
+  const currentSchema=(await current.rpc('tools/list')).result.tools;
+  // F1a/F4-lite add the explicitly enumerated tools and optional context selections. Keep the frozen
+  // comparison exact for every pre-existing field; authorize only these named
+  // additive changes, never drop descriptions or weaken old scientific tests.
+  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_gpa','image_gpa_read','image_gpa_view','image_topology'];
+  assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
+  const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
+  // Presentation controls are explicitly additive and must never become a
+  // required scientific parameter or alter old full-return behavior.
+  for(const name of ['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_info','image_result']){
+    const tool=currentSchema.find(tool=>tool.name===name),detail=tool.inputSchema.properties.response_detail;
+    assert.equal(detail.type,'string');assert.deepEqual(detail.enum.slice().sort(),['compact','full']);
+    assert.ok(!tool.inputSchema.required.includes('response_detail'));
+  }
+  for(const name of ['image_info','image_result'])delete retainedSchema.find(tool=>tool.name===name).inputSchema.properties.response_detail;
+  const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
+  for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
+  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except the named optional presentation controls and additive F1a/F4 tools');
   assert.deepEqual(await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}}),{...refused,id:current.next},'Original-request error remains compatible');
   assert.deepEqual(await current.tool('image_result',{request_id:'frozen-fft'}),fft);
   assert.deepEqual(await current.tool('image_info',{object_id:measure.object_id}),await current.tool('image_result',{request_id:'frozen-measure'}));
   const restored=await current.tool('analysis_read',{analysis_id:'frozen-public-analysis'});
-  assert.deepEqual(restored.context,selected.context);
+  const retainedContext=structuredClone(restored.context);
+  for(const role of ['spatial_field','domains','active_plan']){assert.equal(retainedContext.fingerprints[role],null,'Unselected added roles cannot relabel old science');delete retainedContext.fingerprints[role];}
+  assert.deepEqual(retainedContext,selected.context);
   const exported=await current.tool('image_export',{request_id:'compiled-export',object_id:fft.object_id,output_dir:path.join(directory,'new-export')});
   assert.equal(exported.state,'completed');
   const changed=await current.tool('image_remeasure',{request_id:'compiled-remeasure',object_id:fft.object_id,measurement_object_id:measure.object_id,points:[[0,0],[.125,.03125]],source_text:'Continue the frozen synthetic measurement'});

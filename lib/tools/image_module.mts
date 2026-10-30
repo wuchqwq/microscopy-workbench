@@ -4,6 +4,10 @@ import {ImageWorkspace, imageTools, IMAGE_INSTRUCTIONS} from '../image_workspace
 import {automationRecipes} from '../image_automation_contract.mjs';
 import {sequenceRecipes} from '../image_sequence_contract.mjs';
 import {domainRecipes} from '../image_domain_contract.mjs';
+import {activeRecipes} from '../image_active_contract.mjs';
+import {gpaRecipes} from '../image_gpa_contract.mjs';
+import {topologyRecipes} from '../image_topology_contract.mjs';
+import {evidenceRecipes} from '../image_evidence_contract.mjs';
 import type {CompositionRecipe} from '../image_provider_contracts.mjs';
 import type {RegistryModule,RegistryTool,ToolContract} from '../runtime/contracts.mjs';
 import type {ImageWorkspaceOptions,ImageWorkspaceProvider} from '../image_workspace.mjs';
@@ -19,6 +23,10 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
   ...automationRecipes,
   ...sequenceRecipes,
   ...domainRecipes,
+  ...activeRecipes,
+  ...evidenceRecipes,
+  ...gpaRecipes,
+  ...topologyRecipes,
   image_probe: {
     inputs:['ScientificArrayRef:exact immutable saved plane','PointBatch:1..64 source or original FFT frequency coordinates','Component:raw scalar or explicit real/imag/amplitude/power'],
     outputs:['ReadOnlySampleBatch:original-array nearest samples and exact source identity; not PNG brightness'],

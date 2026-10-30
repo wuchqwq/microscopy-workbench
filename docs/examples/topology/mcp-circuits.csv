@@ -1,0 +1,7 @@
+loop,orientation,rect_local_xyxy,reflection,gx_cycles_per_pixel,gy_cycles_per_pixel,valid,raw_winding,canonical_winding,max_phase_step_rad,minimum_amplitude,failures
+inner,positive_image_xy,80:80:176:176,0,0.125,0.0,True,-1,-1,0.021571548432973486,0.4779295859395551,
+inner,positive_image_xy,80:80:176:176,1,0.0,0.125,True,0,0,2.124403243897177e-05,0.4999758682932201,
+inner,positive_image_xy,80:80:176:176,2,0.125,0.125,True,-1,-1,0.021574642092474505,0.47786378776267985,
+outer,positive_image_xy,64:64:192:192,0,0.125,0.0,True,-1,-1,0.01606801912168976,0.4883039450946915,
+outer,positive_image_xy,64:64:192:192,1,0.0,0.125,True,0,0,2.012233713344358e-05,0.4999688774821249,
+outer,positive_image_xy,64:64:192:192,2,0.125,0.125,True,-1,-1,0.01607068178216764,0.48827702968488695,

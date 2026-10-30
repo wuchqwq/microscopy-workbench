@@ -1,0 +1,306 @@
+{
+  "schema": "public-classical-gpa-physics-v1",
+  "evidence_scope": "public_synthetic_analytic_oracle_not_material_validation",
+  "generator": "tools/create_gpa_fixtures.py",
+  "axes": "array[y,x]; vector[x,y]; F[row_component_xy,column_coordinate_xy]",
+  "image_formula": "I(x)=sum_j cos(2*pi*g_ref[j] dot X); X=inv(F_pixel)*(x-t)",
+  "displacement_truth": "u_E(x)=x-X; subtract mean over reference ROI for constant phase gauge",
+  "finite_strain_truth": "F_xy=S*F_pixel*inv(S); E=.5*(transpose(F_xy)*F_xy-I)",
+  "rotation_truth": "atan2(F_yx-F_xy,F_xx+F_yy)",
+  "g_vectors_cycles_per_pixel": [
+    [
+      0.125,
+      0.0
+    ],
+    [
+      0.0,
+      0.125
+    ]
+  ],
+  "mask_sigma_cycles_per_pixel": 0.012,
+  "reference_rect_xyxy": [
+    88,
+    88,
+    168,
+    168
+  ],
+  "preregistered_tolerances": {
+    "displacement_gauge_removed_rms_pixels": 0.08,
+    "median_deformation_gradient_max_abs": 0.003,
+    "median_green_lagrange_max_abs": 0.004,
+    "median_polar_rotation_degrees": 0.2,
+    "nonuniform_pointwise_deformation_gradient_max_abs": 0.003,
+    "nonuniform_pointwise_green_lagrange_max_abs": 0.004,
+    "nonuniform_pointwise_polar_rotation_degrees": 0.2,
+    "pseudo_strain_min_interface_abs_median_exx": 0.004,
+    "interior_margin_pixels": 64
+  },
+  "tolerance_scope": "Fixed before independent kernel execution; numerical regression gates, not measurement error bars",
+  "affine_cases": [
+    {
+      "name": "finite_rigid_rotation",
+      "shape_yx": [
+        256,
+        256
+      ],
+      "translation_xy_pixels": [
+        0.7,
+        -1.2
+      ],
+      "truth": {
+        "F_pixel": [
+          [
+            0.9928086358538663,
+            -0.11971220728891936
+          ],
+          [
+            0.11971220728891936,
+            0.9928086358538663
+          ]
+        ],
+        "F_xy": [
+          [
+            0.9928086358538664,
+            -0.11971220728891938
+          ],
+          [
+            0.11971220728891938,
+            0.9928086358538664
+          ]
+        ],
+        "green_lagrange_xy": [
+          [
+            1.1102230246251565e-16,
+            3.0145082357261103e-18
+          ],
+          [
+            3.0145082357261103e-18,
+            1.1102230246251565e-16
+          ]
+        ],
+        "polar_rotation_radians": 0.12,
+        "calibration_nm_xy": [
+          0.02,
+          0.02
+        ]
+      }
+    },
+    {
+      "name": "affine_stretch",
+      "shape_yx": [
+        256,
+        256
+      ],
+      "translation_xy_pixels": [
+        0.7,
+        -1.2
+      ],
+      "truth": {
+        "F_pixel": [
+          [
+            1.04,
+            0.0
+          ],
+          [
+            0.0,
+            0.97
+          ]
+        ],
+        "F_xy": [
+          [
+            1.04,
+            0.0
+          ],
+          [
+            0.0,
+            0.97
+          ]
+        ],
+        "green_lagrange_xy": [
+          [
+            0.04080000000000006,
+            0.0
+          ],
+          [
+            0.0,
+            -0.02955000000000002
+          ]
+        ],
+        "polar_rotation_radians": 0.0,
+        "calibration_nm_xy": [
+          0.02,
+          0.02
+        ]
+      }
+    },
+    {
+      "name": "affine_shear",
+      "shape_yx": [
+        256,
+        256
+      ],
+      "translation_xy_pixels": [
+        0.7,
+        -1.2
+      ],
+      "truth": {
+        "F_pixel": [
+          [
+            1.02,
+            0.08
+          ],
+          [
+            0.01,
+            0.99
+          ]
+        ],
+        "F_xy": [
+          [
+            1.02,
+            0.08
+          ],
+          [
+            0.01,
+            0.9900000000000001
+          ]
+        ],
+        "green_lagrange_xy": [
+          [
+            0.02024999999999999,
+            0.045750000000000006
+          ],
+          [
+            0.045750000000000006,
+            -0.006749999999999923
+          ]
+        ],
+        "polar_rotation_radians": -0.03481180146587269,
+        "calibration_nm_xy": [
+          0.02,
+          0.02
+        ]
+      }
+    },
+    {
+      "name": "signed_anisotropic_rotation_nonsquare",
+      "shape_yx": [
+        256,
+        320
+      ],
+      "translation_xy_pixels": [
+        0.7,
+        -1.2
+      ],
+      "truth": {
+        "F_pixel": [
+          [
+            0.9950041652780258,
+            0.17470847913194928
+          ],
+          [
+            -0.05704766665533037,
+            0.9950041652780259
+          ]
+        ],
+        "F_xy": [
+          [
+            0.9950041652780258,
+            -0.09983341664682815
+          ],
+          [
+            0.09983341664682817,
+            0.995004165278026
+          ]
+        ],
+        "green_lagrange_xy": [
+          [
+            1.1102230246251565e-16,
+            1.474850031576645e-17
+          ],
+          [
+            1.474850031576645e-17,
+            2.220446049250313e-16
+          ]
+        ],
+        "polar_rotation_radians": 0.09999999999999999,
+        "calibration_nm_xy": [
+          0.02,
+          -0.035
+        ]
+      }
+    }
+  ],
+  "nonuniform_case": {
+    "name": "smooth_nonuniform_inverse_map",
+    "shape_yx": [
+      256,
+      256
+    ],
+    "k": "2*pi/256",
+    "u_E_x_pixels": "0.6*sin(k*x)+0.2*cos(k*y)",
+    "u_E_y_pixels": "0.4*cos(k*x)-0.3*sin(k*y)",
+    "grad_X": [
+      [
+        "1-0.6*k*cos(k*x)",
+        "0.2*k*sin(k*y)"
+      ],
+      [
+        "0.4*k*sin(k*x)",
+        "1+0.3*k*cos(k*y)"
+      ]
+    ],
+    "truth": "F=inv(grad_X), E=.5*(transpose(F)*F-I); analytic derivatives only",
+    "boundary": "256-pixel periodic smooth inverse map; no numerical image warping"
+  },
+  "pseudo_strain_case": {
+    "name": "fixed_sublattice_varying_contrast",
+    "shape_yx": [
+      256,
+      256
+    ],
+    "A_atom_positions": "(8m,8n), fixed on both sides",
+    "B_atom_positions": "(8m+2,8n+2), fixed on both sides",
+    "gaussian_sigma_pixels": 0.8,
+    "A_brightness": 1.0,
+    "B_brightness": "0.2+1.4*(1+tanh((B_x-128)/16))",
+    "true_atomic_displacement_pixels": [
+      0.0,
+      0.0
+    ],
+    "true_deformation_gradient_xy": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0
+      ]
+    ],
+    "true_green_lagrange_xy": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ]
+    ],
+    "reference_rect_xyxy": [
+      64,
+      80,
+      88,
+      176
+    ],
+    "interface_measurement_rect_xyxy": [
+      116,
+      72,
+      140,
+      184
+    ],
+    "expected_GPA_behavior": "nonzero apparent strain from basis contrast phase; conditional image model only",
+    "mechanism_source": "https://arxiv.org/html/1504.06089v1#S2",
+    "material_validation": false
+  }
+}

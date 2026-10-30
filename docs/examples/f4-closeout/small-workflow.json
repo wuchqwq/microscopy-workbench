@@ -1,0 +1,265 @@
+{
+  "status": "PASS",
+  "scope": "Actual compiled MCP scientific correction and original-ID recovery; browser gestures NOT_TESTED",
+  "implementation_commit": "0a9545a1168d23e014189639081f97e4aafe5de1",
+  "synthetic": true,
+  "source": {
+    "shape_yx": [
+      96,
+      96
+    ],
+    "dtype": "float32",
+    "sha256": "29274f499842d25a1e1c844a41d6da40a6f5dc824a076ac9bdfc80d2017286e6",
+    "physical_scale": null,
+    "interface_x": 32,
+    "truth": "Analytic public F4 cosine source; no phase or specimen interpretation"
+  },
+  "windows": [
+    {
+      "observation_key": "f3a021e5f414ba73f6b3632d79dd1768ced21482eaef25482d47f15d451eafb0",
+      "rect_xyxy": [
+        0,
+        0,
+        64,
+        64
+      ],
+      "scale_pixels": 64,
+      "fft_object_id": "df66c4b8c2424ebf80a3e310155e771c",
+      "measurement_object_ids": [
+        "9aa212a8fb3f4338abb001d33d695335",
+        "6e21dc55685849fa803b6c54fdd1308a",
+        "0a2b7586a5634ed4b5de2596771cf4e7",
+        "aac5ec3dcaab47039b4fa8c4ed45f593",
+        "6345a47bf1e04b58a40d82005319533e",
+        "c9f40226c8a042818b2d7b24cb09a63f",
+        "8ded0cc6e7174be89fa0160d9a190535",
+        "ca51967701464b949cca7a7c4226c394",
+        "97934f0ca7574dfa89d77a3ed8360ca3",
+        "e035077a24f84e028ba533c4fe60dd96",
+        "7ccbf75e54724351acf1fb683c220c8f",
+        "d14f3593a4844677b9fab247f3d10903",
+        "2f107684b6cf4f94884acc3f160d74b6",
+        "51b3083ba7ab4b99ad7d92fb37917981",
+        "7597e8324a4541e3a2dd3de287899608",
+        "cce8032b28da490aaf2a5b772398ac5a"
+      ]
+    },
+    {
+      "observation_key": "fcf5b66b63cedf77255f6cde29f2847133d2f5dce39e3bd2c65d7034894041f1",
+      "rect_xyxy": [
+        0,
+        0,
+        32,
+        32
+      ],
+      "scale_pixels": 32,
+      "fft_object_id": "e1944078230b46099611ae4ec57e8a04",
+      "measurement_object_ids": [
+        "a9dab1a117fc4bad971ac6d134623b9e",
+        "dd84b960ea3e4ab6abbe2c030c85fb30",
+        "3278f76e9fcc4405ac3beb1609d3c8e0",
+        "3861cfa8f339499694f9447fbc2c06ba"
+      ]
+    },
+    {
+      "observation_key": "791eed15a2df5464ae40208cb0ae2b2af10f914915e61fc637aa8ad982e638fd",
+      "rect_xyxy": [
+        32,
+        8,
+        64,
+        40
+      ],
+      "scale_pixels": 32,
+      "fft_object_id": "f96bff317283471ba23de32512f0f7c2",
+      "measurement_object_ids": [
+        "b8990264c50a4b5b86d74b0cf3fe0db5",
+        "496c088bb6d5479d9164a745a7ec8b1c",
+        "eb91b0c72a7c4dd982b7bc75e70a6880",
+        "db7c7cca07a74b6c8c6537c5af5adebe"
+      ]
+    }
+  ],
+  "total_windows": 3,
+  "total_fft_pixels": 6144,
+  "new_fft_count_during_correction": 0,
+  "legacy": {
+    "algorithm_version": "bounded-window-neighbor-signatures-v1",
+    "edge_count": 0,
+    "files_unchanged": true
+  },
+  "support_contact": {
+    "neighbor_policy": "support_contact_v1",
+    "algorithm_version": "bounded-window-support-contact-signatures-v1",
+    "edges": [
+      {
+        "support_relation": "shared_edge",
+        "shared_edge_pixels": 24,
+        "overlap_area_pixels": 0,
+        "geometry_status": "incompatible",
+        "status": "different",
+        "boundary_band_xyxy": [
+          0,
+          0,
+          64,
+          40
+        ]
+      }
+    ],
+    "boundary_bands": [
+      {
+        "rect_xyxy": [
+          0,
+          0,
+          64,
+          40
+        ],
+        "status": "candidate",
+        "meaning": "Bounding support band of differing sampled windows; not a located interface or confidence interval"
+      }
+    ]
+  },
+  "correction": {
+    "method": "Explicit formal image_annotate + image_remeasure, no Panel UI action or human gesture",
+    "observation_key": "fcf5b66b63cedf77255f6cde29f2847133d2f5dce39e3bd2c65d7034894041f1",
+    "old_points": [
+      [
+        0,
+        0
+      ],
+      [
+        -0.1566821583960133,
+        0
+      ]
+    ],
+    "new_points": [
+      [
+        0,
+        0
+      ],
+      [
+        -0.1536821583960133,
+        0
+      ]
+    ],
+    "declared_delta_cycles_per_pixel": [
+      0.003,
+      0
+    ],
+    "old_frequency_magnitude": 0.1566821583960133,
+    "new_frequency_magnitude": 0.1536821583960133,
+    "expected_magnitude": 0.1536821583960133,
+    "pixel_period": 6.506936201554163,
+    "physical_distance": null,
+    "d_spacing_unit": null,
+    "old_measurement_object": "c93508bdebd74238892bf6b6f4052bf2",
+    "new_measurement_object": "a9dab1a117fc4bad971ac6d134623b9e"
+  },
+  "protected_arrays": [
+    {
+      "object_id": "064331d9fa4d408b907289145cbfd218",
+      "kind": "view",
+      "data_sha256": "c9385dcd9dde79183a0d2b41219fc7cdc6fb4c2755f062c27e40b4b609bb4514"
+    },
+    {
+      "object_id": "10a43141718543ecb8f5d200561d0570",
+      "kind": "view",
+      "data_sha256": "684d4346bfab0f251d504ef432da0c9bb00aead1f12b39452aa07d1dd2b4f607"
+    },
+    {
+      "object_id": "18ce5f388ef84a2e96a7d53ba686bc06",
+      "kind": "view",
+      "data_sha256": "73315a0fd2edd35a48531c1379b203992da18c65b1ddde76ab784363067e77a6"
+    },
+    {
+      "object_id": "18d6486026e74f14baab3a47440e9bfc",
+      "kind": "view",
+      "data_sha256": "ab97f5dae23f52504dbef3d9337b8acc067961385ee075fd94834969a14bb412"
+    },
+    {
+      "object_id": "41ec7b9510b74dfc878c17e1b7d9d004",
+      "kind": "view",
+      "data_sha256": "ab97f5dae23f52504dbef3d9337b8acc067961385ee075fd94834969a14bb412"
+    },
+    {
+      "object_id": "6f4a39eb008c43388df234f1353f1b07",
+      "kind": "fft_view",
+      "data_sha256": "309d9e45110d365425f6ac2d09fac589b417700a3042ea207ddf3f434cdc941c"
+    },
+    {
+      "object_id": "7eba4d50214b4a1f933b866ce2f98c08",
+      "kind": "view",
+      "data_sha256": "ab97f5dae23f52504dbef3d9337b8acc067961385ee075fd94834969a14bb412"
+    },
+    {
+      "object_id": "9daaa5003a704e9f8559c0df4a435b75",
+      "kind": "frame",
+      "data_sha256": "ab97f5dae23f52504dbef3d9337b8acc067961385ee075fd94834969a14bb412"
+    },
+    {
+      "object_id": "c0cec0107ee348ed9f9543e3c6f56de1",
+      "kind": "fft_view",
+      "data_sha256": "6401ce96cb4a200009f0017b21f9c53e7b4ff0b1f964bd81620f3f0ad45b1c58"
+    },
+    {
+      "object_id": "cf070764c5964a489d20628c1357ec9d",
+      "kind": "view",
+      "data_sha256": "ab97f5dae23f52504dbef3d9337b8acc067961385ee075fd94834969a14bb412"
+    },
+    {
+      "object_id": "defe4e2487984c61a755f785a2349ff7",
+      "kind": "fft_view",
+      "data_sha256": "307b50b8431a39e71742c1e1b358acc7e288257c3af07fee6448be6d96263b84"
+    },
+    {
+      "object_id": "df66c4b8c2424ebf80a3e310155e771c",
+      "kind": "fft",
+      "data_sha256": "309d9e45110d365425f6ac2d09fac589b417700a3042ea207ddf3f434cdc941c"
+    },
+    {
+      "object_id": "e1944078230b46099611ae4ec57e8a04",
+      "kind": "fft",
+      "data_sha256": "307b50b8431a39e71742c1e1b358acc7e288257c3af07fee6448be6d96263b84"
+    },
+    {
+      "object_id": "f96bff317283471ba23de32512f0f7c2",
+      "kind": "fft",
+      "data_sha256": "6401ce96cb4a200009f0017b21f9c53e7b4ff0b1f964bd81620f3f0ad45b1c58"
+    }
+  ],
+  "source_and_old_array_hashes_unchanged": true,
+  "original_request_recovered": true,
+  "new_client_recovery": true,
+  "context_revision": 6,
+  "response_accounting": {
+    "unit": "JSON MCP result-body bytes; framing excluded",
+    "prepare_calls": 14,
+    "prepare_sum_call_wall_ms": 75537.58410000001,
+    "revision_logged_calls": 13,
+    "revision_sum_logged_call_wall_ms": 76246.80559999999,
+    "note": "New-client recovery calls are independently asserted but outside the logged-call timing list; no claimed total program or isolated compute time"
+  },
+  "previews": [
+    {
+      "file": "revised-map.png",
+      "sha256": "8fae41380d8573069587802013eed32aead03232cbe6035e1c3461c48d17af9e",
+      "meaning": "Actual saved provider preview, not a browser screenshot"
+    },
+    {
+      "file": "revised-field.png",
+      "sha256": "5083a7c7d860bd4999100ebb8b5466a04c8230bc33d8b26f943c702a46ec5516",
+      "meaning": "Actual saved provider preview, not a browser screenshot"
+    },
+    {
+      "file": "legacy-map.png",
+      "sha256": "09d8bc73cca32056331ccf5f5f887ec37477db5160ba691fa17b8618c9f48376",
+      "meaning": "Actual saved provider preview, not a browser screenshot"
+    }
+  ],
+  "limits": [
+    "Actual browser gestures NOT_TESTED after definitive Computer Use URL safety stop",
+    "A shared support edge/band is not physical boundary localization or phase identification",
+    "The predeclared +.003 correction tests revision propagation, not improved scientific peak accuracy",
+    "No frozen old F4 miss or tolerance was rewritten",
+    "Fresh model continuation and controlled delivery performance have separate evidence files"
+  ]
+}

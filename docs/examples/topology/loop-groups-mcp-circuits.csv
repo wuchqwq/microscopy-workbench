@@ -1,0 +1,10 @@
+group_index,group_status,loop,orientation,rect_local_xyxy,reflection,gx_cycles_per_pixel,gy_cycles_per_pixel,valid,raw_winding,canonical_winding,max_phase_step_rad,minimum_amplitude,failures
+0,projected_topological_evidence,core_inner,positive_image_xy,72:72:120:120,0,0.125,0.0,True,-1,-1,0.04456755995478545,0.39222012111507754,
+0,projected_topological_evidence,core_inner,positive_image_xy,72:72:120:120,1,0.0,0.125,True,0,0,7.3420576626404e-05,0.49921737236621694,
+0,projected_topological_evidence,core_inner,positive_image_xy,72:72:120:120,2,0.125,0.125,True,-1,-1,0.04456548596735388,0.3921137408471809,
+0,projected_topological_evidence,core_outer,positive_image_xy,60:60:132:132,0,0.125,0.0,True,-1,-1,0.02901791142025445,0.4564468369866632,
+0,projected_topological_evidence,core_outer,positive_image_xy,60:60:132:132,1,0.0,0.125,True,0,0,2.68085850478883e-05,0.49988334898349296,
+0,projected_topological_evidence,core_outer,positive_image_xy,60:60:132:132,2,0.125,0.125,True,-1,-1,0.02901415066585855,0.45641391235976625,
+1,insufficient_loop_stability,unrelated_zero,positive_image_xy,164:164:204:204,0,0.125,0.0,True,0,0,0.007321238130884922,0.4951399557549383,
+1,insufficient_loop_stability,unrelated_zero,positive_image_xy,164:164:204:204,1,0.0,0.125,True,0,0,2.211743282742873e-05,0.49998171802883784,
+1,insufficient_loop_stability,unrelated_zero,positive_image_xy,164:164:204:204,2,0.125,0.125,True,0,0,0.0073141324752441506,0.4951914856078518,

@@ -1,7 +1,7 @@
 {
   "name": "microscopy-workbench",
-  "version": "0.4.0",
-  "description": "Reusable microscopy tools with spatial ROI spectra, candidate geometric relations and sourced cross-frame evidence.",
+  "version": "0.6.0",
+  "description": "Reusable microscopy with inspectable next-analysis proposals, incremental structural fields and bounded scientific recovery.",
   "author": {
     "name": "wuchqwq"
   },
