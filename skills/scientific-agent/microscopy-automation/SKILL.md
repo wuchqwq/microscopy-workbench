@@ -317,9 +317,15 @@ batch is not a complete analysis.
 
 This package supplies composable local and bounded cross-frame observations
 and explicit candidate comparisons. It does not implement automatic global
-indexing, multi-phase segmentation, twin-interface determination, automatic dislocation analysis
+indexing, multi-phase segmentation, unique twin-interface determination, automatic dislocation analysis
 or ptychography reconstruction. Classical GPA supports one explicit domain and a qualified saved FFT. Sequence FFT currently requires real spatial
 scientific arrays; do not silently take the real part of complex reconstruction
 data or quantize a float array to PNG/uint16. Report the specific unsupported
 entry instead. Existing `image_compare` can show explicitly selected frames
 without asserting alignment, physical depth or unchanged structure.
+
+For adjacent-domain twin hypotheses, optional `structure_twin_orient` and
+`structure_twin_compare` reuse saved local observations and actual simulations.
+See the crystallography-compare Skill's bounded F3b reference. Missing physical
+scale does not block pixel observation, but cannot supply physical twin evidence;
+compatibility is not unique 3D twinning or atomic boundary coherence.

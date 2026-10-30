@@ -73,7 +73,7 @@ Connect the compiled MCP server to a compatible client, or install the packaged 
 
 **Implemented in this checkout:** R2/R3 evidence workflows, F1a multiscale structural fields, F4-lite budgeted incremental analysis, F2a classical GPA and F3a versioned projected phase-winding evidence. The [development status](docs/DEVELOPMENT_STATUS.md) records the reviewed source commits and qualification boundaries. Historical acceptance reports describe their original branch state; they are not rewritten as new experiments.
 
-**Next:** F3b — crystallographic twin-relation and interface evidence, followed by broader cross-method analysis (F4-full). See [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16). Encoder training, foundation-model development and live instrument control are not in the current scope.
+**F3b first increment:** [bounded Sigma3 candidate and projected interface evidence](docs/PROJECTED_TWIN_EVIDENCE.md) reuses saved local FFT observations and actual simulated reflections, keeping untwinned alternatives and insufficient evidence explicit. It does not identify a unique 3D twin. See [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16). Broader F4-full analysis, Encoder training, foundation-model development and live instrument control are outside this increment.
 
 **Not yet qualified:** actual GUI gestures in the documented relay, fresh-model use of the combined GPA/topology Skill, real-specimen accuracy and feature-specific interrupted-worker cases. Existing numerical, protocol or HTTP/PNG tests do not replace those checks. Deferred GUI qualification does not block development of independent scientific methods.
 

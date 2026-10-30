@@ -41,6 +41,12 @@ FIELDS = {
     "orient": {"object_id", "zone_axis_uvw", "in_plane_direction_uvw", "in_plane_rotation_deg"},
     "compare": {"object_id", "measurement_paths", "experimental_kind", "registration", "registration_object_id", "max_residual_inv_angstrom", "correspondences", "current_image_object_id", "analysis_mode", "previous_comparison_id", "source_change_basis"},
     "compare_batch": {"measurement_object_ids", "image_workspace", "candidates", "experimental_kind", "max_residual_inv_angstrom", "current_image_object_id"},
+    "twin_orient": {"object_id", "orientation_id", "plane_hkl", "candidate_basis"},
+    "twin_evidence": {"object_id", "comparison", "section", "offset", "limit"},
+    "twin_compare": {"object_id", "parent_simulation_object_id", "twin_simulation_object_id", "image_workspace",
+                     "current_spatial_image_object_id", "domains", "registration", "max_residual_inv_angstrom",
+                     "angular_tolerance_deg", "interface_measurement_object_id", "interface_projection_basis",
+                     "previous_twin_comparison_id", "revision_note"},
     "register": {"object_id", "measurement_paths", "experimental_kind", "current_image_object_id", "fit_correspondences", "validation_correspondences", "screen_axes", "confirmation", "max_residual_inv_angstrom"},
     "simulate": {"object_id", "voltage_kv", "euler_rzxz_deg", "orientation_id", "reciprocal_radius_inv_angstrom",
                  "max_excitation_error_inv_angstrom", "size", "sigma_pixels", "with_direct_beam", "native_float32"},
@@ -582,7 +588,10 @@ class StructureWorkspace:
         directory.mkdir()
         metadata = {"object_id": ident, "request_id": request["request_id"], "kind": action,
                     "created_utc": datetime.now(timezone.utc).isoformat(), "parameters": {k: v for k, v in request.items() if k not in ("workspace", "action", "request_id")}}
-        if action == "compare_batch":
+        if action in ("twin_orient", "twin_compare"):
+            from crystallography.twin_tools import orient, run
+            metadata.update(orient(self, request, ident) if action == "twin_orient" else run(self, request, directory))
+        elif action == "compare_batch":
             from crystallography.compare_batch import run
             metadata.update(run(self, request, execute))
         elif action == "open":
@@ -734,7 +743,7 @@ class StructureWorkspace:
                                              "scipy": importlib.metadata.version("scipy"),
                                              **({"diffsims": importlib.metadata.version("diffsims"), "diffpy.structure": importlib.metadata.version("diffpy.structure")} if action == "simulate" else {}),
                                              "module_sha256": sha(Path(__file__).read_bytes()),
-                                             "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py") + (("compare_batch.py",) if action == "compare_batch" else ())}},
+                                             "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py") + (("compare_batch.py",) if action == "compare_batch" else ()) + (("twin_tools.py", "twin_geometry.py", "twin_observations.py") if action in ("twin_orient", "twin_compare") else ())}},
                         files_sha256={file.name: sha(file.read_bytes()) for file in directory.iterdir() if file.is_file()},
                         manifest_path=str(directory / "object.json"))
         if (directory / "preview.png").is_file():
@@ -748,10 +757,13 @@ def _execute(request):
     action = request["action"]
     need(set(request) <= FIELDS[action] | {"workspace", "action", "request_id"}, "Unknown structure argument")
     canonical(request)
-    readonly = action in ("get", "result")
+    readonly = action in ("get", "result", "twin_evidence")
     if not readonly:
         need(type(request.get("request_id")) is str and REQUEST_ID.fullmatch(request["request_id"]), "Save request_id before a write")
     workspace = StructureWorkspace(request.get("workspace"), create=not readonly)
+    if action == "twin_evidence":
+        from crystallography.twin_tools import page
+        return {"ok": True, "state": "completed", "backend": BACKEND, **page(workspace, request)}
     if action == "get":
         metadata, _ = workspace.object(request.get("object_id"))
         include = request.get("include_atoms", False)

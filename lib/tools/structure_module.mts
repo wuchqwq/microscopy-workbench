@@ -16,6 +16,27 @@ const workerBudgets = [
   'crystallography/structure_tools.py: <=4096 atoms; bounded source/object files and scientific manifests',
 ];
 const recipes:Record<string,Recipe> = {
+  structure_twin_evidence: {
+    inputs:['TwinEvidenceRef:exact saved F3b object ID','NumericalSection:comparison,section,offset,limit'],
+    outputs:['EvidencePage:hashed immutable numerical rows including unmatched predictions; historical snapshot'],
+    kind:'inspect', requestId:'none',
+    gates:['Existing committed structure manifest/journal and all scientific file hashes','Only named saved F3b sections; no arbitrary path or source mutation'],
+    budgets:['1..128 rows per read; declared offset, total and next offset; no science worker write'],
+  },
+  structure_twin_orient: {
+    inputs:['StructureRef:conventional single-species FCC4/diamond8 model','OrientationRef:parent source-to-lab matrix','CandidatePlane:{111} with explicit hypothesized basis'],
+    outputs:['OrientationRef:source-bound proper Sigma3 candidate reusable by existing view/simulate','TwinLawRef:matrix, plane and symmetry qualifications; not a material/twin identification'],
+    kind:'candidate-twin-orientation-write',
+    gates:['Exact cubic motif and full-occupancy qualification; no inference from cell metric alone','One supplied {111} variant, no orientation search or improper mirror as active rotation'],
+    budgets:['One candidate/structure/orientation per request; existing authoritative structure journal and result query'],
+  },
+  structure_twin_compare: {
+    inputs:['TwinLawRef and actual parent/twin SimulationRefs','Two adjacent sourced SpatialField observations and current FFT MeasurementRefs','One fixed shared registration and optional same-source spatial interface line'],
+    outputs:['TwinEvidenceRef:conditional projected compatible/incompatible/insufficient verdicts, untwinned control, unmatched and ambiguous reflections','DisplayPNG and numerical JSON/CSV:scientific evidence, not confirmed 3D twin/coherence'],
+    kind:'projected-twin-evidence-write',
+    gates:['Configured image provider only; exact source/frame/ROI/grid/calibration/current geometry','Same original structure and simulation settings; separate pinned diffsims simulations, never rotate a filtered reflection table','Fixed independent scale, DC and screen parity; no separate B refit; missing scale gives insufficient and contradiction refuses'],
+    budgets:['Exactly two saved adjacent observations,1..16 measurements each; bounded fixed input copies','Revision depth<=16; original request recovery via structure_result, no automatic retry or new FFT'],
+  },
   structure_compare_batch: {
     inputs: ['SimulationRef[]:1..3 explicit saved candidate simulations and trial transforms','MeasurementRef[]:1..32 committed image IDs in the configured image workspace','ScientificArrayRef:current image revision'],
     outputs: ['ComparisonBatchRef:parent journal and independently committed comparison child receipts','CandidateComparisonRef[]:hypothesized assignments, residuals and unmatched evidence references'],
