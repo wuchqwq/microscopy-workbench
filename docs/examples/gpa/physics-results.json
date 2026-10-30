@@ -1,0 +1,101 @@
+{
+  "schema": "public-classical-gpa-physics-observations-v1",
+  "status": "PASS_LIMITED_SYNTHETIC_SCOPE",
+  "scope": "Analytic public synthetic images only; no experimental, browser, model or DM qualification",
+  "source_truth_manifest": "../../../tests/fixtures/gpa_physics_truth.json",
+  "generator_command": "python tools/create_gpa_fixtures.py --evidence-output docs/examples/gpa",
+  "test_command": [
+    "python",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_image_gpa_physics.py",
+    "-v"
+  ],
+  "test_output": "test_constant_reference_gauge_does_not_claim_absolute_translation (test_image_gpa_physics.IndependentGPAPhysics.test_constant_reference_gauge_does_not_claim_absolute_translation) ... ok\ntest_current_coordinate_rotation_stretch_shear_and_signed_nonsquare_metric (test_image_gpa_physics.IndependentGPAPhysics.test_current_coordinate_rotation_stretch_shear_and_signed_nonsquare_metric) ... ok\ntest_dc_conjugate_and_collinear_vectors_are_rejected (test_image_gpa_physics.IndependentGPAPhysics.test_dc_conjugate_and_collinear_vectors_are_rejected) ... ok\ntest_fitted_reference_is_explicit_relative_deformation (test_image_gpa_physics.IndependentGPAPhysics.test_fitted_reference_is_explicit_relative_deformation) ... ok\ntest_fixed_atoms_varying_contrast_create_apparent_not_material_strain (test_image_gpa_physics.IndependentGPAPhysics.test_fixed_atoms_varying_contrast_create_apparent_not_material_strain) ... ok\ntest_low_amplitude_hole_is_invalid_not_zero_displacement (test_image_gpa_physics.IndependentGPAPhysics.test_low_amplitude_hole_is_invalid_not_zero_displacement) ... ok\ntest_missing_selected_reflection_is_not_numerical_leakage_evidence (test_image_gpa_physics.IndependentGPAPhysics.test_missing_selected_reflection_is_not_numerical_leakage_evidence) ... ok\ntest_negative_reflection_sign_recovers_same_eulerian_field (test_image_gpa_physics.IndependentGPAPhysics.test_negative_reflection_sign_recovers_same_eulerian_field) ... ok\ntest_public_truth_manifest_matches_independent_generator (test_image_gpa_physics.IndependentGPAPhysics.test_public_truth_manifest_matches_independent_generator) ... ok\ntest_smooth_nonuniform_field_matches_analytic_inverse_map_pointwise (test_image_gpa_physics.IndependentGPAPhysics.test_smooth_nonuniform_field_matches_analytic_inverse_map_pointwise) ... ok\ntest_unknown_metric_remains_pixel_image_measurement (test_image_gpa_physics.IndependentGPAPhysics.test_unknown_metric_remains_pixel_image_measurement) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 1.601s\n\nOK\n",
+  "recorded_initial_test_run": {
+    "tests": 11,
+    "passed": 11,
+    "failed": 0,
+    "elapsed_seconds": 1.449,
+    "tolerance_changes_after_first_execution": 0
+  },
+  "failure_history": [],
+  "failure_history_semantics": "Retains any observed failing independent physics runs verbatim; no tolerance relaxation",
+  "preregistered_tolerances": {
+    "displacement_gauge_removed_rms_pixels": 0.08,
+    "median_deformation_gradient_max_abs": 0.003,
+    "median_green_lagrange_max_abs": 0.004,
+    "median_polar_rotation_degrees": 0.2,
+    "nonuniform_pointwise_deformation_gradient_max_abs": 0.003,
+    "nonuniform_pointwise_green_lagrange_max_abs": 0.004,
+    "nonuniform_pointwise_polar_rotation_degrees": 0.2,
+    "pseudo_strain_min_interface_abs_median_exx": 0.004,
+    "interior_margin_pixels": 64
+  },
+  "libraries": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "scikit_image": "0.26.0"
+  },
+  "observed_cases": [
+    {
+      "case": "finite_rigid_rotation",
+      "valid_interior_pixels": 16384,
+      "displacement_rms_pixels": 0.000591823637171198,
+      "median_F_max_abs_error": 1.901945861182419e-05,
+      "median_E_max_abs_error": 2.091742006765651e-05,
+      "median_rotation_error_degrees": 0.00016290884305938816
+    },
+    {
+      "case": "affine_stretch",
+      "valid_interior_pixels": 16384,
+      "displacement_rms_pixels": 7.401740100118071e-05,
+      "median_F_max_abs_error": 1.0537787877851201e-06,
+      "median_E_max_abs_error": 1.0959304944657688e-06,
+      "median_rotation_error_degrees": 0.0
+    },
+    {
+      "case": "affine_shear",
+      "valid_interior_pixels": 16384,
+      "displacement_rms_pixels": 0.0005951328911370485,
+      "median_F_max_abs_error": 2.9654300100157016e-05,
+      "median_E_max_abs_error": 3.018747490740603e-05,
+      "median_rotation_error_degrees": 0.00015980127777833416
+    },
+    {
+      "case": "signed_anisotropic_rotation_nonsquare",
+      "valid_interior_pixels": 24576,
+      "displacement_rms_pixels": 0.0012707635548663747,
+      "median_F_max_abs_error": 6.921107698953932e-06,
+      "median_E_max_abs_error": 8.43495482803592e-07,
+      "median_rotation_error_degrees": 0.0001384431864082885
+    },
+    {
+      "case": "smooth_nonuniform_inverse_map",
+      "valid_interior_pixels": 16384,
+      "displacement_rms_pixels": 0.018274714198287086,
+      "pointwise_F_max_abs_error": 0.0007261640187923302,
+      "pointwise_E_max_abs_error": 0.0007158892195872069,
+      "pointwise_rotation_error_degrees": 0.021675640389144074
+    },
+    {
+      "case": "fixed_sublattice_varying_contrast",
+      "true_atomic_displacement_pixels": 0.0,
+      "true_E_max_abs": 0.0,
+      "fixed_atom_columns": 2048,
+      "median_interface_abs_apparent_E_xx": 0.02285036962586634,
+      "maximum_interface_abs_apparent_E_xx": 0.033683007564472844,
+      "signed_median_interface_apparent_E_xx": 0.02285036962586634,
+      "valid_interface_pixels": 2688,
+      "interpretation_status": "hypothesized",
+      "material_validation": false
+    }
+  ],
+  "figure": "physics.png",
+  "mechanism_source": "https://arxiv.org/html/1504.06089v1#S2",
+  "execution_environment": "Independent isolated Python environment with optional GPA dependencies"
+}

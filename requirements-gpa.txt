@@ -1,0 +1,3 @@
+# Optional classical GPA in the independent image environment; never GMS Python.
+-r requirements-images.txt
+scikit-image>=0.25,<0.27

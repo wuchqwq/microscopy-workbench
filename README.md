@@ -69,7 +69,9 @@ Connect the compiled MCP server to a compatible client, or install the packaged 
 
 **Under review:** [F1a — multiscale structural fields and candidate domains (Draft PR #28)](https://github.com/wuchqwq/microscopy-workbench/pull/28) adds bounded multiscale sampling and candidate domain/boundary evidence. Its synthetic numerical tests have passed, but it is **not yet merged into `main`**, and the remaining GUI/browser scope must not be treated as verified.
 
-**Planned:** [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16) covers evidence-guided, budgeted follow-up analysis (F4-lite), then qualified GPA displacement/strain estimates and crystallographic defect evidence. The current roadmap does **not** include Encoder training or a foundation-model project.
+**F2a implementation branch:** [classical single-domain GPA](docs/CLASSICAL_GPA.md) reuses saved unwindowed FFTs to extract geometric phases, projected displacement, finite Green–Lagrange strain and polar rotation. It requires explicit reference/domain assumptions; unknown XY metric permits image-coordinate fields only. Optional dependencies are in `requirements-gpa.txt`; [acceptance scopes](docs/F2A_ACCEPTANCE.md) distinguish synthetic verification from specimen validity and GUI gestures. This branch does not merge or depend on the F1a/F4 Draft stack.
+
+**Planned:** [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16) retains evidence-guided follow-up analysis and later crystallographic defect evidence. The current roadmap does **not** include Encoder training or a foundation-model project.
 
 ## Scientific scope
 

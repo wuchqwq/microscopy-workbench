@@ -1,6 +1,6 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build sparse structural feature fields, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build sparse structural feature fields or explicit single-domain classical GPA, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
 ---
 
 # Reusable microscopy observations
@@ -138,6 +138,38 @@ whose parent already exists. Do not assume an `exports` subfolder has been creat
 use a new child under a known existing configured workspace/output parent. A
 missing parent requires correcting that parent, not trying more filenames.
 
+## Single-domain classical GPA
+
+When the researcher requests lattice displacement/strain from one selected
+domain, inspect the actual `image_gpa`, `image_gpa_view` and `image_gpa_read`
+schemas. Use two explicit non-collinear reciprocal vectors in cycles/pixel on
+the exact saved FFT. Declare `source_domain: "real_space_lattice"` with an actual
+`source_domain_text` source or working assumption; unknown image metadata alone
+does not establish a lattice, and known reciprocal images remain refused.
+Supply a Gaussian `mask_sigma`, a half-open reference
+rectangle in that FFT's local spatial grid, `reference_mode` and a sourced
+`reference_text`. `fixed_g` preserves affine deformation relative to supplied
+waves; `fit_reference` zeroes the fitted reference lattice and cannot measure
+its absolute strain. Never silently choose a strain-free region.
+
+Inspect amplitude, validity masks and reference diagnostics with the resulting
+maps. `ux`/`uy` remain pixels unless calibration is sourced; unknown metric leaves
+tensors and rotation labeled image-coordinate. Finite strain is Green–Lagrange,
+`exy` is tensor shear, and polar rotation is stored in radians, displayed/read in
+explicitly labeled degrees. Read
+[classical GPA details](../../../docs/CLASSICAL_GPA.md) before interpreting the
+finite Eulerian displacement convention. A geometric phase may include
+sublattice/basis-image changes and pseudo-strain; it is not a ptychographic wave
+phase or material identification.
+
+Revise vectors/mask/reference/calibration with `previous_gpa_id`, preserving the
+old GPA and saved FFT. Use `image_gpa_view` for display-only range/component
+changes and `image_gpa_read` for bounded explicit local integer samples. Retain
+the provider result/request IDs; F2a adds no AnalysisContext GPA role, so do not
+put it in an unrelated slot. Reconnect via saved objects and original
+`image_result` requests, without a new FFT. Export to a fresh directory and retain
+NPY components, masks, report/table and provenance separately from the PNG.
+
 Before each write choose and retain `request_id`. Query the tool's advertised
 recovery endpoint after timeout or cancellation; never resubmit an unknown
 side effect. Batch receipts retain child request IDs and outcomes. An incomplete
@@ -147,8 +179,10 @@ batch is not a complete analysis.
 
 This package supplies composable local and bounded cross-frame observations
 and explicit candidate comparisons. It does not implement automatic global
-indexing, multi-phase segmentation, twin-interface determination, dislocation/GPA
-or ptychography reconstruction. Sequence FFT currently requires real spatial
+indexing, multi-phase segmentation, twin-interface determination, automatic
+dislocation analysis or ptychography reconstruction. Classical GPA is limited to
+one explicit domain and a qualified saved FFT of real scalar spatial data.
+Sequence FFT currently requires real spatial
 scientific arrays; do not silently take the real part of complex reconstruction
 data or quantize a float array to PNG/uint16. Report the specific unsupported
 entry instead. Existing `image_compare` can show explicitly selected frames
