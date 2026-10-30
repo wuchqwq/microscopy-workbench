@@ -16,6 +16,25 @@ const packageRoot=path.basename(path.resolve(here))==='dist'?here:path.join(here
 const sourceRoot=path.basename(path.resolve(here))==='dist'?path.dirname(path.resolve(here)):here;
 const hash=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
 
+const GPA_ADDITIONS=['image_gpa','image_gpa_read','image_gpa_view'];
+function assertCompatibleCatalog(current,frozen){
+ const additions=new Set(GPA_ADDITIONS);
+ assert.deepEqual(current.filter(tool=>additions.has(tool.name)).map(tool=>tool.name).sort(),GPA_ADDITIONS,
+  'Only the three explicitly added GPA tools may extend the frozen catalog');
+ assert.deepEqual(current.filter(tool=>!additions.has(tool.name)),frozen,
+  'Every frozen tool/schema/description and relative order must remain exactly compatible');
+}
+
+test('additive GPA catalog still rejects removed/modified legacy tools and unexpected additions',()=>{
+ const frozen=[{name:'image_fft',description:'frozen',inputSchema:{type:'object'}}];
+ const current=[...GPA_ADDITIONS.map(name=>({name})),...frozen];
+ assertCompatibleCatalog(current,frozen);
+ assert.throws(()=>assertCompatibleCatalog(current.slice(0,3),frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current.slice(0,3),{...frozen[0],description:'changed'}],frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current,{name:'unexpected_tool'}],frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current,{name:'image_gpa'}],frozen));
+});
+
 function snapshot(directory,prefix=''){
  const result={};
  for(const entry of readdirSync(directory,{withFileTypes:true})){
@@ -108,7 +127,7 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   const existing=snapshot(workRoot),fftCount=()=>readdirSync(path.join(workspace,'requests')).map(name=>JSON.parse(readFileSync(path.join(workspace,'requests',name),'utf8'))).filter(row=>row.parameters?.action==='fft').length;
   assert.equal(fftCount(),1);
   const current=new Client(installed,config,tmpdir());clients.push(current);await current.rpc('initialize');
-  assert.deepEqual((await current.rpc('tools/list')).result.tools,schema,'All tool schemas and descriptions remain frozen-compatible');
+  assertCompatibleCatalog((await current.rpc('tools/list')).result.tools,schema);
   assert.deepEqual(await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}}),{...refused,id:current.next},'Original-request error remains compatible');
   assert.deepEqual(await current.tool('image_result',{request_id:'frozen-fft'}),fft);
   assert.deepEqual(await current.tool('image_info',{object_id:measure.object_id}),await current.tool('image_result',{request_id:'frozen-measure'}));

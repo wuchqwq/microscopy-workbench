@@ -138,6 +138,17 @@ These fixes did not change physics tolerances or erase the earlier failures.
 
 ## Final validation after metadata completion
 
+The first PR CI run passed the GPA scientific job, but its frozen package
+compatibility check rejected an additive catalog: it required the entire tool
+list to remain identical. [Original CI failure](https://github.com/wuchqwq/microscopy-workbench/actions/runs/40999615450/job/123880734927)
+is retained. The compatibility assertion now permits exactly the three named
+GPA additions while preserving exact names, descriptions, schemas and order
+for every old tool. Negative cases reject removed/changed legacy tools,
+unexpected additions and duplicate GPA names; no frozen source or scientific
+tolerance was changed.
+The corrected compiled-package test passed 2/2 locally (42.830 s), including
+actual recovery/export/remeasurement and Panel HTTP from the copied package.
+
 The final combined Python command is `python -m unittest discover -s tests -p
 test_image_gpa*.py -v`; the retained console logs are local
 `analysis/f2a-final-python-tests.log` and `analysis/f2a-final-node-tests.log`.
