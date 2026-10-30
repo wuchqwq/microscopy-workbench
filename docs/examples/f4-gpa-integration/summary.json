@@ -1,0 +1,33 @@
+{
+  "scope": "Independent combined F4/F2a compiled MCP on public synthetic data; not browser/model/real-specimen qualification",
+  "result": "PASS",
+  "f4_source": "3678c54a0b8c57ec027fcfd03fd856489d26184c",
+  "gpa_source": "fc3a207fceeeab9f0285ab02596859d90b84d80c",
+  "tested_integration_commit": "83dc06e19b080c4ca5b9bfbe1724c97bce392e13",
+  "qualification_run": 41023949236,
+  "node": {"passed":315,"skipped":5,"failed":0,"total":320},
+  "gpa_scientific_tests": {"passed":28,"failed":0,"elapsed_seconds":6.058},
+  "cross_feature_test": {
+    "result":"PASS",
+    "elapsed_seconds":24.835862059,
+    "formal_calls":38,
+    "expected_small_window_refusals":1,
+    "source_shape_yx":[192,192],
+    "initial_fft_rect_xyxy":[16,24,144,152],
+    "initial_fft_size":128,
+    "appended_fft_size":32,
+    "metric_nm_xy":[0.02,-0.03],
+    "expected_exx":0.06888888888888889,
+    "observed_exx":0.06888889013447219,
+    "forward_fft_count":2,
+    "gpa_forward_ffts":0,
+    "context_revision":4,
+    "old_source_fft_field_unchanged":true,
+    "source_sha256":"636998f711bc57de57df1535a615a617cd4b66bcf1ccdfe01cb17879a1cf5efe",
+    "original_fft_sha256":"ab560d4becc7d7e51abfefecaf51fe2a0169a78e65c827d041adaa1c69403156"
+  },
+  "frozen_compiled_compatibility":{"passed":2,"failed":0},
+  "standalone_science":"PASS",
+  "not_tested":["actual browser gestures","fresh model using combined Skill","real specimens","GPA-specific interrupted-worker injection"],
+  "retained_failure":{"run":41023693324,"cause":"Assembly script expected older Skill description; failed before science; corrected exact anchor in a new commit"}
+}
