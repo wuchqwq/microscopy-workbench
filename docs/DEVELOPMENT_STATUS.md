@@ -4,6 +4,21 @@ Updated 2026-10-30. This document is the current implementation index; individua
 acceptance ledgers remain historical records of the exact versions they tested.
 Mainline admission is not a new real-specimen, GUI, model or instrument qualification.
 
+## F4-full first cross-method slice (review branch)
+
+`feature/f4-cross-method-loop` starts at reviewed main `9fbc769` (F3b #42,
+including its finite-direction correction). It adds three optional formal image
+tools for saved fixed_g GPA → sourced phase follow-up → conditional topology,
+or missing-information/stop decisions. The original request journals own all
+attempt slots/reservations, failures, unknown outcomes and recovery. No scientific
+kernel, global scheduler, source FFT or new model service is introduced.
+
+[Method/API](CROSS_METHOD_ANALYSIS.md) and [acceptance](F4_CROSS_METHOD_ACCEPTANCE.md)
+record actual four-case MCP results and same-cap fixed-sequence comparison,
+including the slower positive active path. Two new-model attempts encountered
+client execution/MCP approval policy blocks; scientific model acceptance stays
+NOT_TESTED and the feature PR remains Draft. GUI/real specimen work is separate.
+
 ## Reviewed implementation ancestry
 
 | Scope | Source PR | Exact reviewed source commit |

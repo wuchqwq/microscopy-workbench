@@ -203,6 +203,9 @@ jobs:
       - run: npm run build
       - run: python -m pip install -r requirements-gpa.txt
       - run: python -B -m unittest discover -s tests -p 'test_*topology*.py' -v
+      - run: python -B tests/test_method_policy.py
+      - run: python -B tests/image_method_journal_test.py
+      - run: python -B tests/test_method_loop_accounting.py
       - run: npm run test:topology
         env:
           MICROSCOPY_PYTHON: python

@@ -1,0 +1,37 @@
+{
+  "result": "BLOCKED_BY_CLIENT_POLICY",
+  "attempts": [
+    {
+      "attempt": "fresh-agent-01",
+      "scope": "Actual isolated Codex model; same read-only sandbox and approval policy; no permission changes",
+      "elapsed_seconds": 26.50488729996141,
+      "exit_code": 0,
+      "mcp_event_count": 0,
+      "user_config_unchanged": true,
+      "scientific_method_calls": 0,
+      "scientific_decision_acceptance": "NOT_TESTED",
+      "blocking_error": "Read-only Skill file command rejected by execution policy",
+      "raw_local_acceptance": "analysis\\2026-10-30-f4-full-mcp-01\\fresh-agent-01\\acceptance.json",
+      "raw_acceptance_sha256": "1aa65c1e91346850f686367f3ce75b9701dfd23aa2b860dd10e8aac348555fc4"
+    },
+    {
+      "attempt": "fresh-agent-02",
+      "scope": "Actual isolated Codex model; same read-only sandbox and approval policy; no permission changes",
+      "elapsed_seconds": 44.82439730002079,
+      "exit_code": 0,
+      "mcp_event_count": 2,
+      "user_config_unchanged": true,
+      "scientific_method_calls": 0,
+      "scientific_decision_acceptance": "NOT_TESTED",
+      "blocking_error": "MCP tool call requires approval, but approval policy is never",
+      "raw_local_acceptance": "analysis\\2026-10-30-f4-full-mcp-01\\fresh-agent-02\\acceptance.json",
+      "raw_acceptance_sha256": "7d139716a03e964e10e96d2afc696c9b66d51bbd240067cc2ee3de00ce69d3f5"
+    }
+  ],
+  "scope_limits": [
+    "Not a successful model scientific workflow",
+    "Not bundled plugin autodiscovery",
+    "No scientific source or user config modification",
+    "Protocol clients are separately qualified in actual-comparison.json"
+  ]
+}
