@@ -244,6 +244,28 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  projected-twin:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements-images.txt
+            requirements-structure-tools.txt
+      # Geometry/source adapter tests need ASE, not the optional scattering stack.
+      # Actual diffsims/MCP acceptance remains the reproducible test:twin command.
+      - run: python -m pip install -r requirements-images.txt 'ase>=3.26,<4'
+      - run: python -B tests/test_twin_geometry.py
+      - run: python -B tests/test_twin_observations.py
+
   compiled-compatibility:
     needs: changes
     if: needs.changes.outputs.run_full_ci == 'true'

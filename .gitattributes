@@ -1,0 +1,4 @@
+# Preserve byte-exact public scientific evidence, including RFC-style CSV CRLF.
+# These are exported artifacts, not source files to normalize on checkout.
+docs/validation/f3b/*.csv -text whitespace=cr-at-eol
+docs/validation/f3b/*.json -text whitespace=cr-at-eol

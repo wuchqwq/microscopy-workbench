@@ -1,0 +1,477 @@
+{
+  "started_utc": "2026-10-30T12:47:32.796Z",
+  "scope": "Actual public stdio MCP and independent ASE/diffsims/image provider; finite synthetic Sigma3 projected geometry, source binding, immutable revision and recovery",
+  "versions": {
+    "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "ase": "3.29.0",
+    "tifffile": "2026.10.15",
+    "diffsims": "0.7.0"
+  },
+  "checks": [
+    "Actual spatial_field saved two exact128 ROIs and two FFTs; all8 peak measurements per ROI independently match the signed anisotropic analytic q oracle, including Friedel partners.",
+    "Actual pinned diffsims parent/twin runs separately use the same diamond8 source and identical parameters; hard-coded matrices/HKL/q independently match both authoritative unrastered tables.",
+    "Actual compatible projected diamond Sigma3/trace hypothesis; immutable wrong-trace revision becomes interface-incompatible while retaining reflection compatibility, old evidence bytes, two FFTs and two simulations.",
+    "Reusing the original comparison request ID with changed bounds is refused without new scientific objects.",
+    "A fresh MCP client recovers original candidate/simulation/comparison/field/line IDs and inspects saved inputs without adding FFTs, simulations or objects; no lost-response injection is claimed.",
+    "Formal read-only structure_twin_evidence paginates both complete unmatched simulated reflection lists, exactly equals committed JSON, preserves the original request ID and creates no requests or scientific objects."
+  ],
+  "not_tested": [
+    "real specimen or material identification",
+    "unique three-dimensional twin or atomic coherence",
+    "HRTEM contrast or intensity interpretation",
+    "browser/GUI gestures",
+    "fresh ordinary model comprehension",
+    "cancellation/lost-response/interrupted-worker injection",
+    "native DM/GMS/vendor/hardware",
+    "all twin systems or orientation search"
+  ],
+  "runtime_ms": 131283.1053,
+  "result": "PASS",
+  "original_report_sha256": "b5668458161d34d3ac9feb1aa945bc29896dd3ec207ebad87795d42d2c16b440",
+  "raw_local_report": "analysis/2026-10-30-f3b-r3/report.json",
+  "observations": {
+    "positive_object_id": "f3b39908740f4b78af0dc320d01cbff9",
+    "positive_request_id": "twin-smoke-11",
+    "positive_status": "compatible",
+    "positive_projected_relation": {
+      "status": "compatible",
+      "reason": "Both domains agree with the explicit candidate and domain B is not explained by the fixed untwinned parent control",
+      "candidate_status": "hypothesized",
+      "domain_a_geometry": {
+        "adequate": true,
+        "noncollinear_direction_family_count": 4,
+        "direction_families": [
+          {
+            "direction_xy_unit": [
+              0,
+              1
+            ],
+            "measurement_object_ids": [
+              "0608fff60c514e389d31bab467866e5f",
+              "9ef4ecf134174b76847a726fda9f6a75"
+            ]
+          },
+          {
+            "direction_xy_unit": [
+              0.9428090415820635,
+              0.3333333333333333
+            ],
+            "measurement_object_ids": [
+              "92d6a0a37bfc4b31b988a0f6f12310f6",
+              "2e895659418c4934a92465f23f4ab12c"
+            ]
+          },
+          {
+            "direction_xy_unit": [
+              0.5773502691896258,
+              0.816496580927726
+            ],
+            "measurement_object_ids": [
+              "cd40f63d166841ee9563ef0df480bb6e",
+              "e42cad9839dd41038bbad729289433fb"
+            ]
+          },
+          {
+            "direction_xy_unit": [
+              0.49236596391733095,
+              -0.8703882797784892
+            ],
+            "measurement_object_ids": [
+              "ab21b805aa264bc48d9a702b8f5f6af5",
+              "c4faa21066444dffa3d82c5f8cc97a3e"
+            ]
+          }
+        ],
+        "normalized_singular_values": [
+          2.0199009876724157,
+          1.3856406460551018
+        ],
+        "independence_scope": "Noncollinear physical reciprocal directions only; conjugate/Friedel and collinear harmonics do not add independent directions; no held-out validation"
+      },
+      "domain_b_geometry": {
+        "adequate": true,
+        "noncollinear_direction_family_count": 4,
+        "direction_families": [
+          {
+            "direction_xy_unit": [
+              0,
+              1
+            ],
+            "measurement_object_ids": [
+              "8ab2251e2a334c5088f749822fe4454a",
+              "7a7a1cc2713441c59a26798aa0f6da33"
+            ]
+          },
+          {
+            "direction_xy_unit": [
+              0.9428090415820635,
+              -0.3333333333333333
+            ],
+            "measurement_object_ids": [
+              "8de4dc029ea3497f9247abb0b3ca608c",
+              "db7aa1ac8dd24d0eb8e771d47b4641b4"
+            ]
+          },
+          {
+            "direction_xy_unit": [
+              0.5773502691896258,
+              -0.816496580927726
+            ],
+            "measurement_object_ids": [
+              "cf11b0514649474f9d1b3e67e6459d8b",
+              "825edb118e2a457cb7d1c33c038decd4"
+            ]
+          },
+          {
+            "direction_xy_unit": [
+              0.49236596391733095,
+              0.8703882797784892
+            ],
+            "measurement_object_ids": [
+              "c8b5b23d71f24d69b5a4fb86db9e59de",
+              "3f30cb00f68c4d839b527bd42bdee71a"
+            ]
+          }
+        ],
+        "normalized_singular_values": [
+          2.0199009876724157,
+          1.3856406460551018
+        ],
+        "independence_scope": "Noncollinear physical reciprocal directions only; conjugate/Friedel and collinear harmonics do not add independent directions; no held-out validation"
+      },
+      "distinct_measurement_identities": true,
+      "parent_domain_all_selected_reflections_match": true,
+      "twin_domain_all_selected_reflections_match": true,
+      "untwinned_control_all_selected_reflections_match": false,
+      "parent_or_twin_assignment_ambiguous": false,
+      "shared_registration": {
+        "basis": "Declared common synthetic laboratory frame after independently supplied signed XY calibration; no rotation, scale, screen parity or domain-B fit",
+        "flip_y": false,
+        "rotation_deg": 0,
+        "scale": 1,
+        "translation_inv_angstrom": [
+          0,
+          0
+        ]
+      },
+      "independent_validation": "not_established_by_this_comparison",
+      "unique_3d_twin_identification": false
+    },
+    "positive_interface": {
+      "status": "compatible",
+      "reason": "Saved projected line agrees with the conditional edge-on {111} trace",
+      "projection_scope": "Unoriented edge-on trace in orthographic beam +Z projection only",
+      "angular_tolerance_degrees": 1,
+      "atomic_coherence_or_registry_established": false,
+      "candidate_normal_lab_unit": [
+        -5.0191172011452766e-18,
+        1,
+        1.7796192843178415e-17
+      ],
+      "edge_on_error_degrees": 1.019646741315044e-15,
+      "candidate_is_edge_on": true,
+      "input_interface": {
+        "physical_vector_xy": [
+          0.9721412416670737,
+          0
+        ],
+        "unit": "nm",
+        "projection": "orthographic_beam_plus_z",
+        "source_basis": "Public stacked source-frame horizontal seam, calibrated signed XY source-pixel line; declared orthographic beam+Z and coherent111 candidate; no observed atomic coherence"
+      },
+      "candidate_trace_xy_lab_unit": [
+        -1,
+        -5.0191172011452766e-18
+      ],
+      "registered_interface_xy_lab_unit": [
+        1,
+        0
+      ],
+      "unoriented_trace_residual_degrees": 2.8757423250713863e-16,
+      "registration_scope": "Same fixed orthogonal screen mapping as reciprocal evidence; direct-vector map is inverse-transpose, equal to this orthogonal matrix"
+    },
+    "wrong_trace_object_id": "671b73e895644d95bfbb12befab77e75",
+    "wrong_trace_status": "incompatible",
+    "wrong_trace_projected_status": "compatible",
+    "wrong_trace_interface": {
+      "status": "incompatible",
+      "reason": "Saved projected line disagrees with the conditional edge-on {111} trace",
+      "projection_scope": "Unoriented edge-on trace in orthographic beam +Z projection only",
+      "angular_tolerance_degrees": 1,
+      "atomic_coherence_or_registry_established": false,
+      "candidate_normal_lab_unit": [
+        -5.0191172011452766e-18,
+        1,
+        1.7796192843178415e-17
+      ],
+      "edge_on_error_degrees": 1.019646741315044e-15,
+      "candidate_is_edge_on": true,
+      "input_interface": {
+        "physical_vector_xy": [
+          0,
+          -1.2124355652982142
+        ],
+        "unit": "nm",
+        "projection": "orthographic_beam_plus_z",
+        "source_basis": "Public stacked source-frame horizontal seam, calibrated signed XY source-pixel line; declared orthographic beam+Z and coherent111 candidate; no observed atomic coherence"
+      },
+      "candidate_trace_xy_lab_unit": [
+        -1,
+        -5.0191172011452766e-18
+      ],
+      "registered_interface_xy_lab_unit": [
+        0,
+        -1
+      ],
+      "unoriented_trace_residual_degrees": 90,
+      "registration_scope": "Same fixed orthogonal screen mapping as reciprocal evidence; direct-vector map is inverse-transpose, equal to this orthogonal matrix"
+    },
+    "source_binding": {
+      "current_spatial_image_object_id": "4bc47e55cc1d46208a088af0a15dcf5a",
+      "current_spatial_manifest_sha256": "fb0916a2d70ec304bef772d52fb82f7620cce94c784ec611f76316cd4bb17292",
+      "frame_object_id": "7d1b0053d18a4510a109241a68951c86",
+      "source_object_id": "99f8968ef3a04b3f985d88850d9fa4a9",
+      "source_identity": {
+        "path": "F:\\microscopy-workbench-f3b\\analysis\\2026-10-30-f3b-r3\\fixture\\sigma3_111_edge_on_cosines.tiff",
+        "sha256": "3b060344c5b63e2fb0de6a03b8f59847813b5ae0b859301c13701aaeb2e9d4ab",
+        "stat": {
+          "ctime_ns": "1793364451397083900",
+          "device": "17081883644722306211",
+          "inode": "281474979327208",
+          "mtime_ns": "1793364451506549800",
+          "size": 131296
+        }
+      },
+      "frame_index": 0,
+      "source_array_sha256": "e2953f62cf0b9221d210e5a61ec50061eafe7bcc6fce6de70c87122247600426",
+      "shape_yx": [
+        256,
+        128
+      ],
+      "dtype": "float32",
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "7d1b0053d18a4510a109241a68951c86",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-f3b\\analysis\\2026-10-30-f3b-r3\\fixture\\sigma3_111_edge_on_cosines.tiff",
+            "sha256": "3b060344c5b63e2fb0de6a03b8f59847813b5ae0b859301c13701aaeb2e9d4ab",
+            "stat": {
+              "ctime_ns": "1793364451397083900",
+              "device": "17081883644722306211",
+              "inode": "281474979327208",
+              "mtime_ns": "1793364451506549800",
+              "size": 131296
+            }
+          }
+        },
+        "calibration_id": "4bc47e55cc1d46208a088af0a15dcf5a",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "Public analytic cosine fixture; declared anisotropic signed source sampling, not instrument calibration",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.007654655446197431,
+          "y": -0.005412658773652742
+        }
+      },
+      "calibration_dependency": {
+        "calibration_id": "4bc47e55cc1d46208a088af0a15dcf5a",
+        "revision": 1,
+        "status": "active",
+        "source": "user_statement_not_independently_verified",
+        "coordinate_domain": "real_space"
+      },
+      "source_capture_files_sha256": null
+    },
+    "FFT_count": 2,
+    "simulation_count": 2
+  },
+  "timings": [
+    {
+      "tool": "image_open",
+      "request_id": "twin-smoke-1",
+      "elapsed_ms": 2668.8737
+    },
+    {
+      "tool": "image_frame",
+      "request_id": "twin-smoke-2",
+      "elapsed_ms": 2278.8952
+    },
+    {
+      "tool": "image_calibrate",
+      "request_id": "twin-smoke-3",
+      "elapsed_ms": 2665.0780999999997
+    },
+    {
+      "tool": "image_spatial_field",
+      "request_id": "twin-smoke-4",
+      "elapsed_ms": 9469.2427
+    },
+    {
+      "tool": "structure_open",
+      "request_id": "twin-smoke-5",
+      "elapsed_ms": 3767.5278999999973
+    },
+    {
+      "tool": "structure_orient",
+      "request_id": "twin-smoke-6",
+      "elapsed_ms": 3345.9218999999975
+    },
+    {
+      "tool": "structure_twin_orient",
+      "request_id": "twin-smoke-7",
+      "elapsed_ms": 3425.3055999999997
+    },
+    {
+      "tool": "structure_simulate",
+      "request_id": "twin-smoke-8",
+      "elapsed_ms": 8371.5982
+    },
+    {
+      "tool": "structure_simulate",
+      "request_id": "twin-smoke-9",
+      "elapsed_ms": 8656.084000000003
+    },
+    {
+      "tool": "image_measure",
+      "request_id": "twin-smoke-10",
+      "elapsed_ms": 2423.4604000000036
+    },
+    {
+      "tool": "structure_twin_compare",
+      "request_id": "twin-smoke-11",
+      "elapsed_ms": 11161.453999999998
+    },
+    {
+      "tool": "image_measure",
+      "request_id": "twin-smoke-12",
+      "elapsed_ms": 2616.8062000000064
+    },
+    {
+      "tool": "structure_twin_compare",
+      "request_id": "twin-smoke-13",
+      "elapsed_ms": 11409.564900000005
+    },
+    {
+      "tool": "structure_twin_compare",
+      "request_id": "twin-smoke-11",
+      "elapsed_ms": 3267.43710000001
+    },
+    {
+      "tool": "structure_result",
+      "request_id": "twin-smoke-7",
+      "elapsed_ms": 3220.25940000001
+    },
+    {
+      "tool": "structure_info",
+      "elapsed_ms": 3286.8320999999996
+    },
+    {
+      "tool": "structure_result",
+      "request_id": "twin-smoke-8",
+      "elapsed_ms": 3286.723100000003
+    },
+    {
+      "tool": "structure_info",
+      "elapsed_ms": 3113.0233000000007
+    },
+    {
+      "tool": "structure_result",
+      "request_id": "twin-smoke-9",
+      "elapsed_ms": 3073.4546999999875
+    },
+    {
+      "tool": "structure_info",
+      "elapsed_ms": 3084.272499999992
+    },
+    {
+      "tool": "structure_result",
+      "request_id": "twin-smoke-11",
+      "elapsed_ms": 3229.6589999999997
+    },
+    {
+      "tool": "structure_info",
+      "elapsed_ms": 3238.377199999988
+    },
+    {
+      "tool": "structure_result",
+      "request_id": "twin-smoke-13",
+      "elapsed_ms": 3184.066399999996
+    },
+    {
+      "tool": "structure_info",
+      "elapsed_ms": 3309.1169999999984
+    },
+    {
+      "tool": "image_result",
+      "request_id": "twin-smoke-4",
+      "elapsed_ms": 4336.347899999993
+    },
+    {
+      "tool": "image_result",
+      "request_id": "twin-smoke-10",
+      "elapsed_ms": 2233.3843999999954
+    },
+    {
+      "tool": "image_result",
+      "request_id": "twin-smoke-12",
+      "elapsed_ms": 2225.395399999994
+    },
+    {
+      "tool": "structure_twin_evidence",
+      "elapsed_ms": 3268.3748999999953
+    },
+    {
+      "tool": "structure_twin_evidence",
+      "elapsed_ms": 3343.9709000000003
+    },
+    {
+      "tool": "structure_twin_evidence",
+      "elapsed_ms": 3452.202400000009
+    },
+    {
+      "tool": "structure_twin_evidence",
+      "elapsed_ms": 3381.55260000001
+    }
+  ],
+  "earlier_failures": [
+    {
+      "trial": "r1",
+      "result": "FAIL",
+      "error": "Error: \u9519\u8bef: INVALID_ARGUMENT: Simulate the original structure twice with different orientation IDs; do not reapply orientations to derived atoms\n    at StdioImageClient.tool (file:///F:/microscopy-workbench-f3b/dist/tools/image_panel.mjs:75:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async call (file:///F:/microscopy-workbench-f3b/dist/tools/smoke_twin.mjs:54:16)\n    at async file:///F:/microscopy-workbench-f3b/dist/tools/smoke_twin.mjs:135:19",
+      "passed_checks_before_failure": [
+        "Actual spatial_field saved two exact128 ROIs and two FFTs; all8 peak measurements per ROI independently match the signed anisotropic analytic q oracle, including Friedel partners.",
+        "Actual pinned diffsims parent/twin runs separately use the same diamond8 source and identical parameters; hard-coded matrices/HKL/q independently match both authoritative unrastered tables."
+      ],
+      "original_report_sha256": "8634a4c3f49d47f2d369a5ccbd75f4ad40bcc50ff68a1841db1e1c372050df61"
+    },
+    {
+      "trial": "r2",
+      "result": "FAIL",
+      "error": "Error: arguments.request_id: \u672a\u77e5\u53c2\u6570\n    at StdioImageClient.tool (file:///F:/microscopy-workbench-f3b/dist/tools/image_panel.mjs:75:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async call (file:///F:/microscopy-workbench-f3b/dist/tools/smoke_twin.mjs:54:16)\n    at async data (file:///F:/microscopy-workbench-f3b/dist/tools/smoke_twin.mjs:60:65)\n    at async file:///F:/microscopy-workbench-f3b/dist/tools/smoke_twin.mjs:168:27",
+      "passed_checks_before_failure": [
+        "Actual spatial_field saved two exact128 ROIs and two FFTs; all8 peak measurements per ROI independently match the signed anisotropic analytic q oracle, including Friedel partners.",
+        "Actual pinned diffsims parent/twin runs separately use the same diamond8 source and identical parameters; hard-coded matrices/HKL/q independently match both authoritative unrastered tables.",
+        "Actual compatible projected diamond Sigma3/trace hypothesis; immutable wrong-trace revision becomes interface-incompatible while retaining reflection compatibility, old evidence bytes, two FFTs and two simulations.",
+        "Reusing the original comparison request ID with changed bounds is refused without new scientific objects."
+      ],
+      "original_report_sha256": "e8223a4afc7a1c8355579756e3c940888c7d7b449575e725feeb25a06810f5f8"
+    }
+  ]
+}

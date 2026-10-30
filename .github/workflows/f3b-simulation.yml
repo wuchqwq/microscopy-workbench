@@ -1,0 +1,70 @@
+name: F3b actual simulation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/f3b-simulation.yml'
+      - 'crystallography/**'
+      - 'lib/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'requirements*.txt'
+      - 'tsconfig*'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-diffsims-mcp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements-images.txt
+            requirements-structure-tools.txt
+      - name: Retain exact public source and environment identity
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/f3b-evidence"
+          git rev-parse HEAD > "$RUNNER_TEMP/f3b-evidence/tested-commit.txt"
+          git archive --format=tar HEAD > "$RUNNER_TEMP/f3b-evidence/source.tar"
+          python --version > "$RUNNER_TEMP/f3b-evidence/python.txt"
+          node --version > "$RUNNER_TEMP/f3b-evidence/node.txt"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Install actual optional scattering provider
+        run: python -m pip install -r requirements-images.txt -r requirements-structure-tools.txt
+      - name: Scientific geometry and source-binding regressions
+        shell: bash
+        run: |
+          set -o pipefail
+          python -B -m unittest discover -s tests -p 'test_twin*.py' -v 2>&1 | tee "$RUNNER_TEMP/f3b-evidence/regressions.log"
+      - name: Actual compiled MCP and pinned diffsims round trip
+        shell: bash
+        env:
+          MICROSCOPY_PYTHON: python
+          MICROSCOPY_SMOKE_OUTPUT: ${{ runner.temp }}/f3b-evidence/actual-mcp
+        run: |
+          set -o pipefail
+          npm run test:twin 2>&1 | tee "$RUNNER_TEMP/f3b-evidence/mcp.log"
+      - name: Retain installed scientific versions
+        if: always()
+        shell: bash
+        run: python -m pip freeze > "$RUNNER_TEMP/f3b-evidence/requirements-resolved.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: f3b-linux-real-simulation
+          path: ${{ runner.temp }}/f3b-evidence
+          if-no-files-found: error
+          retention-days: 14

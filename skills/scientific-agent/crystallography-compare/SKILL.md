@@ -37,8 +37,10 @@ save only that scoped presence statement via `image_context` metadata.research_o
 (or read its saved reference from `image_panel_current`). Do not confirm a twin
 law or HKL on their behalf. Use `synthetic_fixture` for demo input, never
 impersonate human confirmation; remeasure after peak/scale changes. Automated
-twin-interface, dislocation and geometric-phase analysis are not implemented by
-this Skill. Explicit candidate orientations can still be simulated and compared.
+twin-interface identification is not automatic. For a bounded projected Sigma3
+candidate, follow the [F3b tools](references/twin-evidence.md) when advertised.
+Classical GPA/topology tools retain their own single-domain and projected
+evidence limits; none of them confirms a material defect by image appearance.
 The Agent may propose unconfirmed structures, orientations and reflection
 correspondences and test explicit geometric comparisons. Keep those proposals
 as hypotheses: do not assert `user_confirmed` merely to enter a registration

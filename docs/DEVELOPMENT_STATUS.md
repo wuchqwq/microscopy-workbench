@@ -62,7 +62,19 @@ accuracy, independent physical confirmation or a claim of universal speedup.
 These are follow-up qualification tasks, not prerequisites for F3b algorithm
 work. No release tag or broader validation claim follows from merging the stack.
 
-## Next: F3b twin-relation and interface evidence
+## F3b first increment (review branch, Issue #41)
+
+The new `feature/f3b-twin-interface` branch starts at consolidated main
+`f0acf9e`, with no old-stack merges. It adds source-bound Sigma3 {111}
+candidate orientations and projected reflection/interface comparisons for
+ideal conventional monospecies FCC4/diamond8 references. It reuses actual
+saved diffsims simulations and current F1/F4 observations, with an untwinned
+control and no independent target-domain refit. Full unmatched evidence has
+a bounded read-only MCP endpoint. See [method and API](PROJECTED_TWIN_EVIDENCE.md)
+and [qualification scope](F3B_ACCEPTANCE.md). This is conditional evidence,
+not automatic twin identification; GUI gestures remain a separate deferred task.
+
+The original admission guidance for this increment remains:
 
 Start a new branch from the consolidated main, not from an old stacked feature
 branch. Read AGENTS.md and roadmap #16. Reuse saved domain/FFT observations and
