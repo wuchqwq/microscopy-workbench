@@ -38,6 +38,12 @@ and unknown masks. Review each sampled ROI/FFT in the existing Panel, revise a
 measurement and recover the named analysis without repeating unchanged FFTs.
 These descriptive candidates retain their source, scale, calibration and limits.
 
+[F4-lite active analysis](docs/ACTIVE_ANALYSIS.md) proposes bounded next ROI/scale
+observations with transparent priorities and reserved exploration. An Agent can
+select saved actions, append observations while retaining old FFTs, update the
+domain map, and stop on budget, quality, history or evidence limits. Proposals
+are inspectable suggestions; the scientific provider makes no hidden model call.
+
 ## Build and run
 
 Source checkout (Node >=18): `npm ci`, `npm run typecheck`, `npm run build`.

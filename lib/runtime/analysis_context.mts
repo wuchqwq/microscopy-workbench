@@ -1,7 +1,7 @@
 // Revision-aware references only. Scientific providers remain authoritative for
 // arrays, calibration, calculations and original-operation journals.
 import {createHash, randomUUID} from 'node:crypto';
-export const ANALYSIS_ROLES = Object.freeze(['experiment', 'fft', 'display', 'calibration', 'center', 'points', 'measurements', 'reference', 'orientation', 'simulation', 'registration', 'comparison', 'sequence', 'correspondence', 'observations', 'atlas', 'domain_hypotheses', 'field', 'spatial_field', 'domains'] as const);
+export const ANALYSIS_ROLES = Object.freeze(['experiment', 'fft', 'display', 'calibration', 'center', 'points', 'measurements', 'reference', 'orientation', 'simulation', 'registration', 'comparison', 'sequence', 'correspondence', 'observations', 'atlas', 'domain_hypotheses', 'field', 'spatial_field', 'domains', 'active_plan'] as const);
 import type {AnalysisId,AnalysisRole,ContextRequestId,ScopedReference,ReferenceProof,ContextEntry,ContextSlots,ContextFingerprints,ContextFingerprintSlots,ContextSelectionView,StoredContextValue,ContextSnapshot,ContextRevisionRecord,ContextRequestRecord,ContextStorePort,ResolveReference,ValidateBindings,AnalysisContextOptions,ContextMutationResult,CreateContextOptions,CommitContextOptions} from './context_contracts.mjs';
 // Property and RegExp coercion remain native; these helpers assert no data shape.
 const field=(value: unknown,key: string): unknown=>value==null?undefined:(value as Record<string,unknown>)[key];
@@ -49,10 +49,10 @@ const invalidates: Record<AnalysisRole,AnalysisRole[]> = {
   points: ['measurements', 'registration', 'comparison', 'observations', 'atlas', 'domain_hypotheses', 'field', 'spatial_field', 'domains'], measurements: ['registration', 'comparison', 'observations', 'atlas', 'domain_hypotheses', 'field', 'spatial_field', 'domains'],
   reference: ['orientation', 'simulation', 'registration', 'comparison'], orientation: ['simulation', 'registration', 'comparison'],
   simulation: ['registration', 'comparison'], registration: ['comparison'], display: [], comparison: [],
-  sequence: ['correspondence', 'observations'], correspondence: ['observations'], observations: ['domain_hypotheses', 'field'], atlas: ['domain_hypotheses', 'field'], domain_hypotheses: ['field'], field: [], spatial_field: ['domains'], domains: [],
+  sequence: ['correspondence', 'observations'], correspondence: ['observations'], observations: ['domain_hypotheses', 'field'], atlas: ['domain_hypotheses', 'field'], domain_hypotheses: ['field'], field: [], spatial_field: ['domains','active_plan'], domains: ['active_plan'], active_plan: [],
 };
 const parented = new Set<AnalysisRole>(['display', 'calibration', 'center', 'points', 'measurements']);
-const required: Partial<Record<AnalysisRole,AnalysisRole[]>> = {spatial_field:['experiment','calibration','center','points','measurements'],domains:['spatial_field'],atlas: ['calibration', 'center', 'points', 'measurements'], orientation: ['reference'], simulation: ['reference', 'orientation'], measurements: ['points', 'calibration', 'center'], registration: ['measurements', 'simulation'], comparison: ['measurements', 'simulation', 'registration'], correspondence: ['sequence'], observations: ['sequence', 'correspondence']};
+const required: Partial<Record<AnalysisRole,AnalysisRole[]>> = {active_plan:['spatial_field','domains'],spatial_field:['experiment','calibration','center','points','measurements'],domains:['spatial_field'],atlas: ['calibration', 'center', 'points', 'measurements'], orientation: ['reference'], simulation: ['reference', 'orientation'], measurements: ['points', 'calibration', 'center'], registration: ['measurements', 'simulation'], comparison: ['measurements', 'simulation', 'registration'], correspondence: ['sequence'], observations: ['sequence', 'correspondence']};
 
 export function requiredContextDependencies(slot: AnalysisRole, slots: ContextSelectionView): {required: AnalysisRole[];parents: AnalysisRole[]} {
   need(isRole(slot) && plain(slots), 'INVALID_CONTEXT', 'Dependency inspection needs a supported role and selections');

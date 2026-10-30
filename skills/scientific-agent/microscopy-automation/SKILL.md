@@ -5,6 +5,39 @@ description: Choose and revise microscopy ROI atlases and FFT windows, measure F
 
 # Reusable microscopy observations
 
+## Budgeted active follow-up
+
+For an existing structural field, use `image_analysis_candidates` on its saved
+domain map. Supply explicit total window and FFT-pixel budgets, including work
+already done. Inspect the proposed source ROI, scale, inherited settings,
+heuristic reasons, exploration reservation and stopping rule. Scores are
+priorities, not probabilities or calibrated information gain.
+
+Choose 1–4 actions deliberately and call `image_field_extend` with the exact
+base field, saved candidate set and action IDs. Keep request IDs before writes.
+Use direct explicit rectangles only for a documented intended modification;
+do not silently replay duplicates, stale proposals or unknown operations.
+Existing observations must retain their FFT/peak/measurement references. Compute
+the updated `image_domain_map`, inspect new evidence and request the next
+proposal, or stop. This loop uses formal scientific tools; no runtime scripts,
+hidden model calls or developer-session identifiers are required.
+
+Preserve some exploration when a field appears normal: shifted or smaller
+windows can test an unresolved narrow component. Do not spend every action on
+the highest anomaly. Quality-limited noise and repeated non-improvement should
+lead to a bounded stop, not endless refinement. Record misses and unsampled
+support; a uniform-looking candidate does not prove a homogeneous material.
+
+Save the current field/map/proposal under `spatial_field`, `domains` and
+`active_plan` in the named AnalysisContext, using the revision you just read.
+Promote the field before its dependent map and proposal; an old result is
+history until its bindings match the current selection.
+After reconnecting, query saved records and original outcomes before deciding
+what new work is necessary. A successful geometric comparison is still a
+candidate, and missing physical scale remains pixel based. The active tool guide
+and acceptance record are shipped in `docs/ACTIVE_ANALYSIS.md` and
+`docs/F4_LITE_ACCEPTANCE.md`.
+
 Use the installed plugin's actual MCP tools, not ad-hoc Python scripts. Inspect
 the advertised schemas. Keep internal object/request IDs yourself. A new input
 or session must work without any developer's sample IDs, temporary scripts or
@@ -114,9 +147,10 @@ NPY/PNG with `image_export`. Reconnection reads the context and original request
 it does not repeat the sampling. See
 [multiscale details](../../../docs/MULTISCALE_DOMAINS.md).
 
-F1a supplies bounded observation and candidate relations. Active next-ROI
-selection, GPA and defect/twin inference are later capabilities, not implicit
-steps in this tool or reasons to force every image through the same sequence.
+F1a supplies bounded observation and candidate relations. For optional active
+next-ROI selection use [budgeted active follow-up](#budgeted-active-follow-up).
+GPA and defect/twin inference remain outside these tools; neither sampling mode
+is a reason to force every image through the same sequence.
 
 ## Compare and return for correction
 

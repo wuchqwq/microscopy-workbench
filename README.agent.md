@@ -1,5 +1,14 @@
 # Agent guide: independent microscopy science
 
+For [active analysis](docs/ACTIVE_ANALYSIS.md), call `image_analysis_candidates`
+on a saved domain map with explicit cumulative budgets. Select inspectable
+actions through `image_field_extend`, rebuild `image_domain_map`, and evaluate
+again. Keep reserved exploration and stop evidence visible. Save `active_plan`
+beside the exact `spatial_field` and `domains` references. Query an incomplete
+original extension before any further action; a new proposal never authorizes
+replaying an unknown write. Committed observation-key measurement overrides can
+revise a field without additional FFTs.
+
 For [multiscale structural fields](docs/MULTISCALE_DOMAINS.md), use
 `image_spatial_field` with explicit sizes, stride and a window budget, then
 `image_domain_map` with a sourced reciprocal tolerance and explicit rotation

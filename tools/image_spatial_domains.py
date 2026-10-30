@@ -42,6 +42,21 @@ LIMITATIONS = [
 ]
 
 
+def qualified_field(workspace,ident,api):
+    """Reuse complete qualification only within this one Workspace operation.
+
+    Own bytes and creator journal are always re-read. This is the same narrow
+    proof handoff as export_provenance, not a persistent cache or stat shortcut.
+    """
+    snapshot=getattr(workspace,"_spatial_export_snapshots",{}).get(ident)
+    if snapshot is None:return workspace.object(ident)
+    metadata,directory=workspace._object_record(ident)
+    api.need(metadata.get("kind") in ("spatial_field","field_extend","domain_map") and metadata==snapshot
+             and getattr(workspace,"_spatial_export_journal_hashes",{}).get(ident)==api.sha_file(workspace.root/"requests"/(metadata["request_id"]+".json")),
+             "Qualified field changed after dependency validation","CORRUPT_OBJECT")
+    return metadata,directory
+
+
 def sampling(request, shape, api):
     rect = api.rectangle(request.get("rect", [0, 0, shape[1], shape[0]]), shape)
     sizes, stride = request.get("window_sizes"), request.get("stride_xy")
@@ -186,7 +201,22 @@ def _entry(sample):
     return {"families": sample["features"]["families"], "quality": sample["quality"]}
 
 
-def _neighbors(samples):
+def _neighbors(samples, irregular=False):
+    if irregular:
+        # Explicit appended windows have no common grid index. Connect the
+        # nearest saved center in each cardinal direction at the same scale;
+        # the caller still masks positive support gaps as unobserved.
+        for row in samples:
+            r=row["rect_xyxy"];cx=r[0]+r[2];cy=r[1]+r[3]
+            for axis in (0,1):
+                candidates=[]
+                for other in samples:
+                    if other is row or other["scale_pixels"]!=row["scale_pixels"]:continue
+                    s=other["rect_xyxy"];ox=s[0]+s[2];oy=s[1]+s[3]
+                    distance=(ox-cx) if axis==0 and oy==cy else (oy-cy) if axis==1 and ox==cx else 0
+                    if distance>0:candidates.append((distance,other))
+                if candidates:yield row,min(candidates,key=lambda v:(v[0],v[1]["rect_xyxy"]))[1]
+        return
     # Explicit grid indices plus source position, never string IDs or rank.
     lookup = {(s["scale_pixels"], *s["grid_xy"]): s for s in samples}
     for row in samples:
@@ -198,8 +228,8 @@ def _neighbors(samples):
 
 def _domain_result(workspace, request, api):
     angles, tolerance, size = _settings_domain(request, api)
-    parent, directory = workspace.object(request["object_id"])
-    api.need(parent.get("kind") == "spatial_field", "Domain map requires a saved multiscale spatial_field")
+    parent, directory = qualified_field(workspace,request["object_id"],api)
+    api.need(parent.get("kind") in ("spatial_field","field_extend"), "Domain map requires a saved multiscale or incremental spatial field")
     samples = copy.deepcopy(parent["samples"])
     mixed = set()
     cross_scale = []
@@ -228,7 +258,7 @@ def _domain_result(workspace, request, api):
         sample["domain_unknown_reason"]="Conflicting finer signatures within this window support" if sample["sample_index"] in mixed else None
     graph = {s["sample_index"]:set() for s in samples if s["domain_status"] == "candidate"}
     edges, bands = [], []
-    for left, right in _neighbors(samples):
+    for left, right in _neighbors(samples, parent["kind"]=="field_extend"):
         a,b = left["sample_index"],right["sample_index"]
         r,s=left["rect_xyxy"],right["rect_xyxy"]
         gap=[max(0,r[0]-s[2],s[0]-r[2]),max(0,r[1]-s[3],s[1]-r[3])]
@@ -274,7 +304,7 @@ def _domain_result(workspace, request, api):
         row["display_value"] = assigned.get(row["sample_index"])
     _, domain_unknown = _supports(samples, parent["source_context"]["shape_yx"])
     result = {"kind":"domain_map","field_schema_version":1,"algorithm_version":ALGORITHM,
-              "parent_object_id":parent["object_id"],"source_kind":"spatial_field","source_context":parent["source_context"],
+              "parent_object_id":parent["object_id"],"source_kind":parent["kind"],"source_context":parent["source_context"],
               "source_manifest_sha256":api.sha_file(directory/"object.json"),"samples":samples,"sample_count":len(samples),
               "sampling_plan":parent["sampling_plan"],"xy_calibration":parent.get("xy_calibration"),
               "coordinate_domain":parent["coordinate_domain"],"coordinate_unit":parent["coordinate_unit"],"period_unit":parent["period_unit"],

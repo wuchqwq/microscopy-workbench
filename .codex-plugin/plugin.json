@@ -1,7 +1,7 @@
 {
   "name": "microscopy-workbench",
-  "version": "0.5.0",
-  "description": "Microscopy tools with bounded multiscale structural fields, candidate domains and traceable GUI review.",
+  "version": "0.6.0",
+  "description": "Reusable microscopy with inspectable next-analysis proposals, incremental structural fields and bounded scientific recovery.",
   "author": {
     "name": "wuchqwq"
   },

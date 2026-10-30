@@ -34,6 +34,8 @@ if __package__:
     from . import image_domain_compare as domain_compare
     from . import image_feature_field as feature_field
     from . import image_spatial_domains as spatial_domains
+    from . import image_field_increment as field_increment
+    from . import image_active_analysis as active_analysis
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -47,6 +49,8 @@ else:
     import image_domain_compare as domain_compare
     import image_feature_field as feature_field
     import image_spatial_domains as spatial_domains
+    import image_field_increment as field_increment
+    import image_active_analysis as active_analysis
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -64,6 +68,8 @@ FIELDS = {
     **domain_compare.FIELDS,
     **feature_field.FIELDS,
     **spatial_domains.FIELDS,
+    **field_increment.FIELDS,
+    **active_analysis.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
@@ -501,6 +507,10 @@ class Workspace:
             feature_field.validate_references(self, metadata, sys.modules[__name__])
         if metadata.get("kind") in spatial_domains.FIELDS:
             spatial_domains.validate_references(self, metadata, sys.modules[__name__])
+        if metadata.get("kind") in field_increment.FIELDS:
+            field_increment.validate_references(self, metadata, sys.modules[__name__])
+        if metadata.get("kind") in active_analysis.FIELDS:
+            active_analysis.validate_references(self, metadata, sys.modules[__name__])
         return metadata, directory
 
     def resolved(self, ident):
@@ -807,7 +817,7 @@ class Workspace:
                 # inherit the earlier dependency validation or be exported.
                 metadata, directory = self._object_record(current)
                 journal_digest = getattr(self, "_spatial_export_journal_hashes", {}).get(current)
-                need(metadata.get("kind") in spatial_domains.FIELDS and metadata == snapshot and
+                need((metadata.get("kind") in spatial_domains.FIELDS or metadata.get("kind") in field_increment.FIELDS) and metadata == snapshot and
                      journal_digest == sha_file(self.root / "requests" / (metadata["request_id"] + ".json")),
                      "Spatial export record changed after dependency qualification", "CORRUPT_OBJECT")
             else:
@@ -842,7 +852,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py")}})
+                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py")}})
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")
@@ -885,6 +895,10 @@ class Workspace:
             metadata = feature_field.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in spatial_domains.FIELDS:
             metadata = spatial_domains.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in field_increment.FIELDS:
+            metadata = field_increment.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in active_analysis.FIELDS:
+            metadata = active_analysis.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action == "open":
             path = absolute(request.get("source_path"), "source_path")
             identity = source_identity(path)
@@ -1395,13 +1409,13 @@ class Workspace:
                 context = scientific.get("user_context")
             source_directory = self.root / "objects" / scientific["object_id"]
             record = metadata.get("xy_calibration")
-            feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map")
+            feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map", "field_extend", "analysis_candidates")
             if image_object.get("image_path") and not feature_result:
                 need(scientific.get("display_calibration_id") == (record["calibration_id"] if record else None),
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
             numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv")]
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")
@@ -1787,9 +1801,13 @@ def _execute(request):
                 return {**saved["response"], "partial_results": spatial_atlas.recovery(workspace, saved, sys.modules[__name__])}
             elif saved.get("parameters", {}).get("action") in spatial_domains.FIELDS:
                 return {**saved["response"], "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
+            elif saved.get("parameters", {}).get("action") in field_increment.FIELDS:
+                return {**saved["response"], "partial_results": field_increment.recovery(workspace, saved, sys.modules[__name__])}
             return saved["response"]
         if saved.get("parameters", {}).get("action") in spatial_domains.FIELDS:
             return {**pending(ident), "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
+        if saved.get("parameters", {}).get("action") in field_increment.FIELDS:
+            return {**pending(ident), "partial_results": field_increment.recovery(workspace, saved, sys.modules[__name__])}
         if saved.get("parameters", {}).get("action") == "joint_observations":
             return {**pending(ident), "partial_results": joint.recovery(workspace, saved, sys.modules[__name__])}
         if saved.get("parameters", {}).get("action") == "spatial_atlas":

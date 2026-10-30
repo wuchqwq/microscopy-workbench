@@ -72,7 +72,11 @@ export function createScientificContextBindings({providers,signal}: ScientificBi
   }
   const relative=(ref: ScopedReferenceInput,objectId: string)=>({...ref,objectId});
   async function imageProof(ref: ScopedReferenceInput,top: MetadataRead): Promise<ProviderReferenceProof> {
-    if(top.value.kind==='spatial_field'||top.value.kind==='domain_map') {
+    if(top.value.kind==='analysis_candidates') {
+      requireMatch(typeof top.value.source_domain_map_id==='string'&&typeof top.value.field_object_id==='string','Active proposal lacks saved map/field identity');
+      return {manifestHash:top.manifestHash,kind:top.value.kind,roles:['active_plan'],scientific:{sourceId:top.value.source_domain_map_id,fieldId:top.value.field_object_id}};
+    }
+    if(top.value.kind==='spatial_field'||top.value.kind==='field_extend'||top.value.kind==='domain_map') {
       const samples=top.value.samples;
       requireMatch(Array.isArray(samples)&&samples.length>=1&&samples.length<=32,'Spatial field samples exceed the bounded provider contract');
       const calibrations: unknown[]=[],measurementIds: string[]=[];
@@ -83,7 +87,7 @@ export function createScientificContextBindings({providers,signal}: ScientificBi
         calibrations.push(recordDependency(row.xy_calibration));measurementIds.push(...ids);
       }
       const uniqueCalibrations=[...new Map(calibrations.map(value=>[canonical(value),value])).values()];
-      return {manifestHash:top.manifestHash,kind:top.value.kind,roles:[top.value.kind==='spatial_field'?'spatial_field':'domains'],scientific:{manifestPath:top.manifestPath,sourceId:top.value.parent_object_id,calibrations:uniqueCalibrations,measurementIdsBase64:Buffer.from([...new Set(measurementIds)].join(''),'hex').toString('base64')}};
+      return {manifestHash:top.manifestHash,kind:top.value.kind,roles:[top.value.kind==='domain_map'?'domains':'spatial_field'],scientific:{manifestPath:top.manifestPath,sourceId:top.value.parent_object_id,calibrations:uniqueCalibrations,measurementIdsBase64:Buffer.from([...new Set(measurementIds)].join(''),'hex').toString('base64')}};
     }
     const domainRole=({spatial_atlas:'atlas',local_signature_compare:'domain_hypotheses',feature_field:'field'} as Partial<Record<string,AnalysisRole>>)[top.value.kind as string];
     if(domainRole)return {manifestHash:top.manifestHash,kind:top.value.kind,roles:[domainRole],scientific:{manifestPath:top.manifestPath,sourceId:top.value.parent_object_id,sourceKind:top.value.source_kind??null,
@@ -144,6 +148,11 @@ export function createScientificContextBindings({providers,signal}: ScientificBi
   async function validateBindings({slot,entry,slots: rawSlots}: BindingValidation) {
     const slots=rawSlots as BindingSlots,science=fields(entry.proof.scientific);
     if(entry.ref.provider==='external-image-workspace') {
+      if(slot==='active_plan') {
+        if(active(slots.domains).length)requireMatch(science.sourceId===slots.domains!.ref.objectId&&entry.dependsOn.domains,'Active proposal does not bind the selected domain map');
+        if(active(slots.spatial_field).length)requireMatch(science.fieldId===slots.spatial_field!.ref.objectId&&entry.dependsOn.spatial_field,'Active proposal uses a different current field');
+        return;
+      }
       if(slot==='spatial_field'||slot==='domains') {
         const sourceRole=slot==='spatial_field'?'experiment':'spatial_field';
         if(active(slots[sourceRole]).length) {

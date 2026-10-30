@@ -8,13 +8,13 @@ export function renderDomainEvidence(container: BrowserElement|null|undefined,ev
  if(!container)return;
  container.hidden=!evidence;
  if(!evidence){container.replaceChildren();return;}
- if(evidence.kind==='spatial_field'||evidence.kind==='domain_map')validateSpatialDomainEvidence(evidence);
+ if(['spatial_field','field_extend','analysis_candidates','domain_map'].includes(evidence.kind))validateSpatialDomainEvidence(evidence);
  const doc=container.ownerDocument,el=(tag:string,text?:unknown)=>{const node=doc.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
  const fmt=(x:unknown)=>Number.isFinite(x)?Number(x).toPrecision(5):'—';
  const comparison=evidence.kind==='local_signature_compare';
  const domains=evidence.kind==='domain_map';
- const field=evidence.kind==='feature_field'||evidence.kind==='spatial_field'||domains;
- const title=el('summary',domains?'空间结构域与边界 · 候选':evidence.kind==='spatial_field'?'多尺度结构特征场 · 保存观测':field?'空间结构特征场 · 稀疏观测':comparison?'局部频谱几何比较 · 候选证据':'空间 ROI 图谱 · 保存观测');
+ const field=['feature_field','spatial_field','field_extend','analysis_candidates'].includes(evidence.kind)||domains;
+ const title=el('summary',evidence.kind==='analysis_candidates'?'下一步分析候选 · 启发式':evidence.kind==='field_extend'?'增量结构场 · 保存观测':domains?'空间结构域与边界 · 候选':evidence.kind==='spatial_field'?'多尺度结构特征场 · 保存观测':field?'空间结构特征场 · 稀疏观测':comparison?'局部频谱几何比较 · 候选证据':'空间 ROI 图谱 · 保存观测');
  const note=el('p',domains?'候选域表示相邻窗口在固定取向下的反射几何相容。允许旋转后的晶格几何相容另列，不用于合并取向域。边界带是有限窗口支持范围，不能当作边界定位精度；未采样及证据不足处保持未知。':'这些是指定窗口中的反射证据，不是物相、孪晶或位错确认；未分割完整结构域。峰位修订需保存测量并提交新图谱，旧表保留为历史。相反反射按同一几何族处理，不是独立验证。');note.className='help-text';
  const provenance=el('p',`保存对象 ${evidence.object_id} · ${comparison?`${evidence.coordinate_unit}；容差 ${fmt(evidence.tolerance)}；不确定性未知；无独立留出验证`:'未改变源图；窗口重叠不表示独立证据'}`);provenance.className='help-text';
  const navigation=el('div');navigation.className='sequence-navigation';
@@ -31,6 +31,20 @@ export function renderDomainEvidence(container: BrowserElement|null|undefined,ev
   navigation.append(row);
  }
  const contents=[title,note,provenance,navigation];
+ if(evidence.kind==='analysis_candidates'){
+  const stopping=evidence.stopping!,budget=evidence.budget!;
+  const messages:Record<string,string>={user_stop:'用户要求停止',budget_exhausted:'预算耗尽',no_legal_actions:'没有合法新动作',data_quality_limited:'当前数据质量与可用方法受限',no_new_evidence:'连续追加未产生新证据',history_limit:'达到迭代或保存历史上限',continue:'可继续选择动作'};
+  const status=el('p',`${stopping.stop?'停止建议':'下一步建议'}：${messages[stopping.reason]??stopping.reason}。已用 ${budget.used_windows} 个窗口 / ${budget.used_fft_pixels} FFT 像素；剩余 ${budget.remaining_windows} 个窗口 / ${budget.remaining_fft_pixels} FFT 像素。`);status.className='help-text';contents.push(status);
+  const original=el('div');original.className='sequence-navigation';button(original,'来源域图',evidence.source_domain_map_id);button(original,'已有结构场',evidence.field_object_id);contents.push(original);
+  const scroll=el('div');scroll.className='results-scroll';const table=el('table');table.setAttribute('aria-label','主动分析候选动作');const head=el('tr');
+  for(const text of ['动作 / 来源像素 ROI','窗口','推荐理由','启发式优先级','预计新增计算'])head.append(el('th',text));table.append(head);
+  for(const [i,action]of (evidence.actions??[]).entries()){
+   const row=el('tr');row.title=`动作 ${action.action_id}；观测 ${action.observation_key}；选择与执行须使用正式工具，未执行 FFT。`;
+   for(const text of [`${i+1}${evidence.recommended_action_ids?.includes(action.action_id)?' · 推荐':''} · ${JSON.stringify(action.rect_xyxy)}`,`${action.scale_pixels}px`,`${action.exploration?'保留探索；':''}${action.reason_codes.join(' / ')}`,`${fmt(action.heuristic_score)}（非概率）`,`${action.estimated_cost.new_windows} 窗口 / ${action.estimated_cost.fft_pixels} FFT 像素`])row.append(el('td',text));table.append(row);
+  }
+  scroll.append(table);contents.push(scroll);
+ }
+ if(evidence.kind==='field_extend')contents.push(el('p',`本次追加 ${evidence.added_observation_keys?.length??0} 个观测，修订 ${evidence.corrected_observation_keys?.length??0} 个观测；新增 FFT 像素 ${evidence.new_evidence?.added_fft_pixels??'未知'}。旧频谱保持原引用。`));
  const hotspotButtons=new Map<number,BrowserElement>();let mapWrapper:BrowserElement|undefined;
  if(field){
   const map=evidence.field_image;

@@ -90,6 +90,30 @@ jobs:
           MICROSCOPY_RUN_DOMAIN_BINDING_TEST: '1'
           MICROSCOPY_PYTHON: python
 
+  active-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-images.txt
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-images.txt
+      - run: python -B tests/image_field_increment_test.py
+      - run: python -B tests/image_active_analysis_test.py
+      # The full fixed-budget comparison is a reproducible acceptance command,
+      # not a per-commit benchmark. Keep CI bounded to provider and contract tests.
+      - run: node --test dist/tests/active-analysis-contract.test.mjs
+
   compiled-compatibility:
     runs-on: ubuntu-latest
     timeout-minutes: 5
