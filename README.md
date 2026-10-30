@@ -6,7 +6,7 @@
 
 Microscopy Workbench is an open-source, cross-platform workbench for scientific microscopy analysis. It combines numerical tools, persistent scientific records, and a local Image Panel. Through the **Model Context Protocol (MCP)** and installable **Skills**, compatible AI agents can use those same tools to organize an analysis—not replace its numerical or physical foundations.
 
-The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, GMS, or the separate `mcp-dm` repository. **No AI model is needed** to inspect and measure images locally.
+The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, GMS, or the separate `mcp-dm` repository. **No AI model is needed** to inspect and measure images locally. Platform and scientific qualification scopes are recorded separately in the acceptance reports.
 
 ![R3 local structural evidence in the Image Panel](docs/examples/r3/browser-field.png)
 
@@ -14,12 +14,12 @@ The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, 
 
 ## What you can do
 
-- **Inspect microscopy data.** Open supported TIFF images and, with an optional reader, selected DM3/DM4 files. Preserve original arrays, data types, axes, signed calibration, and explicit frame/ROI selections. Selected complex and higher-dimensional inputs require an explicit component or plane.
-- **Measure reciprocal-space features.** Compute local FFTs, detect and refine peaks, measure reciprocal vectors and spacings, and compare explicit crystallographic candidates using optional structure tools.
-- **Build spatial structural evidence (R3).** Connect sampled image windows, saved spectra, reflection families, and local periodicity into a sparse, revisable feature field. Compare specified in-plane rotation hypotheses without silently assigning phases or defects.
-- **Examine saved sequences (R2).** Keep frame meaning and ROI correspondence explicit when comparing neighboring images or reconstructed outputs; frame indices are not assumed to be physical depth.
-- **Review, correct, and export.** Open source-linked measurements in the Image Panel, revise annotations or peaks, and create scientific exports and publication figures with Figure Composer.
-- **Resume reproducibly.** Scientific objects, request journals, source hashes, measurement dependencies, and named AnalysisContext references make it possible to continue a previous analysis without recomputing unchanged FFTs.
+- **Inspect and measure microscopy data.** Open supported TIFF images and, with an optional reader, selected DM3/DM4 files. Preserve original arrays, data types, axes, signed calibration, and explicit frame/ROI selections. Compute local FFTs, detect/refine peaks and measure reciprocal vectors and spacings.
+- **Build structural evidence and choose follow-up analyses (F1a / F4-lite).** Create bounded multiscale fields, candidate domains and finite boundary-support bands; append explicit ROI observations without recalculating unchanged FFTs. Read compact summaries or exact-manifest evidence pages, and obtain budgeted next-analysis proposals with explicit stopping rules.
+- **Estimate single-domain physical fields (F2a).** Reuse a qualified saved FFT to extract geometric phase, projected displacement, finite Green–Lagrange strain and polar rotation. Reference choices, signed pixel metrics, invalid masks and pseudo-strain limitations remain explicit.
+- **Inspect conditional projected topology (F3a).** Measure winding on explicit circuits in saved wrapped GPA bands. Version 2 evaluates strictly nested geometry groups separately and retains remote zero or unavailable observations. It does not confirm a material dislocation or a unique three-dimensional Burgers vector.
+- **Compare saved sequences and review results.** Preserve explicit frame meaning and ROI correspondence (R2). Use the local Panel, scientific exports and Figure Composer to inspect source-linked evidence; frame indices are not assumed to be physical depth.
+- **Resume reproducibly.** Scientific objects, request journals, source hashes, measurement dependencies and supported named AnalysisContext references preserve previous analyses. GPA/topology retain their exact provider object/request IDs; no unrelated context role is silently reused.
 
 ### How it fits together
 
@@ -57,7 +57,13 @@ npm run inspect -- --source /absolute/path/to/image.tiff \
 
 Replace the example paths with real **absolute paths**. The inspector prints a private local Panel URL; keep its process running while using the Panel. On Windows, use `py -3 -m venv .venv` and `.venv\Scripts\python.exe`. See the [client setup guide](docs/CLIENT_SETUP.md) for platform-specific details and supported file types.
 
-For development checks, run `npm run typecheck`, `npm test`, and—after setting `MICROSCOPY_PYTHON` to the absolute interpreter path—`npm run test:science`.
+For optional GPA and the upstream GPA records used by topology, install `requirements-gpa.txt` in the **same independent Python environment**:
+
+```bash
+.venv/bin/python -m pip install -r requirements-gpa.txt
+```
+
+For development checks, run `npm run typecheck`, `npm test`, and—after setting `MICROSCOPY_PYTHON` to the absolute interpreter path—`npm run test:science`. Optional checks include `npm run test:gpa`, `npm run test:topology` and `npm run test:integration:f4-gpa`.
 
 ### Use it with an AI Agent
 
@@ -65,21 +71,17 @@ Connect the compiled MCP server to a compatible client, or install the packaged 
 
 ## Status and research roadmap
 
-**Available on `main`:** the cross-platform TypeScript/MCP runtime, Python science providers, local inspection and visualization, source-linked FFT/measurement workflows, sequence evidence (R2), and sparse spatial structural fields (R3).
+**Implemented in this checkout:** R2/R3 evidence workflows, F1a multiscale structural fields, F4-lite budgeted incremental analysis, F2a classical GPA and F3a versioned projected phase-winding evidence. The [development status](docs/DEVELOPMENT_STATUS.md) records the reviewed source commits and qualification boundaries. Historical acceptance reports describe their original branch state; they are not rewritten as new experiments.
 
-**Under review:** [F1a — multiscale structural fields and candidate domains (Draft PR #28)](https://github.com/wuchqwq/microscopy-workbench/pull/28) adds bounded multiscale sampling and candidate domain/boundary evidence. Its synthetic numerical tests have passed, but it is **not yet merged into `main`**, and the remaining GUI/browser scope must not be treated as verified.
+**Next:** F3b — crystallographic twin-relation and interface evidence, followed by broader cross-method analysis (F4-full). See [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16). Encoder training, foundation-model development and live instrument control are not in the current scope.
 
-**F2a implementation branch:** [classical single-domain GPA](docs/CLASSICAL_GPA.md) reuses saved unwindowed FFTs to extract geometric phases, projected displacement, finite Green–Lagrange strain and polar rotation. It requires explicit reference/domain assumptions; unknown XY metric permits image-coordinate fields only. Optional dependencies are in `requirements-gpa.txt`; [acceptance scopes](docs/F2A_ACCEPTANCE.md) distinguish synthetic verification from specimen validity and GUI gestures. This branch does not merge or depend on the F1a/F4 Draft stack.
-
-**Planned:** [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16) retains evidence-guided follow-up analysis and later crystallographic defect evidence. The current roadmap does **not** include Encoder training or a foundation-model project.
-
-**F3a implementation candidate:** [projected phase-winding evidence](docs/PROJECTED_TOPOLOGY.md) reuses saved wrapped GPA bands for explicit circuit winding and redundant reflection checks. It reports conditional projected closure, not a confirmed material dislocation or unique3D Burgers vector. Based on the unmerged F4/GPA integration candidate #37; [acceptance scopes](docs/F3A_ACCEPTANCE.md) remain explicit.
+**Not yet qualified:** actual GUI gestures in the documented relay, fresh-model use of the combined GPA/topology Skill, real-specimen accuracy and feature-specific interrupted-worker cases. Existing numerical, protocol or HTTP/PNG tests do not replace those checks. Deferred GUI qualification does not block development of independent scientific methods.
 
 ## Scientific scope
 
 This is **research software**, not an autonomous microscope controller or a universally validated phase-identification system. It does not currently perform ptychographic reconstruction, general automatic phase/twin/dislocation identification, or live instrument control. Missing calibration stays missing; local spectral agreement is not proof of a phase, a defect, or a three-dimensional structure. Successful synthetic tests do not imply accuracy on real specimens.
 
-Original scientific data remain separate from display images and annotations. Saved evidence retains provenance, units, hypotheses, and unknown/ambiguous states rather than converting them into confident-looking labels.
+Original scientific data remain separate from display images and annotations. Saved evidence retains provenance, units, hypotheses, and unknown/ambiguous states rather than converting them into confident-looking labels. V1 topology receipts retain their original interpretation; an explicit new request creates a v2 revision.
 
 ## Documentation
 
@@ -87,9 +89,10 @@ Original scientific data remain separate from display images and annotations. Sa
 | --- | --- |
 | Installation and MCP clients | [Client setup](docs/CLIENT_SETUP.md) · [Automation plugin](docs/AUTOMATION_PLUGIN.md) |
 | Local images and review | [Image Panel](docs/LOCAL_IMAGE_PANEL.md) · [Researcher inspector](docs/RESEARCHER_DATA_INSPECTOR.md) |
-| Structural and sequence evidence | [R3 local structural fields](docs/SPATIAL_DOMAINS.md) · [R2 sequences](docs/SEQUENCE_PLUGIN.md) |
+| Structural and sequence evidence | [R3 fields](docs/SPATIAL_DOMAINS.md) · [Multiscale domains](docs/MULTISCALE_DOMAINS.md) · [R2 sequences](docs/SEQUENCE_PLUGIN.md) |
+| Active analysis and physical fields | [Active analysis](docs/ACTIVE_ANALYSIS.md) · [Classical GPA](docs/CLASSICAL_GPA.md) · [Projected topology](docs/PROJECTED_TOPOLOGY.md) |
 | Crystallography and publication | [Structure tools](docs/STRUCTURE_DIFFRACTION_TOOLS.md) · [Figure Composer](docs/FIGURE_COMPOSER.md) |
-| Verified scopes and migration | [R3 acceptance](docs/R3_ACCEPTANCE.md) · [TypeScript completion](docs/TYPESCRIPT_COMPLETE.md) |
+| Status and qualification | [Development status](docs/DEVELOPMENT_STATUS.md) · [F4/GPA integration](docs/F4_F2A_INTEGRATION.md) · [F3a acceptance](docs/F3A_ACCEPTANCE.md) |
 
 ## License
 
