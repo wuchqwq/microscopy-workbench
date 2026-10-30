@@ -7,7 +7,7 @@ import copy
 import hashlib
 
 FIELDS = {"evidence": {"object_id", "manifest_sha256", "section", "offset", "limit"}}
-COMPACT_ACTIONS = {"get", "result", "spatial_field", "domain_map", "field_extend", "analysis_candidates"}
+COMPACT_ACTIONS = {"get", "result", "spatial_field", "domain_map", "field_extend", "analysis_candidates", "discovery", "discovery_review"}
 SECTIONS = {"samples": "samples", "actions": "actions", "neighbors": "edges", "domains": "domains",
             "boundary_bands": "boundary_bands", "increment_history": "increment_history"}
 MAX_DETAIL_BYTES = 128 * 1024

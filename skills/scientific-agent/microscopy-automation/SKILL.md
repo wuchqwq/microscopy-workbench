@@ -1,9 +1,22 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build bounded multiscale structural fields and candidate domains or explicit single-domain classical GPA and conditional projected phase-winding evidence, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Start from original microscopy images or researcher attention, propose and revise source-bound ROI observations, choose FFT/measurements or existing structural-field/GPA/topology tools, establish cross-frame correspondence, compare explicit candidates, and return recoverable scientific evidence to the shared panel. Does not identify phases or defects by assertion.
 ---
 
 # Reusable microscopy observations
+
+## Image-first or existing evidence
+
+For an original image, a researcher saying "look here", or a visible texture
+interruption, read [image-first discovery](references/image-first.md). Use
+`image_discovery` to save explicit manual attention or bounded real-space
+candidate observations; choose existing scientific tools and bind their exact
+source/ROI results with `image_discovery_review`. A complete structural field is
+**not** an admission requirement. Unknown physical scale remains pixel-domain.
+This is a composable observation route, not a mandatory automatic classifier.
+
+If a field or qualified GPA already answers the next question, continue it
+directly using the modes below; do not rebuild it just to enter image-first mode.
 
 ## Budgeted active follow-up
 

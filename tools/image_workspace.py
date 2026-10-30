@@ -41,6 +41,7 @@ if __package__:
     from . import image_gpa as gpa
     from . import image_topology as topology
     from . import image_method_loop as method_loop
+    from . import image_discovery as discovery
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -60,6 +61,7 @@ else:
     import image_gpa as gpa
     import image_topology as topology
     import image_method_loop as method_loop
+    import image_discovery as discovery
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -83,6 +85,7 @@ FIELDS = {
     **gpa.FIELDS,
     **topology.FIELDS,
     **method_loop.FIELDS,
+    **discovery.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
@@ -593,6 +596,8 @@ class Workspace:
                 gpa.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in method_loop.FIELDS:
                 method_loop.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in discovery.FIELDS:
+                discovery.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in topology.FIELDS:
                 topology.validate_references(self, metadata, sys.modules[__name__])
             # Cache completed qualifications only, bounded in count and bytes.
@@ -930,6 +935,10 @@ class Workspace:
                 pending_ids.append(target)
             if metadata.get("kind") in ("gpa", "topology"):
                 pending_ids.extend(row["object_id"] for row in metadata.get("history", []))
+            if metadata.get("kind") in discovery.FIELDS:
+                pending_ids.append(metadata["overview_object_id"])
+                pending_ids.extend(row["object_id"] for row in metadata.get("evidence_refs", []))
+                pending_ids.extend(row["object_id"] for row in metadata.get("history", []))
             record = metadata.get("xy_calibration")
             if record and record["calibration_id"] != current:
                 pending_ids.append(record["calibration_id"])
@@ -949,7 +958,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py")}})
+                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")
@@ -1002,6 +1011,8 @@ class Workspace:
             metadata = active_analysis.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in method_loop.FIELDS:
             metadata = method_loop.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in discovery.FIELDS:
+            metadata = discovery.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action == "open":
             path = absolute(request.get("source_path"), "source_path")
             identity = source_identity(path)
@@ -1514,7 +1525,7 @@ class Workspace:
                 context = scientific.get("user_context")
             source_directory = self.root / "objects" / scientific["object_id"]
             record = metadata.get("xy_calibration")
-            feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map", "field_extend", "analysis_candidates")
+            feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map", "field_extend", "analysis_candidates", "discovery", "discovery_review")
             gpa_result = scientific["kind"] in ("gpa", "gpa_read")
             topology_result = scientific["kind"] == "topology"
             if topology_result:
@@ -1529,7 +1540,7 @@ class Workspace:
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
             numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")

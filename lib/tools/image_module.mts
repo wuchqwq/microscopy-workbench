@@ -6,6 +6,7 @@ import {sequenceRecipes} from '../image_sequence_contract.mjs';
 import {domainRecipes} from '../image_domain_contract.mjs';
 import {activeRecipes} from '../image_active_contract.mjs';
 import {methodRecipes} from '../image_method_contract.mjs';
+import {discoveryRecipes} from '../image_discovery_contract.mjs';
 import {gpaRecipes} from '../image_gpa_contract.mjs';
 import {topologyRecipes} from '../image_topology_contract.mjs';
 import {evidenceRecipes} from '../image_evidence_contract.mjs';
@@ -26,6 +27,7 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
   ...domainRecipes,
   ...activeRecipes,
   ...methodRecipes,
+  ...discoveryRecipes,
   ...evidenceRecipes,
   ...gpaRecipes,
   ...topologyRecipes,

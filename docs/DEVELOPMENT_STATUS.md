@@ -4,6 +4,19 @@ Updated 2026-10-31. This document is the current implementation index; individua
 acceptance ledgers remain historical records of the exact versions they tested.
 Mainline admission is not a new real-specimen, GUI, model or instrument qualification.
 
+## F4b image-first increment (dependent review branch)
+
+`feature/image-first-discovery` starts from #44 at `9ca6b44`; #44 remains
+independent and unmerged unless its live PR says otherwise. Two optional image
+tools save researcher attention or bounded spatial-feature candidates and bind
+existing FFT/measurement/GPA evidence to an exact source ROI. A full structure
+field is not required. Qualified GPA can hand off to the existing method-plan
+mechanism; no new global planner/request authority is introduced.
+See [method and limits](IMAGE_FIRST_DISCOVERY.md) and [acceptance](F4B_ACCEPTANCE.md).
+Registered64px proposals missed the two positive comparison cases; this known
+failure remains explicit alongside successful source/revision/recovery software
+checks. No physical defect, twin or phase is confirmed by appearance.
+
 ## F4-full first cross-method slice (review branch)
 
 `feature/f4-cross-method-loop` starts at reviewed main `9fbc769` (F3b #42,
