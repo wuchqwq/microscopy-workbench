@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "scope": "Final compiled MCP metadata-only follow-up on unchanged public saved GPA bands",
+  "object_id": "b229b19956a64f0b95e1214a4e51df1d",
+  "request_id": "topology-final-metadata-20261030",
+  "checks": [
+    "Path-sample offsets and spatial pixel coordinates have distinct units",
+    "Projected result numerically unchanged",
+    "Original new and old requests recover exact saved identities",
+    "No new FFT or GPA"
+  ],
+  "counts": {
+    "fft": 3,
+    "gpa": 4
+  }
+}

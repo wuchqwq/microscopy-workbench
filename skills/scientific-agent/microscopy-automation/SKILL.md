@@ -1,6 +1,6 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build bounded multiscale structural fields and candidate domains or explicit single-domain classical GPA, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build bounded multiscale structural fields and candidate domains or explicit single-domain classical GPA and conditional projected phase-winding evidence, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
 ---
 
 # Reusable microscopy observations
@@ -269,6 +269,32 @@ the provider result/request IDs; F2a adds no AnalysisContext GPA role, so do not
 put it in an unrelated slot. Reconnect via saved objects and original
 `image_result` requests, without a new FFT. Export to a fresh directory and retain
 NPY components, masks, report/table and provenance separately from the PNG.
+
+## Explicit projected phase-winding evidence
+
+For requested projected closure evidence, inspect `image_topology` and read
+[the sign and path contract](../../../docs/PROJECTED_TOPOLOGY.md). Supply exact
+saved `fixed_g` GPA objects on the same FFT/calibration/local grid with the same
+aperture width, a sourced `model_assumption_text`, and deliberate local
+rectangular loops. It reuses wrapped geometric phases; do not integrate a
+smooth strain map or globally unwrapped displacement. Keep phase-valid path
+support separate from a permitted masked core inside a loop. Use raw wrapped
+phase/amplitude/edge support, independently of GPA unwrapping validity. A hole on
+the path or a phase step reaching the fixed `0.8*pi` guard makes evidence unavailable.
+
+The positive image path runs east/south/west/north (visually clockwise with y
+down); `b_closure=integral(du_E)` and `w=-g dot b_closure`. Report this conditional
+projected closure convention, never a unique conventional 3D Burgers vector.
+Two directions only fit two closure components. At least three nonharmonic
+direction families and distinct nested loops add consistency checks, not real-defect
+proof. Retain noise/contrast artefacts, `g dot b=0` invisibility, opposite-sign
+cancellation, missing constraints and contrary evidence. Compare only explicit
+caller-supplied projected candidates; do not invent a lattice or phase.
+
+Retain original request/result IDs and previous-result links for revisions,
+export masks/tables/report/provenance to a new directory, recover with
+`image_result`, and use `image_panel_open` only for the saved read-only preview.
+No source FFT/GPA rewrite, automatic segmentation or new context role follows.
 
 Before each write choose and retain `request_id`. Query the tool's advertised
 recovery endpoint after timeout or cancellation; never resubmit an unknown

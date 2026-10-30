@@ -1,0 +1,1060 @@
+{
+  "status": "PASS",
+  "command": [
+    "python",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_image_topology_physics.py",
+    "-v"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "test_actual_contrast_vortex_still_cannot_confirm_material_defect (test_image_topology_physics.IndependentTopologyPhysics.test_actual_contrast_vortex_still_cannot_confirm_material_defect) ... ok\ntest_actual_image_fft_existing_gpa_null_pair_and_exterior (test_image_topology_physics.IndependentTopologyPhysics.test_actual_image_fft_existing_gpa_null_pair_and_exterior) ... ok\ntest_actual_image_fft_existing_gpa_positive_negative_and_smooth_addition (test_image_topology_physics.IndependentTopologyPhysics.test_actual_image_fft_existing_gpa_positive_negative_and_smooth_addition) ... ok\ntest_actual_noise_image_is_unstable_for_preregistered_paths (test_image_topology_physics.IndependentTopologyPhysics.test_actual_noise_image_is_unstable_for_preregistered_paths) ... ok\ntest_affine_and_high_gradient_smooth_nulls_have_zero_winding (test_image_topology_physics.IndependentTopologyPhysics.test_affine_and_high_gradient_smooth_nulls_have_zero_winding) ... ok\ntest_contrast_only_vortex_is_observationally_identical_not_material_confirmation (test_image_topology_physics.IndependentTopologyPhysics.test_contrast_only_vortex_is_observationally_identical_not_material_confirmation) ... ok\ntest_exact_positive_negative_burgers_and_loop_radius_shift_stability (test_image_topology_physics.IndependentTopologyPhysics.test_exact_positive_negative_burgers_and_loop_radius_shift_stability) ... ok\ntest_invalid_masked_core_inside_loop_is_permitted (test_image_topology_physics.IndependentTopologyPhysics.test_invalid_masked_core_inside_loop_is_permitted) ... ok\ntest_invisible_reflection_and_exterior_loop_zero_are_not_absence (test_image_topology_physics.IndependentTopologyPhysics.test_invisible_reflection_and_exterior_loop_zero_are_not_absence) ... ok\ntest_masked_low_amplitude_or_nonfinite_path_is_rejected (test_image_topology_physics.IndependentTopologyPhysics.test_masked_low_amplitude_or_nonfinite_path_is_rejected) ... ok\ntest_near_pi_path_jumps_are_rejected (test_image_topology_physics.IndependentTopologyPhysics.test_near_pi_path_jumps_are_rejected) ... ok\ntest_opposite_cores_have_zero_net_but_individual_nonzero_winding (test_image_topology_physics.IndependentTopologyPhysics.test_opposite_cores_have_zero_net_but_individual_nonzero_winding) ... ok\ntest_public_manifest_matches_independent_analytic_generator (test_image_topology_physics.IndependentTopologyPhysics.test_public_manifest_matches_independent_analytic_generator) ... ok\ntest_reverse_orientation_flips_raw_winding_preserves_canonical_b (test_image_topology_physics.IndependentTopologyPhysics.test_reverse_orientation_flips_raw_winding_preserves_canonical_b) ... ok\ntest_selected_random_phase_noise_has_no_determined_topology (test_image_topology_physics.IndependentTopologyPhysics.test_selected_random_phase_noise_has_no_determined_topology) ... ok\ntest_selected_undersampled_high_charge_vortex_is_rejected (test_image_topology_physics.IndependentTopologyPhysics.test_selected_undersampled_high_charge_vortex_is_rejected) ... ok\ntest_unknown_metric_has_pixel_b_only_and_signed_metric_transforms_components (test_image_topology_physics.IndependentTopologyPhysics.test_unknown_metric_has_pixel_b_only_and_signed_metric_transforms_components) ... ok\n\n----------------------------------------------------------------------\nRan 17 tests in 2.297s\n\nOK\n",
+  "preregistered_tolerances": {
+    "exact_winding_integer_max_abs_error": 1e-08,
+    "filtered_winding_integer_max_abs_error": 1e-06,
+    "burgers_pixel_xy_max_abs_error": 1e-06,
+    "candidate_reciprocal_cycle_residual_max_abs": 0.05,
+    "path_phase_step_limit_radians": 2.5132741228718345,
+    "core_taper_radius_pixels": 2.0,
+    "smooth_null_min_max_abs_displacement_gradient": 0.1
+  },
+  "failure_history": [
+    {
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_image_topology_physics.py",
+        "-v"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "test_actual_contrast_vortex_still_cannot_confirm_material_defect (test_image_topology_physics.IndependentTopologyPhysics.test_actual_contrast_vortex_still_cannot_confirm_material_defect) ... ok\ntest_actual_image_fft_existing_gpa_null_pair_and_exterior (test_image_topology_physics.IndependentTopologyPhysics.test_actual_image_fft_existing_gpa_null_pair_and_exterior) ... \n  test_actual_image_fft_existing_gpa_null_pair_and_exterior (test_image_topology_physics.IndependentTopologyPhysics.test_actual_image_fft_existing_gpa_null_pair_and_exterior) (name='exterior') ... FAIL\ntest_actual_image_fft_existing_gpa_positive_negative_and_smooth_addition (test_image_topology_physics.IndependentTopologyPhysics.test_actual_image_fft_existing_gpa_positive_negative_and_smooth_addition) ... ok\ntest_actual_noise_image_is_unstable_for_preregistered_paths (test_image_topology_physics.IndependentTopologyPhysics.test_actual_noise_image_is_unstable_for_preregistered_paths) ... ok\ntest_affine_and_high_gradient_smooth_nulls_have_zero_winding (test_image_topology_physics.IndependentTopologyPhysics.test_affine_and_high_gradient_smooth_nulls_have_zero_winding) ... ok\ntest_contrast_only_vortex_is_observationally_identical_not_material_confirmation (test_image_topology_physics.IndependentTopologyPhysics.test_contrast_only_vortex_is_observationally_identical_not_material_confirmation) ... ok\ntest_exact_positive_negative_burgers_and_loop_radius_shift_stability (test_image_topology_physics.IndependentTopologyPhysics.test_exact_positive_negative_burgers_and_loop_radius_shift_stability) ... ok\ntest_invalid_masked_core_inside_loop_is_permitted (test_image_topology_physics.IndependentTopologyPhysics.test_invalid_masked_core_inside_loop_is_permitted) ... ok\ntest_invisible_reflection_and_exterior_loop_zero_are_not_absence (test_image_topology_physics.IndependentTopologyPhysics.test_invisible_reflection_and_exterior_loop_zero_are_not_absence) ... ok\ntest_masked_low_amplitude_or_nonfinite_path_is_rejected (test_image_topology_physics.IndependentTopologyPhysics.test_masked_low_amplitude_or_nonfinite_path_is_rejected) ... ok\ntest_near_pi_path_jumps_are_rejected (test_image_topology_physics.IndependentTopologyPhysics.test_near_pi_path_jumps_are_rejected) ... ok\ntest_opposite_cores_have_zero_net_but_individual_nonzero_winding (test_image_topology_physics.IndependentTopologyPhysics.test_opposite_cores_have_zero_net_but_individual_nonzero_winding) ... ok\ntest_public_manifest_matches_independent_analytic_generator (test_image_topology_physics.IndependentTopologyPhysics.test_public_manifest_matches_independent_analytic_generator) ... ok\ntest_reverse_orientation_flips_raw_winding_preserves_canonical_b (test_image_topology_physics.IndependentTopologyPhysics.test_reverse_orientation_flips_raw_winding_preserves_canonical_b) ... ok\ntest_selected_random_phase_noise_has_no_determined_topology (test_image_topology_physics.IndependentTopologyPhysics.test_selected_random_phase_noise_has_no_determined_topology) ... ok\ntest_selected_undersampled_high_charge_vortex_is_rejected (test_image_topology_physics.IndependentTopologyPhysics.test_selected_undersampled_high_charge_vortex_is_rejected) ... ok\ntest_unknown_metric_has_pixel_b_only_and_signed_metric_transforms_components (test_image_topology_physics.IndependentTopologyPhysics.test_unknown_metric_has_pixel_b_only_and_signed_metric_transforms_components) ... ok\n\n======================================================================\nFAIL: test_actual_image_fft_existing_gpa_null_pair_and_exterior (test_image_topology_physics.IndependentTopologyPhysics.test_actual_image_fft_existing_gpa_null_pair_and_exterior) (name='exterior')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"F:\\microscopy-workbench-f3a\\tests\\test_image_topology_physics.py\", line 217, in test_actual_image_fft_existing_gpa_null_pair_and_exterior\n    self.assert_winding(result, [0, 0, 0], filtered=True)\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"F:\\microscopy-workbench-f3a\\tests\\test_image_topology_physics.py\", line 60, in assert_winding\n    self.assertTrue(result[\"arrays\"][\"loop_valid\"].all(), result[\"report\"][\"loops\"])\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: np.False_ is not true : [{'loop_index': 0, 'rect_xyxy': [40, 40, 72, 72], 'orientation': 'positive_image_xy', 'sample_count': 124, 'reflections': [{'reflection_index': 0, 'valid': True, 'failures': [], 'winding_cycles': 0.0, 'winding_integer': 0, 'canonical_winding_integer': 0, 'integer_residual_cycles': 0.0, 'maximum_abs_wrapped_step_radians': 0.008650699148716967, 'minimum_path_amplitude': 0.4933563802729656, 'ineligible_path_pixels': 0, 'edge_invalid_path_pixels': 0, 'nonfinite_path_pixels': 0, 'low_amplitude_path_pixels': 0}, {'reflection_index': 1, 'valid': True, 'failures': [], 'winding_cycles': 0.0, 'winding_integer': 0, 'canonical_winding_integer': 0, 'integer_residual_cycles': 0.0, 'maximum_abs_wrapped_step_radians': 0.00015786346907020743, 'minimum_path_amplitude': 0.4999595535782641, 'ineligible_path_pixels': 0, 'edge_invalid_path_pixels': 0, 'nonfinite_path_pixels': 0, 'low_amplitude_path_pixels': 0}, {'reflection_index': 2, 'valid': True, 'failures': [], 'winding_cycles': 0.0, 'winding_integer': 0, 'canonical_winding_integer': 0, 'integer_residual_cycles': 0.0, 'maximum_abs_wrapped_step_radians': 0.008668574760648085, 'minimum_path_amplitude': 0.49339392283409983, 'ineligible_path_pixels': 0, 'edge_invalid_path_pixels': 0, 'nonfinite_path_pixels': 0, 'low_amplitude_path_pixels': 0}]}, {'loop_index': 1, 'rect_xyxy': [36, 36, 76, 76], 'orientation': 'positive_image_xy', 'sample_count': 156, 'reflections': [{'reflection_index': 0, 'valid': False, 'failures': ['ineligible_path_pixel'], 'winding_cycles': 0.0, 'winding_integer': 0, 'canonical_winding_integer': 0, 'integer_residual_cycles': 0.0, 'maximum_abs_wrapped_step_radians': 0.009314242273191553, 'minimum_path_amplitude': 0.4921170692640696, 'ineligible_path_pixels': 85, 'edge_invalid_path_pixels': 85, 'nonfinite_path_pixels': 0, 'low_amplitude_path_pixels': 0}, {'reflection_index': 1, 'valid': False, 'failures': ['ineligible_path_pixel'], 'winding_cycles': 0.0, 'winding_integer': 0, 'canonical_winding_integer': 0, 'integer_residual_cycles': 0.0, 'maximum_abs_wrapped_step_radians': 0.0002997477541413218, 'minimum_path_amplitude': 0.49986752254524486, 'ineligible_path_pixels': 85, 'edge_invalid_path_pixels': 85, 'nonfinite_path_pixels': 0, 'low_amplitude_path_pixels': 0}, {'reflection_index': 2, 'valid': False, 'failures': ['ineligible_path_pixel'], 'winding_cycles': 0.0, 'winding_integer': 0, 'canonical_winding_integer': 0, 'integer_residual_cycles': 0.0, 'maximum_abs_wrapped_step_radians': 0.009312910659730278, 'minimum_path_amplitude': 0.49220320296272724, 'ineligible_path_pixels': 85, 'edge_invalid_path_pixels': 85, 'nonfinite_path_pixels': 0, 'low_amplitude_path_pixels': 0}]}]\n\n----------------------------------------------------------------------\nRan 17 tests in 2.237s\n\nFAILED (failures=1)\n",
+      "preregistered_tolerances": {
+        "exact_winding_integer_max_abs_error": 1e-08,
+        "filtered_winding_integer_max_abs_error": 1e-06,
+        "burgers_pixel_xy_max_abs_error": 1e-06,
+        "candidate_reciprocal_cycle_residual_max_abs": 0.05,
+        "path_phase_step_limit_radians": 2.5132741228718345,
+        "core_taper_radius_pixels": 2.0,
+        "smooth_null_min_max_abs_displacement_gradient": 0.1
+      }
+    }
+  ],
+  "semantic_followup": "Invalid-path scientific winding is unavailable (JSON null/NPY NaN); finite arithmetic sums are explicitly diagnostic only. Valid-path truth, tolerances and statuses unchanged; historical failure output retained verbatim.",
+  "evidence_scope": "analytic_and_public_synthetic_only_not_real_specimen_material_validation",
+  "measured_cases": [
+    {
+      "name": "positive",
+      "independent_analytic_winding": [
+        -1,
+        0,
+        -1
+      ],
+      "measured_winding_cycles_by_loop": [
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "diagnostic_winding_cycles_by_loop": [
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "diagnostic_winding_semantics": "Finite arithmetic sums on unavailable paths are not scientific winding evidence",
+      "valid_paths_by_loop": [
+        [
+          true,
+          true,
+          true
+        ],
+        [
+          true,
+          true,
+          true
+        ]
+      ],
+      "maximum_abs_phase_steps_radians_by_loop": [
+        [
+          0.021571548479954572,
+          2.124392655389329e-05,
+          0.02157464216057292
+        ],
+        [
+          0.016068019193937744,
+          2.012241841953255e-05,
+          0.016070681850095525
+        ]
+      ],
+      "status": "projected_topological_evidence",
+      "interpretation_status": "hypothesized",
+      "projected_burgers": {
+        "stable_reflection_indices": [
+          0,
+          1,
+          2
+        ],
+        "rank": 2,
+        "condition_number": 1.7320508075688772,
+        "condition_number_limit": 100.0,
+        "b_pixel_xy": [
+          7.999999999999997,
+          0.0
+        ],
+        "constraint_residuals_cycles": [
+          -3.3306690738754696e-16,
+          0.0,
+          -3.3306690738754696e-16
+        ],
+        "residual_tolerance_cycles": 0.05,
+        "compatible": true,
+        "redundancy_validated": true,
+        "direction_family_count": 3,
+        "direction_families_reflection_indices": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "leave_one_reflection_out": [
+          {
+            "held_out_reflection_index": 0,
+            "fit_rank": 2,
+            "fit_condition_number": 2.6180339887498953,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 1,
+            "fit_rank": 2,
+            "fit_condition_number": 2.618033988749895,
+            "held_out_residual_cycles": -5.1986413908723184e-17,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 2,
+            "fit_rank": 2,
+            "fit_condition_number": 1.0,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          }
+        ],
+        "two_reflection_exact_fit_is_independent_validation": false,
+        "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+      },
+      "gpa_quality": [
+        {
+          "phase_valid_pixels": 30624,
+          "tensor_valid_pixels": 29752,
+          "phase_valid_fraction": 0.46728515625,
+          "tensor_valid_fraction": 0.4539794921875,
+          "low_amplitude_pixels_per_reflection": [
+            31,
+            0
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            354,
+            0
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        },
+        {
+          "phase_valid_pixels": 22972,
+          "tensor_valid_pixels": 22276,
+          "phase_valid_fraction": 0.35052490234375,
+          "tensor_valid_fraction": 0.33990478515625,
+          "low_amplitude_pixels_per_reflection": [
+            31,
+            41
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            354,
+            352
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 7309,
+          "unstable_deformation_pixels_excluded": 0
+        }
+      ]
+    },
+    {
+      "name": "negative",
+      "independent_analytic_winding": [
+        1,
+        0,
+        1
+      ],
+      "measured_winding_cycles_by_loop": [
+        [
+          1.0,
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "diagnostic_winding_cycles_by_loop": [
+        [
+          1.0,
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "diagnostic_winding_semantics": "Finite arithmetic sums on unavailable paths are not scientific winding evidence",
+      "valid_paths_by_loop": [
+        [
+          true,
+          true,
+          true
+        ],
+        [
+          true,
+          true,
+          true
+        ]
+      ],
+      "maximum_abs_phase_steps_radians_by_loop": [
+        [
+          0.021572834005439745,
+          2.244353183300518e-05,
+          0.02157466460107571
+        ],
+        [
+          0.016068878375605777,
+          2.028736281545207e-05,
+          0.016070714268238362
+        ]
+      ],
+      "status": "projected_topological_evidence",
+      "interpretation_status": "hypothesized",
+      "projected_burgers": {
+        "stable_reflection_indices": [
+          0,
+          1,
+          2
+        ],
+        "rank": 2,
+        "condition_number": 1.7320508075688772,
+        "condition_number_limit": 100.0,
+        "b_pixel_xy": [
+          -7.999999999999997,
+          0.0
+        ],
+        "constraint_residuals_cycles": [
+          3.3306690738754696e-16,
+          0.0,
+          3.3306690738754696e-16
+        ],
+        "residual_tolerance_cycles": 0.05,
+        "compatible": true,
+        "redundancy_validated": true,
+        "direction_family_count": 3,
+        "direction_families_reflection_indices": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "leave_one_reflection_out": [
+          {
+            "held_out_reflection_index": 0,
+            "fit_rank": 2,
+            "fit_condition_number": 2.6180339887498953,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 1,
+            "fit_rank": 2,
+            "fit_condition_number": 2.618033988749895,
+            "held_out_residual_cycles": 5.1986413908723184e-17,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 2,
+            "fit_rank": 2,
+            "fit_condition_number": 1.0,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          }
+        ],
+        "two_reflection_exact_fit_is_independent_validation": false,
+        "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+      },
+      "gpa_quality": [
+        {
+          "phase_valid_pixels": 30622,
+          "tensor_valid_pixels": 29750,
+          "phase_valid_fraction": 0.467254638671875,
+          "tensor_valid_fraction": 0.453948974609375,
+          "low_amplitude_pixels_per_reflection": [
+            31,
+            0
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            356,
+            0
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        },
+        {
+          "phase_valid_pixels": 30371,
+          "tensor_valid_pixels": 29502,
+          "phase_valid_fraction": 0.4634246826171875,
+          "tensor_valid_fraction": 0.450164794921875,
+          "low_amplitude_pixels_per_reflection": [
+            31,
+            41
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            356,
+            354
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        }
+      ]
+    },
+    {
+      "name": "smooth_hotspot_null",
+      "independent_analytic_winding": [
+        0,
+        0,
+        0
+      ],
+      "measured_winding_cycles_by_loop": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "diagnostic_winding_cycles_by_loop": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "diagnostic_winding_semantics": "Finite arithmetic sums on unavailable paths are not scientific winding evidence",
+      "valid_paths_by_loop": [
+        [
+          true,
+          true,
+          true
+        ],
+        [
+          true,
+          true,
+          true
+        ]
+      ],
+      "maximum_abs_phase_steps_radians_by_loop": [
+        [
+          0.0010276660790111691,
+          0.0007238596001712949,
+          0.00037507432668348883
+        ],
+        [
+          8.662342619913943e-05,
+          4.9733180276234634e-05,
+          2.3321727269376424e-05
+        ]
+      ],
+      "status": "no_net_winding_detected",
+      "interpretation_status": "hypothesized",
+      "projected_burgers": {
+        "stable_reflection_indices": [
+          0,
+          1,
+          2
+        ],
+        "rank": 2,
+        "condition_number": 1.7320508075688772,
+        "condition_number_limit": 100.0,
+        "b_pixel_xy": [
+          0.0,
+          0.0
+        ],
+        "constraint_residuals_cycles": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "residual_tolerance_cycles": 0.05,
+        "compatible": true,
+        "redundancy_validated": true,
+        "direction_family_count": 3,
+        "direction_families_reflection_indices": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "leave_one_reflection_out": [
+          {
+            "held_out_reflection_index": 0,
+            "fit_rank": 2,
+            "fit_condition_number": 2.6180339887498953,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 1,
+            "fit_rank": 2,
+            "fit_condition_number": 2.618033988749895,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 2,
+            "fit_rank": 2,
+            "fit_condition_number": 1.0,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          }
+        ],
+        "two_reflection_exact_fit_is_independent_validation": false,
+        "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+      },
+      "gpa_quality": [
+        {
+          "phase_valid_pixels": 30976,
+          "tensor_valid_pixels": 30276,
+          "phase_valid_fraction": 0.47265625,
+          "tensor_valid_fraction": 0.46197509765625,
+          "low_amplitude_pixels_per_reflection": [
+            0,
+            0
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            0,
+            0
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        },
+        {
+          "phase_valid_pixels": 30976,
+          "tensor_valid_pixels": 30276,
+          "phase_valid_fraction": 0.47265625,
+          "tensor_valid_fraction": 0.46197509765625,
+          "low_amplitude_pixels_per_reflection": [
+            0,
+            0
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            0,
+            0
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        }
+      ]
+    },
+    {
+      "name": "opposite_pair_net_zero",
+      "independent_analytic_winding": [
+        0,
+        0,
+        0
+      ],
+      "measured_winding_cycles_by_loop": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "diagnostic_winding_cycles_by_loop": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "diagnostic_winding_semantics": "Finite arithmetic sums on unavailable paths are not scientific winding evidence",
+      "valid_paths_by_loop": [
+        [
+          true,
+          true,
+          true
+        ],
+        [
+          true,
+          true,
+          true
+        ]
+      ],
+      "maximum_abs_phase_steps_radians_by_loop": [
+        [
+          0.03775782554032503,
+          0.00010877231578376723,
+          0.037541712217290524
+        ],
+        [
+          0.017773119864472164,
+          6.226603602499381e-06,
+          0.017762164024901494
+        ]
+      ],
+      "status": "no_net_winding_detected",
+      "interpretation_status": "hypothesized",
+      "projected_burgers": {
+        "stable_reflection_indices": [
+          0,
+          1,
+          2
+        ],
+        "rank": 2,
+        "condition_number": 1.7320508075688772,
+        "condition_number_limit": 100.0,
+        "b_pixel_xy": [
+          0.0,
+          0.0
+        ],
+        "constraint_residuals_cycles": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "residual_tolerance_cycles": 0.05,
+        "compatible": true,
+        "redundancy_validated": true,
+        "direction_family_count": 3,
+        "direction_families_reflection_indices": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "leave_one_reflection_out": [
+          {
+            "held_out_reflection_index": 0,
+            "fit_rank": 2,
+            "fit_condition_number": 2.6180339887498953,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 1,
+            "fit_rank": 2,
+            "fit_condition_number": 2.618033988749895,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 2,
+            "fit_rank": 2,
+            "fit_condition_number": 1.0,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          }
+        ],
+        "two_reflection_exact_fit_is_independent_validation": false,
+        "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+      },
+      "gpa_quality": [
+        {
+          "phase_valid_pixels": 30720,
+          "tensor_valid_pixels": 29902,
+          "phase_valid_fraction": 0.46875,
+          "tensor_valid_fraction": 0.456268310546875,
+          "low_amplitude_pixels_per_reflection": [
+            8,
+            0
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            252,
+            0
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        },
+        {
+          "phase_valid_pixels": 30244,
+          "tensor_valid_pixels": 29426,
+          "phase_valid_fraction": 0.46148681640625,
+          "tensor_valid_fraction": 0.449005126953125,
+          "low_amplitude_pixels_per_reflection": [
+            8,
+            8
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            244,
+            236
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 284,
+          "unstable_deformation_pixels_excluded": 0
+        }
+      ]
+    },
+    {
+      "name": "contrast_only_material_b_zero",
+      "independent_analytic_winding": [
+        -1,
+        0,
+        -1
+      ],
+      "measured_winding_cycles_by_loop": [
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "diagnostic_winding_cycles_by_loop": [
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "diagnostic_winding_semantics": "Finite arithmetic sums on unavailable paths are not scientific winding evidence",
+      "valid_paths_by_loop": [
+        [
+          true,
+          true,
+          true
+        ],
+        [
+          true,
+          true,
+          true
+        ]
+      ],
+      "maximum_abs_phase_steps_radians_by_loop": [
+        [
+          0.021571548479954572,
+          2.124392655389329e-05,
+          0.02157464216057292
+        ],
+        [
+          0.016068019193937744,
+          2.012241841953255e-05,
+          0.016070681850095525
+        ]
+      ],
+      "status": "projected_topological_evidence",
+      "interpretation_status": "hypothesized",
+      "projected_burgers": {
+        "stable_reflection_indices": [
+          0,
+          1,
+          2
+        ],
+        "rank": 2,
+        "condition_number": 1.7320508075688772,
+        "condition_number_limit": 100.0,
+        "b_pixel_xy": [
+          7.999999999999997,
+          0.0
+        ],
+        "constraint_residuals_cycles": [
+          -3.3306690738754696e-16,
+          0.0,
+          -3.3306690738754696e-16
+        ],
+        "residual_tolerance_cycles": 0.05,
+        "compatible": true,
+        "redundancy_validated": true,
+        "direction_family_count": 3,
+        "direction_families_reflection_indices": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "leave_one_reflection_out": [
+          {
+            "held_out_reflection_index": 0,
+            "fit_rank": 2,
+            "fit_condition_number": 2.6180339887498953,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 1,
+            "fit_rank": 2,
+            "fit_condition_number": 2.618033988749895,
+            "held_out_residual_cycles": -5.1986413908723184e-17,
+            "compatible": true
+          },
+          {
+            "held_out_reflection_index": 2,
+            "fit_rank": 2,
+            "fit_condition_number": 1.0,
+            "held_out_residual_cycles": 0.0,
+            "compatible": true
+          }
+        ],
+        "two_reflection_exact_fit_is_independent_validation": false,
+        "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+      },
+      "gpa_quality": [
+        {
+          "phase_valid_pixels": 30624,
+          "tensor_valid_pixels": 29752,
+          "phase_valid_fraction": 0.46728515625,
+          "tensor_valid_fraction": 0.4539794921875,
+          "low_amplitude_pixels_per_reflection": [
+            31,
+            0
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            354,
+            0
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        },
+        {
+          "phase_valid_pixels": 22972,
+          "tensor_valid_pixels": 22276,
+          "phase_valid_fraction": 0.35052490234375,
+          "tensor_valid_fraction": 0.33990478515625,
+          "low_amplitude_pixels_per_reflection": [
+            31,
+            41
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            354,
+            352
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 7309,
+          "unstable_deformation_pixels_excluded": 0
+        }
+      ],
+      "true_material_burgers_pixel_xy": [
+        0.0,
+        0.0
+      ],
+      "material_dislocation_confirmed": false
+    },
+    {
+      "name": "fixed_seed_noise",
+      "independent_analytic_winding": null,
+      "measured_winding_cycles_by_loop": [
+        [
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null
+        ]
+      ],
+      "diagnostic_winding_cycles_by_loop": [
+        [
+          0.0,
+          -1.0,
+          2.0
+        ],
+        [
+          2.0,
+          -1.0,
+          -1.0
+        ]
+      ],
+      "diagnostic_winding_semantics": "Finite arithmetic sums on unavailable paths are not scientific winding evidence",
+      "valid_paths_by_loop": [
+        [
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false
+        ]
+      ],
+      "maximum_abs_phase_steps_radians_by_loop": [
+        [
+          0.6928015684288766,
+          1.725418314580864,
+          1.5756033066821828
+        ],
+        [
+          1.326767425657522,
+          1.1560191282662018,
+          0.6831223834828393
+        ]
+      ],
+      "status": "insufficient_loop_stability",
+      "interpretation_status": "hypothesized",
+      "projected_burgers": {
+        "stable_reflection_indices": [],
+        "rank": 0,
+        "condition_number": null,
+        "condition_number_limit": 100.0,
+        "b_pixel_xy": null,
+        "constraint_residuals_cycles": null,
+        "residual_tolerance_cycles": 0.05,
+        "compatible": false,
+        "redundancy_validated": false,
+        "direction_family_count": 0,
+        "direction_families_reflection_indices": [],
+        "leave_one_reflection_out": [],
+        "two_reflection_exact_fit_is_independent_validation": false,
+        "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+      },
+      "gpa_quality": [
+        {
+          "phase_valid_pixels": 27168,
+          "tensor_valid_pixels": 25294,
+          "phase_valid_fraction": 0.41455078125,
+          "tensor_valid_fraction": 0.385955810546875,
+          "low_amplitude_pixels_per_reflection": [
+            1051,
+            938
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            898,
+            1067
+          ],
+          "initial_connected_components": 2,
+          "disconnected_pixels_excluded": 993,
+          "unstable_deformation_pixels_excluded": 0
+        },
+        {
+          "phase_valid_pixels": 28250,
+          "tensor_valid_pixels": 26372,
+          "phase_valid_fraction": 0.431060791015625,
+          "tensor_valid_fraction": 0.40240478515625,
+          "low_amplitude_pixels_per_reflection": [
+            1051,
+            1751
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            877,
+            717
+          ],
+          "initial_connected_components": 2,
+          "disconnected_pixels_excluded": 12,
+          "unstable_deformation_pixels_excluded": 1
+        }
+      ]
+    }
+  ],
+  "summary_figure": "physics-summary.png"
+}

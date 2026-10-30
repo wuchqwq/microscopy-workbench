@@ -180,6 +180,33 @@ jobs:
         env:
           MICROSCOPY_PYTHON: python
 
+  projected-topology:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements-images.txt
+            requirements-gpa.txt
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-gpa.txt
+      - run: python -B -m unittest discover -s tests -p 'test_image_topology_*.py' -v
+      - run: npm run test:topology
+        env:
+          MICROSCOPY_PYTHON: python
+
   f4-gpa-integration:
     needs: changes
     if: needs.changes.outputs.run_full_ci == 'true'

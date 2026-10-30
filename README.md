@@ -73,6 +73,8 @@ Connect the compiled MCP server to a compatible client, or install the packaged 
 
 **Planned:** [research roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16) retains evidence-guided follow-up analysis and later crystallographic defect evidence. The current roadmap does **not** include Encoder training or a foundation-model project.
 
+**F3a implementation candidate:** [projected phase-winding evidence](docs/PROJECTED_TOPOLOGY.md) reuses saved wrapped GPA bands for explicit circuit winding and redundant reflection checks. It reports conditional projected closure, not a confirmed material dislocation or unique3D Burgers vector. Based on the unmerged F4/GPA integration candidate #37; [acceptance scopes](docs/F3A_ACCEPTANCE.md) remain explicit.
+
 ## Scientific scope
 
 This is **research software**, not an autonomous microscope controller or a universally validated phase-identification system. It does not currently perform ptychographic reconstruction, general automatic phase/twin/dislocation identification, or live instrument control. Missing calibration stays missing; local spectral agreement is not proof of a phase, a defect, or a three-dimensional structure. Successful synthetic tests do not imply accuracy on real specimens.
