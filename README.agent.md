@@ -1,5 +1,12 @@
 # Agent guide: independent microscopy science
 
+For first real-specimen preparation, follow [the private intake protocol](docs/REAL_SPECIMEN_INTAKE.md).
+Use the offline `tools/specimen_intake.py` scaffold/preflight with an explicitly
+authorized private case directory. Keep unknown metadata and independent-reference
+gaps; A tool execution, B numerical consistency and C independent physics have
+separate verdicts. Preparation is DATA_INTAKE_READY only, never REAL_SPECIMEN_PASS.
+Do not upload specimen files or bypass existing scientific admission gates.
+
 For [active analysis](docs/ACTIVE_ANALYSIS.md), call `image_analysis_candidates`
 on a saved domain map with explicit cumulative budgets. Select inspectable
 actions through `image_field_extend`, rebuild `image_domain_map`, and evaluate

@@ -1,0 +1,32 @@
+{
+  "schema": "specimen-protocol-v1",
+  "case_id": "case-001",
+  "status": "DRAFT",
+  "frozen_before_analysis_utc": null,
+  "manifest_sha256": null,
+  "reference_sealed_sha256": null,
+  "operator_id": "unknown",
+  "reference_custodian_id": "unknown",
+  "question": "unknown",
+  "hypotheses_including_non_twin_and_insufficient": [],
+  "primary_file_sha256": null,
+  "frame_dataset_plane_selection": null,
+  "rois_source_xyxy": [],
+  "reference_region_and_g_source": "unknown",
+  "controls": [
+    {"kind": "negative_or_insufficient", "definition_before_run": "unknown", "expected_scope": "unknown"}
+  ],
+  "allowed_tools_and_exact_parameters": [],
+  "disallowed": ["automatic replay of unknown requests", "post-hoc threshold relaxation", "phase/twin truth inferred from filenames or model output"],
+  "tolerances_with_units_and_independent_basis": [],
+  "decision_gates": {
+    "A_read_recover_export": "unknown",
+    "B_geometry_numerics": "unknown",
+    "C_independent_physics": "unknown",
+    "insufficient_conditions": []
+  },
+  "budget": {"max_tool_calls": null, "max_fft_pixels_total": null, "max_wall_seconds": null, "max_parameter_trials": null},
+  "versions_and_code_hashes": "record privately before run",
+  "reference_reveal_after_outputs_frozen": true,
+  "amendments": []
+}

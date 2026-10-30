@@ -1,0 +1,77 @@
+{
+  "schema": "specimen-intake-v1",
+  "case_id": "case-001",
+  "data_kind": "unknown",
+  "permissions": {
+    "local_read_authorized": false,
+    "derivatives_authorized": false,
+    "publication_status": "unknown",
+    "public_upload_authorized": false
+  },
+  "files": [
+    {
+      "file_id": "primary",
+      "path": "raw/original.tiff",
+      "role": "primary_image",
+      "format": "unknown",
+      "sha256": null,
+      "original_array": "unknown",
+      "shape": null,
+      "dtype": null,
+      "array_axes": null,
+      "selection": {
+        "frame_index": null,
+        "dataset_index": null,
+        "plane_axes": null,
+        "plane_indices": null
+      }
+    }
+  ],
+  "acquisition": {
+    "image_domain": "unknown",
+    "domain_source": "unknown",
+    "imaging_mode": "unknown",
+    "frame_semantics": "unknown",
+    "voltage_kv": null,
+    "microscope_conditions": "unknown",
+    "scan_direction": "unknown",
+    "thickness_defocus_aberrations_dose": "unknown"
+  },
+  "calibration": {
+    "coordinate_domain": "unknown",
+    "signed_scale_xy": null,
+    "pixel_zero_xy": null,
+    "unit": "unknown",
+    "source": "unknown",
+    "confidence": "unknown",
+    "uncertainty": null,
+    "flipped_or_resampled": "unknown",
+    "coordinate_mapping_source": "unknown"
+  },
+  "processing_history": "unknown",
+  "sample": {
+    "material": "unknown",
+    "composition_source": "unknown",
+    "reference_cif_file_id": null,
+    "lattice_parameters_and_source": "unknown",
+    "f3b_model": "unknown",
+    "ideal_full_occupancy_monospecies_conventional_cell": "unknown",
+    "parent_orientation_source": "unknown",
+    "zone_axis_and_basis": "unknown",
+    "orientation_basis_evidence": "unknown"
+  },
+  "annotations": {
+    "coordinate_convention": "zero-based source pixel edges; XYXY upper bounds exclusive; trace points are pixel centers",
+    "roi_a_xyxy": null,
+    "roi_b_xyxy": null,
+    "interface_xy": null,
+    "annotator_id": "unknown",
+    "evidence_source": "unknown"
+  },
+  "independent_reference": {
+    "file_ids": [],
+    "custodian_id": "unknown",
+    "available": "unknown",
+    "independence_basis": "unknown"
+  }
+}

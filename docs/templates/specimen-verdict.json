@@ -1,0 +1,21 @@
+{
+  "schema": "specimen-verdict-v1",
+  "case_id": "case-001",
+  "protocol_sha256": null,
+  "preflight_report_sha256": null,
+  "code_commit_and_environment_record": "unknown",
+  "attempts": [],
+  "request_ids_and_authoritative_journal_refs": [],
+  "object_ids_calibration_ids_and_revisions": [],
+  "source_before_after_sha256": null,
+  "export_and_reopened_array_hashes": [],
+  "unmatched_reflections_and_valid_masks_refs": [],
+  "budget_actual_including_failed_attempts": null,
+  "A_tool_execution": {"status": "NOT_TESTED", "evidence": [], "limits": "unknown"},
+  "B_numerical_consistency": {"status": "NOT_TESTED", "evidence": [], "limits": "unknown"},
+  "C_independent_physics": {"status": "NOT_TESTED", "evidence": [], "limits": "unknown"},
+  "negative_or_insufficient_control": {"status": "NOT_TESTED", "evidence": []},
+  "physical_interpretation": "UNDETERMINED",
+  "remaining_unknowns": [],
+  "reviewer_id": "unknown"
+}

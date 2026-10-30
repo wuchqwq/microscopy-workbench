@@ -77,6 +77,7 @@ jobs:
       - run: npm run build
       - run: python -m pip install -r requirements-images.txt -r requirements-dm4.txt
       - run: python -B tests/dm4_import_test.py
+      - run: python -B tests/specimen_intake_test.py -v
       - run: python -B tests/dm_planes_test.py
       - run: python -B tests/dm_complex_test.py
       - run: python -B tests/image_peaks_test.py

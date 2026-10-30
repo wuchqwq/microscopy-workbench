@@ -93,6 +93,7 @@ npm run inspect -- --source /absolute/path/to/image.tiff \
 | 主动分析与物理场 | [主动分析](docs/ACTIVE_ANALYSIS.md) · [经典 GPA](docs/CLASSICAL_GPA.md) · [投影拓扑](docs/PROJECTED_TOPOLOGY.md) |
 | 晶体学与出图 | [晶体学工具](docs/STRUCTURE_DIFFRACTION_TOOLS.md) · [Figure Composer](docs/FIGURE_COMPOSER.md) |
 | 状态与验收 | [开发状态](docs/DEVELOPMENT_STATUS.md) · [F4/GPA 集成](docs/F4_F2A_INTEGRATION.md) · [F3a 验收](docs/F3A_ACCEPTANCE.md) |
+| 真实样品准备 | [单样品私有目录、只读预检和独立验收规程](docs/REAL_SPECIMEN_INTAKE.md) — 仅完成准备；真实样品准确性 NOT_TESTED |
 
 ## 开源协议
 
