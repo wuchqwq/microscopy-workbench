@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "scope": "Final compiled actual MCP metadata-only follow-up on the same public saved FFT",
+  "checks": [
+    "Fourier mask axes reflection,fy,fx",
+    "Spatial unwrap diagnostic axes reflection,y,x",
+    "Physical displacement unit nm",
+    "Original FFT reused and original request recovered"
+  ],
+  "object_id": "a89a0bfa7e7e4634aacc24ea6e71c625",
+  "request_id": "gpa-final-metadata-20261030",
+  "forward_fft_count": 1,
+  "source_hash": "206e45e6d6583176a25d26a6272f9888db618231aeab4a97816d8b0fe16f083c",
+  "fft_hash": "8ddaa4bc66a195734b20a09e07b08b54e3f60fe8ef8af5fe99a4a7aad9b993d9"
+}

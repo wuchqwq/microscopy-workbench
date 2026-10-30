@@ -16,6 +16,25 @@ const packageRoot=path.basename(path.resolve(here))==='dist'?here:path.join(here
 const sourceRoot=path.basename(path.resolve(here))==='dist'?path.dirname(path.resolve(here)):here;
 const hash=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
 
+const GPA_ADDITIONS=['image_gpa','image_gpa_read','image_gpa_view'];
+function assertCompatibleCatalog(current,frozen){
+ const additions=new Set(GPA_ADDITIONS);
+ assert.deepEqual(current.filter(tool=>additions.has(tool.name)).map(tool=>tool.name).sort(),GPA_ADDITIONS,
+  'Only the three explicitly added GPA tools may extend the frozen catalog');
+ assert.deepEqual(current.filter(tool=>!additions.has(tool.name)),frozen,
+  'Every frozen tool/schema/description and relative order must remain exactly compatible');
+}
+
+test('additive GPA catalog still rejects removed/modified legacy tools and unexpected additions',()=>{
+ const frozen=[{name:'image_fft',description:'frozen',inputSchema:{type:'object'}}];
+ const current=[...GPA_ADDITIONS.map(name=>({name})),...frozen];
+ assertCompatibleCatalog(current,frozen);
+ assert.throws(()=>assertCompatibleCatalog(current.slice(0,3),frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current.slice(0,3),{...frozen[0],description:'changed'}],frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current,{name:'unexpected_tool'}],frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current,{name:'image_gpa'}],frozen));
+});
+
 function snapshot(directory,prefix=''){
  const result={};
  for(const entry of readdirSync(directory,{withFileTypes:true})){
@@ -112,7 +131,7 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // F1a/F4-lite add the explicitly enumerated tools and optional context selections. Keep the frozen
   // comparison exact for every pre-existing field; authorize only these named
   // additive changes, never drop descriptions or weaken old scientific tests.
-  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence'];
+  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_gpa','image_gpa_read','image_gpa_view'];
   assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
   const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
   // Presentation controls are explicitly additive and must never become a

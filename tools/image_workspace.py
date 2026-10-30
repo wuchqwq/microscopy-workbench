@@ -38,6 +38,7 @@ if __package__:
     from . import image_field_increment as field_increment
     from . import image_active_analysis as active_analysis
     from . import image_evidence as evidence
+    from . import image_gpa as gpa
 else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -54,6 +55,7 @@ else:
     import image_field_increment as field_increment
     import image_active_analysis as active_analysis
     import image_evidence as evidence
+    import image_gpa as gpa
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -74,6 +76,7 @@ FIELDS = {
     **field_increment.FIELDS,
     **active_analysis.FIELDS,
     **evidence.FIELDS,
+    **gpa.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
@@ -580,6 +583,8 @@ class Workspace:
                 field_increment.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in active_analysis.FIELDS:
                 active_analysis.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in gpa.FIELDS:
+                gpa.validate_references(self, metadata, sys.modules[__name__])
             # Cache completed qualifications only, bounded in count and bytes.
             # Exceeding the budget falls back to ordinary recursive validation.
             if frame["complete"] and ident in self._qualification_own_proofs:
@@ -913,6 +918,8 @@ class Workspace:
             for target in metadata.get("object_ids", []):
                 need(type(target) is str and OBJECT_ID.fullmatch(target), "Invalid comparison source", "CORRUPT_OBJECT")
                 pending_ids.append(target)
+            if metadata.get("kind") == "gpa":
+                pending_ids.extend(row["object_id"] for row in metadata.get("history", []))
             record = metadata.get("xy_calibration")
             if record and record["calibration_id"] != current:
                 pending_ids.append(record["calibration_id"])
@@ -932,7 +939,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py")}})
+                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py")}})
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")
@@ -973,6 +980,8 @@ class Workspace:
             metadata = domain_compare.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in feature_field.FIELDS:
             metadata = feature_field.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in gpa.FIELDS:
+            metadata = gpa.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in spatial_domains.FIELDS:
             metadata = spatial_domains.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in field_increment.FIELDS:
@@ -1485,17 +1494,24 @@ class Workspace:
             scientific = parent
             if parent["kind"] == "annotate":
                 scientific, _ = self.object(parent["render_base_object_id"])
+            if scientific["kind"] == "gpa_view":
+                scientific, _ = self.object(scientific["gpa_object_id"])
             if context is None:
                 context = scientific.get("user_context")
             source_directory = self.root / "objects" / scientific["object_id"]
             record = metadata.get("xy_calibration")
             feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map", "field_extend", "analysis_candidates")
+            gpa_result = scientific["kind"] in ("gpa", "gpa_read")
+            if gpa_result:
+                need(scientific.get("calibration_dependency") == calibration.dependency(record),
+                     "GPA fields/samples use an older XY metric. Revise image_gpa on the current calibrated FFT before exporting physical results",
+                     "STALE_CALIBRATION_RESULT")
             if image_object.get("image_path") and not feature_result:
                 need(scientific.get("display_calibration_id") == (record["calibration_id"] if record else None),
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
             numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv")]
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")
@@ -1515,7 +1531,7 @@ class Workspace:
                 write_new(output / "preview.png", Path(image_object["image_path"]).read_bytes())
                 exported["preview.png"] = sha_file(output / "preview.png")
                 export_display = image_object.get("display") or scientific.get("display")
-            elif numeric_result or scientific.get("dtype") in ("complex64", "complex128"):
+            elif numeric_result or scientific["kind"] == "gpa_read" or scientific.get("dtype") in ("complex64", "complex128"):
                 export_display = None
             else:
                 values = load_array(source_directory / names[0])
