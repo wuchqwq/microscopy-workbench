@@ -1,6 +1,6 @@
 # Mainline consolidation and next scientific stage
 
-Updated 2026-10-30. This document is the current implementation index; individual
+Updated 2026-10-31. This document is the current implementation index; individual
 acceptance ledgers remain historical records of the exact versions they tested.
 Mainline admission is not a new real-specimen, GUI, model or instrument qualification.
 
@@ -15,9 +15,12 @@ kernel, global scheduler, source FFT or new model service is introduced.
 
 [Method/API](CROSS_METHOD_ANALYSIS.md) and [acceptance](F4_CROSS_METHOD_ACCEPTANCE.md)
 record actual four-case MCP results and same-cap fixed-sequence comparison,
-including the slower positive active path. Two new-model attempts encountered
-client execution/MCP approval policy blocks; scientific model acceptance stays
-NOT_TESTED and the feature PR remains Draft. GUI/real specimen work is separate.
+including the slower positive active path. The first two new-model attempts
+encountered client approval blocks and remain recorded. The authorized isolated
+test configuration now supports actual fresh-model decisions and original-ID
+recovery, with global configuration unchanged. See the separate
+[authorization/performance closeout](F4_CROSS_METHOD_CLOSEOUT.md).
+GUI/real specimen work is separate; no feature PR was merged.
 
 ## Reviewed implementation ancestry
 

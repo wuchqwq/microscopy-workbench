@@ -18,7 +18,11 @@ stops and fresh-client recovery also passed.
 - [Small comparison table](actual-comparison.csv)
 - [Observed calls and timings](actual-comparison.png)
 - [Unchanged saved positive topology preview](actual-positive-topology.png)
-- [Actual new-model attempts and client-policy blockers](new-agent-status.json)
+- [Historical new-model attempts and client-policy blockers](new-agent-status.json)
+- [Authorized fresh-model decisions and read-only new-session recovery](new-agent-closeout.json)
+- [2026-10-31 authorization/performance closeout](../../F4_CROSS_METHOD_CLOSEOUT.md)
+- [Same-environment before/final timing and exact NPY comparison](performance-closeout.json)
+- [Before/final timing CSV](performance-closeout.csv)
 - [Final compiled recovery/admission supplement](final-runtime-supplement.json)
 
 Positive active elapsed was 54.4 seconds versus 7.4 seconds for the fixed

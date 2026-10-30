@@ -206,6 +206,7 @@ jobs:
       - run: python -B tests/test_method_policy.py
       - run: python -B tests/image_method_journal_test.py
       - run: python -B tests/test_method_loop_accounting.py
+      - run: python -B tests/test_method_read_reuse.py
       - run: npm run test:topology
         env:
           MICROSCOPY_PYTHON: python

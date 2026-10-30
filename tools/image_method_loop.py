@@ -49,17 +49,23 @@ def _info(api, value):
     return copy.deepcopy(value)
 
 
-def _seed(workspace, ids, api):
+def _seed_ids(ids, api):
     api.need(type(ids) is list and 1 <= len(ids) <= 3 and len(set(ids)) == len(ids), "Select1..3 distinct immutable GPA records")
-    values, refs = [], []
+    return ids
+
+
+def _seed(workspace, ids, api):
+    _seed_ids(ids, api)
+    values, refs, records = [], [], []
     for ident in ids:
         saved, directory = workspace.object(ident)
         api.need(saved.get("kind") == "gpa" and saved["parameters"]["reference_mode"] == "fixed_g",
                  "First cross-method scope starts from saved fixed_g GPA evidence; other tools remain directly callable", "UNSUPPORTED_OPERATION")
         values.append(saved)
+        records.append((ident, saved, directory))
         refs.append({"object_id": ident, "request_id": saved["request_id"], "manifest_sha256": api.sha_file(directory / "object.json")})
     # Existing source/grid/calibration/mask and conjugate-band admission, no new kernel.
-    api.topology._source_bundle(workspace, ids, api)
+    api.topology._source_bundle_records(records, api)
     return values, refs
 
 
@@ -146,8 +152,7 @@ def _plan(workspace, request, metadata, api):
     if request["action"] == "method_plan":
         budget = _cost(api, request.get("budget"))
         information = _info(api, request.get("information"))
-        gpas, refs = _seed(workspace, request.get("object_ids"), api)
-        root = {"object_id": metadata["object_id"], "seed_object_ids": request["object_ids"], "budget": budget}
+        root = {"object_id": metadata["object_id"], "seed_object_ids": _seed_ids(request.get("object_ids"), api), "budget": budget}
         history = []
     else:
         root, previous = _root(workspace, request["object_id"], api)
@@ -244,8 +249,6 @@ def action(workspace, name, request, metadata, directory, api):
 def validate_references(workspace, metadata, api):
     api.need(metadata.get("policy_version") == VERSION, "Unknown cross-method policy version", "CORRUPT_OBJECT")
     if metadata["kind"] == "method_plan":
-        gpas, refs = _seed(workspace, [r["object_id"] for r in metadata["input_refs"]], api)
-        api.need(refs == metadata["input_refs"], "Method input evidence changed", "CORRUPT_OBJECT")
         _cost(api, metadata["budget"]); _info(api, metadata["information"])
         original = api.read_json(workspace.root / "requests" / (metadata["request_id"] + ".json"))["parameters"]
         if original["action"] == "method_plan":
@@ -270,7 +273,7 @@ def validate_references(workspace, metadata, api):
                         "session": "workspace-journal-v1", "request_id": attempt["request_id"]},
                      "Method proposal contains a foreign or omitted attempt", "CORRUPT_OBJECT")
         expected_gpas, expected_refs, topology = _evidence(workspace, root, ledger, api)
-        api.need(refs == expected_refs and metadata["latest_topology_object_id"] == (topology["object_id"] if topology else None),
+        api.need(metadata["input_refs"] == expected_refs and metadata["latest_topology_object_id"] == (topology["object_id"] if topology else None),
                  "Method proposal science differs from its frozen original attempts", "CORRUPT_OBJECT")
         if ledger["has_unknown"] or original.get("user_stop", False):
             proposed = []

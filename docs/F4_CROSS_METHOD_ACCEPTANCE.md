@@ -37,7 +37,7 @@ was modified. Tests ran from this independent worktree.
 | Original requests and fresh protocol client | PASS.12 saved plan/step objects recovered; original failed requests matched their existing errors/journal identities; no science or FFT created by recovery. |
 | Final compiled runtime supplement | PASS. Reopened r1 historical plan/step objects, then verified an exhausted budget refuses before creating a step journal or scientific child. No extra source FFT. |
 | Source protection | PASS. Every source TIFF, saved FFT and initial GPA unchanged; four original source FFTs total. Additional GPA/topology reuse them. |
-| New ordinary model session | BLOCKED; scientific decision acceptance NOT_TESTED. Two actual isolated Codex sessions stopped at client policy gates, described below. |
+| New ordinary model session | PASS in the authorized 2026-10-31 isolated configuration: actual new model chose GPA→topology→stop; another new model recovered original requests without new science. Earlier blocked attempts remain historical. [Closeout](F4_CROSS_METHOD_CLOSEOUT.md). |
 | GUI gestures, real specimens, Mac-specific execution | NOT_TESTED. Deferred independently; no prior browser stop was bypassed. |
 | Real cancellation/lost-response/interrupted-worker injection | NOT_TESTED. Unit journal unknown-state coverage and successful recovery are separate scopes. |
 
@@ -68,7 +68,7 @@ actual preflight failures exhausted a two-call root without launching science.
 Dispatched failures retain scientific reservations; unknown/unreadable costs
 block continuation. Helper unit faults cover that logic, not a killed real worker.
 
-## New model attempts: recorded blockers, not a pass
+## Historical new model attempts: recorded blockers, not a pass
 
 Two fresh `codex exec --ignore-user-config --ephemeral --json --sandbox read-only`
 sessions used isolated task context and explicit local MCP configuration while
@@ -84,9 +84,12 @@ leaving real user config/auth untouched. No model was embedded in the plugin.
 No scientific root/step/child was created by either model. These are real model
 attempts but **not successful scientific comprehension/decision qualification**.
 No permission was widened or alternate execution used after the MCP rejection.
-The direct stdio clients above are independently PASS and do not replace this
-unmet client-level gate. See [bounded status](examples/method-loop/new-agent-status.json).
-This PR remains Draft pending an authorized compatible client configuration.
+The direct stdio clients above are independently PASS and did not replace that
+client-level gate. See the unchanged [historical status](examples/method-loop/new-agent-status.json).
+The owner subsequently authorized an independent test-tool policy. New actual
+model runs now pass that gate, without editing global configuration; see the
+[separate closeout](F4_CROSS_METHOD_CLOSEOUT.md) and
+[new original IDs](examples/method-loop/new-agent-closeout.json).
 
 ## Retained failure and reproducibility
 
@@ -121,4 +124,5 @@ npm run test:method-loop
 Use `requirements-gpa.txt` in an independent environment. The smoke records
 request IDs, all costs including failures, old/new evidence and recovery; it
 never edits experimental inputs. Ordinary model execution needs a compatible
-client's explicit tool policy; this acceptance did not change that policy.
+client's explicit tool policy; the original r1 acceptance did not change it.
+The opt-in closeout driver scopes explicit approvals to named local test tools.
