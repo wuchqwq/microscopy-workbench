@@ -211,27 +211,74 @@ def orient_candidate(atoms, parent_orientation, plane_hkl):
     return {"orientation": orientation, "twin_relation": relation}
 
 
-def _independence(measurements):
+def _independence(measurements, reciprocal_tolerance=.005):
+    """Conservative finite-resolution admission, not floating-point rank.
+
+    The declared reciprocal acceptance radius is a deterministic guard, NOT
+    measured peak uncertainty. Connected ambiguity components may conservatively
+    undercount directions, but near Friedel/harmonic jitter cannot add evidence.
+    """
+    _need(_finite(reciprocal_tolerance) and 1e-12 <= reciprocal_tolerance <= 1,
+          "Direction admission needs the predeclared reciprocal tolerance")
     observations = [measurement_vector(row) for row in measurements]
     vectors = np.asarray([row["q_xy_inv_angstrom"] for row in observations], dtype=float)
-    directions, families = [], []
-    for row, vector in zip(observations, vectors):
-        direction = vector / math.hypot(*vector)
-        if direction[0] < 0 or direction[0] == 0 and direction[1] < 0:
-            direction = -direction
-        selected = next((i for i, old in enumerate(directions)
-                         if abs(float(old[0]*direction[1]-old[1]*direction[0])) <= _ROUND_OFF), None)
-        if selected is None:
-            directions.append(direction)
-            families.append({"direction_xy_unit": direction.tolist(), "measurement_object_ids": []})
-            selected = len(families)-1
-        families[selected]["measurement_object_ids"].append(row["measurement_object_id"])
+    norms = [math.hypot(*vector) for vector in vectors]
+    units = [vector / length for vector, length in zip(vectors, norms)]
+    radii = [math.asin(min(1., reciprocal_tolerance / length)) for length in norms]
+    resolved = [i for i, length in enumerate(norms) if length > reciprocal_tolerance]
+    adjacent = {i: set() for i in resolved}
+    pair_checks = []
+    floor = math.radians(1.)
+    for position, i in enumerate(resolved):
+        for j in resolved[position+1:]:
+            left, right = units[i], units[j]
+            angle = math.atan2(abs(float(left[0]*right[1]-left[1]*right[0])),
+                               abs(float(np.dot(left, right))))
+            threshold = min(math.pi/2, max(floor, radii[i]+radii[j]))
+            separated = bool(angle > threshold + _ROUND_OFF)
+            if not separated:
+                adjacent[i].add(j)
+                adjacent[j].add(i)
+            pair_checks.append({"measurement_indices": [i, j],
+                                "line_angle_degrees": math.degrees(angle),
+                                "required_separation_degrees": math.degrees(threshold),
+                                "resolved_as_distinct": separated})
+    unseen, families = set(resolved), []
+    while unseen:
+        seed = min(unseen, key=lambda i: observations[i]["measurement_object_id"])
+        pending, members = [seed], set()
+        while pending:
+            i = pending.pop()
+            if i in members:
+                continue
+            members.add(i)
+            pending.extend(adjacent[i]-members)
+        unseen -= members
+        members = sorted(members, key=lambda i: observations[i]["measurement_object_id"])
+        representative = units[members[0]].copy()
+        if representative[0] < 0 or representative[0] == 0 and representative[1] < 0:
+            representative = -representative
+        families.append({"direction_xy_unit": representative.tolist(),
+                         "measurement_object_ids": [observations[i]["measurement_object_id"] for i in members],
+                         "family_semantics": "unresolved-direction component, not an indexed reflection identity"})
     singular = np.linalg.svd(vectors / np.max(np.abs(vectors)), compute_uv=False) if len(vectors) else []
-    rank_two = bool(len(singular) == 2 and singular[1] > _ROUND_OFF * max(vectors.shape) * singular[0])
-    return {"adequate": len(families) >= 2 and rank_two,
+    numerical_rank_two = bool(len(singular) == 2 and singular[1] > _ROUND_OFF * max(vectors.shape) * singular[0])
+    return {"adequate": len(families) >= 2 and numerical_rank_two,
             "noncollinear_direction_family_count": len(families), "direction_families": families,
             "normalized_singular_values": list(map(float, singular)),
-            "independence_scope": "Noncollinear physical reciprocal directions only; conjugate/Friedel and collinear harmonics do not add independent directions; no held-out validation"}
+            "numerical_rank_two_diagnostic_only": numerical_rank_two,
+            "direction_policy_version": "finite_reciprocal_direction_support_v2",
+            "direction_admission": {
+                "minimum_line_separation_degrees": 1.,
+                "reciprocal_radius_inv_angstrom": float(reciprocal_tolerance),
+                "angular_radius_formula": "asin(min(1,declared_reciprocal_tolerance/abs(q)))",
+                "pair_threshold": "max(1 degree, sum of angular radii); strict separation",
+                "policy_semantics": "deterministic conservative admission, not measured peak uncertainty or confidence",
+                "family_grouping": "connected ambiguous-line components before candidate fitting"},
+            "per_measurement_angular_radius_degrees": list(map(math.degrees, radii)),
+            "unresolved_measurement_object_ids": [observations[i]["measurement_object_id"] for i in range(len(norms)) if i not in adjacent],
+            "pairwise_direction_checks": pair_checks,
+            "independence_scope": "Finite-resolution noncollinear reciprocal directions only; near Friedel/conjugate/harmonic jitter cannot create a direction; no held-out validation"}
 
 
 def _ambiguous(comparison):
@@ -322,7 +369,7 @@ def evaluate(measurements_a, measurements_b, parent_simulation, twin_simulation,
     parent = compare(measurements_a, parent_simulation, registration, tolerance, experimental_kind)
     twin = compare(measurements_b, twin_simulation, registration, tolerance, experimental_kind)
     control = compare(measurements_b, parent_simulation, registration, tolerance, experimental_kind)
-    geometry_a, geometry_b = _independence(measurements_a), _independence(measurements_b)
+    geometry_a, geometry_b = _independence(measurements_a, tolerance), _independence(measurements_b, tolerance)
     distinct_domains = not ({row["object_id"] for row in measurements_a} & {row["object_id"] for row in measurements_b})
     parent_pass = parent["all_experimental_reflections_matched_within_tolerance"]
     twin_pass = twin["all_experimental_reflections_matched_within_tolerance"]

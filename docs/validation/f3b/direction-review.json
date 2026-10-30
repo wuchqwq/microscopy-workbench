@@ -1,0 +1,102 @@
+{
+  "status": "PASS_LIMITED_REVIEW_SCOPE",
+  "reviewed_source_head": "05e7270",
+  "test_input_q_inv_angstrom": [
+    [
+      0.4,
+      0.2
+    ],
+    [
+      -0.400001,
+      -0.199999
+    ]
+  ],
+  "before": {
+    "adequate": true,
+    "noncollinear_direction_family_count": 2,
+    "direction_families": [
+      {
+        "direction_xy_unit": [
+          0.8944271909999159,
+          0.4472135954999579
+        ],
+        "measurement_object_ids": [
+          "00000000000000000000000000000064"
+        ]
+      },
+      {
+        "direction_xy_unit": [
+          0.8944285326353357,
+          0.4472109122190558
+        ],
+        "measurement_object_ids": [
+          "00000000000000000000000000000065"
+        ]
+      }
+    ],
+    "normalized_singular_values": [
+      1.581135667816412,
+      2.3717011300263276e-06
+    ],
+    "independence_scope": "Noncollinear physical reciprocal directions only; conjugate/Friedel and collinear harmonics do not add independent directions; no held-out validation"
+  },
+  "after": {
+    "adequate": false,
+    "noncollinear_direction_family_count": 1,
+    "direction_families": [
+      {
+        "direction_xy_unit": [
+          0.8944271909999159,
+          0.4472135954999579
+        ],
+        "measurement_object_ids": [
+          "00000000000000000000000000000064",
+          "00000000000000000000000000000065"
+        ],
+        "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+      }
+    ],
+    "normalized_singular_values": [
+      1.581135667816412,
+      2.3717011300263276e-06
+    ],
+    "numerical_rank_two_diagnostic_only": true,
+    "direction_policy_version": "finite_reciprocal_direction_support_v2",
+    "direction_admission": {
+      "minimum_line_separation_degrees": 1.0,
+      "reciprocal_radius_inv_angstrom": 0.005,
+      "angular_radius_formula": "asin(min(1,declared_reciprocal_tolerance/abs(q)))",
+      "pair_threshold": "max(1 degree, sum of angular radii); strict separation",
+      "policy_semantics": "deterministic conservative admission, not measured peak uncertainty or confidence",
+      "family_grouping": "connected ambiguous-line components before candidate fitting"
+    },
+    "per_measurement_angular_radius_degrees": [
+      0.6405996353738912,
+      0.6405989947453197
+    ],
+    "unresolved_measurement_object_ids": [],
+    "pairwise_direction_checks": [
+      {
+        "measurement_indices": [
+          0,
+          1
+        ],
+        "line_angle_degrees": 0.00017188716664818924,
+        "required_separation_degrees": 1.2811986301192109,
+        "resolved_as_distinct": false
+      }
+    ],
+    "independence_scope": "Finite-resolution noncollinear reciprocal directions only; near Friedel/conjugate/harmonic jitter cannot create a direction; no held-out validation"
+  },
+  "noisy_one_family_comparison_before": "compatible",
+  "noisy_one_family_comparison_after": "insufficient_evidence",
+  "positive_multifamily_comparison": "compatible",
+  "original_method_version": "f3b_cubic_sigma3_v1",
+  "new_direction_policy_version": "finite_reciprocal_direction_support_v2",
+  "historical_provider_objects_recovered": 2,
+  "historical_files_preserved": 380,
+  "source_sha256_before": "2a8e4822385fdcb731a32dfa725b5365e4e466547774f6b6038c907c455af054",
+  "source_sha256_after": "eec0c9dc7c7761bed281963a5cf1ca0f39bc184ae132acb8cd01580168a4eae8",
+  "source_arrays_or_fft_recomputed_by_review": false,
+  "scope": "Analytic direction admission plus exact original-request recovery of actual Linux pre-fix MCP results; not real specimens"
+}

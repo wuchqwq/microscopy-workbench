@@ -73,7 +73,7 @@ npm run inspect -- --source /absolute/path/to/image.tiff \
 
 **本版本已实现**：R2/R3 证据工作流、F1a 多尺度结构场、F4-lite 有预算的增量分析、F2a 经典 GPA，以及 F3a 带版本区分的投影相位绕数证据。[开发状态](docs/DEVELOPMENT_STATUS.md)记录了审查基线及验收边界。历史验收报告中的分支状态属于当时记录，不会被改写为新的实验结果。
 
-**下一阶段**：F3b 晶体学孪晶关系与界面证据，之后再开展更完整的跨方法主动分析 F4-full。参见[科研路线 #16](https://github.com/wuchqwq/microscopy-workbench/issues/16)。当前不开展 Encoder、基础模型训练或实时显微镜控制。
+**F3b 首版**：[有限范围的 Σ3 候选与投影界面证据](docs/PROJECTED_TWIN_EVIDENCE.md)复用相邻 ROI 的已保存 FFT 观测和实际模拟反射，分别保留相容、不相容及证据不足，不认定唯一三维孪晶或原子相干界。下一阶段是 F4-full 的最小跨方法分析闭环；参见[科研路线 #16](https://github.com/wuchqwq/microscopy-workbench/issues/16)。当前不开展 Encoder、基础模型训练或实时显微镜控制。
 
 **仍未验收**：已记录的真实 GUI 手势流程、全套 GPA/拓扑 Skill 的新模型独立使用、真实样品准确性，以及对应功能的中断注入。数值、协议或 HTTP/PNG 测试不能替代这些检查；GUI 延后验收不阻塞独立科学方法开发。
 

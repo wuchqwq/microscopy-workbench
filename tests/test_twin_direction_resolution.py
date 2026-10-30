@@ -1,5 +1,6 @@
 """Finite direction resolution: jitter is not a second reciprocal constraint."""
 import copy
+import json
 import math
 from pathlib import Path
 import sys
@@ -115,6 +116,13 @@ class FiniteDirectionAdmission(unittest.TestCase):
             self.assertTrue(result['projected_relation'][side]['adequate'])
             self.assertEqual(result['projected_relation'][side]['direction_admission']['reciprocal_radius_inv_angstrom'], .005)
 
+    def test_reports_are_strict_json_for_unresolved_and_positive_inputs(self):
+        for q in ([[.4, .2], [-.400001, -.199999]], [[.4, .2], [.2, -.4]]):
+            result = twin._independence(rows(q))
+            decoded = json.loads(json.dumps(result, allow_nan=False))
+            self.assertEqual(decoded, result)
+        result = twin.evaluate(*cases(), REGISTRATION, .005, interface=INTERFACE)
+        self.assertEqual(json.loads(json.dumps(result, allow_nan=False)), result)
 
 if __name__ == '__main__':
     unittest.main()

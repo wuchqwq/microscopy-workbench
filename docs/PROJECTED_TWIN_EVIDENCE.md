@@ -116,3 +116,36 @@ Enable the optional structure provider in the existing plugin configuration
 (`structures:true`, independent `structure_python` with
 `requirements-structure-tools.txt`). A plain image-only installation remains
 usable. No DM connection, model API or new environment inside GMS is involved.
+
+## Finite directional resolution after PR42 review
+
+New comparisons identify the direction admission policy as
+`finite_reciprocal_direction_support_v2`. Numerical matrix rank alone cannot
+make jittered Friedel partners or nearly parallel harmonics independent.
+For each nonzero measured q, use the predeclared reciprocal acceptance radius
+r to construct an angular guard asin(min(1,r/|q|)). Unoriented directions must
+be separated by more than max(1 degree, the sum of both angular guards).
+Vectors whose radius reaches DC remain unresolved. Connected ambiguity groups
+are order/sign independent and may conservatively undercount directions;
+these are not assigned crystallographic reflection identities.
+
+This is an explicit deterministic admission policy, NOT an independently
+measured peak uncertainty, calibrated confidence or a change to reflection
+matching tolerances. Known larger localisation/calibration errors still need
+appropriate experimental bounds; the one-degree floor cannot be removed by
+choosing an unrealistically small matching tolerance. The interface angular
+criterion remains a separate, unchanged quantity. Every observation and
+pairwise direction check remains visible; no artificial averaging is used.
+
+The candidate-law `method_version` remains v1 because its matrix/simulation
+model is unchanged. New numerical reports carry the new direction-policy ID.
+Old committed reports without it remain historical and are returned byte-for-byte
+through original-request recovery, not reclassified. Make an explicit new
+comparison/revision to apply the corrected admission. See the exact RED/GREEN
+[review evidence](validation/f3b/direction-review.json).
+
+The independent read-only `F3b actual simulation` workflow runs the actual
+pinned diffsims provider and compiled MCP smoke on Ubuntu, in addition to the
+ordinary lightweight geometry/source tests. It archives its exact public
+source, resolved environment and synthetic output for 14 days. Documentation
+edits alone do not request this optional integration workflow.
