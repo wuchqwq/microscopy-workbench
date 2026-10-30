@@ -1,0 +1,72 @@
+name: Review F3b finite direction correction
+on:
+  push:
+    branches: ['review/f3b-direction-fix-20261030']
+permissions:
+  contents: write
+jobs:
+  qualify-isolated-candidate:
+    if: github.ref == 'refs/heads/review/f3b-direction-fix-20261030'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-images.txt -r requirements-structure-tools.txt
+      - name: Generate actual pre-fix historical MCP records
+        env:
+          MICROSCOPY_PYTHON: python
+          MICROSCOPY_SMOKE_OUTPUT: ${{ runner.temp }}/f3b-baseline
+        run: npm run test:twin
+      - name: Apply exact-anchor fix and verify historical readback
+        env:
+          F3B_BASELINE_WORKSPACE: ${{ runner.temp }}/f3b-baseline
+        run: python -B scripts/review_f3b_direction_patch.py
+      - name: Focused direction and existing source geometry tests
+        run: python -B -m unittest discover -s tests -p 'test_twin*.py' -v
+      - run: npm run typecheck
+      - run: npm test
+      - name: Actual post-fix compiled MCP and pinned diffsims
+        env:
+          MICROSCOPY_PYTHON: python
+          MICROSCOPY_SMOKE_OUTPUT: ${{ runner.temp }}/f3b-after-fix
+        run: npm run test:twin
+      - name: Existing standalone scientific smoke
+        env:
+          MICROSCOPY_PYTHON: python
+        run: npm run test:science
+      - name: Publish only the qualified isolated branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'review/f3b-direction-fix-20261030'
+          test "$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --exit-code -- .github/workflows scripts
+          git add crystallography/twin_geometry.py docs/PROJECTED_TWIN_EVIDENCE.md README.zh-CN.md docs/validation/f3b/direction-review.json
+          git diff --cached --check
+          git commit -m 'fix: reject unresolved Friedel and harmonic direction jitter with versioned evidence'
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: bearer $GH_TOKEN" push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: f3b-direction-before-after
+          path: |
+            ${{ runner.temp }}/f3b-baseline/report.json
+            ${{ runner.temp }}/f3b-after-fix/report.json
+            docs/validation/f3b/direction-review.json
+          if-no-files-found: warn
+          retention-days: 14
