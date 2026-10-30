@@ -80,7 +80,7 @@ def compatibility(s, theirs):
 def skill(s, theirs):
     block = theirs[theirs.index('## Single-domain classical GPA'):theirs.index('Before each write choose and retain')]
     s = once(s, 'Before each write choose and retain', block + 'Before each write choose and retain')
-    s = once(s, 'build sparse structural feature fields,', 'build sparse structural feature fields or explicit single-domain classical GPA,')
+    s = once(s, 'build bounded multiscale structural fields and candidate domains,', 'build bounded multiscale structural fields and candidate domains or explicit single-domain classical GPA,')
     s = once(s, 'dislocation/GPA\nor ptychography reconstruction.', 'automatic dislocation analysis\nor ptychography reconstruction. Classical GPA supports one explicit domain and a qualified saved FFT.')
     return s
 
