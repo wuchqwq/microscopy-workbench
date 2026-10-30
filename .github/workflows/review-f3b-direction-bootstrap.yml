@@ -93,7 +93,11 @@ jobs:
           git add crystallography/twin_geometry.py docs/PROJECTED_TWIN_EVIDENCE.md README.zh-CN.md docs/validation/f3b/direction-review.json tests/test_twin_direction_resolution.py
           git diff --cached --check
           git commit -m 'fix: reject unresolved Friedel and harmonic direction jitter with versioned evidence'
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: bearer $GH_TOKEN" push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+          git archive --format=tar HEAD > "$RUNNER_TEMP/f3b-reviewed-source.tar"
+          git rev-parse HEAD > "$RUNNER_TEMP/f3b-reviewed-commit.txt"
+          AUTH="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::$AUTH"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -101,6 +105,8 @@ jobs:
           path: |
             ${{ runner.temp }}/f3b-baseline/report.json
             ${{ runner.temp }}/f3b-after-fix/report.json
+            ${{ runner.temp }}/f3b-reviewed-source.tar
+            ${{ runner.temp }}/f3b-reviewed-commit.txt
             docs/validation/f3b/direction-review.json
           if-no-files-found: warn
           retention-days: 14
