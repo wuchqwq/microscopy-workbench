@@ -1,5 +1,12 @@
 # Mainline consolidation and next scientific stage
 
+Issue #43 stage-one preparation is documented in [private specimen intake](REAL_SPECIMEN_INTAKE.md):
+one-case templates, an offline read-only preflight and a preregistered independent
+A/B/C protocol. This is DATA_INTAKE_READY, not a real-specimen qualification.
+Actual sample availability, independent physical correctness and all outstanding
+Issue #40 scopes remain NOT_TESTED. Scientific algorithms and historical ledgers
+are unchanged. The intake branch starts from `9fbc769` (reviewed F3b #42 main).
+
 Updated 2026-10-30. This document is the current implementation index; individual
 acceptance ledgers remain historical records of the exact versions they tested.
 Mainline admission is not a new real-specimen, GUI, model or instrument qualification.

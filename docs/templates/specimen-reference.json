@@ -1,0 +1,17 @@
+{
+  "schema": "specimen-independent-reference-v1",
+  "case_id": "case-001",
+  "prepared_before_tool_output": "unknown",
+  "custodian_id": "unknown",
+  "evidence_file_ids_or_citations": [],
+  "evidence_kind": "unknown",
+  "independent_of_this_tool_because": "unknown",
+  "calibration_reference_and_uncertainty": "unknown",
+  "indexing_zone_orientation_basis": "unknown",
+  "expected_observations_with_units_and_tolerances": [],
+  "held_out_reflections_or_regions": [],
+  "projection_or_chemistry_ambiguities": [],
+  "physical_interpretation": "unknown",
+  "interpretation_status": "UNDETERMINED",
+  "reviewer_id": "unknown"
+}

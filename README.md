@@ -93,6 +93,7 @@ Original scientific data remain separate from display images and annotations. Sa
 | Active analysis and physical fields | [Active analysis](docs/ACTIVE_ANALYSIS.md) · [Classical GPA](docs/CLASSICAL_GPA.md) · [Projected topology](docs/PROJECTED_TOPOLOGY.md) |
 | Crystallography and publication | [Structure tools](docs/STRUCTURE_DIFFRACTION_TOOLS.md) · [Figure Composer](docs/FIGURE_COMPOSER.md) |
 | Status and qualification | [Development status](docs/DEVELOPMENT_STATUS.md) · [F4/GPA integration](docs/F4_F2A_INTEGRATION.md) · [F3a acceptance](docs/F3A_ACCEPTANCE.md) |
+| Private real-specimen preparation | [One-specimen intake, offline preflight and independent protocol](docs/REAL_SPECIMEN_INTAKE.md) — preparation only; real-specimen accuracy NOT_TESTED |
 
 ## License
 
