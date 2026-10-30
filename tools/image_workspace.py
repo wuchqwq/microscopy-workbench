@@ -944,7 +944,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py")}})
+                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py")}})
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")

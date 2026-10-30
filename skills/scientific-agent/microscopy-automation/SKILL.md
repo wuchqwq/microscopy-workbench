@@ -291,6 +291,18 @@ proof. Retain noise/contrast artefacts, `g dot b=0` invisibility, opposite-sign
 cancellation, missing constraints and contrary evidence. Compare only explicit
 caller-supplied projected candidates; do not invent a lattice or phase.
 
+Read the saved algorithm version and each `loop_groups[]` entry in v2. Strict
+containment alone connects loops into groups, independently of validity or
+winding; it does not prove one core. Compare winding stability, directional fits and supplied candidates
+within each group. Different nested charges can mean added annular net charge
+and fail a single-closure assumption. Separate remote zero loops retain their
+own evidence; one loop lacks nested stability and never proves defect absence.
+Overlapping non-nested supports remain ambiguous. For multiple groups,
+`spatially_grouped_evidence` is only the overall container; top-level
+`projected_burgers` is null and `reflections`/`burgers_candidates` are empty.
+Report each group's status. Historical v1 objects
+retain their original global-loop semantics and must not be silently reinterpreted.
+
 Retain original request/result IDs and previous-result links for revisions,
 export masks/tables/report/provenance to a new directory, recover with
 `image_result`, and use `image_panel_open` only for the saved read-only preview.

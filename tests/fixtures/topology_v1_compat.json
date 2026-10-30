@@ -1,0 +1,1251 @@
+{
+  "schema": "topology-v1-version-compatibility-golden-v1",
+  "evidence_scope": "public_synthetic_actual_pre_fix_provider_not_experiment_or_material_validation",
+  "base_commit": "b68a4d3",
+  "legacy_provider_sha256": "0c3c000ed77d4802b1319a30f3fd3c7c04781424c3b2568185c54e1b52688e2a",
+  "legacy_core_sha256": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+  "generation": {
+    "generator": "tools.create_topology_fixtures.volterra_fixture",
+    "shape_yx": [
+      256,
+      256
+    ],
+    "center_xy": [
+      96.5,
+      96.5
+    ],
+    "reference_rect": [
+      140,
+      48,
+      172,
+      80
+    ]
+  },
+  "pre_fix_receipt": {
+    "schema": "public-synthetic-topology-v1-pre-fix-receipt",
+    "base_commit": "b68a4d3",
+    "algorithm": "saved-wrapped-phase-rectangular-topology-v1",
+    "root": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden",
+    "workspace": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\workspace",
+    "source": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\public-analytic-core-96.tiff",
+    "source_sha256": "fc3bc99851aea1d29bbbf855549fc70b9397d18903d09d7a1fafbe50ad99fb9a",
+    "ids": {
+      "opened": "3781651d0aed4a1391737ef4b3fffc56",
+      "frame": "1a2c6153133f47c683ea8baf15ddf3ab",
+      "calibration": "f7374865a1794df487e46be8b4eb77b8",
+      "fft": "1b404bd7c7f44dd39e78b5daea146dc7",
+      "gpa": [
+        "00e45999f4d94e008f5608046291df10",
+        "6e2479111548495ebc12d5b33bea9796"
+      ],
+      "topology": "f95cfcb44c9d4ca5bf5a2016733d4b31"
+    },
+    "request": {
+      "action": "topology",
+      "request_id": "v1-topology-misgrouped",
+      "workspace": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\workspace",
+      "object_ids": [
+        "00e45999f4d94e008f5608046291df10",
+        "6e2479111548495ebc12d5b33bea9796"
+      ],
+      "loops": [
+        {
+          "rect": [
+            72,
+            72,
+            120,
+            120
+          ],
+          "orientation": "positive_image_xy",
+          "loop_id": "core_inner"
+        },
+        {
+          "rect": [
+            60,
+            60,
+            132,
+            132
+          ],
+          "orientation": "positive_image_xy",
+          "loop_id": "core_outer"
+        },
+        {
+          "rect": [
+            164,
+            164,
+            204,
+            204
+          ],
+          "orientation": "positive_image_xy",
+          "loop_id": "unrelated_zero"
+        }
+      ],
+      "model_assumption_text": "Public synthetic prescribed core at (96.5,96.5); unrelated exterior zero loop is not a repeat contour",
+      "burgers_candidates": [
+        {
+          "label": "b8x",
+          "b_pixel_xy": [
+            8,
+            0
+          ]
+        }
+      ],
+      "max_size": 256
+    },
+    "response": {
+      "state": "completed",
+      "backend": "external-image-workspace",
+      "request_id": "v1-topology-misgrouped",
+      "object_id": "f95cfcb44c9d4ca5bf5a2016733d4b31",
+      "kind": "topology",
+      "created_utc": "2026-10-30T09:58:29.949859+00:00",
+      "object_ids": [
+        "00e45999f4d94e008f5608046291df10",
+        "6e2479111548495ebc12d5b33bea9796"
+      ],
+      "parent_object_id": "00e45999f4d94e008f5608046291df10",
+      "parameters": {
+        "object_ids": [
+          "00e45999f4d94e008f5608046291df10",
+          "6e2479111548495ebc12d5b33bea9796"
+        ],
+        "loops": [
+          {
+            "rect": [
+              72,
+              72,
+              120,
+              120
+            ],
+            "orientation": "positive_image_xy",
+            "loop_id": "core_inner"
+          },
+          {
+            "rect": [
+              60,
+              60,
+              132,
+              132
+            ],
+            "orientation": "positive_image_xy",
+            "loop_id": "core_outer"
+          },
+          {
+            "rect": [
+              164,
+              164,
+              204,
+              204
+            ],
+            "orientation": "positive_image_xy",
+            "loop_id": "unrelated_zero"
+          }
+        ],
+        "model_assumption_text": "Public synthetic prescribed core at (96.5,96.5); unrelated exterior zero loop is not a repeat contour",
+        "amplitude_floor_relative": 0.05,
+        "burgers_candidates": [
+          {
+            "label": "b8x",
+            "b_pixel_xy": [
+              8,
+              0
+            ]
+          }
+        ]
+      },
+      "input_dependency": {
+        "gpa_records": [
+          {
+            "object_id": "00e45999f4d94e008f5608046291df10",
+            "request_id": "v1-gpa-first",
+            "manifest_sha256": "28bea839c57951d920b7218a6cda78439e0db7aab180c1df28142a67a5b4d220",
+            "band_files_sha256": {
+              "phase_demodulated_wrapped.npy": "4613b09c846dfbb69ba434d93806d2e85bd2d4d92809e8e2f183be8cc7eaa690",
+              "amplitude.npy": "47469bdd3add7a8c312c4ac3dcee7110dd8f9cc00c1330b29a2458ac3d31f282",
+              "edge_invalid.npy": "9f1405d3a31c0cfbf7e2604723b07d556714262471a8222c52e9e89c3dc629dc"
+            },
+            "g_vectors_cycles_per_pixel": [
+              [
+                0.125,
+                0.0
+              ],
+              [
+                0.0,
+                0.125
+              ]
+            ]
+          },
+          {
+            "object_id": "6e2479111548495ebc12d5b33bea9796",
+            "request_id": "v1-gpa-second",
+            "manifest_sha256": "ccfc8a09d50e1939156bc4370fc8c36ba772bc6e043511d671d7cf65b0c288dc",
+            "band_files_sha256": {
+              "phase_demodulated_wrapped.npy": "3822fbba91eb1359002e7425e31c85d8bd29aa1859b6cc36643e1dea9fcb700d",
+              "amplitude.npy": "6782d599beae3df7bde8fa3dd36a3954fac8765a648ee99920aa87f8aee807d9",
+              "edge_invalid.npy": "9f1405d3a31c0cfbf7e2604723b07d556714262471a8222c52e9e89c3dc629dc"
+            },
+            "g_vectors_cycles_per_pixel": [
+              [
+                0.125,
+                0.0
+              ],
+              [
+                0.125,
+                0.125
+              ]
+            ]
+          }
+        ],
+        "common": {
+          "fft": {
+            "manifest_sha256": "b8fbed4ea714c5f45ee725723059803a97d776f1f64cc09a122a5b52379a223e",
+            "object_id": "1b404bd7c7f44dd39e78b5daea146dc7",
+            "request_id": "v1-fft"
+          },
+          "fft_array_sha256": "2ca5a70c8afaa84b729dd1e0b1cbd0d0bf37aa26f0cbe767b853d1542518c0ff",
+          "shape_yx": [
+            256,
+            256
+          ],
+          "source": {
+            "manifest_sha256": "1cba062321db00e3d1a1ded5304ef23506b9ce9c6ed97dbdfa32aad399c74ba5",
+            "object_id": "1a2c6153133f47c683ea8baf15ddf3ab",
+            "request_id": "v1-frame"
+          },
+          "source_array_sha256": "de2cbe0e30addd91cb4360f449ffadcba0255d899dc21b76803f1345615f2d79",
+          "source_mapping": {
+            "domain": "spatial_pixels",
+            "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y",
+            "image_rect_xyxy": [
+              0,
+              0,
+              256,
+              256
+            ],
+            "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+            "source_object_id": "1a2c6153133f47c683ea8baf15ddf3ab",
+            "source_rect_xyxy": [
+              0,
+              0,
+              256,
+              256
+            ]
+          },
+          "xy_calibration": {
+            "applies_to": {
+              "frame_index": 0,
+              "kind": "frame",
+              "object_id": "1a2c6153133f47c683ea8baf15ddf3ab",
+              "source_capture_files_sha256": null,
+              "source_identity": {
+                "path": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\public-analytic-core-96.tiff",
+                "sha256": "fc3bc99851aea1d29bbbf855549fc70b9397d18903d09d7a1fafbe50ad99fb9a",
+                "stat": {
+                  "ctime_ns": "1793354307996217000",
+                  "device": "17081883644722306211",
+                  "inode": "281474979316324",
+                  "mtime_ns": "1793354308001430200",
+                  "size": 262416
+                }
+              }
+            },
+            "calibration_id": "f7374865a1794df487e46be8b4eb77b8",
+            "coordinate_domain": "real_space",
+            "original_file_metadata_modified": false,
+            "previous_calibration_id": null,
+            "real_space_only": true,
+            "revision": 1,
+            "scope": "image",
+            "source": "user_statement_not_independently_verified",
+            "source_text": "Public synthetic signed metric; not specimen calibration",
+            "status": "active",
+            "uncertainty_status": "unknown",
+            "value_unit_or_frame_depth_inferred": false,
+            "xy_scale": {
+              "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+              "uncertainty_x": null,
+              "uncertainty_y": null,
+              "unit": "nm",
+              "x": 0.02,
+              "y": -0.03
+            }
+          },
+          "calibration_dependency": {
+            "calibration_id": "f7374865a1794df487e46be8b4eb77b8",
+            "coordinate_domain": "real_space",
+            "revision": 1,
+            "source": "user_statement_not_independently_verified",
+            "status": "active"
+          },
+          "calibration_nm_xy": [
+            0.02,
+            -0.03
+          ],
+          "mask_sigma": 0.012
+        },
+        "retained_reflections": [
+          {
+            "gpa_object_id": "00e45999f4d94e008f5608046291df10",
+            "reflection_index": 0,
+            "g_vector_cycles_per_pixel": [
+              0.125,
+              0.0
+            ],
+            "aliases": [
+              {
+                "gpa_object_id": "6e2479111548495ebc12d5b33bea9796",
+                "reflection_index": 0,
+                "g_vector_cycles_per_pixel": [
+                  0.125,
+                  0.0
+                ],
+                "phase_sign_to_retained": 1
+              }
+            ],
+            "phase_sign_to_retained": 1
+          },
+          {
+            "gpa_object_id": "00e45999f4d94e008f5608046291df10",
+            "reflection_index": 1,
+            "g_vector_cycles_per_pixel": [
+              0.0,
+              0.125
+            ],
+            "aliases": [],
+            "phase_sign_to_retained": 1
+          },
+          {
+            "gpa_object_id": "6e2479111548495ebc12d5b33bea9796",
+            "reflection_index": 1,
+            "g_vector_cycles_per_pixel": [
+              0.125,
+              0.125
+            ],
+            "aliases": [],
+            "phase_sign_to_retained": 1
+          }
+        ],
+        "phase_basis": "original fixed_g requested reciprocal vectors; no fitted-reference basis substitution"
+      },
+      "retained_reflections": [
+        {
+          "gpa_object_id": "00e45999f4d94e008f5608046291df10",
+          "reflection_index": 0,
+          "g_vector_cycles_per_pixel": [
+            0.125,
+            0.0
+          ],
+          "aliases": [
+            {
+              "gpa_object_id": "6e2479111548495ebc12d5b33bea9796",
+              "reflection_index": 0,
+              "g_vector_cycles_per_pixel": [
+                0.125,
+                0.0
+              ],
+              "phase_sign_to_retained": 1
+            }
+          ],
+          "phase_sign_to_retained": 1
+        },
+        {
+          "gpa_object_id": "00e45999f4d94e008f5608046291df10",
+          "reflection_index": 1,
+          "g_vector_cycles_per_pixel": [
+            0.0,
+            0.125
+          ],
+          "aliases": [],
+          "phase_sign_to_retained": 1
+        },
+        {
+          "gpa_object_id": "6e2479111548495ebc12d5b33bea9796",
+          "reflection_index": 1,
+          "g_vector_cycles_per_pixel": [
+            0.125,
+            0.125
+          ],
+          "aliases": [],
+          "phase_sign_to_retained": 1
+        }
+      ],
+      "report": {
+        "algorithm": "saved-wrapped-phase-rectangular-topology-v1",
+        "status": "inconsistent_or_partial_evidence",
+        "interpretation_status": "hypothesized",
+        "libraries": {
+          "numpy": "2.2.6"
+        },
+        "shape_yx": [
+          256,
+          256
+        ],
+        "reflection_count": 3,
+        "loop_count": 3,
+        "g_vectors_cycles_per_pixel": [
+          [
+            0.125,
+            0.0
+          ],
+          [
+            0.0,
+            0.125
+          ],
+          [
+            0.125,
+            0.125
+          ]
+        ],
+        "calibration_nm_xy": [
+          0.02,
+          -0.03
+        ],
+        "coordinate_domain": "local_spatial_fft_pixel_centres",
+        "phase_source": "saved_phase_demodulated_wrapped_no_unwrap_or_fft",
+        "phase_convention": "phi=-2*pi*G*u; canonical positive_image_xy winding w gives G*b=-w",
+        "positive_loop_convention": "east_south_west_north_positive_shoelace_clockwise_on_y_down_image",
+        "physical_orientation_mapping": {
+          "signed_metric_determinant": -0.0006,
+          "signed_metric_determinant_sign": -1,
+          "positive_image_xy_has_positive_physical_xy_area": false,
+          "b_nm_convention": "S_times_b_pixel_for_same_positive_image_xy_circuit_no_orientation_renormalization"
+        },
+        "rect_convention": "half_open_xyxy_boundary_pixel_centres_closure_implicit",
+        "phase_step_limit_radians": 2.5132741228718345,
+        "integer_residual_tolerance_cycles": 1e-06,
+        "integer_residual_semantics": "arithmetic_closure_check_not_confidence_or_uncertainty",
+        "amplitude_floor_relative": 0.05,
+        "amplitude_normalization": "per_reflection_global_finite_non_edge_maximum_fixed_across_loops",
+        "amplitude_reference_maxima": [
+          0.4982167259295878,
+          0.5001111602992847,
+          0.498229868602475
+        ],
+        "amplitude_thresholds": [
+          0.024910836296479392,
+          0.025005558014964235,
+          0.02491149343012375
+        ],
+        "eligibility_semantics": "finite_phase_and_amplitude_above_floor_and_not_edge_invalid_on_path_only",
+        "total_path_samples": 628,
+        "maximum_path_samples": 16384,
+        "loops": [
+          {
+            "loop_index": 0,
+            "rect_xyxy": [
+              72,
+              72,
+              120,
+              120
+            ],
+            "orientation": "positive_image_xy",
+            "sample_count": 188,
+            "reflections": [
+              {
+                "reflection_index": 0,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": -1.0,
+                "winding_integer": -1,
+                "canonical_winding_integer": -1,
+                "diagnostic_winding_cycles": -1.0,
+                "diagnostic_winding_integer": -1,
+                "diagnostic_canonical_winding_integer": -1,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 0.04456755995478545,
+                "minimum_path_amplitude": 0.39222012111507754,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              },
+              {
+                "reflection_index": 1,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": 0.0,
+                "winding_integer": 0,
+                "canonical_winding_integer": 0,
+                "diagnostic_winding_cycles": 0.0,
+                "diagnostic_winding_integer": 0,
+                "diagnostic_canonical_winding_integer": 0,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 7.3420576626404e-05,
+                "minimum_path_amplitude": 0.49921737236621694,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              },
+              {
+                "reflection_index": 2,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": -1.0,
+                "winding_integer": -1,
+                "canonical_winding_integer": -1,
+                "diagnostic_winding_cycles": -1.0,
+                "diagnostic_winding_integer": -1,
+                "diagnostic_canonical_winding_integer": -1,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 0.04456548596735388,
+                "minimum_path_amplitude": 0.3921137408471809,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              }
+            ],
+            "loop_id": "core_inner"
+          },
+          {
+            "loop_index": 1,
+            "rect_xyxy": [
+              60,
+              60,
+              132,
+              132
+            ],
+            "orientation": "positive_image_xy",
+            "sample_count": 284,
+            "reflections": [
+              {
+                "reflection_index": 0,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": -1.0,
+                "winding_integer": -1,
+                "canonical_winding_integer": -1,
+                "diagnostic_winding_cycles": -1.0,
+                "diagnostic_winding_integer": -1,
+                "diagnostic_canonical_winding_integer": -1,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 0.02901791142025445,
+                "minimum_path_amplitude": 0.4564468369866632,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              },
+              {
+                "reflection_index": 1,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": 0.0,
+                "winding_integer": 0,
+                "canonical_winding_integer": 0,
+                "diagnostic_winding_cycles": 0.0,
+                "diagnostic_winding_integer": 0,
+                "diagnostic_canonical_winding_integer": 0,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 2.68085850478883e-05,
+                "minimum_path_amplitude": 0.49988334898349296,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              },
+              {
+                "reflection_index": 2,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": -1.0,
+                "winding_integer": -1,
+                "canonical_winding_integer": -1,
+                "diagnostic_winding_cycles": -1.0,
+                "diagnostic_winding_integer": -1,
+                "diagnostic_canonical_winding_integer": -1,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 0.02901415066585855,
+                "minimum_path_amplitude": 0.45641391235976625,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              }
+            ],
+            "loop_id": "core_outer"
+          },
+          {
+            "loop_index": 2,
+            "rect_xyxy": [
+              164,
+              164,
+              204,
+              204
+            ],
+            "orientation": "positive_image_xy",
+            "sample_count": 156,
+            "reflections": [
+              {
+                "reflection_index": 0,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": 0.0,
+                "winding_integer": 0,
+                "canonical_winding_integer": 0,
+                "diagnostic_winding_cycles": 0.0,
+                "diagnostic_winding_integer": 0,
+                "diagnostic_canonical_winding_integer": 0,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 0.007321238130884922,
+                "minimum_path_amplitude": 0.4951399557549383,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              },
+              {
+                "reflection_index": 1,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": 0.0,
+                "winding_integer": 0,
+                "canonical_winding_integer": 0,
+                "diagnostic_winding_cycles": 0.0,
+                "diagnostic_winding_integer": 0,
+                "diagnostic_canonical_winding_integer": 0,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 2.211743282742873e-05,
+                "minimum_path_amplitude": 0.49998171802883784,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              },
+              {
+                "reflection_index": 2,
+                "valid": true,
+                "failures": [],
+                "winding_cycles": 0.0,
+                "winding_integer": 0,
+                "canonical_winding_integer": 0,
+                "diagnostic_winding_cycles": 0.0,
+                "diagnostic_winding_integer": 0,
+                "diagnostic_canonical_winding_integer": 0,
+                "integer_residual_cycles": 0.0,
+                "maximum_abs_wrapped_step_radians": 0.0073141324752441506,
+                "minimum_path_amplitude": 0.4951914856078518,
+                "ineligible_path_pixels": 0,
+                "edge_invalid_path_pixels": 0,
+                "nonfinite_path_pixels": 0,
+                "low_amplitude_path_pixels": 0
+              }
+            ],
+            "loop_id": "unrelated_zero"
+          }
+        ],
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "status": "inconsistent_winding",
+            "valid_loop_indices": [
+              0,
+              1,
+              2
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": false,
+            "stable": false,
+            "canonical_winding_integers": [
+              -1,
+              -1,
+              0
+            ],
+            "representative_winding_integer": null,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 1,
+            "status": "stable_zero",
+            "valid_loop_indices": [
+              0,
+              1,
+              2
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": true,
+            "stable": true,
+            "canonical_winding_integers": [
+              0,
+              0,
+              0
+            ],
+            "representative_winding_integer": 0,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 2,
+            "status": "inconsistent_winding",
+            "valid_loop_indices": [
+              0,
+              1,
+              2
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": false,
+            "stable": false,
+            "canonical_winding_integers": [
+              -1,
+              -1,
+              0
+            ],
+            "representative_winding_integer": null,
+            "invalid_loop_count": 0
+          }
+        ],
+        "projected_burgers": {
+          "stable_reflection_indices": [
+            1
+          ],
+          "rank": 1,
+          "condition_number": null,
+          "condition_number_limit": 100.0,
+          "b_pixel_xy": null,
+          "constraint_residuals_cycles": null,
+          "residual_tolerance_cycles": 0.05,
+          "compatible": false,
+          "redundancy_validated": false,
+          "direction_family_count": 1,
+          "direction_families_reflection_indices": [
+            [
+              1
+            ]
+          ],
+          "leave_one_reflection_out": [],
+          "two_reflection_exact_fit_is_independent_validation": false,
+          "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness",
+          "b_nm_xy": null
+        },
+        "burgers_candidates": [
+          {
+            "label": "b8x",
+            "b_pixel_xy": [
+              8.0,
+              0.0
+            ],
+            "predicted_winding_cycles": [
+              -1.0,
+              0.0,
+              -1.0
+            ],
+            "stable_constraint_residuals_cycles": [
+              0.0
+            ],
+            "matches_saved_constraints": true,
+            "uniqueness_status": "not_established_by_finite_projected_candidates",
+            "b_nm_xy": [
+              0.16,
+              -0.0
+            ]
+          }
+        ],
+        "limitations": [
+          "Conditional image-phase topology does not confirm a material dislocation; contrast/noise vortices can produce the same winding",
+          "Wrapped sampled steps cannot rule out unsampled aliasing or guarantee detection of subpixel defects; near-pi rejection is only a conservative diagnostic",
+          "Zero net winding on these loops is not defect absence: g dot b invisibility and opposite-sign enclosed charges can cancel",
+          "Different nested-loop charges may indicate added or cancelling enclosed cores and are inconsistent for a single stable closure",
+          "Only net projected 2D circuit closure is constrained; no 3D Burgers uniqueness, resolved core location, slip system or material identification",
+          "Bandpass and finite-window effects, image contrast, calibration uncertainty and specimen/model validity are not quantified",
+          "Loop locations, sizes and vector choices are explicit user inputs; no adaptive loop or reflection selection is performed"
+        ]
+      },
+      "dependency_sha256": "6c1dfc416de465d690e81e028ebde6b98d14d8069bce002ab06ae49a26d1916a",
+      "history": [],
+      "array_manifest": {
+        "path_xy": {
+          "shape": [
+            628,
+            2
+          ],
+          "dtype": "int64",
+          "axes": "path_sample,xy",
+          "unit": "local pixel index"
+        },
+        "path_offsets": {
+          "shape": [
+            4
+          ],
+          "dtype": "int64",
+          "axes": "loop_boundary",
+          "unit": "concatenated path-sample offset"
+        },
+        "path_eligible": {
+          "shape": [
+            3,
+            628
+          ],
+          "dtype": "bool",
+          "axes": "reflection,path_sample",
+          "unit": "boolean"
+        },
+        "path_phase_radians": {
+          "shape": [
+            3,
+            628
+          ],
+          "dtype": "float64",
+          "axes": "reflection,path_sample",
+          "unit": "radian"
+        },
+        "path_amplitude": {
+          "shape": [
+            3,
+            628
+          ],
+          "dtype": "float64",
+          "axes": "reflection,path_sample",
+          "unit": "source band amplitude"
+        },
+        "wrapped_phase_step_radians": {
+          "shape": [
+            3,
+            628
+          ],
+          "dtype": "float64",
+          "axes": "reflection,path_sample",
+          "unit": "radian"
+        },
+        "eligible_phase": {
+          "shape": [
+            3,
+            256,
+            256
+          ],
+          "dtype": "bool",
+          "axes": "reflection,y,x",
+          "unit": "boolean"
+        },
+        "loop_valid": {
+          "shape": [
+            3,
+            3
+          ],
+          "dtype": "bool",
+          "axes": "loop,reflection",
+          "unit": "boolean"
+        },
+        "loop_winding_cycles": {
+          "shape": [
+            3,
+            3
+          ],
+          "dtype": "float64",
+          "axes": "loop,reflection",
+          "unit": "cycles; NaN unavailable"
+        },
+        "loop_winding_integer": {
+          "shape": [
+            3,
+            3
+          ],
+          "dtype": "float64",
+          "axes": "loop,reflection",
+          "unit": "cycles; NaN unavailable"
+        },
+        "loop_diagnostic_winding_cycles": {
+          "shape": [
+            3,
+            3
+          ],
+          "dtype": "float64",
+          "axes": "loop,reflection",
+          "unit": "cycles; NaN unavailable"
+        },
+        "loop_diagnostic_winding_integer": {
+          "shape": [
+            3,
+            3
+          ],
+          "dtype": "float64",
+          "axes": "loop,reflection",
+          "unit": "cycles; NaN unavailable"
+        },
+        "loop_integer_residual_cycles": {
+          "shape": [
+            3,
+            3
+          ],
+          "dtype": "float64",
+          "axes": "loop,reflection",
+          "unit": "cycles; NaN unavailable"
+        },
+        "loop_maximum_abs_phase_step_radians": {
+          "shape": [
+            3,
+            3
+          ],
+          "dtype": "float64",
+          "axes": "loop,reflection",
+          "unit": "radian"
+        }
+      },
+      "shape_yx": [
+        256,
+        256
+      ],
+      "axes": [
+        "y",
+        "x"
+      ],
+      "dtype": "projected topology path arrays; see array_manifest",
+      "array_domain": "projected_topology_evidence",
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "1a2c6153133f47c683ea8baf15ddf3ab",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\public-analytic-core-96.tiff",
+            "sha256": "fc3bc99851aea1d29bbbf855549fc70b9397d18903d09d7a1fafbe50ad99fb9a",
+            "stat": {
+              "ctime_ns": "1793354307996217000",
+              "device": "17081883644722306211",
+              "inode": "281474979316324",
+              "mtime_ns": "1793354308001430200",
+              "size": 262416
+            }
+          }
+        },
+        "calibration_id": "f7374865a1794df487e46be8b4eb77b8",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "Public synthetic signed metric; not specimen calibration",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.02,
+          "y": -0.03
+        }
+      },
+      "calibration_dependency": {
+        "calibration_id": "f7374865a1794df487e46be8b4eb77b8",
+        "coordinate_domain": "real_space",
+        "revision": 1,
+        "source": "user_statement_not_independently_verified",
+        "status": "active"
+      },
+      "display_calibration_id": "f7374865a1794df487e46be8b4eb77b8",
+      "interpretation_status": "hypothesized",
+      "material_dislocation_confirmed": false,
+      "burgers_3d_unique": false,
+      "fft_recomputed": false,
+      "gpa_recomputed": false,
+      "uncertainty": null,
+      "source_arrays_modified": false,
+      "display": {
+        "representation": "wrapped geometric phase of retained reflection0",
+        "phase_range_radians": [
+          -3.141592653589793,
+          3.141592653589793
+        ],
+        "invalid_color": "gray",
+        "max_size": 256,
+        "scientific_values_changed": false
+      },
+      "panels": [
+        {
+          "domain": "source_array_indices",
+          "source_object_id": "f95cfcb44c9d4ca5bf5a2016733d4b31",
+          "source_rect_xyxy": [
+            0,
+            0,
+            256,
+            256
+          ],
+          "image_rect_xyxy": [
+            12,
+            48,
+            160,
+            196
+          ],
+          "limitation": "local spatial FFT-grid circuit coordinates; this display is not raw intensity"
+        }
+      ],
+      "schema_version": 1,
+      "computation": "explicit external Python; DM not called",
+      "dm_called": false,
+      "files_sha256": {
+        "eligible_phase.npy": "3568022408e7a611e6a43ec5ca0c6c0b32ec90a63124f51e50e7fe9cd5bc3c19",
+        "loop_diagnostic_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "loop_diagnostic_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "loop_integer_residual_cycles.npy": "4f8fe05f6953c4939ac4a3b69210b7f9a410b36b5b0de4d71a3e05a157b9caf5",
+        "loop_maximum_abs_phase_step_radians.npy": "6fd5df0cb0e5de8f65b32b05d8f943bf43d82175f13f5d7587cb0593cb2fedf0",
+        "loop_valid.npy": "ddfc04833105abad2cef14e8d615371e99dc91605616b7c238066fcbd1750ea7",
+        "loop_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "loop_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "path_amplitude.npy": "a9c1819d56b2852a06a1f55f08a3c85acd2502ed4d29a1d141c2f5bbd22abaa6",
+        "path_eligible.npy": "5cc25d4ae0a40b6c7551b5d207449233fdc0d047e80627bbc82a2090df4a267c",
+        "path_offsets.npy": "979f65f86fa214e9e499e70ccb9c73021d4c340f52c69ffe269436cab9d1398f",
+        "path_phase_radians.npy": "211ee93140423a2161c7c6272fa9b0fbb5f1de8aa09f5f198b367cc326ad35d3",
+        "path_xy.npy": "ead9017f6e87f93035099194a0b0066a39df3ef98dfbad2d4e8324816f3e14be",
+        "preview.png": "0f04f67604a49faa4a146b54e3c7d84710f1d7a71dffa91c9b5c7c5369c780a0",
+        "topology-circuits.csv": "cc2469ee3250381bd0c9e719814c73c142c4049d246d4f3109e1985c9b577514",
+        "topology-report.json": "ab9da1ec679778b08d87ab07c49f228762f1e307413a19720a7c0f2fdf9b5369",
+        "wrapped_phase_step_radians.npy": "9743b42180711ebf49b29025252ce45918a73fdc4ca358461572c8771bd7c798"
+      },
+      "software_provenance": {
+        "python": "3.13.2",
+        "numpy": "2.2.6",
+        "Pillow": "11.2.1",
+        "tifffile": "2026.3.3",
+        "worker_sha256": "894e1d197ce9681596723a77907aea126910d216b423580f5aa2b9ade1ca9c6b",
+        "helper_modules_sha256": {
+          "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+          "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+          "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+          "image_peaks.py": "3e2f56818684a4c5f6a52c1251f92826a7cb39bbe498ac1056d81d1703cee94c",
+          "image_automation.py": "2e74258d7a3f4e2bc930940a02b598f9199b52d4cf2032e173058a1dda564a6f",
+          "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+          "image_joint.py": "8b6f0614023ea8b819b4b82067157c882b1ca68a09814c12637800cc884a9c1d",
+          "image_spatial_atlas.py": "fde59458e3a3bd947fe3660a2969212f0ace3cd8c46423f446ec58b41d35ae59",
+          "image_domain_compare.py": "99bf6072f13f27f922447d7db4e79b859f23f05a37de342affc886fc4d730175",
+          "image_feature_field.py": "788995b4868da80367af6510ac14947ec0da8ac8cc8bc2964ec77c8b390d2b86",
+          "image_spatial_domains.py": "4d1ffd2ccea57b9482eed4b997cbbc1f124d8fd814926f89099cb7f369507151",
+          "image_field_increment.py": "f00f2700bc6394c72a7c0d06ddd9d253fac9839457a60eb09d6f190bce338149",
+          "image_active_analysis.py": "cbac7dbfb4f498560429f7f354b9a136b8b63bb409743829b5c2b6ad51aa9fa8",
+          "image_gpa.py": "5d87c901a67b6b731805a5905818d45d4dc773013e7a5662af683af6d67951ca",
+          "image_gpa_core.py": "49a42947dfc12b511a6a83c4715acc477fabc6d69e75139d543a2360f2688215",
+          "image_topology.py": "0c3c000ed77d4802b1319a30f3fd3c7c04781424c3b2568185c54e1b52688e2a",
+          "image_topology_core.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b"
+        }
+      },
+      "manifest_path": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\workspace\\objects\\f95cfcb44c9d4ca5bf5a2016733d4b31\\object.json",
+      "image_path": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\workspace\\objects\\f95cfcb44c9d4ca5bf5a2016733d4b31\\preview.png"
+    },
+    "export": {
+      "state": "completed",
+      "backend": "external-image-workspace",
+      "request_id": "v1-export-misgrouped",
+      "object_id": "895c917b478945cab3e60e7ecce9cf28",
+      "kind": "export",
+      "created_utc": "2026-10-30T09:58:30.337868+00:00",
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "1a2c6153133f47c683ea8baf15ddf3ab",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\public-analytic-core-96.tiff",
+            "sha256": "fc3bc99851aea1d29bbbf855549fc70b9397d18903d09d7a1fafbe50ad99fb9a",
+            "stat": {
+              "ctime_ns": "1793354307996217000",
+              "device": "17081883644722306211",
+              "inode": "281474979316324",
+              "mtime_ns": "1793354308001430200",
+              "size": 262416
+            }
+          }
+        },
+        "calibration_id": "f7374865a1794df487e46be8b4eb77b8",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "Public synthetic signed metric; not specimen calibration",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.02,
+          "y": -0.03
+        }
+      },
+      "parent_object_id": "f95cfcb44c9d4ca5bf5a2016733d4b31",
+      "output_dir": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\v1-export",
+      "exported_files_sha256": {
+        "eligible_phase.npy": "3568022408e7a611e6a43ec5ca0c6c0b32ec90a63124f51e50e7fe9cd5bc3c19",
+        "loop_diagnostic_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "loop_diagnostic_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "loop_integer_residual_cycles.npy": "4f8fe05f6953c4939ac4a3b69210b7f9a410b36b5b0de4d71a3e05a157b9caf5",
+        "loop_maximum_abs_phase_step_radians.npy": "6fd5df0cb0e5de8f65b32b05d8f943bf43d82175f13f5d7587cb0593cb2fedf0",
+        "loop_valid.npy": "ddfc04833105abad2cef14e8d615371e99dc91605616b7c238066fcbd1750ea7",
+        "loop_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "loop_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+        "path_amplitude.npy": "a9c1819d56b2852a06a1f55f08a3c85acd2502ed4d29a1d141c2f5bbd22abaa6",
+        "path_eligible.npy": "5cc25d4ae0a40b6c7551b5d207449233fdc0d047e80627bbc82a2090df4a267c",
+        "path_offsets.npy": "979f65f86fa214e9e499e70ccb9c73021d4c340f52c69ffe269436cab9d1398f",
+        "path_phase_radians.npy": "211ee93140423a2161c7c6272fa9b0fbb5f1de8aa09f5f198b367cc326ad35d3",
+        "path_xy.npy": "ead9017f6e87f93035099194a0b0066a39df3ef98dfbad2d4e8324816f3e14be",
+        "topology-circuits.csv": "cc2469ee3250381bd0c9e719814c73c142c4049d246d4f3109e1985c9b577514",
+        "topology-report.json": "ab9da1ec679778b08d87ab07c49f228762f1e307413a19720a7c0f2fdf9b5369",
+        "wrapped_phase_step_radians.npy": "9743b42180711ebf49b29025252ce45918a73fdc4ca358461572c8771bd7c798",
+        "preview.png": "0f04f67604a49faa4a146b54e3c7d84710f1d7a71dffa91c9b5c7c5369c780a0",
+        "provenance.json": "861b54ee7e60090a2bf072c86befa22d31f9581e18a0276a9b39c4cc643e5041",
+        "manifest.json": "312cf2e924fbf36f53fe2950906594046cb7e9598d20c380e1d866e3d9455848"
+      },
+      "scientific_NPY_is_not_display_PNG": true,
+      "dm_save_as_called": false,
+      "schema_version": 1,
+      "computation": "explicit external Python; DM not called",
+      "dm_called": false,
+      "files_sha256": {},
+      "software_provenance": {
+        "python": "3.13.2",
+        "numpy": "2.2.6",
+        "Pillow": "11.2.1",
+        "tifffile": "2026.3.3",
+        "worker_sha256": "894e1d197ce9681596723a77907aea126910d216b423580f5aa2b9ade1ca9c6b",
+        "helper_modules_sha256": {
+          "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+          "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+          "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+          "image_peaks.py": "3e2f56818684a4c5f6a52c1251f92826a7cb39bbe498ac1056d81d1703cee94c",
+          "image_automation.py": "2e74258d7a3f4e2bc930940a02b598f9199b52d4cf2032e173058a1dda564a6f",
+          "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+          "image_joint.py": "8b6f0614023ea8b819b4b82067157c882b1ca68a09814c12637800cc884a9c1d",
+          "image_spatial_atlas.py": "fde59458e3a3bd947fe3660a2969212f0ace3cd8c46423f446ec58b41d35ae59",
+          "image_domain_compare.py": "99bf6072f13f27f922447d7db4e79b859f23f05a37de342affc886fc4d730175",
+          "image_feature_field.py": "788995b4868da80367af6510ac14947ec0da8ac8cc8bc2964ec77c8b390d2b86",
+          "image_spatial_domains.py": "4d1ffd2ccea57b9482eed4b997cbbc1f124d8fd814926f89099cb7f369507151",
+          "image_field_increment.py": "f00f2700bc6394c72a7c0d06ddd9d253fac9839457a60eb09d6f190bce338149",
+          "image_active_analysis.py": "cbac7dbfb4f498560429f7f354b9a136b8b63bb409743829b5c2b6ad51aa9fa8",
+          "image_gpa.py": "5d87c901a67b6b731805a5905818d45d4dc773013e7a5662af683af6d67951ca",
+          "image_gpa_core.py": "49a42947dfc12b511a6a83c4715acc477fabc6d69e75139d543a2360f2688215",
+          "image_topology.py": "0c3c000ed77d4802b1319a30f3fd3c7c04781424c3b2568185c54e1b52688e2a",
+          "image_topology_core.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b"
+        }
+      },
+      "manifest_path": "F:\\microscopy-workbench-f3a\\analysis\\f3a-v1-golden\\workspace\\objects\\895c917b478945cab3e60e7ecce9cf28\\object.json"
+    },
+    "files_sha256": {
+      "public-analytic-core-96.tiff": "fc3bc99851aea1d29bbbf855549fc70b9397d18903d09d7a1fafbe50ad99fb9a",
+      "v1-export/eligible_phase.npy": "3568022408e7a611e6a43ec5ca0c6c0b32ec90a63124f51e50e7fe9cd5bc3c19",
+      "v1-export/loop_diagnostic_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "v1-export/loop_diagnostic_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "v1-export/loop_integer_residual_cycles.npy": "4f8fe05f6953c4939ac4a3b69210b7f9a410b36b5b0de4d71a3e05a157b9caf5",
+      "v1-export/loop_maximum_abs_phase_step_radians.npy": "6fd5df0cb0e5de8f65b32b05d8f943bf43d82175f13f5d7587cb0593cb2fedf0",
+      "v1-export/loop_valid.npy": "ddfc04833105abad2cef14e8d615371e99dc91605616b7c238066fcbd1750ea7",
+      "v1-export/loop_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "v1-export/loop_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "v1-export/manifest.json": "312cf2e924fbf36f53fe2950906594046cb7e9598d20c380e1d866e3d9455848",
+      "v1-export/path_amplitude.npy": "a9c1819d56b2852a06a1f55f08a3c85acd2502ed4d29a1d141c2f5bbd22abaa6",
+      "v1-export/path_eligible.npy": "5cc25d4ae0a40b6c7551b5d207449233fdc0d047e80627bbc82a2090df4a267c",
+      "v1-export/path_offsets.npy": "979f65f86fa214e9e499e70ccb9c73021d4c340f52c69ffe269436cab9d1398f",
+      "v1-export/path_phase_radians.npy": "211ee93140423a2161c7c6272fa9b0fbb5f1de8aa09f5f198b367cc326ad35d3",
+      "v1-export/path_xy.npy": "ead9017f6e87f93035099194a0b0066a39df3ef98dfbad2d4e8324816f3e14be",
+      "v1-export/preview.png": "0f04f67604a49faa4a146b54e3c7d84710f1d7a71dffa91c9b5c7c5369c780a0",
+      "v1-export/provenance.json": "861b54ee7e60090a2bf072c86befa22d31f9581e18a0276a9b39c4cc643e5041",
+      "v1-export/topology-circuits.csv": "cc2469ee3250381bd0c9e719814c73c142c4049d246d4f3109e1985c9b577514",
+      "v1-export/topology-report.json": "ab9da1ec679778b08d87ab07c49f228762f1e307413a19720a7c0f2fdf9b5369",
+      "v1-export/wrapped_phase_step_radians.npy": "9743b42180711ebf49b29025252ce45918a73fdc4ca358461572c8771bd7c798",
+      "workspace/requests/v1-calibration.json": "c055451f192873f378654e56bf387710c45c9be6fe6a98f9af4438d08acd0c25",
+      "workspace/requests/v1-export-misgrouped.json": "65780508812f4fbe2582f1a2df5e5a8f11e8b7e10f285153057e593caa622a25",
+      "workspace/requests/v1-fft.json": "302aba52d248d9deb7e6f22b72cd930df802dbd02d104509d0e0e917997339c5",
+      "workspace/requests/v1-frame.json": "b1dbd9743b75d75f2e574256e24e91bf3ba0e8270211fbff089fac1f23bdfb14",
+      "workspace/requests/v1-gpa-first.json": "3425aca3e667942418510c240fcddfa37ef8b9a7921c587e7b572a4decd05c65",
+      "workspace/requests/v1-gpa-second.json": "42e84c164ba4d2948b6f691a031cf5d371299dd396f299df78269ccbf455a452",
+      "workspace/requests/v1-open.json": "404d70804c919904a6452efe3f46d06988e68a2fb72328280b1b338243a18113",
+      "workspace/requests/v1-topology-misgrouped.json": "83d73cbb0e9ff876f711a28ca8d2a8ba7b7dfa5ac1a69d25c4881868dca21d18",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/amplitude.npy": "47469bdd3add7a8c312c4ac3dcee7110dd8f9cc00c1330b29a2458ac3d31f282",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/complex_band.npy": "54485708e7e8e2c3eb0739c8dc3d158fad96e9cf722e9863e8e50f6f8be723a9",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/deformation_gradient_pixel_xy.npy": "7df06131ba5bec875c8edc799727cc854b6b1ebce4b3f772f3287f3128ea7085",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/deformation_gradient_xy.npy": "6772d76c4dc495c236c434fdf5ea3796d8f26e5894202bb6ea4b944d5a5fb661",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/displacement_nm_xy.npy": "3a233899321b22bb7978e0e3b5bd77cfff27ff0612e662e74708d2ffec12d645",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/displacement_pixel_xy.npy": "0be2b2fabc68346629df94bed12bb5f985d172f01dcf430df308045dd0a66273",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/edge_invalid.npy": "9f1405d3a31c0cfbf7e2604723b07d556714262471a8222c52e9e89c3dc629dc",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/gpa-report.json": "1f5b4234db06d4292781c3b5072f83d2054fafedcf93a147d9b160d923d6e4d9",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/gpa-summary.csv": "9748d079f77f7be97032703225c9074e2026b62ae48162151fa1aa9a820b7d1c",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/low_amplitude.npy": "27abcd8405dd0cbfe5069b94f4728777d8c5381fbf16a3ec2bb03a68d4fc1482",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/mask_frequency.npy": "da8870fd3a512914aea46c09939c458c606630fab842f951310fe4b83148c6f5",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/object.json": "28bea839c57951d920b7218a6cda78439e0db7aab180c1df28142a67a5b4d220",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/phase_demodulated_wrapped.npy": "4613b09c846dfbb69ba434d93806d2e85bd2d4d92809e8e2f183be8cc7eaa690",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/phase_unwrapped.npy": "bd9c6915d65381b856e9984b7bde283a833e3a5c17507c70fcbbcb72f3c01438",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/phase_unwrap_discontinuity.npy": "39e0433e38a53b078f3d56d45100a7af69b2813dd69158ab16f378fba8a6c5c6",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/phase_wrapped.npy": "cb352c39cb6c7444e2961c1830a4b0eb47704182949fb583ff89b51d5a317615",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/preview.png": "0ebe335a2beea69b287897dfeca8965d3e16157dcd84ec1070ed6f9c8b8e1af0",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/rotation_radians.npy": "6347e5857c840c5cbb0f44c267d1400b59a9149a4614ace89ed818facbede3d2",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/strain_green_lagrange_xy.npy": "3d4da630035bccd7bb64a1e66e8268ef9e1c42b1f6fc397a153da12255609f97",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/valid_displacement.npy": "1717808c797802c71abf8c5aae7c5d01d2b223c2a7eca8be585aa8db7d4671f2",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/valid_phase.npy": "e44f8372c71ac7974cfb4ccbfa30646297fd2f35e1dfb69673e2dc76fbf62c68",
+      "workspace/objects/00e45999f4d94e008f5608046291df10/valid_tensor.npy": "128d527a42da184904eb13248100e21d2a9630bad20b3b8ffa7868aa1d344578",
+      "workspace/objects/1a2c6153133f47c683ea8baf15ddf3ab/data.npy": "de2cbe0e30addd91cb4360f449ffadcba0255d899dc21b76803f1345615f2d79",
+      "workspace/objects/1a2c6153133f47c683ea8baf15ddf3ab/object.json": "1cba062321db00e3d1a1ded5304ef23506b9ce9c6ed97dbdfa32aad399c74ba5",
+      "workspace/objects/1b404bd7c7f44dd39e78b5daea146dc7/data.npy": "2ca5a70c8afaa84b729dd1e0b1cbd0d0bf37aa26f0cbe767b853d1542518c0ff",
+      "workspace/objects/1b404bd7c7f44dd39e78b5daea146dc7/object.json": "b8fbed4ea714c5f45ee725723059803a97d776f1f64cc09a122a5b52379a223e",
+      "workspace/objects/1b404bd7c7f44dd39e78b5daea146dc7/preview.png": "03d63334a073b0a7383b854d42166a3a9f7b85a0746f51b8e546eabd5e7c5265",
+      "workspace/objects/3781651d0aed4a1391737ef4b3fffc56/object.json": "3cbe433191096800257cfc7fbeafb91b7a6fda59e4afb4995f819e2381342ff6",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/amplitude.npy": "6782d599beae3df7bde8fa3dd36a3954fac8765a648ee99920aa87f8aee807d9",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/complex_band.npy": "29e7496e12ac8f1da323d9d805abb1f52b95eb29f1528dc36ed1611ba25d33fc",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/deformation_gradient_pixel_xy.npy": "e3940573cee13217e20e5d91691c7f128449e571be8c764c51c2c38ea2347a3c",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/deformation_gradient_xy.npy": "cb608dbf6b091cecbdd9b726f032667e674681d1d1225dee39c094f3ca65c534",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/disconnected_invalid.npy": "11af704a8796e759fa4091694dd6dab70c442da1177387285fbe8cef234936de",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/displacement_nm_xy.npy": "8ef33b82763d58379d6e633a73d111b494254836061cd22e95ca790d42ea608e",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/displacement_pixel_xy.npy": "379e70e6585e358403b7ec35dd6af94b7af56ac7cf177c3acd18216893ab0f2b",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/edge_invalid.npy": "9f1405d3a31c0cfbf7e2604723b07d556714262471a8222c52e9e89c3dc629dc",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/gpa-report.json": "dde00d0a39d5f04806baad146d3ce62dbbfb691c0abec6c7eece35631e4172c0",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/gpa-summary.csv": "36683d076f97942890d9563ed8cf1549dd010e8d6d3e31049cd14a6eef975e07",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/low_amplitude.npy": "5ee4886ab17acae767f81822907512abbc3f0ce814caa8627351a499a4488a5b",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/mask_frequency.npy": "9d2b4469ffe9349f99e157bfaa837e2eca02214bf56b9960a6039e1942887021",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/object.json": "ccfc8a09d50e1939156bc4370fc8c36ba772bc6e043511d671d7cf65b0c288dc",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/phase_demodulated_wrapped.npy": "3822fbba91eb1359002e7425e31c85d8bd29aa1859b6cc36643e1dea9fcb700d",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/phase_unwrapped.npy": "027d92d56eef7334fdb6b63c41b4aa65412df312ed9f3b87fb1a539b80d0c3f5",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/phase_unwrap_discontinuity.npy": "d8fab2171b0449cdd04900857dff37bc52005fa230e3e6a6e1686c11923b3e0a",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/phase_wrapped.npy": "bf167777e79c0758aeffcf6c1687a6513f0c2817842c89f4735920c1e198fcdc",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/preview.png": "1068660d38391706c1c2f40a16259be93d6ff0038f6a62f7d4a4c4ad3afe6457",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/rotation_radians.npy": "96e8bae23820a894f9fa3397de58cf4abe8d0f16098617de4d222b331eea66dc",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/strain_green_lagrange_xy.npy": "f2a3948224721e27b7743e53a2c7257e59b0d607bd7d949b2d90bc8f375d9a4f",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/valid_displacement.npy": "dce7975d996cee5e28b40b88d0a9da75169b58864e564ca79b981edbd5f42316",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/valid_phase.npy": "ecdb0315ecfd99658c3b734d28bb6d92f5ce3b4a7e603a6213df647189755737",
+      "workspace/objects/6e2479111548495ebc12d5b33bea9796/valid_tensor.npy": "03e61665de6f5bbb80e97f2f6bca37c52dc277ec1517d9f31b9fe7c825d3944b",
+      "workspace/objects/895c917b478945cab3e60e7ecce9cf28/object.json": "05141c4239e25aa6567c3442dfc7ad5f277169b7d42635b1f5f5d49f5266d4aa",
+      "workspace/objects/f7374865a1794df487e46be8b4eb77b8/object.json": "e19840cdbdf74748ddbc5f9996f7951758ac765b72c4d6ccdc20a60a8d2136a9",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/eligible_phase.npy": "3568022408e7a611e6a43ec5ca0c6c0b32ec90a63124f51e50e7fe9cd5bc3c19",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/loop_diagnostic_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/loop_diagnostic_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/loop_integer_residual_cycles.npy": "4f8fe05f6953c4939ac4a3b69210b7f9a410b36b5b0de4d71a3e05a157b9caf5",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/loop_maximum_abs_phase_step_radians.npy": "6fd5df0cb0e5de8f65b32b05d8f943bf43d82175f13f5d7587cb0593cb2fedf0",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/loop_valid.npy": "ddfc04833105abad2cef14e8d615371e99dc91605616b7c238066fcbd1750ea7",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/loop_winding_cycles.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/loop_winding_integer.npy": "8e3fe32d42ccb3823900db0803b6120ecccb2a812b3e610ef99f7aed029d0689",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/object.json": "9ae98926f99987ea1d49a7effdb22fa9affab00c6d393c34b5d7e16be2e61b97",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/path_amplitude.npy": "a9c1819d56b2852a06a1f55f08a3c85acd2502ed4d29a1d141c2f5bbd22abaa6",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/path_eligible.npy": "5cc25d4ae0a40b6c7551b5d207449233fdc0d047e80627bbc82a2090df4a267c",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/path_offsets.npy": "979f65f86fa214e9e499e70ccb9c73021d4c340f52c69ffe269436cab9d1398f",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/path_phase_radians.npy": "211ee93140423a2161c7c6272fa9b0fbb5f1de8aa09f5f198b367cc326ad35d3",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/path_xy.npy": "ead9017f6e87f93035099194a0b0066a39df3ef98dfbad2d4e8324816f3e14be",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/preview.png": "0f04f67604a49faa4a146b54e3c7d84710f1d7a71dffa91c9b5c7c5369c780a0",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/topology-circuits.csv": "cc2469ee3250381bd0c9e719814c73c142c4049d246d4f3109e1985c9b577514",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/topology-report.json": "ab9da1ec679778b08d87ab07c49f228762f1e307413a19720a7c0f2fdf9b5369",
+      "workspace/objects/f95cfcb44c9d4ca5bf5a2016733d4b31/wrapped_phase_step_radians.npy": "9743b42180711ebf49b29025252ce45918a73fdc4ca358461572c8771bd7c798"
+    }
+  },
+  "legacy_provider_fixture": "topology_adapter_v1.py.txt"
+}

@@ -137,11 +137,14 @@ def _source_bundle(workspace, ids, api, *, load=False):
 def _csv(report):
     buffer = io.StringIO(newline="")
     writer = csv.writer(buffer)
-    writer.writerow(["loop", "orientation", "rect_local_xyxy", "reflection", "gx_cycles_per_pixel", "gy_cycles_per_pixel", "valid", "raw_winding", "canonical_winding", "max_phase_step_rad", "minimum_amplitude", "failures"])
+    writer.writerow(["group_index", "group_status", "loop", "orientation", "rect_local_xyxy", "reflection", "gx_cycles_per_pixel", "gy_cycles_per_pixel", "valid", "raw_winding", "canonical_winding", "max_phase_step_rad", "minimum_amplitude", "failures"])
+    groups = {group["group_index"]: group for group in report.get("loop_groups", [])}
     for loop in report["loops"]:
+        group_index = loop.get("group_index")
+        group_status = groups[group_index]["status"] if group_index is not None else "legacy_v1_global_summary"
         for row in loop["reflections"]:
             index = row["reflection_index"]
-            writer.writerow([loop.get("loop_id", str(loop["loop_index"])), loop["orientation"], ":".join(map(str, loop["rect_xyxy"])),
+            writer.writerow([group_index, group_status, loop.get("loop_id", str(loop["loop_index"])), loop["orientation"], ":".join(map(str, loop["rect_xyxy"])),
                              index, *report["g_vectors_cycles_per_pixel"][index], row["valid"], row["winding_integer"],
                              row["canonical_winding_integer"], row["maximum_abs_wrapped_step_radians"], row["minimum_path_amplitude"], ";".join(row["failures"])])
     return buffer.getvalue().encode("utf-8")
@@ -169,7 +172,7 @@ def _preview(directory, metadata, phase, arrays, size, api):
         color = (0, 230, 255) if index % 2 == 0 else (255, 190, 40)
         coords = [12+(x0+.5)*ratio, 48+(y0+.5)*ratio, 12+(x1-.5)*ratio, 48+(y1-.5)*ratio]
         draw.rectangle(coords, outline=color, width=2)
-        draw.text((coords[0]+3, coords[1]+3), loop.get("loop_id", "L"+str(index)), fill=color, stroke_width=1, stroke_fill="black")
+        draw.text((coords[0]+3, coords[1]+3), "G"+str(loop.get("group_index", 0))+":"+loop.get("loop_id", "L"+str(index)), fill=color, stroke_width=1, stroke_fill="black")
     draw.text((12, 8), "Wrapped geometric phase + explicit circuits", fill="black")
     draw.text((12, 25), "Conditional projected evidence | reflection 0", fill="black")
     status = metadata["report"]["status"]
@@ -233,13 +236,45 @@ def validate_references(workspace, metadata, api):
     api.need(metadata["parameters"] == parameters and metadata["input_dependency"] == dependency and
              metadata["dependency_sha256"] == hashlib.sha256(api.canonical({"input": dependency, "parameters": parameters})).hexdigest(),
              "Topology source/parameters no longer agree with the original request", "CORRUPT_OBJECT")
-    api.need(metadata["report"]["algorithm"] == core.ALGORITHM_VERSION and metadata["report"]["shape_yx"] == dependency["common"]["shape_yx"] and
+    api.need(metadata["report"]["algorithm"] in core.SUPPORTED_ALGORITHMS and metadata["report"]["shape_yx"] == dependency["common"]["shape_yx"] and
              metadata["report"]["calibration_nm_xy"] == dependency["common"]["calibration_nm_xy"] and
              metadata["report"]["loop_count"] == len(parameters["loops"]) and
              metadata["report"]["amplitude_floor_relative"] == parameters["amplitude_floor_relative"] and
              metadata["retained_reflections"] == dependency["retained_reflections"] and
              metadata["report"]["g_vectors_cycles_per_pixel"] == [row["g_vector_cycles_per_pixel"] for row in dependency["retained_reflections"]],
              "Topology scientific contract changed", "CORRUPT_OBJECT")
+    if metadata["report"]["algorithm"] == core.ALGORITHM_VERSION:
+        expected_groups, expected_relations = core.spatial_groups(parameters["loops"], metadata["shape_yx"])
+        actual_groups = metadata["report"].get("loop_groups")
+        api.need(type(actual_groups) is list and len(actual_groups) == len(expected_groups) and
+                 all({key: actual.get(key) for key in ("group_index", "loop_indices", "strictly_nested_loop_pairs")} == expected
+                     for actual, expected in zip(actual_groups, expected_groups)),
+                 "Topology spatial groups differ from the original circuit geometry", "CORRUPT_OBJECT")
+        grouping = metadata["report"].get("grouping", {})
+        api.need(grouping.get("policy") == "strict_nesting_components_v1" and
+                 grouping.get("group_count") == len(expected_groups) and
+                 grouping.get("inter_group_relations") == expected_relations and
+                 all(metadata["report"]["loops"][index].get("group_index") == group["group_index"]
+                     for group in expected_groups for index in group["loop_indices"]),
+                 "Topology grouping/loop assignments changed", "CORRUPT_OBJECT")
+        for group in actual_groups:
+            members = group["loop_indices"]
+            reflections = group.get("reflections", [])
+            api.need(len(reflections) == len(metadata["retained_reflections"]),
+                     "Topology group has wrong reflection coverage", "CORRUPT_OBJECT")
+            for i, reflection in enumerate(reflections):
+                valid = [index for index in members if metadata["report"]["loops"][index]["reflections"][i]["valid"]]
+                charges = [metadata["report"]["loops"][index]["reflections"][i]["canonical_winding_integer"] for index in valid]
+                pairs = [pair for pair in group["strictly_nested_loop_pairs"] if all(index in valid for index in pair)]
+                api.need(reflection.get("reflection_index") == i and reflection.get("valid_loop_indices") == valid and
+                         reflection.get("canonical_winding_integers") == charges and
+                         reflection.get("strictly_nested_valid_loop_pairs") == pairs,
+                         "Topology group summaries refer to other circuits", "CORRUPT_OBJECT")
+        if len(expected_groups) > 1:
+            api.need(metadata["report"].get("projected_burgers") is None and
+                     metadata["report"].get("reflections") == [] and metadata["report"].get("burgers_candidates") == [] and
+                     metadata["report"].get("status") == "spatially_grouped_evidence",
+                     "Separate topology groups cannot share a global closure fit", "CORRUPT_OBJECT")
     api.need(len(metadata.get("history", [])) <= 8, "Topology history budget exceeded", "CORRUPT_OBJECT")
     expected_history = []
     if original.get("previous_topology_id"):

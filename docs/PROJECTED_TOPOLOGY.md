@@ -120,8 +120,26 @@ an optional `loop_id` matching `[A-Za-z][A-Za-z0-9_-]{0,39}`. Do not choose
 loops automatically around bright colors or report a defect from one selected
 pixel. Compare distinct nested loops that are intended to enclose the same
 candidate support, and retain that geometric relationship in the report.
-Separate non-nested loops measure separate enclosed support; disagreement
-between them is not by itself an error.
+The current algorithm groups loops by the connected components of strict
+rectangle containment: one rectangle must lie strictly inside the other on all
+four sides, keeping their sampled boundaries disjoint. Group membership uses
+the requested geometry only, independently of validity or winding. An invalid
+path therefore cannot silently split a group or remove contrary observations.
+
+Each group is a geometric comparison support, not an automatically localized
+core. A containing rectangle can connect several inner rectangles around
+different cores. Distinct nested windings can reflect additional net phase
+charge in the intervening annulus; they are inconsistent with one stable
+closure for that group, not an unphysical observation. Preserve every winding
+and unavailable reason.
+
+Non-nested loops have no containment edge. Disjoint remote loops retain their
+own evidence and do not invalidate a nested group's agreement merely by
+measuring a different winding. A single remote zero loop still lacks nested
+stability evidence and does not establish defect absence. Overlapping
+non-nested loops can also be separate groups; their supports are ambiguous for
+this comparison and must not be described as physically disjoint. Geometric
+grouping neither segments domains nor establishes distinct physical defects.
 
 Validity is determined from raw `phase_demodulated_wrapped`, amplitude and edge
 support, independently of GPA unwrapping masks, strain stencils or globally
@@ -144,9 +162,9 @@ numerical closure and does not measure confidence in a real lattice defect.
 ## Directional fit, candidates and redundancy
 
 For an accepted winding vector, solve `G b_closure = -w` in the image-coordinate
-pixel metric. Two independent directions determine two unknown closure
-components algebraically. An exact two-direction fit is therefore expected and
-is **not independent validation**. Rank deficiency or poor conditioning must
+pixel metric separately within each loop group. Two independent directions
+determine two unknown closure components algebraically. An exact two-direction
+fit is therefore expected and is **not independent validation**. Rank deficiency or poor conditioning must
 remain visible, with no unique vector inferred from one effective direction.
 
 At least three nonharmonic direction families are required for the report's
@@ -160,14 +178,29 @@ filtering errors can affect every direction and loop together. Changing the
 aperture/reference creates new GPA objects before a new topology revision;
 F3a never adjusts upstream science to force agreement.
 
+Read `loop_groups[]`: each entry retains its `group_index`, global
+`loop_indices`, strictly nested loop pairs, reflection summaries, fit, status
+and candidate comparisons. Loop rows retain their `group_index`; valid-loop and
+nested-pair indices remain indices into the original requested loop list.
+With more than one geometric group, the overall status is
+`spatially_grouped_evidence`; it is a container for the separate outcomes, not a
+claim that every group passes or that one closure describes all support. The
+top-level `projected_burgers` is null and its `reflections` and
+`burgers_candidates` are empty in that case. Inspect the corresponding fields
+inside every group. A single group also retains these flat summary fields for
+convenience. Do not select only a favorable
+group, pool different groups' winding constraints into one vector, or treat the
+overall status as a substitute for a group's unavailable, partial or
+inconsistent evidence.
+
 Optional `burgers_candidates` contains one to sixteen explicit caller-supplied
 `{label,b_pixel_xy:[bx,by]}` projected values in local spatial pixels. Required
 `model_assumption_text` states the actual lattice-displacement working
 assumption and candidate source where applicable. Compare their predictions
 `w_pred=-G b_candidate` to available observed windings and retain residuals,
-ties, missing constraints and source statements. A preferred candidate is only
-compatible with the supplied evidence and declared tolerances. Do not infer an
-unprovided lattice basis, Miller indices, chemical phase, beam direction,
+ties, missing constraints and source statements separately for each group. A
+preferred candidate is only compatible with the supplied evidence and declared
+tolerances. Do not infer an unprovided lattice basis, Miller indices, chemical phase, beam direction,
 out-of-plane component or a unique 3D Burgers vector. If no candidate is supplied,
 return measured evidence without manufacturing one.
 
@@ -185,6 +218,8 @@ orientation; the report's declared image-path sign remains unchanged.
 | Zero winding for a reflection | No measured net winding for that g/path; a closure with `g·b=0` is invisible to that reflection. |
 | Zero winding for several directions | No measured net projected closure on those paths; opposite-sign defects/dipoles can cancel, and unresolved depth or out-of-plane components remain unavailable. |
 | Agreement across at least three directions and nested loops | Redundant phase consistency within the selected data and policies; it cannot alone prove a real defect or unique conventional 3D b. |
+| Different windings in separate geometric groups | Different sampled enclosed support; this alone is not a contradiction, and overlapping non-nested supports remain ambiguous. |
+| Different windings within a nested group | No single stable closure for the group; added or cancelling annular phase charge remains a possible observation. |
 | Disagreement or unavailable path | An explicit limitation requiring interpretation or a deliberate new measurement; not a reason to delete contrary evidence. |
 
 Scan/projector distortion, phase contrast, compound-basis changes, overlapping
@@ -201,6 +236,19 @@ new topology object via `previous_topology_id`; at most eight historical entries
 are retained in its flat history, on the same FFT. Prior topology, GPA,
 FFT and source objects stay immutable. No new AnalysisContext role is invented.
 Original provider IDs and exact dependency/revision bindings remain authoritative.
+
+The current report algorithm is
+`saved-wrapped-phase-rectangular-topology-v2`, with grouping policy
+`strict_nesting_components_v1` and explicit inter-group `disjoint_support` or
+`overlap_non_nested` relationships. The report's explicit algorithm version
+determines its semantics. Historical
+`saved-wrapped-phase-rectangular-topology-v1` records used one global
+all-valid-loop consistency comparison, even for unrelated support. They remain
+readable and verifiable under that original algorithm, with their original
+reports, identities, hashes and query outcomes. A current grouped revision is a
+new immutable object; it must not reinterpret, rewrite or relabel a saved v1
+record as grouped evidence. In particular, the original v1 synthetic acceptance
+reports do not qualify mixed-loop grouping semantics.
 
 After a timeout or cancellation, query the original request with `image_result`;
 do not replay an unknown write or run another FFT. A fresh client can reopen

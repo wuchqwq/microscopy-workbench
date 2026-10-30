@@ -205,8 +205,19 @@ class SavedPhaseTopologyTest(unittest.TestCase):
         phase = self.phases()
         for loops in ([self.loops[0]] * 2, [self.loops[0], [10, 20, 44, 44]], [self.loops[0]]):
             report = analyze(phase, np.ones_like(phase), self.g, loops)["report"]
-            self.assertEqual(report["status"], "insufficient_loop_stability")
-            self.assertFalse(report["reflections"][0]["strictly_nested_valid_loop_pairs"])
+            if len(loops) > 1:
+                self.assertEqual(report["status"], "spatially_grouped_evidence")
+                self.assertIsNone(report["projected_burgers"])
+            else:
+                self.assertEqual(report["status"], "insufficient_loop_stability")
+                self.assertIsNone(report["projected_burgers"]["b_pixel_xy"])
+            self.assertEqual(len(report["loop_groups"]), len(loops))
+            for group in report["loop_groups"]:
+                self.assertEqual(group["status"], "insufficient_loop_stability")
+                self.assertTrue(all(not reflection["stable"] and
+                                    reflection["strictly_nested_valid_loop_pairs"] == []
+                                    for reflection in group["reflections"]))
+                self.assertFalse(group["reflections"][0]["strictly_nested_valid_loop_pairs"])
 
     def test_user_candidates_preserve_units_and_do_not_claim_unique_match(self):
         report = self.run_topology(calibration_nm_xy=[.02, -.03],
