@@ -1,0 +1,10 @@
+"case","strategy","total_windows","total_fft_pixels","B_vector_evidence_count","new_B_observations","B_evidence_detected","B_evidence_missed","B_vector_false_positive_count","boundary_count","boundary_bands_intersecting_truth","unknown_fraction","domain_count","elapsed_ms","acceptance_only_negative_ms","stop_reason"
+"boundary","active",8,20480,5,3,"true","false",0,2,2,0,4,104036.643,9084.6509,"budget_exhausted"
+"boundary","uniform",8,20480,4,2,"true","false",0,2,2,0,6,51151.87110000002,0,
+"boundary","seeded_stratified",8,20480,4,2,"true","false",0,2,2,0,6,51966.6948,0,
+"narrow-f1-crop","active",8,20480,6,2,"true","false",0,1,1,0,7,116124.94170000002,9985.00079999998,"budget_exhausted"
+"narrow-f1-crop","uniform",8,20480,4,0,"true","false",0,0,0,0,8,73808.04820000002,0,
+"narrow-f1-crop","seeded_stratified",8,20480,5,1,"true","false",0,0,0,0,8,74809.68430000002,0,
+"narrow-offset-right","active",8,20480,3,3,"true","false",0,0,0,0.25,5,135957.6176,11569.046600000001,"budget_exhausted"
+"narrow-offset-right","uniform",8,20480,2,2,"true","false",0,0,0,0.25,5,88160.532,0,
+"narrow-offset-right","seeded_stratified",8,20480,2,2,"true","false",0,0,0,0.25,5,85766.8737,0,

@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "scope": "Final compiled MCP readonly R3/F1a legacy fields/map and original-ID recovery; no browser or FFT replay",
+  "metadata_comparison": "Standard JSON wire values: negative zero rotation constants serialize to zero in Node; array/workspace bytes remain strict SHA equality",
+  "prior_probe": "r1 failed because JS deepStrictEqual distinguishes negative zero; preserved separately, no production or numerical threshold change",
+  "trials": [
+    {
+      "checks": [
+        {
+          "object_id": "1dab7f37075548f5a191f78e7139a78a",
+          "kind": "spatial_field",
+          "request_id": "f1a-dd09f2608a-38",
+          "sample_count": 4,
+          "elapsed_ms": 12306.557299999999,
+          "new_fft_count": 0
+        },
+        {
+          "object_id": "98b36f3314e5457696bee0d9d7c377ac",
+          "kind": "domain_map",
+          "request_id": "f1a-dd09f2608a-39",
+          "sample_count": 4,
+          "elapsed_ms": 15814.640899999999,
+          "new_fft_count": 0
+        }
+      ],
+      "file_count": 2491,
+      "all_file_hashes_unchanged": true
+    },
+    {
+      "checks": [
+        {
+          "object_id": "3ce137d8f67b466c9377ef9973502cb6",
+          "kind": "feature_field",
+          "request_id": "feature-smoke-5",
+          "sample_count": 8,
+          "elapsed_ms": 20135.253600000004,
+          "new_fft_count": 0
+        }
+      ],
+      "file_count": 950,
+      "all_file_hashes_unchanged": true
+    }
+  ]
+}

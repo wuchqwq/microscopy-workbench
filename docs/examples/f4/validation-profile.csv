@@ -1,0 +1,5 @@
+label,mode,wall_seconds,sha_file_calls,read_json_calls,object_calls,_object_record_calls,load_array_calls
+A1,qualified,5.554012499982491,1628,1074,444,445,228
+B1,unconditional,8.6328125,3227,2136,885,885,456
+B2,unconditional,8.430408100015484,3227,2136,885,885,456
+A2,qualified,5.332673899945803,1628,1074,444,445,228
