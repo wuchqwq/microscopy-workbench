@@ -38,13 +38,31 @@ jobs:
           from pathlib import Path
           p = Path('scripts/review_f3b_direction_patch.py')
           s = p.read_text(encoding='utf-8')
-          old = "if metadata.get('kind') != 'twin_compare':"
-          assert s.count(old) == 1
-          s = s.replace(old, "if metadata.get('kind') != 'twin_compare' or path.parent.parent.name != 'objects':")
-          old = "assert read['projected_relation'] == metadata['projected_relation']"
-          assert s.count(old) == 1
-          s = s.replace(old, "assert read['result']['projected_relation'] == metadata['projected_relation']")
+          replacements = {
+              "if metadata.get('kind') != 'twin_compare':": "if metadata.get('kind') != 'twin_compare' or path.parent.parent.name != 'objects':",
+              "assert read['projected_relation'] == metadata['projected_relation']": "assert read['result']['projected_relation'] == metadata['projected_relation']",
+              "separated = angle > threshold + _ROUND_OFF": "separated = bool(angle > threshold + _ROUND_OFF)",
+          }
+          for before, after in replacements.items():
+              assert s.count(before) == 1, before
+              s = s.replace(before, after)
           p.write_text(s, encoding='utf-8')
+          test = Path('tests/test_twin_direction_resolution.py')
+          t = test.read_text(encoding='utf-8').replace('import copy\n', 'import copy\nimport json\n', 1)
+          marker = "\n\nif __name__ == '__main__':"
+          assert t.count(marker) == 1
+          extra = '''
+              def test_reports_are_strict_json_for_unresolved_and_positive_inputs(self):
+                  for q in ([[.4, .2], [-.400001, -.199999]], [[.4, .2], [.2, -.4]]):
+                      result = twin._independence(rows(q))
+                      decoded = json.loads(json.dumps(result, allow_nan=False))
+                      self.assertEqual(decoded, result)
+                  result = twin.evaluate(*cases(), REGISTRATION, .005, interface=INTERFACE)
+                  self.assertEqual(json.loads(json.dumps(result, allow_nan=False)), result)
+          '''
+          import textwrap
+          t = t.replace(marker, '\n' + textwrap.indent(textwrap.dedent(extra).strip(), '    ') + marker)
+          test.write_text(t, encoding='utf-8')
           PY
           python -B scripts/review_f3b_direction_patch.py
           git restore -- scripts/review_f3b_direction_patch.py
@@ -72,7 +90,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git diff --exit-code -- .github/workflows scripts
-          git add crystallography/twin_geometry.py docs/PROJECTED_TWIN_EVIDENCE.md README.zh-CN.md docs/validation/f3b/direction-review.json
+          git add crystallography/twin_geometry.py docs/PROJECTED_TWIN_EVIDENCE.md README.zh-CN.md docs/validation/f3b/direction-review.json tests/test_twin_direction_resolution.py
           git diff --cached --check
           git commit -m 'fix: reject unresolved Friedel and harmonic direction jitter with versioned evidence'
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: bearer $GH_TOKEN" push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
