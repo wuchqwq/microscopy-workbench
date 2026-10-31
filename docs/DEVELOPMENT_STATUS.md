@@ -1,8 +1,19 @@
 # Mainline consolidation and next scientific stage
 
-Updated 2026-10-30. This document is the current implementation index; individual
+Updated 2026-10-31. This document is the current implementation index; individual
 acceptance ledgers remain historical records of the exact versions they tested.
 Mainline admission is not a new real-specimen, GUI, model or instrument qualification.
+
+## General crystallographic evidence review increment
+
+An independent branch from main `9fbc769` adds
+[`structure_general_compare`](GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md): two adjacent
+saved ROI observations, explicit possibly different structures/orientations,
+unchanged ASE/diffsims and reflection comparison, with separate model
+qualifications and conditional evidence. It does not inherit unmerged
+#44/#45/#46, alter F3b Sigma3 semantics, identify phases or name generic relations
+twins. [Executed acceptance](GENERAL_CRYSTALLOGRAPHIC_ACCEPTANCE.md) distinguishes
+analytic checks, actual simulations/MCP, preserved history and NOT_TESTED scopes.
 
 ## Reviewed implementation ancestry
 

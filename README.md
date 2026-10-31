@@ -14,6 +14,8 @@ The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, 
 
 ## What you can do
 
+- **Compare explicit structures across adjacent ROIs.** [General crystallographic evidence](docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md) composes supplied ordered FCC/BCC/HCP or multi-element models, actual qualified simulations and saved reflection measurements. It preserves alternatives and insufficient evidence; generic relations are not automatically twins or phase identifications.
+
 - **Inspect and measure microscopy data.** Open supported TIFF images and, with an optional reader, selected DM3/DM4 files. Preserve original arrays, data types, axes, signed calibration, and explicit frame/ROI selections. Compute local FFTs, detect/refine peaks and measure reciprocal vectors and spacings.
 - **Build structural evidence and choose follow-up analyses (F1a / F4-lite).** Create bounded multiscale fields, candidate domains and finite boundary-support bands; append explicit ROI observations without recalculating unchanged FFTs. Read compact summaries or exact-manifest evidence pages, and obtain budgeted next-analysis proposals with explicit stopping rules.
 - **Estimate single-domain physical fields (F2a).** Reuse a qualified saved FFT to extract geometric phase, projected displacement, finite Green–Lagrange strain and polar rotation. Reference choices, signed pixel metrics, invalid masks and pseudo-strain limitations remain explicit.

@@ -5,6 +5,12 @@ description: Compose ASE structure geometry, shared zone-axis orientation, kinem
 
 # Check a crystallographic hypothesis
 
+For two adjacent ROIs with explicit candidate structures/orientations, read
+[general crystallographic evidence](references/general-evidence.md) and use
+`structure_general_compare` when advertised. It supports supplied ordered
+multi-element and non-FCC models within declared qualification, without naming
+their relation a twin. Keep the specific F3b Sigma3 route separate.
+
 Read explicit CIF/XYZ with `structure_open`; preserve its fixed snapshot. Generic
 cells and cell-free XYZ can be observed. Reciprocal geometry/simulation requires
 the corresponding periodic-cell evidence; do not invent a missing third axis.
