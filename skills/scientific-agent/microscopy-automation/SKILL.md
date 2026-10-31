@@ -1,9 +1,25 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build bounded multiscale structural fields and candidate domains or explicit single-domain classical GPA and conditional projected phase-winding evidence, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Continue from researcher-selected microscopy ROIs, revise source-bound observations, choose FFT/measurement or existing field/GPA/topology tools, establish cross-frame correspondence, and return recoverable evidence to the shared panel. Automatic feature proposals are experimental; phases and defects are not identified by assertion.
 ---
 
 # Reusable microscopy observations
+
+## Image-first or existing evidence
+
+For a researcher saying "look here" or supplying an original-image ROI/reason,
+read [manual image-first discovery](references/image-first.md). Explicitly use
+`image_discovery(entry="manual")`, choose existing scientific tools and bind
+their exact source/ROI results with `image_discovery_review`. Manual support is
+limited to synthetic software/numerical qualification; it does not establish a
+physical explanation or human GUI acceptance. A complete structural field is
+**not** an admission requirement. Unknown physical scale remains pixel-domain.
+Automatic real-space feature proposals are **EXPERIMENTAL**; use them only as
+an explicitly selected exploration option, not a required detector. No candidate
+does not mean normal structure. This is not a fixed automatic classifier.
+
+If a field or qualified GPA already answers the next question, continue it
+directly using the modes below; do not rebuild it just to enter image-first mode.
 
 ## Budgeted active follow-up
 

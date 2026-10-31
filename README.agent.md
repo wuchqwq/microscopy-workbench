@@ -1,5 +1,13 @@
 # Agent guide: independent microscopy science
 
+The formal F4b first-version path starts with a researcher-selected ROI and an
+actual observation reason: explicitly use `image_discovery(entry="manual")`,
+choose existing scientific tools, then bind/revise/recover their evidence with
+`image_discovery_review`. A complete structure field is not required. Automatic
+`entry="feature"` is **EXPERIMENTAL**; empty proposals never mean a normal image.
+Its compatibility default is retained for old requests, not recommended for the
+formal workflow. See [F4b scope](docs/IMAGE_FIRST_DISCOVERY.md).
+
 For [active analysis](docs/ACTIVE_ANALYSIS.md), call `image_analysis_candidates`
 on a saved domain map with explicit cumulative budgets. Select inspectable
 actions through `image_field_extend`, rebuild `image_domain_map`, and evaluate

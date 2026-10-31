@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "scope": "Freeze compiled read-only recovery of legacy no-label objects; not another model/benchmark",
+  "checks": [
+    {
+      "workspace": "2026-10-31-f4b-mcp-r2",
+      "object_count": 9,
+      "unchanged_files": 1017,
+      "new_requests": 0,
+      "new_fft": 0
+    },
+    {
+      "workspace": "2026-10-31-f4b-agent",
+      "object_count": 2,
+      "unchanged_files": 58,
+      "new_requests": 0,
+      "new_fft": 0
+    }
+  ]
+}
