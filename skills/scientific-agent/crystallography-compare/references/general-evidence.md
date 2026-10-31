@@ -1,5 +1,13 @@
 # Compare explicit structures across adjacent ROIs
 
+For two freshly selected regions, the existing `image_spatial_atlas` can process
+only those exact rectangles; a full-grid structural field is unnecessary. Manual
+`image_discovery` reviews can bind the same atlas FFT/measurement children used
+by this comparison. From a marked Panel, prefer its read-only `roi_handoff`:
+canonical saved rectangle bounds and an exact frame/current-calibration recipe.
+An annotation object is not itself a raw frame input; attach the existing scale
+explicitly if required, without reopening or changing source identity.
+
 When the question concerns two neighboring regions and possibly different
 structures, use `structure_general_compare` if advertised. It is separate from
 `structure_twin_compare`; do not enter a generic BCC/HCP/multielement task through

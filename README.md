@@ -14,6 +14,8 @@ The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, 
 
 ## What you can do
 
+- **Continue from two regions selected in the Panel.** The [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md) shares saved FFT/measurement evidence across source-bound reviews and finite candidate comparisons. Real browser gestures and fresh-Agent/recovery tests passed in a [limited public synthetic scope](docs/MANUAL_CRYSTAL_ACCEPTANCE.md); this does not establish a real material's identity.
+
 - **Compare explicit structures across adjacent ROIs.** [General crystallographic evidence](docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md) composes supplied ordered FCC/BCC/HCP or multi-element models, actual qualified simulations and saved reflection measurements. It preserves alternatives and insufficient evidence; generic relations are not automatically twins or phase identifications.
 
 - **Inspect and measure microscopy data.** Open supported TIFF images and, with an optional reader, selected DM3/DM4 files. Preserve original arrays, data types, axes, signed calibration, and explicit frame/ROI selections. Compute local FFTs, detect/refine peaks and measure reciprocal vectors and spacings.

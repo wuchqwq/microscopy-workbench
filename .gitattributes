@@ -4,3 +4,5 @@ docs/validation/f3b/*.csv -text whitespace=cr-at-eol
 docs/validation/f3b/*.json -text whitespace=cr-at-eol
 docs/validation/general-crystal/*.csv -text whitespace=cr-at-eol
 docs/validation/general-crystal/*.json -text whitespace=cr-at-eol
+docs/validation/manual-crystal/*.csv -text whitespace=cr-at-eol
+docs/validation/manual-crystal/*.json -text whitespace=cr-at-eol

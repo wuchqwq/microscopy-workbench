@@ -1,5 +1,13 @@
 # Agent guide: independent microscopy science
 
+To continue from two saved Panel regions into a finite structure comparison,
+use the [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md). Read its
+additive `roi_handoff` for exact anchors/current calibration; share the two-window
+atlas's FFT/measurement children across reviews and comparison. No full-field
+scan or researcher-entered internal IDs is required. The
+[integration record](docs/MANUAL_CRYSTAL_ACCEPTANCE.md) separates actual browser,
+model and software evidence from physical qualification.
+
 The formal F4b first-version path starts with a researcher-selected ROI and an
 actual observation reason: explicitly use `image_discovery(entry="manual")`,
 choose existing scientific tools, then bind/revise/recover their evidence with

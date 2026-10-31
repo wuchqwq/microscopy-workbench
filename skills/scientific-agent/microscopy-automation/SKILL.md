@@ -7,6 +7,11 @@ description: Continue from researcher-selected microscopy ROIs, revise source-bo
 
 ## Image-first or existing evidence
 
+For two neighboring researcher-selected ROIs and explicit structure candidates,
+use [manual ROI to crystal evidence](references/manual-crystal.md). It shares one
+two-window atlas's FFT/measurements between manual reviews and general crystal
+comparison; no full-field scan or duplicate FFT is required.
+
 For a researcher saying "look here" or supplying an original-image ROI/reason,
 read [manual image-first discovery](references/image-first.md). Explicitly use
 `image_discovery(entry="manual")`, choose existing scientific tools and bind

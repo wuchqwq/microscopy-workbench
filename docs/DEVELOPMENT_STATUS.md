@@ -1,8 +1,20 @@
 # Mainline consolidation and next scientific stage
 
-Updated 2026-10-31. This document is the current implementation index; individual
+Updated 2026-11-01. This document is the current implementation index; individual
 acceptance ledgers remain historical records of the exact versions they tested.
 Mainline admission is not a new real-specimen, GUI, model or instrument qualification.
+
+## Manual regions / crystal integration candidate
+
+`integration/manual-crystal-evidence` composes open #44/#46/#47 without merging
+main. A bounded read-only Panel handoff preserves fractional anchors and exposes
+the existing canonical processing edges/exact source/calibration references.
+Actual browser ROI/peak gestures, real FCC MCP/simulation, unchanged-spectrum
+revision and separate fresh-model recovery are recorded in
+[integration acceptance](MANUAL_CRYSTAL_ACCEPTANCE.md). The historical reports
+below retain their original NOT_TESTED/failure scopes. Private-sequence data
+handoff passed locally; independent physical interpretation under #43 stays HOLD.
+See [workflow / remaining calibration-continuation boundary](MANUAL_CRYSTAL_WORKFLOW.md).
 
 ## F4b manual image-first freeze (dependent review branch)
 
