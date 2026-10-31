@@ -1,9 +1,25 @@
 ---
 name: microscopy-automation
-description: Choose and revise microscopy ROI atlases and FFT windows, measure Fourier peaks, build bounded multiscale structural fields and candidate domains or explicit single-domain classical GPA and conditional projected phase-winding evidence, establish sourced cross-frame correspondence, compare local signatures or explicit structural candidates, and return recoverable results to the shared panel. Does not identify phases or defects by assertion.
+description: Continue from researcher-selected microscopy ROIs, revise source-bound observations, choose FFT/measurement or existing field/GPA/topology tools, establish cross-frame correspondence, and return recoverable evidence to the shared panel. Automatic feature proposals are experimental; phases and defects are not identified by assertion.
 ---
 
 # Reusable microscopy observations
+
+## Image-first or existing evidence
+
+For a researcher saying "look here" or supplying an original-image ROI/reason,
+read [manual image-first discovery](references/image-first.md). Explicitly use
+`image_discovery(entry="manual")`, choose existing scientific tools and bind
+their exact source/ROI results with `image_discovery_review`. Manual support is
+limited to synthetic software/numerical qualification; it does not establish a
+physical explanation or human GUI acceptance. A complete structural field is
+**not** an admission requirement. Unknown physical scale remains pixel-domain.
+Automatic real-space feature proposals are **EXPERIMENTAL**; use them only as
+an explicitly selected exploration option, not a required detector. No candidate
+does not mean normal structure. This is not a fixed automatic classifier.
+
+If a field or qualified GPA already answers the next question, continue it
+directly using the modes below; do not rebuild it just to enter image-first mode.
 
 ## Budgeted active follow-up
 
@@ -313,11 +329,21 @@ recovery endpoint after timeout or cancellation; never resubmit an unknown
 side effect. Batch receipts retain child request IDs and outcomes. An incomplete
 batch is not a complete analysis.
 
+## Evidence-driven method continuation
+
+For a projected-topology question over already saved fixed_g GPA, use
+`image_method_plan`, `image_method_step` and `image_method_next` when advertised.
+The [cross-method guide](references/method-loop.md) describes sourced prerequisites,
+original request slots, all-attempt reservations and stopping. This is optional:
+ordinary tools remain directly callable, and domain/twin/multiframe selection
+is not automatically routed by this first increment. Do not run every method
+merely because it is available, or treat a smooth strain hotspot as a defect.
+
 ## Actual scope
 
 This package supplies composable local and bounded cross-frame observations
 and explicit candidate comparisons. It does not implement automatic global
-indexing, multi-phase segmentation, unique twin-interface determination, automatic dislocation analysis
+indexing, multi-phase segmentation, unique twin-interface determination, automatic material-dislocation identification
 or ptychography reconstruction. Classical GPA supports one explicit domain and a qualified saved FFT. Sequence FFT currently requires real spatial
 scientific arrays; do not silently take the real part of complex reconstruction
 data or quantize a float array to PNG/uint16. Report the specific unsupported

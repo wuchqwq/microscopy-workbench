@@ -1,8 +1,47 @@
 # Mainline consolidation and next scientific stage
 
-Updated 2026-10-30. This document is the current implementation index; individual
+Updated 2026-10-31. This document is the current implementation index; individual
 acceptance ledgers remain historical records of the exact versions they tested.
 Mainline admission is not a new real-specimen, GUI, model or instrument qualification.
+
+## F4b manual image-first freeze (dependent review branch)
+
+`feature/image-first-discovery` starts from #44 at `9ca6b44`; #44 remains
+independent and unmerged unless its live PR says otherwise. The supported first
+version records a researcher's explicit ROI/reason, calls existing scientific
+tools, binds/reviews exact-source evidence, then saves, revises and recovers it.
+Manual support is limited to the public synthetic software/numerical scope;
+real specimens and GUI gestures remain NOT_TESTED. Automatic spatial-feature
+proposal is **EXPERIMENTAL**, not qualified reliable anomaly detection. A full
+structure field is not required. Qualified GPA can hand off to the existing
+method-plan mechanism; no new global planner/request authority is introduced.
+See [method and limits](IMAGE_FIRST_DISCOVERY.md), [current freeze acceptance](F4B_FREEZE.md)
+and [historical implementation acceptance](F4B_ACCEPTANCE.md).
+Registered64px proposals missed the two positive comparison cases; this known
+failure remains explicit alongside successful source/revision/recovery software
+checks. The post-hoc32px diagnostic is not independent blind success. Empty
+proposals do not establish normality. No physical defect, twin or phase is
+confirmed by appearance. Real experimental validation remains tracked by
+[Issue #43](https://github.com/wuchqwq/microscopy-workbench/issues/43), separately
+from this limited software freeze.
+
+## F4-full first cross-method slice (review branch)
+
+`feature/f4-cross-method-loop` starts at reviewed main `9fbc769` (F3b #42,
+including its finite-direction correction). It adds three optional formal image
+tools for saved fixed_g GPA → sourced phase follow-up → conditional topology,
+or missing-information/stop decisions. The original request journals own all
+attempt slots/reservations, failures, unknown outcomes and recovery. No scientific
+kernel, global scheduler, source FFT or new model service is introduced.
+
+[Method/API](CROSS_METHOD_ANALYSIS.md) and [acceptance](F4_CROSS_METHOD_ACCEPTANCE.md)
+record actual four-case MCP results and same-cap fixed-sequence comparison,
+including the slower positive active path. The first two new-model attempts
+encountered client approval blocks and remain recorded. The authorized isolated
+test configuration now supports actual fresh-model decisions and original-ID
+recovery, with global configuration unchanged. See the separate
+[authorization/performance closeout](F4_CROSS_METHOD_CLOSEOUT.md).
+GUI/real specimen work is separate; no feature PR was merged.
 
 ## Reviewed implementation ancestry
 
