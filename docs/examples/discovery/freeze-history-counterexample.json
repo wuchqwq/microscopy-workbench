@@ -1,0 +1,28 @@
+{
+  "baseline": "6dede0a",
+  "scope": "Isolated public synthetic own-hash-coherent history fault, not nominal GUI or real interrupted worker",
+  "creation_refused": {
+    "ok": false,
+    "state": "failed",
+    "backend": "external-image-workspace",
+    "request_id": "discovery-workspace-12",
+    "error": {
+      "code": "DISCOVERY_SCOPE_MISMATCH",
+      "message": "Review revision must retain its exact scientific ROI"
+    }
+  },
+  "recovery_accepted": true,
+  "current_roi": [
+    24,
+    24,
+    88,
+    88
+  ],
+  "previous_review_roi": [
+    32,
+    32,
+    96,
+    96
+  ],
+  "source_unchanged": true
+}

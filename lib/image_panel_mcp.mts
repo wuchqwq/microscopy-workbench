@@ -5,6 +5,7 @@ import {randomBytes} from 'node:crypto';
 import {closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {panelRoiHandoff} from './panel_roi_handoff.mjs';
 
 import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
 import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
@@ -110,7 +111,7 @@ export class ImagePanelManager {
     // MCP already exposes tools/list; avoid returning the entire catalog with
     // every selection, and never duplicate the base64 image inside text.
     const {png_base64,clean_png_base64,domain_png_base64,tools,...view}=checked,conn=this.getConnection(panelId);
-    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image.',automatic_model_wake:false};
+    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:panelRoiHandoff(checked),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image.',automatic_model_wake:false};
     const content:ToolContent[]=[{type:'text',text:JSON.stringify(data,null,2)}];
     for(const image of [png_base64,domain_png_base64])if(image!==null&&image!==undefined){
       if(typeof image!=='string'||image.length>6*1024*1024)throw new Error('Invalid bounded saved panel PNG');

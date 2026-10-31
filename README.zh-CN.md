@@ -14,7 +14,12 @@ Microscopy Workbench 是一个开源、跨平台的**显微科学分析工作台
 
 ## 目前能做什么？
 
+- **从面板圈选的两个区域继续分析**：[人工 ROI → 晶体学证据](docs/MANUAL_CRYSTAL_WORKFLOW.md)复用同一组 FFT/测量，衔接区域观察复核与有限候选比较，无需研究者复制内部 ID。[真实浏览器、新 Agent 与恢复验收](docs/MANUAL_CRYSTAL_ACCEPTANCE.md)已在公开合成范围通过；不代表真实样品物相已经确认。
+
+- **比较相邻 ROI 的显式候选结构**：[通用晶体学证据](docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md)复用有序 FCC/BCC/HCP 或多元素结构、实际模拟及已保存的反射测量，保留不同候选、未匹配和证据不足；通用取向关系不会自动被命名为孪晶或唯一物相。
+
 - **读取与测量显微数据**：支持限定类型的 TIFF，以及通过可选读取器导入的部分 DM3/DM4 文件；保留原始数组、数据类型、坐标轴、带符号标定和帧/ROI 选择。进行局部 FFT、峰检测与精化、倒易矢量和晶面间距测量。
+- **接着研究者选定的 ROI 分析（F4b）**：首版正式路径是保存明确的 ROI 和观察理由，由 Agent 调用已有 FFT、峰测量或满足资格要求的 GPA，再绑定、复核、修订与恢复证据；不要求先建完整结构场。已验收的是公开合成输入上的软件与数值闭环，真实样品和浏览器手势仍为 NOT_TESTED。自动实空间候选为 **EXPERIMENTAL（实验性）**，可能漏掉可见异常；没有候选不代表图像正常，也不能据形态确认物理缺陷。参见[范围与局限](docs/IMAGE_FIRST_DISCOVERY.md)及[冻结验收](docs/F4B_FREEZE.md)。
 - **建立结构证据并选择后续分析（F1a / F4-lite）**：生成有预算的多尺度结构场、结构域候选和有限边界支持带；追加 ROI 时复用不变的 FFT。支持精简摘要、绑定精确 manifest 的证据分页，以及带预算、理由和停止规则的下一步分析建议。
 - **估计单域物理场（F2a）**：复用满足条件的已保存 FFT，恢复几何相位、二维投影位移、有限 Green–Lagrange 应变和局部极分解转动。参考选择、带符号像素度量、无效掩膜及伪应变局限保持明确。
 - **检查条件性投影拓扑证据（F3a）**：从保存的 GPA 包裹相位计算显式回路绕数。v2 按严格嵌套的几何组分别评价，保留远处零绕数与不可判观测；不据此确认真实材料位错或唯一三维 Burgers 矢量。
@@ -73,7 +78,7 @@ npm run inspect -- --source /absolute/path/to/image.tiff \
 
 **本版本已实现**：R2/R3 证据工作流、F1a 多尺度结构场、F4-lite 有预算的增量分析、F2a 经典 GPA，以及 F3a 带版本区分的投影相位绕数证据。[开发状态](docs/DEVELOPMENT_STATUS.md)记录了审查基线及验收边界。历史验收报告中的分支状态属于当时记录，不会被改写为新的实验结果。
 
-**F3b 首版**：[有限范围的 Σ3 候选与投影界面证据](docs/PROJECTED_TWIN_EVIDENCE.md)复用相邻 ROI 的已保存 FFT 观测和实际模拟反射，分别保留相容、不相容及证据不足，不认定唯一三维孪晶或原子相干界。下一阶段是 F4-full 的最小跨方法分析闭环；参见[科研路线 #16](https://github.com/wuchqwq/microscopy-workbench/issues/16)。当前不开展 Encoder、基础模型训练或实时显微镜控制。
+**当前增量**：[F3b 投影孪晶证据](docs/PROJECTED_TWIN_EVIDENCE.md)保留有限相容与歧义；[F4-full 首个跨方法闭环](docs/CROSS_METHOD_ANALYSIS.md)可根据已保存 GPA，提出补充相位分量、条件性拓扑检验、请求信息或停止，保留全部尝试预算及原请求。[验收记录](docs/F4_CROSS_METHOD_ACCEPTANCE.md)区分实际 MCP 通过与新模型受客户端审批策略阻塞。结构域／孪晶／多帧自动路由、Encoder 训练及仪器控制不属于本增量；参见[路线 #16](https://github.com/wuchqwq/microscopy-workbench/issues/16)。
 
 **仍未验收**：已记录的真实 GUI 手势流程、全套 GPA/拓扑 Skill 的新模型独立使用、真实样品准确性，以及对应功能的中断注入。数值、协议或 HTTP/PNG 测试不能替代这些检查；GUI 延后验收不阻塞独立科学方法开发。
 

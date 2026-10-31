@@ -57,6 +57,22 @@ jobs:
         run: |
           set -o pipefail
           npm run test:twin 2>&1 | tee "$RUNNER_TEMP/f3b-evidence/mcp.log"
+      - name: General crystallographic evidence through actual MCP and diffsims
+        shell: bash
+        env:
+          MICROSCOPY_PYTHON: python
+          MICROSCOPY_SMOKE_OUTPUT: ${{ runner.temp }}/f3b-evidence/general-crystal-mcp
+        run: |
+          set -o pipefail
+          npm run test:general-crystal 2>&1 | tee "$RUNNER_TEMP/f3b-evidence/general-crystal.log"
+      - name: Manual ROI to crystal evidence integration
+        shell: bash
+        env:
+          MICROSCOPY_PYTHON: python
+          MICROSCOPY_SMOKE_OUTPUT: ${{ runner.temp }}/f3b-evidence/manual-crystal-mcp
+        run: |
+          set -o pipefail
+          npm run test:manual-crystal 2>&1 | tee "$RUNNER_TEMP/f3b-evidence/manual-crystal.log"
       - name: Retain installed scientific versions
         if: always()
         shell: bash

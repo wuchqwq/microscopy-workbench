@@ -1,0 +1,266 @@
+{
+  "scope": "EXPLORATORY POST-HOC SCALE DIAGNOSTIC, not primary benchmark or blind Agent qualification",
+  "post_hoc": true,
+  "truth_known_before": true,
+  "not_primary": true,
+  "primary_report_sha256": "f41084b83fcaf14935b00965b678dc2cf87d2df1d3880a4b729853e17f667053",
+  "primary_64_candidate_count": 0,
+  "request_id": "diagnostic-32-64-fca16225f8ee",
+  "read_requests": 1,
+  "proposal_requests": 1,
+  "old_fft_sha256": {
+    "01a6b7259be942dfadd964392b9f32ef": "fa96fc3748dafe375aca4278e9aa54b114f32eae17a6f8c974b6690a4de5e257",
+    "09283376858d4210b500b0625e35c320": "7632b46ada261b5e09ca054fc47db893212835f6518e5318cab6c416831df3b4",
+    "0e62d1f064374aee81fd2443bd17843e": "fa96fc3748dafe375aca4278e9aa54b114f32eae17a6f8c974b6690a4de5e257",
+    "11080d914c9a4746b2b7a049464f6b82": "f9fbeda646f838c3aad7848d6fb514fadccc1f3548c4ed572e18730466c15bb8",
+    "486efc68a0654dd6912877a8799459ff": "87eb915b35753f839a83d32682877e1acbe4b7710feb0cb392401b6de7224a8d",
+    "53b5d58a710b4a059950f641b2f8c023": "521a5347d645f4fcf009cbccd9ec5df559ce32847e4dffc616b4facf2b860f97",
+    "76b6b28c3d4046bba64825db16cee695": "1585bd0e97344fd55f25cb76c9e337fe0b39e6bee4d54e0bd38a94c2575ea61c",
+    "8c6a5ebf6dbe4f0dac1ee97f9af8c856": "611cd239686e9a70a7c99d4882ac7cfef5f7866904fe2285202ad418f8d73c4d",
+    "9ddb28a904b446129c8904afe4a658b4": "28c953a181a036a449d6d4496f2004631f2bd5b43ae02796845a9fead9694931",
+    "a096582941c64423806e65a0cbd3fd79": "9b15e90834f0ffe6f23fa918e44913c8bc1e3a11bb8f46f346e9970e1a84c0cb",
+    "ac5bf0fe2eb744a5a0e7f2f6480f13c1": "c7fb823011c281931832afdfc5b6815c250609e69c38d85d95d9ffb3933e1f09",
+    "b7b6b5b933664a7bb4d1378cb0d3ed08": "fa96fc3748dafe375aca4278e9aa54b114f32eae17a6f8c974b6690a4de5e257",
+    "bd92ac4f24354a7ab53947d2405c5552": "5595bfd89a5267316bf0df2bb4f40afea76fd265022372e0ec2e4ed7f3a4091d",
+    "c006ec23e7d348ed87fdf0d368d56a0e": "b57dc1541e075c4c0b83b0b25d08b0023b1a5f278457a183de0a69bec6433dc4",
+    "c74e767761d44b52a5cf4572d3543168": "fa96fc3748dafe375aca4278e9aa54b114f32eae17a6f8c974b6690a4de5e257",
+    "c76f8fb55dd04a969ee37c546f8e4c8d": "bee6e5704e872f0cbae53b9f6840be6589e2f7ef534f4259ebbd326efdb84cdf",
+    "cc40304d355d412aa2ce708fbb820894": "fa96fc3748dafe375aca4278e9aa54b114f32eae17a6f8c974b6690a4de5e257",
+    "d1fa9dec83254ad9b99bba287ed2ab54": "fa96fc3748dafe375aca4278e9aa54b114f32eae17a6f8c974b6690a4de5e257",
+    "de2aebbc050e494588a7bf41dff1a4eb": "eccd4d6d6076d0f71529e9480be756092530c8553832101456135d0551067b1b",
+    "ea55ae215240455281195b7e2b9a40bf": "508eeff78ecd53dfe789eb245a0e35a436ec4768588d4ca3f4b9e1a3ab660387",
+    "ec9c5c63d5df41ecbbbc0f6ce145cc29": "b3fcc67330123b38e6f78c6a2315b3c2b0e34a8118ed44bdbc309e442aa12f1d"
+  },
+  "source_sha256": "5fffd119fc568ff1e8daaaedec5c4ef5d0eb39550b8d666de99b56ef25bf0bc3",
+  "elapsed_ms": 2730.3884,
+  "object_id": "9c3f18053b7c424ab35778bde3a59f6e",
+  "candidates": [
+    {
+      "rect": [
+        80,
+        80,
+        112,
+        112
+      ],
+      "window_size": 32,
+      "score": 0.31524164009905525,
+      "metrics": {
+        "gradient_energy_ratio_to_spatial_reference": 0.5254922400501575,
+        "gradient_energy_coefficient_of_variation": 0.5350911334391111,
+        "orientation_disagreement_proxy": 2.2637972802104604e-05
+      },
+      "score_components": {
+        "texture_energy_contrast": 0.30941954494552304,
+        "texture_energy_variation": 0.5350911334391111,
+        "orientation_disagreement_proxy": 2.2637972802104604e-05
+      },
+      "reasons": [
+        "Local image texture energy differs from the image-wide texture-energy reference",
+        "Spatially nonuniform texture energy; inspect interruption/contrast alternatives"
+      ],
+      "unknowns": [
+        "Material cause and physical interpretation unverified",
+        "Scale/shape/sampling sensitivity not a statistical uncertainty"
+      ],
+      "candidate_explanations": [
+        "Image contrast/texture variation; physical cause is not distinguished"
+      ],
+      "candidate_id": "ffcba7a3356b2d89786daf8c9fd569bf",
+      "coordinate_space": "source_pixels",
+      "entry_basis": "numerical_spatial_observation",
+      "interpretation_status": "hypothesized",
+      "physical_conclusion": null
+    },
+    {
+      "rect": [
+        80,
+        64,
+        112,
+        96
+      ],
+      "window_size": 32,
+      "score": 0.3068249673641697,
+      "metrics": {
+        "gradient_energy_ratio_to_spatial_reference": 0.5404774346164103,
+        "gradient_energy_coefficient_of_variation": 0.5295745656598704,
+        "orientation_disagreement_proxy": 1.8230505157425537e-05
+      },
+      "score_components": {
+        "texture_energy_contrast": 0.2958979031303542,
+        "texture_energy_variation": 0.5295745656598704,
+        "orientation_disagreement_proxy": 1.8230505157425537e-05
+      },
+      "reasons": [
+        "Local image texture energy differs from the image-wide texture-energy reference",
+        "Spatially nonuniform texture energy; inspect interruption/contrast alternatives"
+      ],
+      "unknowns": [
+        "Material cause and physical interpretation unverified",
+        "Scale/shape/sampling sensitivity not a statistical uncertainty"
+      ],
+      "candidate_explanations": [
+        "Image contrast/texture variation; physical cause is not distinguished"
+      ],
+      "candidate_id": "44d0f461d80424e5cf6fc4b643694234",
+      "coordinate_space": "source_pixels",
+      "entry_basis": "numerical_spatial_observation",
+      "interpretation_status": "hypothesized",
+      "physical_conclusion": null
+    },
+    {
+      "rect": [
+        64,
+        80,
+        96,
+        112
+      ],
+      "window_size": 32,
+      "score": 0.3068221182925432,
+      "metrics": {
+        "gradient_energy_ratio_to_spatial_reference": 0.540449793113145,
+        "gradient_energy_coefficient_of_variation": 0.5295240225705529,
+        "orientation_disagreement_proxy": 1.831204672217013e-05
+      },
+      "score_components": {
+        "texture_energy_contrast": 0.29592249822406586,
+        "texture_energy_variation": 0.5295240225705529,
+        "orientation_disagreement_proxy": 1.831204672217013e-05
+      },
+      "reasons": [
+        "Local image texture energy differs from the image-wide texture-energy reference",
+        "Spatially nonuniform texture energy; inspect interruption/contrast alternatives"
+      ],
+      "unknowns": [
+        "Material cause and physical interpretation unverified",
+        "Scale/shape/sampling sensitivity not a statistical uncertainty"
+      ],
+      "candidate_explanations": [
+        "Image contrast/texture variation; physical cause is not distinguished"
+      ],
+      "candidate_id": "130de81d9c858e5d5d4be723522fc294",
+      "coordinate_space": "source_pixels",
+      "entry_basis": "numerical_spatial_observation",
+      "interpretation_status": "hypothesized",
+      "physical_conclusion": null
+    },
+    {
+      "rect": [
+        64,
+        64,
+        96,
+        96
+      ],
+      "window_size": 32,
+      "score": 0.29855671073031753,
+      "metrics": {
+        "gradient_energy_ratio_to_spatial_reference": 0.5549242553844651,
+        "gradient_energy_coefficient_of_variation": 0.5231547598763999,
+        "orientation_disagreement_proxy": 2.0387801863474966e-05
+      },
+      "score_components": {
+        "texture_energy_contrast": 0.2832124104140497,
+        "texture_energy_variation": 0.5231547598763999,
+        "orientation_disagreement_proxy": 2.0387801863474966e-05
+      },
+      "reasons": [
+        "Local image texture energy differs from the image-wide texture-energy reference",
+        "Spatially nonuniform texture energy; inspect interruption/contrast alternatives"
+      ],
+      "unknowns": [
+        "Material cause and physical interpretation unverified",
+        "Scale/shape/sampling sensitivity not a statistical uncertainty"
+      ],
+      "candidate_explanations": [
+        "Image contrast/texture variation; physical cause is not distinguished"
+      ],
+      "candidate_id": "4bc46b8c40a7fe4a12195d05bdd873a1",
+      "coordinate_space": "source_pixels",
+      "entry_basis": "numerical_spatial_observation",
+      "interpretation_status": "hypothesized",
+      "physical_conclusion": null
+    }
+  ],
+  "observation_cost": {
+    "source_pixels": 65536,
+    "spatial_feature_pixels": 65536,
+    "sampled_windows": 274,
+    "gaussian_filter_passes": 5,
+    "spatial_filter_pixel_passes": 327680,
+    "summed_window_area_pixels": 431104,
+    "new_fft_pixels": 0
+  },
+  "quality": {
+    "status": "spatial_observation_available",
+    "lag1_correlations_yx": [
+      0.8786145003030675,
+      0.816358867455433
+    ],
+    "mean_absolute_lag1_correlation": 0.8474866838792503,
+    "diagnostic_not_noise_classifier": true
+  },
+  "stop_reason": "Candidates require independent scientific checks",
+  "candidate_iou_descriptive_only": [
+    {
+      "rect": [
+        80,
+        80,
+        112,
+        112
+      ],
+      "iou": 0.391304347826087
+    },
+    {
+      "rect": [
+        80,
+        64,
+        112,
+        96
+      ],
+      "iou": 0.391304347826087
+    },
+    {
+      "rect": [
+        64,
+        80,
+        96,
+        112
+      ],
+      "iou": 0.391304347826087
+    },
+    {
+      "rect": [
+        64,
+        64,
+        96,
+        96
+      ],
+      "iou": 0.391304347826087
+    }
+  ],
+  "old_fft_count": 21,
+  "new_fft_count": 0,
+  "unchanged_existing_object_files": 688,
+  "primary_report_unchanged": true,
+  "result": "PASS_SOFTWARE_DIAGNOSTIC",
+  "client_and_check_elapsed_ms": 4787.1918000000005,
+  "raw_report_sha256": "a72ad85fe62a0aefb5824c53f0674069916f048573a2a4193c0dfacdfb1ac86a",
+  "saved_detector_settings": {
+    "boundary_mode": "reflect",
+    "coordinate_space": "source_array_indices",
+    "energy_reference": "Full-image median gradient energy, floored by0.05 times mean and numerical epsilon",
+    "gaussian_truncate": 4.0,
+    "gradient_sigma_pixels": 1.0,
+    "lag1_correlation_floor": 0.15,
+    "max_candidates": 4,
+    "nms_iou_max": 0.35,
+    "normalization": "Source median and p95-p5, fallback full range; heuristic only, not intensity calibration",
+    "rect_convention": "half-open XYXY pixels",
+    "sampling": "half-window offset grid; deterministic thinning if over budget",
+    "score_threshold": 0.18,
+    "tensor_sigma_pixels": 4.0,
+    "window_sizes": [
+      32,
+      64
+    ]
+  }
+}

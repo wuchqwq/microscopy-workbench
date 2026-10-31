@@ -203,6 +203,12 @@ jobs:
       - run: npm run build
       - run: python -m pip install -r requirements-gpa.txt
       - run: python -B -m unittest discover -s tests -p 'test_*topology*.py' -v
+      - run: python -B tests/test_method_policy.py
+      - run: python -B tests/image_method_journal_test.py
+      - run: python -B tests/test_method_loop_accounting.py
+      - run: python -B tests/test_method_read_reuse.py
+      - run: python -B tests/test_image_discovery_core.py
+      - run: python -B tests/test_image_discovery_workspace.py
       - run: npm run test:topology
         env:
           MICROSCOPY_PYTHON: python
@@ -265,6 +271,9 @@ jobs:
       - run: python -m pip install -r requirements-images.txt 'ase>=3.26,<4'
       - run: python -B tests/test_twin_geometry.py
       - run: python -B tests/test_twin_observations.py
+      - run: python -B tests/test_crystal_qualification.py
+      - run: python -B tests/test_general_evidence.py
+      - run: python -B tests/test_general_recovery.py
 
   compiled-compatibility:
     needs: changes

@@ -41,6 +41,7 @@ FIELDS = {
     "orient": {"object_id", "zone_axis_uvw", "in_plane_direction_uvw", "in_plane_rotation_deg"},
     "compare": {"object_id", "measurement_paths", "experimental_kind", "registration", "registration_object_id", "max_residual_inv_angstrom", "correspondences", "current_image_object_id", "analysis_mode", "previous_comparison_id", "source_change_basis"},
     "compare_batch": {"measurement_object_ids", "image_workspace", "candidates", "experimental_kind", "max_residual_inv_angstrom", "current_image_object_id"},
+    "general_compare": {"domains", "current_spatial_image_object_id", "registration", "experimental_kind", "max_residual_inv_angstrom", "candidates", "previous_evidence_id", "revision_note", "image_workspace"},
     "twin_orient": {"object_id", "orientation_id", "plane_hkl", "candidate_basis"},
     "twin_evidence": {"object_id", "comparison", "section", "offset", "limit"},
     "twin_compare": {"object_id", "parent_simulation_object_id", "twin_simulation_object_id", "image_workspace",
@@ -527,6 +528,9 @@ class StructureWorkspace:
                 need(child["request_id"] == receipt["request_id"] and
                      sha(read_bytes(child_directory / "object.json", 8 * MAX_BYTES)) == receipt["object_manifest_sha256"],
                      "Comparison batch child identity changed", "CORRUPT_OBJECT")
+        if metadata.get("kind") == "crystal_evidence":
+            from crystallography.general_evidence import validate_references
+            validate_references(self, metadata)
         return metadata, directory
 
     def structure(self, ident):
@@ -591,6 +595,9 @@ class StructureWorkspace:
         if action in ("twin_orient", "twin_compare"):
             from crystallography.twin_tools import orient, run
             metadata.update(orient(self, request, ident) if action == "twin_orient" else run(self, request, directory))
+        elif action == "general_compare":
+            from crystallography.general_evidence import run
+            metadata.update(run(self, request, directory, execute))
         elif action == "compare_batch":
             from crystallography.compare_batch import run
             metadata.update(run(self, request, execute))
@@ -743,7 +750,8 @@ class StructureWorkspace:
                                              "scipy": importlib.metadata.version("scipy"),
                                              **({"diffsims": importlib.metadata.version("diffsims"), "diffpy.structure": importlib.metadata.version("diffpy.structure")} if action == "simulate" else {}),
                                              "module_sha256": sha(Path(__file__).read_bytes()),
-                                             "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py") + (("compare_batch.py",) if action == "compare_batch" else ()) + (("twin_tools.py", "twin_geometry.py", "twin_observations.py") if action in ("twin_orient", "twin_compare") else ())}},
+                                             **({"qualification_module_sha256": sha((Path(__file__).parents[1] / "tools" / "crystal_qualification.py").read_bytes())} if action == "general_compare" else {}),
+                                             "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py") + (("compare_batch.py",) if action == "compare_batch" else ()) + (("twin_tools.py", "twin_geometry.py", "twin_observations.py") if action in ("twin_orient", "twin_compare") else ()) + (("general_evidence.py", "twin_geometry.py", "twin_observations.py") if action == "general_compare" else ())}},
                         files_sha256={file.name: sha(file.read_bytes()) for file in directory.iterdir() if file.is_file()},
                         manifest_path=str(directory / "object.json"))
         if (directory / "preview.png").is_file():

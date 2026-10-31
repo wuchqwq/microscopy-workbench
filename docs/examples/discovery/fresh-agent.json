@@ -1,0 +1,460 @@
+{
+  "status": "PASS",
+  "scope": "Actual new runtime model on a separate192px public analytic input, then another new read-only recovery model; direct MCP plus exact provided Skill text, not automatic plugin discovery.",
+  "comparison_scope": "Positive software composition check, not a replacement blind performance benchmark. Developer formula/truth withheld from both models.",
+  "sessions": [
+    {
+      "mode": "analyze-01",
+      "thread_id": "01a18e70-6c05-7f41-be4a-9b658307155d",
+      "event_sha256": "53e0c4f7f2f247c99766bb0914aa8547b59bedf6f21b6034a582077274bff324",
+      "elapsed_seconds": 88.00221830001101,
+      "global_config_unchanged": true,
+      "calls": [
+        {
+          "tool": "image_open",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-open-01",
+            "source_kind": "tiff"
+          },
+          "object_id": "36df952824fa41ecb35eee269311ef44",
+          "original_request_id": "f4b-5996a90579e3-open-01",
+          "manifest_sha256": "ae06bad9befa573983600527a9244a5c6c8bfdfa2ed9f76670d317f88df8894c",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_frame",
+          "arguments": {
+            "object_id": "36df952824fa41ecb35eee269311ef44",
+            "frame_index": 0,
+            "request_id": "f4b-5996a90579e3-frame-01"
+          },
+          "object_id": "d4337fec4d344a89b015893446bd0ff1",
+          "original_request_id": "f4b-5996a90579e3-frame-01",
+          "manifest_sha256": "dbbb96300ecbae5578db3072c187bfc1d20f076f20f13b2e23e0f11c3c4253ba",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "d4337fec4d344a89b015893446bd0ff1",
+            "response_detail": "compact"
+          },
+          "object_id": "d4337fec4d344a89b015893446bd0ff1",
+          "original_request_id": "f4b-5996a90579e3-frame-01",
+          "manifest_sha256": "dbbb96300ecbae5578db3072c187bfc1d20f076f20f13b2e23e0f11c3c4253ba",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_preview",
+          "arguments": {
+            "object_id": "d4337fec4d344a89b015893446bd0ff1",
+            "request_id": "f4b-5996a90579e3-preview-01",
+            "max_size": 512
+          },
+          "object_id": "a680fcb7200a4726bfbb45742b3ad3c0",
+          "original_request_id": "f4b-5996a90579e3-preview-01",
+          "manifest_sha256": "1617b9233fc781f3e4b1715f78b2328cef41772b4f42513a16d6768d58ed8062",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_discovery",
+          "arguments": {
+            "object_id": "d4337fec4d344a89b015893446bd0ff1",
+            "entry": "feature",
+            "window_sizes": [
+              64,
+              96
+            ],
+            "max_candidates": 4,
+            "request_id": "f4b-5996a90579e3-discovery-01"
+          },
+          "object_id": "1a237f037eb240d48fbc1da0175b59ed",
+          "original_request_id": "f4b-5996a90579e3-discovery-01",
+          "manifest_sha256": "980381e40fce5d4ed50f07dd057a901fcca5c0fa147c9e1ad65e4bd6913c8b8a",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_fft_batch",
+          "arguments": {
+            "object_id": "d4337fec4d344a89b015893446bd0ff1",
+            "rects": [
+              [
+                64,
+                64,
+                128,
+                128
+              ]
+            ],
+            "window": "hann",
+            "subtract_mean": true,
+            "request_id": "f4b-5996a90579e3-fft-01"
+          },
+          "object_id": "485e2cb8e32d4c5c81b3268571b8798f",
+          "original_request_id": "f4b-5996a90579e3-fft-01",
+          "manifest_sha256": "487d60c46a3ce82260ebaa87c92ade679cc4f25d3fcf73052eb0c8391c9a7003",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_peaks",
+          "arguments": {
+            "object_id": "451abda246fc45ca90bab5a5e5bdf799",
+            "max_peaks": 4,
+            "exclude_dc_radius_bins": 3,
+            "min_separation_bins": 4,
+            "threshold_rel": 0.2,
+            "refinement": "quadratic",
+            "request_id": "f4b-5996a90579e3-peaks-01",
+            "max_size": 512
+          },
+          "object_id": "0c7df03f5da14f15b77e73fc25da9800",
+          "original_request_id": "f4b-5996a90579e3-peaks-01",
+          "manifest_sha256": "ad0f2dfad7284120737c10510524722d7cca275c7f693b657f860821615176ee",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_peak_measurements",
+          "arguments": {
+            "object_id": "0c7df03f5da14f15b77e73fc25da9800",
+            "peak_ids": [
+              "peak-2",
+              "peak-4"
+            ],
+            "max_peaks": 2,
+            "request_id": "f4b-5996a90579e3-measure-01"
+          },
+          "object_id": "71ac208ce0fc4051b59365dff4f7f228",
+          "original_request_id": "f4b-5996a90579e3-measure-01",
+          "manifest_sha256": "44e2f42962bc4d5221d353b97fd8c598a6da67e51363ce812cfe58c29734911a",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_discovery_review",
+          "arguments": {
+            "object_id": "1a237f037eb240d48fbc1da0175b59ed",
+            "candidate_id": "2821f5a9bc75a3b2161d0785f4118f1a",
+            "evidence_ids": [
+              "485e2cb8e32d4c5c81b3268571b8798f",
+              "451abda246fc45ca90bab5a5e5bdf799",
+              "0c7df03f5da14f15b77e73fc25da9800",
+              "dda56646faf64617bb834726ba05948f",
+              "3c3c73885c0c4723afaa0783790f5255"
+            ],
+            "observation_text": "The actual source preview shows a central reduction in periodic texture contrast. The exact [64,64,128,128] candidate has texture-energy ratio 0.61053 to the spatial reference. One mean-subtracted Hann FFT retains four detected maxima as two conjugate pairs near the image axes; two nonconjugate DC-to-peak measurements give periods about 8 pixels. This verifies retained periodic image content within the contrast patch, not its material cause. No adjacent-region FFT comparison was performed. Stop after bounded observation.",
+            "candidate_explanations": [
+              "Local contrast or amplitude variation can account for the visible texture change; its physical cause is unresolved."
+            ],
+            "unresolved": [
+              "Physical XY calibration and acquisition/image-domain meaning are not supplied.",
+              "No material phase, twin, dislocation, strain or resolved depth is established.",
+              "Localization uncertainty is unknown; Hann windowing and mixed support limit interpretation.",
+              "For physical interpretation provide sourced calibration, acquisition context and a specific research question."
+            ],
+            "request_id": "f4b-5996a90579e3-review-01"
+          },
+          "object_id": "59269e2177234f5eaaae8da5bd635dd3",
+          "original_request_id": "f4b-5996a90579e3-review-01",
+          "manifest_sha256": "0ed84c4fbdfa80f33bbac5b53713c081799e3df24e1adbfc168a6dfd11ad2af5",
+          "actual_image_content": true
+        }
+      ]
+    },
+    {
+      "mode": "recover-01",
+      "thread_id": "01a18e72-a13a-7893-9119-e00e28c852bf",
+      "event_sha256": "941200e5bc1a38ba394fb6e090e3abd39508926e9436c134c3f8700ef59e1033",
+      "elapsed_seconds": 52.55688359995838,
+      "global_config_unchanged": true,
+      "calls": [
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-open-01",
+            "response_detail": "compact"
+          },
+          "object_id": "36df952824fa41ecb35eee269311ef44",
+          "original_request_id": "f4b-5996a90579e3-open-01",
+          "manifest_sha256": "ae06bad9befa573983600527a9244a5c6c8bfdfa2ed9f76670d317f88df8894c",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-frame-01",
+            "response_detail": "compact"
+          },
+          "object_id": "d4337fec4d344a89b015893446bd0ff1",
+          "original_request_id": "f4b-5996a90579e3-frame-01",
+          "manifest_sha256": "dbbb96300ecbae5578db3072c187bfc1d20f076f20f13b2e23e0f11c3c4253ba",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-preview-01",
+            "response_detail": "compact"
+          },
+          "object_id": "a680fcb7200a4726bfbb45742b3ad3c0",
+          "original_request_id": "f4b-5996a90579e3-preview-01",
+          "manifest_sha256": "1617b9233fc781f3e4b1715f78b2328cef41772b4f42513a16d6768d58ed8062",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-discovery-01",
+            "response_detail": "compact"
+          },
+          "object_id": "1a237f037eb240d48fbc1da0175b59ed",
+          "original_request_id": "f4b-5996a90579e3-discovery-01",
+          "manifest_sha256": "980381e40fce5d4ed50f07dd057a901fcca5c0fa147c9e1ad65e4bd6913c8b8a",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-fft-01",
+            "response_detail": "compact"
+          },
+          "object_id": "485e2cb8e32d4c5c81b3268571b8798f",
+          "original_request_id": "f4b-5996a90579e3-fft-01",
+          "manifest_sha256": "487d60c46a3ce82260ebaa87c92ade679cc4f25d3fcf73052eb0c8391c9a7003",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-a703910b1f3b881e365b96f9eeb7e0cc6b22b1e1e9e87a23",
+            "response_detail": "compact"
+          },
+          "object_id": "451abda246fc45ca90bab5a5e5bdf799",
+          "original_request_id": "auto-a703910b1f3b881e365b96f9eeb7e0cc6b22b1e1e9e87a23",
+          "manifest_sha256": "540d17b653d8c5c8c4a938983d57fc5dda0f3f198673a026e739163159917f27",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-peaks-01",
+            "response_detail": "compact"
+          },
+          "object_id": "0c7df03f5da14f15b77e73fc25da9800",
+          "original_request_id": "f4b-5996a90579e3-peaks-01",
+          "manifest_sha256": "ad0f2dfad7284120737c10510524722d7cca275c7f693b657f860821615176ee",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-measure-01",
+            "response_detail": "compact"
+          },
+          "object_id": "71ac208ce0fc4051b59365dff4f7f228",
+          "original_request_id": "f4b-5996a90579e3-measure-01",
+          "manifest_sha256": "44e2f42962bc4d5221d353b97fd8c598a6da67e51363ce812cfe58c29734911a",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-46caaa9bd89128ecc757cdbbfbf32ba322cb01754598f2ea",
+            "response_detail": "compact"
+          },
+          "object_id": "dda56646faf64617bb834726ba05948f",
+          "original_request_id": "auto-46caaa9bd89128ecc757cdbbfbf32ba322cb01754598f2ea",
+          "manifest_sha256": "6696fc96f761d542173baf4aef33eca09539ce610c2f4601093beb157cd7041d",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-6ce8ab61e3a118e3b53d7243886d2a6ea5c607d69be9ab97",
+            "response_detail": "compact"
+          },
+          "object_id": "3c3c73885c0c4723afaa0783790f5255",
+          "original_request_id": "auto-6ce8ab61e3a118e3b53d7243886d2a6ea5c607d69be9ab97",
+          "manifest_sha256": "c70355b008d356032b7168a979a97060b9888cb2e373b3b2b96ac713cb120c8a",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "f4b-5996a90579e3-review-01",
+            "response_detail": "compact"
+          },
+          "object_id": "59269e2177234f5eaaae8da5bd635dd3",
+          "original_request_id": "f4b-5996a90579e3-review-01",
+          "manifest_sha256": "0ed84c4fbdfa80f33bbac5b53713c081799e3df24e1adbfc168a6dfd11ad2af5",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "1a237f037eb240d48fbc1da0175b59ed",
+            "response_detail": "full"
+          },
+          "object_id": "1a237f037eb240d48fbc1da0175b59ed",
+          "original_request_id": "f4b-5996a90579e3-discovery-01",
+          "manifest_sha256": "980381e40fce5d4ed50f07dd057a901fcca5c0fa147c9e1ad65e4bd6913c8b8a",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "485e2cb8e32d4c5c81b3268571b8798f",
+            "response_detail": "full"
+          },
+          "object_id": "485e2cb8e32d4c5c81b3268571b8798f",
+          "original_request_id": "f4b-5996a90579e3-fft-01",
+          "manifest_sha256": "487d60c46a3ce82260ebaa87c92ade679cc4f25d3fcf73052eb0c8391c9a7003",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "451abda246fc45ca90bab5a5e5bdf799",
+            "response_detail": "full"
+          },
+          "object_id": "451abda246fc45ca90bab5a5e5bdf799",
+          "original_request_id": "auto-a703910b1f3b881e365b96f9eeb7e0cc6b22b1e1e9e87a23",
+          "manifest_sha256": "540d17b653d8c5c8c4a938983d57fc5dda0f3f198673a026e739163159917f27",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "0c7df03f5da14f15b77e73fc25da9800",
+            "response_detail": "full"
+          },
+          "object_id": "0c7df03f5da14f15b77e73fc25da9800",
+          "original_request_id": "f4b-5996a90579e3-peaks-01",
+          "manifest_sha256": "ad0f2dfad7284120737c10510524722d7cca275c7f693b657f860821615176ee",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "71ac208ce0fc4051b59365dff4f7f228",
+            "response_detail": "full"
+          },
+          "object_id": "71ac208ce0fc4051b59365dff4f7f228",
+          "original_request_id": "f4b-5996a90579e3-measure-01",
+          "manifest_sha256": "44e2f42962bc4d5221d353b97fd8c598a6da67e51363ce812cfe58c29734911a",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "dda56646faf64617bb834726ba05948f",
+            "response_detail": "full"
+          },
+          "object_id": "dda56646faf64617bb834726ba05948f",
+          "original_request_id": "auto-46caaa9bd89128ecc757cdbbfbf32ba322cb01754598f2ea",
+          "manifest_sha256": "6696fc96f761d542173baf4aef33eca09539ce610c2f4601093beb157cd7041d",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "3c3c73885c0c4723afaa0783790f5255",
+            "response_detail": "full"
+          },
+          "object_id": "3c3c73885c0c4723afaa0783790f5255",
+          "original_request_id": "auto-6ce8ab61e3a118e3b53d7243886d2a6ea5c607d69be9ab97",
+          "manifest_sha256": "c70355b008d356032b7168a979a97060b9888cb2e373b3b2b96ac713cb120c8a",
+          "actual_image_content": false
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "59269e2177234f5eaaae8da5bd635dd3",
+            "response_detail": "full"
+          },
+          "object_id": "59269e2177234f5eaaae8da5bd635dd3",
+          "original_request_id": "f4b-5996a90579e3-review-01",
+          "manifest_sha256": "0ed84c4fbdfa80f33bbac5b53713c081799e3df24e1adbfc168a6dfd11ad2af5",
+          "actual_image_content": true
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "a680fcb7200a4726bfbb45742b3ad3c0",
+            "response_detail": "full"
+          },
+          "object_id": "a680fcb7200a4726bfbb45742b3ad3c0",
+          "original_request_id": "f4b-5996a90579e3-preview-01",
+          "manifest_sha256": "1617b9233fc781f3e4b1715f78b2328cef41772b4f42513a16d6768d58ed8062",
+          "actual_image_content": true
+        }
+      ]
+    }
+  ],
+  "source_dtype": "float32",
+  "source_shape_yx": [
+    192,
+    192
+  ],
+  "source_sha256": "5b3d15ffd8babf0332934a3898dc53be38deb4a897a360cc15af173808b805e3",
+  "candidate_rect": [
+    64,
+    64,
+    128,
+    128
+  ],
+  "candidate_id": "2821f5a9bc75a3b2161d0785f4118f1a",
+  "chosen_window_sizes": [
+    64,
+    96
+  ],
+  "observation_cost": {
+    "gaussian_filter_passes": 5,
+    "new_fft_pixels": 0,
+    "sampled_windows": 34,
+    "source_pixels": 36864,
+    "spatial_feature_pixels": 36864,
+    "spatial_filter_pixel_passes": 184320,
+    "summed_window_area_pixels": 185344
+  },
+  "fft_pixels": 4096,
+  "new_fft_count": 1,
+  "measurements": [
+    {
+      "peak_id": "peak-2",
+      "object_id": "dda56646faf64617bb834726ba05948f",
+      "request_id": "auto-46caaa9bd89128ecc757cdbbfbf32ba322cb01754598f2ea",
+      "frequency_cycles_per_pixel": [
+        0.12499946471143353,
+        -2.9317196864608874e-07
+      ],
+      "pixel_period": 8.000034258592958
+    },
+    {
+      "peak_id": "peak-4",
+      "object_id": "3c3c73885c0c4723afaa0783790f5255",
+      "request_id": "auto-6ce8ab61e3a118e3b53d7243886d2a6ea5c607d69be9ab97",
+      "frequency_cycles_per_pixel": [
+        2.2377716968335903e-07,
+        0.12500075239814346
+      ],
+      "pixel_period": 7.999951846795842
+    }
+  ],
+  "direct_finite_dft_max_error": 2.911382913615443e-13,
+  "recovery_immutable_files": 58,
+  "recovery_new_requests": 0,
+  "recovery_new_science": 0,
+  "interpretation_status": "hypothesized",
+  "physical_conclusion": null,
+  "NOT_TESTED": [
+    "automatic plugin discovery",
+    "browser/mouse gestures",
+    "real specimens",
+    "actual worker interruption"
+  ],
+  "model_execution_sources_sha256": {
+    "tools/image_workspace.py": "679575cbc6aa209a701a981a44f91371474fd95f6e8b7b73712c71fa9260ffab",
+    "tools/image_discovery.py": "05a70182c42f245cbd22e347b8ccef98612ba64b3cf93f64395520a98658d972",
+    "tools/image_discovery_core.py": "79014eec6165411eac36d866c7f52a7da6248375043eedfd322458e7c0d2d545"
+  },
+  "subsequent_guard": "Final source adds controlled rejection of nonfinite spatial statistics for extreme finite float64 inputs; normal algorithm/thresholds unchanged. Guard verified by targeted negative regression and final read-only original-record supplement, not a replacement model/performance run.",
+  "subsequent_contract_fix": "Explicit current calibration can attach to an unchanged saved FFT for new measurements; bare old-scale evidence still refused. Verified by targeted original-array/hash regression and final read-only supplement; not a replacement model or benchmark run."
+}

@@ -1,0 +1,13 @@
+case,strategy,candidate_count,localized_truth_hits,localized_truth_misses,false_attention_count,unknown_sample_count,initial_fft_windows,initial_fft_pixels,verification_fft_windows,verification_fft_pixels,total_fft_pixels,preparation_elapsed_ms,verification_elapsed_ms
+amplitude_dip,image_first,0,0,1,0,,0,0,0,0,0,2749.767,
+amplitude_dip,structure_field,0,0,1,0,0,4,65536,0,0,65536,21710.7706,
+amplitude_dip,manual,1,1,0,0,,0,0,1,4096,4096,1660.7638000000006,8288.799299999999
+orientation_interface,image_first,0,0,1,0,,0,0,0,0,0,2639.7235,
+orientation_interface,structure_field,2,1,0,0,0,4,65536,1,4096,69632,21619.888900000005,6125.498099999997
+orientation_interface,manual,1,1,0,0,,0,0,1,4096,4096,1772.0129999999917,8380.410299999989
+clean,image_first,0,0,0,0,,0,0,0,0,0,2720.299700000003,
+clean,structure_field,0,0,0,0,0,4,65536,0,0,65536,21244.52500000001,
+clean,manual,1,0,0,1,,0,0,1,4096,4096,1709.2804000000033,8454.808000000005
+white_noise,image_first,0,0,0,0,,0,0,0,0,0,2675.5047000000195,
+white_noise,structure_field,0,0,0,0,4,4,65536,0,0,65536,23615.2531,
+white_noise,manual,1,0,0,1,,0,0,1,4096,4096,1777.0068000000028,8201.749899999995

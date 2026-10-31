@@ -12,7 +12,7 @@ export interface StructureArguments {
  readonly orientation_id?: string; readonly euler_rzxz_deg?: readonly number[];
  readonly interactive?: boolean;
 }
-export type StructureAction = 'open'|'get'|'view'|'measure'|'derive'|'simulate'|'result'|'orient'|'compare'|'register'|'compare_batch'|'twin_orient'|'twin_compare'|'twin_evidence';
+export type StructureAction = 'open'|'get'|'view'|'measure'|'derive'|'simulate'|'result'|'orient'|'compare'|'register'|'compare_batch'|'general_compare'|'twin_orient'|'twin_compare'|'twin_evidence';
 export interface StructureWorkerPayload extends Record<string,unknown> {workspace:string;action:StructureAction;}
 // Only these two provenance fields are checked for every successful Python
 // reply. All other scientific fields remain unknown until their existing guard.

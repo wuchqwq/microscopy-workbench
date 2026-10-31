@@ -1,0 +1,492 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-01 Asia/Shanghai",
+  "scope": "Public analytic cosine/atomic fixtures; independent DFT/reciprocal geometry, actual finite kinematic diffsims, actual Chrome and separately scoped model sessions; no specimen physical conclusion",
+  "environment": {
+    "os": "Windows x64",
+    "node": "24.16.0",
+    "python": "3.13.2",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "ase": "3.29.0",
+    "diffsims": "0.7.0",
+    "diffpy.structure": "3.5.0"
+  },
+  "formal_MCP": {
+    "result": "PASS",
+    "elapsed_seconds": 85.8671396,
+    "independent_numeric": {
+      "result": "PASS",
+      "source_array_equal": true,
+      "all_bin_direct_dft_max_errors": [
+        6.325281023279943e-11,
+        5.860982684926488e-11
+      ],
+      "unchanged_tolerance": 1e-07
+    },
+    "shape_yx": [
+      64,
+      128
+    ],
+    "dtype": "float32",
+    "source_rectangles": [
+      [
+        0,
+        0,
+        64,
+        64
+      ],
+      [
+        64,
+        0,
+        128,
+        64
+      ]
+    ],
+    "signed_scale_nm": [
+      0.025,
+      -0.025
+    ],
+    "analytic_q_inv_angstrom": [
+      [
+        0.5,
+        0
+      ],
+      [
+        0,
+        0.5
+      ],
+      [
+        0.5,
+        0.5
+      ]
+    ],
+    "hkl": [
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0
+      ],
+      [
+        2,
+        2,
+        0
+      ]
+    ],
+    "preregistered_conditions": {
+      "window": "none",
+      "subtract_mean": true,
+      "max_peaks": 8,
+      "threshold_rel": 0.2,
+      "refinement": "none",
+      "radius_inv_angstrom": 1,
+      "max_excitation_error_inv_angstrom": 0.02,
+      "residual_inv_angstrom": 0.005,
+      "revision_delta_cycles_per_pixel": 0.0005
+    },
+    "counts": {
+      "fft": 2,
+      "simulate": 2,
+      "full_fields": 0
+    },
+    "protected_scientific_files": 28,
+    "historical_files_preserved": 251,
+    "recovery_files_unchanged": 422,
+    "source_sha256": {
+      "candidate_a.cif": "67fec4743ea4375ef6648be39da2646cfd57244f1a0526709b155f12b7d1a003",
+      "candidate_b.cif": "1dbc423dd13f57df61c4710a11b7551c8ab6f18b35f4ca5721ffabce7b1c3876",
+      "two_operator_rois.tiff": "ec6730f2151312f65cfe2ff9af3dade8cf91c615e4b8152c67ad0a13312dddb8"
+    },
+    "candidate_statuses": [
+      "compatible",
+      "incompatible"
+    ],
+    "revision_candidate_statuses": [
+      "compatible",
+      "incompatible"
+    ],
+    "single_anchor_delta_cycles_per_pixel": 0.0005,
+    "checks": [
+      "Explicit synthetic-operator manual ROI records and exact two-window atlas share the same source/calibration; both manual reviews bind the original atlas FFT/measurement children. No full structural field is created.",
+      "One explicit anchor is remeasured, both unchanged FFT IDs/hashes are reused through atlas revision, other measurement IDs/values and neighboring manual review remain unchanged. General comparison children are new lightweight match records, not new FFTs or simulations.",
+      "Actual FCC shared-orientation diffsims tables agree with independent HKL/q, correct candidate fits and wrong metric candidate refuses geometrically; all results remain hypotheses, not a unique material or twin identification.",
+      "Conflicting original ID, foreign-ROI evidence and stale calibration refuse. A fresh MCP client recovers original successful and failed outcomes without adding scientific computation or altering original records.",
+      "Source/frame arrays equal the TIFF, both spectra match independent finite DFT, scientific NPY and scientific evidence copies match saved bytes; display gamma never changes scientific arrays."
+    ],
+    "refusals": {
+      "wrong_roi": "错误: DISCOVERY_SCOPE_MISMATCH: Evidence has a different frame, ROI or calibration revision",
+      "wrong_roi_original_request": "manual-crystal-20",
+      "failed_request_recovered_identically": true,
+      "stale_calibration_refused": true
+    },
+    "original_references": {
+      "image_source": "c4d4d85a8af64325b5f8c26f7d0448b6",
+      "frame": "e81531ace7a040a9a96e3fd6454d6544",
+      "calibrated_frame": "066d882da0b54aceb052ac55b9f1fcd2",
+      "discovery": "7ab84dc79d844be59c26ebd6cfd77cd6",
+      "atlas": "86c555c11ff94a0196dc3d05650d9086",
+      "ffts": [
+        "aff2e090bfa64f1c90f05108d938305d",
+        "29c9201a5dfb4873a1ce7361ae8a2848"
+      ],
+      "manual_reviews": [
+        "f7f10870cf3049ae8b854a94610cd502",
+        "a8544ba9a7d04450ba7663ba6498667d"
+      ],
+      "models": {
+        "a4": "3603ba87b5c1481a820bede4c5036cf1",
+        "a3_2": "6b7f3d12afc847c38c078558e40f5d81"
+      },
+      "simulations": {
+        "a4": "e8646702687545a08bef2857737500e6",
+        "a3_2": "0e12c2b10cfa44cda7b445a152a5d7f6"
+      },
+      "comparison": "6aaf5e86b29449ada60c52d2b9ecae1c",
+      "revised_atlas": "aad45c3086d24ac5a2387909e2ec7ff9",
+      "revised_comparison": "feb4dd1acbe8438dab5bf10f2a4f0bc2"
+    },
+    "raw_local_report_sha256": "d80c06e3702bd9e3e64703b064b1e35ed7bb7874dabbc91c271219d1ce1eec32"
+  },
+  "actual_model_analysis_and_query_only_recovery": {
+    "result": "PASS_LIMITED_SYNTHETIC_MODEL_AND_RECOVERY",
+    "analysis": {
+      "result": "PASS_LIMITED_SYNTHETIC",
+      "scope": "Independent actual-model tool/reference inspection and finite DFT/analytic q checks; not a real material identification",
+      "model_identity": "Installed CLI default; actual model name not emitted in JSON event stream",
+      "actual_mcp_calls": 19,
+      "actual_mcp_image_blocks": 10,
+      "source_frame_and_array_equal": true,
+      "actual_GUI_rectangles_read_from_packet": true,
+      "same_FFT_and_measurements_in_reviews_and_comparison": true,
+      "all_bin_direct_DFT_max_errors": [
+        3.210347869589801e-09,
+        2.445513233188595e-09
+      ],
+      "analytic_q_max_error_inv_angstrom": 0.0,
+      "fft_count": 2,
+      "simulation_count": 2,
+      "full_field_count": 0,
+      "candidate_statuses": [
+        "compatible",
+        "incompatible"
+      ],
+      "phase_identified": false,
+      "schema_refusal_attempts": [
+        {
+          "tool": "image_discovery_review",
+          "request_id": "manual-crystal-c4691a856d-review-0",
+          "message": "tool call error: tool call failed for `microscopy_workbench/image_discovery_review`\n\nCaused by:\n    Mcp error: -32602: arguments.evidence_ids: 元素数量错误",
+          "worker_journal_created": false
+        }
+      ],
+      "originals_unchanged": true,
+      "global_config_unchanged": true,
+      "compiled_read_admission": [
+        {
+          "provider": "images",
+          "object_id": "ab76b504657940f5bdc7e8190a9c2653"
+        },
+        {
+          "provider": "images",
+          "object_id": "ee4ab6d5e3c643e69e45d30535af6b6e"
+        },
+        {
+          "provider": "images",
+          "object_id": "638f4b770d4c4b0aacba4c74b57e1e2c"
+        },
+        {
+          "provider": "images",
+          "object_id": "8c98897c1efc4d66822a45e5638b4d2e"
+        },
+        {
+          "provider": "images",
+          "object_id": "dedb440aa5794f4984e4cdf5b3b6cf7a"
+        },
+        {
+          "provider": "structures",
+          "object_id": "045137a2348d41c786df270643f7d856"
+        }
+      ],
+      "read_admission_unchanged_files": 263,
+      "new_session_recovery": "PENDING_SEPARATE_RUN",
+      "not_tested": [
+        "automatic plugin/Skill discovery",
+        "real specimen interpretation",
+        "actual worker interruption",
+        "human-operated ROI acceptance"
+      ]
+    },
+    "recovery": {
+      "result": "PASS_LIMITED_QUERY_ONLY_RECOVERY",
+      "scope": "A separate actual ephemeral Codex session queried original scientific outcomes; mutable Panel presentation/history remains separately scoped",
+      "elapsed_seconds": 96.7965478999995,
+      "actual_mcp_calls": 21,
+      "actual_image_blocks": 8,
+      "actual_successful_scientific_object_reads": 18,
+      "distinct_original_objects_recovered": 16,
+      "all_provider_files_unchanged": 263,
+      "new_scientific_requests": 0,
+      "new_fft": 0,
+      "new_simulations": 0,
+      "global_config_unchanged": true,
+      "no_non_mcp_actions": true,
+      "candidate_statuses": [
+        "compatible",
+        "incompatible"
+      ],
+      "phase_identified": false,
+      "original_refs": [
+        {
+          "provider": "images",
+          "object_id": "ee4ab6d5e3c643e69e45d30535af6b6e",
+          "request_id": "manual-crystal-c4691a856d-atlas"
+        },
+        {
+          "provider": "structures",
+          "object_id": "045137a2348d41c786df270643f7d856",
+          "request_id": "manual-crystal-c4691a856d-compare"
+        },
+        {
+          "provider": "images",
+          "object_id": "f743edfd666f4c75aabf2150a7219934",
+          "request_id": "gui-prepare-source"
+        },
+        {
+          "provider": "images",
+          "object_id": "ab76b504657940f5bdc7e8190a9c2653",
+          "request_id": "gui-prepare-frame"
+        },
+        {
+          "provider": "images",
+          "object_id": "fe8ade7bb92443d48be67802d1a62568",
+          "request_id": "manual-crystal-c4691a856d-calibration"
+        },
+        {
+          "provider": "images",
+          "object_id": "638f4b770d4c4b0aacba4c74b57e1e2c",
+          "request_id": "manual-crystal-c4691a856d-discovery"
+        },
+        {
+          "provider": "images",
+          "object_id": "8c98897c1efc4d66822a45e5638b4d2e",
+          "request_id": "manual-crystal-c4691a856d-review-0-bounded"
+        },
+        {
+          "provider": "images",
+          "object_id": "dedb440aa5794f4984e4cdf5b3b6cf7a",
+          "request_id": "manual-crystal-c4691a856d-review-1"
+        },
+        {
+          "provider": "structures",
+          "object_id": "d98b0794276448b5b9551ff00c7f2698",
+          "request_id": "manual-crystal-c4691a856d-open-a"
+        },
+        {
+          "provider": "structures",
+          "object_id": "86a7180dc7a74d8fba88a3199a5c14b7",
+          "request_id": "manual-crystal-c4691a856d-open-b"
+        },
+        {
+          "provider": "structures",
+          "object_id": "4c60a401fb4c415cbbe27eb3c60be917",
+          "request_id": "manual-crystal-c4691a856d-orient-a"
+        },
+        {
+          "provider": "structures",
+          "object_id": "ea348277894e443eb8b3e04e7ecde2c7",
+          "request_id": "manual-crystal-c4691a856d-orient-b"
+        },
+        {
+          "provider": "structures",
+          "object_id": "ce663b0c972f448ca5b33a50f99b7983",
+          "request_id": "manual-crystal-c4691a856d-sim-a"
+        },
+        {
+          "provider": "structures",
+          "object_id": "14bc619948e34e44a396a4fbd6808959",
+          "request_id": "manual-crystal-c4691a856d-sim-b"
+        },
+        {
+          "provider": "structures",
+          "object_id": "d98b0794276448b5b9551ff00c7f2698",
+          "request_id": "manual-crystal-c4691a856d-open-a"
+        },
+        {
+          "provider": "structures",
+          "object_id": "86a7180dc7a74d8fba88a3199a5c14b7",
+          "request_id": "manual-crystal-c4691a856d-open-b"
+        },
+        {
+          "provider": "images",
+          "object_id": "3cd953ce766b47c39cdcb07c400d6bac",
+          "request_id": "auto-0050acf5bdc81699370238d30bfd11df2b040825b87f551e"
+        },
+        {
+          "provider": "images",
+          "object_id": "b8564e7b9bae4e3f9e1fdca1b33bc39e",
+          "request_id": "auto-162314b487cde19af1d91027bb04eb58c41fdeda45fd2558"
+        }
+      ],
+      "non_successful_queries_preserved": [
+        {
+          "tool": "image_result",
+          "request_id": "manual-crystal-c4691a856d-review-0",
+          "outcome": "REQUEST_NOT_FOUND",
+          "raw_error_text": "错误: REQUEST_NOT_FOUND: Original request not found"
+        },
+        {
+          "tool": "image_result",
+          "request_id": "manual-crystal-c4691a856d-show",
+          "outcome": "REQUEST_NOT_FOUND",
+          "raw_error_text": "错误: REQUEST_NOT_FOUND: Original request not found"
+        }
+      ],
+      "panel_scope": {
+        "current_state_observed": true,
+        "old_show_receipt_NOT_VERIFIED_via_image_result": true,
+        "separate_presentation_namespace": true,
+        "mutable_draft_and_current_mark_differences_explicitly_reported": true
+      },
+      "model_identity": "CLI default; actual model name not emitted in JSON stream",
+      "usage": {
+        "input_tokens": 517161,
+        "cached_input_tokens": 431872,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5812,
+        "reasoning_output_tokens": 70
+      },
+      "assessment_harness_note": "Initial assessment expected every read response to be JSON; the2actual NOT_FOUND read replies are preserved plaintext and now explicitly classified, not relabeled as recovered objects. No scientific assertion/tolerance changed.",
+      "final_sha256": "4f1fa9f534c3708c7de0296edacd45e51fd0b19509070711c76992b4ffc552b2",
+      "raw_events_sha256": "d8aa7b33e4b6142710369e89d82908bc8c10d98ceebae000f445ab4dd44d28a5"
+    },
+    "original_analysis_final_sha256": "397e50d74e803f16725be8d2d2cf5471d877f9123641cf90ef9769dddb87c059",
+    "original_analysis_events_sha256": "334b671ba6862733b5942a249bee42640a2533925e677420a6dcb77229b2412c",
+    "not_tested": [
+      "automatic plugin or Skill discovery",
+      "real specimen interpretation",
+      "actual worker interruption",
+      "human-operated GUI acceptance",
+      "historical presentation receipt recovery in this model query-only allowlist"
+    ]
+  },
+  "later_Codex_operated_GUI_revision_and_formal_continuation": {
+    "result": "PASS_LIMITED_CUA_REVISION_AND_FORMAL_CONTINUATION",
+    "method": "Actual Chrome point drag, GUI measure, refresh, followed by formal MCP atlas/review/comparison revision and original-ID queries; not another runtime-model run",
+    "coordinates": [
+      [
+        0,
+        0
+      ],
+      [
+        0.14722222222222228,
+        0.014814814814814836
+      ]
+    ],
+    "period_nm": 0.15206222307056635,
+    "independent_period_nm": 0.15206222307056633,
+    "source_fft_ids": [
+      "3cd953ce766b47c39cdcb07c400d6bac",
+      "b8564e7b9bae4e3f9e1fdca1b33bc39e"
+    ],
+    "fft_count": 2,
+    "simulation_count": 2,
+    "full_field_count": 0,
+    "other_ROI_unchanged": true,
+    "all_prior_provider_files_unchanged": 263,
+    "original_comparison_id": "045137a2348d41c786df270643f7d856",
+    "revised_comparison_id": "4e6e7175202f4d6c93276157b8c917cb",
+    "old_statuses": [
+      "compatible",
+      "incompatible"
+    ],
+    "new_statuses": [
+      "incompatible",
+      "incompatible"
+    ],
+    "original_requests_recovered": [
+      {
+        "tool": "image_result",
+        "request_id": "gui-followup-atlas-1",
+        "object_id": "2a45262d487948cf8ee9f4e96a26dc91"
+      },
+      {
+        "tool": "image_result",
+        "request_id": "gui-followup-review-1",
+        "object_id": "41d6d54ebb07420fb39dd8c3e268de5c"
+      },
+      {
+        "tool": "structure_result",
+        "request_id": "gui-followup-compare-1",
+        "object_id": "4e6e7175202f4d6c93276157b8c917cb"
+      }
+    ],
+    "failure_retained": "Initial post-write assertion compared parsed disk -0 with MCP wire +0; both saved records are now compared directly, unchanged exact numeric/byte assertions retained. No operation resubmitted; all three original outcomes queried."
+  },
+  "authorized_private_data": {
+    "result": "DATA_PATH_READY_PHYSICS_HOLD",
+    "source_frame_values_and_uint16_exact": true,
+    "source_file_unchanged": true,
+    "exported_NPY_byte_equal": true,
+    "frames_tested": 2,
+    "fft_count": 4,
+    "model_received_private_images": false,
+    "uploaded_private_data": false,
+    "physical_validation": "HOLD_MISSING_INDEPENDENT_CANDIDATE_AND_REFERENCE",
+    "evidence": "Local only; not a public fixture or phase identification"
+  },
+  "local_regression": {
+    "npm": {
+      "total": 341,
+      "pass": 335,
+      "skip_conditional": 6,
+      "fail": 0
+    },
+    "typecheck": "PASS",
+    "build": "PASS",
+    "compiled_compatibility": {
+      "pass": 2,
+      "fail": 0
+    },
+    "standalone_science": "PASS",
+    "general_python": {
+      "pass": 17,
+      "fail": 0
+    }
+  },
+  "retained_failures": [
+    "Initial actual browser transitive module403; fixed by existing79e4866 without token bypass",
+    "Actual model first review exceeded schema max8; preworker refusal and original NOT_FOUND retained; separate bounded review shares existing FFT/measurements",
+    "Recovery image_result on presentation ID is NOT_FOUND; not claimed recovered; separate presentation namespace remains outside model recovery allowlist",
+    "Private export wrong output_directory key rejected preworker; later continuation queries original completed IDs before new correct export",
+    "Optional GUI checker disk -0 versus MCP+0 identity false failure after completed operations; new read-only original-ID/saved-record validation, no write replay, unchanged exact hashes/tolerance"
+  ],
+  "not_tested": [
+    "Human-operated usability",
+    "Automatic plugin/Skill discovery",
+    "Actual worker interruption/lost-response injection",
+    "Mac desktop",
+    "DM/native",
+    "Reliable automatic anomaly detection",
+    "Real-specimen physical interpretation"
+  ],
+  "not_implemented": [
+    "Cross-calibration previous-atlas continuation",
+    "Retrofitting standalone FFT batches into an atlas"
+  ],
+  "new_evidence_sha256": {
+    "reflections.csv": "ac08123180b4b3962c4e0d96a2cf67243da48ac5c7a84d8ef8d8d4dac5f8af2b",
+    "revised-reflections.csv": "f37c9a741b95db5e5fbf78a648e5f435f563426c9bcd2698d958aa3c2ff4f7b0",
+    "comparisons.json": "8cddbed94c11c2e93f1e30a3fec35724594286f33d383e9f319243809771a3af",
+    "qualification.json": "b375b80d381bb148c153a1131585c17bb1549dd6518995af905d5ef3e2530b2a",
+    "observation-bindings.json": "35e8b31ae0c27c72f723dd926c0ab754fe0d449d22ecef6663fa917ed7488ca8",
+    "general-evidence.png": "679b7a865c98cf80faa2af202b2ea42a6637869389148c5c722e323d8743921e",
+    "two-roi-atlas.png": "47fe7b72a31b57bcd98e7f52da9797f647e178469ccd041a3bc22710702678ff",
+    "gui-two-rois.png": "b4896178114e974cbc4f72304f764e17745421e8445733868c2eb3e8b9767325",
+    "gui-peak-recovered.png": "67cb095ca6d076b67c44333d51c6745557201160f2e7f11ee4456720b4a076d4"
+  }
+}

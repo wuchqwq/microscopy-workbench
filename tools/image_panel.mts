@@ -386,6 +386,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  staticFiles.set('/figure-composer.mjs',['figure-composer.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/sequence-evidence.mjs',['sequence-evidence.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/domain-evidence.mjs',['domain-evidence.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/evidence-contracts.mjs',['evidence-contracts.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{
