@@ -1,10 +1,18 @@
-# F4b: image-first scientific observations
+# F4b: manual image-first scientific observations
 
-This optional entrance starts with an explicit original image/frame, not a
-complete structural field. It saves researcher attention or lightweight
-real-space observations, then binds results from the existing scientific tools.
-The runtime Agent chooses what to inspect, verify, compare, revise or stop.
-No model is embedded in the provider and no scientific algorithm is replaced.
+The supported first-version path is: **researcher observes and selects an ROI
+→ Agent calls existing scientific tools → bind/review the evidence → save,
+revise and recover**. It starts with an explicit original image/frame, not a
+complete structural field. Manual image-first is supported within the public
+synthetic software/numerical qualification; it is not real-specimen physical
+validation or human GUI-gesture acceptance. The runtime Agent still chooses
+appropriate tools and stopping conditions. No model is embedded in the provider.
+
+Automatic feature proposal remains available as **EXPERIMENTAL**. Its reliable
+anomaly-detection ability is not qualified. No candidate does not mean a normal
+image. The [freeze report](F4B_FREEZE.md) records current-HEAD acceptance;
+[historical implementation evidence](F4B_ACCEPTANCE.md) retains the original
+negative results, sources and hashes.
 
 ## Formal tools and limits
 
@@ -16,14 +24,25 @@ component conversion or backend fallback. Full selected input is bounded to
 4,194,304 pixels. This increment observes one source frame, not a new cross-frame
 association engine; existing R2 tools remain directly callable.
 
-- `entry:"manual"`: one to four half-open source rectangles with an actual
+- **Manual image-first — supported limited scope.** `entry:"manual"`: one to
+  four half-open source rectangles with an actual
   researcher `reason`, optional `candidate_explanations` and `unresolved` text.
   Origin is `researcher_statement`, not numerically verified physics. It is a
   caller-reported statement, not authentication of the human's identity.
-- `entry:"feature"` (default): one or two fitting `window_sizes` (32–256 pixels,
+- **Automatic feature proposal — EXPERIMENTAL.** `entry:"feature"`: one or two
+  fitting `window_sizes` (32–256 pixels,
   default64), at most512 observation windows and four ranked candidates.
   It returns raw-value texture/tensor proxies, reasons, unknowns, finite costs,
   an overview and explicit existing-tool actions. It computes no FFT or GPA.
+
+Always set `entry:"manual"` explicitly for the formal first-version workflow.
+Omitting entry retains the earlier `feature` default solely for request/history
+compatibility; it does not make automatic proposals a supported detection path.
+New discovery/review records expose `support_status` as
+`MANUAL_SUPPORTED_LIMITED` or `EXPERIMENTAL`, following the originating entrance.
+A numerical review does not promote experimental proposals into validated
+automatic detection. Historical objects keep their original fields and hashes;
+interpret their entrance from `parameters.entry` rather than rewriting them.
 
 `image_discovery_review` requires the saved discovery object, its source-bound
 32-hex `candidate_id`, one to eight actual `evidence_ids`, `observation_text`
@@ -50,7 +69,7 @@ No new global scheduler, database, budget authority or AnalysisContext role is
 introduced. The Agent keeps total observational and scientific attempts/costs;
 the existing tool journals own actual outcomes and recovery.
 
-## Lightweight method, not a physical classifier
+## Experimental feature method, not a physical classifier
 
 The algorithm uses mature [SciPy Gaussian derivatives](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.gaussian_filter.html)
 and the classical local gradient-product
@@ -114,7 +133,19 @@ own original objects; a discovery PNG is not those values. Old files and records
 are not overwritten. See the [automation Skill](../skills/scientific-agent/microscopy-automation/references/image-first.md)
 for composable runtime use and [acceptance](F4B_ACCEPTANCE.md) for actual scopes.
 
-## Important first-version limitations
+## Real-specimen entry and first-version limitations
+
+Real experimental validation follows [Issue #43](https://github.com/wuchqwq/microscopy-workbench/issues/43).
+Start with one authorized local original image and explicit ROI/reason; retain
+its file/frame/dataset/plane, dtype, coordinates, source hash and known
+calibration with its source. Unknown scale still permits pixel-domain manual
+analysis. Private data and derived evidence stay outside the public repository.
+Independent physical references are needed before testing a physical
+interpretation; an FFT or a self-consistent review is not that reference.
+The separate intake work in [PR #45](https://github.com/wuchqwq/microscopy-workbench/pull/45)
+is not merged into this branch, and its CLI is not assumed to be installed here.
+Data-intake readiness, successful operations and physical agreement are separate
+acceptance levels; this freeze does not grant `REAL_SPECIMEN_PASS`.
 
 Fixed64-pixel feature scanning missed both registered attention anomalies in the
 initial public comparison; the existing structure field also missed the
@@ -123,4 +154,7 @@ field. These failures are retained, not corrected by changing truth/thresholds.
 The fixed method can miss small, low-contrast or sharply oriented support even
 when image differences are visible. Empty proposals never mean defect absence.
 Any later scale diagnostic is separately labelled, not a replacement benchmark.
-This is a traceable attention/evidence MVP, not reliable general defect discovery.
+The freeze changes neither threshold, weighting, window settings nor the
+registered truth. The32px diagnostic remains post-hoc, not independent blind
+success. This release is a traceable **manual attention/evidence MVP**, with an
+experimental proposal tool, not reliable automatic visual or defect discovery.

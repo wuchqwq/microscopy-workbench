@@ -14,6 +14,16 @@ const fixture=()=>{
   return {calls,registry:new ToolRegistry().register(module)};
 };
 
+test('discovery descriptions separate the supported manual entrance from experimental legacy default',()=>{
+  const {registry}=fixture();
+  const discovery=registry.listTools().find(tool=>tool.name==='image_discovery');
+  const review=registry.listTools().find(tool=>tool.name==='image_discovery_review');
+  assert.match(discovery.description,/manual/i);
+  assert.match(discovery.description,/EXPERIMENTAL/);
+  assert.match(review.description,/EXPERIMENTAL/);
+  assert.match(discovery.inputSchema.properties.entry.description,/default remains feature/);
+});
+
 test('image-first tools register as bounded sourced observations with original-request recovery',async()=>{
   const {registry,calls}=fixture();
   for(const name of ['image_discovery','image_discovery_review','image_fft_batch','image_method_plan'])assert.ok(registry.listTools().some(tool=>tool.name===name));

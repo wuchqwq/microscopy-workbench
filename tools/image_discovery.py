@@ -19,6 +19,11 @@ LIMITS = ["Visual/spatial observations are not confirmed phase, twin, dislocatio
           "Physical scale and uncertainty are unknown unless explicitly sourced; no depth is inferred"]
 
 
+def _support_status(entry):
+    # Qualification of a workflow is separate from its physical interpretation.
+    return "MANUAL_SUPPORTED_LIMITED" if entry == "manual" else "EXPERIMENTAL"
+
+
 def _text(value, api):
     api.need(type(value) is str and 1 <= len(value.strip()) <= 2000, "Provide bounded actual observation/source text")
     return value
@@ -131,13 +136,15 @@ def _propose(workspace, request, metadata, directory, api):
         report = {"algorithm": "researcher-attention-v1", "quality": {"status": "researcher_statement_not_numerically_verified"},
                   "cost": {"source_read_pixels": int(values.size), "feature_pixels": 0, "fft_pixels": 0}, "observations": [],
                   "stop_reason": None}
-    report = {**report, "candidates": candidates, "source_science": source["science"], "parameters": parameters}
+    report = {**report, "candidates": candidates, "source_science": source["science"], "parameters": parameters,
+              "support_status": _support_status(parameters["entry"])}
     api.write_new(directory/"discovery-report.json", api.canonical(report)+b"\n")
     overview = (api.automation.overview(workspace, request, [c["rect"] for c in candidates], api) if candidates else
                 api.automation.run_child(workspace, request, "context-view", "view", object_id=request["object_id"], max_size=parameters["max_size"]))
     shutil.copyfile(overview["image_path"], directory/"preview.png")
     next_actions = _actions(candidates, request["object_id"])
     metadata.update(policy_version=VERSION, parent_object_id=request["object_id"], parameters=parameters,
+                    support_status=_support_status(parameters["entry"]),
                     source_dependency=source, source_context=source["source_context"], history=history, candidates=candidates,
                     quality=report["quality"], observation_cost=report["cost"], stop_reason=report.get("stop_reason"),
                     overview_object_id=overview["object_id"], overview_dependency=_dep(overview, Path(overview["manifest_path"]).parent, api),
@@ -223,6 +230,7 @@ def _review(workspace, request, metadata, directory, api):
             visible.append(value)
     api.automation.contact_sheet(directory, [("Observation / saved evidence", r) for r in visible], api)
     metadata.update(policy_version=VERSION, parent_object_id=request["object_id"], discovery_dependency=_dep(discovery, discovery_dir, api),
+                    support_status=_support_status(discovery["parameters"]["entry"]),
                     source_dependency=discovery["source_dependency"], source_context=discovery["source_context"], candidate=candidate,
                     evidence_refs=refs, numerical_observations=observations, fft_refs=ffts, history=history,
                     observation_text=text, candidate_explanations=explanations, unresolved=unresolved,
@@ -247,6 +255,9 @@ def validate_references(workspace, metadata, api):
         source, values = _source(workspace, original["object_id"], api)
         parameters = _parameters(original, values.shape, api)
         report = api.read_json(Path(metadata["manifest_path"]).parent/"discovery-report.json")
+        if "support_status" in metadata:
+            api.need(metadata["support_status"] == report.get("support_status") == _support_status(parameters["entry"]),
+                     "Discovery support label contradicts its original entry", "CORRUPT_OBJECT")
         api.need(metadata["source_dependency"] == source and metadata["parameters"] == parameters and report["parameters"] == parameters and
                  report["source_science"] == source["science"] and report["candidates"] == metadata["candidates"] and
                  metadata["source_context"] == source["source_context"] and metadata["quality"] == report["quality"] and
@@ -282,6 +293,10 @@ def validate_references(workspace, metadata, api):
                  "Discovery overview belongs to a different original image", "CORRUPT_OBJECT")
     else:
         discovery, directory = workspace.object(original["object_id"])
+        if "support_status" in metadata:
+            report = api.read_json(Path(metadata["manifest_path"]).parent/"discovery-review.json")
+            api.need(metadata["support_status"] == report.get("support_status") == _support_status(discovery["parameters"]["entry"]),
+                     "Review support label contradicts its original observation entry", "CORRUPT_OBJECT")
         candidate = next((r for r in discovery["candidates"] if r["candidate_id"] == original["candidate_id"]), None)
         api.need(candidate is not None and metadata["candidate"] == candidate and metadata["discovery_dependency"] == _dep(discovery,directory,api) and
                  metadata["source_dependency"] == discovery["source_dependency"], "Review has a different original discovery/ROI", "CORRUPT_OBJECT")
@@ -307,6 +322,9 @@ def validate_references(workspace, metadata, api):
         old, directory = workspace._object_record(original[previous_key])
         api.need(old["kind"] == metadata["kind"] and old["source_dependency"]["science"] == metadata["source_dependency"]["science"],
                  "Historical discovery frame/calibration changed", "CORRUPT_OBJECT")
+        if metadata["kind"] == "discovery_review":
+            api.need(old["candidate"]["rect"] == metadata["candidate"]["rect"],
+                     "Historical review belongs to a different scientific ROI", "CORRUPT_OBJECT")
         history = [*old.get("history",[]), _dep(old,directory,api)]
     api.need(metadata.get("history",[]) == history and metadata["scientific_data_changed"] is False and metadata["fft_recomputed"] is False,
              "Discovery revision differs from original history/zero-science operation", "CORRUPT_OBJECT")

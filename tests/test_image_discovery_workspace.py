@@ -1,5 +1,6 @@
 """Actual scientific worker records; no model, browser or specimen qualification."""
 import copy
+from contextlib import contextmanager
 import hashlib
 import json
 from pathlib import Path
@@ -109,6 +110,102 @@ class DiscoveryWorkspace(unittest.TestCase):
         finally:
             manifest.write_bytes(manifest_raw)
             journal_path.write_bytes(journal_raw)
+
+    @contextmanager
+    def coherent_record(self, record, mutate, *, mutate_parameters=None, report_file=None, mutate_report=None):
+        """Fault a committed record without relying on shallow hash failures."""
+        directory = self.workspace/"objects"/record["object_id"]
+        manifest = directory/"object.json"
+        journal_path = self.workspace/"requests"/(record["request_id"]+".json")
+        originals = {path:path.read_bytes() for path in (manifest,journal_path)}
+        try:
+            changed = copy.deepcopy(record)
+            mutate(changed)
+            if report_file:
+                report_path = directory/report_file
+                originals[report_path] = report_path.read_bytes()
+                report = worker.strict_json(originals[report_path].decode("utf-8"))
+                mutate_report(report)
+                report_path.write_bytes(worker.canonical(report)+b"\n")
+                changed["files_sha256"][report_file] = worker.sha_file(report_path)
+            manifest.write_bytes(worker.canonical(changed)+b"\n")
+            journal = worker.strict_json(originals[journal_path].decode("utf-8"))
+            if mutate_parameters:
+                mutate_parameters(journal["parameters"])
+                journal["parameters_sha256"] = hashlib.sha256(worker.canonical(journal["parameters"])).hexdigest()
+            journal["object_manifest_sha256"] = worker.sha_file(manifest)
+            journal["response"] = {"ok":True,"state":"completed","backend":worker.BACKEND,**changed}
+            journal_path.write_bytes(worker.canonical(journal)+b"\n")
+            self.assertEqual(worker.Workspace(str(self.workspace),False)._object_record(record["object_id"])[0],changed)
+            yield changed
+        finally:
+            for path, raw in originals.items():
+                path.write_bytes(raw)
+
+    def assert_get_and_original_result_refuse(self, record):
+        for action, arguments in (("get",{"object_id":record["object_id"]}),
+                                  ("result",{"query_request_id":record["request_id"]})):
+            with self.subTest(recovery_action=action):
+                denied = worker.execute(self.request(action,**arguments))
+                self.assertFalse(denied["ok"],denied)
+                self.assertEqual(denied["error"]["code"],"CORRUPT_OBJECT",denied)
+
+    def test_support_labels_follow_entry_even_with_coherent_manifest_and_report_hashes(self):
+        feature = self.call("discovery",object_id=self.calibrated["object_id"],entry="feature",
+                            window_sizes=[32],max_candidates=1,max_size=128)
+        for saved, expected, report_file in ((self.discovery,"MANUAL_SUPPORTED_LIMITED","discovery-report.json"),
+                                             (self.review,"MANUAL_SUPPORTED_LIMITED","discovery-review.json"),
+                                             (feature,"EXPERIMENTAL","discovery-report.json")):
+            with self.subTest(kind=saved["kind"],support_status=expected):
+                record = self.record(saved["object_id"])
+                self.assertEqual(record["support_status"],expected)
+                self.assertEqual(self.call("result",query_request_id=record["request_id"])["support_status"],expected)
+                self.assertEqual(record["interpretation_status"],"hypothesized")
+                wrong = "EXPERIMENTAL" if expected=="MANUAL_SUPPORTED_LIMITED" else "MANUAL_SUPPORTED_LIMITED"
+                with self.coherent_record(record,lambda value:value.update(support_status=wrong),
+                                          report_file=report_file,mutate_report=lambda value:value.update(support_status=wrong)):
+                    self.assert_get_and_original_result_refuse(record)
+
+    def test_legacy_discovery_and_review_without_optional_support_labels_remain_readable(self):
+        # Removing only the new optional label models the earlier record contract;
+        # the original arrays, interpretation, request identity and dependencies stay exact.
+        for saved, report_file in ((self.discovery,"discovery-report.json"),(self.review,"discovery-review.json")):
+            with self.subTest(kind=saved["kind"]):
+                record = self.record(saved["object_id"])
+                with self.coherent_record(record,lambda value:value.pop("support_status"),
+                                          report_file=report_file,mutate_report=lambda value:value.pop("support_status")) as legacy:
+                    self.assertEqual(self.call("get",object_id=record["object_id"]),{"state":"completed",**legacy})
+                    self.assertEqual(self.call("result",query_request_id=record["request_id"]),{"state":"completed",**legacy})
+
+    def test_cross_roi_review_history_cannot_be_recovered_with_coherent_original_request_and_hashes(self):
+        other_rect = [32,32,96,96]
+        other = self.call("discovery",**{**self.proposal_args,
+                          "regions":[{"rect":other_rect,"reason":"Independent second public synthetic ROI"}]})
+        other_fft = self.call("fft",object_id=self.calibrated["object_id"],rect=other_rect,
+                              window="none",subtract_mean=True,max_size=128)
+        other_review = self.call("discovery_review",object_id=other["object_id"],
+                                 candidate_id=other["candidates"][0]["candidate_id"],evidence_ids=[other_fft["object_id"]],
+                                 observation_text="Evidence belongs only to the second exact source ROI")
+        refused = self.refuse("discovery_review",**{**self.review_args,"previous_review_id":other_review["object_id"]})
+        self.assertEqual(refused["error"]["code"],"DISCOVERY_SCOPE_MISMATCH")
+        fft_count = self.count("fft")
+        revision = self.call("discovery_review",**{**self.review_args,"previous_review_id":self.review["object_id"]})
+        record = self.record(revision["object_id"])
+        self.assertEqual(self.call("get",object_id=record["object_id"]),{"state":"completed",**record})
+        self.assertEqual(self.call("result",query_request_id=record["request_id"]),{"state":"completed",**record})
+        other_record = self.record(other_review["object_id"])
+        other_dependency = {"object_id":other_record["object_id"],"request_id":other_record["request_id"],
+                            "manifest_sha256":worker.sha_file(self.workspace/"objects"/other_record["object_id"]/"object.json")}
+        self.assertNotEqual(record["candidate"]["rect"],other_record["candidate"]["rect"])
+        # Both the original request and reconstructed history point to the foreign
+        # review. Own manifest/journal admission succeeds, so dependency semantics
+        # must independently enforce the creation-time exact-ROI invariant.
+        with self.coherent_record(record,lambda value:value.update(history=[*other_record["history"],other_dependency]),
+                                  mutate_parameters=lambda value:value.update(previous_review_id=other_review["object_id"])):
+            self.assert_get_and_original_result_refuse(record)
+        self.assertEqual(self.call("get",object_id=record["object_id"]),{"state":"completed",**record})
+        self.assertEqual(self.call("result",query_request_id=record["request_id"]),{"state":"completed",**record})
+        self.assertEqual(self.count("fft"),fft_count,"Review revision/recovery must reuse existing FFTs")
 
     def test_manual_observation_retains_source_grid_reason_and_unknown_interpretation(self):
         record = self.record(self.discovery["object_id"])

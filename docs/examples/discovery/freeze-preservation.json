@@ -1,0 +1,62 @@
+{
+  "result": "PASS",
+  "baseline": "6dede0ac01ac623a35f2ef5b225ea143e4385781",
+  "scope": "Byte-identical detector, fixture, preregistration and all existing public evidence except updated explanatory README; no threshold/settings/truth changes",
+  "files": [
+    {
+      "path": "tools/image_discovery_core.py",
+      "sha256": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d",
+      "unchanged": true
+    },
+    {
+      "path": "tools/create_discovery_fixtures.py",
+      "sha256": "8c0eb09570b38c872fb7e6714bc628ad1f4d146ed628ef3b134052c93f4278f6",
+      "unchanged": true
+    },
+    {
+      "path": "docs/F4B_BENCHMARK_PREREGISTRATION.md",
+      "sha256": "fa7f1896ae4601645347d60ef6e016738507e7c6146d642f15d546839e1cfbeb",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/final-readonly.json",
+      "sha256": "c773ad61d0457a074276549b4afac20dde6e2a3b30f9474734647c3887e60e59",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/fresh-agent-candidates.png",
+      "sha256": "fd9b204ae264dbfd9f250ff5d566418be57a5f36d77845ca2ce0d2445415261d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/fresh-agent.json",
+      "sha256": "ef52e13ef997361bad3ebe4c9954ce1f75fe8cc261233fe78f5ea0bb87531abb",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/manual-attention.png",
+      "sha256": "fa45510b3c2bec7d1871c91c0d12c01d5c9930d92aa173e77339e2e014f871aa",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/manual-evidence.png",
+      "sha256": "22e68118277fb6932bb02fe5d533ca098d51d5885db7a1e7e969ba2046534395",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/primary-comparison.csv",
+      "sha256": "493b52e89c169067b3ea6f026fb786aa23efc6d8439044e3516f240761254bc7",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/primary-summary.json",
+      "sha256": "d49b95f307458c2bd25abe7d78d82357d72e83c476461c056c98865b4b026b23",
+      "unchanged": true
+    },
+    {
+      "path": "docs/examples/discovery/scale-diagnostic.json",
+      "sha256": "dd7e68d29ab4b32bfc80f054fab586bcdd71691fb62105d75eac66c145e2f813",
+      "unchanged": true
+    }
+  ]
+}

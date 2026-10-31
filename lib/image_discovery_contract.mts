@@ -17,16 +17,16 @@ const write=(name:string,description:string,properties:Record<string,ArgumentSch
 });
 
 export const discoveryTools:ToolDefinition[]=[
-  write('image_discovery','Start image-first observations on an exact real-space scalar frame, without first creating a full structure field. entry=feature proposes at most4 bounded ROIs from lightweight original-array spatial features; these scores are heuristic priorities, not physical defects or calibrated probabilities. entry=manual requires1..4 explicit source-pixel regions with researcher reasons; records explanations and unknowns as supplied observations. Retains source/frame/grid/calibration and previous revision references, an overview and ready existing-tool actions. Does not compute FFT/GPA, identify a phase, or invoke a model.',{
+  write('image_discovery','Manual image-first is the supported first-version workflow: explicitly use entry=manual with1..4 researcher source-pixel ROIs and reasons, then choose existing scientific tools and bind their evidence. Qualification is limited to synthetic software/numerical checks, not real-specimen physical accuracy. Automatic entry=feature is EXPERIMENTAL: bounded spatial heuristics do not reliably detect anomalies; no candidate never means a normal image. Original coordinates, calibration, history, explanations and unknowns are retained without requiring a full structure field. No FFT/GPA, model invocation or physical identification is performed.',{
     object_id:id,
-    entry:{type:'string',enum:['feature','manual'],description:'Default feature. manual requires regions; the worker validates this conditional requirement and exact source bounds.'},
+    entry:{type:'string',enum:['feature','manual'],description:'Use explicit manual plus researcher regions for the supported workflow. Compatibility default remains feature (EXPERIMENTAL) so historical requests retain their meaning; it is not the recommended formal entry.'},
     window_sizes:{type:'array',minItems:1,maxItems:2,items:{type:'integer',minimum:32,maximum:256},description:'Feature-only window edge lengths in original source pixels; default[64]. Manual attention uses explicit rectangles. Window scale is not physical resolution.'},
     max_candidates:{type:'integer',minimum:1,maximum:4},
     regions:{type:'array',minItems:1,maxItems:4,items:region},
     previous_discovery_id:id,
     max_size:displaySize,
   },['object_id']),
-  write('image_discovery_review','Bind saved numerical evidence to one exact saved image-first candidate. The worker checks source/frame/ROI/calibration identities, original journals and payloads; region/peak numbering and display labels are not identity. Saves observations, candidate explanations and unresolved information without promoting them to confirmed dislocations, twins or phases. Existing FFT/peaks/measurement/GPA tools perform science explicitly; an applicable saved GPA can hand off to the existing F4 method-plan tools. This review creates no new FFT, GPA, numerical measurement or hidden model call.',{
+  write('image_discovery_review','Bind existing numerical evidence to one exact saved ROI. Manual image-first is supported within the documented synthetic software/numerical scope; a review originating from automatic feature proposals remains EXPERIMENTAL and does not validate detection accuracy. Check source/frame/ROI/current calibration, original journals and payloads; retain explanations, unknowns and history as hypotheses, never confirmed defects/twins/phases. Existing FFT/peaks/measurement/GPA tools perform science explicitly; qualified GPA may hand off to the existing F4 method plan. No new FFT/GPA/measurement or hidden model call.',{
     object_id:id,candidate_id:id,
     evidence_ids:{type:'array',minItems:1,maxItems:8,items:id},
     observation_text:text,

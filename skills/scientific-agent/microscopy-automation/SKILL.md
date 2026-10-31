@@ -1,19 +1,22 @@
 ---
 name: microscopy-automation
-description: Start from original microscopy images or researcher attention, propose and revise source-bound ROI observations, choose FFT/measurements or existing structural-field/GPA/topology tools, establish cross-frame correspondence, compare explicit candidates, and return recoverable scientific evidence to the shared panel. Does not identify phases or defects by assertion.
+description: Continue from researcher-selected microscopy ROIs, revise source-bound observations, choose FFT/measurement or existing field/GPA/topology tools, establish cross-frame correspondence, and return recoverable evidence to the shared panel. Automatic feature proposals are experimental; phases and defects are not identified by assertion.
 ---
 
 # Reusable microscopy observations
 
 ## Image-first or existing evidence
 
-For an original image, a researcher saying "look here", or a visible texture
-interruption, read [image-first discovery](references/image-first.md). Use
-`image_discovery` to save explicit manual attention or bounded real-space
-candidate observations; choose existing scientific tools and bind their exact
-source/ROI results with `image_discovery_review`. A complete structural field is
+For a researcher saying "look here" or supplying an original-image ROI/reason,
+read [manual image-first discovery](references/image-first.md). Explicitly use
+`image_discovery(entry="manual")`, choose existing scientific tools and bind
+their exact source/ROI results with `image_discovery_review`. Manual support is
+limited to synthetic software/numerical qualification; it does not establish a
+physical explanation or human GUI acceptance. A complete structural field is
 **not** an admission requirement. Unknown physical scale remains pixel-domain.
-This is a composable observation route, not a mandatory automatic classifier.
+Automatic real-space feature proposals are **EXPERIMENTAL**; use them only as
+an explicitly selected exploration option, not a required detector. No candidate
+does not mean normal structure. This is not a fixed automatic classifier.
 
 If a field or qualified GPA already answers the next question, continue it
 directly using the modes below; do not rebuild it just to enter image-first mode.

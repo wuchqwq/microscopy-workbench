@@ -30,7 +30,8 @@
     "test:topology": "node dist/tools/smoke_topology.mjs",
     "test:twin": "node dist/tools/smoke_twin.mjs",
     "test:method-loop": "node dist/tools/smoke_method_loop.mjs",
-    "test:discovery": "node dist/tools/smoke_discovery.mjs"
+    "test:discovery": "node dist/tools/smoke_discovery.mjs",
+    "test:manual-discovery": "node dist/tools/smoke_manual_image_first.mjs"
   },
   "type": "module",
   "version": "0.1.0",

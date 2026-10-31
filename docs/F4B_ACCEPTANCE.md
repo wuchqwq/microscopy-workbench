@@ -1,4 +1,11 @@
-# F4b first image-first slice — acceptance
+# F4b first image-first slice — historical implementation acceptance
+
+This ledger describes the implementation at `6dede0a` and its retained earlier
+runs, not a substitute for later HEAD validation. The current first-version
+positioning is **Manual image-first supported within limited synthetic
+software/numerical scope; Automatic feature proposal EXPERIMENTAL**. See the
+[freeze report](F4B_FREEZE.md) for final-HEAD checks. The original records,
+negative performance results and source hashes below are preserved.
 
 Date:2026-10-31. Branch `feature/image-first-discovery`, based on
 PR #44 at `9ca6b44`; main was `9fbc769`. #44 is not implicitly merged by this
@@ -9,12 +16,16 @@ work. [Method/API](IMAGE_FIRST_DISCOVERY.md),
 ## What now works
 
 An original explicit image/frame can enter without a complete structure field.
-`image_discovery` records actual researcher attention or lightweight spatial
-observations with exact original coordinates, scale/settings, reasons,
+The formal manual path, `image_discovery(entry="manual")`, records actual
+researcher attention with exact original coordinates, scale/settings, reasons,
 hypotheses and unknowns. The runtime Agent selects existing FFT/peak/measurement
 tools; `image_discovery_review` binds their actual saved evidence to the exact
 source/ROI/calibration and returns existing Panel views. Source arrays remain
 read-only and provider journals remain the sole request authority.
+
+The historical automatic software checks below verify bounded operation,
+evidence binding and recovery, not reliable anomaly detection. That entrance is
+EXPERIMENTAL even when those engineering checks pass.
 
 Qualified fixed-g GPA can hand off to the existing F4 method-plan mechanism.
 One actual worker test performs that admission and recovers its original IDs
@@ -46,7 +57,7 @@ framework was involved.
 | Browser/mouse gestures, real specimens, macOS-specific execution | NOT_TESTED; no previous browser safety stop bypassed. |
 | Actual worker interruption/cancellation injection | NOT_TESTED; ordinary original-ID recovery and unit integrity faults are separate. |
 
-## Main comparison — do not hide the misses
+## Historical experimental comparison — do not hide the misses
 
 The source formulas and evaluation support were fixed before detector scoring.
 The image entrance uses64px only; the field uses four128px windows covering the
@@ -88,7 +99,7 @@ preserved in the [separate report](examples/discovery/scale-diagnostic.json).
 It neither replaces the failed primary result nor supplies blind performance
 evidence. Thresholds, noise seed and original truth were not retuned.
 
-## Actual new Agent, not the developer running its sequence
+## Historical actual new Agent, not automatic-detection qualification
 
 A separate192² float32 public analytic input was generated before its model run.
 Its source filename is generic and its formula/truth file was withheld. The

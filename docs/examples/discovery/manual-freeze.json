@@ -1,0 +1,366 @@
+{
+  "schema": "manual-image-first-freeze-qualification-v1",
+  "started_utc": "2026-10-31T07:28:36.578Z",
+  "scope": "Actual compiled MCP stdio/Python; explicitly supplied public synthetic researcher ROI and observation reason. Manual workflow software/numerical qualification only.",
+  "automatic_proposals_run": 0,
+  "structure_fields_created": 0,
+  "timings": [
+    {
+      "tool": "image_open",
+      "request_id": "manual-freeze-db3d8140fc-1",
+      "state": "completed",
+      "elapsed_ms": 1724.2751
+    },
+    {
+      "tool": "image_frame",
+      "request_id": "manual-freeze-db3d8140fc-2",
+      "state": "completed",
+      "elapsed_ms": 1457.2350000000001
+    },
+    {
+      "tool": "image_calibrate",
+      "request_id": "manual-freeze-db3d8140fc-3",
+      "state": "completed",
+      "elapsed_ms": 1310.1687999999995
+    },
+    {
+      "tool": "image_discovery",
+      "request_id": "manual-freeze-db3d8140fc-4",
+      "state": "completed",
+      "elapsed_ms": 1670.6378999999988
+    },
+    {
+      "tool": "image_fft_batch",
+      "request_id": "manual-freeze-db3d8140fc-5",
+      "state": "completed",
+      "elapsed_ms": 1779.6224000000002
+    },
+    {
+      "tool": "image_peaks",
+      "request_id": "manual-freeze-db3d8140fc-6",
+      "state": "completed",
+      "elapsed_ms": 2817.109199999999
+    },
+    {
+      "tool": "image_peak_measurements",
+      "request_id": "manual-freeze-db3d8140fc-7",
+      "state": "completed",
+      "elapsed_ms": 1890.0797000000002
+    },
+    {
+      "tool": "image_discovery_review",
+      "request_id": "manual-freeze-db3d8140fc-8",
+      "state": "completed",
+      "elapsed_ms": 2086.3804999999993
+    },
+    {
+      "tool": "image_discovery",
+      "request_id": "manual-freeze-db3d8140fc-9",
+      "state": "completed",
+      "elapsed_ms": 1741.4451999999983
+    },
+    {
+      "tool": "image_discovery_review",
+      "request_id": "manual-freeze-db3d8140fc-10",
+      "state": "completed",
+      "elapsed_ms": 2393.6954000000005
+    },
+    {
+      "tool": "image_discovery",
+      "request_id": "manual-freeze-db3d8140fc-11",
+      "state": "completed",
+      "elapsed_ms": 1685.5976999999984
+    },
+    {
+      "tool": "image_discovery_review",
+      "request_id": "manual-freeze-db3d8140fc-12",
+      "state": "failed_or_unknown",
+      "elapsed_ms": 1476.3596999999972
+    },
+    {
+      "tool": "image_export",
+      "request_id": "manual-freeze-db3d8140fc-13",
+      "state": "completed",
+      "elapsed_ms": 2863.487100000002
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-4",
+      "state": "completed",
+      "elapsed_ms": 1347.0355999999992
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-5",
+      "state": "completed",
+      "elapsed_ms": 1360.1628999999994
+    },
+    {
+      "tool": "image_result",
+      "request_id": "auto-7f799eed8b154955a2f713ed37d0aa18f142ad1e393e13e7",
+      "state": "completed",
+      "elapsed_ms": 1297.7937999999995
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-6",
+      "state": "completed",
+      "elapsed_ms": 1342.1109999999971
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-7",
+      "state": "completed",
+      "elapsed_ms": 1398.2489999999962
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-8",
+      "state": "completed",
+      "elapsed_ms": 1582.7243999999992
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-9",
+      "state": "completed",
+      "elapsed_ms": 1287.9150999999983
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-10",
+      "state": "completed",
+      "elapsed_ms": 1694.7358999999997
+    },
+    {
+      "tool": "image_result",
+      "request_id": "manual-freeze-db3d8140fc-12",
+      "state": "failed_or_unknown",
+      "elapsed_ms": 1262.040399999998
+    }
+  ],
+  "checks": [
+    "Same-ROI researcher rationale/review revision reuses the identical FFT and numerical evidence, retaining old records and explicit history.",
+    "Explicit source/frame/ROI/dtype/signed metric and numerical periods match actual provider records; no physical interpretation confirmed.",
+    "Fresh client original-ID recovery, failed-request recovery and exact exported scientific JSON preserve all authoritative bytes without repeating science.",
+    "Original float32 array equals TIFF exactly; every complex FFT bin matches independent finite DFT, with analytic signed metric periods."
+  ],
+  "not_tested": [
+    "human browser gestures",
+    "real specimens/independent material interpretation",
+    "new runtime model",
+    "real worker interruption"
+  ],
+  "export": {
+    "object_id": "1e328c3f5fee49c7a3f5e23a993a3fc4",
+    "files_sha256": {
+      "discovery-review.json": "d67bca80d38081d09613afc0058d8a6c4ca0b22d95c0f4502373ccfa1997f695",
+      "preview.png": "8bb01d013bb3aed56f6f23187b116512cd69cf9b4e682faf934762adca4e38e3",
+      "provenance.json": "450c9dde789be7e8343d2095cd560724c55b998bcd45d59abd5aae0c893db98e",
+      "manifest.json": "b4b53d18ba989f268bbdfc2835785eed051da99e2d8168a752afb297600b5191"
+    },
+    "byte_exact": true
+  },
+  "source": {
+    "backend": "external-image-workspace",
+    "source_sha256": "5fffd119fc568ff1e8daaaedec5c4ef5d0eb39550b8d666de99b56ef25bf0bc3",
+    "frame_array_sha256": "dd0bae982f24ccf290f14b03f99c183f74c601fb03c5b748a63e9efb58dafaed",
+    "dtype": "float32",
+    "shape_yx": [
+      256,
+      256
+    ],
+    "calibration": {
+      "calibration_id": "43a0c4691e9d4e3ebfe5a7ad0552c8d4",
+      "revision": 1,
+      "previous_calibration_id": null,
+      "status": "active",
+      "scope": "image",
+      "applies_to": {
+        "object_id": "58a756f30baf45739c4c1e1abe6122dc",
+        "kind": "frame",
+        "source_identity": {
+          "path": "F:\\microscopy-workbench-f4b\\analysis\\2026-10-31-f4b-freeze-manual-r1\\fixture\\amplitude_dip.tiff",
+          "sha256": "5fffd119fc568ff1e8daaaedec5c4ef5d0eb39550b8d666de99b56ef25bf0bc3",
+          "stat": {
+            "ctime_ns": "1793431716455235200",
+            "device": "17081883644722306211",
+            "inode": "281474979336905",
+            "mtime_ns": "1793431716456321700",
+            "size": 262368
+          }
+        },
+        "frame_index": 0,
+        "source_capture_files_sha256": null
+      },
+      "xy_scale": {
+        "x": 0.02,
+        "y": -0.03,
+        "unit": "nm",
+        "uncertainty_x": null,
+        "uncertainty_y": null,
+        "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified"
+      },
+      "source_text": "Public synthetic signed XY sampling for manual workflow qualification; not experimental calibration.",
+      "source": "user_statement_not_independently_verified",
+      "uncertainty_status": "unknown",
+      "coordinate_domain": "real_space",
+      "real_space_only": true,
+      "original_file_metadata_modified": false,
+      "value_unit_or_frame_depth_inferred": false
+    }
+  },
+  "manual": {
+    "object_id": "771923be70bb4e9097dc7496ee3263a1",
+    "request_id": "manual-freeze-db3d8140fc-4",
+    "candidate_id": "e4a60b2446a4530d70f1639816f88948",
+    "rect": [
+      56,
+      56,
+      120,
+      120
+    ],
+    "reason": "Synthetic researcher selects a visible contrast depression for checking; material cause remains unknown.",
+    "support_status": "MANUAL_SUPPORTED_LIMITED"
+  },
+  "science": {
+    "fft_id": "2727f07d65c2401296c6eed6b3bbadef",
+    "fft_sha256": "9b15e90834f0ffe6f23fa918e44913c8bc1e3a11bb8f46f346e9970e1a84c0cb",
+    "fft_pixels": 4096,
+    "measurements": [
+      {
+        "peak_id": "peak-1",
+        "measurement_object_id": "5a9ab78a33a44dd0a96a67e789f7744b",
+        "measurement_request_id": "auto-af92c72b92a5e88f43358fee9540b655ab3448392cc333e3",
+        "manifest_path": "F:\\microscopy-workbench-f4b\\analysis\\2026-10-31-f4b-freeze-manual-r1\\workspace\\images\\objects\\5a9ab78a33a44dd0a96a67e789f7744b\\object.json",
+        "frequency_cycles_per_pixel": [
+          -0.125,
+          0
+        ],
+        "pixel_period": 8,
+        "d_spacing": 0.16,
+        "d_spacing_unit": "nm",
+        "status": "hypothesized"
+      },
+      {
+        "peak_id": "peak-2",
+        "measurement_object_id": "bf5315f79a704809a653cd3aa0ced9c2",
+        "measurement_request_id": "auto-710373f099e22c34910707b16324cbc1069a15a0249b99fb",
+        "manifest_path": "F:\\microscopy-workbench-f4b\\analysis\\2026-10-31-f4b-freeze-manual-r1\\workspace\\images\\objects\\bf5315f79a704809a653cd3aa0ced9c2\\object.json",
+        "frequency_cycles_per_pixel": [
+          0.125,
+          0
+        ],
+        "pixel_period": 8,
+        "d_spacing": 0.16,
+        "d_spacing_unit": "nm",
+        "status": "hypothesized"
+      },
+      {
+        "peak_id": "peak-3",
+        "measurement_object_id": "8038e78337ea4eb88549a6b1ff152266",
+        "measurement_request_id": "auto-bb7496348a036cc2bab3c6aeca572080d38f739ce90165a4",
+        "manifest_path": "F:\\microscopy-workbench-f4b\\analysis\\2026-10-31-f4b-freeze-manual-r1\\workspace\\images\\objects\\8038e78337ea4eb88549a6b1ff152266\\object.json",
+        "frequency_cycles_per_pixel": [
+          0,
+          -0.125
+        ],
+        "pixel_period": 8,
+        "d_spacing": 0.24,
+        "d_spacing_unit": "nm",
+        "status": "hypothesized"
+      },
+      {
+        "peak_id": "peak-4",
+        "measurement_object_id": "5026b8972ed942a0aa61ec0b1f43ba33",
+        "measurement_request_id": "auto-3caa36858a1f09288e5e6c9d9dcac35de10d27a9320e63b2",
+        "manifest_path": "F:\\microscopy-workbench-f4b\\analysis\\2026-10-31-f4b-freeze-manual-r1\\workspace\\images\\objects\\5026b8972ed942a0aa61ec0b1f43ba33\\object.json",
+        "frequency_cycles_per_pixel": [
+          0,
+          0.125
+        ],
+        "pixel_period": 8,
+        "d_spacing": 0.24,
+        "d_spacing_unit": "nm",
+        "status": "hypothesized"
+      }
+    ],
+    "evidence_refs": [
+      {
+        "object_id": "4f7289d1508d4ecd8c9e0e21c425f0b4",
+        "request_id": "manual-freeze-db3d8140fc-5",
+        "manifest_sha256": "b0198ba9e8c2f21975fb8b515dd6b8d9e0efaddedc88588fd9c1119e324f81cf"
+      },
+      {
+        "object_id": "dbbda4bf8dfb48d493897701592f4b41",
+        "request_id": "manual-freeze-db3d8140fc-6",
+        "manifest_sha256": "53a887dc6c7a30cd613afe6c3bf4438114cab363298756f3d7a3e397d25087ea"
+      },
+      {
+        "object_id": "bb3f62f6bfbf4943a636ced3ec4228c4",
+        "request_id": "manual-freeze-db3d8140fc-7",
+        "manifest_sha256": "ad52aa707f34818bd058663f6cda85e85ae8d6c0d5fa441209b3ac1ddf00b9cd"
+      }
+    ]
+  },
+  "revision": {
+    "discovery_id": "fb21fdd91ef94789b96041ee9ac92e24",
+    "review_id": "9812e0f0e7874861a942c4783c79f130",
+    "fft_unchanged": true,
+    "old_files_unchanged": 60
+  },
+  "stale_roi": {
+    "failed_request_id": "manual-freeze-db3d8140fc-12",
+    "original_error": "错误: DISCOVERY_SCOPE_MISMATCH: FFT batch does not contain this exact candidate ROI",
+    "recovered_error_identical": true
+  },
+  "recovery": {
+    "fresh_client": true,
+    "original_requests": [
+      {
+        "object_id": "771923be70bb4e9097dc7496ee3263a1",
+        "request_id": "manual-freeze-db3d8140fc-4"
+      },
+      {
+        "object_id": "4f7289d1508d4ecd8c9e0e21c425f0b4",
+        "request_id": "manual-freeze-db3d8140fc-5"
+      },
+      {
+        "object_id": "2727f07d65c2401296c6eed6b3bbadef",
+        "request_id": "auto-7f799eed8b154955a2f713ed37d0aa18f142ad1e393e13e7"
+      },
+      {
+        "object_id": "dbbda4bf8dfb48d493897701592f4b41",
+        "request_id": "manual-freeze-db3d8140fc-6"
+      },
+      {
+        "object_id": "bb3f62f6bfbf4943a636ced3ec4228c4",
+        "request_id": "manual-freeze-db3d8140fc-7"
+      },
+      {
+        "object_id": "742a7b5cd31c47d8aa61b1fe6cbcc87e",
+        "request_id": "manual-freeze-db3d8140fc-8"
+      },
+      {
+        "object_id": "fb21fdd91ef94789b96041ee9ac92e24",
+        "request_id": "manual-freeze-db3d8140fc-9"
+      },
+      {
+        "object_id": "9812e0f0e7874861a942c4783c79f130",
+        "request_id": "manual-freeze-db3d8140fc-10"
+      }
+    ],
+    "unchanged_files": 89,
+    "new_requests": 0,
+    "new_fft": 0
+  },
+  "independent_numeric": {
+    "result": "PASS",
+    "source_arrays_equal": true,
+    "all_bin_direct_dft_max_error": 1.7716904380295302e-12,
+    "measurements_checked": 4,
+    "scope": "Direct finite DFT and signed synthetic XY metric; not physical interpretation or detector performance"
+  },
+  "result": "PASS",
+  "completed_utc": "2026-10-31T07:29:15.865Z",
+  "runtime_ms": 39287.1779
+}
