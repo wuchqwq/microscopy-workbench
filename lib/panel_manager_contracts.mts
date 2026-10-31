@@ -3,6 +3,7 @@ import type {ToolResult} from './runtime/contracts.mjs';
 
 export interface OwnedPanelConnection {
   schema_version: 1; panel_id: string; port: number; token: string; pid: number;
+  evidence_token?:string;
 }
 // Only response()'s existing panel/object identity checks establish this view.
 // Every other field, including presentation, calibration and selection, is raw.
@@ -23,6 +24,7 @@ export type PanelFetch = (url: string, options: {
 export interface PanelManagerOptions {
   workspace?: string; python?: string;
   inspect?: (objectId: string) => unknown | PromiseLike<unknown>;
+  inspectEvidence?: (objectId: string) => unknown | PromiseLike<unknown>;
   launch?: (request: PanelLaunch) => unknown | PromiseLike<unknown>;
   fetchImpl?: PanelFetch; readyTimeoutMs?: number; requestTimeoutMs?: number;
 }
@@ -32,5 +34,9 @@ export interface PanelManagerPort {
 }
 export interface PanelImageWorkspacePort {
   readonly workspace: string; readonly python?: string;
+  call(name: string, args: unknown): ToolResult | PromiseLike<ToolResult>;
+}
+export interface PanelStructureWorkspacePort {
+  readonly workspace: string;
   call(name: string, args: unknown): ToolResult | PromiseLike<ToolResult>;
 }

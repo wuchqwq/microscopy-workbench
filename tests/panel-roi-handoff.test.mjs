@@ -90,6 +90,37 @@ test('malformed geometry and inspection budgets cannot become a partly truncated
  assert.ok(panelRoiHandoff(panels).saved_rectangles.every(row=>!row.usable));
 });
 
+test('fractional drawing contact and canonical FFT support remain separate without changing eligibility',()=>{
+ const cases=[
+  {raw:[[0,0,31.2,32],[31.8,0,64,32]],original:'gap_unknown',canonical:'overlap'},
+  {raw:[[0,0,31.2,16],[31.2,16,63.2,32]],original:'corner_only',canonical:'shared_edge'},
+  {raw:[[0,0,31.2,32],[31.2,0,64,32]],original:'shared_edge',canonical:'overlap'},
+  {raw:[[0,0,31.2,32],[33.8,0,64,32]],original:'gap_unknown',canonical:'gap_unknown'},
+ ];
+ for(const example of cases){
+  const source=state();source.object.annotations=example.raw.map((coordinates,index)=>mark(`stable-${index}`,coordinates,{text:'same visible label'}));
+  const before=structuredClone(source),packet=panelRoiHandoff(source),pair=packet.support_pairs[0];
+  assert.ok(packet.saved_rectangles.every(row=>row.usable),'Reporting contact does not change tool admission');
+  assert.deepEqual(pair.annotation_ids,['stable-0','stable-1'],'Text/ordinal labels are not identity');
+  assert.equal(pair.original_relation,example.original);assert.equal(pair.canonical_relation,example.canonical);
+  assert.equal(pair.relation_changed,example.original!==example.canonical);assert.equal(Boolean(pair.warning),pair.relation_changed);
+  assert.equal(packet.pair_inspection.complete,true);assert.deepEqual(source,before);
+ }
+});
+
+test('pair inspection is bounded and never claims a truncated or ambiguous ROI set was fully checked',()=>{
+ const many=state();many.object.annotations=Array.from({length:10},(_,i)=>mark(`id-${i}`,[i,0,i+20,20]));
+ const packet=panelRoiHandoff(many);assert.equal(packet.support_pairs.length,32);assert.equal(packet.pair_inspection.pair_count,45);
+ assert.equal(packet.pair_inspection.complete,false);assert.equal(packet.pair_inspection.status,'pair_budget_exceeded');
+ assert.equal(packet.saved_rectangles.length,10,'Pair return budget does not truncate saved ROI eligibility');
+ const duplicate=state();duplicate.object.annotations[1].annotation_id='roi-a';
+ const ambiguous=panelRoiHandoff(duplicate);assert.equal(ambiguous.pair_inspection.status,'ambiguous_annotation_identity');
+ assert.equal(ambiguous.pair_inspection.pair_count,null);assert.deepEqual(ambiguous.support_pairs,[]);
+ assert.ok(ambiguous.saved_rectangles.every(row=>row.usable),'Identity diagnostics do not rewrite old rectangle eligibility');
+ const over=state();over.object.annotations=Array.from({length:101},(_,i)=>mark(`id-${i}`,[0,0,10,10]));
+ assert.equal(panelRoiHandoff(over).pair_inspection.status,'handoff_budget_exceeded');assert.equal(panelRoiHandoff(over).pair_inspection.pair_count,null);
+});
+
 test('Panel MCP response adds handoff while preserving old view and actual image content fields',()=>{
  const source=state(),png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
  source.png_base64=png;source.clean_png_base64=png;source.domain_png_base64=null;source.tools=[];

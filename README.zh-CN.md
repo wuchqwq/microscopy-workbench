@@ -14,6 +14,8 @@ Microscopy Workbench 是一个开源、跨平台的**显微科学分析工作台
 
 ## 目前能做什么？
 
+- **在图旁保存观察、接着分析**：[GUI-first 试用清单](docs/GUI_FIRST_ROUND1.md)提供可见的 ROI/观察理由列表、明确的 Agent 接续入口和同面板的有限候选比较证据。FFT 链接打开已有测量视图；修订峰位后，旧证据持续提示待更新。这里没有内嵌聊天，也不会自动唤醒模型。
+
 - **从面板圈选的两个区域继续分析**：[人工 ROI → 晶体学证据](docs/MANUAL_CRYSTAL_WORKFLOW.md)复用同一组 FFT/测量，衔接区域观察复核与有限候选比较，无需研究者复制内部 ID。[真实浏览器、新 Agent 与恢复验收](docs/MANUAL_CRYSTAL_ACCEPTANCE.md)已在公开合成范围通过；不代表真实样品物相已经确认。
 
 - **比较相邻 ROI 的显式候选结构**：[通用晶体学证据](docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md)复用有序 FCC/BCC/HCP 或多元素结构、实际模拟及已保存的反射测量，保留不同候选、未匹配和证据不足；通用取向关系不会自动被命名为孪晶或唯一物相。

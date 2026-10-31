@@ -83,7 +83,7 @@ export async function startResearcherInspector(options:ResearcherOptions,{create
   if(!objectId.test((fields(result.data)?.object_id??'') as string))throw new Error('Operation has not returned a saved object. Recover original request '+request.arguments.request_id);
   durableNew(responseFile,{object_id:fields(result.data).object_id,request_id:request.arguments.request_id});return fields(result.data);
  };
- let bootstrap=createClient({workspace,python}),selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown;
+ let bootstrap=createClient({workspace,python}),selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown,crystalEvidenceSnapshot:unknown;
  try{
   const initialized=fields(await bootstrap.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-researcher-inspector',version:'1'}}));if(initialized.error)throw new Error(fields(initialized.error).message as string);
   const pointer=path.join(directory,'latest-panel.json');
@@ -96,6 +96,7 @@ export async function startResearcherInspector(options:ResearcherOptions,{create
    selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
    previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
    numericResultRefs=Object.hasOwn(selection,'numeric_result_refs')?selection.numeric_result_refs:null;
+   crystalEvidenceSnapshot=selection.crystal_evidence??null;
   }else{
    const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
    const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:(session.initial_frame as number)-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{}),...(session.initial_plane_axes!==undefined?{plane_axes:session.initial_plane_axes,plane_indices:session.initial_plane_indices}:{})});
@@ -105,7 +106,7 @@ export async function startResearcherInspector(options:ResearcherOptions,{create
  const runId=randomBytes(16).toString('hex'),runDirectory=path.join(directory,'panels',runId),journalDirectory=path.join(runDirectory,'journal');mkdirSync(runDirectory,{recursive:true});
  durableNew(path.join(runDirectory,'run.json'),{schema_version:1,session_id:session.session_id,object_id:selected.object_id,created_utc:new Date().toISOString()});
  let panel;
- try{panel=await openPanel({workspace,python,object_id:selected.object_id as string,journalDirectory,numeric_result_refs:numericResultRefs});replaceJSON(path.join(directory,'latest-panel.json'),{schema_version:1,session_id:session.session_id,run_id:runId});}
+ try{panel=await openPanel({workspace,python,object_id:selected.object_id as string,journalDirectory,numeric_result_refs:numericResultRefs,crystal_evidence_snapshot:crystalEvidenceSnapshot});replaceJSON(path.join(directory,'latest-panel.json'),{schema_version:1,session_id:session.session_id,run_id:runId});}
  catch(error){if(panel)await panel.close();throw error;}
  return {panel,workspace,source_path:session.source_path,resumed,previous_unsaved_draft:previousDraft,numeric_result_recovery:panel.state?.().numeric_result_recovery??{state:numericResultRefs===null?'legacy_missing_refs':'not_requested'},
   async close(){await panel.close();}};

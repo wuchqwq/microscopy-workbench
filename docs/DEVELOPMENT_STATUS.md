@@ -6,6 +6,11 @@ Mainline admission is not a new real-specimen, GUI, model or instrument qualific
 
 ## Manual regions / crystal integration candidate
 
+The dependent [GUI-first round 1](GUI_FIRST_ROUND1_ACCEPTANCE.md) adds visible
+ROI observations, explicit continuation, finite provider-qualified evidence,
+and persistent revision requirements. It retains the parent scientific records
+and limits. Its browser/model/numerical scopes are recorded separately.
+
 `integration/manual-crystal-evidence` composes open #44/#46/#47 without merging
 main. A bounded read-only Panel handoff preserves fractional anchors and exposes
 the existing canonical processing edges/exact source/calibration references.

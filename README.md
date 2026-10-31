@@ -14,6 +14,8 @@ The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, 
 
 ## What you can do
 
+- **Save observations and continue beside the image.** The [GUI-first trial](docs/GUI_FIRST_ROUND1.md) adds a visible ROI/reason list, an explicit Agent handoff and qualified finite-comparison evidence in the same Panel. Saved FFT links reopen measurement views; peak revisions keep older evidence visibly pending until updated. This does not embed a chat or automatically wake a model.
+
 - **Continue from two regions selected in the Panel.** The [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md) shares saved FFT/measurement evidence across source-bound reviews and finite candidate comparisons. Real browser gestures and fresh-Agent/recovery tests passed in a [limited public synthetic scope](docs/MANUAL_CRYSTAL_ACCEPTANCE.md); this does not establish a real material's identity.
 
 - **Compare explicit structures across adjacent ROIs.** [General crystallographic evidence](docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md) composes supplied ordered FCC/BCC/HCP or multi-element models, actual qualified simulations and saved reflection measurements. It preserves alternatives and insufficient evidence; generic relations are not automatically twins or phase identifications.

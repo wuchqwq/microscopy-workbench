@@ -1,13 +1,22 @@
 // Panel presentation is an explicit optional module, not a science fallback or
 // another image state database. Existing manager/HTTP guards remain in place.
-import {ImagePanelManager, imagePanelTools, IMAGE_PANEL_INSTRUCTIONS} from '../image_panel_mcp.mjs';
+import {ImagePanelManager, imagePanelTools,imagePanelEvidenceTool, IMAGE_PANEL_INSTRUCTIONS} from '../image_panel_mcp.mjs';
+import {buildCrystalEvidencePayload,addCrystalInteractionViews} from '../panel_crystal_evidence.mjs';
 
-import type {PanelImageWorkspacePort,PanelManagerOptions,PanelManagerPort} from '../panel_manager_contracts.mjs';
+import type {PanelImageWorkspacePort,PanelStructureWorkspacePort,PanelManagerOptions,PanelManagerPort} from '../panel_manager_contracts.mjs';
 import type {RegistryModule,RequestIdentityPolicy,ToolContract,ToolCallOptions} from '../runtime/contracts.mjs';
 interface PanelRecipe {inputs:readonly string[];outputs:readonly string[];kind:string;requestId:RequestIdentityPolicy;gates:readonly string[];serialization:string;recovery:ToolContract['recovery'];}
-interface ImagePanelModuleOptions {imageWorkspace?:PanelImageWorkspacePort;manager?:PanelManagerPort;managerOptions?:PanelManagerOptions;}
+interface ImagePanelModuleOptions {imageWorkspace?:PanelImageWorkspacePort;structureWorkspace?:PanelStructureWorkspacePort;manager?:PanelManagerPort;managerOptions?:PanelManagerOptions;}
 
 const recipes:Readonly<Record<string,PanelRecipe>> = {
+  image_panel_evidence: {
+    inputs: ['GeneralCrystalEvidenceRef:existing fully admitted structure comparison','PanelRef:owned exact current view and draft revision','Optional ObservationViewRef:two exact saved original ROI observations','OperationReceipt:pre-saved presentation request_id'],
+    outputs: ['CrystalEvidencePresentation:bounded provider references, qualified counts/details and comparison PNG; never a scientific image input','PresentationReceipt:original attach outcome'],
+    kind:'panel-evidence-attachment',requestId:'required',
+    gates:['Explicit structure workspace structure_info full admission; exact hash-checked saved comparison file','Exact source/frame/calibration/ROI and owned Panel/draft guards; no fitting or scientific write'],
+    serialization:'Existing Panel receipt authority and owned HTTP serialized presentation; no scientific journal duplication',
+    recovery:{method:'Repeat image_panel_evidence with exactly the original arguments; original immutable attachment receipt only. Read image_panel_current separately for latest currentness.',tool:'image_panel_evidence',idField:'request_id',scope:'Configured image Panel registry, explicit structure provider, owned live helper; unknown/stopped attachment is not automatically replayed'},
+  },
   image_panel_open: {
     inputs: ['ImageViewRef or ScientificObjectRef:existing exact image object', 'OperationReceipt:pre-saved panel request_id'],
     outputs: ['PanelRef:owned token-protected loopback URL and panel_id', 'DisplayPNG:saved immutable view; not unsaved gesture/tone drafts'],
@@ -50,7 +59,7 @@ function contract(name:string, manager:PanelManagerPort):ToolContract {
   };
 }
 
-export function createImagePanelModule({imageWorkspace, manager, managerOptions}:ImagePanelModuleOptions = {}):RegistryModule&{manager:PanelManagerPort} {
+export function createImagePanelModule({imageWorkspace,structureWorkspace, manager, managerOptions}:ImagePanelModuleOptions = {}):RegistryModule&{manager:PanelManagerPort} {
   let runtime = manager;
   if (!runtime) {
     if (!imageWorkspace || typeof imageWorkspace.call !== 'function') throw new TypeError('Image panel module requires its existing image workspace');
@@ -59,13 +68,15 @@ export function createImagePanelModule({imageWorkspace, manager, managerOptions}
       inspect: async object_id => {
         const result = await imageWorkspace.call('image_info', {object_id});
         if (result.isError) throw new Error('Image object inspection failed');
+        return result;
       },
+      ...(structureWorkspace?{inspectEvidence:async(object_id:string)=>addCrystalInteractionViews(buildCrystalEvidencePayload(await structureWorkspace.call('structure_info',{object_id}),structureWorkspace.workspace,object_id),id=>imageWorkspace.call('image_info',{object_id:id}))}:{}),
     });
   }
   if (typeof runtime.call !== 'function') throw new TypeError('Image panel module requires an ImagePanelManager-compatible call method');
   return {
     id: 'image-panel', enabled: true, manager: runtime,
-    instructions: IMAGE_PANEL_INSTRUCTIONS,
-    tools: imagePanelTools.map(definition => ({definition, contract: contract(definition.name, runtime), execute: (args:unknown, {signal}:ToolCallOptions = {}) => runtime.call(definition.name, args, signal)})),
+    instructions: IMAGE_PANEL_INSTRUCTIONS+(structureWorkspace?' To return an existing general crystallographic comparison to this same GUI, use image_panel_evidence against the inspected exact object/draft revision; optionally retain the saved original observation_view_object_id. It attaches provider-qualified evidence beside the image, not a new scientific image. A reloaded process snapshot is unvalidated until explicit provider reattachment; do not replay unknown scientific requests.':''),
+    tools: [...imagePanelTools,...(structureWorkspace?[imagePanelEvidenceTool]:[])].map(definition => ({definition, contract: contract(definition.name, runtime), execute: (args:unknown, {signal}:ToolCallOptions = {}) => runtime.call(definition.name, args, signal)})),
   };
 }
