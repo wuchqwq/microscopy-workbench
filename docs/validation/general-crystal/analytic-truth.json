@@ -1,0 +1,249 @@
+{
+  "scope": "Independent hard-coded conventional-cell reciprocal vectors; no production structure solver or simulated reflections generated truth. Cosines do not model HRTEM contrast/intensities.",
+  "cases": {
+    "heterophase": {
+      "source_path": "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\bcc_b2_geometry.tiff",
+      "shape_yx": [
+        256,
+        128
+      ],
+      "dtype": "float32",
+      "scale_nm": [
+        0.05,
+        -0.05
+      ],
+      "q_inv_angstrom": [
+        [
+          [
+            0.25,
+            0.25
+          ],
+          [
+            0.5,
+            0
+          ]
+        ],
+        [
+          [
+            0.25,
+            0
+          ],
+          [
+            0,
+            0.25
+          ],
+          [
+            0.25,
+            0.25
+          ]
+        ]
+      ],
+      "bins": [
+        [
+          [
+            16,
+            -16
+          ],
+          [
+            32,
+            0
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            0,
+            -16
+          ],
+          [
+            16,
+            -16
+          ]
+        ]
+      ]
+    },
+    "hexagonal": {
+      "source_path": "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\hcp_geometry.tiff",
+      "shape_yx": [
+        256,
+        128
+      ],
+      "dtype": "float32",
+      "scale_nm": [
+        0.05,
+        -0.08660254037844387
+      ],
+      "q_inv_angstrom": [
+        [
+          [
+            0.25,
+            0.14433756729740646
+          ],
+          [
+            0,
+            0.2886751345948129
+          ],
+          [
+            0.25,
+            0.43301270189221935
+          ]
+        ],
+        [
+          [
+            0.25,
+            0.14433756729740646
+          ],
+          [
+            0,
+            0.2886751345948129
+          ],
+          [
+            0.25,
+            0.43301270189221935
+          ]
+        ]
+      ],
+      "bins": [
+        [
+          [
+            16,
+            -16
+          ],
+          [
+            0,
+            -32
+          ],
+          [
+            16,
+            -48
+          ]
+        ],
+        [
+          [
+            16,
+            -16
+          ],
+          [
+            0,
+            -32
+          ],
+          [
+            16,
+            -48
+          ]
+        ]
+      ]
+    }
+  },
+  "structures": {
+    "bcc": "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\bcc_fe_a4.cif",
+    "b2": "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\ordered_b2_cscl_a4.cif",
+    "hcp": "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\hcp_mg_a4_c6.cif"
+  },
+  "hkls": {
+    "bcc": [
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ]
+    ],
+    "b2": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ]
+    ],
+    "hcp": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ]
+    ]
+  },
+  "q_inv_angstrom": {
+    "bcc": [
+      [
+        0.25,
+        0.25
+      ],
+      [
+        0.5,
+        0
+      ]
+    ],
+    "b2": [
+      [
+        0.25,
+        0
+      ],
+      [
+        0,
+        0.25
+      ],
+      [
+        0.25,
+        0.25
+      ]
+    ],
+    "hcp": [
+      [
+        0.25,
+        0.14433756729740646
+      ],
+      [
+        0,
+        0.2886751345948129
+      ],
+      [
+        0.25,
+        0.43301270189221935
+      ]
+    ]
+  },
+  "registered_settings": {
+    "reciprocal_radius_inv_angstrom": 1,
+    "max_excitation_error_inv_angstrom": 0.02,
+    "max_residual_inv_angstrom": 0.005,
+    "peak_threshold_rel": 0.2,
+    "window": "none",
+    "subtract_mean": true
+  },
+  "file_sha256": {
+    "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\bcc_b2_geometry.tiff": "6619877cde29903402de326473cfd4b03d78af6427df57bb5ab1dec6bea55d2b",
+    "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\bcc_fe_a4.cif": "4249388c34aed3c16286fd84dcbeadb6776ca991f495025e58a6b05d09fb786e",
+    "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\hcp_geometry.tiff": "5845b9a45422584122289511ff0a85050d84540f3311c32f4370316f2a801ddf",
+    "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\hcp_mg_a4_c6.cif": "a8b02bf464eabcf0853a9de2fc5601a20db25663acb99081a029c57c416ed432",
+    "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\ordered_b2_cscl_a4.cif": "079a6423ca1a937980ee3ee27df2b314d77630abe3e8f75b4974f5d2e13f404d"
+  }
+}

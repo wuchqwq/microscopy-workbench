@@ -43,6 +43,17 @@ recovery, with global configuration unchanged. See the separate
 [authorization/performance closeout](F4_CROSS_METHOD_CLOSEOUT.md).
 GUI/real specimen work is separate; no feature PR was merged.
 
+## General crystallographic evidence review increment
+
+An independent branch from main `9fbc769` adds
+[`structure_general_compare`](GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md): two adjacent
+saved ROI observations, explicit possibly different structures/orientations,
+unchanged ASE/diffsims and reflection comparison, with separate model
+qualifications and conditional evidence. It does not inherit unmerged
+#44/#45/#46, alter F3b Sigma3 semantics, identify phases or name generic relations
+twins. [Executed acceptance](GENERAL_CRYSTALLOGRAPHIC_ACCEPTANCE.md) distinguishes
+analytic checks, actual simulations/MCP, preserved history and NOT_TESTED scopes.
+
 ## Reviewed implementation ancestry
 
 | Scope | Source PR | Exact reviewed source commit |
