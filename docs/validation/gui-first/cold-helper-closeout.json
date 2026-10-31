@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "scope": "Review closeout acceptance, no GUI or scientific-runtime changes",
+  "reviewed_implementation": "c02736f2f512be6fa6d102b3e27f5542cc35e9a4",
+  "result": "PASS_SAFE_COLD_API_RESTORE_AND_NORMAL_CLEANUP_WITH_READMISSION_HOLD",
+  "qualification_boundary": "Previously admitted saved evidence starts unvalidated in each newly created public API helper. This is not a live-current registered MCP helper restart/readmission qualification. No Inspector or PanelManager registration was manufactured.",
+  "retained_r1": {
+    "result": "SAFE_RESTORE_PASS_SECOND_NORMAL_CLEANUP_HOLD",
+    "normal_first_close": {
+      "pid": 37328,
+      "code": 0,
+      "signal": null,
+      "close_method": "dedicated parent IPC -> existing panel.close(); no force kill"
+    },
+    "second_helper_pid": 2752,
+    "failure": "Non-TTY execution input was already closed; close-owned-helper could not be delivered. Only disposable verified test driver/helper were forcibly cleaned; this is not normal-close evidence.",
+    "raw_report_sha256": "7df1ced732ec620928e91fe04db6faea59827d43106250a1f88a8cda978be179",
+    "forced_cleanup_record_sha256": "e1d81b7c00255d0026973da1a3ce5f1a543f6ea1be5120cffa014f276f2f93eb"
+  },
+  "r2": {
+    "schema_version": 1,
+    "scope": "Actual public createImagePanel API cold helper-process close/reopen; same API is used by inspector, not ordinary registered MCP helper restart",
+    "result": "PASS_SAFE_COLD_SNAPSHOT_RESTORE_WITH_READMISSION_HOLD",
+    "normal_first_close": {
+      "pid": 28412,
+      "code": 0,
+      "signal": null,
+      "close_method": "dedicated parent IPC -> existing panel.close(); no force kill"
+    },
+    "second_helper": {
+      "pid": 32008,
+      "distinct_process": true,
+      "panel_id": null,
+      "attachment_status": "restored_unvalidated",
+      "currentness": "unvalidated_snapshot"
+    },
+    "full_structure_info_readmission": "PASS exact saved comparison/source/frame/calibration; this does not attach it to the unregistered helper",
+    "original_structure_request_recovered": true,
+    "ordinary_formal_panel_attachment": "HOLD_UNREGISTERED_PANEL",
+    "hold_reason": "Public createImagePanel/researcher_inspector helper has null panel_id and no owned PanelManager registration; no private registry was forged and no product registration API was added",
+    "source_file_unchanged": true,
+    "scientific_and_request_files_unchanged": 428,
+    "object_id": "5631c23b869b4fbe80b7c33beb381f0b",
+    "comparison_object_id": "cb0c1bd98cda45879d4b1a3948b5776a",
+    "comparison_request_id": "gui-correction-551843661c-compare",
+    "source_frame_object_id": "b42e77d4e9a6428db7d1530f04fce74b",
+    "source_array_sha256": "007e875fad8936bc32868f30f10e68fda211353cbfc9c84f9110b77233f34e76",
+    "calibration_dependency": {
+      "calibration_id": "af56380129e048519baed642be70ffc7",
+      "coordinate_domain": "real_space",
+      "revision": 1,
+      "source": "user_statement_not_independently_verified",
+      "status": "active"
+    },
+    "new_scientific_objects": 0,
+    "new_fft": 0,
+    "not_tested": [
+      "ordinary registered-MCP cold helper recovery",
+      "browser gestures in this runner",
+      "human usability",
+      "Mac desktop"
+    ]
+  },
+  "second_normal_close": {
+    "pid": 32008,
+    "code": 0,
+    "signal": null,
+    "close_method": "dedicated parent IPC -> existing panel.close(); no force kill"
+  },
+  "wrapper_execution": {
+    "result": "PASS",
+    "exit_code": 0,
+    "test_mode": "Actual Windows TTY, explicit owned close command"
+  },
+  "actual_browser": {
+    "result": "PASS_READ_ONLY_UNVALIDATED_SNAPSHOT_DISPLAY",
+    "helper_pid": 2752,
+    "observed": [
+      "Exact saved source image and two ROI reasons retained",
+      "Header and evidence card show 重连快照 · 待工具复核",
+      "No current qualification or new scientific result claimed"
+    ],
+    "screenshot": "cold-helper-unvalidated.png",
+    "screenshot_sha256": "48828e46ad7d043ddd329d3d9527ffccd67106071e8904b2d05f45d41bf75a0c",
+    "human_usability": "NOT_TESTED"
+  },
+  "final_harness_negative": {
+    "result": "PASS",
+    "non_tty_keep_open": "Refused before output directory or helpers were created"
+  },
+  "remaining": [
+    "HOLD_UNREGISTERED_PANEL for formal same-Inspector evidence attachment",
+    "NOT_TESTED ordinary registered-MCP cold restart, actual worker interruption, automatic discovery, GUI CSV download, human usability, current Mac GUI/optional structure provider, real-specimen physics"
+  ]
+}

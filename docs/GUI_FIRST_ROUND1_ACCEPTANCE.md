@@ -132,3 +132,7 @@ claimed as actual browser edits. The scientific Python code stayed unchanged.
 Issues #40 and #43 stay open. The narrower Codex-operated GUI path does not close
 human GUI acceptance, combined GPA/topology Skill qualification, actual worker
 interruption or independent real-specimen physical-validation gates.
+
+The subsequent [integration closeout](GUI_FIRST_INTEGRATION_CLOSEOUT.md) records
+the separate cold-helper/API/browser check and remaining re-admission boundary.
+It does not retroactively change this implementation's historical test scopes.

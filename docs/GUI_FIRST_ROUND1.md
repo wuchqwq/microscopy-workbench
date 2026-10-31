@@ -110,3 +110,5 @@ broader GPA/topology interruption tasks in Issues #40/#43 are separate scopes.
 
 See [the actual round-1 record](GUI_FIRST_ROUND1_ACCEPTANCE.md) for browser,
 MCP, numerical, recovery and NOT_TESTED distinctions.
+For dependency/merge order, helper cold-reopen limits and Mac preparation, use
+the subsequent [integration closeout](GUI_FIRST_INTEGRATION_CLOSEOUT.md).

@@ -10,6 +10,9 @@ The dependent [GUI-first round 1](GUI_FIRST_ROUND1_ACCEPTANCE.md) adds visible
 ROI observations, explicit continuation, finite provider-qualified evidence,
 and persistent revision requirements. It retains the parent scientific records
 and limits. Its browser/model/numerical scopes are recorded separately.
+The [integration closeout](GUI_FIRST_INTEGRATION_CLOSEOUT.md) freezes that GUI
+scope, rehearses dependency merges locally and records cold-helper re-admission
+as a separate qualification gate. No further GUI features are added there.
 
 `integration/manual-crystal-evidence` composes open #44/#46/#47 without merging
 main. A bounded read-only Panel handoff preserves fractional anchors and exposes

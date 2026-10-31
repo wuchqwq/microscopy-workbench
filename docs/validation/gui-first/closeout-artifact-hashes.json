@@ -1,0 +1,7 @@
+{
+  "scope": "Additional closeout artifacts; original round-1 artifact manifest is unchanged",
+  "sha256": {
+    "cold-helper-closeout.json": "bcf3cfd1fd43ff4446acdfbd047d93c72c29bc707d52477ae1dee6afb7e50758",
+    "cold-helper-unvalidated.png": "48828e46ad7d043ddd329d3d9527ffccd67106071e8904b2d05f45d41bf75a0c"
+  }
+}
