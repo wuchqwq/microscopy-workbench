@@ -6,6 +6,19 @@ on:
       - 'crystallography/**'
       - 'lib/**'
       - 'tools/**'
+      - 'ui/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'requirements*.txt'
+      - 'tsconfig*'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/f3b-simulation.yml'
+      - 'crystallography/**'
+      - 'lib/**'
+      - 'tools/**'
+      - 'ui/**'
       - 'tests/**'
       - 'package*.json'
       - 'requirements*.txt'
