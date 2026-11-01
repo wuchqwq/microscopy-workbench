@@ -230,8 +230,14 @@ class Dependencies(unittest.TestCase):
         self.assertIn("image-coordinate", result["angle_scope"])
         self.assertFalse(result["fft_recomputed"])
         physical = comparison.derive(self.workspace, {**self.request, "coordinate_domain": "physical"}, worker)
-        self.assertEqual(physical["relations"][0]["status"], "incompatible")
+        self.assertEqual(physical["relations"][0]["status"], "insufficient_evidence")
+        self.assertEqual(physical["evidence_semantics_version"], 2)
         self.assertEqual(physical["relations"][0]["candidates"], [])
+        legacy = comparison.derive(self.workspace, {**self.request, "coordinate_domain": "physical"}, worker, semantics_version=1)
+        self.assertEqual(legacy["relations"][0]["status"], "incompatible")
+        self.assertNotIn("evidence_semantics_version", legacy)
+        with self.assertRaises(Exception):
+            comparison.derive(self.workspace, self.request, worker, semantics_version=3)
         self.assertIn("cycles/pixel", comparison.report_csv(result).decode())
 
     def test_corrupt_measurement_geometry_and_wrong_peak_parent_refused(self):

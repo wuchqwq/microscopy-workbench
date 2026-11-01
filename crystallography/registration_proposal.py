@@ -20,6 +20,22 @@ class RegistrationError(ValueError):
     code = "INVALID_REGISTRATION_PROPOSAL"
 
 
+EVIDENCE_SEMANTICS_VERSION = 2
+
+
+def independent_validation():
+    """Coordinate correspondences do not establish resolved source observations.
+
+    Kabsch solves a conditional rotation problem. Neither its residual nor
+    distinct floating-point anchors supplies a detection/resolution model.
+    Keep this machine-readable abstention separate from useful geometry.
+    """
+    return {"status": "insufficient_evidence", "validated": None,
+            "reason_codes": ["resolved_source_observation_independence_not_established",
+                             "localization_calibration_and_model_uncertainty_not_evaluated"],
+            "scope": "independent experimental or statistical validation; conditional correspondence geometry is reported separately"}
+
+
 def require(value, message):
     if not value:
         raise RegistrationError(message)
@@ -288,7 +304,6 @@ def propose(measurements, simulation, fit_correspondences, validation_correspond
     fit_pass = all(row["within_declared_tolerance"] for row in fitted["matched"])
     held_pass = all(row["within_declared_tolerance"] for row in held["matched"]) if held else None
     status = ("not_tested_no_held_out" if held is None else "fit_inconsistent" if not fit_pass else
-              "held_out_independence_unresolved" if unresolved else
               "held_out_geometry_consistent" if held_pass else "held_out_inconsistent")
     return {"proposal_kind": "proper_in_plane_rotation_fixed_experimental_scale_and_dc",
             "registration": transform,
@@ -304,7 +319,12 @@ def propose(measurements, simulation, fit_correspondences, validation_correspond
             "fit_correspondences": copy.deepcopy(fit_correspondences), "validation_correspondences": copy.deepcopy(validation_correspondences),
             "fit_evidence": fitted["matched"], "validation_evidence": held["matched"] if held else [],
             "fit_status": "within_declared_tolerance" if fit_pass else "outside_declared_tolerance",
-            "validation_status": status, "held_out_validation_passed": (fit_pass and held_pass and not unresolved) if held else None,
+            "evidence_semantics_version": EVIDENCE_SEMANTICS_VERSION,
+            "held_out_geometry_status": status,
+            "held_out_geometry_passed": (fit_pass and held_pass) if held else None,
+            "validation_status": "insufficient_evidence" if held else "not_tested_no_held_out",
+            "held_out_validation_passed": None,
+            "independent_validation": independent_validation(),
             "held_out_independence": {"scope": "disjoint original peak anchors/HKL/projections; not a proof of statistical or experimental resolving power",
                                       "unresolved_binary64_aliases": unresolved,
                                       "ulp_warning_is_not_a_measurement_uncertainty_or_residual_tolerance": True},

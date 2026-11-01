@@ -193,6 +193,7 @@ def action(workspace, action_name, request, metadata, directory, api):
         import scipy
         report["software"] = {"scikit_image": skimage.__version__, "scipy": scipy.__version__, "numpy": np.__version__}
         report["limitations"] = list(dict.fromkeys([*report["limitations"], *LIMITATIONS]))
+        report["evidence_assessment"] = core.evidence_assessment(report)
         for name, array in arrays.items():
             api.save_array(directory, name+".npy", array)
         manifest = {name: {"shape": list(a.shape), "dtype": str(a.dtype), "axes": ("reflection,y,x" if name in ("complex_band", "amplitude", "mask_frequency", "phase_wrapped", "phase_demodulated_wrapped", "phase_unwrapped", "valid_phase", "low_amplitude", "phase_residue", "phase_unwrap_discontinuity") else "y,x,component_xy,derivative_xy" if a.ndim == 4 else "y,x,component_xy" if a.ndim == 3 else "y,x")} for name, a in arrays.items()}
@@ -221,7 +222,8 @@ def action(workspace, action_name, request, metadata, directory, api):
                         dtype="float64; complex128 bands; boolean masks", history=history, fft_recomputed=False,
                         scientific_source_modified=False, material_strain_verified=False, uncertainty=None,
                         calibration_dependency=dependency["calibration_dependency"], xy_calibration=dependency["xy_calibration"],
-                        interpretation_status="hypothesized", display_calibration_id=(dependency["xy_calibration"] or {}).get("calibration_id"))
+                        interpretation_status="hypothesized", evidence_assessment=report["evidence_assessment"],
+                        display_calibration_id=(dependency["xy_calibration"] or {}).get("calibration_id"))
         api.write_new(directory / "gpa-report.json", api.canonical(report)+b"\n")
         rows = [{"component": c, "unit": _component(arrays, metadata, c, api)[2],
                  "valid_pixels": int(_component(arrays, metadata, c, api)[1].sum()),
@@ -237,6 +239,9 @@ def action(workspace, action_name, request, metadata, directory, api):
                     coordinate_domain=parent["report"]["coordinate_domain"], material_strain_verified=False,
                     calibration_dependency=parent["calibration_dependency"], interpretation_status="hypothesized",
                     display_calibration_id=parent.get("display_calibration_id"))
+    # Historical objects do not acquire a new interpretation by being viewed.
+    if "evidence_assessment" in parent:
+        metadata["evidence_assessment"] = parent["evidence_assessment"]
     if action_name == "gpa_view":
         metadata["display"], metadata["panels"] = _preview(directory, arrays, parent, request.get("component"), request, api)
         metadata["dtype"] = "float64 field (see GPA component)"
@@ -264,6 +269,8 @@ def validate_references(workspace, metadata, api):
         parent, directory = workspace.object(metadata["gpa_object_id"])
         api.need(parent["kind"] == "gpa" and _dependency(parent, directory, api) == metadata["gpa_dependency"],
                  "GPA view/sample belongs to a different science result", "CORRUPT_OBJECT")
+        api.need(metadata.get("evidence_assessment") == parent.get("evidence_assessment"),
+                 "GPA view/sample evidence semantics differ from source", "CORRUPT_OBJECT")
         return
     original = api.read_json(workspace.root / "requests" / (metadata["request_id"]+".json"))["parameters"]
     parameters, _ = _parameters(original, api)
@@ -277,6 +284,10 @@ def validate_references(workspace, metadata, api):
              metadata["report"]["reference_rect_xyxy"] == parameters["reference_rect"] and
              metadata["report"]["g_vectors_cycles_per_pixel"] == parameters["g_vectors"],
              "GPA scientific contract differs from submitted parameters", "CORRUPT_OBJECT")
+    if "evidence_assessment" in metadata or "evidence_assessment" in metadata["report"]:
+        expected = core.evidence_assessment(metadata["report"])
+        api.need(metadata.get("evidence_assessment") == expected and metadata["report"].get("evidence_assessment") == expected,
+                 "GPA evidence semantics or analytic transfer changed", "CORRUPT_OBJECT")
     api.need(len(metadata.get("history", [])) <= 8, "GPA history exceeds budget", "CORRUPT_OBJECT")
     for old in metadata.get("history", []):
         api.need(type(old.get("object_id")) is str and api.OBJECT_ID.fullmatch(old["object_id"]), "Invalid GPA historical identity", "CORRUPT_OBJECT")

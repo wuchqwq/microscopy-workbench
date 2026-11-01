@@ -500,6 +500,10 @@ class StructureWorkspace:
         need(directory.is_dir() and not directory.is_symlink() and directory.resolve().parent == (self.root / "objects"),
              "Structure object not found or outside workspace", "OBJECT_NOT_FOUND")
         metadata = json_file(directory / "object.json")
+        if metadata.get("kind") in ("register", "compare"):
+            policy = metadata.get("evidence_semantics_version", 1)
+            need(type(policy) is int and policy in (1, 2),
+                 "Unsupported registration/comparison evidence semantics", "CORRUPT_OBJECT")
         creator = metadata.get("request_id")
         need(metadata.get("object_id") == ident and type(creator) is str and REQUEST_ID.fullmatch(creator), "Stored structure identity differs", "CORRUPT_OBJECT")
         journal = json_file(self.root / "requests" / (creator + ".json"))
@@ -664,7 +668,9 @@ class StructureWorkspace:
                     measurements.append(row)
                     sources.append({**source, "fixed_manifest_file": manifest_name, "fixed_journal_file": journal_name,
                                     "measurement_object_id": row["object_id"], "measurement_request_id": row["request_id"]})
-                from crystallography.registration_proposal import propose, geometry_binding
+                from crystallography.registration_proposal import (
+                    propose, geometry_binding, independent_validation, EVIDENCE_SEMANTICS_VERSION,
+                )
                 mode = request.get("analysis_mode", "continue_current" if request.get("current_image_object_id") else "standalone_snapshot")
                 if action == "register":
                     need(type(request.get("current_image_object_id")) is str,
@@ -697,6 +703,9 @@ class StructureWorkspace:
                     compared = compare_reflections(measurements, previous, registration,
                                                    request.get("max_residual_inv_angstrom"), request.get("experimental_kind"),
                                                    request.get("correspondences"))
+                    compared.update(evidence_semantics_version=EVIDENCE_SEMANTICS_VERSION,
+                                    independent_validation=independent_validation(),
+                                    tolerance_semantics="deterministic reciprocal residual bound; not a confidence interval or uncertainty estimate")
                     if registration_record:
                         compared["registration"]["parameter_source"] = "proper in-plane rotation from the exact saved constrained registration proposal; no refit during this comparison"
                         compared["registration"]["proposal_object_id"] = registration_record["object_id"]
@@ -706,8 +715,13 @@ class StructureWorkspace:
                             if value.startswith("Registration is caller supplied") else value
                             for value in compared["scientific_limits"]]
                         compared.update(registration_object_id=registration_record["object_id"],
-                                        fit_validation_evidence={key: registration_record.get(key) for key in
-                                            ("fit_evidence", "validation_evidence", "fit_status", "validation_status", "held_out_validation_passed")},
+                                        fit_validation_evidence={"evidence_scope": "historical_source_registration_snapshot",
+                                            "source_evidence_semantics_version": registration_record.get("evidence_semantics_version", 1),
+                                            **{key: registration_record.get(key) for key in
+                                            ("fit_evidence", "validation_evidence", "fit_status", "validation_status", "held_out_validation_passed",
+                                             "held_out_geometry_status", "held_out_geometry_passed", "independent_validation")}},
+                                        source_registration_evidence_semantics_version=registration_record.get("evidence_semantics_version", 1),
+                                        source_registration_evidence_is_historical=True,
                                         comparison_is_not_new_independent_validation=True)
                     old = self.object(request["previous_comparison_id"])[0] if "previous_comparison_id" in request else None
                     compared.update(comparison_revision(ident, old, binding, compared["observations"], previous["object_id"],

@@ -156,7 +156,8 @@ def analyse(request, base):
         axes = capture.frequency_axes_cycles_per_nm()
         center_local = [-axis["calibrated_value_at_pixel_zero"] / axis["scale"] for axis in axes]
         mapping = calibration_map({"mode": "capture_axes", "convention": "cycles_per_length",
-                                   **({"scale_sigma_xy": request["calibration"]["scale_sigma_xy"]} if "scale_sigma_xy" in request.get("calibration", {}) else {})}, axes)
+                                   **{key: request["calibration"][key] for key in ("scale_sigma_xy", "scale_correlation_xy")
+                                      if key in request.get("calibration", {})}}, axes)
         center_note = "Recorded native Fourier mathematical DC; may be outside ROI. No half-bin display calibration substituted."
         if sigma is None:
             sigma = [0., 0.]  # Mathematical bin origin, not an estimated physical beam.

@@ -103,6 +103,14 @@ C:\analysis\crystal-env\Scripts\python -m crystallography verify --output C:\ana
   几何比值/角度与相对候选，不输出 d 或绝对晶格常数。不确认各向同性则不索引物理几何。
 - `sigma_px` 和 `scale_sigma_xy` 是调用方给出的 1σ 标准差；缺任一项均标未知。
   当前线性误差传播考虑共享中心和轴尺度引入的角度相关性，不建畸变或自动估计噪声模型。
+  可在物理 calibration 中显式提供 `scale_correlation_xy`（−1…1，省略为 0），
+  表示**带符号尺度变量**的相关系数，必须同时给出两个尺度 SD。共同各向同性
+  标度误差在 XY 同号时为 +1、异号时为 −1；它在夹角传播中正确抵消。
+  此相关性同样适用于 FFT capture_axes 路径，不由候选配准反推。
+  新输出 `uncertainty_semantics_version:2`；在精确 0°/180° 且角度不确定度非零时，
+  `sigma_deg` 留空，保留 `linearized_unwrapped_sigma_deg` 诊断，状态为
+  `nonlinear_fold_unresolved`。附近输出距折叠点的标准差倍数作为诊断，不臆定覆盖率。
+  一阶 SD 不自动变成候选匹配容限或置信区间；统计验证仍 insufficient_evidence。
 - HRTEM/ADF 路径先执行已有且符合类型/尺寸条件的 **DM 原生 FFT → 标量频谱 → READ/NPY**。
   请求用 `source.kind:"fft"`、`center.mode:"frequency_grid_dc"`。中心和坐标采用已有数学
   `frequency_grid`，保留 crop+READ 偏移与区域外 DC；不使用原生显示半格偏移代替数学频率。

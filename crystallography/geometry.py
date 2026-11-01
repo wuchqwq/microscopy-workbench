@@ -60,6 +60,7 @@ def calibration_map(spec, capture_axes=None):
     require(type(spec) is dict, "Explicit calibration object required")
     mode = spec.get("mode")
     if mode == "relative":
+        require("scale_correlation_xy" not in spec, "Scale correlation requires a physical calibration")
         require(type(spec.get("isotropic_pixel_geometry_confirmed")) is bool,
                 "Relative geometry needs an explicit isotropic-pixel confirmation")
         return {"mode": mode, "scale_xy": [1.0, 1.0], "zero_xy": [0.0, 0.0],
@@ -93,9 +94,22 @@ def calibration_map(spec, capture_axes=None):
     sigma = spec.get("scale_sigma_xy")
     if sigma is not None:
         sigma = (vector2(sigma, "scale uncertainty", True) * factors).tolist()
+    correlation = spec.get("scale_correlation_xy", 0.0)
+    require(type(correlation) in (int, float) and math.isfinite(correlation) and -1 <= correlation <= 1,
+            "scale_correlation_xy requires a finite correlation in [-1,1]")
+    require("scale_correlation_xy" not in spec or sigma is not None,
+            "Explicit scale correlation requires both scale_sigma_xy terms")
     return {"mode": mode, "scale_xy": scale.tolist(), "zero_xy": zero.tolist(),
             "calibrated": True, "geometry_usable": True, "unit": "cycles/nm",
-            "scale_sigma_xy": sigma, "basis": basis, "input": spec}
+            "scale_sigma_xy": sigma, "scale_correlation_xy": float(correlation), "basis": basis, "input": spec}
+
+
+def _scale_variance(jacobian, sigma, correlation):
+    # Equivalent to J C J^T, with Cxy=rho*sx*sy. This factorization stays
+    # nonnegative at rank-one common-mode calibration (rho=+/-1), without a
+    # tolerance that could hide an invalid covariance supplied by the caller.
+    a, b = jacobian * sigma
+    return (a + correlation * b) ** 2 + (1 - correlation ** 2) * b ** 2
 
 
 def measure_geometry(center_xy, spots, mapping, center_sigma_px=None):
@@ -112,6 +126,9 @@ def measure_geometry(center_xy, spots, mapping, center_sigma_px=None):
     c_sigma = None if center_sigma_px is None else vector2(center_sigma_px, "centre uncertainty", True)
     s_sigma = mapping.get("scale_sigma_xy")
     s_sigma = None if s_sigma is None else vector2(s_sigma, "scale uncertainty", True)
+    s_correlation = mapping.get("scale_correlation_xy", 0.0)
+    require(type(s_correlation) in (int, float) and math.isfinite(s_correlation) and -1 <= s_correlation <= 1,
+            "Invalid signed XY scale correlation")
     items, seen, positions = [], set(), []
     for spot in spots:
         require(type(spot) is dict and type(spot.get("id")) is str and
@@ -129,7 +146,11 @@ def measure_geometry(center_xy, spots, mapping, center_sigma_px=None):
         sigma_g = None
         if known:
             variance = scale ** 2 * (p_sigma ** 2 + c_sigma ** 2) + delta ** 2 * s_sigma ** 2
-            sigma_g = float(np.sqrt(np.sum((g / norm) ** 2 * variance)))
+            if s_correlation == 0:
+                sigma_g = float(np.sqrt(np.sum((g / norm) ** 2 * variance)))
+            else:
+                position_variance = np.sum((g / norm * scale) ** 2 * (p_sigma ** 2 + c_sigma ** 2))
+                sigma_g = float(np.sqrt(position_variance + _scale_variance(g / norm * delta, s_sigma, s_correlation)))
         absolute = mapping["calibrated"]
         usable = mapping["geometry_usable"]
         items.append({"id": spot["id"], "xy": xy.tolist(), "delta_xy": delta.tolist(),
@@ -140,7 +161,8 @@ def measure_geometry(center_xy, spots, mapping, center_sigma_px=None):
                       "d_nm": 1.0 / norm if absolute else None,
                       "d_unavailable_reason": None if absolute else "absolute reciprocal calibration missing",
                       "g_sigma": sigma_g, "d_sigma_nm": sigma_g / norm ** 2 if absolute and known else None,
-                      "uncertainty_status": "first_order_independent_inputs_shared_centre_and_scale" if known else "UNKNOWN",
+                      "uncertainty_status": ("first_order_shared_centre_correlated_xy_scale" if s_correlation != 0 else
+                                             "first_order_independent_inputs_shared_centre_and_scale") if known else "UNKNOWN",
                       "sigma_px": None if p_sigma is None else p_sigma.tolist()})
     first = items[0]["vector_length"]
     for item in items:
@@ -163,15 +185,32 @@ def measure_geometry(center_xy, spots, mapping, center_sigma_px=None):
                 variance = np.sum((ja * scale * pa) ** 2 + (jb * scale * pb) ** 2 +
                                   ((ja - jb) * scale * c_sigma) ** 2 +
                                   ((jb * db - ja * da) * s_sigma) ** 2)
+                if s_correlation != 0:
+                    variance = (np.sum((ja * scale * pa) ** 2 + (jb * scale * pb) ** 2 +
+                                       ((ja - jb) * scale * c_sigma) ** 2) +
+                                _scale_variance(jb * db - ja * da, s_sigma, s_correlation))
                 sigma_angle = math.degrees(math.sqrt(float(variance)))
+            # At the fold the absolute angle is not differentiable. Preserve
+            # the unwrapped linearized diagnostic, but do not label it as the
+            # SD of the measured nonnegative angle. No arbitrary near-fold
+            # distance or confidence threshold is introduced here.
+            folded = cross == 0 and sigma_angle is not None and sigma_angle > 0
             angles.append({"from": items[i]["id"], "to": items[j]["id"],
                            "angle_deg": angle if mapping["geometry_usable"] else None,
-                           "sigma_deg": sigma_angle if mapping["geometry_usable"] else None,
+                           "sigma_deg": sigma_angle if mapping["geometry_usable"] and not folded else None,
+                           "linearized_unwrapped_sigma_deg": sigma_angle if mapping["geometry_usable"] else None,
+                           "uncertainty_status": "UNKNOWN" if sigma_angle is None or not mapping["geometry_usable"] else
+                           "nonlinear_fold_unresolved" if folded else "first_order_only_not_coverage",
+                           "distance_to_fold_in_linearized_sigma": min(angle, 180-angle)/sigma_angle
+                           if mapping["geometry_usable"] and sigma_angle is not None and sigma_angle > 0 else None,
                            "uncertainty_method": "linearized_unwrapped_angle; unreliable_at_0_or_180" if sigma_angle is not None else "UNKNOWN"})
     return {"computation": "explicit external NumPy selected-point geometry", "dm_called": False,
             "center_xy": centre.tolist(), "center_sigma_px": None if c_sigma is None else c_sigma.tolist(),
             "calibration": mapping, "spots": items, "angles": angles,
-            "uncertainty_model": "Independent spot positions and independent x/y scale errors; centre and scales shared across spots. No distortion model or fitted covariance inferred.",
+            "uncertainty_semantics_version": 2,
+            "uncertainty_model": "Independent spot positions; centre and scales shared across spots. Signed XY scale correlation is explicitly supplied or defaults to zero. No distortion model or fitted covariance inferred.",
+            "statistical_validation": {"status": "insufficient_evidence", "coverage_probability": None,
+                                       "reason": "First-order input propagation does not calibrate a candidate-matching tolerance or establish model validity"},
             "limitations": ["Geometry consumes supplied centre/spot coordinates; optional automatic localization is documented separately in detection evidence",
                             "Pixel/scale uncertainty is user supplied; missing terms remain unknown",
                             "Single-pattern geometry is not unique chemical phase evidence; dynamical scattering may produce forbidden reflections"]}

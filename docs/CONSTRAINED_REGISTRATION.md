@@ -63,11 +63,21 @@ This machine-representation warning is not a localization uncertainty or a
 change to the caller's tolerance. General experimental/statistical independence
 and resolving power remain unverified without suitable uncertainty evidence.
 
-The result keeps `fit_evidence`, `validation_evidence`, their statuses and
-`held_out_validation_passed` separately. No held-out list means
+New results have `evidence_semantics_version:2`. `held_out_geometry_status` and
+`held_out_geometry_passed` describe the fixed correspondence residual test.
+`held_out_validation_passed` is null and `independent_validation.status` is
+`insufficient_evidence`: separate coordinates/HKL and a caller confirmation do
+not establish independent resolved source observations or calibrated confidence.
+No held-out list means
 `validation_status:"not_tested_no_held_out"` and a null validation outcome.
 Inconsistent fit evidence cannot borrow a successful held-out residual to claim
 success. Bad held-out reflections do not refit the angle or scale.
+
+Historical unversioned records retain their v1 outcomes, including historical
+pass flags, byte-for-byte on recovery. A new comparison using an old proposal
+marks its source version and copied evidence as historical, and separately
+reports current independent validation as insufficient. Unsupported future
+versions are refused. No old object, request, tolerance or hash is migrated.
 
 The full existing [reflection comparison](REFLECTION_COMPARISON.md) remains in
 `comparison`, including unmatched reflections, competing in-tolerance matches
