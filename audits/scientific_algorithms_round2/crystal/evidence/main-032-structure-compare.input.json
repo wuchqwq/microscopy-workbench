@@ -1,0 +1,15 @@
+{
+  "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/structures",
+  "action": "compare",
+  "request_id": "r2-crystal-032",
+  "object_id": "bdd644c64d6a45ceabf32b7269478168",
+  "measurement_paths": [
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/images/objects/38f7eb49753045399a5ce70c18b4642d/object.json",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/images/objects/dc7e16d0bb6e435695855927428a9a2a/object.json",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/images/objects/b5c4c1aa99b44c5d975dcd36a180aa3d/object.json"
+  ],
+  "experimental_kind": "real_space_fft",
+  "current_image_object_id": "46493a22af6d482184d4a0e00e82395e",
+  "registration_object_id": "421dbd056c6044599cd32d059922fe6e",
+  "max_residual_inv_angstrom": 0.003
+}

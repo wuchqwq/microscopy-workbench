@@ -1,0 +1,1443 @@
+{
+  "revision": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "reviewer": "explicitly requested gpt-6-astra independent delegated reviewer",
+  "versions": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "ase": "3.29.0",
+    "diffsims": "0.7.0",
+    "tifffile": "2026.10.15"
+  },
+  "raw_reports": {
+    "analysis/algorithm-audit-round2-crystal-20261101-234148/report.json": "b423ef16dc01918669ffdf0cc20154bce0b4dade1e7eb2f6d055c2247010a320",
+    "analysis/algorithm-audit-round2-crystal-controls-20261101-234332/report.json": "d0cb73efcfdc9484e76945d029bbeffcbcd8e2ebe94185f39b69bee30721381e"
+  },
+  "main_cases": {
+    "registration_positive": {
+      "proposal": {
+        "object_id": "b12cdf0cd58f4a88a8a8d1421cfefc03",
+        "request_id": "r2-crystal-010",
+        "registration": {
+          "rotation_deg": 22.999999999999986,
+          "scale": 1.0,
+          "translation_inv_angstrom": [
+            0.0,
+            0.0
+          ],
+          "flip_y": false,
+          "basis": "Fixed experimental scale/DC; SO(2) fit from caller-asserted correspondences. Screen basis: Signed analytic real-space metric; same orthogonal screen map for both domains"
+        },
+        "fit_status": "within_declared_tolerance",
+        "validation_status": "held_out_geometry_consistent",
+        "held_out_validation_passed": true,
+        "held_out_independence": {
+          "scope": "disjoint original peak anchors/HKL/projections; not a proof of statistical or experimental resolving power",
+          "unresolved_binary64_aliases": [],
+          "ulp_warning_is_not_a_measurement_uncertainty_or_residual_tolerance": true
+        },
+        "fit_evidence": [
+          {
+            "measurement_index": 0,
+            "measurement_object_id": "122324da39b94e5f88d3e86b6a50358b",
+            "simulation_reflection_index": 11,
+            "hkl": [
+              1,
+              1,
+              1
+            ],
+            "experiment_original_q_xy_inv_angstrom": [
+              0.0,
+              0.3464101615137755
+            ],
+            "experiment_registered_q_xy_inv_angstrom": [
+              -0.135353233328429,
+              0.31887223495867417
+            ],
+            "simulation_q_xyz_inv_angstrom": [
+              -0.135353233328429,
+              0.3188722349586741,
+              -9.877583447104212e-17
+            ],
+            "position_residual_xy_inv_angstrom": [
+              0.0,
+              -5.551115123125783e-17
+            ],
+            "position_residual_inv_angstrom": 5.551115123125783e-17,
+            "within_declared_tolerance": true,
+            "experiment_original_projected_period_angstrom": 2.886751345948128,
+            "experiment_registered_projected_period_angstrom": 2.886751345948128,
+            "simulation_projected_period_angstrom": 2.8867513459481287,
+            "simulation_lattice_d_spacing_angstrom": 2.8867513459481287,
+            "kinematic_intensity_retained_not_compared": 184.7276022571539
+          },
+          {
+            "measurement_index": 2,
+            "measurement_object_id": "47429719928e406da072b7a279083687",
+            "simulation_reflection_index": 10,
+            "hkl": [
+              1,
+              1,
+              -1
+            ],
+            "experiment_original_q_xy_inv_angstrom": [
+              0.32659863237109044,
+              0.11547005383792516
+            ],
+            "experiment_registered_q_xy_inv_angstrom": [
+              0.25551788178570845,
+              0.23390299717563423
+            ],
+            "simulation_q_xyz_inv_angstrom": [
+              0.2555178817857084,
+              0.23390299717563423,
+              -1.2326877045398918e-16
+            ],
+            "position_residual_xy_inv_angstrom": [
+              -5.551115123125783e-17,
+              0.0
+            ],
+            "position_residual_inv_angstrom": 5.551115123125783e-17,
+            "within_declared_tolerance": true,
+            "experiment_original_projected_period_angstrom": 2.8867513459481287,
+            "experiment_registered_projected_period_angstrom": 2.886751345948128,
+            "simulation_projected_period_angstrom": 2.8867513459481287,
+            "simulation_lattice_d_spacing_angstrom": 2.8867513459481287,
+            "kinematic_intensity_retained_not_compared": 184.7276022571534
+          }
+        ],
+        "validation_evidence": [
+          {
+            "measurement_index": 4,
+            "measurement_object_id": "be4e9423687c438d8fff1e81cf7effb3",
+            "simulation_reflection_index": 14,
+            "hkl": [
+              2,
+              2,
+              0
+            ],
+            "experiment_original_q_xy_inv_angstrom": [
+              0.32659863237109044,
+              0.46188021535170065
+            ],
+            "experiment_registered_q_xy_inv_angstrom": [
+              0.12016464845727942,
+              0.5527752321343085
+            ],
+            "simulation_q_xyz_inv_angstrom": [
+              0.12016464845727942,
+              0.5527752321343083,
+              -2.220446049250313e-16
+            ],
+            "position_residual_xy_inv_angstrom": [
+              0.0,
+              -1.1102230246251565e-16
+            ],
+            "position_residual_inv_angstrom": 1.1102230246251565e-16,
+            "within_declared_tolerance": true,
+            "experiment_original_projected_period_angstrom": 1.7677669529663689,
+            "experiment_registered_projected_period_angstrom": 1.7677669529663684,
+            "simulation_projected_period_angstrom": 1.7677669529663689,
+            "simulation_lattice_d_spacing_angstrom": 1.7677669529663689,
+            "kinematic_intensity_retained_not_compared": 60.737967962829
+          },
+          {
+            "measurement_index": 6,
+            "measurement_object_id": "95ec746a0e2e42369515338c19918d9c",
+            "simulation_reflection_index": 12,
+            "hkl": [
+              1,
+              1,
+              3
+            ],
+            "experiment_original_q_xy_inv_angstrom": [
+              -0.32659863237109044,
+              0.5773502691896258
+            ],
+            "experiment_registered_q_xy_inv_angstrom": [
+              -0.5262243484425664,
+              0.4038414727417141
+            ],
+            "simulation_q_xyz_inv_angstrom": [
+              -0.5262243484425665,
+              0.403841472741714,
+              -7.428289848809505e-17
+            ],
+            "position_residual_xy_inv_angstrom": [
+              -1.1102230246251565e-16,
+              -1.1102230246251565e-16
+            ],
+            "position_residual_inv_angstrom": 1.5700924586837752e-16,
+            "within_declared_tolerance": true,
+            "experiment_original_projected_period_angstrom": 1.507556722888818,
+            "experiment_registered_projected_period_angstrom": 1.507556722888818,
+            "simulation_projected_period_angstrom": 1.507556722888818,
+            "simulation_lattice_d_spacing_angstrom": 1.507556722888818,
+            "kinematic_intensity_retained_not_compared": 34.13010673553903
+          }
+        ]
+      },
+      "compare_id": "b2c3c444780c47ce97f909c7342ddc65",
+      "comparison_is_not_new_independent_validation": true,
+      "unmatched_simulated_count": 8
+    },
+    "general_positive_wrong_alternative": {
+      "object_id": "479d28c0dbff4514b388fa4467cb88ef",
+      "status": "compatible",
+      "candidates": [
+        {
+          "label": "FCC parent and Sigma3",
+          "status": "compatible",
+          "independent_validation": "NOT_VALIDATED",
+          "sides": [
+            {
+              "status": "compatible",
+              "matched_count": 8,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 8
+            },
+            {
+              "status": "compatible",
+              "matched_count": 8,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 8
+            }
+          ]
+        },
+        {
+          "label": "wrong untwinned FCC",
+          "status": "incompatible",
+          "independent_validation": "NOT_VALIDATED",
+          "sides": [
+            {
+              "status": "compatible",
+              "matched_count": 8,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 8
+            },
+            {
+              "status": "incompatible",
+              "matched_count": 2,
+              "unmatched_experimental_count": 6,
+              "unmatched_simulated_count": 14
+            }
+          ]
+        }
+      ]
+    },
+    "twin_positive_wrong_trace": {
+      "positive": {
+        "object_id": "0de2b42264e54c529a983658ed30ce0f",
+        "status": "compatible",
+        "projected_status": "compatible",
+        "interface_status": "compatible",
+        "trace_residual_degrees": 1.9083328088781097e-14,
+        "parent_matches": true,
+        "twin_matches": true,
+        "untwinned_matches": false
+      },
+      "wrong": {
+        "object_id": "4b52c09e1340495ab98143ab82581d96",
+        "status": "incompatible",
+        "projected_status": "compatible",
+        "interface_status": "incompatible",
+        "trace_residual_degrees": 89.99999999999999,
+        "parent_matches": true,
+        "twin_matches": true,
+        "untwinned_matches": false
+      }
+    },
+    "cross_candidate_registration_rejected": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-structure-workspace",
+      "request_id": "r2-crystal-017",
+      "automatic_retry": false,
+      "error": {
+        "code": "INVALID_ARGUMENT",
+        "message": "Registration belongs to a different saved simulation"
+      }
+    },
+    "held_out_wrong_correspondence": {
+      "object_id": "b42ff5e8b5204d56875c1f657579a4e9",
+      "request_id": "r2-crystal-018",
+      "registration": {
+        "rotation_deg": 22.999999999999986,
+        "scale": 1.0,
+        "translation_inv_angstrom": [
+          0.0,
+          0.0
+        ],
+        "flip_y": false,
+        "basis": "Fixed experimental scale/DC; SO(2) fit from caller-asserted correspondences. Screen basis: Signed analytic real-space metric; same orthogonal screen map for both domains"
+      },
+      "fit_status": "within_declared_tolerance",
+      "validation_status": "held_out_inconsistent",
+      "held_out_validation_passed": false,
+      "held_out_independence": {
+        "scope": "disjoint original peak anchors/HKL/projections; not a proof of statistical or experimental resolving power",
+        "unresolved_binary64_aliases": [],
+        "ulp_warning_is_not_a_measurement_uncertainty_or_residual_tolerance": true
+      },
+      "fit_evidence": [
+        {
+          "measurement_index": 0,
+          "measurement_object_id": "122324da39b94e5f88d3e86b6a50358b",
+          "simulation_reflection_index": 11,
+          "hkl": [
+            1,
+            1,
+            1
+          ],
+          "experiment_original_q_xy_inv_angstrom": [
+            0.0,
+            0.3464101615137755
+          ],
+          "experiment_registered_q_xy_inv_angstrom": [
+            -0.135353233328429,
+            0.31887223495867417
+          ],
+          "simulation_q_xyz_inv_angstrom": [
+            -0.135353233328429,
+            0.3188722349586741,
+            -9.877583447104212e-17
+          ],
+          "position_residual_xy_inv_angstrom": [
+            0.0,
+            -5.551115123125783e-17
+          ],
+          "position_residual_inv_angstrom": 5.551115123125783e-17,
+          "within_declared_tolerance": true,
+          "experiment_original_projected_period_angstrom": 2.886751345948128,
+          "experiment_registered_projected_period_angstrom": 2.886751345948128,
+          "simulation_projected_period_angstrom": 2.8867513459481287,
+          "simulation_lattice_d_spacing_angstrom": 2.8867513459481287,
+          "kinematic_intensity_retained_not_compared": 184.7276022571539
+        },
+        {
+          "measurement_index": 2,
+          "measurement_object_id": "47429719928e406da072b7a279083687",
+          "simulation_reflection_index": 10,
+          "hkl": [
+            1,
+            1,
+            -1
+          ],
+          "experiment_original_q_xy_inv_angstrom": [
+            0.32659863237109044,
+            0.11547005383792516
+          ],
+          "experiment_registered_q_xy_inv_angstrom": [
+            0.25551788178570845,
+            0.23390299717563423
+          ],
+          "simulation_q_xyz_inv_angstrom": [
+            0.2555178817857084,
+            0.23390299717563423,
+            -1.2326877045398918e-16
+          ],
+          "position_residual_xy_inv_angstrom": [
+            -5.551115123125783e-17,
+            0.0
+          ],
+          "position_residual_inv_angstrom": 5.551115123125783e-17,
+          "within_declared_tolerance": true,
+          "experiment_original_projected_period_angstrom": 2.8867513459481287,
+          "experiment_registered_projected_period_angstrom": 2.886751345948128,
+          "simulation_projected_period_angstrom": 2.8867513459481287,
+          "simulation_lattice_d_spacing_angstrom": 2.8867513459481287,
+          "kinematic_intensity_retained_not_compared": 184.7276022571534
+        }
+      ],
+      "validation_evidence": [
+        {
+          "measurement_index": 4,
+          "measurement_object_id": "be4e9423687c438d8fff1e81cf7effb3",
+          "simulation_reflection_index": 15,
+          "hkl": [
+            2,
+            2,
+            2
+          ],
+          "experiment_original_q_xy_inv_angstrom": [
+            0.32659863237109044,
+            0.46188021535170065
+          ],
+          "experiment_registered_q_xy_inv_angstrom": [
+            0.12016464845727942,
+            0.5527752321343085
+          ],
+          "simulation_q_xyz_inv_angstrom": [
+            -0.270706466656858,
+            0.6377444699173482,
+            -1.9755166894208425e-16
+          ],
+          "position_residual_xy_inv_angstrom": [
+            -0.3908711151141374,
+            0.08496923778303977
+          ],
+          "position_residual_inv_angstrom": 0.4,
+          "within_declared_tolerance": false,
+          "experiment_original_projected_period_angstrom": 1.7677669529663689,
+          "experiment_registered_projected_period_angstrom": 1.7677669529663684,
+          "simulation_projected_period_angstrom": 1.4433756729740643,
+          "simulation_lattice_d_spacing_angstrom": 1.4433756729740643,
+          "kinematic_intensity_retained_not_compared": 28.51062296246928
+        }
+      ]
+    },
+    "conflict_and_recovery": {
+      "conflict": {
+        "ok": false,
+        "state": "failed",
+        "backend": "external-structure-workspace",
+        "request_id": "r2-crystal-012",
+        "automatic_retry": false,
+        "error": {
+          "code": "REQUEST_CONFLICT",
+          "message": "Same request_id has different action/parameters"
+        }
+      },
+      "object_id": "479d28c0dbff4514b388fa4467cb88ef",
+      "original_journal_sha256": "21c92fab5ec09f5dabc955305ad81fde6cedee72c8eb8824feb1d0ef6a0f9616"
+    },
+    "unresolved_projection_alias": {
+      "source_has_two_cosine_families": true,
+      "fit_to_hold_q_separation": 0.00031249389666318316,
+      "fft_bin_resolution_inv_angstrom": 0.015625,
+      "separation_in_fft_bins": 0.019999609386443722,
+      "compare_id": "1b5d749d106c4167ae41f084c6376e32",
+      "proposal": {
+        "object_id": "421dbd056c6044599cd32d059922fe6e",
+        "registration": {
+          "rotation_deg": 17.0,
+          "scale": 1.0,
+          "translation_inv_angstrom": [
+            0.0,
+            0.0
+          ],
+          "flip_y": false,
+          "basis": "Fixed experimental scale/DC; SO(2) fit from caller-asserted correspondences. Screen basis: Explicit signed analytic metric"
+        },
+        "fit_status": "within_declared_tolerance",
+        "validation_status": "held_out_geometry_consistent",
+        "held_out_validation_passed": true,
+        "held_out_independence": {
+          "scope": "disjoint original peak anchors/HKL/projections; not a proof of statistical or experimental resolving power",
+          "unresolved_binary64_aliases": [],
+          "ulp_warning_is_not_a_measurement_uncertainty_or_residual_tolerance": true
+        }
+      },
+      "held_out_residuals": [
+        1.3877787807814457e-17
+      ],
+      "comparison_ambiguity_counts": [
+        5,
+        5,
+        5
+      ],
+      "propagated_validation_passed": true
+    }
+  },
+  "controls": {
+    "near_conjugate_projected_alias": {
+      "object_id": "1290e64af503441381ec1b1f5661287f",
+      "registration": {
+        "rotation_deg": 17.0,
+        "scale": 1.0,
+        "translation_inv_angstrom": [
+          0.0,
+          0.0
+        ],
+        "flip_y": false,
+        "basis": "Fixed experimental scale/DC; SO(2) fit from caller-asserted correspondences. Screen basis: Explicit signed analytic metric"
+      },
+      "fit_status": "within_declared_tolerance",
+      "validation_status": "held_out_geometry_consistent",
+      "held_out_validation_passed": true,
+      "held_out_independence": {
+        "scope": "disjoint original peak anchors/HKL/projections; not a proof of statistical or experimental resolving power",
+        "unresolved_binary64_aliases": [],
+        "ulp_warning_is_not_a_measurement_uncertainty_or_residual_tolerance": true
+      }
+    },
+    "exact_friedel_rejected": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-structure-workspace",
+      "request_id": "r2-controls-004",
+      "automatic_retry": false,
+      "error": {
+        "code": "INVALID_REGISTRATION_PROPOSAL",
+        "message": "A fitted reflection's Friedel mate is not independent held-out validation"
+      }
+    },
+    "harmonic_geometry_holdout": {
+      "object_id": "da0195d9862748f38a62bf39a8a31182",
+      "registration": {
+        "rotation_deg": 17.0,
+        "scale": 1.0,
+        "translation_inv_angstrom": [
+          0.0,
+          0.0
+        ],
+        "flip_y": false,
+        "basis": "Fixed experimental scale/DC; SO(2) fit from caller-asserted correspondences. Screen basis: Explicit signed analytic metric"
+      },
+      "fit_status": "within_declared_tolerance",
+      "validation_status": "held_out_geometry_consistent",
+      "held_out_validation_passed": true,
+      "held_out_independence": {
+        "scope": "disjoint original peak anchors/HKL/projections; not a proof of statistical or experimental resolving power",
+        "unresolved_binary64_aliases": [],
+        "ulp_warning_is_not_a_measurement_uncertainty_or_residual_tolerance": true
+      }
+    },
+    "collinear_fit_rejected": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-structure-workspace",
+      "request_id": "r2-controls-007",
+      "automatic_retry": false,
+      "error": {
+        "code": "INVALID_REGISTRATION_PROPOSAL",
+        "message": "Fit experiment requires at least two numerically non-collinear reciprocal reflections"
+      }
+    },
+    "no_holdout_not_tested": {
+      "object_id": "cd69350bf4734b30a0edb98ff0033a03",
+      "registration": {
+        "rotation_deg": 17.0,
+        "scale": 1.0,
+        "translation_inv_angstrom": [
+          0.0,
+          0.0
+        ],
+        "flip_y": false,
+        "basis": "Fixed experimental scale/DC; SO(2) fit from caller-asserted correspondences. Screen basis: Explicit signed analytic metric"
+      },
+      "fit_status": "within_declared_tolerance",
+      "validation_status": "not_tested_no_held_out",
+      "held_out_validation_passed": null,
+      "held_out_independence": {
+        "scope": "disjoint original peak anchors/HKL/projections; not a proof of statistical or experimental resolving power",
+        "unresolved_binary64_aliases": [],
+        "ulp_warning_is_not_a_measurement_uncertainty_or_residual_tolerance": true
+      }
+    },
+    "absent_scale": {
+      "general_status": "insufficient_evidence",
+      "general_id": "4fa3dd08e31544bca6bb2c408f21ccd6",
+      "twin_status": "insufficient_evidence",
+      "twin_id": "f60ac45bd6aa40f3805c377b0e6feac6",
+      "twin_projected_relation": {
+        "status": "insufficient_evidence",
+        "reason": "Missing or withdrawn sourced physical calibration; pixel observations retained"
+      }
+    },
+    "wrong_scale": {
+      "general_status": "incompatible",
+      "general_id": "b41e8b6aa97e4b639a5631fb43fe9227",
+      "twin_status": "insufficient_evidence",
+      "twin_id": "00d6871cb9ac4cbbb2078e9d9f4a109a",
+      "twin_projected_relation": {
+        "status": "insufficient_evidence",
+        "reason": "The supplied parent model/registration does not explain domain A; the twin test lacks its parent anchor",
+        "candidate_status": "hypothesized",
+        "domain_a_geometry": {
+          "adequate": true,
+          "noncollinear_direction_family_count": 4,
+          "direction_families": [
+            {
+              "direction_xy_unit": [
+                0.0,
+                1.0
+              ],
+              "measurement_object_ids": [
+                "36bcc22a63f343c6ba5421e1e7eac38b",
+                "beeb1442d6af4fc3911c11bf65ef6041"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            },
+            {
+              "direction_xy_unit": [
+                0.49236596391733095,
+                -0.8703882797784892
+              ],
+              "measurement_object_ids": [
+                "3dabf8a8b9d8422caa363d6e58a49d1d",
+                "ad5eb47436be48a2b30dd59569f9408a"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            },
+            {
+              "direction_xy_unit": [
+                0.5773502691896257,
+                0.816496580927726
+              ],
+              "measurement_object_ids": [
+                "5471dcc175d746a999328bb426e66879",
+                "5fd312922c7b4027a5639fd4f0be6b5f"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            },
+            {
+              "direction_xy_unit": [
+                0.9428090415820634,
+                0.3333333333333333
+              ],
+              "measurement_object_ids": [
+                "b383845689a942c0b734da98ed193cc6",
+                "c23cda4502a245da8b39abf040329207"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            }
+          ],
+          "normalized_singular_values": [
+            2.0199009876724157,
+            1.3856406460551018
+          ],
+          "numerical_rank_two_diagnostic_only": true,
+          "direction_policy_version": "finite_reciprocal_direction_support_v2",
+          "direction_admission": {
+            "minimum_line_separation_degrees": 1.0,
+            "reciprocal_radius_inv_angstrom": 0.003,
+            "angular_radius_formula": "asin(min(1,declared_reciprocal_tolerance/abs(q)))",
+            "pair_threshold": "max(1 degree, sum of angular radii); strict separation",
+            "policy_semantics": "deterministic conservative admission, not measured peak uncertainty or confidence",
+            "family_grouping": "connected ambiguous-line components before candidate fitting"
+          },
+          "per_measurement_angular_radius_degrees": [
+            0.5458238622657725,
+            0.5458238622657725,
+            0.5458238622657725,
+            0.5458238622657725,
+            0.33424432818365446,
+            0.33424432818365446,
+            0.2850440798888138,
+            0.2850440798888138
+          ],
+          "unresolved_measurement_object_ids": [],
+          "pairwise_direction_checks": [
+            {
+              "measurement_indices": [
+                0,
+                1
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": false
+            },
+            {
+              "measurement_indices": [
+                0,
+                2
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                3
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                6
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                7
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                2
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                3
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                6
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                7
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                3
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": false
+            },
+            {
+              "measurement_indices": [
+                2,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                6
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                7
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                6
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                7
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                4,
+                5
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": false
+            },
+            {
+              "measurement_indices": [
+                4,
+                6
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                4,
+                7
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                5,
+                6
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                5,
+                7
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                6,
+                7
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": false
+            }
+          ],
+          "independence_scope": "Finite-resolution noncollinear reciprocal directions only; near Friedel/conjugate/harmonic jitter cannot create a direction; no held-out validation"
+        },
+        "domain_b_geometry": {
+          "adequate": true,
+          "noncollinear_direction_family_count": 4,
+          "direction_families": [
+            {
+              "direction_xy_unit": [
+                0.49236596391733095,
+                0.8703882797784892
+              ],
+              "measurement_object_ids": [
+                "19feb2457e134d5b9e8c289b12edf9de",
+                "69ea44981fb2434aa6d6d95a44d9573f"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            },
+            {
+              "direction_xy_unit": [
+                0.5773502691896257,
+                -0.816496580927726
+              ],
+              "measurement_object_ids": [
+                "3a557a04a710463aa3409ff095e55c62",
+                "96838d050f8e444cbc7931c37803e8ef"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            },
+            {
+              "direction_xy_unit": [
+                0.9428090415820634,
+                -0.3333333333333333
+              ],
+              "measurement_object_ids": [
+                "7691f7e82b55419cbb53001db8bb584c",
+                "90ab7f21c4ad4a07b6d96cbe9107bed7"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            },
+            {
+              "direction_xy_unit": [
+                0.0,
+                1.0
+              ],
+              "measurement_object_ids": [
+                "9809e375bc2d4938ba2379f519f7bc8c",
+                "fda079779de544978652c1ad4c6f73a3"
+              ],
+              "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+            }
+          ],
+          "normalized_singular_values": [
+            2.0199009876724157,
+            1.3856406460551018
+          ],
+          "numerical_rank_two_diagnostic_only": true,
+          "direction_policy_version": "finite_reciprocal_direction_support_v2",
+          "direction_admission": {
+            "minimum_line_separation_degrees": 1.0,
+            "reciprocal_radius_inv_angstrom": 0.003,
+            "angular_radius_formula": "asin(min(1,declared_reciprocal_tolerance/abs(q)))",
+            "pair_threshold": "max(1 degree, sum of angular radii); strict separation",
+            "policy_semantics": "deterministic conservative admission, not measured peak uncertainty or confidence",
+            "family_grouping": "connected ambiguous-line components before candidate fitting"
+          },
+          "per_measurement_angular_radius_degrees": [
+            0.5458238622657725,
+            0.5458238622657725,
+            0.5458238622657725,
+            0.5458238622657725,
+            0.33424432818365446,
+            0.33424432818365446,
+            0.2850440798888138,
+            0.2850440798888138
+          ],
+          "unresolved_measurement_object_ids": [],
+          "pairwise_direction_checks": [
+            {
+              "measurement_indices": [
+                0,
+                1
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": false
+            },
+            {
+              "measurement_indices": [
+                0,
+                2
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                3
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                6
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                0,
+                7
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                2
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                3
+              ],
+              "line_angle_degrees": 70.52877936550931,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                6
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                1,
+                7
+              ],
+              "line_angle_degrees": 29.49620849656643,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                3
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.091647724531545,
+              "resolved_as_distinct": false
+            },
+            {
+              "measurement_indices": [
+                2,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                6
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                2,
+                7
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                4
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                5
+              ],
+              "line_angle_degrees": 35.264389682754654,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                6
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                3,
+                7
+              ],
+              "line_angle_degrees": 79.97501213792425,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                4,
+                5
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": false
+            },
+            {
+              "measurement_indices": [
+                4,
+                6
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                4,
+                7
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                5,
+                6
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                5,
+                7
+              ],
+              "line_angle_degrees": 64.7605981793211,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": true
+            },
+            {
+              "measurement_indices": [
+                6,
+                7
+              ],
+              "line_angle_degrees": 0.0,
+              "required_separation_degrees": 1.0,
+              "resolved_as_distinct": false
+            }
+          ],
+          "independence_scope": "Finite-resolution noncollinear reciprocal directions only; near Friedel/conjugate/harmonic jitter cannot create a direction; no held-out validation"
+        },
+        "distinct_measurement_identities": true,
+        "parent_domain_all_selected_reflections_match": false,
+        "twin_domain_all_selected_reflections_match": false,
+        "untwinned_control_all_selected_reflections_match": false,
+        "parent_or_twin_assignment_ambiguous": false,
+        "shared_registration": {
+          "rotation_deg": 22.999999999999986,
+          "scale": 1.0,
+          "translation_inv_angstrom": [
+            0.0,
+            0.0
+          ],
+          "flip_y": false,
+          "basis": "Rotation23 from saved parent fit b12cdf0cd58f4a88a8a8d1421cfefc03; carried explicitly; both domain candidates share this same transform"
+        },
+        "independent_validation": "not_established_by_this_comparison",
+        "unique_3d_twin_identification": false
+      },
+      "stale_proposal_rejected": {
+        "ok": false,
+        "state": "failed",
+        "backend": "external-structure-workspace",
+        "request_id": "r2-controls-016",
+        "automatic_retry": false,
+        "error": {
+          "code": "INVALID_COMPARISON",
+          "message": "Measurement belongs to a different capture/frame/ROI/FFT; create a fresh matching measurement"
+        }
+      }
+    },
+    "one_family_friedel": {
+      "general_status": "insufficient_evidence",
+      "twin_status": "insufficient_evidence",
+      "direction_evidence": {
+        "adequate": false,
+        "noncollinear_direction_family_count": 1,
+        "direction_families": [
+          {
+            "direction_xy_unit": [
+              0.0,
+              1.0
+            ],
+            "measurement_object_ids": [
+              "122324da39b94e5f88d3e86b6a50358b",
+              "c51e0b54c7de4fbdb1a6c6bad2bd687b"
+            ],
+            "family_semantics": "unresolved-direction component, not an indexed reflection identity"
+          }
+        ],
+        "normalized_singular_values": [
+          1.4142135623730951,
+          0.0
+        ],
+        "numerical_rank_two_diagnostic_only": false,
+        "direction_policy_version": "finite_reciprocal_direction_support_v2",
+        "direction_admission": {
+          "minimum_line_separation_degrees": 1.0,
+          "reciprocal_radius_inv_angstrom": 0.003,
+          "angular_radius_formula": "asin(min(1,declared_reciprocal_tolerance/abs(q)))",
+          "pair_threshold": "max(1 degree, sum of angular radii); strict separation",
+          "policy_semantics": "deterministic conservative admission, not measured peak uncertainty or confidence",
+          "family_grouping": "connected ambiguous-line components before candidate fitting"
+        },
+        "per_measurement_angular_radius_degrees": [
+          0.49620220853902836,
+          0.49620220853902836
+        ],
+        "unresolved_measurement_object_ids": [],
+        "pairwise_direction_checks": [
+          {
+            "measurement_indices": [
+              0,
+              1
+            ],
+            "line_angle_degrees": 0.0,
+            "required_separation_degrees": 1.0,
+            "resolved_as_distinct": false
+          }
+        ],
+        "independence_scope": "Finite-resolution noncollinear reciprocal directions only; near Friedel/conjugate/harmonic jitter cannot create a direction; no held-out validation"
+      }
+    }
+  },
+  "original_files_verified_unchanged_after_controls": 617,
+  "prior_failed_harness_runs": [
+    {
+      "directory": "analysis/algorithm-audit-round2-crystal-20261101-234021",
+      "result": "TIFF float64 unsupported; corrected fixture to float32; not a production finding"
+    },
+    {
+      "directory": "analysis/algorithm-audit-round2-crystal-20261101-234124",
+      "result": "UVW100 exceeds documented32 bound; corrected fixture to32; complete prior general/twin results retained; not production finding"
+    }
+  ],
+  "audit_source_sha256": {
+    "audits/scientific_algorithms_round2/crystal/probe_saved_crystal.py": "7daf4cded2afb7a67a6bfa9916ed7a2ec404c1a2a720fa8a985a9ff02a222609",
+    "audits/scientific_algorithms_round2/crystal/probe_tolerance_sweep.py": "ac7d92fe85c45c211a1000319560a8d12df3514ab0b2bd49f73609e46444ee82",
+    "audits/scientific_algorithms_round2/crystal/probe_admission_controls.py": "5c6969428a1d9bc268afc7bac5c06d0effaa256dadcffac91f0fcb3fad64b05e"
+  },
+  "tolerance_sweep": {
+    "predeclared_tolerances": [
+      0.003,
+      0.03,
+      0.06,
+      0.061,
+      0.08
+    ],
+    "independent_true_correspondence_max_residual_inv_angstrom": 0.06030226891555273,
+    "rows": [
+      {
+        "action": "general_compare",
+        "tolerance": 0.003,
+        "status": "incompatible",
+        "object_id": "bcbde63fcd674f5ebf472e6cbc3c24df",
+        "request_id": "r2-sweep-general_compare-00",
+        "candidate_statuses": [
+          [
+            "FCC parent and Sigma3",
+            "incompatible"
+          ],
+          [
+            "wrong untwinned FCC",
+            "incompatible"
+          ]
+        ]
+      },
+      {
+        "action": "general_compare",
+        "tolerance": 0.03,
+        "status": "incompatible",
+        "object_id": "6f8c04728a6f4e31bfb98a671eab5eb5",
+        "request_id": "r2-sweep-general_compare-01",
+        "candidate_statuses": [
+          [
+            "FCC parent and Sigma3",
+            "incompatible"
+          ],
+          [
+            "wrong untwinned FCC",
+            "incompatible"
+          ]
+        ]
+      },
+      {
+        "action": "general_compare",
+        "tolerance": 0.06,
+        "status": "incompatible",
+        "object_id": "de7d43b551314405883471b2fee35295",
+        "request_id": "r2-sweep-general_compare-02",
+        "candidate_statuses": [
+          [
+            "FCC parent and Sigma3",
+            "incompatible"
+          ],
+          [
+            "wrong untwinned FCC",
+            "incompatible"
+          ]
+        ]
+      },
+      {
+        "action": "general_compare",
+        "tolerance": 0.061,
+        "status": "compatible",
+        "object_id": "4b15c0a2c59e4e22bc1ccc784ad13af2",
+        "request_id": "r2-sweep-general_compare-03",
+        "candidate_statuses": [
+          [
+            "FCC parent and Sigma3",
+            "compatible"
+          ],
+          [
+            "wrong untwinned FCC",
+            "incompatible"
+          ]
+        ]
+      },
+      {
+        "action": "general_compare",
+        "tolerance": 0.08,
+        "status": "compatible",
+        "object_id": "bc4d7e4f0fef4742aaf10370aaa51f14",
+        "request_id": "r2-sweep-general_compare-04",
+        "candidate_statuses": [
+          [
+            "FCC parent and Sigma3",
+            "compatible"
+          ],
+          [
+            "wrong untwinned FCC",
+            "incompatible"
+          ]
+        ]
+      },
+      {
+        "action": "twin_compare",
+        "tolerance": 0.003,
+        "status": "insufficient_evidence",
+        "object_id": "d016c70877f843aaaad44af3d772e323",
+        "request_id": "r2-sweep-twin_compare-00",
+        "projected_status": "insufficient_evidence"
+      },
+      {
+        "action": "twin_compare",
+        "tolerance": 0.03,
+        "status": "insufficient_evidence",
+        "object_id": "5653e6a84cff4a8485f340aa8114bf5f",
+        "request_id": "r2-sweep-twin_compare-01",
+        "projected_status": "insufficient_evidence"
+      },
+      {
+        "action": "twin_compare",
+        "tolerance": 0.06,
+        "status": "insufficient_evidence",
+        "object_id": "cb2562a465ac4e3591d0130e79cd3a4e",
+        "request_id": "r2-sweep-twin_compare-02",
+        "projected_status": "insufficient_evidence"
+      },
+      {
+        "action": "twin_compare",
+        "tolerance": 0.061,
+        "status": "insufficient_evidence",
+        "object_id": "2c69bf8b8f6640b9a5087800c19be678",
+        "request_id": "r2-sweep-twin_compare-03",
+        "projected_status": "compatible"
+      },
+      {
+        "action": "twin_compare",
+        "tolerance": 0.08,
+        "status": "insufficient_evidence",
+        "object_id": "f3d627ca131f4df59502312d58ebeac4",
+        "request_id": "r2-sweep-twin_compare-04",
+        "projected_status": "compatible"
+      }
+    ]
+  }
+}

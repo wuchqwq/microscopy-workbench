@@ -1,0 +1,50 @@
+{
+  "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/structures",
+  "request_id": "r2-controls-002",
+  "action": "register",
+  "object_id": "bdd644c64d6a45ceabf32b7269478168",
+  "measurement_paths": [
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/images/objects/38f7eb49753045399a5ce70c18b4642d/object.json",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/images/objects/dc7e16d0bb6e435695855927428a9a2a/object.json",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-crystal-20261101-234148/images/objects/db79fa5dab0c458ea0a8332c1a052a05/object.json"
+  ],
+  "experimental_kind": "real_space_fft",
+  "current_image_object_id": "46493a22af6d482184d4a0e00e82395e",
+  "fit_correspondences": [
+    {
+      "measurement_index": 0,
+      "hkl": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "measurement_index": 1,
+      "hkl": [
+        0,
+        1,
+        0
+      ]
+    }
+  ],
+  "validation_correspondences": [
+    {
+      "measurement_index": 2,
+      "hkl": [
+        -1,
+        0,
+        1
+      ]
+    }
+  ],
+  "screen_axes": {
+    "flip_y": false,
+    "basis": "Explicit signed analytic metric"
+  },
+  "confirmation": {
+    "source": "synthetic_fixture",
+    "source_text": "Intentional counterexample: third anchor is an unresolved offset of first observed peak, not an independent observed spot"
+  },
+  "max_residual_inv_angstrom": 0.003
+}

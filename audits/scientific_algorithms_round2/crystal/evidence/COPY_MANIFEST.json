@@ -1,0 +1,95 @@
+[
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/report.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/main-original-report.json.gz",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable",
+    "compression": "gzip; mtime=0",
+    "compressed_bytes": 31716,
+    "compressed_sha256": "dece3b405f0a11501aeb225f25b6cfb424720e41f2b47036066c67c2161233e4",
+    "uncompressed_bytes": 291640,
+    "uncompressed_sha256": "b423ef16dc01918669ffdf0cc20154bce0b4dade1e7eb2f6d055c2247010a320"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-controls-20261101-234332/report.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/controls-original-report.json.gz",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable",
+    "compression": "gzip; mtime=0",
+    "compressed_bytes": 5350,
+    "compressed_sha256": "8872c61a499b27addfd6fb829f7cdd957d05f19ccb45df2e7ef65d8f898064d0",
+    "uncompressed_bytes": 37206,
+    "uncompressed_sha256": "d0cb73efcfdc9484e76945d029bbeffcbcd8e2ebe94185f39b69bee30721381e"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/calls/031-structure-register.input.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/main-031-structure-register.input.json",
+    "bytes": 1657,
+    "sha256": "3d5336a09cdd3e5f2b3f1e3fb6e6d83e48b0360fc67fa97b49f02964dd301b8f",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/calls/031-structure-register.stdout.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/main-031-structure-register.stdout.json",
+    "bytes": 53420,
+    "sha256": "f2576bdacd3fbcdcd20966f629de8eb51a13d31941e5b6676d71916f323eafb1",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/structures/requests/r2-crystal-031.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/main-031-original-worker-journal.json",
+    "bytes": 52405,
+    "sha256": "eee7fc7489b84736a6b521d77e429f9057e613cd813600eff8d0944cfd2fdbd6",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/calls/032-structure-compare.input.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/main-032-structure-compare.input.json",
+    "bytes": 1062,
+    "sha256": "3a0aef7929e6014477ae54dfc8ece9d58888f558ae774606d177c636809affea",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/calls/032-structure-compare.stdout.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/main-032-structure-compare.stdout.json",
+    "bytes": 47972,
+    "sha256": "772e2ce6d3d6c84c04980c45260599a05f1f15404c5f12b1a5b313557f900dcf",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/structures/requests/r2-crystal-032.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/main-032-original-worker-journal.json",
+    "bytes": 46830,
+    "sha256": "21a34619a07317d22bc370cda6af4a9610c92f8a24b0fb9e74234caa936c9266",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-controls-20261101-234332/calls/002-structure-register.input.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/controls-002-structure-register.input.json",
+    "bytes": 1659,
+    "sha256": "0d050e98ad7437d1344cf2f42006c91b491810a9930c5340f1d8ec8a160a6c29",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-controls-20261101-234332/calls/002-structure-register.stdout.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/controls-002-structure-register.stdout.json",
+    "bytes": 53436,
+    "sha256": "6cc6c95ed4afc90deb03fc465ff4d8079bc8494a860d91dcd2256dbc97ab902e",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-20261101-234148/structures/requests/r2-controls-002.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/controls-002-original-worker-journal.json",
+    "bytes": 52424,
+    "sha256": "af96735543878aa20296603dcb869f9e61f05f285fb0bdbc9fee6368ae135878",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable"
+  },
+  {
+    "source": "analysis/algorithm-audit-round2-crystal-sweep-20261101-234741/report.json",
+    "copy": "audits/scientific_algorithms_round2/crystal/evidence/sweep-original-report.json.gz",
+    "semantics": "byte-exact original evidence copy; referenced full workspace remains local and is not portable",
+    "compression": "gzip; mtime=0",
+    "compressed_bytes": 5558,
+    "compressed_sha256": "169b3cc7e1d3efab56ca02630fe4426c963e1afe412e850122c89e44c67dc46b",
+    "uncompressed_bytes": 129038,
+    "uncompressed_sha256": "8a6e841ab7e0dbd210198b6e371b1f6287f0cb8b9fddac63717af135be92c8ef"
+  }
+]
