@@ -339,6 +339,8 @@ def report_csv(result):
 
 def action(workspace, name, request, metadata, directory, api):
     api.need(name == "feature_field", "Unknown feature-field action")
+    _, _, source, _, _ = _source(workspace, request["object_id"], api)
+    api.peaks.require_current_observations(workspace, source, api)
     result = derive(workspace, request, api)
     render_preview(result, directory, api)
     api.write_new(directory / "feature-field.json", api.canonical(result)+b"\n")

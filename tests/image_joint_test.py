@@ -125,6 +125,30 @@ class JointObservations(unittest.TestCase):
         self.assertEqual(refused["error"]["code"], "MEASUREMENT_SCOPE_MISMATCH")
         self.assertFalse((self.workspace / "requests" / (child_request_id("wrong-frame", "frame-0-fft-batch")+".json")).exists())
 
+    def test_interrupted_redetection_qualifies_new_children_on_reused_fft(self):
+        original = self.joint()
+        before_fft = self.fft_arrays()
+        run_child = image_automation.run_child
+        def interrupt(workspace, request, label, action, **parameters):
+            if label == "frame-1-peaks":
+                raise RuntimeError("Stop after first frame redetection was committed")
+            return run_child(workspace, request, label, action, **parameters)
+        with mock.patch.object(image_automation, "run_child", side_effect=interrupt):
+            # An explicit changed detector request triggers redetection while
+            # retaining the original FFT, also used by a v1→v2 detector upgrade.
+            self.call("joint_observations", ok=False, request_id="interrupted-redetection",
+                correspondence_object_id=self.corr["object_id"], previous_observations_id=original["object_id"],
+                window="none", subtract_mean=True, max_peaks=8, frequency_tolerance_cycles_per_pixel=.01,
+                peak_options={"refinement":"none", "threshold_rel":.2, "min_separation_bins":1})
+        protected = {p:hashlib.sha256(p.read_bytes()).hexdigest() for p in self.workspace.rglob("*") if p.is_file()}
+        outcome = worker.execute(dict(action="result",workspace=str(self.workspace),query_request_id="interrupted-redetection"))
+        rows = [r for r in outcome["partial_results"]["children"] if r["origin"]=="original_child" and
+                r["frame_index"]==0 and r["action"] in ("peaks","peak_measurements")]
+        self.assertEqual(len(rows),2)
+        self.assertTrue(all(r["state"]=="completed" and r["validated"] for r in rows),rows)
+        self.assertEqual(before_fft,self.fft_arrays())
+        self.assertTrue(all(hashlib.sha256(p.read_bytes()).hexdigest()==h for p,h in protected.items()))
+
     def test_missing_correspondence_excluded_not_silently_cropped(self):
         unverified = self.call("region_correspondence", sequence_object_id=self.sequence["object_id"], reference_index=1,
                                rect=[0,0,48,48], mode="identity")

@@ -7,6 +7,75 @@ import math
 
 import numpy as np
 
+DETECTOR_VERSION = 2
+CONTRAST_POLICY = "binary64_fft_depth_neighborhood_contrast_v1"
+
+
+def current(metadata):
+    """Missing version is historical, never a current numerical certificate."""
+    detection, quality = metadata.get("peak_detection"), metadata.get("peak_quality")
+    if type(detection) is not dict or type(quality) is not dict:
+        return False
+    version, contrast = detection.get("version"), quality.get("numerical_contrast")
+    return (type(version) is int and version == DETECTOR_VERSION and
+            detection.get("numerical_contrast_policy") == CONTRAST_POLICY and type(contrast) is dict and
+            contrast.get("policy") == CONTRAST_POLICY and
+            contrast.get("status") in ("resolved_amplitude_variation", "insufficient_evidence") and
+            (contrast["status"] != "insufficient_evidence" or metadata.get("peak_table") == []))
+
+
+def require_current(metadata, api):
+    api.need(current(metadata),
+             "Legacy/unknown peak detection has no current numerical-contrast assessment. "
+             "Read old results unchanged; explicitly run image_peaks on the saved FFT "
+             "or revise the atlas/joint observations under a new request ID.", "LEGACY_PEAK_DETECTION")
+
+
+def require_current_observations(workspace, source, api):
+    """Only new automatic evidence requires current detector admission.
+
+    Historical validators never call this gate. Explicit saved measurement
+    overrides are caller selections, not automatic peak detection.
+    """
+    rows = source.get("regions", source.get("frame_observations", source.get("samples", [])))
+    for row in rows:
+        if row.get("peaks_object_id") and row.get("override_measurement_object_ids") is None and row.get("override_source") is None:
+            metadata, _ = workspace.object(row["peaks_object_id"])
+            require_current(metadata, api)
+
+
+def numerical_contrast(amplitude, eligible):
+    """Conservative resolution policy, not a certified PocketFFT error bound.
+
+    Nominal binary64 complex-butterfly depth proxy k=8*sum(ceil(log2(n))).
+    Comparison span must exceed 2*gamma_k, gamma_k=k*u/(1-k*u). Eight models
+    nominal complex arithmetic, not the actual mixed-radix or Bluestein plan.
+    No SNR/localization/physical validity follows. Normalize before comparing.
+    """
+    from scipy.ndimage import maximum_filter
+    # Match the detector's local comparison support. Equal-height real peaks
+    # alone may survive a large DC exclusion; their lower neighbors still
+    # establish contrast. Exact DC is excluded even from these neighborhoods:
+    # mean subtraction changes only that coefficient for a true impulse.
+    support = maximum_filter(eligible, size=3, mode="constant")
+    support[amplitude.shape[0]//2, amplitude.shape[1]//2] = False
+    admitted = amplitude[support]
+    strongest = float(admitted.max()) if admitted.size else 0.
+    depth = sum((int(n)-1).bit_length() for n in amplitude.shape)
+    k, u = 8*depth, np.finfo(np.float64).eps/2
+    guard = 2*(k*u)/(1-k*u)
+    span = float(np.max(admitted/strongest)-np.min(admitted/strongest)) if strongest > 0 else 0.
+    resolved = strongest > 0 and span > guard
+    return {"policy": CONTRAST_POLICY, "status": "resolved_amplitude_variation" if resolved else "insufficient_evidence",
+            "reason": None if resolved else "unresolved_numerical_contrast",
+            "eligible_bin_count": int(np.count_nonzero(eligible)),
+            "comparison_bin_count": int(admitted.size),
+            "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+            "normalized_amplitude_span": span,
+            "relative_resolution_guard": guard, "unit_roundoff": float(u),
+            "nominal_operation_depth": k, "certified_fft_error_bound": False,
+            "statistical_or_physical_validity": False}
+
 
 def detect(values, parameters, need):
     """3x3 local maxima, explicit DC mask and deterministic nonmaximum suppression."""
@@ -33,10 +102,13 @@ def detect(values, parameters, need):
     admitted = amplitude[eligible]
     strongest = float(admitted.max()) if admitted.size else 0.
     absolute_threshold = strongest * threshold
+    contrast = numerical_contrast(amplitude, eligible)
     # Constant magnitude has no localized maximum, including an impulse FFT.
     local_maximum = maximum_filter(amplitude, size=3, mode="nearest")
     local_minimum = minimum_filter(amplitude, size=3, mode="nearest")
     mask = eligible & (amplitude >= absolute_threshold) & (amplitude > 0) & (amplitude == local_maximum) & (amplitude > local_minimum)
+    if contrast["status"] == "insufficient_evidence":
+        mask[:] = False
     indices = np.flatnonzero(mask)
     need(len(indices) <= 4096, "More than 4096 local maxima; raise threshold_rel or use a smaller FFT ROI", "BUDGET_EXCEEDED")
     ordered = sorted(indices.tolist(), key=lambda index: (-float(amplitude.flat[index]), index))
@@ -89,11 +161,12 @@ def detect(values, parameters, need):
     normalized = {"max_peaks": maximum, "min_separation_bins": separation, "exclude_dc_radius_bins": dc_radius,
                   "threshold_rel": threshold, "refinement": refinement}
     quality = {"local_maxima_above_threshold": len(indices), "returned_count": len(rows),
+               "numerical_contrast": contrast,
                "selection_limit_reached": len(rows) == maximum,
                "detection_rect_xyxy": [0, 0, width, height],
                "display_selection_used": False,
                "threshold_amplitude": absolute_threshold, "strongest_outside_dc_amplitude": strongest,
-               "empty_reason": None if rows else "No localized maximum passes the explicit DC/relative-amplitude filters",
+               "empty_reason": None if rows else "Unresolved numerical amplitude contrast; no periodicity inference" if contrast["status"] == "insufficient_evidence" else "No localized maximum passes the explicit DC/relative-amplitude filters",
                "limitations": ["Geometric peak candidates, not indexed reflections or phase identification",
                                "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
                                "Conjugate peaks from a real image are not independent crystallographic evidence",
@@ -138,7 +211,8 @@ def run(workspace, request, ident, directory, metadata, api):
                     xy_calibration=record, user_context=context, scientific_grid_identity=workspace.measurement_grid(request["object_id"]),
                     display=settings, display_representation=expression, display_calibration_id=record["calibration_id"] if record else None,
                     panels=[panel], annotations=marks, peak_table=rows, peak_parameters=parameters, peak_quality=quality,
-                    peak_detection={"algorithm": "SciPy ndimage 3x3 amplitude maxima; deterministic Euclidean nonmaximum suppression; optional three-point log-quadratic interpolation",
+                    peak_detection={"version": DETECTOR_VERSION, "numerical_contrast_policy": CONTRAST_POLICY,
+                                    "algorithm": "SciPy ndimage 3x3 amplitude maxima; deterministic Euclidean nonmaximum suppression; optional three-point log-quadratic interpolation",
                                     "scipy_version": scipy.__version__, "uses_display_pixels": False, "input_complex_array_sha256": api.sha_file(parent_directory / "data.npy"),
                                     "measurement_records_created": False, "next_measurement_tool": "image_measure"},
                     fft_recomputed=False, scientific_data_changed=False)

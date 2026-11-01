@@ -344,6 +344,15 @@ def recovery(workspace, saved, api):
         result["children"].append(entry)
         return None
 
+    previous_rows = []
+    if parameters.get("previous_observations_id"):
+        try:
+            predecessor, _ = workspace.object(parameters["previous_observations_id"])
+            api.need(predecessor.get("kind") == "joint_observations", "Previous observation is not a joint record")
+            if predecessor["fft_parameters"] == fft_settings:
+                previous_rows = [r for r in predecessor["frame_observations"] if r["status"] == "VERIFIED"]
+        except Exception as error:
+            result["previous_result_inspection_error"] = {"code": getattr(error, "code", "INSPECTION_FAILED"), "message": str(error)}
     for row in corr["rows"]:
         if row["status"] != "VERIFIED":
             continue
@@ -361,6 +370,13 @@ def recovery(workspace, saved, api):
                 {"object_id": row["selected_object_id"], "rect": row["target_rect"], "max_size": size})
         fft = inspect(automation.child_request_id(batch_id, "fft-0"), "fft", "fft-batch/fft-0", index,
                       {"object_id": row["selected_object_id"], "rect": row["target_rect"], "max_size": size, **fft_settings})
+        if fft is None:
+            prior = next((r for r in previous_rows if r["selected_object_id"] == row["selected_object_id"] and
+                          r["target_rect"] == row["target_rect"]), None)
+            if prior is not None:
+                fft = inspect(prior["fft_request_id"], "fft", "fft", index,
+                              {"object_id": row["selected_object_id"], "rect": row["target_rect"], **fft_settings},
+                              "available_previous_result")
         peak_id = automation.child_request_id(parent_id, "frame-%d-peaks" % index)
         peaks = inspect(peak_id, "peaks", "peaks", index, {"object_id": fft["object_id"], "max_size": size, **peak_settings} if fft else None)
         measure_id = automation.child_request_id(parent_id, "frame-%d-measurements" % index)
@@ -453,8 +469,9 @@ def action(workspace, name, request, metadata, directory, api):
                                          rects=[row["target_rect"]], max_size=size, **fft_settings)
         region = batch["regions"][0]
         fft, _ = workspace.object(region["fft_object_id"])
-        if prior and previous["peak_parameters"] == peak_settings:
-            peaks, _ = workspace.object(prior["peaks_object_id"])
+        cached = workspace.object(prior["peaks_object_id"])[0] if prior and previous["peak_parameters"] == peak_settings else None
+        if cached is not None and api.peaks.current(cached):
+            peaks = cached
             measured, _ = workspace.object(prior["peak_measurements_object_id"])
         else:
             peaks = automation.run_child(workspace, request, prefix+"peaks", "peaks", object_id=fft["object_id"], max_size=size, **peak_settings)

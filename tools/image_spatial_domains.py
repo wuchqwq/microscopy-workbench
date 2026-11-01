@@ -404,6 +404,8 @@ def _write(result,directory,coverage,unknown,api):
 def action(workspace,name,request,metadata,directory,api):
     started=time.monotonic()
     if name=="domain_map":
+        source,_=workspace.object(request["object_id"])
+        api.peaks.require_current_observations(workspace,source,api)
         result,parent=_domain_result(workspace,request,api)
         frame,_,_=workspace.resolved(parent["parent_object_id"])
         coverage,unknown=_supports(result["samples"],frame["shape_yx"])

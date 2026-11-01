@@ -201,6 +201,7 @@ def _write(result,directory,coverage,unknown,api):
 
 def action(workspace,name,request,metadata,directory,api):
     started=time.monotonic();base,base_dir,frame,depth=_source(workspace,request,api)
+    api.peaks.require_current_observations(workspace,base,api)
     rects,keys,action_ids,size=_selection(workspace,request,base,frame["shape_yx"],api)
     overrides=_overrides(workspace,request,base,api);corrections={}
     for key,row in sorted(overrides.items()):

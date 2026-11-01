@@ -60,16 +60,17 @@ cross-band redundancy. Reused support retains conditional diagnostics with
 create an explicit revision for the new check. Even disjoint supports are not
 independent experiments or evidence of a confirmed material defect.
 
-The issue below remains an **unfixed implementation defect**, not merely a
-method limit (audits #53/#55, semantics repair #57):
-
-- A numerically flat FFT amplitude can yield roundoff peaks. Inspect signal/peak
-  support before interpreting a feature field; `status=valid` is not a guarantee
-  of a lattice. Do not invent a new threshold in the chat to hide this defect.
-
-This remains a repair blocker for its affected scientific paths. Warnings and
-this narrower default do not repair it. Direct scoped diagnostic testing is
-still permitted with explicit disclosure; never silently reinterpret old objects.
+Peak detector v2 refuses unresolved numerical amplitude contrast, including the
+reproduced flat-spectrum roundoff peaks. The fixed binary64 depth-based policy
+is explicitly not a certified FFT error bound, measured SNR or physical peak
+validation. True contrast near floating-point resolution can remain unresolved.
+Old unversioned peak objects keep their original interpretation; new automatic
+measurements/fields require current detection. Atlas/joint revisions rerun peak
+detection on the same saved FFT instead of silently reusing a legacy peak table.
+Explicit manual measurement overrides retain their source and caller meaning.
+These repairs do not turn `valid` fields into evidence of a crystal or authorize
+automatic material interpretation. Inspect support and conflicts; do not invent
+thresholds in chat or silently reinterpret old objects.
 
 ## Evidence rules in every route
 

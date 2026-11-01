@@ -367,6 +367,8 @@ def report_csv(result):
 def action(workspace, name, request, metadata, directory, api):
     import scipy
     api.need(name == "local_signature_compare", "Unknown local signature operation")
+    source, _ = workspace.object(request["object_id"])
+    api.peaks.require_current_observations(workspace, source, api)
     result = derive(workspace, request, api)
     pictures = []
     if result["overview_object_id"]:

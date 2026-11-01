@@ -169,8 +169,9 @@ def action(workspace, name, request, metadata, directory, api):
         prior = prior_by_rect.get(tuple(region["rect"]))
         fft, _ = workspace.object(region["fft_object_id"])
         prefix = "region-%d-" % index
-        if prior and previous["peak_parameters"] == peak_settings:
-            peaks, _ = workspace.object(prior["peaks_object_id"])
+        cached = workspace.object(prior["peaks_object_id"])[0] if prior and previous["peak_parameters"] == peak_settings else None
+        if cached is not None and api.peaks.current(cached):
+            peaks = cached
             measured, _ = workspace.object(prior["peak_measurements_object_id"])
         else:
             peaks = automation.run_child(workspace, request, prefix+"peaks", "peaks", object_id=fft["object_id"], max_size=size, **peak_settings)
@@ -293,13 +294,13 @@ def recovery(workspace, saved, api):
                           {"object_id": request["object_id"], "rect": rect, **fft_settings}, "available_previous_result") or fft
         peak_expected = {"object_id": fft["object_id"], "max_size": size, **peak_settings} if fft else None
         peaks = inspect(automation.child_request_id(parent_id, "region-%d-peaks" % index), "peaks", "peaks", index, peak_expected)
-        if prior and previous["peak_parameters"] == peak_settings:
+        if not peaks and prior and previous["peak_parameters"] == peak_settings:
             peaks = inspect(prior["peaks_request_id"], "peaks", "peaks", index,
                             {"object_id": fft["object_id"], **peak_settings} if fft else None, "available_previous_result") or peaks
         measure_id = automation.child_request_id(parent_id, "region-%d-measurements" % index)
         expected_measure = {"object_id": peaks["object_id"], "max_peaks": peak_settings["max_peaks"]} if peaks else None
         measured = inspect(measure_id, "peak_measurements", "measurements", index, expected_measure)
-        if prior and previous["peak_parameters"] == peak_settings:
+        if not measured and prior and previous["peak_parameters"] == peak_settings and peaks and peaks["object_id"] == prior["peaks_object_id"]:
             measured = inspect(prior["peak_measurements_request_id"], "peak_measurements", "measurements", index,
                                expected_measure, "available_previous_result") or measured
         updates = []

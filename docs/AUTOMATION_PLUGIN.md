@@ -127,6 +127,14 @@ directory is present. Existing files remain protected from overwrite.
 
 ## Scientific and delivery scope
 
+Peak detector v2 includes a fixed, versioned numerical-contrast admission. A
+flat or unresolved amplitude spectrum produces no automatic peak measurements
+and leaves derived features insufficient. Its binary64 depth model is not a
+certified FFT error bound, noise estimate or physical validity test. Historical
+unversioned peaks remain readable; new automatic use requires explicit current
+detection, with atlas/joint revisions reusing FFT bytes. See
+[flat-spectrum repair and limits](FLAT_SPECTRUM_REPAIR.md).
+
 Peak detection is not unique indexing or phase identification. FFT conjugate
 pairs are not independent reflections. Explicit scale and signed anisotropic
 axes control physical conversion; missing scale permits cycles/pixel and pixel
