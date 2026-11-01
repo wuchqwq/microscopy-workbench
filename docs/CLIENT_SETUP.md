@@ -65,9 +65,11 @@ Optional `MICROSCOPY_CONTEXT_WORKSPACE`, `MICROSCOPY_STRUCTURE_WORKSPACE` and
 are needed. Materials Project is an independent optional provider, not a default
 image dependency. Keep API keys out of repository files, command logs and chat.
 
-For the compiled plugin entry, the repository also supplies an append-only
-registrar (setup Python >=3.11; this does not change the scientific runtime's
-Python requirement). Prepare an explicit plugin JSON using the existing
+As an **alternative** to the direct `microscopy_core` stdio template above,
+the compiled plugin entry offers an append-only registrar. Pick one route to
+avoid accidentally configuring two copies of the same scientific workspace.
+The registrar uses setup Python >=3.11; this does not change the scientific
+runtime's Python requirement. Prepare an explicit plugin JSON using the existing
 [plugin configuration format](AUTOMATION_PLUGIN.md), then inspect a dry run:
 
 ```sh
