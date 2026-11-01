@@ -1,0 +1,9 @@
+{
+  "lib/panel_ownership.mts": "8f08dd374ff89429ca76e0cec62feb0bf386cf246d96a756aa25435905f777b2",
+  "lib/image_panel_mcp.mts": "e30c8925064a3e7d30da934c68d915cf419161eb77ae9173b18691343e41b3cd",
+  "lib/panel_manager_contracts.mts": "9c0cc62c8a2c2474208494f8e1c3d45193204059cbaa8c2ae45fdc6a0e616f2c",
+  "lib/image_panel_contracts.mts": "84fa27706ddcd98b08433021b1460b04d1d87bf42326d0694cdf38f400efa8bf",
+  "lib/tools/image_panel_module.mts": "03d29023e43d43537cb4d69333d1bcb7cce659c1efc4f4a8a98812142f1578f8",
+  "tools/image_panel.mts": "70852ed00a62bbf55902df1570b375fbd35fe0188f98b6387a7142821b213049",
+  "tools/researcher_inspector.mts": "b4db2b7ea11e06c5cc503eda6218ccccb45dd701f89343d50c7dc042973ffe4b"
+}

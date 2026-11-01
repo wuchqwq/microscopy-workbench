@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {panelRoiHandoff} from './panel_roi_handoff.mjs';
 import {attachCrystalEvidence} from './panel_crystal_evidence.mjs';
 import type {CrystalEvidencePayload} from './panel_crystal_evidence.mjs';
+import {prepareOwnedPanelRegistration,readOwnedPanelCheckpoint,assertOwnedPanelStopped,validateOwnedConnection} from './panel_ownership.mjs';
 
 import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
 import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
@@ -31,6 +32,7 @@ export const imagePanelTools: PanelToolDefinition[]=[
   make('image_panel_current','Read exact current panel/object, source-coordinate selection, saved scoped research_observation reference and unsaved-draft status, plus the saved PNG. A twinning observation confirms only its explicitly recorded scope, not a twin law, orientation or HKL; synthetic_fixture is not human confirmation. With one live registered panel, panel_id may be omitted. This reads after the user says continue; it does not automatically wake the model. Unsaved browser tone/gesture drafts are described separately from the saved image.',{panel_id:objectId},[]),
   make('image_panel_show','Offer an existing result to an explicit panel. Save request_id first. expected_object_id and draft_revision bind the inspected view. Dirty/newer drafts queue the result for explicit user acceptance instead of overwriting them. Same ID returns the original presentation receipt, never repeats it; call image_panel_current for the latest view.',{panel_id:objectId,object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId},['panel_id','object_id','expected_object_id','draft_revision','request_id']),
 ];
+export const imagePanelResumeTool:PanelToolDefinition=make('image_panel_resume','Explicitly resume a stopped registered owned helper from its exact checkpoint. Save request_id first. Stable logical panel_id, new helper generation and capability; saved crystal evidence remains unvalidated until full image_panel_evidence admission. Never restarts a live, legacy, failed or unknown operation automatically.',{panel_id:objectId,request_id:requestId},['panel_id','request_id']);
 export const imagePanelEvidenceTool:PanelToolDefinition=make('image_panel_evidence','Attach an existing fully admitted general crystal comparison to an owned image Panel without replacing its scientific canvas. Requires the explicitly configured structure provider. Save request_id first; exact original arguments recover only the original attachment receipt, not a new calculation or current-state query. Stale frame/calibration/ROI or unsaved draft refuses; no model is awakened.',{panel_id:objectId,comparison_object_id:objectId,observation_view_object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId},['panel_id','comparison_object_id','expected_object_id','draft_revision','request_id']);
 export const IMAGE_PANEL_INSTRUCTIONS='Use image_panel_open to give the researcher a local shared view of an existing image object. Retain the returned panel_id internally. After the user circles a region and says continue, image_panel_current returns its exact source/frequency coordinates and unsaved draft state; use ordinary image_* tools for the chosen operation, then image_panel_show with the inspected object/draft revision. Do not claim automatic model wake. A queued result has not replaced the current view; the researcher explicitly accepts it without losing an unseen draft. Returned PNG is the saved immutable view, not a screenshot of unsaved local tone/gesture drafts. Panel connection records persist across MCP clients but are not a scientific state database; stopped panels are not automatically restarted.';
 
@@ -40,7 +42,7 @@ const identical=(a:unknown,b:unknown)=>JSON.stringify(canonical(a))===JSON.strin
 const ownKeys=(value:unknown,keys:readonly string[]):value is RawSlots=>(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.includes(key))) as boolean;
 function validateId(value:unknown,label:string,request=false):asserts value is string{if(typeof value!=='string'||!(request?/^[A-Za-z0-9_-]{1,64}$/:/^[a-f0-9]{32}$/).test(value))throw new Error(`Invalid ${label}`);}
 function validateArguments(name:string,args:unknown):asserts args is ValidatedPanelArguments{
-  const entry=[...imagePanelTools,imagePanelEvidenceTool].find(tool=>tool.name===name);if(!entry)throw new Error('Unknown panel tool');
+  const entry=[...imagePanelTools,imagePanelEvidenceTool,imagePanelResumeTool].find(tool=>tool.name===name);if(!entry)throw new Error('Unknown panel tool');
   if(!ownKeys(args,Object.keys(entry.inputSchema.properties)))throw new Error('Panel arguments contain unknown fields');
   for(const required of entry.inputSchema.required)if(!Object.hasOwn(args,required))throw new Error(`Missing ${required}`);
   for(const [key,value] of Object.entries(args)){
@@ -59,8 +61,7 @@ function readJson(file:string,root:string,maxBytes=20*1024*1024):unknown{
   return JSON.parse(readFileSync(real,'utf8'));
 }
 function connection(value:unknown,panelId:string):OwnedPanelConnection{
-  if(!ownKeys(value,['schema_version','panel_id','port','token','pid','evidence_token'])||value.schema_version!==1||value.panel_id!==panelId||!Number.isInteger(value.port)||(value.port as number)<1||(value.port as number)>65535||typeof value.token!=='string'||!/^[a-f0-9]{48,64}$/.test(value.token)||!Number.isSafeInteger(value.pid)||(value.pid as number)<1||value.evidence_token!==undefined&&(typeof value.evidence_token!=='string'||!/^[a-f0-9]{64}$/.test(value.evidence_token)))throw new Error('Invalid owned panel connection');
-  return value as unknown as OwnedPanelConnection;
+  return validateOwnedConnection(value,panelId);
 }
 function waitWithoutCancelling<Result>(operation:Promise<Result>,signal?:AbortSignal):Promise<Result>{
   if(!signal)return operation;
@@ -86,9 +87,10 @@ export class ImagePanelManager {
     if(typeof inspect!=='function')throw new Error('Panel requires the existing image inspector');
     this.workspace=path.resolve(workspace);this.python=python;this.inspect=inspect;this.inspectEvidence=inspectEvidence;this.fetch=fetchImpl;this.readyTimeoutMs=readyTimeoutMs;this.requestTimeoutMs=requestTimeoutMs;
     this.directory=path.join(this.workspace,'panel-registry');this.requests=path.join(this.directory,'requests');this.panels=path.join(this.directory,'panels');this.active=new Map();
-    this.launch=launch??(async({panel_id,connection_file,object_id})=>{
+    this.launch=launch??(async({panel_id,object_id,registration_file})=>{
       if(!path.isAbsolute(this.python))throw new Error('Panel launch requires an absolute DM_IMAGE_PYTHON executable; configure the independent image environment');
-      const child=spawn(process.execPath,[fileURLToPath(new URL('../tools/image_panel.mjs',import.meta.url)),'--workspace',this.workspace,'--python',this.python,'--object',object_id,'--connection-file',connection_file,'--panel-id',panel_id],{detached:true,windowsHide:true,stdio:'ignore'});
+      const registration=registration_file??prepareOwnedPanelRegistration({workspace:this.workspace,panel_id}).registration_file;
+      const child=spawn(process.execPath,[fileURLToPath(new URL('../tools/image_panel.mjs',import.meta.url)),'--workspace',this.workspace,'--python',this.python,'--object',object_id,'--owned-registration',registration],{detached:true,windowsHide:true,stdio:'ignore'});
       await new Promise<void>((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();
     });
   }
@@ -97,6 +99,7 @@ export class ImagePanelManager {
   connectionFile(id:unknown){return path.join(this.panels,(id as string)+'.json');}
   getConnection(id:unknown){validateId(id,'panel_id');return connection(readJson(this.connectionFile(id),this.canonicalDirectory,4096),id);}
   async request(conn:OwnedPanelConnection,method:string,route:string,body?:unknown):Promise<unknown>{
+    if(conn.schema_version===2&&conn.status==='closed')throw new Error('Owned Panel helper was normally closed; use explicit image_panel_resume with a saved new request_id');
     const evidenceKey=method==='POST'&&route==='/api/evidence'?conn.evidence_token:null;
     if(method==='POST'&&route==='/api/evidence'&&!evidenceKey)throw new Error('This saved Panel helper predates qualified evidence attachment; reopen a new Panel without replaying science');
     const origin=`http://127.0.0.1:${conn.port}`,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),method==='GET'?Math.min(this.requestTimeoutMs,3000):this.requestTimeoutMs);
@@ -105,6 +108,7 @@ export class ImagePanelManager {
       const text=await response.text();if(Buffer.byteLength(text)>20*1024*1024)throw new Error('Panel response exceeds bound');
       let value:unknown;try{value=JSON.parse(text);}catch{throw new Error('Invalid owned panel response');}
       if(!response.ok){const error:Error&{httpStatus?:number}=new Error(((value as RawSlots).error??`Panel HTTP ${response.status}`) as string);error.httpStatus=response.status;throw error;}
+      if(conn.schema_version===2&&route==='/api/state'&&((value as RawSlots).helper_session_id!==conn.helper_session_id||(value as RawSlots).panel_generation!==conn.generation))throw new Error('Owned helper generation does not match its connection');
       return value;
     }finally{clearTimeout(timer);}
   }
@@ -143,13 +147,25 @@ export class ImagePanelManager {
     }
     return this.response(panelId,await this.request(this.getConnection(panelId),'GET','/api/state'));
   }
-  async waitForConnection(panelId:string){
+  async waitForConnection(panelId:string,helperSession?:string){
     const started=Date.now();
-    while(!existsSync(this.connectionFile(panelId))){if(Date.now()-started>this.readyTimeoutMs)throw new Error('Panel launch is unverified; query the original request_id. It will not be automatically relaunched.');await delay(40);}
+    while(!existsSync(this.connectionFile(panelId))||helperSession&&this.getConnection(panelId).helper_session_id!==helperSession){if(Date.now()-started>this.readyTimeoutMs)throw new Error('Panel launch is unverified; query the original request_id. It will not be automatically relaunched.');await delay(40);}
     return this.getConnection(panelId);
   }
   async recover(record:RawSlots):Promise<ToolResult>{
     if(record.status==='failed')throw new Error(record.error as string|undefined);
+    if(record.name==='image_panel_resume'){
+      if(typeof record.helper_session_id!=='string'||!/^[a-f0-9]{32}$/.test(record.helper_session_id)||!Number.isSafeInteger(record.generation)||(record.generation as number)<2||!['launching','completed'].includes(record.stage as string))throw new Error('Original resume has no qualified assigned helper generation; no operation was repeated');
+      if(record.status==='completed'){
+        const saved=record.response as RawSlots|undefined;if(!saved||saved.panel_id!==record.panel_id||saved.helper_session_id!==record.helper_session_id||saved.panel_generation!==record.generation)throw new Error('Original resumed-helper receipt has no matching qualified generation');
+        return this.response(record.panel_id as string,record.response,{request_id:record.request_id,recovered:true,resumed:true,panel_generation:record.generation,helper_session_id:record.helper_session_id,snapshot_semantics:'Original immutable resumed-helper receipt; call image_panel_current separately.'});
+      }
+      // A submitted/crashed resume is never another launch. Only the exact
+      // already-published generation can establish its original outcome.
+      const conn=this.getConnection(record.panel_id);if(conn.schema_version!==2||conn.helper_session_id!==record.helper_session_id||conn.generation!==record.generation)throw new Error('Original resume remains unverified; no helper was relaunched');
+      const state=await this.request(conn,'GET','/api/state');record.status='completed';record.response=state;durableWrite(this.requestFile(record.request_id),record);
+      return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true,resumed:true,panel_generation:record.generation,helper_session_id:record.helper_session_id});
+    }
     if(record.name==='image_panel_open'){
       if(!existsSync(this.connectionFile(record.panel_id)))throw new Error('Original panel launch is still unverified. It will not be automatically relaunched.');
       const state=await this.request(this.getConnection(record.panel_id),'GET','/api/state');
@@ -196,6 +212,7 @@ export class ImagePanelManager {
       return this.recover(prior);
     }
     if(name==='image_panel_evidence')return this.mutateEvidence(args,file);
+    if(name==='image_panel_resume')return this.resume(args,file);
     await this.inspect(args.object_id as string);
     const panelId=name==='image_panel_open'?randomBytes(16).toString('hex'):args.panel_id as string;
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name,arguments:args,panel_id:panelId,status:'submitted'};
@@ -218,6 +235,21 @@ export class ImagePanelManager {
       if((error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=(error as ThrownSlots).message;durableWrite(file,record);}
       throw new Error(`${(error as ThrownSlots).message} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`);
     }
+  }
+  async resume(args:PanelMutationArguments,file:string):Promise<ToolResult>{
+    const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name:'image_panel_resume',arguments:args,panel_id:args.panel_id as string,status:'submitted',stage:'preflight'};
+    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_resume',args);throw error;}
+    let dispatched=false;
+    try{
+      const old=this.getConnection(args.panel_id);assertOwnedPanelStopped(old);const checkpoint=readOwnedPanelCheckpoint(this.workspace,old);
+      await this.inspect(checkpoint.object_id as string);
+      const registration=prepareOwnedPanelRegistration({workspace:this.workspace,panel_id:args.panel_id as string});
+      record.helper_session_id=registration.helper_session_id;record.generation=registration.generation;record.stage='launching';durableWrite(file,record);dispatched=true;
+      await this.launch({panel_id:args.panel_id as string,connection_file:this.connectionFile(args.panel_id),object_id:checkpoint.object_id as string,registration_file:registration.registration_file,helper_session_id:registration.helper_session_id,generation:registration.generation});
+      const state=await this.request(await this.waitForConnection(args.panel_id as string,registration.helper_session_id),'GET','/api/state');
+      record.status='completed';record.stage='completed';record.response=state;durableWrite(file,record);
+      return this.response(args.panel_id as string,state,{request_id:args.request_id,recovered:false,resumed:true,panel_generation:registration.generation,helper_session_id:registration.helper_session_id});
+    }catch(error){const message=`${error instanceof Error?error.message:String(error)} Original resume request_id: ${args.request_id}; query only this original ID; no automatic relaunch.`;if(!dispatched){record.status='failed';record.error=message;durableWrite(file,record);}throw new Error(message);}
   }
   call(name:string,args:unknown={},signal?:AbortSignal):Promise<ToolResult>{
     validateArguments(name,args);this.initialize();

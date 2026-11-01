@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "scope": "Actual default Inspector library and independent process/Python/MCP plus separately operated Chrome; browser observations not human usability",
+  "panel_id": "c871fe3f3f8f40b80f2707d4bba53105",
+  "stages": {
+    "before": "unvalidated_snapshot",
+    "after_full_readmission": "current"
+  },
+  "scientific_refs": {
+    "logical_panel_id": "c871fe3f3f8f40b80f2707d4bba53105",
+    "observation_view_object_id": "3888cb1610a24fc3a160fd8279b21987",
+    "source_frame": "00a55be0e91a4443895aa649b913b669",
+    "calibrated_frame": "cfbbf46dbb114ffc98ef331cfc048b4e",
+    "ffts": [
+      "7698da6dd42142dba10973e85cffac49",
+      "68e28cfccd9544e3ac78b2aea51e414a"
+    ],
+    "comparison": "12545d8df1ce467c80eed3cfb7d46799",
+    "show_request": "inspector-existing-observations",
+    "original_evidence_request": "inspector-evidence-before",
+    "new_evidence_request": "inspector-evidence-after"
+  },
+  "generation": 3,
+  "normal_close": "PASS",
+  "result": "PASS",
+  "browser": {
+    "kind": "Actual Chrome via Computer Use",
+    "operator": "Codex; not human usability acceptance",
+    "same_tab": true,
+    "observations": [
+      "Cold generation 3: 重连快照 · 待工具复核",
+      "Full formal MCP readmission: 已核对的保存证据",
+      "Browser refresh retains the admitted current evidence and two saved ROIs"
+    ],
+    "gestures_NOT_TESTED": true
+  },
+  "screenshots": {
+    "cold-unvalidated.png": "8946d2df8db94d4d7b9f0260e6a783fdf67813a9b8ae88f120d2336ba17b4513",
+    "reattached-current.png": "620d72eb068d274283db189d62479e1a2850811b0249679a223b7fef3f3b8886"
+  }
+}

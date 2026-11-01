@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "scope": "Real exported plugin MCP -> independent Python -> default registered owned Node Panel; public analytic synthetic data; controlled forced disposable-helper termination",
+  "started_utc": "2026-11-01T08:21:28.752Z",
+  "checks": [],
+  "not_tested": [
+    "Normal helper exit",
+    "Interruption while a scientific worker is active",
+    "Actual MCP-process crash between resume submission and publication",
+    "Human/browser gestures",
+    "Real specimen, GMS, Mac/Linux process control"
+  ],
+  "result": "FAIL",
+  "error": "Error: 错误: INVALID_ARGUMENT: annotate requires a rendered view/compare/FFT object\n    at StdioImageClient.tool (file:///F:/microscopy-workbench-inspector-rebind/dist/tools/image_panel.mjs:77:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async call (file:///F:/microscopy-workbench-inspector-rebind/dist/tools/smoke_registered_panel_recovery.mjs:98:27)\n    at async file:///F:/microscopy-workbench-inspector-rebind/dist/tools/smoke_registered_panel_recovery.mjs:252:29",
+  "calls": [
+    {
+      "name": "image_annotate",
+      "request_id": "registered-observations",
+      "state": "failed_or_unknown",
+      "elapsed_ms": 1121.8410000000003
+    }
+  ],
+  "runtime_ms": 118671.6329,
+  "completed_utc": "2026-11-01T08:23:27.424Z"
+}

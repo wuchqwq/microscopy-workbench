@@ -1,0 +1,35 @@
+{
+  "result": "PASS",
+  "scope": "Independent post-run readonly arrays, direct finite DFT, all admitted object file hashes and original receipt states; no browser/model/GMS claim",
+  "source_tiff_sha256": "ec6730f2151312f65cfe2ff9af3dade8cf91c615e4b8152c67ad0a13312dddb8",
+  "frame_dtype": "float32",
+  "shape_yx": [
+    64,
+    128
+  ],
+  "source_array_equal": true,
+  "all_bin_direct_dft_max_errors": [
+    6.325281023279943e-11,
+    5.860982684926488e-11
+  ],
+  "unchanged_dft_tolerance": 1e-07,
+  "signed_scale": {
+    "x": 0.025,
+    "y": -0.025,
+    "unit": "nm"
+  },
+  "candidate_statuses": [
+    "compatible",
+    "incompatible"
+  ],
+  "phase_identified": false,
+  "twin_law_tested": false,
+  "failed_original_preserved": true,
+  "resume_original_snapshot": "unvalidated_snapshot",
+  "evidence_original_receipts": [
+    "current",
+    "current"
+  ],
+  "primary_logical_panel_id": "68340950360abc64b345bce8235dbefe",
+  "inspector_logical_panel_id": "c871fe3f3f8f40b80f2707d4bba53105"
+}

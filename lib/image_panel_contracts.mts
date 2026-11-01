@@ -19,6 +19,7 @@ export interface PanelDraftAcknowledgment {schema_version:1;panel_id:string|null
 export interface PanelPendingResult {object_id:unknown;request_id:unknown;reason:'unsaved_draft';scientific_operation_complete:true;}
 export interface PanelState {
  schema_version:1;panel_id:string|null;backend:'external-image-workspace';state_revision:number;
+ helper_session_id?:string|null;panel_generation?:number|null;
  object:PanelMetadata;source_identity:PanelMetadata;effective_display:unknown;display_source_object_id:unknown;render_base_id:unknown;
  frame_identity:PanelFrameIdentity|null;png_base64:unknown;clean_png_base64:unknown;clean_png_sha256:string|null;domain_png_base64:unknown;
  sequence_evidence:unknown;domain_evidence:unknown;numeric_results:Record<'statistics'|'profile',PanelMetadata|null>;

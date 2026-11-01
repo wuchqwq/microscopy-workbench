@@ -2,8 +2,10 @@
 import type {ToolResult} from './runtime/contracts.mjs';
 
 export interface OwnedPanelConnection {
-  schema_version: 1; panel_id: string; port: number; token: string; pid: number;
+  schema_version: 1|2; panel_id: string; port: number; token: string; pid: number;
   evidence_token?:string;
+  helper_session_id?:string;generation?:number;checkpoint_file?:string;
+  status?:'running'|'closed';closed_utc?:string;
 }
 // Only response()'s existing panel/object identity checks establish this view.
 // Every other field, including presentation, calibration and selection, is raw.
@@ -13,6 +15,7 @@ export interface IdentityCheckedPanelState extends Record<string, unknown> {
 }
 export interface PanelLaunch {
   panel_id: string; connection_file: string; object_id: string;
+  registration_file?:string;helper_session_id?:string;generation?:number;
 }
 export interface PanelHttpResponse {
   readonly ok: boolean; readonly status: number;
