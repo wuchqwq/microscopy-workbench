@@ -1,0 +1,26 @@
+{
+  "status": "NOT_TESTED",
+  "attempts": [
+    {
+      "reason": "user declined origin approval",
+      "origin": "http://127.0.0.1:51457"
+    },
+    {
+      "after_user_reauthorization": "full CDP enabled",
+      "reason": "saved permission or managed policy denied same origin"
+    },
+    {
+      "after_user_reauthorization": "local website permissions changed",
+      "reason": "saved permission or managed policy denied same origin"
+    },
+    {
+      "after_user_reauthorization": "local website permissions adjusted again",
+      "reason": "saved permission or managed policy denied same origin"
+    }
+  ],
+  "final_user_instruction": "Defer GUI access; user will resolve permissions.",
+  "workaround_used": false,
+  "browser_page_read": false,
+  "browser_gestures": false,
+  "protocol_simulation_is_browser_acceptance": false
+}

@@ -9,6 +9,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {performance} from 'node:perf_hooks';
 import {StdioImageClient,createImagePanel} from './image_panel.mjs';
+import {prepareOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
 
 type Data=Record<string,unknown>;
 const record=(value:unknown):Data=>{assert.ok(value&&typeof value==='object'&&!Array.isArray(value));return value as Data;};
@@ -48,6 +49,7 @@ const gpaCount=()=>objects().filter(id=>metadata(id).kind==='gpa').length;
 const allFiles=(id:string)=>Object.fromEntries(readdirSync(path.join(workspace,'objects',id)).map(name=>[name,hash(path.join(workspace,'objects',id,name))]));
 const png=(value:unknown)=>{assert.equal(typeof value,'string');assert.equal(Buffer.from(value as string,'base64').subarray(0,8).toString('hex'),'89504e470d0a1a0a');};
 const clients=[makeClient()],first=clients[0],start=performance.now();let serial=0,panel:Awaited<ReturnType<typeof createImagePanel>>|null=null;
+let owned:ReturnType<typeof prepareOwnedPanelRegistration>|null=null;
 const timings:Data[]=[],checks:string[]=[],tag=hash(oracle).slice(0,10);
 const report:Data={started_utc:new Date().toISOString(),scope:'Actual public MCP stdio/Python single-domain GPA, analytic finite affine fixture and Panel HTTP',versions,checks,timings,not_tested:['browser/GUI gestures','native DM/GMS/vendor/hardware','real specimen strain accuracy','compound-basis pseudo-strain removal','fresh ordinary model session using the Skill','F3 segmentation/defect analysis','ptychography']};
 const call=async(name:string,args:Data={},client=first)=>{
@@ -128,11 +130,27 @@ assert next(z for z in rows if z['component']=='exx')['unit']=='dimensionless'
   assert.equal(record((await fresh.tool('image_info',{object_id:saved.object_id})).data).object_id,saved.object_id);
  }
  assert.deepEqual({objects:objects().length,ffts:fftCount()},beforeRecovery);
- panel=await createImagePanel({workspace,python,object_id:identifier(views[2].object_id)});
+ const panelId=createHash('sha256').update(directory).digest('hex').slice(0,32);
+ owned=prepareOwnedPanelRegistration({workspace,panel_id:panelId});
+ panel=await createImagePanel({workspace,python,object_id:identifier(views[2].object_id),panel_id:panelId,
+  helper_session_id:owned.helper_session_id,panel_generation:owned.generation,journalDirectory:owned.journalDirectory});
+ owned.publish(panel);
  const origin=panel.url.split('/#')[0];assert.equal((await fetch(origin)).status,200);
  const stateResponse=await fetch(origin+'/api/state',{headers:{'X-Panel-Token':panel.token}});assert.equal(stateResponse.status,200);
  const state=record(await stateResponse.json());assert.equal(record(state.object).object_id,views[2].object_id);png(state.png_base64);
- report.panel={http_status:200,object_id:record(state.object).object_id,scope:'Actual Panel creation, static HTTP and authenticated state/PNG only; no browser or gestures'};
+ assert.deepEqual(record(state.object).evidence_assessment,physical.evidence_assessment);
+ assert.deepEqual(record(state.object).evidence_assessment,views[2].evidence_assessment);
+ assert.equal(record(state.object).material_strain_verified,false);
+ assert.equal(record(state.object).interpretation_status,'hypothesized');
+ assert.equal(record(state.object).gpa_object_id,physicalId);
+ assert.equal((await fetch(origin+'/gpa-evidence.mjs')).status,200);
+ const mcpCurrent=record((await fresh.tool('image_panel_current',{panel_id:panelId})).data);
+ assert.deepEqual(record(record(mcpCurrent.view).object).evidence_assessment,physical.evidence_assessment);
+ assert.equal(record(record(mcpCurrent.view).object).material_strain_verified,false);
+ assert.deepEqual({objects:objects().length,ffts:fftCount()},beforeRecovery);
+ checks.push('Exact saved GPA/view evidence assessment reaches Panel HTTP unchanged; numerical masks never grant material strain verification.');
+ checks.push('Formal stdio MCP image_panel_current returns the exact saved assessment through the owned Panel with no new science objects.');
+ report.panel={http_status:200,object_id:record(state.object).object_id,scope:'Actual owned Panel HTTP and formal stdio MCP image_panel_current; no browser or gestures'};
  checks.push('Fresh MCP client recovers original GPA/view/sample request IDs without science objects or FFTs; actual Panel HTTP/state exposes the saved component.');
  assert.equal(hash(source),sourceHash);assert.equal(hash(path.join(workspace,'objects',fftId,'data.npy')),fftHash);assert.deepEqual(allFiles(unknownId),originalFiles);assert.equal(fftCount(),1);
  report.source_integrity={source_sha256:sourceHash,fft_sha256:fftHash,source_unchanged:true,fft_unchanged:true,forward_fft_count:fftCount()};
@@ -141,4 +159,4 @@ assert next(z for z in rows if z['component']=='exx')['unit']=='dimensionless'
  writeFileSync(path.join(directory,'report.json'),JSON.stringify(report,null,2));
  console.log('PASS: actual GPA MCP/Python, independent finite-affine oracle, references/metric, immutable revisions, view/read, export, fresh recovery and Panel HTTP.');
 }catch(caught){report.result='FAIL';report.error=caught instanceof Error?caught.stack:String(caught);report.runtime_ms=performance.now()-start;writeFileSync(path.join(directory,'report.json'),JSON.stringify(report,null,2));throw caught;}
-finally{await panel?.close();for(const client of clients)await client.close();if(previousConfig===undefined)delete process.env.MICROSCOPY_PLUGIN_CONFIG;else process.env.MICROSCOPY_PLUGIN_CONFIG=previousConfig;console.log('Public evidence: '+path.join(directory,'report.json'));}
+finally{if(panel){if(owned)await owned.close(panel);else await panel.close();}for(const client of clients)await client.close();if(previousConfig===undefined)delete process.env.MICROSCOPY_PLUGIN_CONFIG;else process.env.MICROSCOPY_PLUGIN_CONFIG=previousConfig;console.log('Public evidence: '+path.join(directory,'report.json'));}

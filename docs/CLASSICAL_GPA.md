@@ -1,5 +1,19 @@
 # Classical single-domain geometric phase analysis (F2a)
 
+New saved GPA results include a versioned `evidence_assessment`; reads and views
+inherit their parent's assessment (including its absence on historical results).
+The numerical field remains available; `material_strain_status` is
+`insufficient_evidence` because numerical masks and caller assumptions do not
+independently establish a single-domain displacement model or uncertainty.
+The assessment reports the actual aperture sigma/cutoff and an analytic
+small-phase transfer table, including the central-difference derivative response.
+A narrow aperture can remove short-period deformation while leaving valid
+pixels. This is an isolated-carrier, constant-amplitude interior approximation,
+not measured resolution or a deconvolved field. The nominal untruncated Gaussian
+FWHM is labeled as such; truncation tails and finite boundaries differ.
+No new SNR threshold is inferred from these quantities. Historical results keep
+their original fields/interpretation; merely reading them does not migrate them.
+
 F2a extracts two geometric phases from an existing, saved complex FFT of one
 real scalar spatial image/ROI, 64–512 pixels on each axis, with `window=none`.
 Hann-windowed FFTs and imported complex fields are not qualified inputs.

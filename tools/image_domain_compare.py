@@ -33,6 +33,7 @@ FIELDS = {"local_signature_compare": {
     "coordinate_domain", "tolerance",
 }}
 ROUND_OFF = 64 * np.finfo(float).eps
+EVIDENCE_SEMANTICS_VERSION = 2
 LIMITATIONS = [
     "Finite caller-supplied angles only; absence of a match is not exhaustive orientation exclusion",
     "Descriptive selected-peak geometry only; no independent held-out validation or statistical confidence",
@@ -286,12 +287,20 @@ def check_report_budget(result, api):
              "BUDGET_EXCEEDED")
 
 
-def derive(workspace, request, api):
+def derive(workspace, request, api, *, semantics_version=EVIDENCE_SEMANTICS_VERSION):
+    api.need(type(semantics_version) is int and semantics_version in (1, 2),
+             "Unsupported local signature evidence semantics", "CORRUPT_OBJECT")
     reference, targets, angles, domain, tolerance = settings(request, api)
     parent, parent_directory = workspace.object(request["object_id"])
     api.need(parent.get("kind") in ("spatial_atlas", "joint_observations"),
              "Select a saved spatial_atlas or R2 joint_observations object")
     entries = _entries(workspace, parent, domain, api)
+    # _entries is also used by the historical feature-field validator. Keep
+    # its representation stable; only new local comparisons change semantics.
+    if semantics_version == 2:
+        for entry in entries:
+            if entry["geometry_status"] == "incompatible":
+                entry["geometry_status"] = "insufficient_evidence"
     lookup = {entry["index"]: entry for entry in entries}
     api.need(reference in lookup, "reference_index is absent from the selected source")
     targets = targets if targets is not None else [entry["index"] for entry in entries if entry["index"] != reference]
@@ -300,7 +309,8 @@ def derive(workspace, request, api):
     for target in targets:
         first, second = lookup[reference], lookup[target]
         if first["geometry_status"] != "admitted" or second["geometry_status"] != "admitted":
-            status = "not_comparable" if any(row["geometry_status"] == "not_comparable" for row in (first, second)) else "incompatible"
+            status = ("not_comparable" if any(row["geometry_status"] == "not_comparable" for row in (first, second))
+                      else "insufficient_evidence" if semantics_version == 2 else "incompatible")
             result = {"status": status, "candidates": [], "accepted_angles_degrees": [],
                       "reason": "; ".join(row["reason"] for row in (first, second) if row.get("reason")),
                       "interpretation_status": "hypothesized", "uncertainty": None,
@@ -324,6 +334,8 @@ def derive(workspace, request, api):
             "interpretation_status": "hypothesized", "uncertainty": None,
             "independent_validation": "not_tested_no_held_out_observations", "limitations": LIMITATIONS,
             "fft_recomputed": False, "scientific_data_changed": False, "contact_sheet_is_display_only": True}
+    if semantics_version == 2:
+        result["evidence_semantics_version"] = semantics_version
     check_report_budget(result, api)
     return result
 
@@ -355,6 +367,8 @@ def report_csv(result):
 def action(workspace, name, request, metadata, directory, api):
     import scipy
     api.need(name == "local_signature_compare", "Unknown local signature operation")
+    source, _ = workspace.object(request["object_id"])
+    api.peaks.require_current_observations(workspace, source, api)
     result = derive(workspace, request, api)
     pictures = []
     if result["overview_object_id"]:
@@ -384,7 +398,9 @@ def validate_references(workspace, metadata, api):
         params = automation._saved_parameters(workspace, metadata, api)
         api.need(params.get("action") == "local_signature_compare" and params.get("object_id") == metadata.get("parent_object_id"),
                  "Signature comparison differs from original request", "CORRUPT_OBJECT")
-        expected = derive(workspace, params, api)
+        # Missing version means the original v1 producer, never latest. Old
+        # requests/reports remain byte-identical and use the old derivation.
+        expected = derive(workspace, params, api, semantics_version=metadata.get("evidence_semantics_version", 1))
         api.need(all(metadata.get(key) == value for key, value in expected.items()),
                  "Signature comparison differs from committed measurements or declared comparison", "CORRUPT_OBJECT")
         directory = workspace.root / "objects" / metadata["object_id"]

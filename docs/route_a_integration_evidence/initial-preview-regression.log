@@ -1,0 +1,33 @@
+✔ a new draft is accepted while a real server write waits; late result cannot switch the visible base (63.452375ms)
+✔ Agent presentation queues on dirty or active gesture; original receipt survives another HTTP client and refuses conflicts (25.883083ms)
+✔ draft schema, wrong base, decreasing revision and foreign origin cannot change the shared selection (14.56925ms)
+✔ annotation drafts expose their saved scientific anchor but cannot change identity or escape bounds (17.0635ms)
+✔ lightweight draft acknowledgment omits scientific images and catalog while legacy reply is unchanged (41.01625ms)
+✔ intermediate snapshots coalesce but gesture transitions publish the latest durable handoff (169.331167ms)
+✔ source label uses explicit declaration or fixed provenance and never the filename as a synthetic claim (48.765125ms)
+✔ normal helper closure flushes a pending latest draft snapshot and clears its timer (16.229709ms)
+✔ automatic same-grid edit adoption preserves newer active draft and pending Agent result (68.579167ms)
+✔ automatic adoption refuses a changed render window rather than rebasing unrelated geometry (26.215166ms)
+✔ explicit handoff confirmation flushes coalesced draft before its HTTP receipt (34.729042ms)
+✔ failed durable handoff save is observable and a later explicit confirmation can recover (24.283ms)
+✔ accept-result refuses an older clean selection revision without adopting or clearing pending science (48.582ms)
+✔ initial completed preview receipt does not leave shared-workspace handoff submitted (22.000375ms)
+✔ saved fractional source rectangles use the existing outward edge conversion without changing anchors (1.070083ms)
+✔ scientific recipe names the exact frame and current calibration, never the annotation object (0.105458ms)
+✔ unknown scale stays pixel-only and missing or malformed identities never infer a replacement (0.249416ms)
+✔ frequency, wrong-source, out-of-bounds and ambiguous panels are explicitly unusable without clipping (0.13ms)
+✔ current draft selection stays separate from committed saved rectangles and requires exact panel mapping (0.153917ms)
+✔ malformed geometry and inspection budgets cannot become a partly truncated valid ROI set (0.127084ms)
+✔ fractional drawing contact and canonical FFT support remain separate without changing eligibility (0.181542ms)
+✔ pair inspection is bounded and never claims a truncated or ambiguous ROI set was fully checked (0.1055ms)
+✔ Panel MCP response adds handoff while preserving old view and actual image content fields (0.3265ms)
+✔ interaction gate is shared by both entry routes and is not a scientific qualification (0.135166ms)
+✔ shared snapshot gate keeps pending/results/save errors distinct from old draft flags (0.3285ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 560.219666

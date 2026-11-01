@@ -1,0 +1,16 @@
+{
+  "initial-preview-original-failure.log": "809467f24aa0ca6d41c2fe19b1e2719d443c1e0f17a6c2aa4cdcff9249d453e7",
+  "science-smoke.log": "be98da5f1ddc36067242c101ea0c3e1013f6353a0fe00f834b59cdcdf16a4f7b",
+  "runs.csv": "2c00e0ea46b2bce09ff6d11a9983bdf918e000078db6d29c5885cde605949060",
+  "initial-preview-regression.log": "3ab6050e7aa17481613eb95fac2ba0eab9239f4785e4417b366380233bc703f6",
+  "independent-agent-assessment.md": "10e07b88a09da440a5a0065a9eb6630cd8bb0714f800d267c006b7c19fb32c5c",
+  "synthetic-scientific-records.tar.xz": "596d5f853ee49ac6c77ce790a04e8ed42141f1646f8225021142167d5cdaa5fa",
+  "typecheck.log": "b54b24bb36861baaaf4cfc103c61a4a141ff5bc40af5f6c99df559b33391cc2a",
+  "trace-manifest.json": "f2d858b72da50b7acb6333fdce85e8d16748576ac502128556546c332a43b473",
+  "node-tests.log": "44795ec314b60f836f1ff581f94ceebcd33b6bb0285296f44c2467ee87416f6d",
+  "fixture-tests.log": "31ddd9255b64c139d734ce0c8eb0f1bd06017b7bb11be654ca3d3a32609f0b6e",
+  "browser-attempts.json": "49ce998df8a59b2a41bedc94ad6140ab9aec2c142cae7d2b661a22fafc070bf1",
+  "agent-traces-redacted.tar.xz": "ffc3ae11506bb3f87187756c21465486c7abbc268593ca0310d95c599a3a3ddf",
+  "final-runtime-inventory.json": "22a57fe1ebca579bea81eaafcf4463799971de5b64a975d4daaa8ad7a7102de2",
+  "runs.json": "835a20958ac91a2d00a439131ae32b1d58ceca5ad04cd8fb9e9433107539214d"
+}

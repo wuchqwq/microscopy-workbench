@@ -22,6 +22,43 @@ MASK_TRUNCATION_SIGMA = 3.0
 MAX_CONDITION = 100.0
 
 
+def evidence_assessment(report):
+    """Describe the computed field's transfer and unresolved physical claims.
+
+    No SNR or material-model test is invented from the numerical validity mask.
+    The response is a small-phase, isolated-carrier approximation, not a
+    deconvolution or an assertion of instrumental/specimen spatial resolution.
+    """
+    sigma = np.asarray(report["mask"]["sigma_cycles_per_pixel"], dtype=float)
+    periods = (8., 16., 32., 64., 128., 256., 512.)
+    response = []
+    for period in periods:
+        k = 1. / period
+        phase_gain = np.where(k <= MASK_TRUNCATION_SIGMA * sigma,
+                              np.exp(-.5 * (k / sigma) ** 2), 0.)
+        derivative_gain = math.sin(2 * math.pi * k) / (2 * math.pi * k)
+        response.append({"modulation_period_pixels": period,
+                         "phase_gain_per_reflection": phase_gain.tolist(),
+                         "central_difference_gain_1d": derivative_gain,
+                         "first_order_strain_gain_1d_per_reflection": (phase_gain * derivative_gain).tolist()})
+    reasons = ["single_domain_displacement_origin_not_independently_established",
+               "signal_and_model_uncertainty_not_quantified",
+               "band_limited_field_cannot_exclude_out_of_band_deformation"]
+    if report["calibration_nm_xy"] is None:
+        reasons.append("physical_xy_calibration_missing")
+    return {"semantics_version": 1, "numerical_field_status": "computed_conditional",
+            "material_strain_status": "insufficient_evidence", "material_strain_validated": None,
+            "reason_codes": reasons,
+            "spatial_transfer": {
+                "model": "small phase, constant amplitude, isolated carrier at aperture centre; 1D modulation and interior central differences",
+                "frequency_unit": "cycles/pixel",
+                "aperture_sigma_cycles_per_pixel": sigma.tolist(),
+                "aperture_cutoff_cycles_per_pixel": (MASK_TRUNCATION_SIGMA * sigma).tolist(),
+                "nominal_untruncated_gaussian_real_space_fwhm_pixels": (math.sqrt(2 * math.log(2)) / (math.pi * sigma)).tolist(),
+                "response_samples": response,
+                "scope": "analytic transfer approximation, not measured resolution, uncertainty, SNR or a corrected strain field; finite-grid, truncation tails, large phase and boundaries can differ"}}
+
+
 class GPAError(ValueError):
     def __init__(self, message, code="GPA_INVALID_ARGUMENT"):
         super().__init__(message)

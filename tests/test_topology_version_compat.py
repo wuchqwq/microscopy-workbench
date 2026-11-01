@@ -152,8 +152,13 @@ class TopologyVersionCompatibility(unittest.TestCase):
                                 **self.parameters)
         self.assertEqual(current_analysis.call_count, 1)
         self.assertNotEqual(revised["report"]["algorithm"], self.old["report"]["algorithm"])
-        self.assertEqual(revised["report"]["algorithm"], current_core.ALGORITHM_VERSION)
-        self.assertEqual(revised["input_dependency"], self.old["input_dependency"])
+        self.assertEqual(revised["report"]["algorithm"], current_core.DEPENDENCY_ALGORITHM_VERSION)
+        expected_dependency = copy.deepcopy(revised["input_dependency"])
+        self.assertTrue(expected_dependency.pop("band_dependency")["qualified_cross_band_support"])
+        for source in expected_dependency["gpa_records"]:
+            self.assertIn("mask_frequency.npy", source["band_files_sha256"])
+            del source["band_files_sha256"]["mask_frequency.npy"]
+        self.assertEqual(expected_dependency, self.old["input_dependency"])
         self.assertEqual(revised["object_ids"], self.old["object_ids"])
         self.assertEqual(revised["input_dependency"]["common"]["fft"]["object_id"], self.fft["object_id"])
         self.assertEqual(revised["history"], [{"object_id": self.old["object_id"], "request_id": self.old_request_id,

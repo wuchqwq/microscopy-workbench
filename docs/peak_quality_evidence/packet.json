@@ -1,0 +1,1674 @@
+{
+  "instructions": "For each case, return a concise Chinese report plus proposed_calls (do not execute calls). Use only supplied observations; case identifiers are arbitrary. These are snapshot tasks, not a request to inspect other files or find fixture provenance.",
+  "cases": [
+    {
+      "id": "A",
+      "request": "请给出这块ROI可报告的周期和方向，说明能否给出物理间距、SNR、定位误差，并提出仍可讨论的解释。",
+      "observations": {
+        "roi_xyxy": [
+          0,
+          0,
+          128,
+          128
+        ],
+        "window": "hann",
+        "subtract_mean": true,
+        "refinement": "quadratic",
+        "parameters": {
+          "exclude_dc_radius_bins": 3,
+          "max_peaks": 16,
+          "min_separation_bins": 3,
+          "refinement": "quadratic",
+          "threshold_rel": 0.05
+        },
+        "peak_table": [
+          {
+            "bin_xy": [
+              56,
+              59
+            ],
+            "conjugate_peak_ids": [
+              "peak-2"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.06133705749427243,
+              -0.038171291568446675
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.07224459925876155,
+            "local_median_amplitude": 422.03096095971915,
+            "local_peak_to_median_ratio": 4.1657025119009985,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-1",
+            "pixel_period": 13.84186513954154,
+            "refined": true,
+            "refined_bin_xy": [
+              56.14885664073313,
+              59.114074679238826
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1758.0554341698942,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              72,
+              69
+            ],
+            "conjugate_peak_ids": [
+              "peak-1"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.06133705749427243,
+              0.038171291568446675
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.07224459925876155,
+            "local_median_amplitude": 422.0309609597192,
+            "local_peak_to_median_ratio": 4.165702511900997,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-2",
+            "pixel_period": 13.84186513954154,
+            "refined": true,
+            "refined_bin_xy": [
+              71.85114335926687,
+              68.88592532076117
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1758.055434169894,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              66,
+              47
+            ],
+            "conjugate_peak_ids": [
+              "peak-4"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.017880508610411794,
+              -0.1331315639240751
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.1343269366174823,
+            "local_median_amplitude": 555.3043084579868,
+            "local_peak_to_median_ratio": 1.826685013480546,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-3",
+            "pixel_period": 7.444523229526643,
+            "refined": true,
+            "refined_bin_xy": [
+              66.28870510213271,
+              46.95915981771839
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1014.366058181383,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              62,
+              81
+            ],
+            "conjugate_peak_ids": [
+              "peak-3"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.01788050861041174,
+              0.1331315639240751
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.1343269366174823,
+            "local_median_amplitude": 555.3043084579867,
+            "local_peak_to_median_ratio": 1.8266850134805461,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-4",
+            "pixel_period": 7.444523229526643,
+            "refined": true,
+            "refined_bin_xy": [
+              61.7112948978673,
+              81.04084018228161
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1014.3660581813829,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              0,
+              91
+            ],
+            "conjugate_peak_ids": [],
+            "frequency_cycles_per_pixel": [
+              -0.5,
+              0.2109375
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.542673593337883,
+            "local_median_amplitude": 432.87609383957863,
+            "local_peak_to_median_ratio": 2.1377673163310136,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-5",
+            "pixel_period": 1.842728321916658,
+            "refined": false,
+            "refined_bin_xy": [
+              0.0,
+              91.0
+            ],
+            "refinement_note": "edge, plateau or unresolved curvature; retained integer bin",
+            "sampled_amplitude": 925.3883654312881,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              0,
+              37
+            ],
+            "conjugate_peak_ids": [],
+            "frequency_cycles_per_pixel": [
+              -0.5,
+              -0.2109375
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.542673593337883,
+            "local_median_amplitude": 392.9829778917028,
+            "local_peak_to_median_ratio": 2.354779767805373,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-6",
+            "pixel_period": 1.842728321916658,
+            "refined": false,
+            "refined_bin_xy": [
+              0.0,
+              37.0
+            ],
+            "refinement_note": "edge, plateau or unresolved curvature; retained integer bin",
+            "sampled_amplitude": 925.3883654312879,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              91,
+              95
+            ],
+            "conjugate_peak_ids": [
+              "peak-8"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.20795379508515333,
+              0.24430398709453904
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.32082583904761575,
+            "local_median_amplitude": 411.1498017004483,
+            "local_peak_to_median_ratio": 2.178446807632395,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-7",
+            "pixel_period": 3.1169559252725394,
+            "refined": true,
+            "refined_bin_xy": [
+              90.61808577089963,
+              95.270910348101
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 895.6679729730338,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              37,
+              33
+            ],
+            "conjugate_peak_ids": [
+              "peak-7"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.20795379508515327,
+              -0.2443039870945391
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.32082583904761575,
+            "local_median_amplitude": 411.1498017004482,
+            "local_peak_to_median_ratio": 2.178446807632395,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-8",
+            "pixel_period": 3.1169559252725394,
+            "refined": true,
+            "refined_bin_xy": [
+              37.38191422910038,
+              32.729089651898995
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 895.6679729730336,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              74,
+              48
+            ],
+            "conjugate_peak_ids": [
+              "peak-10"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.0788419802735123,
+              -0.12629608271661552
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.14888505083792358,
+            "local_median_amplitude": 311.11763731768843,
+            "local_peak_to_median_ratio": 2.8131736079129555,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-9",
+            "pixel_period": 6.7165910504245385,
+            "refined": true,
+            "refined_bin_xy": [
+              74.09177347500957,
+              47.83410141227321
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 875.2279262583559,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              54,
+              80
+            ],
+            "conjugate_peak_ids": [
+              "peak-9"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.07884198027351225,
+              0.12629608271661552
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.14888505083792355,
+            "local_median_amplitude": 311.1176373176885,
+            "local_peak_to_median_ratio": 2.8131736079129546,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-10",
+            "pixel_period": 6.71659105042454,
+            "refined": true,
+            "refined_bin_xy": [
+              53.90822652499043,
+              80.16589858772679
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 875.2279262583559,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              11,
+              83
+            ],
+            "conjugate_peak_ids": [
+              "peak-12"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.4154783886314907,
+              0.14787774611408389
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.44101033912551474,
+            "local_median_amplitude": 532.0782694789494,
+            "local_peak_to_median_ratio": 1.6104832029761973,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-11",
+            "pixel_period": 2.2675205347405534,
+            "refined": true,
+            "refined_bin_xy": [
+              10.818766255169185,
+              82.92835150260274
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 856.9031156644908,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              117,
+              45
+            ],
+            "conjugate_peak_ids": [
+              "peak-11"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.4154783886314908,
+              -0.14787774611408383
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.44101033912551474,
+            "local_median_amplitude": 532.0782694789494,
+            "local_peak_to_median_ratio": 1.610483202976197,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-12",
+            "pixel_period": 2.2675205347405534,
+            "refined": true,
+            "refined_bin_xy": [
+              117.18123374483082,
+              45.07164849739727
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 856.9031156644907,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              48,
+              15
+            ],
+            "conjugate_peak_ids": [
+              "peak-14"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.12792684287713185,
+              -0.3823946135082683
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.40322564101089636,
+            "local_median_amplitude": 380.18481358195464,
+            "local_peak_to_median_ratio": 2.232296795284956,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-13",
+            "pixel_period": 2.4800010175270004,
+            "refined": true,
+            "refined_bin_xy": [
+              47.62536411172712,
+              15.053489470941656
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 848.6853409750057,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              80,
+              113
+            ],
+            "conjugate_peak_ids": [
+              "peak-13"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.12792684287713185,
+              0.3823946135082683
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.40322564101089636,
+            "local_median_amplitude": 380.1848135819548,
+            "local_peak_to_median_ratio": 2.232296795284955,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-14",
+            "pixel_period": 2.4800010175270004,
+            "refined": true,
+            "refined_bin_xy": [
+              80.37463588827288,
+              112.94651052905834
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 848.6853409750057,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              91,
+              57
+            ],
+            "conjugate_peak_ids": [
+              "peak-16"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.21134654836090572,
+              -0.05439696349131323
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.2182347202924959,
+            "local_median_amplitude": 454.7794399138567,
+            "local_peak_to_median_ratio": 1.8594360511532486,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-15",
+            "pixel_period": 4.582222291025547,
+            "refined": true,
+            "refined_bin_xy": [
+              91.05235819019593,
+              57.037188673111906
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 845.6332858991078,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              37,
+              71
+            ],
+            "conjugate_peak_ids": [
+              "peak-15"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.21134654836090572,
+              0.05439696349131329
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.2182347202924959,
+            "local_median_amplitude": 454.7794399138567,
+            "local_peak_to_median_ratio": 1.8594360511532484,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-16",
+            "pixel_period": 4.582222291025547,
+            "refined": true,
+            "refined_bin_xy": [
+              36.94764180980407,
+              70.9628113268881
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 845.6332858991077,
+            "status": "hypothesized"
+          }
+        ],
+        "peak_quality": {
+          "detection_rect_xyxy": [
+            0,
+            0,
+            128,
+            128
+          ],
+          "display_selection_used": false,
+          "empty_reason": null,
+          "limitations": [
+            "Geometric peak candidates, not indexed reflections or phase identification",
+            "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+            "Conjugate peaks from a real image are not independent crystallographic evidence",
+            "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+            "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+          ],
+          "local_maxima_above_threshold": 1320,
+          "numerical_contrast": {
+            "certified_fft_error_bound": false,
+            "comparison_bin_count": 16375,
+            "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+            "complete_fft_max_amplitude": 1758.0554341698942,
+            "eligible_bin_count": 16355,
+            "individual_peak_resolution_established": false,
+            "nominal_operation_depth": 112,
+            "nominal_relative_fft_error": 1.2434497875801753e-14,
+            "normalization_scope": "complete FFT maximum including DC and excluded coefficients",
+            "normalized_amplitude_span": 0.9983987969437337,
+            "policy": "binary64_fft_normwise_neighborhood_contrast_v1",
+            "reason": null,
+            "relative_resolution_guard": 6.156228150173867e-13,
+            "scaled_complete_fft_l2_norm": 24.75463107422361,
+            "statistical_or_physical_validity": false,
+            "status": "resolved_amplitude_variation",
+            "unit_roundoff": 1.1102230246251565e-16
+          },
+          "returned_count": 16,
+          "selection_limit_reached": true,
+          "strongest_outside_dc_amplitude": 1758.0554341698942,
+          "threshold_amplitude": 87.90277170849471
+        },
+        "calibration": null,
+        "source_ref": "image-A"
+      }
+    },
+    {
+      "id": "B",
+      "request": "有人提出单一周期，也有人提出两个很近的周期。请比较这两种解释，说明精化坐标能解决什么，选择至多一个后续图像分析动作。",
+      "observations": {
+        "roi_xyxy": [
+          0,
+          0,
+          128,
+          128
+        ],
+        "window": "hann",
+        "subtract_mean": true,
+        "refinement": "quadratic",
+        "parameters": {
+          "exclude_dc_radius_bins": 3,
+          "max_peaks": 16,
+          "min_separation_bins": 3,
+          "refinement": "quadratic",
+          "threshold_rel": 0.05
+        },
+        "peak_table": [
+          {
+            "bin_xy": [
+              56,
+              59
+            ],
+            "conjugate_peak_ids": [
+              "peak-2"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.06506295549529645,
+              -0.03910970724944335
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.07591282749917887,
+            "local_median_amplitude": 703.8871617018091,
+            "local_peak_to_median_ratio": 24.53556680148531,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-1",
+            "pixel_period": 13.17300425953462,
+            "refined": true,
+            "refined_bin_xy": [
+              55.671941696602055,
+              58.99395747207125
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 17270.27047664263,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              72,
+              69
+            ],
+            "conjugate_peak_ids": [
+              "peak-1"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.06506295549529639,
+              0.039109707249443404
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.07591282749917885,
+            "local_median_amplitude": 703.8871617018089,
+            "local_peak_to_median_ratio": 24.535566801485313,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-2",
+            "pixel_period": 13.173004259534622,
+            "refined": true,
+            "refined_bin_xy": [
+              72.32805830339794,
+              69.00604252792876
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 17270.270476642625,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              114,
+              45
+            ],
+            "conjugate_peak_ids": [
+              "peak-4"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.3924547129373026,
+              -0.14937214133492743
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.41991991892940983,
+            "local_median_amplitude": 447.67534018704873,
+            "local_peak_to_median_ratio": 2.3878179385572125,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-3",
+            "pixel_period": 2.38140644185089,
+            "refined": true,
+            "refined_bin_xy": [
+              114.23420325597473,
+              44.88036590912929
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1068.9672079483375,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              14,
+              83
+            ],
+            "conjugate_peak_ids": [
+              "peak-3"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.3924547129373026,
+              0.14937214133492738
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.41991991892940983,
+            "local_median_amplitude": 447.67534018704885,
+            "local_peak_to_median_ratio": 2.387817938557212,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-4",
+            "pixel_period": 2.38140644185089,
+            "refined": true,
+            "refined_bin_xy": [
+              13.765796744025266,
+              83.1196340908707
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1068.9672079483375,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              24,
+              53
+            ],
+            "conjugate_peak_ids": [
+              "peak-6"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.3122168561447596,
+              -0.08478724924518805
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.3235247175958634,
+            "local_median_amplitude": 324.6098800167082,
+            "local_peak_to_median_ratio": 3.099311866627205,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-5",
+            "pixel_period": 3.090953938329892,
+            "refined": true,
+            "refined_bin_xy": [
+              24.036242413470777,
+              53.14723209661593
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1006.0672531602169,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              104,
+              75
+            ],
+            "conjugate_peak_ids": [
+              "peak-5"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.3122168561447596,
+              0.08478724924518799
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.3235247175958633,
+            "local_median_amplitude": 324.6098800167079,
+            "local_peak_to_median_ratio": 3.0993118666272075,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-6",
+            "pixel_period": 3.0909539383298923,
+            "refined": true,
+            "refined_bin_xy": [
+              103.96375758652923,
+              74.85276790338406
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 1006.0672531602169,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              48,
+              5
+            ],
+            "conjugate_peak_ids": [
+              "peak-8"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.1260201677689609,
+              -0.4611066615831332
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.4780171922021834,
+            "local_median_amplitude": 394.6039728419043,
+            "local_peak_to_median_ratio": 2.454909088763765,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-7",
+            "pixel_period": 2.0919749672456076,
+            "refined": true,
+            "refined_bin_xy": [
+              47.869418525573,
+              4.978347317358952
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 968.7168793918808,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              80,
+              123
+            ],
+            "conjugate_peak_ids": [
+              "peak-7"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.12602016776896097,
+              0.4611066615831332
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.4780171922021834,
+            "local_median_amplitude": 394.60397284190424,
+            "local_peak_to_median_ratio": 2.4549090887637655,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-8",
+            "pixel_period": 2.0919749672456076,
+            "refined": true,
+            "refined_bin_xy": [
+              80.130581474427,
+              123.02165268264105
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 968.7168793918808,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              66,
+              47
+            ],
+            "conjugate_peak_ids": [
+              "peak-10"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.01743625991343034,
+              -0.12956558684887176
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.1307335628492593,
+            "local_median_amplitude": 487.6337594329898,
+            "local_peak_to_median_ratio": 1.9280329780995307,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-9",
+            "pixel_period": 7.649145163687136,
+            "refined": true,
+            "refined_bin_xy": [
+              66.23184126891908,
+              47.415604883344415
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 940.1739694214574,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              62,
+              81
+            ],
+            "conjugate_peak_ids": [
+              "peak-9"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.01743625991343034,
+              0.12956558684887176
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.1307335628492593,
+            "local_median_amplitude": 487.6337594329897,
+            "local_peak_to_median_ratio": 1.9280329780995311,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-10",
+            "pixel_period": 7.649145163687136,
+            "refined": true,
+            "refined_bin_xy": [
+              61.768158731080916,
+              80.58439511665559
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 940.1739694214574,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              47,
+              28
+            ],
+            "conjugate_peak_ids": [
+              "peak-12"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.1305479855072858,
+              -0.28327951154528586
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.311913542798876,
+            "local_median_amplitude": 437.2030914034134,
+            "local_peak_to_median_ratio": 2.0982138096849705,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-11",
+            "pixel_period": 3.2060166128945764,
+            "refined": true,
+            "refined_bin_xy": [
+              47.28985785506742,
+              27.740222522203407
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 917.3455640196023,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              81,
+              100
+            ],
+            "conjugate_peak_ids": [
+              "peak-11"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.13054798550728575,
+              0.28327951154528586
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.31191354279887595,
+            "local_median_amplitude": 437.20309140341345,
+            "local_peak_to_median_ratio": 2.098213809684969,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-12",
+            "pixel_period": 3.2060166128945773,
+            "refined": true,
+            "refined_bin_xy": [
+              80.71014214493258,
+              100.25977747779659
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 917.345564019602,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              8,
+              2
+            ],
+            "conjugate_peak_ids": [
+              "peak-14"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.43738363526899676,
+              -0.4818233412668097
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.6507366414999507,
+            "local_median_amplitude": 352.2704232446988,
+            "local_peak_to_median_ratio": 2.5732778277654553,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-13",
+            "pixel_period": 1.5367199819807222,
+            "refined": true,
+            "refined_bin_xy": [
+              8.014894685568416,
+              2.32661231784836
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 906.4896695131362,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              120,
+              126
+            ],
+            "conjugate_peak_ids": [
+              "peak-13"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.4373836352689967,
+              0.4818233412668097
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.6507366414999507,
+            "local_median_amplitude": 363.9868945830058,
+            "local_peak_to_median_ratio": 2.490445900673533,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-14",
+            "pixel_period": 1.5367199819807222,
+            "refined": true,
+            "refined_bin_xy": [
+              119.98510531443158,
+              125.67338768215164
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 906.489669513136,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              115,
+              25
+            ],
+            "conjugate_peak_ids": [
+              "peak-16"
+            ],
+            "frequency_cycles_per_pixel": [
+              0.40104854853589655,
+              -0.3079443014075107
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.5056378457474373,
+            "local_median_amplitude": 428.28253911280694,
+            "local_peak_to_median_ratio": 2.0840563363256703,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-15",
+            "pixel_period": 1.9777000642066125,
+            "refined": true,
+            "refined_bin_xy": [
+              115.33421421259476,
+              24.583129419838624
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 892.564939375692,
+            "status": "hypothesized"
+          },
+          {
+            "bin_xy": [
+              13,
+              103
+            ],
+            "conjugate_peak_ids": [
+              "peak-15"
+            ],
+            "frequency_cycles_per_pixel": [
+              -0.4010485485358965,
+              0.3079443014075107
+            ],
+            "frequency_magnitude_cycles_per_pixel": 0.5056378457474372,
+            "local_median_amplitude": 428.28253911280683,
+            "local_peak_to_median_ratio": 2.0840563363256703,
+            "localization_uncertainty_bins": null,
+            "peak_id": "peak-16",
+            "pixel_period": 1.977700064206613,
+            "refined": true,
+            "refined_bin_xy": [
+              12.665785787405246,
+              103.41687058016137
+            ],
+            "refinement_note": "separable three-point quadratic log-amplitude estimate",
+            "sampled_amplitude": 892.5649393756918,
+            "status": "hypothesized"
+          }
+        ],
+        "peak_quality": {
+          "detection_rect_xyxy": [
+            0,
+            0,
+            128,
+            128
+          ],
+          "display_selection_used": false,
+          "empty_reason": null,
+          "limitations": [
+            "Geometric peak candidates, not indexed reflections or phase identification",
+            "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+            "Conjugate peaks from a real image are not independent crystallographic evidence",
+            "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+            "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+          ],
+          "local_maxima_above_threshold": 16,
+          "numerical_contrast": {
+            "certified_fft_error_bound": false,
+            "comparison_bin_count": 16375,
+            "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+            "complete_fft_max_amplitude": 17270.27047664263,
+            "eligible_bin_count": 16355,
+            "individual_peak_resolution_established": false,
+            "nominal_operation_depth": 112,
+            "nominal_relative_fft_error": 1.2434497875801753e-14,
+            "normalization_scope": "complete FFT maximum including DC and excluded coefficients",
+            "normalized_amplitude_span": 0.9997120311302236,
+            "policy": "binary64_fft_normwise_neighborhood_contrast_v1",
+            "reason": null,
+            "relative_resolution_guard": 8.658774385963187e-14,
+            "scaled_complete_fft_l2_norm": 3.4817547409025464,
+            "statistical_or_physical_validity": false,
+            "status": "resolved_amplitude_variation",
+            "unit_roundoff": 1.1102230246251565e-16
+          },
+          "returned_count": 16,
+          "selection_limit_reached": true,
+          "strongest_outside_dc_amplitude": 17270.27047664263,
+          "threshold_amplitude": 863.5135238321315
+        },
+        "calibration": null,
+        "source_ref": "image-A"
+      }
+    },
+    {
+      "id": "C",
+      "request": "同一图像同一ROI得到下面两个处理结果。请总结证据强度和差别。",
+      "observations": [
+        {
+          "roi_xyxy": [
+            0,
+            0,
+            128,
+            128
+          ],
+          "window": "hann",
+          "subtract_mean": true,
+          "refinement": "quadratic",
+          "parameters": {
+            "exclude_dc_radius_bins": 3,
+            "max_peaks": 16,
+            "min_separation_bins": 3,
+            "refinement": "quadratic",
+            "threshold_rel": 0.05
+          },
+          "peak_table": [
+            {
+              "bin_xy": [
+                56,
+                59
+              ],
+              "conjugate_peak_ids": [
+                "peak-2"
+              ],
+              "frequency_cycles_per_pixel": [
+                -0.0652641594192862,
+                -0.04147517703997161
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07732787864155458,
+              "local_median_amplitude": 1641.078283470962,
+              "local_peak_to_median_ratio": 13.652608829025535,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-1",
+              "pixel_period": 12.931946635124921,
+              "refined": true,
+              "refined_bin_xy": [
+                55.646187594331366,
+                58.691177338883634
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 22404.999862037726,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                72,
+                69
+              ],
+              "conjugate_peak_ids": [
+                "peak-1"
+              ],
+              "frequency_cycles_per_pixel": [
+                0.0652641594192862,
+                0.04147517703997161
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07732787864155458,
+              "local_median_amplitude": 1641.0782834709617,
+              "local_peak_to_median_ratio": 13.652608829025537,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-2",
+              "pixel_period": 12.931946635124921,
+              "refined": true,
+              "refined_bin_xy": [
+                72.35381240566863,
+                69.30882266111637
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 22404.999862037723,
+              "status": "hypothesized"
+            }
+          ],
+          "peak_quality": {
+            "detection_rect_xyxy": [
+              0,
+              0,
+              128,
+              128
+            ],
+            "display_selection_used": false,
+            "empty_reason": null,
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ],
+            "local_maxima_above_threshold": 2,
+            "numerical_contrast": {
+              "certified_fft_error_bound": false,
+              "comparison_bin_count": 16375,
+              "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+              "complete_fft_max_amplitude": 22404.999862037726,
+              "eligible_bin_count": 16355,
+              "individual_peak_resolution_established": false,
+              "nominal_operation_depth": 112,
+              "nominal_relative_fft_error": 1.2434497875801753e-14,
+              "normalization_scope": "complete FFT maximum including DC and excluded coefficients",
+              "normalized_amplitude_span": 0.9997921858743793,
+              "policy": "binary64_fft_normwise_neighborhood_contrast_v1",
+              "reason": null,
+              "relative_resolution_guard": 7.761984608038805e-14,
+              "scaled_complete_fft_l2_norm": 3.1211491953945223,
+              "statistical_or_physical_validity": false,
+              "status": "resolved_amplitude_variation",
+              "unit_roundoff": 1.1102230246251565e-16
+            },
+            "returned_count": 2,
+            "selection_limit_reached": false,
+            "strongest_outside_dc_amplitude": 22404.999862037726,
+            "threshold_amplitude": 1120.2499931018863
+          },
+          "calibration": null,
+          "source_ref": "image-A"
+        },
+        {
+          "roi_xyxy": [
+            0,
+            0,
+            128,
+            128
+          ],
+          "window": "none",
+          "subtract_mean": false,
+          "refinement": "quadratic",
+          "parameters": {
+            "exclude_dc_radius_bins": 3,
+            "max_peaks": 16,
+            "min_separation_bins": 3,
+            "refinement": "quadratic",
+            "threshold_rel": 0.05
+          },
+          "peak_table": [
+            {
+              "bin_xy": [
+                56,
+                59
+              ],
+              "conjugate_peak_ids": [
+                "peak-2"
+              ],
+              "frequency_cycles_per_pixel": [
+                -0.06413534285286243,
+                -0.040188026526402965
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07568632425307151,
+              "local_median_amplitude": 6386.436669194608,
+              "local_peak_to_median_ratio": 11.083026593910542,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-1",
+              "pixel_period": 13.212426549561467,
+              "refined": true,
+              "refined_bin_xy": [
+                55.79067611483361,
+                58.85593260462042
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 70781.0474450093,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                72,
+                69
+              ],
+              "conjugate_peak_ids": [
+                "peak-1"
+              ],
+              "frequency_cycles_per_pixel": [
+                0.06413534285286238,
+                0.040188026526402965
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07568632425307147,
+              "local_median_amplitude": 6386.436669194608,
+              "local_peak_to_median_ratio": 11.083026593910542,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-2",
+              "pixel_period": 13.212426549561474,
+              "refined": true,
+              "refined_bin_xy": [
+                72.20932388516638,
+                69.14406739537958
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 70781.0474450093,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                72,
+                63
+              ],
+              "conjugate_peak_ids": [
+                "peak-4"
+              ],
+              "frequency_cycles_per_pixel": [
+                0.06524215912147824,
+                -0.005139138603221016
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.06544425163767557,
+              "local_median_amplitude": 1449.0386107106165,
+              "local_peak_to_median_ratio": 2.758860714196333,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-3",
+              "pixel_period": 15.280180840578371,
+              "refined": true,
+              "refined_bin_xy": [
+                72.35099636754921,
+                63.34219025878771
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 3997.6956964431533,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                56,
+                65
+              ],
+              "conjugate_peak_ids": [
+                "peak-3"
+              ],
+              "frequency_cycles_per_pixel": [
+                -0.06524215912147824,
+                0.005139138603221016
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.06544425163767557,
+              "local_median_amplitude": 1449.0386107106171,
+              "local_peak_to_median_ratio": 2.7588607141963313,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-4",
+              "pixel_period": 15.280180840578371,
+              "refined": true,
+              "refined_bin_xy": [
+                55.649003632450786,
+                64.65780974121229
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 3997.695696443153,
+              "status": "hypothesized"
+            }
+          ],
+          "peak_quality": {
+            "detection_rect_xyxy": [
+              0,
+              0,
+              128,
+              128
+            ],
+            "display_selection_used": false,
+            "empty_reason": null,
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ],
+            "local_maxima_above_threshold": 4,
+            "numerical_contrast": {
+              "certified_fft_error_bound": false,
+              "comparison_bin_count": 16375,
+              "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+              "complete_fft_max_amplitude": 819580.0,
+              "eligible_bin_count": 16355,
+              "individual_peak_resolution_established": false,
+              "nominal_operation_depth": 112,
+              "nominal_relative_fft_error": 1.2434497875801753e-14,
+              "normalization_scope": "complete FFT maximum including DC and excluded coefficients",
+              "normalized_amplitude_span": 0.08635862545130765,
+              "policy": "binary64_fft_normwise_neighborhood_contrast_v1",
+              "reason": null,
+              "relative_resolution_guard": 2.54941294522728e-14,
+              "scaled_complete_fft_l2_norm": 1.0251370705481209,
+              "statistical_or_physical_validity": false,
+              "status": "resolved_amplitude_variation",
+              "unit_roundoff": 1.1102230246251565e-16
+            },
+            "returned_count": 4,
+            "selection_limit_reached": false,
+            "strongest_outside_dc_amplitude": 70781.0474450093,
+            "threshold_amplitude": 3539.0523722504654
+          },
+          "calibration": null,
+          "source_ref": "image-A"
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "request": "请解释这个结构特征结果，说明它支持什么材料结论。",
+      "observations": {
+        "source_ref": "image-D",
+        "status": "valid",
+        "features": {
+          "families": [
+            {
+              "direction_angle_mod180": 111.8206767964965,
+              "direction_angle_mod180_degrees": 111.8206767964965,
+              "family_id": "family-1",
+              "members": [
+                {
+                  "frequency_cycles_per_pixel": [
+                    0.03126765487730587,
+                    -0.07809297019636124
+                  ],
+                  "sign_to_family_representative": 1,
+                  "vector_xy": [
+                    0.03126765487730587,
+                    -0.07809297019636124
+                  ]
+                },
+                {
+                  "frequency_cycles_per_pixel": [
+                    -0.03126765487730587,
+                    0.07809297019636119
+                  ],
+                  "sign_to_family_representative": -1,
+                  "vector_xy": [
+                    -0.03126765487730587,
+                    0.07809297019636119
+                  ]
+                }
+              ],
+              "period": 11.887776140951312,
+              "period_valid": true,
+              "reciprocal_magnitude": 0.08412002279847572,
+              "vector_xy": [
+                0.03126765487730587,
+                -0.07809297019636124
+              ]
+            },
+            {
+              "direction_angle_mod180": 31.991597742350883,
+              "direction_angle_mod180_degrees": 31.991597742350883,
+              "family_id": "family-2",
+              "members": [
+                {
+                  "frequency_cycles_per_pixel": [
+                    -0.0625035927236926,
+                    -0.03904383571722703
+                  ],
+                  "sign_to_family_representative": -1,
+                  "vector_xy": [
+                    -0.0625035927236926,
+                    -0.03904383571722703
+                  ]
+                },
+                {
+                  "frequency_cycles_per_pixel": [
+                    0.06250359272369266,
+                    0.03904383571722703
+                  ],
+                  "sign_to_family_representative": 1,
+                  "vector_xy": [
+                    0.06250359272369266,
+                    0.03904383571722703
+                  ]
+                }
+              ],
+              "period": 13.569232762172254,
+              "period_valid": true,
+              "reciprocal_magnitude": 0.07369613430081019,
+              "vector_xy": [
+                0.0625035927236926,
+                0.03904383571722703
+              ]
+            }
+          ],
+          "family_count": 2,
+          "pairwise_angles_degrees": [
+            {
+              "acute_line_angle_degrees": 79.82907905414561,
+              "family_ids": [
+                "family-1",
+                "family-2"
+              ]
+            }
+          ],
+          "shortest_period": 11.887776140951312
+        },
+        "invalid_reasons": [],
+        "measurements": [
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              -0.0625035927236926,
+              -0.03904383571722703
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-3151180e7d5267219b5e6f26be173fb9111791b476ee36b0",
+            "pixel_period": 13.569232762172254,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          },
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              0.06250359272369266,
+              0.03904383571722703
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-e23b3ea368081fac3de86f3c540ea84c9c13b8b0b1760dd1",
+            "pixel_period": 13.569232762172245,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          },
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              0.03126765487730587,
+              -0.07809297019636124
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-fe4aaf49a467332c4b89cd19cdf008587fee4cf38efd70cc",
+            "pixel_period": 11.887776140951312,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          },
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              -0.03126765487730587,
+              0.07809297019636119
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-f63ee9b4ea6b9f3b6a4dcae531c31be3b683c5f1c4e0440b",
+            "pixel_period": 11.887776140951317,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          }
+        ],
+        "peak_observation": {
+          "roi_xyxy": [
+            0,
+            0,
+            128,
+            128
+          ],
+          "window": "hann",
+          "subtract_mean": true,
+          "refinement": "quadratic",
+          "parameters": {
+            "exclude_dc_radius_bins": 3,
+            "max_peaks": 16,
+            "min_separation_bins": 3,
+            "refinement": "quadratic",
+            "threshold_rel": 0.05
+          },
+          "peak_table": [
+            {
+              "bin_xy": [
+                68,
+                54
+              ],
+              "conjugate_peak_ids": [
+                "peak-2"
+              ],
+              "frequency_cycles_per_pixel": [
+                0.031248102179818105,
+                -0.07816128647580234
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.08417618780506038,
+              "local_median_amplitude": 503.3228496148758,
+              "local_peak_to_median_ratio": 39.671731411620584,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-1",
+              "pixel_period": 11.87984424188765,
+              "refined": true,
+              "refined_bin_xy": [
+                67.99975707901672,
+                53.9953553310973
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 19967.688903252852,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                60,
+                74
+              ],
+              "conjugate_peak_ids": [
+                "peak-1"
+              ],
+              "frequency_cycles_per_pixel": [
+                -0.03124810217981816,
+                0.07816128647580234
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.08417618780506039,
+              "local_median_amplitude": 503.32284961487585,
+              "local_peak_to_median_ratio": 39.671731411620584,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-2",
+              "pixel_period": 11.879844241887648,
+              "refined": true,
+              "refined_bin_xy": [
+                60.000242920983275,
+                74.0046446689027
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 19967.688903252852,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                56,
+                59
+              ],
+              "conjugate_peak_ids": [
+                "peak-4"
+              ],
+              "frequency_cycles_per_pixel": [
+                -0.06257168457762335,
+                -0.03899309995647171
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07372704764940058,
+              "local_median_amplitude": 420.14417645573263,
+              "local_peak_to_median_ratio": 46.778265906764545,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-3",
+              "pixel_period": 13.563543256951919,
+              "refined": true,
+              "refined_bin_xy": [
+                55.99082437406421,
+                59.00888320557162
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 19653.616005424865,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                72,
+                69
+              ],
+              "conjugate_peak_ids": [
+                "peak-3"
+              ],
+              "frequency_cycles_per_pixel": [
+                0.06257168457762341,
+                0.03899309995647171
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07372704764940062,
+              "local_median_amplitude": 420.14417645573235,
+              "local_peak_to_median_ratio": 46.77826590676456,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-4",
+              "pixel_period": 13.563543256951911,
+              "refined": true,
+              "refined_bin_xy": [
+                72.0091756259358,
+                68.99111679442838
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 19653.616005424858,
+              "status": "hypothesized"
+            }
+          ],
+          "peak_quality": {
+            "detection_rect_xyxy": [
+              0,
+              0,
+              128,
+              128
+            ],
+            "display_selection_used": false,
+            "empty_reason": null,
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ],
+            "local_maxima_above_threshold": 4,
+            "numerical_contrast": {
+              "certified_fft_error_bound": false,
+              "comparison_bin_count": 16375,
+              "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+              "complete_fft_max_amplitude": 19967.688903252852,
+              "eligible_bin_count": 16355,
+              "individual_peak_resolution_established": false,
+              "nominal_operation_depth": 112,
+              "nominal_relative_fft_error": 1.2434497875801753e-14,
+              "normalization_scope": "complete FFT maximum including DC and excluded coefficients",
+              "normalized_amplitude_span": 0.9997785519734851,
+              "policy": "binary64_fft_normwise_neighborhood_contrast_v1",
+              "reason": null,
+              "relative_resolution_guard": 9.165622923037469e-14,
+              "scaled_complete_fft_l2_norm": 3.685562141143706,
+              "statistical_or_physical_validity": false,
+              "status": "resolved_amplitude_variation",
+              "unit_roundoff": 1.1102230246251565e-16
+            },
+            "returned_count": 4,
+            "selection_limit_reached": false,
+            "strongest_outside_dc_amplitude": 19967.688903252852,
+            "threshold_amplitude": 998.3844451626427
+          },
+          "calibration": null,
+          "source_ref": "image-A"
+        }
+      }
+    },
+    {
+      "id": "E",
+      "request": "前一次操作超时了，请继续把结果接回工作台。",
+      "observations": {
+        "operation": "image_spatial_atlas",
+        "request_id": "req-pending-01",
+        "transport": "timeout",
+        "outcome": "unknown",
+        "known_result_object_id": null,
+        "advertised_tools": {
+          "image_result": {
+            "request_id": "string"
+          },
+          "image_info": {
+            "object_id": "string"
+          },
+          "image_spatial_atlas": {
+            "request_id": "string",
+            "object_id": "string",
+            "rects": "array"
+          }
+        }
+      }
+    }
+  ]
+}

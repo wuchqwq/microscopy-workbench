@@ -75,7 +75,7 @@ try{
  const manual=await call('image_discovery',{object_id:calibration.object_id,entry:'manual',regions:[{rect,reason,candidate_explanations:['Image contrast variation is a candidate, not a confirmed material defect.'],unresolved:['Imaging/transfer contribution is unknown.']}]});
  boundedManual(manual);assert.equal(row(manual.parameters).entry,'manual');assert.equal(manual.full_structure_field_required,false);
  const candidate=rows(manual.candidates)[0]!;assert.deepEqual(candidate.rect,rect);assert.deepEqual(candidate.reasons,[reason]);
- assert.equal(candidate.entry_basis,'researcher_statement');assert.equal(candidate.score,null);
+ assert.equal(candidate.entry_basis,'explicit_caller_supplied_roi');assert.equal(candidate.selection_origin,'unspecified');assert.equal(candidate.selection_origin_basis,'caller_reported_not_authenticated');assert.equal(candidate.score,null);
  const context=row(manual.source_context);assert.equal(context.dtype,'float32');assert.deepEqual(context.shape_yx,[256,256]);
  assert.equal(row(context.xy_calibration).calibration_id,metric.calibration_id);
  assert.equal(row(row(manual.source_dependency).science).array_sha256,frameHash);

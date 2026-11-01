@@ -93,8 +93,15 @@ parameters and software versions are saved. Explicit inputs include voltage,
 RZXZ Euler angles, reciprocal cutoff and excitation-error cutoff; raster sampling,
 spot width and direct-beam choice remain visible. The supplied structure basis
 is retained. Work/atom/reflection/raster budgets are checked before simulation.
-Mixed/partial occupancy is retained for viewing but currently refused for
-simulation.
+New atom-model v2 snapshots retain canonical species fractions at every expanded
+site, including supported extXYZ occupancy arrays and CIF kind mappings. Exact
+conflicts, unknown fractions and unresolvable mappings are refused. Missing
+disorder metadata means a supplied ideal atom-list assumption, not measured full
+occupancy. Mixed/partial occupancy survives reload/repeat/rotation for viewing,
+but is refused for simulation and twin admission. Historical unversioned atom
+snapshots remain readable with unchanged requests/results; new qualified science
+requires explicitly reopening their original input and repeating derivations.
+See [occupancy repair evidence](SITE_OCCUPANCY_REPAIR.md).
 
 The tested engine's reciprocal-lattice enumeration can omit cancelling HKLs
 for some skew cells. A conservative analytic completeness check therefore

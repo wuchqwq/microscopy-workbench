@@ -21,11 +21,20 @@ export interface PanelScientificInput {
  readonly direct_input_object_id:string|null;
  readonly prepare_call:{tool:'image_calibrate';arguments:{object_id:string;calibration_object_id:string};request_id_required:true}|null;
 }
+export type PanelInteractionReason = 'draft_state_unknown'|'unsaved_draft'|'gesture_active'|
+ 'annotation_edit_pending'|'pending_result'|'draft_save_pending'|'draft_save_failed'|
+ 'draft_persistence_unknown'|'operation_unresolved';
+export interface PanelInteractionGate {
+ readonly status:'ready'|'blocked'|'unknown';
+ readonly reasons:readonly PanelInteractionReason[];
+ readonly requires_fresh_read:true;
+}
 export interface PanelRoiHandoff {
  readonly schema_version:1;readonly read_only:true;readonly source_view_object_id:string;
  readonly state_revision:number|null;readonly inspection_status:string;readonly coordinate_policy:string;
  readonly scientific_input:PanelScientificInput;readonly saved_rectangles:readonly PanelRoiRectangle[];
  readonly current_selection:PanelRoiRectangle|null;
+ readonly interaction_gate:PanelInteractionGate;
  readonly draft_state:{dirty:boolean|null;gesture_active:boolean|null;requires_user_commit:boolean};
  readonly support_pairs:readonly PanelRoiSupportPair[];
  readonly pair_inspection:PanelRoiPairInspection;
@@ -141,6 +150,27 @@ function supportPairs(rectangles:readonly PanelRoiRectangle[],inspection:string)
   eligible_rectangle_count:unique.length,ignored_ambiguous_id_count:ignored,meaning:PAIR_MEANING}};
 }
 
+/** Advisory snapshot only: no lock, approval, scientific admission or new runtime.
+ * Both entry routes still reread the Panel and use existing guarded commands. */
+function interactionGate(state:PanelRoiSnapshot):PanelInteractionGate {
+ const draft=slots(state.edit_state),reasons:PanelInteractionReason[]=[];
+ if(typeof draft?.dirty!=='boolean'||typeof draft?.gesture_active!=='boolean')reasons.push('draft_state_unknown');
+ if(draft?.dirty===true)reasons.push('unsaved_draft');
+ if(draft?.gesture_active===true)reasons.push('gesture_active');
+ if(draft?.annotation_edit!=null)reasons.push('annotation_edit_pending');
+ if(state.pending_result!=null)reasons.push('pending_result');
+ if(state.draft_persistence!==undefined){
+  const save=slots(state.draft_persistence);
+  if(!save||typeof save.pending!=='boolean'||save.error!==null&&typeof save.error!=='string')reasons.push('draft_persistence_unknown');
+  if(save?.pending===true)reasons.push('draft_save_pending');
+  if(typeof save?.error==='string')reasons.push('draft_save_failed');
+ }
+ if(slots(state.last_operation)?.state==='submitted')reasons.push('operation_unresolved');
+ const unknown=reasons.some(r=>r==='draft_state_unknown'||r==='draft_persistence_unknown');
+ const blocked=reasons.some(r=>r!=='draft_state_unknown'&&r!=='draft_persistence_unknown');
+ return {status:blocked?'blocked':unknown?'unknown':'ready',reasons,requires_fresh_read:true};
+}
+
 export function panelRoiHandoff(state:PanelRoiSnapshot):PanelRoiHandoff {
  const input=scientificInput(state),allMarks=state.object.annotations,marks:unknown[]=Array.isArray(allMarks)&&allMarks.length<=100?allMarks:[];
  const panels=spatialPanels(state.object.panels),draft=slots(state.edit_state);
@@ -149,7 +179,7 @@ export function panelRoiHandoff(state:PanelRoiSnapshot):PanelRoiHandoff {
  const rectangles=marks.filter(mark=>slots(mark)?.kind==='rectangle').map(mark=>handoffRectangle(mark,'saved_annotation',panels,input.frame_object_id));
  return {schema_version:1,read_only:true,source_view_object_id:state.object.object_id,state_revision:integer(state.state_revision)?state.state_revision:null,
   inspection_status:inspection,coordinate_policy:'Existing selectionRectangle: outward half-open integer source-pixel edges; preserved fractional anchors; no clamp, physical scale, frame or panel is inferred.',
-  scientific_input:input,saved_rectangles:rectangles,...supportPairs(rectangles,inspection),
+  scientific_input:input,saved_rectangles:rectangles,...supportPairs(rectangles,inspection),interaction_gate:interactionGate(state),
   current_selection:state.selection===null||state.selection===undefined?null:handoffRectangle(state.selection,'current_selection',panels,input.frame_object_id),
   draft_state:{dirty,gesture_active:gesture,requires_user_commit:dirty===true||gesture===true||draft?.annotation_edit!==null&&draft?.annotation_edit!==undefined}};
 }

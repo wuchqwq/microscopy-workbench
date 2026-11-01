@@ -12,7 +12,8 @@ import math
 import numpy as np
 
 
-VERSION = "general-crystal-qualification-v1"
+LEGACY_VERSION = "general-crystal-qualification-v1"
+VERSION = "general-crystal-qualification-v2"
 LIMITS = [
     "Qualification describes the supplied candidate model, not an identified experimental phase.",
     "Space-group declarations are not numerical point-group or motif verification.",
@@ -92,7 +93,7 @@ def _certificate(simulation):
             all(type(a) is int and type(b) is int and a >= b >= 0 for a, b in zip(observed, required)))
 
 
-def qualify_structure(atoms, *, source_provenance=None, source_bytes=None, simulation=None):
+def qualify_structure(atoms, *, source_provenance=None, source_bytes=None, simulation=None, policy_version=2):
     """Return stable, JSON-ready, separate source/site/cell/symmetry qualifications.
 
     ``source_bytes`` is optional hash-bound original CIF evidence; it is never
@@ -101,6 +102,8 @@ def qualify_structure(atoms, *, source_provenance=None, source_bytes=None, simul
     necessary; this helper cannot qualify an unexecuted numerical engine.
     Full ordered multi-element models need no FCC/diamond motif assumption.
     """
+    if type(policy_version) is not int or policy_version not in (1, 2):
+        raise ValueError("Unsupported crystal qualification version")
     source = _source(source_provenance)
     positions, cell, numbers = np.asarray(atoms.positions), np.asarray(atoms.cell.array), np.asarray(atoms.numbers)
     finite_positions = bool(positions.ndim == 2 and positions.shape[1:] == (3,) and np.isfinite(positions).all())
@@ -112,7 +115,16 @@ def qualify_structure(atoms, *, source_provenance=None, source_bytes=None, simul
     periodic = bool(np.all(atoms.pbc))
     valid_sites = 1 <= len(atoms) <= 4096 and finite_positions and bool(np.all(numbers > 0))
     geometry = finite_cell and rank == 3 and condition is not None and condition <= 1e6
-    occupancy = _occupancy(atoms)
+    if policy_version == 1:
+        # Historical general evidence is validated against its original policy.
+        occupancy = _occupancy(atoms)
+    else:
+        from crystallography.occupancy import assessment, OccupancyError
+        try:
+            occupancy = assessment(atoms)
+        except OccupancyError as error:
+            occupancy = {"status": "unqualified_or_legacy_occupancy", "qualified_ordered_model": False,
+                         "policy_version": 2, "reason": str(error), "code": error.code}
     reasons = []
     for admitted, reason in ((source["status"] == "hash_bound_candidate", "missing_hash_bound_structure_source"),
                              (valid_sites, "invalid_or_unknown_atomic_sites"),
@@ -129,7 +141,7 @@ def qualify_structure(atoms, *, source_provenance=None, source_bytes=None, simul
         if not _certificate(simulation):
             reasons.append("missing_or_invalid_existing_enumeration_certificate")
         status = "qualified_saved_kinematic_model" if not reasons else "unsupported_or_insufficient"
-    return {"qualification_version": VERSION, "source": source,
+    return {"qualification_version": LEGACY_VERSION if policy_version == 1 else VERSION, "source": source,
             "sites": {"status": "valid_candidate_sites" if valid_sites else "insufficient_evidence",
                       "atom_count": len(atoms), "elements": sorted(set(atoms.get_chemical_symbols())),
                       "finite_positions": finite_positions, "all_elements_known": bool(np.all(numbers > 0)),

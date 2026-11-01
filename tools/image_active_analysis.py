@@ -374,6 +374,8 @@ def _render(value, mapped, map_directory, directory, api):
 
 def action(workspace, name, request, metadata, directory, api):
     started = time.monotonic()
+    source, _ = workspace.object(request["object_id"])
+    api.peaks.require_current_observations(workspace, source, api)
     value, mapped, map_directory = result(workspace, request, api)
     computed = time.monotonic()
     api.write_new(directory/"analysis-candidates.json", api.canonical(value)+b"\n")

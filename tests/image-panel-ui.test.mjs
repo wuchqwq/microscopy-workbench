@@ -25,7 +25,7 @@ const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
 async function harness(initial=fixture()){
- const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
+ const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
  const canvasContexts=[],probeCalls=[],probeTimers=new Map();let probeTimerId=0;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
@@ -44,6 +44,7 @@ async function harness(initial=fixture()){
   getContext(){return this.context??=new Context(this);}
   getBoundingClientRect(){return {left:0,top:0,width:this.width,height:this.height};}
   setPointerCapture(){}
+  showModal(){this.open=true;}
  }
  const bodyClasses=new Set(),body={classList:{add:(...keys)=>keys.forEach(k=>bodyClasses.add(k)),remove:(...keys)=>keys.forEach(k=>bodyClasses.delete(k)),contains:key=>bodyClasses.has(key),toggle:(key,on)=>{const next=on??!bodyClasses.has(key);if(next)bodyClasses.add(key);else bodyClasses.delete(key);return next;}}};
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
@@ -55,16 +56,16 @@ async function harness(initial=fixture()){
   document:{body,getElementById:$,createElement:tag=>new Element(tag),querySelectorAll:()=>[],addEventListener(){}},
   sessionStorage:{getItem:()=> 'synthetic-token',setItem(){}},location:{hash:'',pathname:'/'},history:{replaceState(){}},
   Option:class{constructor(text,value){this.text=text;this.value=value;}},
-  Image:class{constructor(){this.width=128;this.height=96;}async decode(){}},
+  Image:class{constructor(){this.width=128;this.height=96;}async decode(){if(waitDecode)await waitDecode;}},
   ImageData:class{constructor(data,width,height){this.data=data;this.width=width;this.height=height;}},
   requestAnimationFrame:fn=>{frames.set(++frameId,fn);return frameId;},cancelAnimationFrame:id=>frames.delete(id),
   fetch:async(url,options)=>{
-   if(!options.body){getCalls.push(url);if(url.startsWith('/api/measurements?'))return {ok:true,json:async()=>({current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false})};if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
+   if(!options.body){getCalls.push(url);if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/measurements?'))return {ok:true,json:async()=>({current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false})};if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
    if(options.body){const body=JSON.parse(options.body);
     if(url==='/api/probe'){probeCalls.push(body);return {ok:true,json:async()=>({object_id:body.expected_object_id,kind:'probe',component:body.component,coordinate_space:body.coordinate_space,samples:[{point:body.coordinates,array_index_xy:body.coordinates,value:17}]})};}
-    if(body.action==='draft'){draftCalls.push(body);if(body.params.selection)server.selection=copy(body.params.selection);server.edit_state={...copy(body.params),base_object_id:server.object.object_id};return {ok:true,json:async()=>body.lightweight?{object_id:server.object.object_id,edit_state:copy(server.edit_state)}:copy(server)};}
+    if(body.action==='draft'){draftCalls.push(body);if(waitDraft)await waitDraft;if(draftFailure){const error=draftFailure;draftFailure=null;return {ok:false,json:async()=>({error})};}if(body.params.selection)server.selection=copy(body.params.selection);server.edit_state={...copy(body.params),base_object_id:server.object.object_id};return {ok:true,json:async()=>body.lightweight?{object_id:server.object.object_id,edit_state:copy(server.edit_state)}:copy(server)};}
     calls.push(body);assert.equal(body.expected_object_id,server.object.object_id);if(waitAction)await waitAction;if(body.action==='measure'&&waitMeasurement)await waitMeasurement;
-    if(actionFailure){const error=actionFailure;actionFailure=null;return {ok:false,json:async()=>({error})};}
+    if(actionFailure){server.last_operation={state:'submitted',request_id:'controlled-lost-request'};const error=actionFailure;actionFailure=null;return {ok:false,json:async()=>({error})};}
     if(['edit','edit-layout'].includes(body.action)&&body.params.auto_commit){
      const result=nextActionResult?copy(nextActionResult):copy(server);nextActionResult=null;
      for(const update of body.params.updates){const mark=result.object.annotations.find(m=>m.annotation_id===update.annotation_id);assert.ok(mark,'autosave must update an existing stable mark');for(const [field,value]of Object.entries(update)){if(field==='coordinates')mark.anchor.coordinates=copy(value);else if(!['annotation_id','presentation_replace'].includes(field))mark[field]=copy(value);}}
@@ -82,7 +83,7 @@ async function harness(initial=fixture()){
  const renderSource=readFileSync(new URL('../ui/image-panel/viewer-render.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
  const script=renderSource+'\n'+source.replace(/^import .*from '\.\/[^']+\.mjs';\r?\n/gm,'')
   .replace('refresh().then(','globalThis.ready=refresh().then(')
-  +'\nglobalThis.pollUI=pollRevision;globalThis.finishSaves=async()=>{do{if(autoSaving)await autoSaving;await Promise.resolve();}while(autoSaving);};globalThis.inspect=()=>({draft,drag,editCoordinates,state,pending,dirty:dirty(),view,draftRevision:historyDraft.revision,queuedEdits:[...queuedEdits],autoFailed,busy});';
+  +'\nglobalThis.selectMeasurementUI=selectMeasurement;globalThis.pollUI=pollRevision;globalThis.finishSaves=async()=>{do{if(autoSaving)await autoSaving;await Promise.resolve();}while(autoSaving);};globalThis.inspect=()=>({draft,drag,editCoordinates,state,pending,dirty:dirty(),view,draftRevision:historyDraft.revision,queuedEdits:[...queuedEdits],autoFailed,busy});';
  vm.runInNewContext(script,sandbox,{filename:'ui/image-panel/app.mjs'});await sandbox.ready;
  const flush=()=>{for(const [id,callback] of [...frames]){frames.delete(id);callback();}};
  const event=(type,x=10,y=10,extra={})=>{$('canvas').listeners[type]?.({clientX:x,clientY:y,pointerId:1,button:0,...extra});};
@@ -90,8 +91,9 @@ async function harness(initial=fixture()){
  const draw=(kind='line')=>{$('mode').value=kind;event('pointerdown',10,10);event('pointermove',40,35);event('pointerup',40,35);flush();};
  return {$,bodyClasses,calls,draftCalls,getCalls,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},
-  delayAction(promise){waitAction=promise;},
+  delayAction(promise){waitAction=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
+  failDraft(message='Controlled draft delivery failure'){draftFailure=message;},
   actionResult(value){nextActionResult=copy(value);},
   measureResponse(value){measurementResponse=typeof value==='function'?value:copy(value);},delayMeasurement(promise){waitMeasurement=promise;},
   recoverResponse(value){recoveryResponse=copy(value);},
@@ -624,4 +626,115 @@ test('display settings replace the evidence sidebar without losing the observati
  assert.equal(h.bodyClasses.has('research-open'),false);assert.equal(h.bodyClasses.has('properties-open'),true);assert.equal(h.$('research-panel').hidden,true);assert.equal(h.$('settings-panel').open,true);
  await h.click('toggle-research');assert.equal(h.bodyClasses.has('properties-open'),false);assert.equal(h.bodyClasses.has('research-open'),true);
  assert.equal(h.$('roi-reason').value,'Still being written');assert.equal(h.$('gamma').value,'1.4');assert.equal(h.inspect().dirty,true);assert.deepEqual(h.inspect().state.object,before.state.object);assert.equal(h.calls.length,0);
+});
+
+
+function handoffFixture(){
+ const s=fixture();s.panel_id='c'.repeat(32);s.state_revision=1;
+ s.frame_identity={frame_object_id:sourceId,frame_index:0};
+ s.edit_state={draft_revision:0,dirty:false,gesture_active:false,annotation_edit:null};
+ s.object.annotations=[{annotation_id:'saved-roi',kind:'rectangle',text:'ROI',note:'look here',status:'hypothesized',anchor:{source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:[30,20,50,40]}}];
+ return s;
+}
+
+test('Agent handoff confirms its draft delivery and rereads current state without science',async()=>{
+ const h=await harness(handoffFixture()),reads=h.getCalls.length,posts=h.draftCalls.length;
+ await h.click('agent-continue');
+ assert.equal(h.$('agent-handoff-dialog').open,true,String(h.$('message').textContent));
+ assert.ok(h.draftCalls.length>posts,'Explicit current handoff acknowledgement is required');
+ assert.equal(h.draftCalls.at(-1).params.confirm_persistence,true);
+ assert.ok(h.getCalls.slice(reads).includes('/api/state'),'Old browser snapshot is not a fresh handoff');
+ assert.deepEqual(h.calls,[]);assert.match(h.$('agent-prompt').value,/image_panel_current/);
+});
+
+test('failed draft delivery cannot silently produce a continuation prompt; explicit retry can',async()=>{
+ const h=await harness(handoffFixture()),reads=h.getCalls.length;h.failDraft();
+ await h.click('agent-continue');
+ assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/交接.*保存|保存.*确认/);
+ assert.deepEqual(h.getCalls.slice(reads),[]);assert.deepEqual(h.calls,[]);
+ await h.click('agent-continue');assert.equal(h.$('agent-handoff-dialog').open,true,String(h.$('message').textContent));assert.deepEqual(h.calls,[]);
+});
+
+test('result queued after last browser load blocks handoff instead of using stale local readiness',async()=>{
+ const h=await harness(handoffFixture()),server=h.server();server.pending_result={object_id:'d'.repeat(32),request_id:'already-computed'};h.setServer(server);
+ await h.click('agent-continue');assert.notEqual(h.$('agent-handoff-dialog').open,true);
+ assert.match(h.$('message').textContent,/待接纳/);assert.equal(h.server().pending_result.request_id,'already-computed');assert.deepEqual(h.calls,[]);
+});
+
+test('changed current view is refused during handoff, not silently adopted',async()=>{
+ const h=await harness(handoffFixture()),server=h.server();server.object.object_id='d'.repeat(32);h.setServer(server);
+ await h.click('agent-continue');assert.notEqual(h.$('agent-handoff-dialog').open,true);
+ assert.match(h.$('message').textContent,/改变|变化/);assert.equal(h.inspect().state.object.object_id,viewId);assert.deepEqual(h.calls,[]);
+});
+
+
+test('measurement selection during a delayed handoff read invalidates the old prompt and publishes new selection',async()=>{
+ const s=handoffFixture();s.object.annotations.push({annotation_id:'point-b',kind:'point',anchor:{source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:[70,60]}});
+ const h=await harness(s);let release;h.delayState(new Promise(resolve=>release=resolve));
+ const handing=h.click('agent-continue');await h.settle();
+ const revision=h.inspect().draftRevision;
+ h.selectMeasurement({object_id:'e'.repeat(32),annotation_id:'point-b',same_grid:true,visible_in_current_view:true,annotation_matches_current:true});
+ await h.settle();release();await handing;
+ assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/版本已改变/);
+ assert.ok(h.inspect().draftRevision>revision);assert.deepEqual(h.server().selection.coordinates,[70,60]);
+ assert.deepEqual(h.calls,[]);
+});
+
+test('an action with lost response during a delayed handoff read invalidates its earlier ready snapshot',async()=>{
+ const h=await harness(handoffFixture());h.draw('rectangle');await h.settle();
+ let release;h.delayState(new Promise(resolve=>release=resolve));
+ const handing=h.click('agent-continue');await h.settle();
+ h.failAction();await h.click('fft');assert.equal(h.inspect().busy,false);
+ release();await handing;
+ assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/版本已改变/);
+ assert.equal(h.server().last_operation.request_id,'controlled-lost-request');assert.equal(h.calls.length,1);
+});
+
+test('selection changed while draft confirmation is in flight requires a new handoff',async()=>{
+ const h=await harness(handoffFixture());let release;h.delayDraft(new Promise(resolve=>release=resolve));
+ const handing=h.click('agent-continue');await h.settle();h.draw('rectangle');release();await handing;
+ assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/版本已改变/);assert.deepEqual(h.calls,[]);
+});
+
+
+test('a stale AI view read cannot clear a human ROI drawn while refresh was waiting',async()=>{
+ const h=await harness(handoffFixture()),next=h.server();next.object.object_id='d'.repeat(32);
+ next.object.panels=[{domain:'frequency',source_object_id:'e'.repeat(32),fft_shape_yx:[32,32],image_rect_xyxy:[0,0,32,32]}];next.selection=null;next.state_revision=2;h.setServer(next);
+ let release;h.delayState(new Promise(resolve=>release=resolve));const refreshing=h.click('reload');await h.settle();
+ h.draw('rectangle');const human=h.inspect();assert.ok(human.draft);assert.equal(human.dirty,false);
+ release();await refreshing;
+ assert.equal(h.inspect().state.object.object_id,viewId);assert.deepEqual(h.inspect().draft,human.draft);
+ assert.equal(h.inspect().pending.object.object_id,next.object.object_id,'late view is retained for explicit acceptance');
+});
+
+
+for(const button of ['accept-agent-result','discard-local','discard-draft'])test(`${button} cannot authorize overwriting edits made during its state read`,async()=>{
+ const h=await harness(handoffFixture());
+ if(button==='accept-agent-result'){
+  h.$('gamma').value='1.9';h.$('gamma').oninput();const next=h.server();next.object.object_id='d'.repeat(32);next.state_revision=2;h.setServer(next);
+  await h.click('reload');assert.ok(h.inspect().pending);h.$('gamma').value='1';h.$('gamma').oninput();await h.settle();
+ }
+ let release;h.delayState(new Promise(resolve=>release=resolve));const reading=h.click(button);await h.settle();
+ h.draw('rectangle');const human=h.inspect().draft;release();await reading;
+ assert.equal(h.inspect().state.object.object_id,viewId);assert.deepEqual(h.inspect().draft,human);assert.deepEqual(h.calls,[]);
+ assert.match(h.$('message').textContent,/读取期间有新操作/);
+ if(button==='accept-agent-result')assert.ok(h.inspect().pending,'explicit acceptance must not clear the notice before a successful read');
+});
+
+test('discarding toward a cached pending view stops after a newer edit during image decoding',async()=>{
+ const h=await harness(handoffFixture());h.$('gamma').value='1.9';h.$('gamma').oninput();
+ const next=h.server();next.object.object_id='d'.repeat(32);next.object.panels=[{domain:'frequency',source_object_id:'e'.repeat(32),fft_shape_yx:[32,32],image_rect_xyxy:[0,0,32,32]}];next.selection=null;next.state_revision=2;h.setServer(next);await h.click('reload');
+ let release;h.delayDecode(new Promise(resolve=>release=resolve));const reading=h.click('discard-draft');await h.settle();h.draw('rectangle');const human=h.inspect().draft;release();await reading;
+ assert.equal(h.inspect().state.object.object_id,viewId);assert.deepEqual(h.inspect().draft,human);assert.ok(h.inspect().pending);assert.deepEqual(h.calls,[]);
+});
+
+
+test('cancelled mark selection invalidates an in-flight handoff and publishes its retained selection',async()=>{
+ for(const ending of ['pointercancel','lostpointercapture']){
+  const s=handoffFixture();s.object.annotations.push({annotation_id:'point-b',kind:'point',anchor:{source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:[70,60]}});
+  const h=await harness(s);let release;h.delayState(new Promise(resolve=>release=resolve));const handing=h.click('agent-continue');await h.settle();
+  h.$('mode').value='select';h.event('pointerdown',50,48);h.event(ending,50,48);await h.settle();release();await handing;
+  assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/版本已改变/);
+  assert.deepEqual(h.inspect().draft.coordinates,[70,60]);assert.deepEqual(h.server().selection.coordinates,[70,60]);assert.deepEqual(h.calls,[]);
+ }
 });

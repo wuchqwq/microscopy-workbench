@@ -1,0 +1,110 @@
+[
+  {
+    "request": {
+      "action": "open",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/workspace",
+      "request_id": "independent-audit-1",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/dft-33.tiff"
+    },
+    "response": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-image-workspace",
+      "request_id": "independent-audit-1",
+      "error": {
+        "code": "UNSUPPORTED_LAYOUT",
+        "message": "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported"
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/workspace",
+      "request_id": "independent-audit-2",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/metric.tiff"
+    },
+    "response": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-image-workspace",
+      "request_id": "independent-audit-2",
+      "error": {
+        "code": "UNSUPPORTED_LAYOUT",
+        "message": "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported"
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/workspace",
+      "request_id": "independent-audit-3",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/aliased-grating.tiff"
+    },
+    "response": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-image-workspace",
+      "request_id": "independent-audit-3",
+      "error": {
+        "code": "UNSUPPORTED_LAYOUT",
+        "message": "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported"
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/workspace",
+      "request_id": "independent-audit-4",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/same-periods.tiff"
+    },
+    "response": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-image-workspace",
+      "request_id": "independent-audit-4",
+      "error": {
+        "code": "UNSUPPORTED_LAYOUT",
+        "message": "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported"
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/workspace",
+      "request_id": "independent-audit-5",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/contrast-only-change.tiff"
+    },
+    "response": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-image-workspace",
+      "request_id": "independent-audit-5",
+      "error": {
+        "code": "UNSUPPORTED_LAYOUT",
+        "message": "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported"
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/workspace",
+      "request_id": "independent-audit-6",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/declared-reciprocal.tiff"
+    },
+    "response": {
+      "ok": false,
+      "state": "failed",
+      "backend": "external-image-workspace",
+      "request_id": "independent-audit-6",
+      "error": {
+        "code": "UNSUPPORTED_LAYOUT",
+        "message": "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported"
+      }
+    }
+  }
+]

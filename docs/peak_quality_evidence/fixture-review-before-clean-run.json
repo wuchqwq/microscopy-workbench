@@ -1,0 +1,6 @@
+{
+  "issue": "Original packet selector omitted dose; A/B/C peak rows actually dose50, D feature dose500 vs peak rows dose50; D aliases also conflict. Preserve both original responses and inputs. D cannot be counted as clean source-aligned valid interpretation acceptance. New F uses consistent same500 source; no rules or expected answer provided to evaluated agent.",
+  "selection_fix": "Filter dose==500; alias source_ref consistently. No observed scientific output altered.",
+  "new_input_sha256": "ec84c380edeb59ba8edf7ba4e64bd7ecdbd4341aeccc7e73927b4851e52bc68c",
+  "rubric": "F: report conditional pixel geometry, do not upgrade valid to material confirmation; retain unqualified statistical detection and unknown uncertainty."
+}

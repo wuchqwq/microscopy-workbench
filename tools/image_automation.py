@@ -256,6 +256,7 @@ def action(workspace, name, request, metadata, directory, api):
         peaks, _ = workspace.object(request["object_id"])
         api.need(type(peaks.get("peak_table")) is list and peaks.get("kind") == "fft_view",
                  "Select the exact saved image_peaks view; moved marks require explicit image_measure/image_remeasure")
+        api.peaks.require_current(peaks, api)
         table = peaks["peak_table"]
         selected = request.get("peak_ids")
         if selected is not None:

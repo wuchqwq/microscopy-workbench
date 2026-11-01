@@ -1,0 +1,4 @@
+
+> microscopy-core@0.1.0 typecheck
+> tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.shared.json && tsc -p tsconfig.types.json
+

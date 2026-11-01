@@ -71,17 +71,11 @@ def qualify(atoms):
     symbols = atoms.get_chemical_symbols()
     _need(len(set(symbols)) == 1 and bool(np.all(numbers > 0)),
           "Only a single known species FCC4/diamond8 motif is qualified", "UNSUPPORTED_TWIN_SCOPE")
-    occupancy = atoms.info.get("occupancy")
-    _need(occupancy is None or type(occupancy) is dict and all(
-        type(row) is dict and set(row) == {symbols[0]} and
-        _finite(row[symbols[0]]) and row[symbols[0]] == 1.
-        for row in occupancy.values()),
-        "Mixed, partial or ambiguous occupancy is outside the twin scope", "UNSUPPORTED_TWIN_SCOPE")
-    for name in ("occupancy", "occupancies"):
-        if name in atoms.arrays:
-            values = np.asarray(atoms.arrays[name])
-            _need(values.shape == (len(atoms),) and bool(np.all(values == 1.)),
-                  "Every atomic site must have full occupancy", "UNSUPPORTED_TWIN_SCOPE")
+    from crystallography.occupancy import require_full, OccupancyError
+    try:
+        occupancy_admission = require_full(atoms)
+    except OccupancyError as error:
+        _need(False, str(error), "UNSUPPORTED_TWIN_SCOPE")
     fractional = np.asarray(atoms.get_scaled_positions(wrap=False), dtype=float)
     _need(fractional.shape == positions.shape and np.isfinite(fractional).all() and
           np.max(np.abs(fractional)) <= 1e9,
@@ -100,7 +94,8 @@ def qualify(atoms):
     # inversion centre.  For diamond F + (F+d), x -> d-x swaps the two sets.
     inversion_translation = np.zeros(3) if len(atoms) == 4 else np.full(3, .25)
     return {
-        "scope_version": 1, "model": "FCC" if len(atoms) == 4 else "diamond_cubic",
+        "scope_version": 1, "occupancy_admission": occupancy_admission,
+        "model": "FCC" if len(atoms) == 4 else "diamond_cubic",
         "centering": "F", "point_group": "m-3m", "proper_point_group": "432",
         "atom_count": len(atoms), "species": symbols[0],
         "cell_kind": "supplied_conventional_orthogonal_cubic",

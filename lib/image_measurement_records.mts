@@ -1,3 +1,4 @@
+import {projectResultSemantics} from '../ui/image-panel/result-semantics.mjs';
 // Bounded, rebuildable metadata view of the existing image provider journal.
 // No pixels, scientific computation or independent measurement authority lives here.
 import {createHash} from 'node:crypto';
@@ -159,7 +160,8 @@ export function readImageMeasurements({workspace,objectId,limit=256}:Measurement
   const selectedMark=marks.find(mark=>mark.annotation_id===annotationId),matched=!!selectedMark&&anchorMatches(selectedMark,measure);
   const calibrationChanged=sameGrid&&!same((measure.xy_calibration as Metadata|undefined)?.calibration_id,(current.record as Metadata|undefined)?.calibration_id);
   const geometryChanged=sameGrid&&!!annotationId&&!!selectedMark&&!matched;
-  records.push({...measure,measurement_object_id:measure.object_id,measurement_manifest_sha256:record.manifest_sha256,
+  const {result_semantics:omittedSemantics,...boundedMeasure}=measure;
+  records.push({...boundedMeasure,...projectResultSemantics(measure),measurement_object_id:measure.object_id,measurement_manifest_sha256:record.manifest_sha256,
    input_object_id:measure.parent_object_id,annotation_id:annotationId,name:link?.name??(typeof inferred?.text==='string'?inferred.text:null),
    measurement_kind:typeof measure.dc_reference_point_index==='number'?'dc_to_peak':'two_point',
    previous_measurement_object_id:(measure.remeasurement as Metadata|undefined)?.previous_measurement_object_id??null,

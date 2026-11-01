@@ -48,3 +48,56 @@ test('pending observation save locks only its text input so a late acknowledgeme
  ui.render(s);assert.equal(nodes.get('roi-reason').disabled,false);assert.equal(nodes.get('roi-reason').value,'Submitted reason');
  ui.render(s,{gesture:true});assert.equal(nodes.get('roi-reason').disabled,true);
 });
+
+test('shared research workspace renders saved GPA evidence and clears it on non-GPA navigation',()=>{
+ const {ui,nodes,actions}=setup(),s=state();s.object.kind='gpa_view';s.object.material_strain_verified=false;
+ s.object.interpretation_status='hypothesized';s.object.evidence_assessment={semantics_version:1,
+  numerical_field_status:'computed_conditional',material_strain_status:'insufficient_evidence',material_strain_validated:null,
+  reason_codes:['band_limited_field_cannot_exclude_out_of_band_deformation'],
+  spatial_transfer:{model:'small phase, isolated carrier, 1D interior derivative',frequency_unit:'cycles/pixel',
+   aperture_sigma_cycles_per_pixel:[.012,.012],aperture_cutoff_cycles_per_pixel:[.036,.036],
+   nominal_untruncated_gaussian_real_space_fwhm_pixels:[31,31],response_samples:[{modulation_period_pixels:32,
+    phase_gain_per_reflection:[.03,.03],central_difference_gain_1d:.99,first_order_strain_gain_1d_per_reflection:[.0297,.0297]}],
+   scope:'analytic approximation, not measured resolution'}};
+ const before=structuredClone(s);ui.render(s);
+ assert.equal(nodes.get('gpa-evidence').hidden,false);assert.match(text(nodes.get('gpa-evidence')),/材料应变未验证/);
+ assert.match(text(nodes.get('gpa-evidence')),/带宽之外/);assert.deepEqual(s,before);assert.deepEqual(actions,[]);
+ const detail=nodes.get('gpa-evidence').children.find(n=>n.tagName==='DETAILS');detail.open=true;
+ ui.render(structuredClone(s));assert.equal(nodes.get('gpa-evidence').children.find(n=>n.tagName==='DETAILS'),detail);
+ assert.equal(detail.open,true);
+ ui.render(state());assert.equal(nodes.get('gpa-evidence').hidden,true);assert.equal(nodes.get('gpa-evidence').children.length,0);
+});
+
+test('old last operation semantics cannot attach to the current scientific object',()=>{
+ const {ui,nodes}=setup(),s=state();s.last_operation={kind:'measure',object_id:E,result_semantics:{version:99,note:'OLD_MEASURE_ONLY'}};
+ ui.render(s);assert.equal(nodes.get('result-semantics').hidden,true);assert.doesNotMatch(text(nodes.get('result-semantics')),/OLD_MEASURE_ONLY/);
+ s.object.kind='fft';ui.render(s);assert.match(text(nodes.get('result-semantics')),/未记录/);assert.doesNotMatch(text(nodes.get('result-semantics')),/OLD_MEASURE_ONLY/);
+});
+
+
+for (const [name, patch, message] of [
+ ['queued Agent result', {pending_result:{object_id:E,request_id:'already-computed'}}, /待接纳/],
+ ['draft persistence pending', {draft_persistence:{pending:true,error:null}}, /保存/],
+ ['draft persistence failed', {draft_persistence:{pending:false,error:'private-disk-error'}}, /保存/],
+ ['scientific outcome unresolved', {last_operation:{state:'submitted',request_id:'original-write'}}, /原请求/],
+ ['missing draft state', {edit_state:null}, /状态/],
+]) {
+ test(`handoff blocks ${name} without accepting results or replaying a scientific request`,()=>{
+  const {ui,nodes,actions}=setup(),s={...state(),...patch},before=structuredClone(s);
+  ui.render(s);
+  assert.equal(nodes.get('agent-continue').disabled,true);
+  assert.match(nodes.get('observation-draft-state').textContent,message);
+  assert.throws(()=>agentContinuationText(roiObservationModel(s),P),message);
+  assert.throws(()=>ui.showHandoff(s),message);
+  assert.deepEqual(actions,[]);assert.deepEqual(s,before);
+  assert.doesNotMatch(nodes.get('observation-draft-state').textContent,/private-disk-error/);
+ });
+}
+
+test('resolved handoff re-enables the existing button, without inventing model wake or permission',()=>{
+ const {ui,nodes}=setup(),s=state();s.pending_result={object_id:E,request_id:'saved-result'};
+ ui.render(s);assert.equal(nodes.get('agent-continue').disabled,true);
+ s.pending_result=null;s.draft_persistence={pending:false,error:null};
+ ui.render(s);assert.equal(nodes.get('agent-continue').disabled,false);
+ assert.match(agentContinuationText(roiObservationModel(s),P),/image_panel_current/);
+});

@@ -1,0 +1,68 @@
+[
+  {
+    "kind": "gpa",
+    "object_id": "f2b8c6f905f9422d987ad0f297188903",
+    "request_id": "round2-gpa-5",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "kind": "gpa_read",
+    "object_id": "ce13e2a2517148b199f29b264e8551f6",
+    "request_id": "round2-gpa-6",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "kind": "gpa",
+    "object_id": "b9fa128211934a359f84e41811e1466d",
+    "request_id": "round2-gpa-10",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "kind": "gpa",
+    "object_id": "9b1d272ea228441084581d8528359c34",
+    "request_id": "round2-gpa-14",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "kind": "gpa",
+    "object_id": "a1361db29a8f4bf6adcb3b7af8e2e56e",
+    "request_id": "round2-gpa-18",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "kind": "gpa",
+    "object_id": "2e0b6e6aeb38480f8093bd6cbeeae830",
+    "request_id": "round2-gpa-22",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+    "original_files": 172,
+    "unchanged": true
+  },
+  {
+    "kind": "local_signature_compare",
+    "object_id": "263f0babca5d4c228e1cd2192d64358a",
+    "request_id": "round2-gpa-4",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "kind": "local_signature_compare",
+    "object_id": "add568d57d7948018b10eb07dc4953b9",
+    "request_id": "round2-gpa-5",
+    "exact_recovery": true,
+    "no_new_semantics_injected": true
+  },
+  {
+    "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+    "original_files": 85,
+    "unchanged": true
+  }
+]

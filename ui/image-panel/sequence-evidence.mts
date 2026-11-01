@@ -1,3 +1,4 @@
+import {renderResultSemantics} from './result-semantics.mjs';
 import type {BrowserElement} from './browser-ports.mjs';
 import type {CorrespondenceFrame,SequenceEvidence,EvidenceNavigation} from './evidence-contracts.mjs';
 // Read-only projection of authoritative saved joint observations. Navigation uses
@@ -37,5 +38,5 @@ export function renderSequenceEvidence(container: BrowserElement|null|undefined,
     const tr=make('tr');tr.title=`保存测量：${row.measurement_object_id??'未匹配'}；参考：${row.reference_measurement_object_id??'无'}`;
     for(const text of [String(row.frame_index+1),row.status,basisText(frames.get(row.frame_index)??{frame_index:row.frame_index}),row.frequency_cycles_per_pixel?.map(format).join(' / ')??'—',format(row.residual_cycles_per_pixel),Number.isFinite(row.d_spacing)?`${format(row.d_spacing)} ${row.d_spacing_unit}`:'—'])tr.append(make('td',text));body.append(tr);
   }
-  table.append(body);scroll.append(table);container.replaceChildren(summary,note,navigation,scroll);
+  table.append(body);scroll.append(table);const semantics=make('section');renderResultSemantics(semantics,{kind:'joint_observations',...evidence},doc);container.replaceChildren(summary,note,navigation,scroll,semantics);
 }

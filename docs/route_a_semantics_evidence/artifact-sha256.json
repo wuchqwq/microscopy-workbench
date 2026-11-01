@@ -1,0 +1,17 @@
+{
+  "selection-origin-hashes.json": "943edd98b685cfa98b246c3570f00dd3737190f7ae4d2de1a5483cd6efc955b4",
+  "science-smoke.log": "be98da5f1ddc36067242c101ea0c3e1013f6353a0fe00f834b59cdcdf16a4f7b",
+  "projection-regression.log": "a840ebeb87ff361745cad8b614188829efb06c1c62177e6e051433dcb46127c0",
+  "astra-review.md": "3c20f9bc80498117ff9a6a12fd9d31cad22378d99bb0d585b1931e86438280e6",
+  "typecheck.log": "b54b24bb36861baaaf4cfc103c61a4a141ff5bc40af5f6c99df559b33391cc2a",
+  "astra-original-failures.json": "1def40153d1f395955a8a7be5434bfb155d1a67434b604db0010e398f3a56825",
+  "selection-origin-reproduce.py": "8d3b7dae5abd9b56c3f1f58c040ec8a3d6367e4301af75fe7d324c686e959a5c",
+  "selection-origin-original.tar.gz": "cfe0f3d79aa16bd28d169e54af08b2b9436c7fd674947acfa02abc3e36933ef2",
+  "mcp-run2.tar.gz": "e6bccb9d81f5e712e4712b180f8de33a59f300c1a6400f598458778391f3d75d",
+  "review-failures.tar.gz": "a978a69943968bf31024e76381a5004ca48a765a1200f004ef480bba0d45e6fc",
+  "selection-origin-README.md": "50583a78a0dcfb7bfc7b11e2d98a5894bea28caf4b91eea279f481c4a0b62fd3",
+  "node-tests.log": "7448e83b6b4faf62dc26c745f10c37477faa008860d28faaea226cb6ee6576ad",
+  "python-regression.log": "262eb0838b08e43f24151308158227d6c554ab9e1f9bb022ec37bf565738b056",
+  "mcp-acceptance.json": "5ac26baad7aa48d0b44424c38f496402f180a811c4bfac9a14b49418dccf244f",
+  "discovery-mcp.log": "2723022a60893e1122fdfadcd1b2070dbb0471f6e027e5190b1947603751b601"
+}

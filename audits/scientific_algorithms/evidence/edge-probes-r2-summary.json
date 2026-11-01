@@ -1,0 +1,327 @@
+{
+  "source_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "git_tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "python": "3.13.18",
+  "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "versions": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "tifffile": "2026.10.15",
+    "scikit-image": "0.26.0"
+  },
+  "cases": [
+    {
+      "probe": "shifted_impulse",
+      "execution": "PASS",
+      "classification": "numerical_error",
+      "finding": "A03",
+      "results": [
+        {
+          "shape": 64,
+          "position_xy": [
+            0,
+            0
+          ],
+          "expected_peak_count": 0,
+          "amplitude_peak_to_peak": 0.0,
+          "returned_peaks": 0,
+          "quality": {
+            "local_maxima_above_threshold": 0,
+            "returned_count": 0,
+            "selection_limit_reached": false,
+            "detection_rect_xyxy": [
+              0,
+              0,
+              64,
+              64
+            ],
+            "display_selection_used": false,
+            "threshold_amplitude": 1.0,
+            "strongest_outside_dc_amplitude": 1.0,
+            "empty_reason": "No localized maximum passes the explicit DC/relative-amplitude filters",
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ]
+          },
+          "peak_vectors": [],
+          "fft_id": "1351a1f4b52d480387d24e00ba4d1f5f",
+          "peaks_id": "7b9a5a639c4d428eaeba6aaf2dfa2da4"
+        },
+        {
+          "shape": 64,
+          "position_xy": [
+            25,
+            20
+          ],
+          "expected_peak_count": 0,
+          "amplitude_peak_to_peak": 4.440892098500626e-16,
+          "returned_peaks": 12,
+          "quality": {
+            "local_maxima_above_threshold": 1240,
+            "returned_count": 12,
+            "selection_limit_reached": true,
+            "detection_rect_xyxy": [
+              0,
+              0,
+              64,
+              64
+            ],
+            "display_selection_used": false,
+            "threshold_amplitude": 1.0000000000000002,
+            "strongest_outside_dc_amplitude": 1.0000000000000002,
+            "empty_reason": null,
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ]
+          },
+          "peak_vectors": [
+            [
+              -0.484375,
+              -0.5
+            ],
+            [
+              -0.375,
+              -0.5
+            ],
+            [
+              -0.328125,
+              -0.5
+            ],
+            [
+              -0.28125,
+              -0.5
+            ],
+            [
+              -0.234375,
+              -0.5
+            ],
+            [
+              -0.125,
+              -0.5
+            ],
+            [
+              -0.078125,
+              -0.5
+            ],
+            [
+              -0.03125,
+              -0.5
+            ],
+            [
+              0.015625,
+              -0.5
+            ],
+            [
+              0.125,
+              -0.5
+            ],
+            [
+              0.171875,
+              -0.5
+            ],
+            [
+              0.21875,
+              -0.5
+            ]
+          ],
+          "fft_id": "983c6699f5724e2b87526e6c06fb06d8",
+          "peaks_id": "9b9e6df8689a4b2ba0d250fdcba30234"
+        },
+        {
+          "shape": 63,
+          "position_xy": [
+            0,
+            0
+          ],
+          "expected_peak_count": 0,
+          "amplitude_peak_to_peak": 0.0,
+          "returned_peaks": 0,
+          "quality": {
+            "local_maxima_above_threshold": 0,
+            "returned_count": 0,
+            "selection_limit_reached": false,
+            "detection_rect_xyxy": [
+              0,
+              0,
+              63,
+              63
+            ],
+            "display_selection_used": false,
+            "threshold_amplitude": 1.0,
+            "strongest_outside_dc_amplitude": 1.0,
+            "empty_reason": "No localized maximum passes the explicit DC/relative-amplitude filters",
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ]
+          },
+          "peak_vectors": [],
+          "fft_id": "013a738223db48a8a2f6dde23bfd3291",
+          "peaks_id": "bc0f34e74ff44289b7330ea71acef0d5"
+        },
+        {
+          "shape": 63,
+          "position_xy": [
+            25,
+            20
+          ],
+          "expected_peak_count": 0,
+          "amplitude_peak_to_peak": 1.1102230246251565e-15,
+          "returned_peaks": 4,
+          "quality": {
+            "local_maxima_above_threshold": 4,
+            "returned_count": 4,
+            "selection_limit_reached": false,
+            "detection_rect_xyxy": [
+              0,
+              0,
+              63,
+              63
+            ],
+            "display_selection_used": false,
+            "threshold_amplitude": 1.0000000000000004,
+            "strongest_outside_dc_amplitude": 1.0000000000000004,
+            "empty_reason": null,
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ]
+          },
+          "peak_vectors": [
+            [
+              -0.047619047619047616,
+              -0.4603174603174603
+            ],
+            [
+              -0.031746031746031744,
+              -0.31746031746031744
+            ],
+            [
+              -0.047619047619047616,
+              -0.1746031746031746
+            ],
+            [
+              -0.047619047619047616,
+              0.4444444444444444
+            ]
+          ],
+          "fft_id": "571b1d07e536409d9afbb4b421f8540a",
+          "peaks_id": "fb4d70132b41480f9e3e8caa3f6951fa",
+          "field_status": "valid",
+          "field_family_count": 4,
+          "field_id": "5fb255d6b26a46beb8996bcacbbb87cd"
+        }
+      ],
+      "analytic_truth": "DFT of delta at (x0,y0) is exp(-2pi i (kx*x0/Nx+ky*y0/Ny)); its magnitude is exactly one everywhere regardless of position.",
+      "implication": "Floating-point plateau noise becomes four peaks and a valid two-family field in the odd-size control. No crystalline periodicity exists.",
+      "proposed_change": "Explicit versioned numerical prominence/roundoff qualification; keep original detector results. Do not tune a scientific SNR threshold to these fixtures.",
+      "test_code_sha256": "7a264d189edf256e158e2d36a54f924b7897a6cda2279aae6ba2dc575f82820d",
+      "elapsed_seconds": 0.26257420900219586
+    },
+    {
+      "probe": "rotations",
+      "execution": "PASS",
+      "classification": "verified_math",
+      "results": [
+        {
+          "transform": "original",
+          "expected": [
+            0.078125,
+            0.046875
+          ],
+          "actual": [
+            [
+              -0.078125,
+              -0.046875
+            ],
+            [
+              0.078125,
+              0.046875
+            ]
+          ]
+        },
+        {
+          "transform": "x_reflected",
+          "expected": [
+            -0.078125,
+            0.046875
+          ],
+          "actual": [
+            [
+              0.078125,
+              -0.046875
+            ],
+            [
+              -0.078125,
+              0.046875
+            ]
+          ]
+        },
+        {
+          "transform": "ccw_array_rotation",
+          "expected": [
+            0.046875,
+            -0.078125
+          ],
+          "actual": [
+            [
+              0.046875,
+              -0.078125
+            ],
+            [
+              -0.046875,
+              0.078125
+            ]
+          ]
+        }
+      ],
+      "truth": "Array b[y,x]=a[x,N-1-y] gives q_b=(q_y,-q_x); x mirror gives (-q_x,q_y).",
+      "test_code_sha256": "7a264d189edf256e158e2d36a54f924b7897a6cda2279aae6ba2dc575f82820d",
+      "elapsed_seconds": 0.03310475000034785
+    },
+    {
+      "probe": "reciprocal_gpa_guard",
+      "execution": "PASS",
+      "classification": "verified_guard",
+      "response": {
+        "ok": false,
+        "state": "failed",
+        "backend": "external-image-workspace",
+        "request_id": "independent-audit-34",
+        "error": {
+          "code": "UNSUPPORTED_OPERATION",
+          "message": "GPA requires an existing real-image external FFT, not an image phase array or imported complex field"
+        }
+      },
+      "test_code_sha256": "7a264d189edf256e158e2d36a54f924b7897a6cda2279aae6ba2dc575f82820d",
+      "elapsed_seconds": 0.010462875005032402
+    }
+  ],
+  "source_file_sha256": {
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/impulse-64-0-0.tiff": "b423b2d907347578e278c611a8783955760077fe783d9a4d4fe0ec9c8de60a63",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/impulse-64-25-20.tiff": "fb2c96f573b323e944d5cb7df10149d79861ffefe442d7ad622085f2c1568351",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/impulse-63-0-0.tiff": "958c58f7add007492b81716634b23f47652959761b867081c0b240f9bedfede6",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/impulse-63-25-20.tiff": "d930ac43f760e2207fe5480128fd286a78c5ac9a98c989b5b5c16ebc0b3364fc",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/original.tiff": "78c49453596ae303d964a17ea1476b050e836198ffaea4da6be2260c6f83a811",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/x_reflected.tiff": "902cb0fb64d168de98a3baee4078d3d1a3c2641001325c1df65cdd335594048f",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/ccw_array_rotation.tiff": "1f0c577bb9f5f0175c813a995150083323d7626d25c303d80d8c9d7092a97127",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-edge-r2/reciprocal-for-gpa.tiff": "44e40969fb2e5ee4902621454559ec58f95e33a914666d8d445fc54c65400f59"
+  },
+  "original_sources_unchanged": true,
+  "request_count": 34,
+  "test_code_sha256": "3e6465a9037dcd838e620a64fb10935daf893bc02eca870f255e6464d6f1b6b9"
+}

@@ -1,0 +1,362 @@
+{
+  "instructions": "For each case, return a concise Chinese report plus proposed_calls (do not execute calls). Use only supplied observations; case identifiers are arbitrary. These are snapshot tasks, not a request to inspect other files or find fixture provenance.",
+  "cases": [
+    {
+      "id": "F",
+      "request": "请解释这个结构特征结果，说明它支持什么材料结论。",
+      "observations": {
+        "source_ref": "image-D",
+        "status": "valid",
+        "features": {
+          "families": [
+            {
+              "direction_angle_mod180": 111.8206767964965,
+              "direction_angle_mod180_degrees": 111.8206767964965,
+              "family_id": "family-1",
+              "members": [
+                {
+                  "frequency_cycles_per_pixel": [
+                    0.03126765487730587,
+                    -0.07809297019636124
+                  ],
+                  "sign_to_family_representative": 1,
+                  "vector_xy": [
+                    0.03126765487730587,
+                    -0.07809297019636124
+                  ]
+                },
+                {
+                  "frequency_cycles_per_pixel": [
+                    -0.03126765487730587,
+                    0.07809297019636119
+                  ],
+                  "sign_to_family_representative": -1,
+                  "vector_xy": [
+                    -0.03126765487730587,
+                    0.07809297019636119
+                  ]
+                }
+              ],
+              "period": 11.887776140951312,
+              "period_valid": true,
+              "reciprocal_magnitude": 0.08412002279847572,
+              "vector_xy": [
+                0.03126765487730587,
+                -0.07809297019636124
+              ]
+            },
+            {
+              "direction_angle_mod180": 31.991597742350883,
+              "direction_angle_mod180_degrees": 31.991597742350883,
+              "family_id": "family-2",
+              "members": [
+                {
+                  "frequency_cycles_per_pixel": [
+                    -0.0625035927236926,
+                    -0.03904383571722703
+                  ],
+                  "sign_to_family_representative": -1,
+                  "vector_xy": [
+                    -0.0625035927236926,
+                    -0.03904383571722703
+                  ]
+                },
+                {
+                  "frequency_cycles_per_pixel": [
+                    0.06250359272369266,
+                    0.03904383571722703
+                  ],
+                  "sign_to_family_representative": 1,
+                  "vector_xy": [
+                    0.06250359272369266,
+                    0.03904383571722703
+                  ]
+                }
+              ],
+              "period": 13.569232762172254,
+              "period_valid": true,
+              "reciprocal_magnitude": 0.07369613430081019,
+              "vector_xy": [
+                0.0625035927236926,
+                0.03904383571722703
+              ]
+            }
+          ],
+          "family_count": 2,
+          "pairwise_angles_degrees": [
+            {
+              "acute_line_angle_degrees": 79.82907905414561,
+              "family_ids": [
+                "family-1",
+                "family-2"
+              ]
+            }
+          ],
+          "shortest_period": 11.887776140951312
+        },
+        "invalid_reasons": [],
+        "measurements": [
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              -0.0625035927236926,
+              -0.03904383571722703
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-3151180e7d5267219b5e6f26be173fb9111791b476ee36b0",
+            "pixel_period": 13.569232762172254,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          },
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              0.06250359272369266,
+              0.03904383571722703
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-e23b3ea368081fac3de86f3c540ea84c9c13b8b0b1760dd1",
+            "pixel_period": 13.569232762172245,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          },
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              0.03126765487730587,
+              -0.07809297019636124
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-fe4aaf49a467332c4b89cd19cdf008587fee4cf38efd70cc",
+            "pixel_period": 11.887776140951312,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          },
+          {
+            "calibration_dependency": null,
+            "d_spacing": null,
+            "d_spacing_unit": null,
+            "frequency_cycles_per_pixel": [
+              -0.03126765487730587,
+              0.07809297019636119
+            ],
+            "interpretation_status": "hypothesized",
+            "measurement_request_id": "auto-f63ee9b4ea6b9f3b6a4dcae531c31be3b683c5f1c4e0440b",
+            "pixel_period": 11.887776140951317,
+            "scientific_grid_identity": {
+              "array_sha256": "c54c0da73f5bc680bea40cb241cc7daab3b18ce7331c11f32c5b1aa1616eb6eb",
+              "coordinate_space": "frequency_cycles_per_pixel",
+              "dtype": "complex128",
+              "shape_yx": [
+                128,
+                128
+              ],
+              "source_rect_xyxy": null
+            }
+          }
+        ],
+        "peak_observation": {
+          "roi_xyxy": [
+            0,
+            0,
+            128,
+            128
+          ],
+          "window": "hann",
+          "subtract_mean": true,
+          "refinement": "quadratic",
+          "parameters": {
+            "exclude_dc_radius_bins": 3,
+            "max_peaks": 16,
+            "min_separation_bins": 3,
+            "refinement": "quadratic",
+            "threshold_rel": 0.05
+          },
+          "peak_table": [
+            {
+              "bin_xy": [
+                56,
+                59
+              ],
+              "conjugate_peak_ids": [
+                "peak-2"
+              ],
+              "frequency_cycles_per_pixel": [
+                -0.0625035927236926,
+                -0.03904383571722703
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07369613430081019,
+              "local_median_amplitude": 1095.7441462573445,
+              "local_peak_to_median_ratio": 184.00960751372034,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-1",
+              "pixel_period": 13.569232762172254,
+              "refined": true,
+              "refined_bin_xy": [
+                55.99954013136735,
+                59.00238902819494
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 201627.45028827054,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                72,
+                69
+              ],
+              "conjugate_peak_ids": [
+                "peak-1"
+              ],
+              "frequency_cycles_per_pixel": [
+                0.06250359272369266,
+                0.03904383571722703
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.07369613430081023,
+              "local_median_amplitude": 1095.7441462573445,
+              "local_peak_to_median_ratio": 184.00960751372034,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-2",
+              "pixel_period": 13.569232762172245,
+              "refined": true,
+              "refined_bin_xy": [
+                72.00045986863266,
+                68.99761097180506
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 201627.45028827054,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                68,
+                54
+              ],
+              "conjugate_peak_ids": [
+                "peak-4"
+              ],
+              "frequency_cycles_per_pixel": [
+                0.03126765487730587,
+                -0.07809297019636124
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.08412002279847572,
+              "local_median_amplitude": 1416.9002313322055,
+              "local_peak_to_median_ratio": 141.591494537186,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-3",
+              "pixel_period": 11.887776140951312,
+              "refined": true,
+              "refined_bin_xy": [
+                68.00225982429515,
+                54.00409981486576
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 200621.02136441157,
+              "status": "hypothesized"
+            },
+            {
+              "bin_xy": [
+                60,
+                74
+              ],
+              "conjugate_peak_ids": [
+                "peak-3"
+              ],
+              "frequency_cycles_per_pixel": [
+                -0.03126765487730587,
+                0.07809297019636119
+              ],
+              "frequency_magnitude_cycles_per_pixel": 0.08412002279847568,
+              "local_median_amplitude": 1416.9002313322073,
+              "local_peak_to_median_ratio": 141.59149453718584,
+              "localization_uncertainty_bins": null,
+              "peak_id": "peak-4",
+              "pixel_period": 11.887776140951317,
+              "refined": true,
+              "refined_bin_xy": [
+                59.99774017570485,
+                73.99590018513423
+              ],
+              "refinement_note": "separable three-point quadratic log-amplitude estimate",
+              "sampled_amplitude": 200621.02136441157,
+              "status": "hypothesized"
+            }
+          ],
+          "peak_quality": {
+            "detection_rect_xyxy": [
+              0,
+              0,
+              128,
+              128
+            ],
+            "display_selection_used": false,
+            "empty_reason": null,
+            "limitations": [
+              "Geometric peak candidates, not indexed reflections or phase identification",
+              "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+              "Conjugate peaks from a real image are not independent crystallographic evidence",
+              "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+              "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+            ],
+            "local_maxima_above_threshold": 4,
+            "numerical_contrast": {
+              "certified_fft_error_bound": false,
+              "comparison_bin_count": 16375,
+              "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+              "complete_fft_max_amplitude": 201627.45028827054,
+              "eligible_bin_count": 16355,
+              "individual_peak_resolution_established": false,
+              "nominal_operation_depth": 112,
+              "nominal_relative_fft_error": 1.2434497875801753e-14,
+              "normalization_scope": "complete FFT maximum including DC and excluded coefficients",
+              "normalized_amplitude_span": 0.9999333479406356,
+              "policy": "binary64_fft_normwise_neighborhood_contrast_v1",
+              "reason": null,
+              "relative_resolution_guard": 7.681642510619329e-14,
+              "scaled_complete_fft_l2_norm": 3.088843066823048,
+              "statistical_or_physical_validity": false,
+              "status": "resolved_amplitude_variation",
+              "unit_roundoff": 1.1102230246251565e-16
+            },
+            "returned_count": 4,
+            "selection_limit_reached": false,
+            "strongest_outside_dc_amplitude": 201627.45028827054,
+            "threshold_amplitude": 10081.372514413528
+          },
+          "calibration": null,
+          "source_ref": "image-D"
+        }
+      }
+    }
+  ]
+}

@@ -5,6 +5,17 @@ description: Choose composable microscopy observation, revision and crystallogra
 
 # Choose the next useful observation
 
+For autonomous, evidence-grounded choices and three-layer saved results, read
+[Route A decisions](../microscopy-automation/references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
+
+
+First apply [bounded automation scope](../microscopy-automation/references/automation-scope.md).
+Candidates may be proposed by either researcher or Agent from actual observations
+and stated material context. Discussion does not require a completed simulation;
+formal checks keep their input prerequisites. No automatic experimental planning.
+Both human-first and Agent-first entry remain supported. Do not automatically
+turn a general image-analysis request into field/GPA/topology or twin validation.
+
 The host Agent chooses the scientific strategy. These tools do not require a
 fixed input-to-phase pipeline, an installed Skill or an analysis session.
 

@@ -105,6 +105,19 @@ jobs:
       - run: python -B tests/dm_planes_test.py
       - run: python -B tests/dm_complex_test.py
       - run: python -B tests/image_peaks_test.py
+      - run: python -B tests/test_flat_spectrum.py -v
+      - run: python -B tests/test_fft_dc_roundoff.py -v
+      - run: python -B tests/test_fft_preprocessing_oracle.py -v
+      - run: python -B tests/test_controlled_fft_backgrounds.py -v
+      - run: python -B tests/test_fft_summary_provenance.py -v
+      - run: python -B tests/test_controlled_fft_fixture.py -v
+      - run: python -B tests/fixtures/controlled_fft_noise.py "${{ runner.temp }}/controlled-fft-inputs" --smoke
+      - run: python -B tests/fixtures/evaluate_fft_noise.py --repository . --dataset "${{ runner.temp }}/controlled-fft-inputs" --output "${{ runner.temp }}/controlled-fft-raw"
+      - name: Validate noise harness execution without asserting random physical answers
+        run: python -c "import json; from pathlib import Path; rows=[json.loads(line) for line in Path(r'${{ runner.temp }}/controlled-fft-raw/raw.jsonl').read_text().splitlines()]; assert len(rows)==388; assert all(r['execution']=='ok' for r in rows)"
+      - run: python -B tests/fixtures/flat_spectrum_saved.py create "${{ runner.temp }}/flat-spectrum-saved"
+      - run: python -B tests/fixtures/fft_dc_saved.py create "${{ runner.temp }}/fft-dc-saved"
+      - run: node dist/tests/fft-dc-science-smoke.mjs
       - run: python -B tests/image_automation_test.py
       - run: python -B tests/image_sequence_test.py
       - run: python -B tests/image_joint_test.py
@@ -201,6 +214,10 @@ jobs:
       - run: npm run build
       - run: python -m pip install -r requirements-gpa.txt
       - run: python -B -m unittest discover -s tests -p 'test_image_gpa_*.py' -v
+      - run: python -B tests/test_scientific_evidence_semantics.py
+      - run: python -B tests/test_result_semantics.py
+      - run: python -B tests/test_result_semantics_projection.py
+      - run: python -B tests/test_route_a_runtime.py
       - run: npm run test:gpa
         env:
           MICROSCOPY_PYTHON: python
@@ -228,12 +245,14 @@ jobs:
       - run: npm run build
       - run: python -m pip install -r requirements-gpa.txt
       - run: python -B -m unittest discover -s tests -p 'test_*topology*.py' -v
+      - run: python -B tests/fixtures/topology_band_dependence.py "${{ runner.temp }}/topology-band-dependence"
       - run: python -B tests/test_method_policy.py
       - run: python -B tests/image_method_journal_test.py
       - run: python -B tests/test_method_loop_accounting.py
       - run: python -B tests/test_method_read_reuse.py
       - run: python -B tests/test_image_discovery_core.py
       - run: python -B tests/test_image_discovery_workspace.py
+      - run: python -B tests/test_discovery_selection_origin.py
       - run: npm run test:topology
         env:
           MICROSCOPY_PYTHON: python

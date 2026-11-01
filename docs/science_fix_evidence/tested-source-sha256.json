@@ -1,0 +1,16 @@
+{
+  ".github/workflows/quick.yml": "06780297d3b51f992ccf54ddf04a6625c630ef04c55a95dda2260377d95b0c3a",
+  "crystallography/geometry.py": "cf5e9e7e7f81776e3266cffacc2a490cf7410e34697a45a8ae38230f5b695f3b",
+  "crystallography/registration_proposal.py": "038722a5ab1d68a84ee812127d2f5aebef94ec88d5fcf9e9f66eedb328d1c8d1",
+  "crystallography/structure_tools.py": "acdacd939e92fefc3b6d89e910dfe89b791e7c3343fe33e735c9c172587de33d",
+  "crystallography/workflow.py": "2ab23692a37a86877f42a4c7c63c7b809f7262aa49dd3a24bc0c65e65fd273e3",
+  "lib/image_gpa_contract.mts": "a48e5f508dcd3a58c1ba21c15612c702793fbcd3882e4a8ad610b516e5d4289e",
+  "lib/structure_workspace.mts": "c8a57b1cc97c0f254247eda930041462719941093e34b5732809a15f8707c911",
+  "tests/image_domain_compare_test.py": "dd9d815fc3c708c4f12cfb6dd3a278ac1a9984b75bfd1581bea91807510b2485",
+  "tools/image_domain_compare.py": "ad84bb43d6dbf206a530a28d926c94b5865ee039797a764d76264c1cbdda1ce8",
+  "tools/image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+  "tools/image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+  "tests/test_scientific_evidence_semantics.py": "155fd99c70d9b80a7b26d51f64db81157296ee0b081e39f6c8aeab431e20fa4c",
+  "tests/fixtures/science_fix_saved.py": "2a44bff569c0efddada4fb931b14ac0ab2248be8965ae1d023e70e15915788e1",
+  "tests/fixtures/science_fix_history.py": "e3ce0d9d7c650ffd932bd237d0bc40f697325764a9f25f644412bce4b914f8e6"
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,readFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,readFileSync,rmSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {createImagePanel} from '../tools/image_panel.mjs';
@@ -98,3 +98,45 @@ test('automatic adoption refuses a changed render window rather than rebasing un
  assert.equal(reply.status,409);assert.equal(panel.state().object.object_id,A);
  assert.match(reply.data.error,/same scientific grid/);
 },{foreignEdit:true}));
+
+
+test('explicit handoff confirmation flushes coalesced draft before its HTTP receipt',async()=>fixture(async({act,panel,saved,calls})=>{
+ for(let revision=1;revision<=3;revision++){
+  const queued=await act('draft',{draft_revision:revision,dirty:false,gesture_active:false,selection:selected},{lightweight:true});
+  assert.equal(queued.data.draft_persistence.pending,true);
+  const confirmed=await act('draft',{draft_revision:revision,dirty:false,gesture_active:false,selection:selected,confirm_persistence:true},{lightweight:true});
+  assert.equal(confirmed.status,200);assert.deepEqual(confirmed.data.draft_persistence,{pending:false,error:null});
+  assert.deepEqual(panel.state().draft_persistence,{pending:false,error:null});assert.equal(saved().edit_state.draft_revision,revision);
+ }
+ assert.equal(calls.filter(call=>call.name!=='image_info').length,0);
+}));
+
+test('failed durable handoff save is observable and a later explicit confirmation can recover',async()=>fixture(async({act,panel,saved})=>{
+ const file=path.join(panel.journal,'current-selection.json');rmSync(file);mkdirSync(file);
+ try{
+  const failed=await act('draft',{draft_revision:1,dirty:false,gesture_active:false,selection:selected,confirm_persistence:true},{lightweight:true});
+  assert.notEqual(failed.status,200);assert.equal(panel.state().draft_persistence.pending,false);assert.equal(typeof panel.state().draft_persistence.error,'string');
+  assert.deepEqual(panel.state().selection,selected,'failed save retains the current in-memory draft');
+ }finally{rmSync(file,{recursive:true});}
+ const recovered=await act('draft',{draft_revision:1,dirty:false,gesture_active:false,selection:selected,confirm_persistence:true},{lightweight:true});
+ assert.equal(recovered.status,200);assert.deepEqual(recovered.data.draft_persistence,{pending:false,error:null});assert.equal(saved().edit_state.draft_revision,1);
+}));
+
+
+test('accept-result refuses an older clean selection revision without adopting or clearing pending science',async()=>fixture(async({act,post,panel,saved,calls})=>{
+ await act('draft',{draft_revision:1,dirty:true,gesture_active:false},{lightweight:true});
+ const queued=await post('/api/present',{object_id:C,expected_object_id:A,draft_revision:1,request_id:'original-queued-result'});assert.equal(JSON.parse(queued.raw).presentation.status,'queued');
+ await act('draft',{draft_revision:2,dirty:false,gesture_active:false,selection:selected,confirm_persistence:true},{lightweight:true});
+ const refused=await act('accept-result',{}, {draft_revision:1});
+ assert.equal(refused.status,409);assert.equal(panel.state().object.object_id,A);assert.deepEqual(panel.state().selection,selected);
+ assert.equal(panel.state().pending_result.request_id,'original-queued-result');assert.equal(saved().edit_state.draft_revision,2);
+ assert.equal(calls.filter(call=>call.name!=='image_info').length,0);
+ const accepted=await act('accept-result');assert.equal(accepted.status,200);assert.equal(panel.state().object.object_id,C);
+}));
+
+test('initial completed preview receipt does not leave shared-workspace handoff submitted',async()=>{
+ const workspace=mkdtempSync(path.join(tmpdir(),'initial-preview-receipt-')),frameId='e'.repeat(32),viewId='f'.repeat(32);
+ const frame={object_id:frameId,kind:'frame',frame_index:0,shape_yx:[32,32],annotations:[],panels:[]};
+ const client={async rpc(method){return{result:method==='tools/list'?{tools:['image_info','image_preview'].map(name=>({name,inputSchema:{}}))}:{}};},async tool(name,args){if(name==='image_info')return{data:frame};assert.equal(name,'image_preview');return{data:{object_id:viewId,kind:'view',parent_object_id:frameId,display:{},state:'completed',request_id:args.request_id,annotations:[],panels:[]},png:'iVBORw0KGgo='};},async close(){}};
+ let panel;try{panel=await createImagePanel({workspace,python:process.execPath,object_id:frameId,client});assert.equal(panel.state().last_operation.state,'completed');assert.equal(panel.state().last_operation.object_id,viewId);assert.equal(panel.state().object.object_id,viewId);}finally{await panel?.close();rmSync(workspace,{recursive:true,force:true});}
+});

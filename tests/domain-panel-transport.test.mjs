@@ -46,3 +46,9 @@ test('a comparison without any saved display is rejected',async()=>{
  const evidence={object_id:comparisonId,kind:'local_signature_compare',overview_object_id:null,source_entries:[],relations:[]};
  await assert.rejects(open(evidence,async()=>assert.fail('unexpected panel')),/no saved source overview or observation view/);
 });
+
+test('domain result semantics is bounded before Panel transport, without truncation or source mutation',async()=>{
+ const evidence={object_id:comparisonId,kind:'local_signature_compare',overview_object_id:overviewId,source_entries:[],relations:[],result_semantics:{version:99,note:'x'.repeat(1025)}};
+ const original=structuredClone(evidence);
+ await open(evidence,async panel=>{const state=panel.state();assert.equal(state.domain_evidence.result_semantics,undefined);assert.equal(state.domain_evidence.result_semantics_projection.status,'unavailable');assert.deepEqual(evidence,original);});
+});

@@ -1,0 +1,65 @@
+{
+  "rows": [
+    {
+      "action": "register",
+      "original_object_id": "ad4f87673d91465bb320a772eb260772",
+      "original_response_sha256": "78a1e7020082c9c294feb7f4e45b36feb9f9f3776df89945ba08d72cad96c53e",
+      "replay_equal": true,
+      "original_pass": true
+    },
+    {
+      "action": "compare",
+      "original_object_id": "b6445daae6ac49c2881f623bae508791",
+      "original_response_sha256": "97ea0f9d76248685fb56adf88d16be08cfff9b52429d6e949d0ca44cca24ad05",
+      "replay_equal": true,
+      "original_pass": null,
+      "new_object_id": "d8699d854e6348ec9573c33a42782695",
+      "current_independent_validation": {
+        "status": "insufficient_evidence",
+        "validated": null,
+        "reason_codes": [
+          "resolved_source_observation_independence_not_established",
+          "localization_calibration_and_model_uncertainty_not_evaluated"
+        ],
+        "scope": "independent experimental or statistical validation; conditional correspondence geometry is reported separately"
+      },
+      "historical_pass_preserved": true
+    },
+    {
+      "action": "register",
+      "original_object_id": "42dac7440cbe41e1863809944a4a3f83",
+      "original_response_sha256": "5b916e32ceb40fb7075b2bbcec83507d5a13ff1178edefc8221e2bae0ee87fe3",
+      "replay_equal": true,
+      "original_pass": false
+    },
+    {
+      "action": "register",
+      "original_object_id": "a2324ebd235b4e1b988f7059003d044c",
+      "original_response_sha256": "421ed9dd709ad53fc011a62e2ffec835f0afcdd0c7f9b89caf884122a1225d14",
+      "replay_equal": true,
+      "original_pass": true
+    },
+    {
+      "action": "compare",
+      "original_object_id": "bcdeb6076d714c73a799d01f69a96c4c",
+      "original_response_sha256": "8df81239354938c9feab8067f10ac87f8d9c2e078d7d7ce58563602a2eda5977",
+      "replay_equal": true,
+      "original_pass": null,
+      "new_object_id": "506ee378e9754b13832d5f412eccc161",
+      "current_independent_validation": {
+        "status": "insufficient_evidence",
+        "validated": null,
+        "reason_codes": [
+          "resolved_source_observation_independence_not_established",
+          "localization_calibration_and_model_uncertainty_not_evaluated"
+        ],
+        "scope": "independent experimental or statistical validation; conditional correspondence geometry is reported separately"
+      },
+      "historical_pass_preserved": true
+    }
+  ],
+  "original_file_count": 619,
+  "all_original_files_unchanged": true,
+  "calls": 17,
+  "source_file_sha256": "e3ce0d9d7c650ffd932bd237d0bc40f697325764a9f25f644412bce4b914f8e6"
+}

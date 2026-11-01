@@ -1,0 +1,54 @@
+{
+  "result": "PASS",
+  "runtime_ms": 16848.555667,
+  "formal_mcp_calls": 80,
+  "new_semantics_records_recovered": 16,
+  "current_object_request_files_unchanged": 451,
+  "compiled_runtime_files_unchanged": 126,
+  "source_reference_head_tree": [
+    "03027d1d5e34b4c236df203d502b609503fe7516",
+    "93e25cee40d65d10a98857ecb88009f8edba7e65"
+  ],
+  "source_reference_scope": "Git reference only; actual executed files are independently hashed in runtime-before-sha256.json, including any uncommitted build inputs.",
+  "legacy": {
+    "commit": "7f0e523ba287de11c0913abd68f553655f008182",
+    "tree": "ade267286535291a42f0992fe34d8726318cfdb9",
+    "actual_frozen_producer": true,
+    "current_mcp_reads": true,
+    "old_records_recovered": 8,
+    "original_files_unchanged": 105,
+    "new_child_uses_v1_without_backfill": true
+  },
+  "independent_dft": {
+    "oracle": "direct separable finite DFT definition, not np.fft or Workbench FFT",
+    "maximum_absolute_error": 6.325281023279943e-11,
+    "fixed_tolerance": 1e-07
+  },
+  "checks": [
+    "Actual FFT/peak/individual+bulk measurement/atlas/feature/local-comparison objects save scoped v1 semantics; unassessed noise/localization/resolution remain unknown; physical-only insufficiency leaves pixel period 8 available; display-only preview does not inherit a fresh assessment.",
+    "Single-direction descriptor insufficiency preserves the independently prescribed 8-pixel period. Constant100+one101 impulse, 63x63, no window/no mean subtraction remains a completed FFT with no admitted peaks and explicit numerical-contrast insufficiency.",
+    "Actual ASE/diffsims structure save/simulate/register/compare/general_compare preserves geometry-qualified fit separately from independent-validation insufficiency. Correct and wrong cell candidates remain finite geometric compatibility/conflict, not phase identification.",
+    "Actual frozen #64 worker produced missing-field FFT/peaks/measure/atlas/feature/local-comparison history; current formal MCP info/original-request recovery preserves absent fields and all bytes. A new child uses v1 semantics without rewriting the old FFT or original requests."
+  ],
+  "not_tested": [
+    "actual runtime Agent judgments",
+    "browser gestures or GUI visibility",
+    "private/real specimen accuracy",
+    "calibrated noise false-discovery probability",
+    "GPA/topology/twin execution in this bounded smoke",
+    "old structure-provider record compatibility in this bounded smoke"
+  ],
+  "artifacts": {
+    "report.json": "50566c9376480c5922a772c834ba02a819a39140a0cf6f0d934ed79b680d6ecd",
+    "calls.jsonl": "f84d2233cffa215543d9ddb843fc3d6e9cc2966243ed44ff1362394e7eebc2e5",
+    "runtime-before-sha256.json": "6c95056b22fe09d52d149458cfccfc9ffd1dc91091df1ef03e23088b9aa78d3c",
+    "runtime-after-sha256.json": "6c95056b22fe09d52d149458cfccfc9ffd1dc91091df1ef03e23088b9aa78d3c",
+    "current-before-recovery-sha256.json": "21ea0976d6499260dfb98237c9526960f1a50395281a618a47122992e5236704",
+    "current-after-recovery-sha256.json": "21ea0976d6499260dfb98237c9526960f1a50395281a618a47122992e5236704",
+    "legacy-producer-record.json": "e60008f65fa07ec4b9c65dccae3b98ad848f3e26b3199fa1882609872494732b",
+    "legacy-before-read-sha256.json": "aa8a5236dba7ee1ab35484ed3016e3f72a6210ef4a2e0852fc7a11e90dc367ea",
+    "legacy-after-read-sha256.json": "6db40d1b623b634977891e373ebc8769cb8dda486297f1050f89bdf82b9c10d4"
+  },
+  "first_run_preserved": "analysis/result-semantics-mcp-run1 (PASS before adding runtime provenance capture; no failed algorithm result was replaced)",
+  "script_source_sha256": "1a455f5ca1d888cc2846eb46820cf61e817e1d3f2d6e854772a9aae34ec30eaa"
+}

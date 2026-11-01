@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "result": {
+    "state": "completed",
+    "backend": "external-structure-workspace",
+    "object_id": "b1257d38f6b242d8b0c9807a5cc08c71",
+    "request_id": "partial_open",
+    "kind": "structure",
+    "created_utc": "2026-11-01T15:19:04.511565+00:00",
+    "parameters": {
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_occupancy.xyz"
+    },
+    "atom_count": 1,
+    "formula": "Cu",
+    "length_unit": "angstrom",
+    "cell_angstrom": [
+      [
+        3.6,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        3.6,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        3.6
+      ]
+    ],
+    "cell_rank": 3,
+    "cell_nonzero_vector_count": 3,
+    "cell_parameters_angstrom_degrees": [
+      3.6,
+      3.6,
+      3.6,
+      90.0,
+      90.0,
+      90.0
+    ],
+    "pbc": [
+      true,
+      true,
+      true
+    ],
+    "has_periodic_3d_cell": true,
+    "cell_standardized": false,
+    "phase_identified": false,
+    "occupancy_status": "no explicit disorder metadata",
+    "uncertainty_status": "input numerical uncertainties not propagated",
+    "parser_warnings": [],
+    "source": {
+      "path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_occupancy.xyz",
+      "sha256": "e52d1cc23662c076988206aab5d0e48f29360840751cee5e0680e61c6cab6a9a",
+      "bytes": 106,
+      "format": "xyz",
+      "fixed_input_copy": true,
+      "original_file_modified": false,
+      "coordinate_unit_convention": "ASE XYZ/extXYZ Angstrom convention; not independently verified physical units"
+    },
+    "schema_version": 1,
+    "dm_called": false,
+    "computation_source": "explicit_external_python",
+    "software_provenance": {
+      "python": "3.13.18",
+      "ase": "3.29.0",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "module_sha256": "1887b50b8a2c08a2cc83cb4e627fe6015a02378070bd3369b63c8e1807366012",
+      "helper_modules_sha256": {
+        "orientation.py": "3a5f6f80708213c9daa9aab0dc90025e60033fc1701635e84bf2ec3ec28eefd2",
+        "reflection_compare.py": "127b5bb14aa6ff03761be057b29c55b554b9ad532b30dc126ec2aa691ad62fbe",
+        "registration_proposal.py": "1ab3c541fc62fb2d989810acdd0c11b87f3c3dae652b8ad0ecb842733eeb6367",
+        "analysis_revision.py": "5801dc8c607659eb282fbedcb455b0b96d8787155fddea48abd8c5f79f4154d5"
+      }
+    },
+    "files_sha256": {
+      "atoms.json": "0702b6d761c5ec735efbaa43ae41ecf6fdb099df97ee03ea3de4b24f907465d6",
+      "source.xyz": "e52d1cc23662c076988206aab5d0e48f29360840751cee5e0680e61c6cab6a9a"
+    },
+    "manifest_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_workspace/objects/b1257d38f6b242d8b0c9807a5cc08c71/object.json"
+  }
+}

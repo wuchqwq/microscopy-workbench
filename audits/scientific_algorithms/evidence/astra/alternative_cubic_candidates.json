@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "computation_source": "external_python_crystallography",
+  "model": "bounded_cubic_reciprocal_geometry",
+  "calibrated": true,
+  "input_vectors": [
+    [
+      5.0,
+      0.0
+    ],
+    [
+      0.0,
+      5.0
+    ],
+    [
+      5.0,
+      5.0
+    ]
+  ],
+  "frequency_convention": "cycles_per_length; |g|=1/d",
+  "tolerances": {
+    "relative_radial": 0.03,
+    "angle_deg": 2.0,
+    "max_unmatched": 0
+  },
+  "candidates": [
+    {
+      "centering": "F",
+      "structure_label": "FCC",
+      "lattice_parameter_nm": 0.4,
+      "lattice_parameter_source": "fixed_reference",
+      "reciprocal_scale_per_hkl": 2.5,
+      "reciprocal_scale_unit": "cycles/nm",
+      "zone_axis_uvw": [
+        0,
+        0,
+        -1
+      ],
+      "crystal_to_image_orientation": [
+        [
+          1.0,
+          -1.2116883882008518e-16,
+          0.0
+        ],
+        [
+          -1.7938038903913487e-16,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.0,
+          -1.0
+        ]
+      ],
+      "orientation_convention": "column g_image_xyz = orientation @ hkl * reciprocal_scale; right-handed; beam +z",
+      "matched_count": 3,
+      "unmatched_observation_indices": [],
+      "rms_relative_vector_residual": 1.6167214528347138e-16,
+      "max_pair_angle_residual_deg": 0.0,
+      "observations": [
+        {
+          "observation_index": 0,
+          "matched": true,
+          "hkl": [
+            2,
+            0,
+            0
+          ],
+          "predicted_vector": [
+            5.0,
+            -8.969019451956743e-16
+          ],
+          "observed_magnitude": 5.0,
+          "predicted_magnitude": 5.0,
+          "relative_radial_residual": 0.0,
+          "direction_residual_deg": 0.0,
+          "individual_lattice_estimate_nm": 0.4,
+          "vector_residual": 8.969019451956743e-16,
+          "relative_vector_residual": 1.7938038903913485e-16
+        },
+        {
+          "observation_index": 1,
+          "matched": true,
+          "hkl": [
+            0,
+            -2,
+            0
+          ],
+          "predicted_vector": [
+            6.058441941004259e-16,
+            5.0
+          ],
+          "observed_magnitude": 5.0,
+          "predicted_magnitude": 5.0,
+          "relative_radial_residual": 0.0,
+          "direction_residual_deg": 0.0,
+          "individual_lattice_estimate_nm": 0.4,
+          "vector_residual": 6.058441941004259e-16,
+          "relative_vector_residual": 1.2116883882008518e-16
+        },
+        {
+          "observation_index": 2,
+          "matched": true,
+          "hkl": [
+            2,
+            -2,
+            0
+          ],
+          "predicted_vector": [
+            5.000000000000001,
+            4.999999999999999
+          ],
+          "observed_magnitude": 7.0710678118654755,
+          "predicted_magnitude": 7.0710678118654755,
+          "relative_radial_residual": 0.0,
+          "direction_residual_deg": 8.537736462515939e-07,
+          "individual_lattice_estimate_nm": 0.4,
+          "vector_residual": 1.2560739669470201e-15,
+          "relative_vector_residual": 1.7763568394002506e-16
+        }
+      ],
+      "chemical_phase_identified": false
+    },
+    {
+      "centering": "P",
+      "structure_label": "primitive cubic",
+      "lattice_parameter_nm": 0.2,
+      "lattice_parameter_source": "fixed_reference",
+      "reciprocal_scale_per_hkl": 5.0,
+      "reciprocal_scale_unit": "cycles/nm",
+      "zone_axis_uvw": [
+        0,
+        0,
+        -1
+      ],
+      "crystal_to_image_orientation": [
+        [
+          1.0,
+          -1.2116883882008518e-16,
+          0.0
+        ],
+        [
+          -1.7938038903913487e-16,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.0,
+          -1.0
+        ]
+      ],
+      "orientation_convention": "column g_image_xyz = orientation @ hkl * reciprocal_scale; right-handed; beam +z",
+      "matched_count": 3,
+      "unmatched_observation_indices": [],
+      "rms_relative_vector_residual": 1.6167214528347138e-16,
+      "max_pair_angle_residual_deg": 0.0,
+      "observations": [
+        {
+          "observation_index": 0,
+          "matched": true,
+          "hkl": [
+            1,
+            0,
+            0
+          ],
+          "predicted_vector": [
+            5.0,
+            -8.969019451956743e-16
+          ],
+          "observed_magnitude": 5.0,
+          "predicted_magnitude": 5.0,
+          "relative_radial_residual": 0.0,
+          "direction_residual_deg": 0.0,
+          "individual_lattice_estimate_nm": 0.2,
+          "vector_residual": 8.969019451956743e-16,
+          "relative_vector_residual": 1.7938038903913485e-16
+        },
+        {
+          "observation_index": 1,
+          "matched": true,
+          "hkl": [
+            0,
+            -1,
+            0
+          ],
+          "predicted_vector": [
+            6.058441941004259e-16,
+            5.0
+          ],
+          "observed_magnitude": 5.0,
+          "predicted_magnitude": 5.0,
+          "relative_radial_residual": 0.0,
+          "direction_residual_deg": 0.0,
+          "individual_lattice_estimate_nm": 0.2,
+          "vector_residual": 6.058441941004259e-16,
+          "relative_vector_residual": 1.2116883882008518e-16
+        },
+        {
+          "observation_index": 2,
+          "matched": true,
+          "hkl": [
+            1,
+            -1,
+            0
+          ],
+          "predicted_vector": [
+            5.000000000000001,
+            4.999999999999999
+          ],
+          "observed_magnitude": 7.0710678118654755,
+          "predicted_magnitude": 7.0710678118654755,
+          "relative_radial_residual": 0.0,
+          "direction_residual_deg": 8.537736462515939e-07,
+          "individual_lattice_estimate_nm": 0.2,
+          "vector_residual": 1.2560739669470201e-15,
+          "relative_vector_residual": 1.7763568394002506e-16
+        }
+      ],
+      "chemical_phase_identified": false
+    }
+  ],
+  "search": {
+    "anchor_pairs_considered": 3756,
+    "anchor_seeds_after_geometric_pruning": 24,
+    "joint_fits_evaluated": 24,
+    "max_index": 2,
+    "max_observations": 12,
+    "max_search_seeds": 50000,
+    "requested_centerings": [
+      "F",
+      "P"
+    ],
+    "candidate_counts_by_centering": {
+      "F": 1,
+      "P": 1
+    },
+    "total_distinct_candidates": 2,
+    "returned_candidates": 2,
+    "requested_max_candidates": 100,
+    "output_truncated": false,
+    "anchor_enumeration_exhausted": true,
+    "method": "canonical_cubic_two_anchor_then_three_joint_procrustes_assignment_steps",
+    "global_noisy_solution_completeness_proven": false
+  },
+  "ambiguity": {
+    "multiple_candidates": true,
+    "compatible_centerings": [
+      "F",
+      "P"
+    ],
+    "unique_chemical_phase_claim": false,
+    "bounded_search_does_not_establish_uniqueness": true
+  },
+  "limitations": [
+    "Cubic metric and integral centering only; no chemical basis or intensities.",
+    "Dynamical/multiple scattering and unobserved reflections are not modelled.",
+    "A common lattice parameter and orientation are checked; this is not phase identification.",
+    "Supplied absolute calibration and fixed reference lattice are never adjusted to force a match.",
+    "Finite hkl bounds and local noisy refinement can miss alternatives."
+  ]
+}

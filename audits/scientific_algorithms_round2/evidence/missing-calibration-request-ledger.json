@@ -1,0 +1,121 @@
+[
+  {
+    "request": {
+      "action": "open",
+      "request_id": "round2-gpa-1",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/same-unstrained-carriers.tiff"
+    },
+    "response_sha256_canonical": "96af1387bc300d2e88375797890d5259bd7ba787666926e70ce6c29f0e2ed9ec",
+    "ok": true,
+    "object_id": "1d952585fafa4774956dc7393c8bcfcb",
+    "kind": "tiff_source",
+    "files_sha256": {}
+  },
+  {
+    "request": {
+      "action": "frame",
+      "request_id": "round2-gpa-2",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+      "object_id": "1d952585fafa4774956dc7393c8bcfcb",
+      "frame_index": 0
+    },
+    "response_sha256_canonical": "57ad5a0c434ce9c20b1c58d0def670975b499e36340cd04799900a1201581a83",
+    "ok": true,
+    "object_id": "576d1e5d835b444c8643562f815b34fc",
+    "kind": "frame",
+    "files_sha256": {
+      "data.npy": "ee011a43c6a261d700554fdc8d3eb669fd603f25b8f69a7dfc36e9eb6b3bf8e8"
+    }
+  },
+  {
+    "request": {
+      "action": "spatial_atlas",
+      "request_id": "round2-gpa-3",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+      "object_id": "576d1e5d835b444c8643562f815b34fc",
+      "rects": [
+        [
+          0,
+          0,
+          64,
+          64
+        ],
+        [
+          96,
+          0,
+          160,
+          64
+        ]
+      ],
+      "window": "none",
+      "subtract_mean": true,
+      "max_peaks": 8,
+      "peak_options": {
+        "threshold_rel": 0.1,
+        "refinement": "none"
+      },
+      "max_size": 256
+    },
+    "response_sha256_canonical": "504e8f7ba8798f36f4710e35972e2e5b4ab3c6e0bdcec4c519b9e150978528ef",
+    "ok": true,
+    "object_id": "b18310a2ce554c12b0dcfb715486936d",
+    "kind": "spatial_atlas",
+    "files_sha256": {
+      "atlas-observations.json": "2316f7f0005ca0d92c6a47c4d6c8f3352b6811997275cbe34c4c8e1163674126",
+      "preview.png": "513f1f9fae07a99ddcd154bc1c63cba80af8480eebdea4b5a2091801716f0309"
+    }
+  },
+  {
+    "request": {
+      "action": "local_signature_compare",
+      "request_id": "round2-gpa-4",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+      "object_id": "b18310a2ce554c12b0dcfb715486936d",
+      "reference_index": 0,
+      "target_indices": [
+        1
+      ],
+      "angles_degrees": [
+        0.0
+      ],
+      "coordinate_domain": "pixel",
+      "tolerance": 0.001
+    },
+    "response_sha256_canonical": "53e301b1d02c9c86cf6f6d93da0db46fd3119ac72b71f770e4129af67b3353fe",
+    "ok": true,
+    "object_id": "263f0babca5d4c228e1cd2192d64358a",
+    "kind": "local_signature_compare",
+    "files_sha256": {
+      "relations.json": "003f9bd5150a238c2eba5b2e515a649d425442fea29ab8f370d97e92934573c1",
+      "preview.png": "5a32c4d1a538940f81c84bfdb9359b7760cac126fc92fae9cf8b664e4d367891",
+      "relations.csv": "6e8b32f32f622af888e7c47eaa0b70c824d734d0e7de0d3b016588565f5fc235"
+    }
+  },
+  {
+    "request": {
+      "action": "local_signature_compare",
+      "request_id": "round2-gpa-5",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+      "object_id": "b18310a2ce554c12b0dcfb715486936d",
+      "reference_index": 0,
+      "target_indices": [
+        1
+      ],
+      "angles_degrees": [
+        0.0
+      ],
+      "coordinate_domain": "physical",
+      "tolerance": 0.001
+    },
+    "response_sha256_canonical": "e1cb6a2d85c0b471e5e276b6d8e51d4658e3048a5fae0623bbace97f30904219",
+    "ok": true,
+    "object_id": "add568d57d7948018b10eb07dc4953b9",
+    "kind": "local_signature_compare",
+    "files_sha256": {
+      "relations.json": "1ee4acde79b7572c57fe387199beaa70bdbf0bd455299d32492dab3ed7a6efd5",
+      "preview.png": "5a32c4d1a538940f81c84bfdb9359b7760cac126fc92fae9cf8b664e4d367891",
+      "relations.csv": "9bad8ad6166ae9666b8ab63d24e887573a63ffb57d025a41f519fc038ac2a995"
+    }
+  }
+]

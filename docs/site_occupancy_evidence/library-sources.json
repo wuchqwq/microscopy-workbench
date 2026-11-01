@@ -1,0 +1,18 @@
+{
+  "ase.io.extxyz": {
+    "path": "/Volumes/External SSD/mircograph/structure-occupancy-fix-20261102/.venv/lib/python3.13/site-packages/ase/io/extxyz.py",
+    "sha256": "bae127796d6f89f6144733ade5ba8c44920ee182b1b0dae2a7c85de9feef277e"
+  },
+  "ase.io.cif": {
+    "path": "/Volumes/External SSD/mircograph/structure-occupancy-fix-20261102/.venv/lib/python3.13/site-packages/ase/io/cif.py",
+    "sha256": "845f7b4241d5d6cb5be176249b4befd1d3f088400122fc64eb78dd12737c3c6d"
+  },
+  "ase.spacegroup.xtal": {
+    "path": "/Volumes/External SSD/mircograph/structure-occupancy-fix-20261102/.venv/lib/python3.13/site-packages/ase/spacegroup/xtal.py",
+    "sha256": "60053767ba2aa7a1d8d8b69f5bfd294f2a6ca13200289d3d3d9c05ff1d6e1502"
+  },
+  "diffsims.utils.sim_utils": {
+    "path": "/Volumes/External SSD/mircograph/structure-occupancy-fix-20261102/.venv/lib/python3.13/site-packages/diffsims/utils/sim_utils.py",
+    "sha256": "7599bff886c71fd7b92083de930003ff984ffad7682a5dd21120a9fe63704e19"
+  }
+}
