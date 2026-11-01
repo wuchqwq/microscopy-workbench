@@ -100,3 +100,19 @@ Normal Inspector reopen was qualified; the alternative `image_panel_resume`
 entry was not tested on this Mac. Finite geometric compatibility does not
 identify a unique phase, twin or 3D structure. Local config backups, loopback
 URLs, tokens and raw model logs are excluded from the published receipts.
+
+## Post-review integration state (separate from pinned Mac execution)
+
+After the machine qualification above, main received #50 (`65aa0f4`) and #51
+(`b21939b`). PR #52 was retargeted from the #51 branch to that updated main;
+its incremental diff still contains only its client/launcher/setup changes.
+Small documentation fixes distinguish the now-merged #44/#46/#47 ancestry from
+historical pre-merge reports and tell users to choose either direct stdio or the
+optional compiled-plugin registrar rather than duplicate MCP servers.
+
+The macOS experiment in this document remains source-pinned to `c1651b5`, with
+only the separately stated stock fixed-launcher run covering #52's new prompt.
+Retargeting is **not** a new Mac execution or a new physical qualification.
+Require new PR-head CI after this note and final merged-main push CI before
+marking the combined source tree as a pre-migration checkpoint; no release tag
+or real-specimen certification is implied.
