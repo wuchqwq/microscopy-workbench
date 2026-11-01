@@ -5,6 +5,15 @@ description: Continue from researcher-selected microscopy ROIs, revise source-bo
 
 # Reusable microscopy observations
 
+## Shared GUI and Agent entry
+
+For either a researcher-first Inspector or an Agent-first supplied image, read
+[shared workspace entry and handoff](references/shared-workspace.md). Reuse the
+same explicitly identified Panel/provider workspace. Human edits and pending
+results must be checked before continuing; no custom Agent runtime or mandatory
+full-image analysis is required. Model/client activation remains host-controlled
+and on demand.
+
 ## Image-first or existing evidence
 
 For two neighboring researcher-selected ROIs and explicit structure candidates,

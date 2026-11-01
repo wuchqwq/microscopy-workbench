@@ -132,3 +132,36 @@ test('Panel MCP response adds handoff while preserving old view and actual image
  assert.equal(result.content[1].type,'image');assert.equal(result.content[1].data,png);
  assert.deepEqual(source,before,'Adding readonly handoff does not rewrite the old view');
 });
+
+
+test('interaction gate is shared by both entry routes and is not a scientific qualification',()=>{
+ const gui=state(),agent=state();agent.object.annotations=[];delete agent.object.xy_calibration;
+ for(const s of [gui,agent]) {
+  const before=structuredClone(s),gate=panelRoiHandoff(s).interaction_gate;
+  assert.equal(gate.status,'ready');assert.equal(gate.requires_fresh_read,true);
+  assert.deepEqual(gate.reasons,[]);assert.deepEqual(s,before);
+ }
+ assert.equal(panelRoiHandoff(agent).saved_rectangles.length,0,'Agent-first source preview needs no invented human ROI');
+ assert.equal(panelRoiHandoff(agent).scientific_input.status,'pixel_only');
+});
+
+test('shared snapshot gate keeps pending/results/save errors distinct from old draft flags',()=>{
+ const cases=[
+  [{pending_result:{object_id:C,request_id:'computed-view'}},'pending_result'],
+  [{draft_persistence:{pending:true,error:null}},'draft_save_pending'],
+  [{draft_persistence:{pending:false,error:'private-path-secret'}},'draft_save_failed'],
+  [{last_operation:{state:'submitted',request_id:'original-request'}},'operation_unresolved'],
+  [{edit_state:{dirty:false,gesture_active:false,annotation_edit:{annotation_id:'roi-a'}}},'annotation_edit_pending'],
+ ];
+ for(const [patch,reason] of cases) {
+  const s={...state(),...patch},before=structuredClone(s),packet=panelRoiHandoff(s);
+  assert.equal(packet.interaction_gate.status,'blocked');assert.ok(packet.interaction_gate.reasons.includes(reason));
+  assert.equal(packet.interaction_gate.requires_fresh_read,true);assert.deepEqual(s,before);
+  assert.doesNotMatch(JSON.stringify(packet.interaction_gate),/private-path-secret/);
+ }
+ const queued={...state(),pending_result:{object_id:C,request_id:'already-saved'}};
+ assert.equal(panelRoiHandoff(queued).draft_state.requires_user_commit,false,'Do not reinterpret the old draft flag as result acceptance');
+ for(const patch of [{edit_state:null},{edit_state:{dirty:false}},{draft_persistence:{pending:'no',error:null}},{draft_persistence:{pending:false}},{draft_persistence:null}]) {
+  assert.equal(panelRoiHandoff({...state(),...patch}).interaction_gate.status,'unknown');
+ }
+});
