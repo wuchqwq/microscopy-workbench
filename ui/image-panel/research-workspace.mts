@@ -1,5 +1,6 @@
 // Presentation only; existing providers remain the numerical authority.
 import {roiObservationModel} from './roi-observations.mjs';
+import {renderGpaEvidence} from './gpa-evidence.mjs';
 import type {PanelRoiSnapshot,RoiDependencySnapshot,RoiObservationModel} from './roi-observations.mjs';
 import type {BrowserDocument} from './browser-ports.mjs';
 type Row=Record<string,unknown>;
@@ -43,7 +44,7 @@ export class ResearchWorkspace {
   this.el('observation-draft-state').textContent=this.reasonDirty?'说明尚未保存；Agent 不会把它当作正式观察。':model.packet.draft_state.requires_user_commit?'有未完成草稿，请先保存或撤销。':'保存仅记录位置与理由，不确认物相。';
   this.el('agent-continue').disabled=busy||gesture||this.reasonDirty||model.packet.draft_state.requires_user_commit||(!usable.length&&!retained);this.el('save-observation-entry').disabled=busy||gesture||!current?.usable;
   const signature=JSON.stringify([model.rows,retained?.view_id]);if(signature!==this.rowSignature){this.rowSignature=signature;const list=this.el('roi-observations');list.replaceChildren();for(const r of model.rows){const li=this.node('li');li.className=r.selected?'selected-observation':'';const b=this.node('button',r.label);b.disabled=!r.usable;b.title=r.eligibility_reason;b.onclick=()=>this.run(()=>r.annotation_id&&this.options.onSelect(r.annotation_id));li.append(b,this.node('small',({saved:'已保存',saved_with_draft:'保存版＋未提交草稿',retracted:'已撤回',unusable:'当前网格不可用'} as Row)[r.status]),this.node('p',r.reason??'观察理由未知'),this.node('small',r.rect_xyxy?`处理窗口 [${r.rect_xyxy.join(', ')}]`:'未选择可用处理窗口'));list.append(li);}if(!model.rows.length){if(retained){for(const r of retained.observations){const li=this.node('li'),b=this.node('button',value(r.text)+'（原保存视图）');b.onclick=()=>this.run(async()=>{await this.options.onNavigate(retained.view_id);await this.options.onSelect(String(r.annotation_id));});li.append(b,this.node('p',value(r.reason)),this.node('small','历史观察引用，不会投到当前 FFT 上'));list.append(li);}}else list.append(this.node('li','暂无保存观察；当前选区与保存记录相互独立。'));}}
-  this.el('roi-warnings').replaceChildren(...model.warnings.map(w=>this.node('p',w)));this.renderEvidence(state.crystal_evidence,busy||gesture);
+  this.el('roi-warnings').replaceChildren(...model.warnings.map(w=>this.node('p',w)));renderGpaEvidence(this.el('gpa-evidence'),state.object,this.doc);this.renderEvidence(state.crystal_evidence,busy||gesture);
  }
  showHandoff(state:PanelRoiSnapshot){if(this.reasonDirty)throw new Error('请先保存观察说明。');this.el('agent-prompt').value=agentContinuationText(roiObservationModel(state),state.panel_id,state.crystal_evidence);this.el('agent-copy-status').textContent='只交接已保存观察；复制后粘贴给已连接的 Agent。没有内嵌对话，也不会自动运行。';this.el('agent-handoff-dialog').showModal();}
  private renderEvidence(raw:unknown,disabled:boolean){

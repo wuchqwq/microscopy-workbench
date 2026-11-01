@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-02",
+  "base_sha": "4141225653b41b134a76c5b2119888c01c481f54",
+  "base_tree": "d53fa691181d6d2ae348dffe10f3c76b148e17f0",
+  "verified_main_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "attachment_sha256": "8ae7e2d4ab99281bce5d71750f806851d38ab55ba0eb953c1e3e8afa4bc69085",
+  "attachment_member_hashes_verified": 38,
+  "attachment_exact_tree": "f14e8368c87b0eccdc6bf3d5f2f812bf5561ecd0",
+  "toolchain": {
+    "node": "24.22.2",
+    "npm": "11.19.1",
+    "typescript": "5.9.3",
+    "node_types": "18.19.130",
+    "undici_types": "5.26.5",
+    "python": "3.13.18",
+    "python_packages": "50 exact versions from #57 docs/science_fix_evidence/packages.txt"
+  },
+  "tests": {
+    "node": {
+      "total": 413,
+      "pass": 408,
+      "skip": 5,
+      "fail": 0
+    },
+    "focused_independent": 21,
+    "independent_http_mcp_cases": 13,
+    "python_semantics": 9,
+    "typecheck": "PASS",
+    "science_smoke": "PASS",
+    "actual_gpa_formal_mcp": "PASS",
+    "legacy": {
+      "exact_old_reads": 3,
+      "panels": 2,
+      "original_files_unchanged": 40
+    },
+    "browser": "NOT_TESTED_ORIGIN_PERMISSION_REJECTED",
+    "pr54_integration": "NOT_TESTED"
+  },
+  "scope": "Projection/interpretation/rendering increment only; occupancy, topology redundancy and flat-spectrum defects remain for separate repairs. No physical validation or API prohibition."
+}

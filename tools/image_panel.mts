@@ -29,11 +29,12 @@ import type {DisplayParameters} from '../ui/image-panel/figure-export.mjs';
 import {resolveComposition} from '../lib/figure_composer_assets.mjs';
 import {attachCrystalEvidence,crystalEvidenceForState,restoreCrystalEvidenceSnapshot,rememberCrystalScienceEvent} from '../lib/panel_crystal_evidence.mjs';
 import {loadOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
+import {projectGpaEvidence} from '../ui/image-panel/gpa-evidence.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const objectId=/^[a-f0-9]{32}$/;
 const safeId=/^[A-Za-z0-9_-]{1,64}$/;
-function publicImageObject(value:Metadata):Metadata{const fields=['source_file_format','source_reader','dm_dataset_index','dm_dataset','dm_catalog','calibration_admission','dm_plane_selection'];return {...publicObject(value),...Object.fromEntries(fields.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]))};}
+function publicImageObject(value:Metadata):Metadata{const fields=['source_file_format','source_reader','dm_dataset_index','dm_dataset','dm_catalog','calibration_admission','dm_plane_selection'];return {...publicObject(value),...projectGpaEvidence(value),...Object.fromEntries(fields.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]))};}
 function fail(message:string,status=400):never{const e=new Error(message) as Error&{status:number};e.status=status;throw e;}
 function fields(value:unknown,allowed:readonly string[]):asserts value is Metadata{if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!allowed.includes(k)))fail('Unexpected action fields');}
 function presentationUpdate(value:Metadata){if(value.presentation!==undefined)validate(value.presentation,annotationPresentation,'presentation');if(value.presentation_replace!==undefined&&(typeof value.presentation_replace!=='boolean'||value.presentation===undefined))fail('presentation_replace requires an explicit boolean and presentation metadata');}
@@ -417,6 +418,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  staticFiles.set('/evidence-contracts.mjs',['evidence-contracts.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/roi-observations.mjs',['roi-observations.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/research-workspace.mjs',['research-workspace.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/gpa-evidence.mjs',['gpa-evidence.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{

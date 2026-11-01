@@ -1,0 +1,16 @@
+{
+  "tools/image_panel.mts": "a5449d413e7c654895bc5ffbf83fc57f3b66167df1f372b743e7a5753dfe7320",
+  "tools/smoke_gpa.mts": "bb2cde90b2e0386d228ef0bfca29c1fdf69bc939f77d988a73c1df643c05b540",
+  "ui/image-panel/gpa-evidence.mts": "c1f969dbc3a2f48f4cfef9301b9dc950638a14f4357db375d4a542b340da08d8",
+  "ui/image-panel/research-workspace.mts": "c2d1ad42eae6ed5423afd25af97fc384f871df370d1a4c38f4bc1f103e9f431e",
+  "ui/image-panel/index.html": "75b91538d9a6709a4f3c9eae626c42544ea7466fcd82b33bc5cb6a816d3d78b0",
+  "tests/gpa-evidence-panel.test.mjs": "d4dccd41abf9365b4ddb41c8896b3762e563c340fd0fe1385916d397b0db2ac7",
+  "tests/research-workspace-ui.test.mjs": "ca60345de1a455d2922030089d60386c7f1fc0be01a7c1eced22af5bfbe0be73",
+  "package.json": "c31a5435a71ae2eae0f5112501c3db5a59ce855cc28373cea3faab5c6f5abb4a",
+  "package-lock.json": "5811d9254e255127de15d3158b6c16d36a8be01b71fbd3d9cb8e98130e6980db",
+  "tests/fixtures/serve-gpa-evidence-review.mjs": "9e4eb3d999db3589c2456c245aef1be2b92280f44fc7d8c8abd31f3df1f83521",
+  "tests/fixtures/create-legacy-gpa.py": "865fb059133a8773a1d7795b633dc173a467a3a9e8bcee9245cd9e53446393e8",
+  "tests/fixtures/gpa-panel-boundary-probe.mjs": "8d2c11495323248529a3ee8437f697cd7ca7d2d573b5e4c4f389dbca0b1d319d",
+  "tests/fixtures/gpa-evidence-history.mjs": "a43924b5d1d766f25298aa158cb8a48ca1638b078c099cac2440f8ee332d4f2b",
+  "tests/fixtures/gpa_physics_truth.json": "12705d107a279deb389a35072ee2506e2bd0686f9a218ed2ef6cc70e3bf2d111"
+}

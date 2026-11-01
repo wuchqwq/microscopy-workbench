@@ -5,6 +5,10 @@ description: Continue from researcher-selected microscopy ROIs, revise source-bo
 
 # Reusable microscopy observations
 
+Before choosing tools, read [bounded automation scope](references/automation-scope.md).
+Default to explicit ROI measurements and finite hypotheses; advanced scientific
+interpretations are not automatically validated by successful tool execution.
+
 ## Image-first or existing evidence
 
 For two neighboring researcher-selected ROIs and explicit structure candidates,

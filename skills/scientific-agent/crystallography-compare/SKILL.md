@@ -5,6 +5,17 @@ description: Compose ASE structure geometry, shared zone-axis orientation, kinem
 
 # Check a crystallographic hypothesis
 
+Apply [bounded automation scope and open scientific defects](../microscopy-automation/references/automation-scope.md)
+before candidate simulation or physical interpretation. In particular, extXYZ
+occupancy persistence is not yet repaired; do not treat a lossy saved summary
+as proof of full occupancy or a valid scattering/twin reference.
+
+The Agent may propose a few candidates from observed images, saved measurements
+and supplied material context. Complete structure simulations are not required
+to discuss them. The formal tools below still require their declared inputs;
+missing inputs leave the corresponding check unperformed, not the candidate
+confirmed or excluded. Preserve conflicting and indistinguishable explanations.
+
 For two adjacent ROIs with explicit candidate structures/orientations, read
 [general crystallographic evidence](references/general-evidence.md) and use
 `structure_general_compare` when advertised. It supports supplied ordered

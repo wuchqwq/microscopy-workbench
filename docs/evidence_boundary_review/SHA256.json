@@ -1,0 +1,9 @@
+{
+  "ORIGINAL_PATCH_REVIEW.md": "5edfde273100e440b13b26199d4b8fc2890ceb95ae6d2dcfdc50b6dd8c735fe9",
+  "INDEPENDENT_REVIEW.md": "6f7c2b392a257de15ac5a586e50a15c410f51c15984f523819c243c459da6c1c",
+  "tested-source-sha256.json": "467de4c0ab7ac8996506173c9009e11a49305ff02491fd1a2f415f6ac64977f1",
+  "review-execution.json.gz": "5cd84583a4248f2b5e7b8f97f4b58d5fdf0e361fb915d7d2a6a4d8cdc6e4af03",
+  "saved-worker-records.json.gz": "69433f8e164e71c62bb166c677ecbb4eee3eafbd54fa480366affcd5cdfbf9bf",
+  "VALIDATION.json": "f8deb8369d4123af682a2677ba2416daf4be16119fd8a499899323f1dc5077b2",
+  "original-handoff.json.gz": "9a6b393a8ce65db6979668117074988cd15ec595e71c3082dc74ffc5b8238fdf"
+}
