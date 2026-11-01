@@ -1,0 +1,18 @@
+[
+  {
+    "label": "joint",
+    "input_has_semantics": true,
+    "visible_kind": "view",
+    "visible_model": null,
+    "sequence_has_semantics": false,
+    "sequence_has_projection": false
+  },
+  {
+    "label": "legacy-peaks",
+    "input_has_semantics": false,
+    "visible_kind": "fft_view",
+    "visible_model": null,
+    "sequence_has_semantics": false,
+    "sequence_has_projection": false
+  }
+]

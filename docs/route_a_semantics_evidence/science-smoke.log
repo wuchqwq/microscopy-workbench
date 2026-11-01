@@ -1,0 +1,5 @@
+
+> microscopy-core@0.1.0 test:science
+> node dist/tests/standalone-science-smoke.mjs
+
+PASS: standalone TIFF -> signed calibration -> ROI FFT -> 0.8 nm measurement -> NPY export/direct DFT -> display-only revision -> restart recovery -> panel HTTP; source unchanged.

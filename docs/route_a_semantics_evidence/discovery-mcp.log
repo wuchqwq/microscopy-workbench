@@ -1,0 +1,5 @@
+
+> microscopy-core@0.1.0 test:manual-discovery
+> node dist/tools/smoke_manual_image_first.mjs
+
+PASS: manual image-first actual MCP qualification retained at /var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/manual-image-first-MS9Lf9/report.json
