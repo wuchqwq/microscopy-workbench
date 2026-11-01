@@ -122,6 +122,9 @@ explicitly. Hann reduces window-edge leakage but changes peak shape; a larger
 window improves frequency sampling while possibly mixing domains.
 
 Call `image_peaks` on a saved FFT to locate maxima in scientific amplitude,
+using the [peak-quality reference](references/peak-quality.md) to choose
+bounded checks and distinguish numerical candidates from qualified detection.
+The detector operates on the saved numerical spectrum,
 excluding the specified DC neighborhood. Threshold/separation/refinement are
 reported numerical choices, not a phase confidence. Inspect the returned
 annotated spectrum and peak table alongside the source region. Weak or merged

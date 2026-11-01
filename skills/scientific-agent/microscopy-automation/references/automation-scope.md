@@ -60,10 +60,12 @@ cross-band redundancy. Reused support retains conditional diagnostics with
 create an explicit revision for the new check. Even disjoint supports are not
 independent experiments or evidence of a confirmed material defect.
 
-Peak detector v2 refuses unresolved numerical amplitude contrast, including the
-reproduced flat-spectrum roundoff peaks. The fixed binary64 depth-based policy
-is explicitly not a certified FFT error bound, measured SNR or physical peak
-validation. True contrast near floating-point resolution can remain unresolved.
+Peak detector v3 includes the complete FFT norm, including DC, when assessing
+unresolved numerical amplitude contrast. Its binary64 depth-based proxy is
+explicitly not a certified FFT error bound, per-peak numerical certificate,
+measured SNR or physical peak validation. True contrast near floating-point
+resolution can remain unresolved. Read the [peak-quality reference](peak-quality.md)
+for existing diagnostics, bounded choices and claim-specific stopping conditions.
 Old unversioned peak objects keep their original interpretation; new automatic
 measurements/fields require current detection. Atlas/joint revisions rerun peak
 detection on the same saved FFT instead of silently reusing a legacy peak table.
