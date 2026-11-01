@@ -21,6 +21,13 @@ internally. The owned helper survives MCP client disconnect; querying the same
 original request reuses that panel. Stopped/unknown launches are not restarted
 automatically. The CLI below remains available for explicit manual setup.
 
+New owned v2 helpers also support the explicit
+`image_panel_resume({panel_id, request_id})` operation after the previous helper
+has stopped. Save that new request ID first; recovery queries never launch a
+second helper. New Researcher Inspectors use the same formal registration.
+See [registered Inspector and Panel recovery](INSPECTOR_PANEL_RECOVERY.md) for
+generation/URL changes, draft handling and legacy archive restrictions.
+
 Use the integration branch containing `tools/image_panel.mjs` and configure the
 same independent Python environment and output workspace as the Agent's
 `image_*` tools. No new browser framework or package is required. In PowerShell:
@@ -202,9 +209,17 @@ managed `image_panel_open` registry entry. Its selection-file option remains a
 manual compatibility handoff, not a replacement for the normal panel tools.
 
 If the helper has stopped, querying its old open request does not restart it.
-Recover the saved scientific objects or named analysis, then explicitly open
-a new panel on the chosen saved object with a new panel-open request. This
-creates a new viewing session, not a retry of an uncertain scientific
-operation. Unsaved browser drafts are not guaranteed across host termination;
-the last saved arrays, calibration, annotations and original result records
-remain separate from the panel lifetime.
+For an owned v2 helper, explicitly call `image_panel_resume` with its retained
+Panel ID and a request ID saved before submission. Its logical Panel ID remains
+the same; the helper generation, capabilities and returned URL change. Saved
+crystal evidence remains `restored_unvalidated` until a fresh full
+`image_panel_evidence` admission. Old attachment/presentation/resume receipts
+remain historical; use `image_panel_current` to inspect the new helper.
+
+Legacy helpers without a qualified owned checkpoint cannot resume. Recover the
+saved scientific objects or named analysis, then explicitly open a new Panel on
+the chosen saved object. That creates a new viewing session, not a retry of an
+uncertain scientific operation. Only persisted drafts can be restored; unsent
+browser edits are not guaranteed across host termination. Saved arrays,
+calibration, annotations and original result records remain separate from the
+Panel lifetime. See the [recovery compatibility table](INSPECTOR_PANEL_RECOVERY.md#compatibility-and-migration).

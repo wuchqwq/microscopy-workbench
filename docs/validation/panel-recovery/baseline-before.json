@@ -1,0 +1,66 @@
+{
+  "result": "PASS_BASELINE_EXPECTED_FAILURES_REPRODUCED",
+  "baseline": "14613c4f5fba5af941568d5c71413928c627bd9d",
+  "runtime_file_sha256": {
+    "panel_manager": "2dd8beb8a79fce7c675551a89caa58fe1a4729fb9341f2e3829470ca59cc8ed9",
+    "inspector": "81dc94ead7b0c3617a381fc03d2319ed3b85f9828dd81ffea3f0402f76d862b2",
+    "panel_helper": "90d888117f122de80792f273664fcb05a86f367a82ab51785a80023df51bf3bf"
+  },
+  "registered": {
+    "result": "PASS_EXPECTED_BASELINE_REFUSAL",
+    "scope": "Actual stock compiled plugin stdio MCP, stock default registered helper launch and real Python. Explicit disposable idle helper forced stop; not normal close or scientific-worker interruption.",
+    "source_object_id": "6c843f7ed9f54305964f28a6f303dded",
+    "frame_object_id": "1075374c37e34d7fb674b15aa3c6eafd",
+    "view_object_id": "2598a4ad19244e029021e50d34a6f29f",
+    "panel_id": "b294bcc0b5c98208a214d6493e822deb",
+    "original_request_id": "baseline-registered-open",
+    "registered_helper_pid": 35180,
+    "parent_server_pid": 33860,
+    "stop": {
+      "controlled_forced_stop": true,
+      "verified_node_helper": true,
+      "parent_pid": 33860,
+      "pid": 35180,
+      "verified_workspace_panel_connection": true,
+      "normal_close": false,
+      "creation_utc": "2026-11-01T08:09:40.1871580Z"
+    },
+    "old_open_error": "错误: fetch failed",
+    "current_error": "错误: fetch failed",
+    "resume_tool_published": false,
+    "original_registry_hashes": {
+      "connection": "cf520758433d6615bf5723d265e93e11ef109b2a782bd06b7091a21fba7cd3d2",
+      "request": "ed5c4e11ce4456e6b2166a2d0248ede90bbf5e4cf4e069cc73daaf8ee634aa0f"
+    },
+    "original_registry_bytes_unchanged": true,
+    "scientific_files_unchanged": 9,
+    "source_file_unchanged": true
+  },
+  "inspector": {
+    "result": "HOLD_UNREGISTERED_PANEL_BASELINE",
+    "scope": "Actual existing public startResearcherInspector API and formal stock stdio MCP; no browser/model or custom registration callback.",
+    "public_panel_id": null,
+    "view_object_id": "779baec5c8f04fbe866f3e24866acd20",
+    "frame_object_id": "d0ef56ca35124c06aaeaa7dedb690817",
+    "formal_current_error": "错误: Expected exactly one live registered panel; found 0. Specify the retained panel_id.",
+    "scientific_files_unchanged": 9,
+    "source_file_unchanged": true
+  },
+  "independent_frame_oracle": "PASS exact synthetic frame/dtype",
+  "source_sha256": "1dcfc54e57dcc30a62f706a47ba012a8a1410874b65d93184d7f807cae72a7b8",
+  "source_unchanged": true,
+  "not_tested": [
+    "New resume tool",
+    "New ownership/checkpoint contract",
+    "Actual helper normal closure in registered-stop case",
+    "Active scientific worker interruption",
+    "Browser/model",
+    "Real data",
+    "Mac"
+  ],
+  "cleanup": {
+    "registered_helper": "Controlled forced stop of exact new idle helper only",
+    "MCP_clients": "Normal stdin EOF close",
+    "Inspector": "Normal existing public close()"
+  }
+}

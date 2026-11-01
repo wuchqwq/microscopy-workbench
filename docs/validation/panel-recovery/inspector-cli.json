@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "scope": "Actual stock researcher_inspector CLI registration -> formal exported MCP show/evidence -> controlled owned helper termination -> documented cold CLI reopen -> full evidence revalidation; previously fresh public science records reused byte-for-byte",
+  "started_utc": "2026-11-01T08:27:10.668Z",
+  "checks": [
+    "The actual default Inspector CLI, without injected provider/Panel ports, publishes its own session ID through the official registrar. Formal MCP current/show/evidence attaches saved scientific two-ROI evidence to this same Inspector.",
+    "Only the exact verified disposable Inspector PID is force-terminated. The documented no-source cold reopen preserves logical Panel and exact saved scientific object, creates generation 2/new OS/helper identity, and restores only unvalidated evidence snapshot.",
+    "A new full image_panel_evidence admission restores current; a fresh MCP client recovers all original science, Inspector startup and same-window presentation request objects. No FFT/simulation or old file changes; unrelated prior helper connection is untouched."
+  ],
+  "not_tested": [
+    "Normal helper exit",
+    "Interruption while a scientific worker is active",
+    "Actual MCP-process crash between resume submission and publication",
+    "Human/browser gestures",
+    "Real specimen, GMS, Mac/Linux process control"
+  ],
+  "science_directory": "F:/microscopy-workbench-inspector-rebind/analysis/registered-panel-recovery-r2/science",
+  "science_fixture_mode": "reuse_primary_qualified_public_science",
+  "result": "PASS",
+  "references": {
+    "logical_panel_id": "c871fe3f3f8f40b80f2707d4bba53105",
+    "observation_view_object_id": "3888cb1610a24fc3a160fd8279b21987",
+    "source_frame": "00a55be0e91a4443895aa649b913b669",
+    "calibrated_frame": "cfbbf46dbb114ffc98ef331cfc048b4e",
+    "ffts": [
+      "7698da6dd42142dba10973e85cffac49",
+      "68e28cfccd9544e3ac78b2aea51e414a"
+    ],
+    "comparison": "12545d8df1ce467c80eed3cfb7d46799",
+    "show_request": "inspector-existing-observations",
+    "original_evidence_request": "inspector-evidence-before",
+    "new_evidence_request": "inspector-evidence-after"
+  },
+  "helpers": {
+    "before": {
+      "pid": 18616,
+      "creation_utc": "2026-11-01T08:27:11.1200260Z",
+      "executable_verified": true,
+      "exact_stock_argv_verified": true,
+      "action": "inspect",
+      "helper_session_id": "557c1c35c928b25762bdcb3e103afb1e",
+      "generation": 1
+    },
+    "after": {
+      "pid": 30780,
+      "creation_utc": "2026-11-01T08:27:38.7386470Z",
+      "executable_verified": true,
+      "exact_stock_argv_verified": true,
+      "action": "inspect",
+      "helper_session_id": "d8415760ef8f875747937efd88b9a8dd",
+      "generation": 2
+    },
+    "stop": {
+      "pid": 18616,
+      "creation_utc": "2026-11-01T08:27:11.1200260Z",
+      "executable_verified": true,
+      "exact_stock_argv_verified": true,
+      "action": "stop",
+      "classification": "controlled_forced_inspector_termination_at_idle_checkpoint",
+      "normal_exit": false
+    }
+  },
+  "integrity": {
+    "science_counts": {
+      "fft": 2,
+      "simulate": 2
+    },
+    "old_scientific_files_preserved": 430,
+    "cold_reopen_files_preserved": 442,
+    "recovery_files_unchanged": 443,
+    "startup_files_preserved": 6,
+    "original_checkpoint_sha256": "a4a2effa00cbda93c3c711df4b9328b4029a5e6c813168c87f8563677e15abaa",
+    "independent_numeric": {
+      "result": "PASS",
+      "source_array_equal": true,
+      "all_bin_direct_dft_max_errors": [
+        6.325281023279943e-11,
+        5.860982684926488e-11
+      ],
+      "unchanged_tolerance": 1e-7
+    }
+  },
+  "stages": {
+    "before": "current",
+    "after_cold_reopen": "unvalidated_snapshot",
+    "after_full_reattachment": "current"
+  },
+  "cleanup": {
+    "result": "PASS",
+    "classification": "controlled_forced_owned_test_helper_cleanup",
+    "pid": 30780
+  },
+  "calls": [
+    {
+      "name": "image_panel_current",
+      "request_id": null,
+      "state": "completed",
+      "elapsed_ms": 36.84400000000005
+    },
+    {
+      "name": "image_panel_show",
+      "request_id": "inspector-existing-observations",
+      "state": "completed",
+      "elapsed_ms": 9043.605599999999
+    },
+    {
+      "name": "image_panel_evidence",
+      "request_id": "inspector-evidence-before",
+      "state": "completed",
+      "elapsed_ms": 9603.908
+    },
+    {
+      "name": "image_panel_current",
+      "request_id": null,
+      "state": "failed_or_unknown",
+      "elapsed_ms": 9.605999999999767
+    },
+    {
+      "name": "image_panel_current",
+      "request_id": null,
+      "state": "completed",
+      "elapsed_ms": 22.469100000002072
+    },
+    {
+      "name": "image_panel_evidence",
+      "request_id": "inspector-evidence-after",
+      "state": "completed",
+      "elapsed_ms": 10106.569900000002
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-4",
+      "state": "completed",
+      "elapsed_ms": 1183.9381999999969
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-5",
+      "state": "completed",
+      "elapsed_ms": 2139.6627000000008
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-6",
+      "state": "completed",
+      "elapsed_ms": 1451.4266000000061
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-7",
+      "state": "completed",
+      "elapsed_ms": 1418.9009000000005
+    },
+    {
+      "name": "structure_result",
+      "request_id": "manual-crystal-10",
+      "state": "completed",
+      "elapsed_ms": 2668.0499000000054
+    },
+    {
+      "name": "structure_result",
+      "request_id": "manual-crystal-13",
+      "state": "completed",
+      "elapsed_ms": 2671.9349999999977
+    },
+    {
+      "name": "structure_result",
+      "request_id": "manual-crystal-14",
+      "state": "completed",
+      "elapsed_ms": 5732.711900000002
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-15",
+      "state": "completed",
+      "elapsed_ms": 1151.0561999999918
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-16",
+      "state": "completed",
+      "elapsed_ms": 1155.7249999999913
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-17",
+      "state": "completed",
+      "elapsed_ms": 2150.7813999999926
+    },
+    {
+      "name": "image_result",
+      "request_id": "manual-crystal-18",
+      "state": "completed",
+      "elapsed_ms": 1616.1809000000067
+    },
+    {
+      "name": "structure_result",
+      "request_id": "manual-crystal-19",
+      "state": "completed",
+      "elapsed_ms": 8662.494399999996
+    },
+    {
+      "name": "image_result",
+      "request_id": "inspector-c871fe3f3f8f-open",
+      "state": "completed",
+      "elapsed_ms": 1223.266599999988
+    },
+    {
+      "name": "image_result",
+      "request_id": "inspector-c871fe3f3f8f-frame",
+      "state": "completed",
+      "elapsed_ms": 1235.120900000009
+    },
+    {
+      "name": "image_result",
+      "request_id": "inspector-c871fe3f3f8f-preview",
+      "state": "completed",
+      "elapsed_ms": 1283.0513000000064
+    },
+    {
+      "name": "image_panel_show",
+      "request_id": "inspector-existing-observations",
+      "state": "completed",
+      "elapsed_ms": 14.9206000000122
+    },
+    {
+      "name": "image_panel_evidence",
+      "request_id": "inspector-evidence-before",
+      "state": "completed",
+      "elapsed_ms": 16.005099999994854
+    },
+    {
+      "name": "image_panel_evidence",
+      "request_id": "inspector-evidence-after",
+      "state": "completed",
+      "elapsed_ms": 16.033699999999953
+    },
+    {
+      "name": "image_panel_current",
+      "request_id": null,
+      "state": "completed",
+      "elapsed_ms": 45.03589999998803
+    }
+  ],
+  "runtime_ms": 86762.05840000001,
+  "completed_utc": "2026-11-01T08:28:37.431Z"
+}

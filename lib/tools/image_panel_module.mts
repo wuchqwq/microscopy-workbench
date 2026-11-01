@@ -1,6 +1,6 @@
 // Panel presentation is an explicit optional module, not a science fallback or
 // another image state database. Existing manager/HTTP guards remain in place.
-import {ImagePanelManager, imagePanelTools,imagePanelEvidenceTool, IMAGE_PANEL_INSTRUCTIONS} from '../image_panel_mcp.mjs';
+import {ImagePanelManager, imagePanelTools,imagePanelEvidenceTool,imagePanelResumeTool, IMAGE_PANEL_INSTRUCTIONS} from '../image_panel_mcp.mjs';
 import {buildCrystalEvidencePayload,addCrystalInteractionViews} from '../panel_crystal_evidence.mjs';
 
 import type {PanelImageWorkspacePort,PanelStructureWorkspacePort,PanelManagerOptions,PanelManagerPort} from '../panel_manager_contracts.mjs';
@@ -9,6 +9,7 @@ interface PanelRecipe {inputs:readonly string[];outputs:readonly string[];kind:s
 interface ImagePanelModuleOptions {imageWorkspace?:PanelImageWorkspacePort;structureWorkspace?:PanelStructureWorkspacePort;manager?:PanelManagerPort;managerOptions?:PanelManagerOptions;}
 
 const recipes:Readonly<Record<string,PanelRecipe>> = {
+  image_panel_resume:{inputs:['PanelRef:explicit stopped owned registered helper','OperationReceipt:pre-saved explicit resume request_id'],outputs:['PanelRef:same logical ID, fresh helper session/generation/capability','CheckpointSnapshot:unvalidated evidence until provider admission'],kind:'owned-panel-resume',requestId:'required',gates:['Exact owned connection and checkpoint generation inside workspace; stopped PID or normal-close marker','Durable submitted intent and exclusive per-panel claim; failed/unknown request never launches again','No scientific operation or original tool replay; saved evidence requires full provider readmission'],serialization:'Exclusive owned Panel registration claim, independent of provider scientific queues',recovery:{method:'Repeat image_panel_resume with exact original panel_id/request_id; query its original receipt only, never repeat a launch',tool:'image_panel_resume',idField:'request_id',scope:'Exact workspace Panel registry and owned helper generation; legacy unregistered helpers cannot resume'}},
   image_panel_evidence: {
     inputs: ['GeneralCrystalEvidenceRef:existing fully admitted structure comparison','PanelRef:owned exact current view and draft revision','Optional ObservationViewRef:two exact saved original ROI observations','OperationReceipt:pre-saved presentation request_id'],
     outputs: ['CrystalEvidencePresentation:bounded provider references, qualified counts/details and comparison PNG; never a scientific image input','PresentationReceipt:original attach outcome'],
@@ -77,6 +78,6 @@ export function createImagePanelModule({imageWorkspace,structureWorkspace, manag
   return {
     id: 'image-panel', enabled: true, manager: runtime,
     instructions: IMAGE_PANEL_INSTRUCTIONS+(structureWorkspace?' To return an existing general crystallographic comparison to this same GUI, use image_panel_evidence against the inspected exact object/draft revision; optionally retain the saved original observation_view_object_id. It attaches provider-qualified evidence beside the image, not a new scientific image. A reloaded process snapshot is unvalidated until explicit provider reattachment; do not replay unknown scientific requests.':''),
-    tools: [...imagePanelTools,...(structureWorkspace?[imagePanelEvidenceTool]:[])].map(definition => ({definition, contract: contract(definition.name, runtime), execute: (args:unknown, {signal}:ToolCallOptions = {}) => runtime.call(definition.name, args, signal)})),
+    tools: [...imagePanelTools,imagePanelResumeTool,...(structureWorkspace?[imagePanelEvidenceTool]:[])].map(definition => ({definition, contract: contract(definition.name, runtime), execute: (args:unknown, {signal}:ToolCallOptions = {}) => runtime.call(definition.name, args, signal)})),
   };
 }

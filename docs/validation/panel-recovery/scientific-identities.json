@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "scope": "Read-only final post-browser metadata/file hash verification, no new scientific computation",
+  "base_main": "14613c4f5fba5af941568d5c71413928c627bd9d",
+  "shape_yx": [
+    64,
+    128
+  ],
+  "dtype": "float32",
+  "source_tiff_sha256": "ec6730f2151312f65cfe2ff9af3dade8cf91c615e4b8152c67ad0a13312dddb8",
+  "rois_xyxy": [
+    [
+      0,
+      0,
+      64,
+      64
+    ],
+    [
+      64,
+      0,
+      128,
+      64
+    ]
+  ],
+  "signed_scale_nm_per_px": {
+    "x": 0.025,
+    "y": -0.025
+  },
+  "science_counts_after_browser": {
+    "fft": 2,
+    "simulate": 2
+  },
+  "scientific_objects": {
+    "source": {
+      "object_id": "949c2591025142668db331d121b4d09c",
+      "request_id": "manual-crystal-1",
+      "kind": "tiff_source",
+      "files_sha256": {},
+      "object_json_sha256": "b0b6d5f370312c5dbb3155a1404262f2c839670891d14a8bd4ef8d2bf08c516d"
+    },
+    "frame": {
+      "object_id": "00a55be0e91a4443895aa649b913b669",
+      "request_id": "manual-crystal-2",
+      "kind": "frame",
+      "dtype": "float32",
+      "shape_yx": [
+        64,
+        128
+      ],
+      "files_sha256": {
+        "data.npy": "fc39c67fa83d1a1571027b1420539581788100025b9eef486c397c4adec977e9"
+      },
+      "object_json_sha256": "9626693540e07eb50e79c56380588b46da68545847858e092e6aeb1cf742fb68"
+    },
+    "calibration": {
+      "object_id": "cfbbf46dbb114ffc98ef331cfc048b4e",
+      "request_id": "manual-crystal-3",
+      "kind": "calibration",
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "00a55be0e91a4443895aa649b913b669",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-inspector-rebind\\analysis\\registered-panel-recovery-r2\\science\\fixture\\two_operator_rois.tiff",
+            "sha256": "ec6730f2151312f65cfe2ff9af3dade8cf91c615e4b8152c67ad0a13312dddb8",
+            "stat": {
+              "ctime_ns": "1793521289668868100",
+              "device": "17081883644722306211",
+              "inode": "281474979350598",
+              "mtime_ns": "1793521289679923900",
+              "size": 32992
+            }
+          }
+        },
+        "calibration_id": "cfbbf46dbb114ffc98ef331cfc048b4e",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "Explicit public synthetic signed sampling; not independent experimental calibration.",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.025,
+          "y": -0.025
+        }
+      },
+      "files_sha256": {},
+      "object_json_sha256": "91754dec38a78ec07ac520dcab692544874e4cbb3813e2e14f838bce10a21a35"
+    },
+    "atlas": {
+      "object_id": "dba5736af710433f92daf68ff7a882d3",
+      "request_id": "manual-crystal-5",
+      "kind": "spatial_atlas",
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "00a55be0e91a4443895aa649b913b669",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-inspector-rebind\\analysis\\registered-panel-recovery-r2\\science\\fixture\\two_operator_rois.tiff",
+            "sha256": "ec6730f2151312f65cfe2ff9af3dade8cf91c615e4b8152c67ad0a13312dddb8",
+            "stat": {
+              "ctime_ns": "1793521289668868100",
+              "device": "17081883644722306211",
+              "inode": "281474979350598",
+              "mtime_ns": "1793521289679923900",
+              "size": 32992
+            }
+          }
+        },
+        "calibration_id": "cfbbf46dbb114ffc98ef331cfc048b4e",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "Explicit public synthetic signed sampling; not independent experimental calibration.",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.025,
+          "y": -0.025
+        }
+      },
+      "files_sha256": {
+        "atlas-observations.json": "29c9fdb5ca3c80810990224cf030729034c23e16905652dfeba1cce07a7bda69",
+        "preview.png": "47fe7b72a31b57bcd98e7f52da9797f647e178469ccd041a3bc22710702678ff"
+      },
+      "object_json_sha256": "b320c992434cfe0a0443af09a8ad8da2defb0daa0c0fa05ae68c362fd970b0c6"
+    },
+    "fft1": {
+      "object_id": "7698da6dd42142dba10973e85cffac49",
+      "request_id": "auto-9a07739f120a587648a399b0501169fcbd08422df9f742a6",
+      "kind": "fft",
+      "dtype": "complex128",
+      "shape_yx": [
+        64,
+        64
+      ],
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "00a55be0e91a4443895aa649b913b669",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-inspector-rebind\\analysis\\registered-panel-recovery-r2\\science\\fixture\\two_operator_rois.tiff",
+            "sha256": "ec6730f2151312f65cfe2ff9af3dade8cf91c615e4b8152c67ad0a13312dddb8",
+            "stat": {
+              "ctime_ns": "1793521289668868100",
+              "device": "17081883644722306211",
+              "inode": "281474979350598",
+              "mtime_ns": "1793521289679923900",
+              "size": 32992
+            }
+          }
+        },
+        "calibration_id": "cfbbf46dbb114ffc98ef331cfc048b4e",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "Explicit public synthetic signed sampling; not independent experimental calibration.",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.025,
+          "y": -0.025
+        }
+      },
+      "files_sha256": {
+        "data.npy": "e480371e89d16413e73ad1bebb0600c91fc6a84b859cd4d79695f1355ae9a340",
+        "preview.png": "a28e326dc0fc53a46c590e8963feb2263b48438d9f9b7662435715e024d108d2"
+      },
+      "object_json_sha256": "702e45e3c02c6c05bcee48bc228a5588754803b6ff6a19eafeeadaac6fca20d1"
+    },
+    "fft2": {
+      "object_id": "68e28cfccd9544e3ac78b2aea51e414a",
+      "request_id": "auto-59e0c2f31babb6d5e7cf2595d9783a0326533d17127128d2",
+      "kind": "fft",
+      "dtype": "complex128",
+      "shape_yx": [
+        64,
+        64
+      ],
+      "xy_calibration": {
+        "applies_to": {
+          "frame_index": 0,
+          "kind": "frame",
+          "object_id": "00a55be0e91a4443895aa649b913b669",
+          "source_capture_files_sha256": null,
+          "source_identity": {
+            "path": "F:\\microscopy-workbench-inspector-rebind\\analysis\\registered-panel-recovery-r2\\science\\fixture\\two_operator_rois.tiff",
+            "sha256": "ec6730f2151312f65cfe2ff9af3dade8cf91c615e4b8152c67ad0a13312dddb8",
+            "stat": {
+              "ctime_ns": "1793521289668868100",
+              "device": "17081883644722306211",
+              "inode": "281474979350598",
+              "mtime_ns": "1793521289679923900",
+              "size": 32992
+            }
+          }
+        },
+        "calibration_id": "cfbbf46dbb114ffc98ef331cfc048b4e",
+        "coordinate_domain": "real_space",
+        "original_file_metadata_modified": false,
+        "previous_calibration_id": null,
+        "real_space_only": true,
+        "revision": 1,
+        "scope": "image",
+        "source": "user_statement_not_independently_verified",
+        "source_text": "Explicit public synthetic signed sampling; not independent experimental calibration.",
+        "status": "active",
+        "uncertainty_status": "unknown",
+        "value_unit_or_frame_depth_inferred": false,
+        "xy_scale": {
+          "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+          "uncertainty_x": null,
+          "uncertainty_y": null,
+          "unit": "nm",
+          "x": 0.025,
+          "y": -0.025
+        }
+      },
+      "files_sha256": {
+        "data.npy": "f00e5a6288b10cfc91b4cebd9fe61320c9fce5cbb92ef3d05f0e26ab774d887f",
+        "preview.png": "656d00680c507826aa8781453357ef5672fc67517ff29077554805635e5c6e3c"
+      },
+      "object_json_sha256": "99349c51797a3515eb00e55a3fedb71176da0adb0ad7a8a60af4e4811e0a817c"
+    },
+    "comparison": {
+      "object_id": "12545d8df1ce467c80eed3cfb7d46799",
+      "request_id": "manual-crystal-14",
+      "kind": "crystal_evidence",
+      "parameters": {
+        "candidates": [
+          {
+            "basis": "Explicit supplied ordered FCC source and [001] projection; lattice parameters are synthetic candidates, not measured material labels.",
+            "label": "FCC candidate a4",
+            "simulation_a_object_id": "39f34ffc766e487ab07b6d82dcc1a308",
+            "simulation_b_object_id": "39f34ffc766e487ab07b6d82dcc1a308"
+          },
+          {
+            "basis": "Explicit supplied ordered FCC source and [001] projection; lattice parameters are synthetic candidates, not measured material labels.",
+            "label": "wrong metric candidate a3.2",
+            "simulation_a_object_id": "65d0e6b82c3c471cb2f4a373f3827878",
+            "simulation_b_object_id": "65d0e6b82c3c471cb2f4a373f3827878"
+          }
+        ],
+        "current_spatial_image_object_id": "cfbbf46dbb114ffc98ef331cfc048b4e",
+        "domains": [
+          {
+            "current_image_object_id": "47e8a52878f640dc9200c1261e50c9bd",
+            "field_object_id": "dba5736af710433f92daf68ff7a882d3",
+            "measurement_object_ids": [
+              "7c859294b3c549edaeff81becbf592c1",
+              "e85dfb92aac644eebcbd5b2871730743",
+              "a690f1c8f46d47a59356292f04aa5914",
+              "18b0fdec6304499e9662b2fe44ae3ddd",
+              "df277ef0fc4943fabf47946f61f4428e",
+              "7adba37749854e4488d3eed3dd144ba8"
+            ],
+            "rect_xyxy": [
+              0,
+              0,
+              64,
+              64
+            ]
+          },
+          {
+            "current_image_object_id": "ca934dc4dc4f4021ae27a85836ba6c29",
+            "field_object_id": "dba5736af710433f92daf68ff7a882d3",
+            "measurement_object_ids": [
+              "b7dc1d8f28634f5389b882e248681469",
+              "c41d029e1bdc484784797813162e050a",
+              "8b4f696bbe9a4e55a4ae8606c492cd81",
+              "993ceae9696c4071a17f2c973fc76394",
+              "0dda0d6497d247aeb3d5a9e76a6babde",
+              "cd20379f5f364f0a9de94b3af3f3b3b8"
+            ],
+            "rect_xyxy": [
+              64,
+              0,
+              128,
+              64
+            ]
+          }
+        ],
+        "experimental_kind": "real_space_fft",
+        "image_workspace": "F:\\microscopy-workbench-inspector-rebind\\analysis\\registered-panel-recovery-r2\\science\\workspace\\images",
+        "max_residual_inv_angstrom": 0.005,
+        "registration": {
+          "basis": "Declared independent synthetic reciprocal laboratory axes, signed XY scale; no per-ROI fit or inferred mirror.",
+          "flip_y": false,
+          "rotation_deg": 0,
+          "scale": 1,
+          "translation_inv_angstrom": [
+            0,
+            0
+          ]
+        }
+      },
+      "files_sha256": {
+        "comparisons.json": "83b4b7818c01601cd222088dea518d91fcee5b49df5da6d9379a768b448ea87e",
+        "input-000.json": "6f231368058e0af0bd755af98ec2fc2b788d57519476efbf11abf9d86a2b4fd0",
+        "input-001.json": "8d6901c8b2e794538027649986699fdaa46ba5d1ae4ec3cd1362998910187daf",
+        "input-002.json": "2b66eba761bb83772a950217244f39b038e67c56550ee2b0d01d5986dcca6a05",
+        "input-003.json": "7ca6b4ba99c98e6d7973b39ee7e7abecffc08dfb10c96e79008f3846526c1551",
+        "input-004.json": "7deb9effb51891ffb0911a0346fe1ee0cad92681903dec1f0386bd3157355ee4",
+        "input-005.json": "78635fb989ba73b124af11ce3ddcbf647183d0c55400cf3b71c4e7861b64a2c9",
+        "input-006.json": "cf67521d15be284a6127e34d438ea4e62181f3e1cc919e8e5984ea2188868886",
+        "input-007.json": "78f5164cee7b1294766132c809cfd9dfc0714b3a6dabdcb0249d5aa45f1c8bd6",
+        "input-008.json": "f742f4851dcbd82b99ea448a851d459a9b4241808ccb8bf8522987bedc4a2af0",
+        "input-009.json": "80d44e21cf184fdded5e9de041ae674b26b39284e271f4a9d147b5d30b544829",
+        "input-010.json": "4bb8d37499f23ddaaf0352c7fc0e41df597e7c3716d3ea9c5bb2ea58eca2272f",
+        "input-011.json": "79574f36012e805e95d71ac350c12daed542fba188bd4bbf3173fd18323ac0eb",
+        "input-012.json": "e3d43aa5b48897f08a12c29e04f82619a0d40af75ad4443b714f0f07dea7ab4b",
+        "input-013.json": "187d32eeb87dd0ba0699fe1b078782d23861270cdf9a37bfe1541a6bdd49f3f0",
+        "input-014.json": "b6be2abcce5966f6ce1ddafcbc59d85f5d334f5b0bd41c2079e99f45f31be456",
+        "input-015.json": "056f32170195eff1e3eefba69c7b21665d12fb9de42cdca45cbcf0284294f941",
+        "input-016.json": "32a4a5c8d909716787e17fda04daebf25feeeefe990c031fa4e762e7d74bed50",
+        "input-017.json": "1d2cb9fc1c9cd76cb9da7884e4e50bda1e8198ea99c9d05476bdf3fe19426a43",
+        "input-018.json": "6dd73040409b08140a5cfce1abc3084414e95e8bacfee8ee8c39cbf787f0f93e",
+        "input-019.json": "ffb1522104186c1c305466b5182bdc3bec50e5b2a1b585537fd2cf87a6a3593f",
+        "input-020.json": "498f9f8f11cfef13487177b00bc5f511648e15290302093d30f27e5eb7244cd7",
+        "input-021.json": "c91dac2174308e0f80af23f8129eef99120181b0c598d4fd759cc87529266c07",
+        "input-022.json": "966edcaf7f3e31a1172f425db02a1529f24e59ba958d05bbea422c50884a4e56",
+        "input-023.json": "4f2aba9ad291a1becdea3d0fdbcaa2b661fc977ab1378111559287f354fa957e",
+        "input-024.json": "5274e7591e25466e624624af14787869a420ee1487959a246b2f5afdc509bc4e",
+        "input-025.json": "885ccdc4fa4d6b1e14e0a536759c7ba20daf9bbd83dca024dad182643418360b",
+        "input-026.json": "99349c51797a3515eb00e55a3fedb71176da0adb0ad7a8a60af4e4811e0a817c",
+        "input-027.json": "78682b0861d792d224354d336f9a294392aaa18528199b1e8ee5b06ee6d969e8",
+        "input-028.json": "91754dec38a78ec07ac520dcab692544874e4cbb3813e2e14f838bce10a21a35",
+        "input-029.json": "68ea5a37b42f81e42a8405d7c19be7228fb39d69dac743b8a4df501db2eb624e",
+        "input-030.json": "9626693540e07eb50e79c56380588b46da68545847858e092e6aeb1cf742fb68",
+        "input-031.json": "dfcd22a3f50df0d2976c3ead81968a70b17bb9c0ebe0153b4d6c3366e1a6c62a",
+        "input-032.json": "b0b6d5f370312c5dbb3155a1404262f2c839670891d14a8bd4ef8d2bf08c516d",
+        "input-033.json": "2ff28c67eda2dd36c47b0dc70d4e17c18ff2488d5a8ceb71f3deeb01ddf067c6",
+        "input-034.json": "fef2ace2919923c4d60e177d4655ee8e1bef732e1d76cc7a88b5eb7a848480cc",
+        "input-035.json": "d5dd2ecad72a1dc0d9192de63a8cc2e42dfd16d13363873785926ba890e86638",
+        "input-036.json": "702e45e3c02c6c05bcee48bc228a5588754803b6ff6a19eafeeadaac6fca20d1",
+        "input-037.json": "5ab07a088e7b095f15d6728d202bbd9cc3ff0a1744689dd5a1d1c7e2250f2f4e",
+        "input-038.json": "81c5635802a8a37e49f71e24254e5bd845c77adac78a3c14fa90d38d722248a3",
+        "input-039.json": "b20f0dba751fb74d652302c5bf21c11888645aecc8919270b8b4bf09ccc34fda",
+        "input-040.json": "1ff2234a361b90788d29d4fa9e4c7a9e811d300b942790455d6f670c53085fda",
+        "input-041.json": "dd104d2df5e9f35f9915720e1385d0f1d1597a8d6301f305bd0d0b8fb56d9952",
+        "input-042.json": "b320c992434cfe0a0443af09a8ad8da2defb0daa0c0fa05ae68c362fd970b0c6",
+        "input-043.json": "dde183874b832ec8458c47f70ca8f6af79324e0e655a2fe04122404490a02d17",
+        "input-044.json": "1257e331c34665b435cca3a15debdf135a3b99528d2477f4e3c282aa0fa00313",
+        "input-045.json": "85ebe6d790360519a74958e6759be524b57163ef9fe4588491afaae6021c8da5",
+        "input-046.json": "08fda9e96dd32b0cf2becec7437377b926325f594aaf31d8b0d916b384d14e47",
+        "input-047.json": "981315ed5adcabc6837e434124a0e5b7bebc4c7a60f94aa612676b3032dc8c98",
+        "input-048.json": "23f45d61c479e66adfe9f44ea483d2853537febd06d1370145552ea17b3cfcfc",
+        "input-049.json": "c3c8233c2e895d5c41e92d5b3d98a810672d920d7f34f5f09c2c831845bf6311",
+        "input-050.json": "2c7c3b7fc51989c5cb0c5e3f7a9a293af9d3a6981f884e4d22d46bbb4dcb44bd",
+        "input-051.json": "e2f86ac8ee26498587a54e595f03ee32a3a60b5edaebcdf4aa06b3565815eba8",
+        "input-052.json": "66f88f4749628b9f4e2e7b6be3e94c2983bcfc4940353d42b97e18e1a31c7a8c",
+        "input-053.json": "f34ac55f6b74a736c907537f817beeb00b55aa28fe58d9b485c0abf2b563bf87",
+        "input-054.json": "e0730bd351b4cc91b4df61942db2013b9e3416d61a35932cb42d039f7c1e2cff",
+        "input-055.json": "da5876058555f6b26f76a62567dabe4a927fb8c7c31b7aa496bab4a50e728b09",
+        "input-056.json": "08675298ba232ef4ca5dff1f7e2eeab1f363c3db1b04eeacfa3944080e4940e9",
+        "input-057.json": "d4956f9fb9c02dd61478fd6170b0c6dc7c66a5ae0b426a0a82444522c1a742a8",
+        "observation-bindings.json": "5112a08134b9982b79b4f3526368a8229652e372ace446b8a3869017d76198ee",
+        "preview.png": "679b7a865c98cf80faa2af202b2ea42a6637869389148c5c722e323d8743921e",
+        "qualification.json": "e98163c29a36a265de2fc3c0148d338fe9c753ccf55e651c33aa854ce0b84c4d",
+        "reflections.csv": "7ac454b440783d1165eded6bf082dbbcbc3941b11b2cfde9e2eab70cd6a3d3e9"
+      },
+      "object_json_sha256": "56b9c45b326fd1a9f5df90a76a18a79f01b185241e646dd6a97d56d8f478ea74"
+    }
+  }
+}

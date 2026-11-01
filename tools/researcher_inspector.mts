@@ -6,6 +6,8 @@ import {randomBytes} from 'node:crypto';
 import {mkdirSync,existsSync,realpathSync,statSync,openSync,writeFileSync,fsyncSync,closeSync,readFileSync,renameSync,unlinkSync} from 'node:fs';
 import {StdioImageClient,createImagePanel} from './image_panel.mjs';
 import type {PanelClient} from '../lib/image_panel_contracts.mjs';
+import {prepareOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
+import type {OwnedRegistration} from '../lib/panel_ownership.mjs';
 
 // CLI options are a caller contract; existing validation still runs at entry.
 export interface ResearcherOptions {workspace:string;python:string;source?:string;frame?:number;dataset?:number;plane_axes?:number[];plane_indices?:(number|null)[];component?:string;}
@@ -40,7 +42,8 @@ export function parseResearcherArgs(argv:readonly string[]):ResearcherOptions{
  validatePlaneOptions(options);return options as unknown as ResearcherOptions;
 }
 
-export async function startResearcherInspector(options:ResearcherOptions,{createClient=args=>new StdioImageClient(args),openPanel=createImagePanel}:InspectorPorts={}){
+export async function startResearcherInspector(options:ResearcherOptions,ports:InspectorPorts={}){
+ const createClient=ports.createClient??(args=>new StdioImageClient(args)),openPanel=ports.openPanel??createImagePanel;
  // The only file entry is the explicitly named TIFF, DM3 or DM4. All later references are
  // provider objects or this launcher's own bounded journal within the workspace.
  const workspace=path.resolve(options.workspace),python=options.python;
@@ -83,33 +86,63 @@ export async function startResearcherInspector(options:ResearcherOptions,{create
   if(!objectId.test((fields(result.data)?.object_id??'') as string))throw new Error('Operation has not returned a saved object. Recover original request '+request.arguments.request_id);
   durableNew(responseFile,{object_id:fields(result.data).object_id,request_id:request.arguments.request_id});return fields(result.data);
  };
- let bootstrap=createClient({workspace,python}),selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown,crystalEvidenceSnapshot:unknown;
+ const pointer=path.join(directory,'latest-panel.json'),connectionFile=path.join(workspace,'panel-registry','panels',(session.session_id as string)+'.json');
+ // The normal entry publishes the actual helper through the same ownership
+ // mechanism as MCP. Old unregistered archives remain explicitly read-only;
+ // their last-window pointer is not proof that a former helper has stopped.
+ let owned:OwnedRegistration|undefined;
+ if(ports.openPanel===undefined&&(existsSync(connectionFile)||!existsSync(pointer)))owned=prepareOwnedPanelRegistration({workspace,panel_id:session.session_id as string});
+ if(!owned&&existsSync(pointer)&&fields(boundedJSON(pointer)).schema_version===2)throw new Error('Registered Inspector ownership is missing; do not invent a replacement registration');
+ let selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown,crystalEvidenceSnapshot:unknown;
+ const runId=randomBytes(16).toString('hex'),runDirectory=path.join(directory,'panels',runId),journalDirectory=owned?.journalDirectory??path.join(runDirectory,'journal');
+ let panel,panelClient:PanelClient|undefined,published=false;
+ // Roll back only failures proved to precede openPanel. Once helper entry is
+ // invoked, its claim remains fail-closed even when the eventual outcome is
+ // unknown. Scientific startup requests retain their original query-only IDs.
  try{
-  const initialized=fields(await bootstrap.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-researcher-inspector',version:'1'}}));if(initialized.error)throw new Error(fields(initialized.error).message as string);
-  const pointer=path.join(directory,'latest-panel.json');
-  if(existsSync(pointer)){
-   resumed=true;
-   const saved=fields(boundedJSON(inside(workspace,pointer)));
-   if(saved.schema_version!==1||saved.session_id!==session.session_id||!objectId.test((saved.run_id??'') as string))throw new Error('Saved panel binding is invalid');
-   const selectionPath=inside(workspace,path.join(directory,'panels',saved.run_id as string,'journal','current-selection.json'));
-   const selection=fields(boundedJSON(selectionPath));if(!objectId.test((selection.object_id??'') as string))throw new Error('Saved panel object identity is invalid');
-   selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
-   previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
-   numericResultRefs=Object.hasOwn(selection,'numeric_result_refs')?selection.numeric_result_refs:null;
-   crystalEvidenceSnapshot=selection.crystal_evidence??null;
-  }else{
-   const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
-   const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:(session.initial_frame as number)-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{}),...(session.initial_plane_axes!==undefined?{plane_axes:session.initial_plane_axes,plane_indices:session.initial_plane_indices}:{})});
-   selected=await call(bootstrap,'preview','image_preview',{object_id:frame.object_id,...(session.initial_component!==undefined?{component:session.initial_component}:{})});
-  }
- }finally{await bootstrap.close();}
- const runId=randomBytes(16).toString('hex'),runDirectory=path.join(directory,'panels',runId),journalDirectory=path.join(runDirectory,'journal');mkdirSync(runDirectory,{recursive:true});
- durableNew(path.join(runDirectory,'run.json'),{schema_version:1,session_id:session.session_id,object_id:selected.object_id,created_utc:new Date().toISOString()});
- let panel;
- try{panel=await openPanel({workspace,python,object_id:selected.object_id as string,journalDirectory,numeric_result_refs:numericResultRefs,crystal_evidence_snapshot:crystalEvidenceSnapshot});replaceJSON(path.join(directory,'latest-panel.json'),{schema_version:1,session_id:session.session_id,run_id:runId});}
- catch(error){if(panel)await panel.close();throw error;}
- return {panel,workspace,source_path:session.source_path,resumed,previous_unsaved_draft:previousDraft,numeric_result_recovery:panel.state?.().numeric_result_recovery??{state:numericResultRefs===null?'legacy_missing_refs':'not_requested'},
-  async close(){await panel.close();}};
+  let bootstrap:PanelClient|undefined;
+  try{
+   bootstrap=createClient({workspace,python});
+   const initialized=fields(await bootstrap.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-researcher-inspector',version:'1'}}));if(initialized.error)throw new Error(fields(initialized.error).message as string);
+   if(owned?.previousCheckpoint){
+    resumed=true;const selection=owned.previousCheckpoint;
+    selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
+    previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
+    numericResultRefs=selection.numeric_result_refs??null;crystalEvidenceSnapshot=selection.crystal_evidence??null;
+   }else if(existsSync(pointer)){
+    resumed=true;
+    const saved=fields(boundedJSON(inside(workspace,pointer)));
+    if(saved.schema_version!==1||saved.session_id!==session.session_id||!objectId.test((saved.run_id??'') as string))throw new Error('Saved panel binding is invalid');
+    const selectionPath=inside(workspace,path.join(directory,'panels',saved.run_id as string,'journal','current-selection.json'));
+    const selection=fields(boundedJSON(selectionPath));if(!objectId.test((selection.object_id??'') as string))throw new Error('Saved panel object identity is invalid');
+    selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
+    previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
+    numericResultRefs=Object.hasOwn(selection,'numeric_result_refs')?selection.numeric_result_refs:null;
+    crystalEvidenceSnapshot=selection.crystal_evidence??null;
+   }else{
+    const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
+    const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:(session.initial_frame as number)-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{}),...(session.initial_plane_axes!==undefined?{plane_axes:session.initial_plane_axes,plane_indices:session.initial_plane_indices}:{})});
+    selected=await call(bootstrap,'preview','image_preview',{object_id:frame.object_id,...(session.initial_component!==undefined?{component:session.initial_component}:{})});
+   }
+  }finally{await bootstrap?.close();}
+  mkdirSync(runDirectory,{recursive:true});
+  durableNew(path.join(runDirectory,'run.json'),{schema_version:1,session_id:session.session_id,object_id:selected.object_id,created_utc:new Date().toISOString()});
+  if(ports.openPanel===undefined)panelClient=createClient({workspace,python});
+ }catch(error){
+  try{owned?.releaseUnlaunched();}
+  catch(rollbackError){throw new AggregateError([error,rollbackError],'Inspector prelaunch failed; ownership claim retained because safe rollback could not be verified');}
+  throw error;
+ }
+ try{
+  panel=await openPanel({workspace,python,object_id:selected.object_id as string,journalDirectory,numeric_result_refs:numericResultRefs,crystal_evidence_snapshot:crystalEvidenceSnapshot,...(panelClient?{client:panelClient}:{}),...(owned?{panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,...(owned.previousCheckpoint?{resume_checkpoint:owned.previousCheckpoint}:{})}:{})});
+  owned?.publish(panel);
+  published=Boolean(owned);
+  replaceJSON(pointer,{schema_version:owned?2:1,session_id:session.session_id,run_id:runId,...(owned?{panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation}:{})});
+ }
+ catch(error){if(panel){if(published)await owned!.close(panel);else await panel.close();}else await panelClient?.close();throw error;}
+ let closing:Promise<void>|undefined;
+ return {panel,workspace,source_path:session.source_path,resumed,previous_unsaved_draft:previousDraft,panel_registration:{status:owned?'registered':'legacy_unregistered_readonly',panel_id:owned?.panel_id??null,helper_session_id:owned?.helper_session_id??null,generation:owned?.generation??null},numeric_result_recovery:panel.state?.().numeric_result_recovery??{state:numericResultRefs===null?'legacy_missing_refs':'not_requested'},
+  async close(){await (closing??=(owned?owned.close(panel):panel.close()));}};
 }
 
 if(isDirectInvocation(import.meta.url)){
@@ -118,7 +151,8 @@ if(isDirectInvocation(import.meta.url)){
   instance=await startResearcherInspector(parseResearcherArgs(process.argv.slice(2)));
   process.stdout.write('Researcher Image Inspector — scientific backend active; no model session.\n'+instance.panel.url+'\n');
   process.stdout.write('Keep this process running. Ctrl+C closes the local panel normally. Reuse the same workspace to reopen saved results.\n');
-  if(instance.previous_unsaved_draft)process.stderr.write('The previous session had an unsaved draft. Its original journal is retained; this window resumes only the last saved scientific object.\n');
+  if(instance.panel_registration.status==='legacy_unregistered_readonly')process.stderr.write('Legacy unregistered Inspector archive: saved image recovery is read-only; same-window MCP evidence attachment remains unavailable. No ownership was invented.\n');
+  if(instance.previous_unsaved_draft)process.stderr.write(instance.panel_registration.status==='registered'?'The previous session had an unsaved draft. It is restored separately from the saved scientific object; review and explicitly save it before using it as scientific evidence.\n':'The previous session had an unsaved draft. Its original legacy journal is retained; this window resumes only the last saved scientific object.\n');
   if(instance.numeric_result_recovery.state==='legacy_missing_refs')process.stderr.write('Previous panel snapshot has no separate statistics/profile references. Old records are retained; no results were guessed or recalculated.\n');
   else if(instance.numeric_result_recovery.state==='partial')process.stderr.write('Some saved statistics/profile references could not be verified. The image remains open; inspect numeric_result_recovery and do not repeat unknown requests automatically.\n');
   let closing=false;const close=async()=>{if(!closing){closing=true;await instance.close();}};process.on('SIGINT',close);process.on('SIGTERM',close);

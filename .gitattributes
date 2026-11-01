@@ -10,3 +10,5 @@ docs/validation/manual-crystal/*.json -text whitespace=cr-at-eol
 docs/validation/gui-first/*.csv -text whitespace=cr-at-eol
 
 docs/validation/gui-first/*.json -text whitespace=cr-at-eol
+
+docs/validation/panel-recovery/*.json -text whitespace=cr-at-eol

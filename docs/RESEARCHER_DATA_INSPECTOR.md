@@ -39,6 +39,24 @@ node tools/researcher_inspector.mjs `
 用新的工作区。若上次还有未保存草稿，原 journal 保留，并提示本轮只恢复已保存
 对象；不宣称把未保存编辑自动合入新视图。
 
+新建 Inspector 现在通过与 MCP 相同的 owned v2 机制注册，Agent 配置同一图像
+工作区后可用 `image_panel_current` 接过这个实际窗口。正常退出后，上述重开命令
+使用绑定的 checkpoint，保留逻辑 Panel ID、换用新的 helper session/generation
+和访问 URL。只恢复已持久化的选择及草稿，不承诺找回未送出的鼠标动作或浏览器
+撤销栈；中断的手势不会继续保持 active。旧 helper 尚存活时拒绝创建替身。
+
+Agent 也可显式调用 `image_panel_resume({panel_id, request_id})`，提交前保存新请求
+ID；超时后用同一参数查询原 ID，不自动重启、不重放失败或未知操作。
+恢复的晶体学卡片保持 `restored_unvalidated`，必须重新通过完整
+`image_panel_evidence` 来源、ROI、标定及草稿核对才能作为当前证据。旧回执只证明
+原操作，不证明新窗口已经接纳。详见[注册窗口恢复与兼容范围](INSPECTOR_PANEL_RECOVERY.md)。
+
+历史未注册 Inspector 档案仍可用原工作区命令只读恢复已有记录，但其同窗口 MCP
+重新接入保持 **HOLD / `legacy_unregistered_readonly`**，不会事后补造注册身份。
+这里“只读恢复”指读取旧记录，不代表所有 GUI 处理按钮被禁用。不要删除旧档案来
+绕过限制；另建工作区打开原文件是新的分析，不是恢复旧窗口。裸
+`tools/image_panel.mjs --object ...` CLI 也不会自动取得正式 owned 注册。
+
 新快照还分别保存最近一条 ROI 统计和强度剖面的对象／原请求引用。即使最后
 一次操作是导出或显示，重开也会只读核对并恢复这两条记录，不重新计算。
 结果必须仍匹配当前科学网格和标定才能显示为当前值；切帧或改标定后，旧轴
