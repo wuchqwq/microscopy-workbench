@@ -48,7 +48,12 @@ On macOS/Linux use the actual absolute Node and virtual-environment paths.
 Quotes preserve spaces; these paths are examples, not assumptions about a host.
 
 Alternatively use the installed CLI's `codex mcp add --help` and explicit env
-options after checking existing names. See the
+options after checking existing names. **First save a complete private copy of
+the configuration, not just its hash.** Some CLI versions reserialize existing
+MCP tables while adding one server, including omission of empty/default fields.
+Check all pre-existing entries and approval settings afterward; tool availability
+alone does not establish configuration preservation. Keep copies outside the
+repository and never publish their contents. See the
 [official MCP configuration reference](https://developers.openai.com/codex/mcp/).
 Restart/reconnect as the client requires. Verify the connection advertises
 `microscopy-core` and `image_*` tools, not `dm_*`. Tools/list alone is not a
@@ -59,6 +64,28 @@ Optional `MICROSCOPY_CONTEXT_WORKSPACE`, `MICROSCOPY_STRUCTURE_WORKSPACE` and
 [structure requirements](../requirements-structure-tools.txt) when those tasks
 are needed. Materials Project is an independent optional provider, not a default
 image dependency. Keep API keys out of repository files, command logs and chat.
+
+For the compiled plugin entry, the repository also supplies an append-only
+registrar (setup Python >=3.11; this does not change the scientific runtime's
+Python requirement). Prepare an explicit plugin JSON using the existing
+[plugin configuration format](AUTOMATION_PLUGIN.md), then inspect a dry run:
+
+```sh
+python3 tools/register_codex_mcp.py --node /absolute/path/to/node \
+  --plugin-config /absolute/private/plugin-config.json
+```
+
+Add `--apply` to register it. The helper preserves the existing TOML bytes,
+backs them up privately before a write, checks for intervening edits, and refuses
+an existing name with different settings. It does not call `codex mcp add`,
+change approval policy, install a Skill, or overwrite another server. Use
+`--config` for a non-default client configuration. Close other configuration
+editors while applying; the checks do not lock out unrelated writers. An already
+matching entry is a no-op. This prevents a new preservation gap; it cannot
+reconstruct an old configuration for which only a hash was retained.
+Backups use mode 700/600 on POSIX systems. On Windows, keep the client and backup
+directories within the user's private inherited ACL; POSIX mode bits do not
+establish Windows access control. Backups inside a Git checkout are refused.
 
 ## No-model GUI and first check
 

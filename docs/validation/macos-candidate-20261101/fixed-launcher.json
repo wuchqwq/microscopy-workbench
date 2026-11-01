@@ -1,0 +1,72 @@
+{
+  "scope": "Independent read-only audit of the same completed actual stock fixed launcher run; no model/science replay",
+  "observed_at_utc": "2026-11-01T11:42:34.135937+00:00",
+  "result": "PASS",
+  "actual_mcp_calls": 24,
+  "actual_image_blocks": 17,
+  "non_mcp_actions": [],
+  "failed_model_calls": [],
+  "currentness": "current",
+  "attachment_status": "validated",
+  "references": {
+    "panel_id": "ce91aca3ba252837e890b5ac7bb0f0b2",
+    "original_pixel_only_observation_view": "3e05855caa7845c9976958cacff9f354",
+    "new_calibrated_observation_view": "006d414ba0f84cd3b935659e5cb86da3",
+    "calibration": "ce2452edc2fc43eb9cdd032dad5c78bd",
+    "comparison": "c0e579c49d0840f6820c6a79f062fa23",
+    "presentation_request": "manual-crystal-616a989a4c-panel-evidence"
+  },
+  "object_counts": {
+    "images": {
+      "measure": 12,
+      "calibration": 3,
+      "view": 6,
+      "discovery_review": 2,
+      "fft_batch": 1,
+      "peak_measurements": 2,
+      "annotate": 5,
+      "discovery": 1,
+      "frame": 1,
+      "spatial_atlas": 1,
+      "fft": 2,
+      "fft_view": 2,
+      "tiff_source": 1
+    },
+    "structures": {
+      "orient": 2,
+      "compare": 4,
+      "structure": 2,
+      "crystal_evidence": 1,
+      "simulate": 2
+    }
+  },
+  "protected_old_files_unchanged": 17,
+  "source_sha256": "d197fa273466a138c43b891ea3d2559055c9f77315c9eb92712adbf2defcde8e",
+  "original_observation_manifest_sha256": "7d41d18811f49352015ee7737f2fbcc4d517a21ad71d8bb7d8f728b7e73f217f",
+  "all_original_annotation_ids_anchors_reasons_statuses_preserved": true,
+  "raw_tiff_and_saved_float32_npy_equal": true,
+  "independent_all_bin_dft": [
+    {
+      "object_id": "6225f3ff7a84437a80819e4b04f07ec8",
+      "array_sha256": "feefbd10148d9ac5dcc766b601bfc7c71ec1cea24e823fe57b83e92c98e6d603",
+      "max_dft_absolute_error": 4.3890203508079065e-10,
+      "unchanged_tolerance": 1e-07
+    },
+    {
+      "object_id": "0292f3cbfb53491799f8c749ae2744b3",
+      "array_sha256": "7ef4e34562462866c265af2074bf77e01c854ab3c2eb032709ab8f5065df74dc",
+      "max_dft_absolute_error": 5.795600705096745e-10,
+      "unchanged_tolerance": 1e-07
+    }
+  ],
+  "artifact_hash_errors": [],
+  "harness_metadata_extraction_note": "Initial process host auditor expected IDs at top-level evidence. Correct independent audit uses actual image_panel_evidence arguments and payload.object_id; any host-audit failure is preserved, and this audit reuses the same completed model/provider records without replay.",
+  "global_config_unchanged_during_model": true,
+  "tested_qualifier_sha256": "adaf77945a0eab1bc278692637b2afbcab844c1d3fb45523d2bf07f32f4bade5",
+  "provider_source_baseline": "c1651b5346df55e91602d5c32b5d2f73e659bdd5",
+  "scope_limits": [
+    "Controlled formal fixture API saved ROI marks, no new browser gestures in the fixed-launcher test",
+    "Synthetic numerical/software evidence, no real-material or human-usability qualification",
+    "Original pre-registration configuration preservation remains NOT_ESTABLISHED"
+  ]
+}
