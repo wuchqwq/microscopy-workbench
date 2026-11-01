@@ -108,7 +108,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
     return {...row,method:mapping.method,basis:mapping.basis,reason:mapping.reason,shift_xy:mapping.shift_xy};
    });
    const shown=await journalCall('image_info',{object_id:frame.view_object_id});
-   return {...shown,sequenceEvidence:{object_id:evidence.object_id,request_id:evidence.request_id,sequence_object_id:evidence.sequence_object_id,correspondence_object_id:evidence.correspondence_object_id,reference_index:evidence.reference_index,frame_observations:frameEvidence,observations:evidence.observations}};
+   return {...shown,sequenceEvidence:{...projectResultSemantics(evidence),kind:evidence.kind,object_id:evidence.object_id,request_id:evidence.request_id,sequence_object_id:evidence.sequence_object_id,correspondence_object_id:evidence.correspondence_object_id,reference_index:evidence.reference_index,frame_observations:frameEvidence,observations:evidence.observations}};
   }
   let renderKind=r.data.kind,renderDtype=r.data.dtype;
   if((['tiff_source','dm_source'] as readonly unknown[]).includes(r.data.kind)||r.png&&r.data.kind!=='calibration')return r;
