@@ -1,0 +1,788 @@
+{
+  "ok": true,
+  "result": {
+    "state": "completed",
+    "backend": "external-structure-workspace",
+    "object_id": "7361587218154e0fbed9ba6e834257c1",
+    "request_id": "partial_simulate",
+    "kind": "simulate",
+    "created_utc": "2026-11-01T15:19:04.514219+00:00",
+    "parameters": {
+      "voltage_kv": 200,
+      "euler_rzxz_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reciprocal_radius_inv_angstrom": 0.8,
+      "max_excitation_error_inv_angstrom": 0.02,
+      "shape_factor": "lorentzian",
+      "shape_factor_width": 0.02,
+      "scattering_params": "lobato",
+      "debye_waller_factors": {},
+      "minimum_intensity_relative": 1e-12,
+      "with_direct_beam": false,
+      "size": 64,
+      "sigma_pixels": 1.0,
+      "raster_normalized": true,
+      "native_float32": false
+    },
+    "parent_object_id": "b1257d38f6b242d8b0c9807a5cc08c71",
+    "structure_object_id": "b1257d38f6b242d8b0c9807a5cc08c71",
+    "source_provenance": {
+      "status": "fixed_source_and_verified_derivations",
+      "source_object_id": "b1257d38f6b242d8b0c9807a5cc08c71",
+      "source": {
+        "bytes": 106,
+        "coordinate_unit_convention": "ASE XYZ/extXYZ Angstrom convention; not independently verified physical units",
+        "fixed_input_copy": true,
+        "format": "xyz",
+        "original_file_modified": false,
+        "path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_occupancy.xyz",
+        "sha256": "e52d1cc23662c076988206aab5d0e48f29360840751cee5e0680e61c6cab6a9a"
+      },
+      "parser": {
+        "library": "ASE",
+        "version": "3.29.0",
+        "format": "xyz",
+        "warnings": []
+      },
+      "source_atoms_json_sha256": "0702b6d761c5ec735efbaa43ae41ecf6fdb099df97ee03ea3de4b24f907465d6",
+      "derivation_chain": [],
+      "original_source_reread": false
+    },
+    "atom_count": 1,
+    "formula": "Cu",
+    "length_unit": "angstrom",
+    "cell_angstrom": [
+      [
+        3.6,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        3.6,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        3.6
+      ]
+    ],
+    "cell_rank": 3,
+    "cell_nonzero_vector_count": 3,
+    "cell_parameters_angstrom_degrees": [
+      3.6,
+      3.6,
+      3.6,
+      90.0,
+      90.0,
+      90.0
+    ],
+    "pbc": [
+      true,
+      true,
+      true
+    ],
+    "has_periodic_3d_cell": true,
+    "cell_standardized": false,
+    "phase_identified": false,
+    "occupancy_status": "no explicit disorder metadata",
+    "uncertainty_status": "input numerical uncertainties not propagated",
+    "orientation": null,
+    "reflection_count": 24,
+    "reflections": {
+      "coordinates_inv_angstrom": [
+        [
+          -0.5555555555555556,
+          -0.5555555555555556,
+          0.0
+        ],
+        [
+          -0.5555555555555556,
+          -0.2777777777777778,
+          0.0
+        ],
+        [
+          -0.5555555555555556,
+          0.0,
+          0.0
+        ],
+        [
+          -0.5555555555555556,
+          0.2777777777777778,
+          0.0
+        ],
+        [
+          -0.5555555555555556,
+          0.5555555555555556,
+          0.0
+        ],
+        [
+          -0.2777777777777778,
+          -0.5555555555555556,
+          0.0
+        ],
+        [
+          -0.2777777777777778,
+          -0.2777777777777778,
+          0.0
+        ],
+        [
+          -0.2777777777777778,
+          0.0,
+          0.0
+        ],
+        [
+          -0.2777777777777778,
+          0.2777777777777778,
+          0.0
+        ],
+        [
+          -0.2777777777777778,
+          0.5555555555555556,
+          0.0
+        ],
+        [
+          0.0,
+          -0.5555555555555556,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2777777777777778,
+          0.0
+        ],
+        [
+          0.0,
+          0.2777777777777778,
+          0.0
+        ],
+        [
+          0.0,
+          0.5555555555555556,
+          0.0
+        ],
+        [
+          0.2777777777777778,
+          -0.5555555555555556,
+          0.0
+        ],
+        [
+          0.2777777777777778,
+          -0.2777777777777778,
+          0.0
+        ],
+        [
+          0.2777777777777778,
+          0.0,
+          0.0
+        ],
+        [
+          0.2777777777777778,
+          0.2777777777777778,
+          0.0
+        ],
+        [
+          0.2777777777777778,
+          0.5555555555555556,
+          0.0
+        ],
+        [
+          0.5555555555555556,
+          -0.5555555555555556,
+          0.0
+        ],
+        [
+          0.5555555555555556,
+          -0.2777777777777778,
+          0.0
+        ],
+        [
+          0.5555555555555556,
+          0.0,
+          0.0
+        ],
+        [
+          0.5555555555555556,
+          0.2777777777777778,
+          0.0
+        ],
+        [
+          0.5555555555555556,
+          0.5555555555555556,
+          0.0
+        ]
+      ],
+      "hkl": [
+        [
+          -2.0,
+          -2.0,
+          0.0
+        ],
+        [
+          -2.0,
+          -1.0,
+          0.0
+        ],
+        [
+          -2.0,
+          0.0,
+          0.0
+        ],
+        [
+          -2.0,
+          1.0,
+          0.0
+        ],
+        [
+          -2.0,
+          2.0,
+          0.0
+        ],
+        [
+          -1.0,
+          -2.0,
+          0.0
+        ],
+        [
+          -1.0,
+          -1.0,
+          0.0
+        ],
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -1.0,
+          1.0,
+          0.0
+        ],
+        [
+          -1.0,
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          2.0,
+          0.0
+        ],
+        [
+          1.0,
+          -2.0,
+          0.0
+        ],
+        [
+          1.0,
+          -1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          2.0,
+          0.0
+        ],
+        [
+          2.0,
+          -2.0,
+          0.0
+        ],
+        [
+          2.0,
+          -1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0,
+          0.0
+        ],
+        [
+          2.0,
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          2.0,
+          0.0
+        ]
+      ],
+      "kinematic_intensity": [
+        1.4699255868031793,
+        3.5309649949254798,
+        4.8647055386978595,
+        3.5309649949254798,
+        1.4699255868031793,
+        3.5309649949254798,
+        9.95349016429225,
+        15.745492719171727,
+        9.95349016429225,
+        3.5309649949254798,
+        4.8647055386978595,
+        15.745492719171727,
+        15.745492719171727,
+        4.8647055386978595,
+        3.5309649949254798,
+        9.95349016429225,
+        15.745492719171727,
+        9.95349016429225,
+        3.5309649949254798,
+        1.4699255868031793,
+        3.5309649949254798,
+        4.8647055386978595,
+        3.5309649949254798,
+        1.4699255868031793
+      ],
+      "coordinates_frame": "rotated laboratory xyz; beam +z; raster columns +x, rows +y",
+      "reciprocal_convention": "cycles_per_angstrom_no_2pi",
+      "measurement_authority": "unrastered reflection geometry, not quantized Gaussian raster"
+    },
+    "rasterization": {
+      "authority": "Unrastered coordinates/HKL/intensities in reflections.json; raster is qualitative only",
+      "engine": "diffsims0.7.0 DiffractionSimulation.get_diffraction_pattern",
+      "coordinate_transform": "same pinned library _get_transformed_coordinates(in_plane_angle=0, mirrored=False)",
+      "continuous_center_xy_pixels": [
+        [
+          9.777777777777782,
+          9.777777777777779
+        ],
+        [
+          9.777777777777779,
+          20.888888888888886
+        ],
+        [
+          9.777777777777779,
+          32.0
+        ],
+        [
+          9.777777777777779,
+          43.111111111111114
+        ],
+        [
+          9.777777777777782,
+          54.22222222222222
+        ],
+        [
+          20.88888888888889,
+          9.777777777777779
+        ],
+        [
+          20.888888888888893,
+          20.88888888888889
+        ],
+        [
+          20.88888888888889,
+          32.0
+        ],
+        [
+          20.888888888888893,
+          43.111111111111114
+        ],
+        [
+          20.88888888888889,
+          54.22222222222222
+        ],
+        [
+          32.0,
+          9.777777777777779
+        ],
+        [
+          32.0,
+          20.88888888888889
+        ],
+        [
+          32.0,
+          43.111111111111114
+        ],
+        [
+          32.0,
+          54.22222222222222
+        ],
+        [
+          43.111111111111114,
+          9.777777777777779
+        ],
+        [
+          43.111111111111114,
+          20.888888888888893
+        ],
+        [
+          43.111111111111114,
+          32.0
+        ],
+        [
+          43.111111111111114,
+          43.11111111111111
+        ],
+        [
+          43.111111111111114,
+          54.22222222222222
+        ],
+        [
+          54.22222222222222,
+          9.777777777777782
+        ],
+        [
+          54.22222222222222,
+          20.88888888888889
+        ],
+        [
+          54.22222222222222,
+          32.0
+        ],
+        [
+          54.22222222222222,
+          43.111111111111114
+        ],
+        [
+          54.22222222222222,
+          54.222222222222214
+        ]
+      ],
+      "in_frame_reflection_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "integer_center_xy_pixels": [
+        [
+          9,
+          9
+        ],
+        [
+          9,
+          20
+        ],
+        [
+          9,
+          32
+        ],
+        [
+          9,
+          43
+        ],
+        [
+          9,
+          54
+        ],
+        [
+          20,
+          9
+        ],
+        [
+          20,
+          20
+        ],
+        [
+          20,
+          32
+        ],
+        [
+          20,
+          43
+        ],
+        [
+          20,
+          54
+        ],
+        [
+          32,
+          9
+        ],
+        [
+          32,
+          20
+        ],
+        [
+          32,
+          43
+        ],
+        [
+          32,
+          54
+        ],
+        [
+          43,
+          9
+        ],
+        [
+          43,
+          20
+        ],
+        [
+          43,
+          32
+        ],
+        [
+          43,
+          43
+        ],
+        [
+          43,
+          54
+        ],
+        [
+          54,
+          9
+        ],
+        [
+          54,
+          20
+        ],
+        [
+          54,
+          32
+        ],
+        [
+          54,
+          43
+        ],
+        [
+          54,
+          54
+        ]
+      ],
+      "integer_center_row_col": [
+        [
+          9,
+          9
+        ],
+        [
+          20,
+          9
+        ],
+        [
+          32,
+          9
+        ],
+        [
+          43,
+          9
+        ],
+        [
+          54,
+          9
+        ],
+        [
+          9,
+          20
+        ],
+        [
+          20,
+          20
+        ],
+        [
+          32,
+          20
+        ],
+        [
+          43,
+          20
+        ],
+        [
+          54,
+          20
+        ],
+        [
+          9,
+          32
+        ],
+        [
+          20,
+          32
+        ],
+        [
+          43,
+          32
+        ],
+        [
+          54,
+          32
+        ],
+        [
+          9,
+          43
+        ],
+        [
+          20,
+          43
+        ],
+        [
+          32,
+          43
+        ],
+        [
+          43,
+          43
+        ],
+        [
+          54,
+          43
+        ],
+        [
+          9,
+          54
+        ],
+        [
+          20,
+          54
+        ],
+        [
+          32,
+          54
+        ],
+        [
+          43,
+          54
+        ],
+        [
+          54,
+          54
+        ]
+      ],
+      "pixel_mapping": "column=x; row=y; +x increases columns; +y increases rows",
+      "integer_center_policy": "library astype(int), truncation after nonnegative in-frame selection; no subpixel raster centers",
+      "in_frame_reflection_count": 24,
+      "outside_frame_reflection_count": 0,
+      "unique_integer_center_count": 24,
+      "cumulative_collision_count": 0,
+      "colliding_integer_center_count": 0,
+      "coincident_center_policy": "library NumPy indexed assignment overwrites coincident centers, does not sum their intensities",
+      "maximum_center_quantization_error_pixels": 0.8888888888888928,
+      "maximum_center_quantization_error_inv_angstrom": 0.022222222222222324,
+      "sigma_pixels": 1.0,
+      "sigma_inv_angstrom": 0.025,
+      "normalization": "library divides qualitative Gaussian raster by its maximum; integrated intensity is not conserved"
+    },
+    "reciprocal_enumeration": {
+      "completeness_certified": true,
+      "library_integer_extents_hkl": [
+        2,
+        2,
+        2
+      ],
+      "required_integer_extents_hkl": [
+        2,
+        2,
+        2
+      ],
+      "certificate": "All |g|<R satisfy integer |h_i|<R*|a_i|; the pinned library box contains this conservative bound",
+      "basis_reduced": false,
+      "library_enumeration_replaced": false
+    },
+    "capture_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_workspace/objects/7361587218154e0fbed9ba6e834257c1",
+    "array_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_workspace/objects/7361587218154e0fbed9ba6e834257c1/input.npy",
+    "dtype": "float64",
+    "shape_yx": [
+      64,
+      64
+    ],
+    "axes": [
+      "gy",
+      "gx"
+    ],
+    "reciprocal_pixel_scale_inv_angstrom": 0.025,
+    "physical_pixel_zero_inv_angstrom": [
+      -0.8,
+      -0.8
+    ],
+    "resource_estimate": {
+      "integer_box_candidates": 343,
+      "atom_reflection_pairs_upper_bound": 343
+    },
+    "display_recipe": {
+      "mapping": "log1p",
+      "multiplier": 1000.0,
+      "normalization": "divide_by_log1p_1000",
+      "output_dtype": "uint8",
+      "scientific_raster_modified": false
+    },
+    "limitations": [
+      "Kinematic elastic approximation; multiple/dynamical scattering and image contrast transfer are absent.",
+      "Relative intensities are not measured detector counts or phase fractions.",
+      "The library raster quantizes spot centers to integer pixels and overwrites coincident centers; it is qualitative only.",
+      "A compatible projection or reflection set is not unique phase confirmation.",
+      "No thermal displacement factors were supplied; empty library defaults are recorded."
+    ],
+    "engine": "diffsims.DiffractionGenerator.calculate_ed_data + get_diffraction_pattern",
+    "schema_version": 1,
+    "dm_called": false,
+    "computation_source": "explicit_external_python",
+    "software_provenance": {
+      "python": "3.13.18",
+      "ase": "3.29.0",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "diffsims": "0.7.0",
+      "diffpy.structure": "3.5.0",
+      "module_sha256": "1887b50b8a2c08a2cc83cb4e627fe6015a02378070bd3369b63c8e1807366012",
+      "helper_modules_sha256": {
+        "orientation.py": "3a5f6f80708213c9daa9aab0dc90025e60033fc1701635e84bf2ec3ec28eefd2",
+        "reflection_compare.py": "127b5bb14aa6ff03761be057b29c55b554b9ad532b30dc126ec2aa691ad62fbe",
+        "registration_proposal.py": "1ab3c541fc62fb2d989810acdd0c11b87f3c3dae652b8ad0ecb842733eeb6367",
+        "analysis_revision.py": "5801dc8c607659eb282fbedcb455b0b96d8787155fddea48abd8c5f79f4154d5"
+      }
+    },
+    "files_sha256": {
+      "preview.png": "477d4a862ac42d102121c39bf814d4ab9ac0879d7e75de314445d853b81abb88",
+      "input.npy": "f45d0bff9ad09e5e2989295fca34ac3b750549baea6eae0aee7dcc842a0ebea1",
+      "input.json": "214d43e62ad8d3f898ebc67d6d81f059a3eeed8166783879793bf73bbc023032",
+      "capture.json": "7c9d5cf1d381bc3bde176f2c4a9bd8f3c254f2daf378249d063fa6411bd6e9c3",
+      "reflections.json": "cf7f798388ed6f1ec7a0651501093ff6a520ca432c6c4387a465af132427546a"
+    },
+    "manifest_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_workspace/objects/7361587218154e0fbed9ba6e834257c1/object.json",
+    "image_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_workspace/objects/7361587218154e0fbed9ba6e834257c1/preview.png"
+  }
+}

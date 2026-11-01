@@ -1,0 +1,307 @@
+{
+  "source_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "git_tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "python": "3.13.18",
+  "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "versions": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "tifffile": "2026.10.15",
+    "scikit-image": "0.26.0"
+  },
+  "cases": [
+    {
+      "probe": "fft_definition",
+      "execution": "FAIL",
+      "traceback": "Traceback (most recent call last):\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 82, in run\n    value = fn()\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 108, in fft_definition\n    f = self.source(\"dft-\"+str(shape[0]), full)\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 73, in source\n    obj = self.call(\"open\", source_path=str(p))\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 66, in call\n    raise RuntimeError(result)\nRuntimeError: {'ok': False, 'state': 'failed', 'backend': 'external-image-workspace', 'request_id': 'independent-audit-1', 'error': {'code': 'UNSUPPORTED_LAYOUT', 'message': 'TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported'}}\n",
+      "elapsed_seconds": 0.0019775830005528405
+    },
+    {
+      "probe": "calibration",
+      "execution": "FAIL",
+      "traceback": "Traceback (most recent call last):\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 82, in run\n    value = fn()\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 121, in calibration\n    f=self.source(\"metric\", np.cos(2*np.pi*(5*x+3*y)/64))\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 73, in source\n    obj = self.call(\"open\", source_path=str(p))\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 66, in call\n    raise RuntimeError(result)\nRuntimeError: {'ok': False, 'state': 'failed', 'backend': 'external-image-workspace', 'request_id': 'independent-audit-2', 'error': {'code': 'UNSUPPORTED_LAYOUT', 'message': 'TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported'}}\n",
+      "elapsed_seconds": 0.0014092499986873008
+    },
+    {
+      "probe": "peaks_and_alias",
+      "execution": "FAIL",
+      "traceback": "Traceback (most recent call last):\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 82, in run\n    value = fn()\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 146, in peaks_and_alias\n    f=self.source(\"aliased-grating\",a)\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 73, in source\n    obj = self.call(\"open\", source_path=str(p))\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 66, in call\n    raise RuntimeError(result)\nRuntimeError: {'ok': False, 'state': 'failed', 'backend': 'external-image-workspace', 'request_id': 'independent-audit-3', 'error': {'code': 'UNSUPPORTED_LAYOUT', 'message': 'TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported'}}\n",
+      "elapsed_seconds": 0.0015000409985077567
+    },
+    {
+      "probe": "field_scope",
+      "execution": "FAIL",
+      "traceback": "Traceback (most recent call last):\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 82, in run\n    value = fn()\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 178, in field_scope\n    f=self.source(\"same-periods\",a)\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 73, in source\n    obj = self.call(\"open\", source_path=str(p))\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 66, in call\n    raise RuntimeError(result)\nRuntimeError: {'ok': False, 'state': 'failed', 'backend': 'external-image-workspace', 'request_id': 'independent-audit-4', 'error': {'code': 'UNSUPPORTED_LAYOUT', 'message': 'TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported'}}\n",
+      "elapsed_seconds": 0.0015310840026359074
+    },
+    {
+      "probe": "contrast_false_boundary",
+      "execution": "FAIL",
+      "traceback": "Traceback (most recent call last):\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 82, in run\n    value = fn()\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 203, in contrast_false_boundary\n    f=self.source(\"contrast-only-change\",data)\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 73, in source\n    obj = self.call(\"open\", source_path=str(p))\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 66, in call\n    raise RuntimeError(result)\nRuntimeError: {'ok': False, 'state': 'failed', 'backend': 'external-image-workspace', 'request_id': 'independent-audit-5', 'error': {'code': 'UNSUPPORTED_LAYOUT', 'message': 'TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported'}}\n",
+      "elapsed_seconds": 0.0016248329993686639
+    },
+    {
+      "probe": "rank_and_chain",
+      "execution": "PASS",
+      "classification": "method_limit",
+      "near_collinear_angle_deg": 2.864788975654116e-07,
+      "near_collinear_status": "compatible_signature",
+      "chain_pair_statuses": [
+        "compatible_signature",
+        "compatible_signature",
+        "incompatible"
+      ],
+      "meaning": "Feature quality uses floating-point rank, not angular resolvability. Domain connected components establish local links only, not common orientation of every member.",
+      "elapsed_seconds": 0.12901987499935785
+    },
+    {
+      "probe": "discovery_limits",
+      "execution": "PASS",
+      "classification": "method_limit",
+      "controls": [
+        {
+          "name": "constant",
+          "quality": {
+            "status": "no_observable_contrast",
+            "lag1_correlations_yx": [
+              0.0,
+              0.0
+            ]
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "No observable contrast at this precision; no automatic ROI proposed"
+        },
+        {
+          "name": "clean",
+          "quality": {
+            "status": "spatial_observation_available",
+            "lag1_correlations_yx": [
+              0.8512115171605993,
+              0.8512115171605993
+            ],
+            "mean_absolute_lag1_correlation": 0.8512115171605993,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "No candidate exceeded this finite heuristic threshold; narrow/weak changes can remain undetected"
+        },
+        {
+          "name": "amplitude_dip",
+          "quality": {
+            "status": "spatial_observation_available",
+            "lag1_correlations_yx": [
+              0.8511967753182151,
+              0.8511967753182151
+            ],
+            "mean_absolute_lag1_correlation": 0.8511967753182151,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "No candidate exceeded this finite heuristic threshold; narrow/weak changes can remain undetected"
+        },
+        {
+          "name": "noise",
+          "quality": {
+            "status": "quality_limited",
+            "lag1_correlations_yx": [
+              0.002806046503346596,
+              -0.0024597216223150413
+            ],
+            "mean_absolute_lag1_correlation": 0.002632884062830819,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "Quality-limited image correlations: inspect manually or request context; no automatic refinement"
+        },
+        {
+          "name": "smooth_aperiodic_blob",
+          "quality": {
+            "status": "spatial_observation_available",
+            "lag1_correlations_yx": [
+              0.9996640661070677,
+              0.9996640661070678
+            ],
+            "mean_absolute_lag1_correlation": 0.9996640661070677,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 4,
+          "rects": [
+            [
+              160,
+              96,
+              224,
+              160
+            ],
+            [
+              96,
+              160,
+              160,
+              224
+            ],
+            [
+              32,
+              96,
+              96,
+              160
+            ],
+            [
+              96,
+              32,
+              160,
+              96
+            ]
+          ],
+          "physical_conclusion": null,
+          "stop": "Candidates require independent scientific checks"
+        }
+      ],
+      "contrast_sign_invariance": true,
+      "historical_primary_benchmark": "Preserve examples/discovery/primary-comparison.csv; this different formula is not its rerun and does not replace misses.",
+      "elapsed_seconds": 0.05799516700062668
+    },
+    {
+      "probe": "method_stops",
+      "execution": "PASS",
+      "classification": "verified_guard",
+      "results": [
+        {
+          "name": "no_evidence",
+          "decision": {
+            "algorithm": "saved-gpa-method-followup-v1",
+            "status": "request_information",
+            "reason": "saved_gpa_required",
+            "interpretation_status": "hypothesized",
+            "material_defect_confirmed": false,
+            "heuristic": true,
+            "diagnostics": {},
+            "limitations": [
+              "Heuristic method selection and numerical quality guards are not confidence or scientific uncertainty",
+              "All material interpretations remain hypothesized; no material defect is confirmed",
+              "Contrast-only vortices can reproduce the same image and phase winding with zero material displacement",
+              "A clean finite ROI or zero net winding does not establish defect absence",
+              "First scope starts from saved GPA; domain-to-GPA selection and new source FFTs are excluded"
+            ]
+          },
+          "action": {
+            "kind": "request_information",
+            "reason": "saved_gpa_required",
+            "preconditions": [],
+            "parameters": {
+              "required_fields": [
+                "1..3 exact saved GPA records"
+              ]
+            },
+            "cost": {
+              "method_calls": 0,
+              "gpa_band_pixels": 0,
+              "topology_path_samples": 0,
+              "fft_pixels": 0
+            }
+          }
+        },
+        {
+          "name": "unknown_request",
+          "decision": {
+            "algorithm": "saved-gpa-method-followup-v1",
+            "status": "stop",
+            "reason": "original_request_outcome_unresolved",
+            "interpretation_status": "hypothesized",
+            "material_defect_confirmed": false,
+            "heuristic": true,
+            "diagnostics": {},
+            "limitations": [
+              "Heuristic method selection and numerical quality guards are not confidence or scientific uncertainty",
+              "All material interpretations remain hypothesized; no material defect is confirmed",
+              "Contrast-only vortices can reproduce the same image and phase winding with zero material displacement",
+              "A clean finite ROI or zero net winding does not establish defect absence",
+              "First scope starts from saved GPA; domain-to-GPA selection and new source FFTs are excluded"
+            ]
+          },
+          "action": {
+            "kind": "stop",
+            "reason": "original_request_outcome_unresolved",
+            "preconditions": [
+              "Recover original requests with image_result before any dependent method call"
+            ],
+            "parameters": {
+              "original_request_ids": [
+                "original-unknown"
+              ]
+            },
+            "cost": {
+              "method_calls": 0,
+              "gpa_band_pixels": 0,
+              "topology_path_samples": 0,
+              "fft_pixels": 0
+            }
+          }
+        },
+        {
+          "name": "conflicting_topology_retained",
+          "decision": {
+            "algorithm": "saved-gpa-method-followup-v1",
+            "status": "stop",
+            "reason": "topology_evidence_retained",
+            "interpretation_status": "hypothesized",
+            "material_defect_confirmed": false,
+            "heuristic": true,
+            "diagnostics": {
+              "topology_status": "inconsistent",
+              "topology_loop_group_statuses": [
+                "inconsistent"
+              ]
+            },
+            "limitations": [
+              "Heuristic method selection and numerical quality guards are not confidence or scientific uncertainty",
+              "All material interpretations remain hypothesized; no material defect is confirmed",
+              "Contrast-only vortices can reproduce the same image and phase winding with zero material displacement",
+              "A clean finite ROI or zero net winding does not establish defect absence",
+              "First scope starts from saved GPA; domain-to-GPA selection and new source FFTs are excluded"
+            ]
+          },
+          "action": {
+            "kind": "stop",
+            "reason": "topology_evidence_retained",
+            "preconditions": [
+              "Inspect every group, unavailable path and contrary observation; no automatic fit repair"
+            ],
+            "parameters": {},
+            "cost": {
+              "method_calls": 0,
+              "gpa_band_pixels": 0,
+              "topology_path_samples": 0,
+              "fft_pixels": 0
+            }
+          }
+        }
+      ],
+      "comparison_scope": "No new speed/success-rate benchmark; active strategy superiority remains NOT_TESTED.",
+      "elapsed_seconds": 5.0791997637134045e-05
+    },
+    {
+      "probe": "reciprocal_fft",
+      "execution": "FAIL",
+      "traceback": "Traceback (most recent call last):\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 82, in run\n    value = fn()\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 266, in reciprocal_fft\n    y,x=np.indices((64,64));f=self.source(\"declared-reciprocal\",np.cos(2*np.pi*x/8)+np.cos(2*np.pi*y/8))\n                              ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 73, in source\n    obj = self.call(\"open\", source_path=str(p))\n  File \"/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/main_probes.py\", line 66, in call\n    raise RuntimeError(result)\nRuntimeError: {'ok': False, 'state': 'failed', 'backend': 'external-image-workspace', 'request_id': 'independent-audit-6', 'error': {'code': 'UNSUPPORTED_LAYOUT', 'message': 'TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported'}}\n",
+      "elapsed_seconds": 0.0016686669987393543
+    }
+  ],
+  "source_file_sha256": {
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/dft-33.tiff": "6c0a30a5bbaaaeaff9584e48bf3b27dd8562f106e20d88bcd5224e605826a4ef",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/metric.tiff": "b2e83f55ef95415aa6c12cd0d8a69c84382702a25f5d863cddf99b1beb7872ef",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/aliased-grating.tiff": "1bbf73485c42e1ec1e8729bb5106d2c215e24950a357933cb9fc2d3be9aee1dc",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/same-periods.tiff": "a29982a0b03568cb368060cd2cec757a095bb30537c0e38d32a42f0705358b79",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/contrast-only-change.tiff": "8fbd6628e8acb1ce28f8f5045fe9fb315c42f918eb46587f01c47b62c40349e4",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r1/declared-reciprocal.tiff": "2ee9d7d19cb4e0787455eb489314056ffa061cdbd78a849eb232fe43de0d4f52"
+  },
+  "original_sources_unchanged": true,
+  "request_count": 6,
+  "test_code_sha256": "5ba592aba369e6942432429ae6b553b8297c0880ccf481218d99afa650b02a2f"
+}

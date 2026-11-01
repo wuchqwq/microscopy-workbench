@@ -1,0 +1,928 @@
+{
+  "state": "completed",
+  "backend": "external-image-workspace",
+  "request_id": "vortex_6",
+  "object_id": "ee2d2769fe7b4fa5a46d6ce852051930",
+  "kind": "topology",
+  "created_utc": "2026-11-01T15:19:05.151854+00:00",
+  "object_ids": [
+    "4211f3f7900b4c6f980e21d4636b94c9",
+    "670a2a33cb874bbe8488c830f7debc02"
+  ],
+  "parent_object_id": "4211f3f7900b4c6f980e21d4636b94c9",
+  "parameters": {
+    "object_ids": [
+      "4211f3f7900b4c6f980e21d4636b94c9",
+      "670a2a33cb874bbe8488c830f7debc02"
+    ],
+    "loops": [
+      {
+        "rect": [
+          75,
+          75,
+          182,
+          182
+        ],
+        "orientation": "positive_image_xy"
+      },
+      {
+        "rect": [
+          60,
+          60,
+          197,
+          197
+        ],
+        "orientation": "positive_image_xy"
+      }
+    ],
+    "model_assumption_text": "Only analytic synthetic image-phase winding; no material dislocation assertion",
+    "amplitude_floor_relative": 0.05,
+    "burgers_candidates": null
+  },
+  "input_dependency": {
+    "gpa_records": [
+      {
+        "object_id": "4211f3f7900b4c6f980e21d4636b94c9",
+        "request_id": "vortex_4",
+        "manifest_sha256": "911495d6ebf2d55cef3ff6bf77f174054be845f7134c20270cd5c57984ee772d",
+        "band_files_sha256": {
+          "phase_demodulated_wrapped.npy": "d8c4f01ec8e9a3ad77751e028de7defd116e59c96f61f051989462ed0fd189c2",
+          "amplitude.npy": "fed37146ab037ae798b4f0ffc9cf1b677be80d47a59c00eae4875461d8532947",
+          "edge_invalid.npy": "c03c10b0c3cb5900fd4719e53390b90f43f623e652397366f01f8660ca62dd02"
+        },
+        "g_vectors_cycles_per_pixel": [
+          [
+            0.125,
+            0
+          ],
+          [
+            0,
+            0.125
+          ]
+        ]
+      },
+      {
+        "object_id": "670a2a33cb874bbe8488c830f7debc02",
+        "request_id": "vortex_5",
+        "manifest_sha256": "b1a78b7759b9dacec62a408aa7182a2c70448a04a0b096876b15a9e9a7b91691",
+        "band_files_sha256": {
+          "phase_demodulated_wrapped.npy": "4c857611eecdad78d7f21630d6cf78277b319388b229182e38917a2aae8e1ccb",
+          "amplitude.npy": "8d2676322290b7e72f67ea15e479ad25e37efe03236c5df6a7681f2b0bb7ee39",
+          "edge_invalid.npy": "c03c10b0c3cb5900fd4719e53390b90f43f623e652397366f01f8660ca62dd02"
+        },
+        "g_vectors_cycles_per_pixel": [
+          [
+            0.125,
+            0
+          ],
+          [
+            0.125,
+            0.125
+          ]
+        ]
+      }
+    ],
+    "common": {
+      "fft": {
+        "manifest_sha256": "26e00a0a3b0ff521e90df7b2783058289aab68cc09316be41e4ba34454549144",
+        "object_id": "3f660d1e937a4e7d92039a211991c9d6",
+        "request_id": "vortex_3"
+      },
+      "fft_array_sha256": "8c592f76ef4bb6f9222bdeb6cbdf9e408c737e7c857833434fd0d62fc520a4fc",
+      "shape_yx": [
+        256,
+        256
+      ],
+      "source": {
+        "manifest_sha256": "0b5ca05507b24351141d3279487df9f6c1e42bb3c7e1fcb9545be3ea41a3d64b",
+        "object_id": "b8f61aa9380e496bb2f0de40d4525810",
+        "request_id": "vortex_2"
+      },
+      "source_array_sha256": "1be286cf9e121f61018c504ea1eafdc3d9e25c7d636975753cf253b62664607c",
+      "source_mapping": {
+        "domain": "spatial_pixels",
+        "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y",
+        "image_rect_xyxy": [
+          0,
+          0,
+          256,
+          256
+        ],
+        "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+        "source_object_id": "b8f61aa9380e496bb2f0de40d4525810",
+        "source_rect_xyxy": [
+          0,
+          0,
+          256,
+          256
+        ]
+      },
+      "xy_calibration": null,
+      "calibration_dependency": null,
+      "calibration_nm_xy": null,
+      "mask_sigma": 0.014
+    },
+    "retained_reflections": [
+      {
+        "gpa_object_id": "4211f3f7900b4c6f980e21d4636b94c9",
+        "reflection_index": 0,
+        "g_vector_cycles_per_pixel": [
+          0.125,
+          0
+        ],
+        "aliases": [
+          {
+            "gpa_object_id": "670a2a33cb874bbe8488c830f7debc02",
+            "reflection_index": 0,
+            "g_vector_cycles_per_pixel": [
+              0.125,
+              0
+            ],
+            "phase_sign_to_retained": 1
+          }
+        ],
+        "phase_sign_to_retained": 1
+      },
+      {
+        "gpa_object_id": "4211f3f7900b4c6f980e21d4636b94c9",
+        "reflection_index": 1,
+        "g_vector_cycles_per_pixel": [
+          0,
+          0.125
+        ],
+        "aliases": [],
+        "phase_sign_to_retained": 1
+      },
+      {
+        "gpa_object_id": "670a2a33cb874bbe8488c830f7debc02",
+        "reflection_index": 1,
+        "g_vector_cycles_per_pixel": [
+          0.125,
+          0.125
+        ],
+        "aliases": [],
+        "phase_sign_to_retained": 1
+      }
+    ],
+    "phase_basis": "original fixed_g requested reciprocal vectors; no fitted-reference basis substitution"
+  },
+  "retained_reflections": [
+    {
+      "gpa_object_id": "4211f3f7900b4c6f980e21d4636b94c9",
+      "reflection_index": 0,
+      "g_vector_cycles_per_pixel": [
+        0.125,
+        0.0
+      ],
+      "aliases": [
+        {
+          "gpa_object_id": "670a2a33cb874bbe8488c830f7debc02",
+          "reflection_index": 0,
+          "g_vector_cycles_per_pixel": [
+            0.125,
+            0.0
+          ],
+          "phase_sign_to_retained": 1
+        }
+      ],
+      "phase_sign_to_retained": 1
+    },
+    {
+      "gpa_object_id": "4211f3f7900b4c6f980e21d4636b94c9",
+      "reflection_index": 1,
+      "g_vector_cycles_per_pixel": [
+        0.0,
+        0.125
+      ],
+      "aliases": [],
+      "phase_sign_to_retained": 1
+    },
+    {
+      "gpa_object_id": "670a2a33cb874bbe8488c830f7debc02",
+      "reflection_index": 1,
+      "g_vector_cycles_per_pixel": [
+        0.125,
+        0.125
+      ],
+      "aliases": [],
+      "phase_sign_to_retained": 1
+    }
+  ],
+  "report": {
+    "algorithm": "saved-wrapped-phase-rectangular-topology-v2",
+    "status": "projected_topological_evidence",
+    "interpretation_status": "hypothesized",
+    "libraries": {
+      "numpy": "2.5.4"
+    },
+    "shape_yx": [
+      256,
+      256
+    ],
+    "reflection_count": 3,
+    "loop_count": 2,
+    "g_vectors_cycles_per_pixel": [
+      [
+        0.125,
+        0.0
+      ],
+      [
+        0.0,
+        0.125
+      ],
+      [
+        0.125,
+        0.125
+      ]
+    ],
+    "calibration_nm_xy": null,
+    "coordinate_domain": "local_spatial_fft_pixel_centres",
+    "phase_source": "saved_phase_demodulated_wrapped_no_unwrap_or_fft",
+    "phase_convention": "phi=-2*pi*G*u; canonical positive_image_xy winding w gives G*b=-w",
+    "positive_loop_convention": "east_south_west_north_positive_shoelace_clockwise_on_y_down_image",
+    "physical_orientation_mapping": null,
+    "rect_convention": "half_open_xyxy_boundary_pixel_centres_closure_implicit",
+    "phase_step_limit_radians": 2.5132741228718345,
+    "integer_residual_tolerance_cycles": 1e-06,
+    "integer_residual_semantics": "arithmetic_closure_check_not_confidence_or_uncertainty",
+    "amplitude_floor_relative": 0.05,
+    "amplitude_normalization": "per_reflection_global_finite_non_edge_maximum_fixed_across_loops",
+    "amplitude_reference_maxima": [
+      0.49809042822641747,
+      0.5044755466128075,
+      0.4980518566670388
+    ],
+    "amplitude_thresholds": [
+      0.024904521411320876,
+      0.025223777330640375,
+      0.02490259283335194
+    ],
+    "eligibility_semantics": "finite_phase_and_amplitude_above_floor_and_not_edge_invalid_on_path_only",
+    "total_path_samples": 968,
+    "maximum_path_samples": 16384,
+    "loops": [
+      {
+        "loop_index": 0,
+        "rect_xyxy": [
+          75,
+          75,
+          182,
+          182
+        ],
+        "orientation": "positive_image_xy",
+        "sample_count": 424,
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1.0,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1.0,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0.0,
+            "maximum_abs_wrapped_step_radians": 0.018956200654727695,
+            "minimum_path_amplitude": 0.4875777747551944,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 1,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": 0.0,
+            "winding_integer": 0,
+            "canonical_winding_integer": 0,
+            "diagnostic_winding_cycles": 0.0,
+            "diagnostic_winding_integer": 0,
+            "diagnostic_canonical_winding_integer": 0,
+            "integer_residual_cycles": 0.0,
+            "maximum_abs_wrapped_step_radians": 4.105340477167374e-05,
+            "minimum_path_amplitude": 0.499953935160131,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 2,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1.0,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1.0,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0.0,
+            "maximum_abs_wrapped_step_radians": 0.018961798223131154,
+            "minimum_path_amplitude": 0.48743807601349537,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          }
+        ],
+        "group_index": 0
+      },
+      {
+        "loop_index": 1,
+        "rect_xyxy": [
+          60,
+          60,
+          197,
+          197
+        ],
+        "orientation": "positive_image_xy",
+        "sample_count": 544,
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1.0,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1.0,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0.0,
+            "maximum_abs_wrapped_step_radians": 0.014732853834956927,
+            "minimum_path_amplitude": 0.49301153619151916,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 1,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": 0.0,
+            "winding_integer": 0,
+            "canonical_winding_integer": 0,
+            "diagnostic_winding_cycles": 0.0,
+            "diagnostic_winding_integer": 0,
+            "diagnostic_canonical_winding_integer": 0,
+            "integer_residual_cycles": 0.0,
+            "maximum_abs_wrapped_step_radians": 4.455319122342871e-05,
+            "minimum_path_amplitude": 0.49994387894069475,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          },
+          {
+            "reflection_index": 2,
+            "valid": true,
+            "failures": [],
+            "winding_cycles": -1.0,
+            "winding_integer": -1,
+            "canonical_winding_integer": -1,
+            "diagnostic_winding_cycles": -1.0,
+            "diagnostic_winding_integer": -1,
+            "diagnostic_canonical_winding_integer": -1,
+            "integer_residual_cycles": 0.0,
+            "maximum_abs_wrapped_step_radians": 0.014736125829898583,
+            "minimum_path_amplitude": 0.4929365570068411,
+            "ineligible_path_pixels": 0,
+            "edge_invalid_path_pixels": 0,
+            "nonfinite_path_pixels": 0,
+            "low_amplitude_path_pixels": 0
+          }
+        ],
+        "group_index": 0
+      }
+    ],
+    "reflections": [
+      {
+        "reflection_index": 0,
+        "status": "stable_nonzero",
+        "valid_loop_indices": [
+          0,
+          1
+        ],
+        "strictly_nested_valid_loop_pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "consistent": true,
+        "stable": true,
+        "canonical_winding_integers": [
+          -1,
+          -1
+        ],
+        "representative_winding_integer": -1,
+        "invalid_loop_count": 0
+      },
+      {
+        "reflection_index": 1,
+        "status": "stable_zero",
+        "valid_loop_indices": [
+          0,
+          1
+        ],
+        "strictly_nested_valid_loop_pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "consistent": true,
+        "stable": true,
+        "canonical_winding_integers": [
+          0,
+          0
+        ],
+        "representative_winding_integer": 0,
+        "invalid_loop_count": 0
+      },
+      {
+        "reflection_index": 2,
+        "status": "stable_nonzero",
+        "valid_loop_indices": [
+          0,
+          1
+        ],
+        "strictly_nested_valid_loop_pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "consistent": true,
+        "stable": true,
+        "canonical_winding_integers": [
+          -1,
+          -1
+        ],
+        "representative_winding_integer": -1,
+        "invalid_loop_count": 0
+      }
+    ],
+    "projected_burgers": {
+      "stable_reflection_indices": [
+        0,
+        1,
+        2
+      ],
+      "rank": 2,
+      "condition_number": 1.7320508075688772,
+      "condition_number_limit": 100.0,
+      "b_pixel_xy": [
+        7.9999999999999964,
+        -6.2803698347351e-16
+      ],
+      "constraint_residuals_cycles": [
+        -4.440892098500626e-16,
+        -7.850462293418875e-17,
+        -5.551115123125783e-16
+      ],
+      "residual_tolerance_cycles": 0.05,
+      "compatible": true,
+      "redundancy_validated": true,
+      "direction_family_count": 3,
+      "direction_families_reflection_indices": [
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          2
+        ]
+      ],
+      "leave_one_reflection_out": [
+        {
+          "held_out_reflection_index": 0,
+          "fit_rank": 2,
+          "fit_condition_number": 2.6180339887498953,
+          "held_out_residual_cycles": 0.0,
+          "compatible": true
+        },
+        {
+          "held_out_reflection_index": 1,
+          "fit_rank": 2,
+          "fit_condition_number": 2.618033988749895,
+          "held_out_residual_cycles": 0.0,
+          "compatible": true
+        },
+        {
+          "held_out_reflection_index": 2,
+          "fit_rank": 2,
+          "fit_condition_number": 1.0,
+          "held_out_residual_cycles": 0.0,
+          "compatible": true
+        }
+      ],
+      "two_reflection_exact_fit_is_independent_validation": false,
+      "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+    },
+    "burgers_candidates": [],
+    "limitations": [
+      "Conditional image-phase topology does not confirm a material dislocation; contrast/noise vortices can produce the same winding",
+      "Wrapped sampled steps cannot rule out unsampled aliasing or guarantee detection of subpixel defects; near-pi rejection is only a conservative diagnostic",
+      "Zero net winding on these loops is not defect absence: g dot b invisibility and opposite-sign enclosed charges can cancel",
+      "Only net projected 2D circuit closure is constrained; no 3D Burgers uniqueness, resolved core location, slip system or material identification",
+      "Bandpass and finite-window effects, image contrast, calibration uncertainty and specimen/model validity are not quantified",
+      "Loop locations, sizes and vector choices are explicit user inputs; no adaptive loop or reflection selection is performed",
+      "Strict nesting groups are geometric test scopes, not proof that all paths enclose one core",
+      "Nested winding changes can reflect added or cancelling enclosed cores in the annulus; they invalidate only the group's single stable closure hypothesis",
+      "Separated groups retain separate observations and fits; overlapping nonnested support remains ambiguous and is not forced into one closure"
+    ],
+    "loop_groups": [
+      {
+        "group_index": 0,
+        "loop_indices": [
+          0,
+          1
+        ],
+        "strictly_nested_loop_pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "status": "projected_topological_evidence",
+        "reflections": [
+          {
+            "reflection_index": 0,
+            "status": "stable_nonzero",
+            "valid_loop_indices": [
+              0,
+              1
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": true,
+            "stable": true,
+            "canonical_winding_integers": [
+              -1,
+              -1
+            ],
+            "representative_winding_integer": -1,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 1,
+            "status": "stable_zero",
+            "valid_loop_indices": [
+              0,
+              1
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": true,
+            "stable": true,
+            "canonical_winding_integers": [
+              0,
+              0
+            ],
+            "representative_winding_integer": 0,
+            "invalid_loop_count": 0
+          },
+          {
+            "reflection_index": 2,
+            "status": "stable_nonzero",
+            "valid_loop_indices": [
+              0,
+              1
+            ],
+            "strictly_nested_valid_loop_pairs": [
+              [
+                0,
+                1
+              ]
+            ],
+            "consistent": true,
+            "stable": true,
+            "canonical_winding_integers": [
+              -1,
+              -1
+            ],
+            "representative_winding_integer": -1,
+            "invalid_loop_count": 0
+          }
+        ],
+        "projected_burgers": {
+          "stable_reflection_indices": [
+            0,
+            1,
+            2
+          ],
+          "rank": 2,
+          "condition_number": 1.7320508075688772,
+          "condition_number_limit": 100.0,
+          "b_pixel_xy": [
+            7.9999999999999964,
+            -6.2803698347351e-16
+          ],
+          "constraint_residuals_cycles": [
+            -4.440892098500626e-16,
+            -7.850462293418875e-17,
+            -5.551115123125783e-16
+          ],
+          "residual_tolerance_cycles": 0.05,
+          "compatible": true,
+          "redundancy_validated": true,
+          "direction_family_count": 3,
+          "direction_families_reflection_indices": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ]
+          ],
+          "leave_one_reflection_out": [
+            {
+              "held_out_reflection_index": 0,
+              "fit_rank": 2,
+              "fit_condition_number": 2.6180339887498953,
+              "held_out_residual_cycles": 0.0,
+              "compatible": true
+            },
+            {
+              "held_out_reflection_index": 1,
+              "fit_rank": 2,
+              "fit_condition_number": 2.618033988749895,
+              "held_out_residual_cycles": 0.0,
+              "compatible": true
+            },
+            {
+              "held_out_reflection_index": 2,
+              "fit_rank": 2,
+              "fit_condition_number": 1.0,
+              "held_out_residual_cycles": 0.0,
+              "compatible": true
+            }
+          ],
+          "two_reflection_exact_fit_is_independent_validation": false,
+          "uniqueness_status": "projected_2d_conditional_candidate_no_3d_uniqueness"
+        },
+        "burgers_candidates": [],
+        "interpretation_status": "hypothesized",
+        "stability_scope": "one net closure hypothesis across this strictly nested geometry component"
+      }
+    ],
+    "grouping": {
+      "policy": "strict_nesting_components_v1",
+      "group_count": 1,
+      "assignment_basis": "all supplied rectangle geometry before phase validity or winding",
+      "cross_group_constraints": "not_compared_or_fitted",
+      "inter_group_relations": [],
+      "group_membership_is_core_identity": false,
+      "nested_charge_variation_meaning": "annular net charge may differ; no single stable closure, not a physical contradiction"
+    }
+  },
+  "dependency_sha256": "87052dfae8267ce3c5794b2ad217c3c5d95dfaaf242db53abd88a4a4e5e8b3b1",
+  "history": [],
+  "array_manifest": {
+    "path_xy": {
+      "shape": [
+        968,
+        2
+      ],
+      "dtype": "int64",
+      "axes": "path_sample,xy",
+      "unit": "local pixel index"
+    },
+    "path_offsets": {
+      "shape": [
+        3
+      ],
+      "dtype": "int64",
+      "axes": "loop_boundary",
+      "unit": "concatenated path-sample offset"
+    },
+    "path_eligible": {
+      "shape": [
+        3,
+        968
+      ],
+      "dtype": "bool",
+      "axes": "reflection,path_sample",
+      "unit": "boolean"
+    },
+    "path_phase_radians": {
+      "shape": [
+        3,
+        968
+      ],
+      "dtype": "float64",
+      "axes": "reflection,path_sample",
+      "unit": "radian"
+    },
+    "path_amplitude": {
+      "shape": [
+        3,
+        968
+      ],
+      "dtype": "float64",
+      "axes": "reflection,path_sample",
+      "unit": "source band amplitude"
+    },
+    "wrapped_phase_step_radians": {
+      "shape": [
+        3,
+        968
+      ],
+      "dtype": "float64",
+      "axes": "reflection,path_sample",
+      "unit": "radian"
+    },
+    "eligible_phase": {
+      "shape": [
+        3,
+        256,
+        256
+      ],
+      "dtype": "bool",
+      "axes": "reflection,y,x",
+      "unit": "boolean"
+    },
+    "loop_valid": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "bool",
+      "axes": "loop,reflection",
+      "unit": "boolean"
+    },
+    "loop_winding_cycles": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64",
+      "axes": "loop,reflection",
+      "unit": "cycles; NaN unavailable"
+    },
+    "loop_winding_integer": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64",
+      "axes": "loop,reflection",
+      "unit": "cycles; NaN unavailable"
+    },
+    "loop_diagnostic_winding_cycles": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64",
+      "axes": "loop,reflection",
+      "unit": "cycles; NaN unavailable"
+    },
+    "loop_diagnostic_winding_integer": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64",
+      "axes": "loop,reflection",
+      "unit": "cycles; NaN unavailable"
+    },
+    "loop_integer_residual_cycles": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64",
+      "axes": "loop,reflection",
+      "unit": "cycles; NaN unavailable"
+    },
+    "loop_maximum_abs_phase_step_radians": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64",
+      "axes": "loop,reflection",
+      "unit": "radian"
+    }
+  },
+  "shape_yx": [
+    256,
+    256
+  ],
+  "axes": [
+    "y",
+    "x"
+  ],
+  "dtype": "projected topology path arrays; see array_manifest",
+  "array_domain": "projected_topology_evidence",
+  "xy_calibration": null,
+  "calibration_dependency": null,
+  "display_calibration_id": null,
+  "interpretation_status": "hypothesized",
+  "material_dislocation_confirmed": false,
+  "burgers_3d_unique": false,
+  "fft_recomputed": false,
+  "gpa_recomputed": false,
+  "uncertainty": null,
+  "source_arrays_modified": false,
+  "display": {
+    "representation": "wrapped geometric phase of retained reflection0",
+    "phase_range_radians": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "invalid_color": "gray",
+    "max_size": 256,
+    "scientific_values_changed": false
+  },
+  "panels": [
+    {
+      "domain": "source_array_indices",
+      "source_object_id": "ee2d2769fe7b4fa5a46d6ce852051930",
+      "source_rect_xyxy": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "image_rect_xyxy": [
+        12,
+        48,
+        160,
+        196
+      ],
+      "limitation": "local spatial FFT-grid circuit coordinates; this display is not raw intensity"
+    }
+  ],
+  "schema_version": 1,
+  "computation": "explicit external Python; DM not called",
+  "dm_called": false,
+  "files_sha256": {
+    "path_eligible.npy": "2c060cc47c5297b1c1e6e1d6f462b5921426f823c88419c12ff2e09ae5056ee3",
+    "preview.png": "9e0f901f800cb136aba1417c67c8e22a6cfb55105e1be460bff2246b4d5e435c",
+    "loop_diagnostic_winding_cycles.npy": "896c62a8720612fe1dc98b34b26d0f91afc50d587312675ce6d26d05060149ee",
+    "wrapped_phase_step_radians.npy": "35249297c4d7a3e764ce471258692bd6ab9800efc8bd70e08e71bc242cdfd23b",
+    "loop_winding_cycles.npy": "896c62a8720612fe1dc98b34b26d0f91afc50d587312675ce6d26d05060149ee",
+    "eligible_phase.npy": "7e946ca4093c87a1569c10893e0c2f2393bd79c420b4d399168d6cd4a162c2aa",
+    "path_offsets.npy": "455f373b03d718a49468c08a13b8e399954f8e44627cf31ab60df3fc1787c968",
+    "loop_integer_residual_cycles.npy": "0c80bf9005c3a6261ac9ba29272eb9b52c404923ac41ff76e7881443ddb3b38f",
+    "loop_valid.npy": "45129eee9936c052dec17d5735a7f472d00c6ee646748fadd5731e83484f2208",
+    "loop_diagnostic_winding_integer.npy": "896c62a8720612fe1dc98b34b26d0f91afc50d587312675ce6d26d05060149ee",
+    "topology-circuits.csv": "18ffb79931956bf6968750e5270fa40fde2038ccf43ac9c04a2c18daa2272edd",
+    "loop_maximum_abs_phase_step_radians.npy": "a2c808bbbe2706e9bcbf057024bfd6a0b27574b716395736eb76ecb5944048e1",
+    "path_xy.npy": "18df1a79a7a2430e97d918a66ff1bd998672e91f7b72fd102deb18ab77a77b5b",
+    "path_phase_radians.npy": "a3b2ad0b888ee17c3ebcfa4b8dcaf310c73383febdf1a61409409e6742c4893c",
+    "path_amplitude.npy": "ab28cb5405b2c4fd386ed332ef36aca4895fadf54a1b39937ddd996d546c11e8",
+    "topology-report.json": "0ee42c4a8c296c3cd53fc9b17d21424d07e6f84d782ef3412e81defb58ed15f4",
+    "loop_winding_integer.npy": "896c62a8720612fe1dc98b34b26d0f91afc50d587312675ce6d26d05060149ee"
+  },
+  "software_provenance": {
+    "python": "3.13.18",
+    "numpy": "2.5.4",
+    "Pillow": "12.3.0",
+    "tifffile": "2026.10.15",
+    "worker_sha256": "679575cbc6aa209a701a981a44f91371474fd95f6e8b7b73712c71fa9260ffab",
+    "helper_modules_sha256": {
+      "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+      "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+      "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+      "image_peaks.py": "3e2f56818684a4c5f6a52c1251f92826a7cb39bbe498ac1056d81d1703cee94c",
+      "image_automation.py": "2e74258d7a3f4e2bc930940a02b598f9199b52d4cf2032e173058a1dda564a6f",
+      "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+      "image_joint.py": "8b6f0614023ea8b819b4b82067157c882b1ca68a09814c12637800cc884a9c1d",
+      "image_spatial_atlas.py": "fde59458e3a3bd947fe3660a2969212f0ace3cd8c46423f446ec58b41d35ae59",
+      "image_domain_compare.py": "99bf6072f13f27f922447d7db4e79b859f23f05a37de342affc886fc4d730175",
+      "image_feature_field.py": "788995b4868da80367af6510ac14947ec0da8ac8cc8bc2964ec77c8b390d2b86",
+      "image_spatial_domains.py": "4d1ffd2ccea57b9482eed4b997cbbc1f124d8fd814926f89099cb7f369507151",
+      "image_field_increment.py": "f00f2700bc6394c72a7c0d06ddd9d253fac9839457a60eb09d6f190bce338149",
+      "image_active_analysis.py": "cbac7dbfb4f498560429f7f354b9a136b8b63bb409743829b5c2b6ad51aa9fa8",
+      "image_gpa.py": "5d87c901a67b6b731805a5905818d45d4dc773013e7a5662af683af6d67951ca",
+      "image_gpa_core.py": "e58e9a829c5c75d1e95d0ffe8c17aee6e5d1ef65062f0d8287988e7cd972c8be",
+      "image_topology.py": "b2a570ae148870662e66fb4b18768244f3ae2e59ab4e7bb5f68179a87f9fabaf",
+      "image_topology_core.py": "7727e456b7b5d7dbe8809a364d1c9842a50061f493604edc874e37161677edb0",
+      "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+      "image_discovery.py": "1de0c4890937116008d73e625fde6b7996cf5f27caf97f3cdc1a53f0ebcf6417",
+      "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+    }
+  },
+  "manifest_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/phase_vortex_workspace/objects/ee2d2769fe7b4fa5a46d6ce852051930/object.json",
+  "image_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/phase_vortex_workspace/objects/ee2d2769fe7b4fa5a46d6ce852051930/preview.png"
+}

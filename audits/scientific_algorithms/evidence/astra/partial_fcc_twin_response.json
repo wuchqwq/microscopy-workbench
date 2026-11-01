@@ -1,0 +1,515 @@
+{
+  "ok": true,
+  "result": {
+    "state": "completed",
+    "backend": "external-structure-workspace",
+    "object_id": "47525d753f014080872eaa827bb16973",
+    "request_id": "partial_twin",
+    "kind": "orient",
+    "created_utc": "2026-11-01T15:19:04.932863+00:00",
+    "parameters": {
+      "object_id": "12cc8e80d2a94edfa57e315c689383a1",
+      "orientation_id": "2bbb957e90664a9bb6771278b0623daa",
+      "plane_hkl": [
+        1,
+        1,
+        1
+      ],
+      "candidate_basis": "Synthetic audit: explicitly partial occupation must not qualify as fully occupied FCC."
+    },
+    "orientation": {
+      "record_version": 1,
+      "orientation_kind": "bounded_Sigma3_candidate",
+      "zone_axis_uvw": null,
+      "index_convention": "Cartesian composition from supplied conventional cubic {111} reciprocal normal",
+      "source_cell_angstrom": [
+        [
+          3.6,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          3.6,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          3.6
+        ]
+      ],
+      "beam_direction_cartesian_source_unit": [
+        -0.3333333333333333,
+        0.6666666666666665,
+        0.6666666666666669
+      ],
+      "beam_direction_lab_unit": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "rotation_matrix_cartesian": [
+        [
+          0.6666666666666669,
+          -0.3333333333333333,
+          0.6666666666666665
+        ],
+        [
+          0.6666666666666665,
+          0.6666666666666669,
+          -0.3333333333333333
+        ],
+        [
+          -0.3333333333333333,
+          0.6666666666666665,
+          0.6666666666666669
+        ]
+      ],
+      "inverse_rotation_matrix_cartesian": [
+        [
+          0.6666666666666669,
+          0.6666666666666665,
+          -0.3333333333333333
+        ],
+        [
+          -0.3333333333333333,
+          0.6666666666666669,
+          0.6666666666666665
+        ],
+        [
+          0.6666666666666665,
+          -0.3333333333333333,
+          0.6666666666666669
+        ]
+      ],
+      "row_vector_rule": "v_lab = v_source @ R.T; column_vector_rule: v_lab = R @ v_source",
+      "matrix_semantics": "active Cartesian source-to-laboratory rotation; source positions/cell are never overwritten",
+      "handedness": "right",
+      "determinant": 1.0,
+      "euler_rzxz_deg": [
+        63.43494882292201,
+        48.18968510422139,
+        -26.565051177077994
+      ],
+      "euler_convention": "SciPy intrinsic ZXZ in degrees; same active matrix as diffsims0.7.0 transforms3d.euler.euler2mat(axes='rzxz')",
+      "euler_gimbal_lock": false,
+      "euler_nonuniqueness": "At gimbal lock the matrix remains unique; SciPy sets the third angle to zero",
+      "quaternion_xyzw": [
+        0.2886751345948128,
+        0.2886751345948128,
+        0.2886751345948128,
+        0.8660254037844387
+      ],
+      "laboratory_axes": {
+        "x": "transverse horizontal +X",
+        "y": "right-handed transverse +Y; ASE/3Dmol screen up, diffsims raster increasing rows (down)",
+        "z": "selected positive zone-axis beam; diffsims optical axis"
+      },
+      "display_raster_relation": "Same laboratory vectors; ASE/3Dmol use screen +Y up, pinned diffsims raster maps +Y to increasing rows. Compare scientific coordinates with explicit image-axis mapping, never silently mirror data.",
+      "view_direction": "exit-side back-view: beam propagation is +laboratory Z; standard display observer is at +Z looking toward origin (camera line-of-sight -Z); camera motion is presentation only",
+      "source_coordinates_modified": false,
+      "phase_identified": false,
+      "twin_relation": {
+        "relation_version": 1,
+        "candidate_law": "cubic_Sigma3_60deg_about_111",
+        "candidate_status": "hypothesized",
+        "scope": {
+          "scope_version": 1,
+          "model": "FCC",
+          "centering": "F",
+          "point_group": "m-3m",
+          "proper_point_group": "432",
+          "atom_count": 4,
+          "species": "Cu",
+          "cell_kind": "supplied_conventional_orthogonal_cubic",
+          "cell_angstrom": [
+            [
+              3.6,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              3.6,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              3.6
+            ]
+          ],
+          "a_angstrom": 3.6,
+          "basis_qualified": true,
+          "symmetry_qualified_for_supported_motif": true,
+          "inversion_qualified": true,
+          "full_occupancy": true,
+          "fractional_origin_shift": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "atom_to_template_permutation": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "maximum_fractional_motif_residual": 0.0,
+          "inversion_translation_fractional_about_template_origin": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "numerical_admission": {
+            "fractional_motif_max_component_tolerance": 1e-07,
+            "cubic_relative_metric_tolerance": 1e-08,
+            "experimental_uncertainty": "not estimated"
+          },
+          "cell_standardized": false,
+          "qualification_scope": "The supplied ideal motif supports this finite geometric model; no experimental phase identification"
+        },
+        "requested_plane_hkl": [
+          1,
+          1,
+          1
+        ],
+        "plane_hkl": [
+          1,
+          1,
+          1
+        ],
+        "plane_sign_convention": "first HKL positive; opposite normals describe one undirected plane",
+        "axis_source_cartesian_unit": [
+          0.5773502691896257,
+          0.5773502691896257,
+          0.5773502691896257
+        ],
+        "angle_degrees": 60.0,
+        "operation_matrix_source_cartesian": [
+          [
+            0.6666666666666669,
+            -0.3333333333333333,
+            0.6666666666666665
+          ],
+          [
+            0.6666666666666665,
+            0.6666666666666669,
+            -0.3333333333333333
+          ],
+          [
+            -0.3333333333333333,
+            0.6666666666666665,
+            0.6666666666666669
+          ]
+        ],
+        "proper_determinant": 1.0,
+        "parent_rotation_matrix_cartesian": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "twin_rotation_matrix_cartesian": [
+          [
+            0.6666666666666669,
+            -0.3333333333333333,
+            0.6666666666666665
+          ],
+          [
+            0.6666666666666665,
+            0.6666666666666669,
+            -0.3333333333333333
+          ],
+          [
+            -0.3333333333333333,
+            0.6666666666666665,
+            0.6666666666666669
+          ]
+        ],
+        "composition_rule": "U_twin = U_parent @ T; g_lab = U @ g_source",
+        "interface_normal_lab_unit": [
+          0.5773502691896257,
+          0.5773502691896257,
+          0.5773502691896257
+        ],
+        "equivalences": {
+          "proper_group_engine": "scipy.spatial.transform.Rotation.create_group('O')",
+          "proper_group_order": 24,
+          "plus_minus_60_equivalent_modulo_cubic_symmetry": true,
+          "plus_minus_60_equivalence_residual": 8.15843973306311e-16,
+          "mirror_equivalent_only_after_inversion_and_cubic_symmetry": true,
+          "mirror_matrix_source_cartesian": [
+            [
+              0.33333333333333337,
+              -0.6666666666666666,
+              -0.6666666666666666
+            ],
+            [
+              -0.6666666666666666,
+              0.33333333333333337,
+              -0.6666666666666666
+            ],
+            [
+              -0.6666666666666666,
+              -0.6666666666666666,
+              0.33333333333333337
+            ]
+          ],
+          "mirror_determinant": -1.0,
+          "inversion_times_mirror_is_proper_180_degree_rotation": true,
+          "inversion_mirror_to_60_equivalence_residual": 4.406061034464155e-16,
+          "scope": "Supported full-occupancy centrosymmetric FCC4/diamond8 motif; reflection is never supplied as a proper rotation"
+        },
+        "limitations": [
+          "This is a candidate crystallographic operation, not evidence that the specimen contains a twin",
+          "The interface normal is a coherent {111} candidate; orientation agreement alone does not prove the physical interface plane or atomic registry"
+        ],
+        "parent_orientation_id": "2bbb957e90664a9bb6771278b0623daa",
+        "structure_object_id": "12cc8e80d2a94edfa57e315c689383a1",
+        "candidate_basis": "Synthetic audit: explicitly partial occupation must not qualify as fully occupied FCC.",
+        "interpretation_status": "hypothesized",
+        "twin_confirmed": false,
+        "method_version": "f3b_cubic_sigma3_v1"
+      },
+      "orientation_id": "47525d753f014080872eaa827bb16973",
+      "structure_object_id": "12cc8e80d2a94edfa57e315c689383a1",
+      "source_atoms_sha256": "e08beb041bcc208ec81070ceee8ce55af4f8c67f1960e6c9746ca70bd93d0fae"
+    },
+    "twin_relation": {
+      "relation_version": 1,
+      "candidate_law": "cubic_Sigma3_60deg_about_111",
+      "candidate_status": "hypothesized",
+      "scope": {
+        "scope_version": 1,
+        "model": "FCC",
+        "centering": "F",
+        "point_group": "m-3m",
+        "proper_point_group": "432",
+        "atom_count": 4,
+        "species": "Cu",
+        "cell_kind": "supplied_conventional_orthogonal_cubic",
+        "cell_angstrom": [
+          [
+            3.6,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            3.6,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            3.6
+          ]
+        ],
+        "a_angstrom": 3.6,
+        "basis_qualified": true,
+        "symmetry_qualified_for_supported_motif": true,
+        "inversion_qualified": true,
+        "full_occupancy": true,
+        "fractional_origin_shift": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "atom_to_template_permutation": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "maximum_fractional_motif_residual": 0.0,
+        "inversion_translation_fractional_about_template_origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "numerical_admission": {
+          "fractional_motif_max_component_tolerance": 1e-07,
+          "cubic_relative_metric_tolerance": 1e-08,
+          "experimental_uncertainty": "not estimated"
+        },
+        "cell_standardized": false,
+        "qualification_scope": "The supplied ideal motif supports this finite geometric model; no experimental phase identification"
+      },
+      "requested_plane_hkl": [
+        1,
+        1,
+        1
+      ],
+      "plane_hkl": [
+        1,
+        1,
+        1
+      ],
+      "plane_sign_convention": "first HKL positive; opposite normals describe one undirected plane",
+      "axis_source_cartesian_unit": [
+        0.5773502691896257,
+        0.5773502691896257,
+        0.5773502691896257
+      ],
+      "angle_degrees": 60.0,
+      "operation_matrix_source_cartesian": [
+        [
+          0.6666666666666669,
+          -0.3333333333333333,
+          0.6666666666666665
+        ],
+        [
+          0.6666666666666665,
+          0.6666666666666669,
+          -0.3333333333333333
+        ],
+        [
+          -0.3333333333333333,
+          0.6666666666666665,
+          0.6666666666666669
+        ]
+      ],
+      "proper_determinant": 1.0,
+      "parent_rotation_matrix_cartesian": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "twin_rotation_matrix_cartesian": [
+        [
+          0.6666666666666669,
+          -0.3333333333333333,
+          0.6666666666666665
+        ],
+        [
+          0.6666666666666665,
+          0.6666666666666669,
+          -0.3333333333333333
+        ],
+        [
+          -0.3333333333333333,
+          0.6666666666666665,
+          0.6666666666666669
+        ]
+      ],
+      "composition_rule": "U_twin = U_parent @ T; g_lab = U @ g_source",
+      "interface_normal_lab_unit": [
+        0.5773502691896257,
+        0.5773502691896257,
+        0.5773502691896257
+      ],
+      "equivalences": {
+        "proper_group_engine": "scipy.spatial.transform.Rotation.create_group('O')",
+        "proper_group_order": 24,
+        "plus_minus_60_equivalent_modulo_cubic_symmetry": true,
+        "plus_minus_60_equivalence_residual": 8.15843973306311e-16,
+        "mirror_equivalent_only_after_inversion_and_cubic_symmetry": true,
+        "mirror_matrix_source_cartesian": [
+          [
+            0.33333333333333337,
+            -0.6666666666666666,
+            -0.6666666666666666
+          ],
+          [
+            -0.6666666666666666,
+            0.33333333333333337,
+            -0.6666666666666666
+          ],
+          [
+            -0.6666666666666666,
+            -0.6666666666666666,
+            0.33333333333333337
+          ]
+        ],
+        "mirror_determinant": -1.0,
+        "inversion_times_mirror_is_proper_180_degree_rotation": true,
+        "inversion_mirror_to_60_equivalence_residual": 4.406061034464155e-16,
+        "scope": "Supported full-occupancy centrosymmetric FCC4/diamond8 motif; reflection is never supplied as a proper rotation"
+      },
+      "limitations": [
+        "This is a candidate crystallographic operation, not evidence that the specimen contains a twin",
+        "The interface normal is a coherent {111} candidate; orientation agreement alone does not prove the physical interface plane or atomic registry"
+      ],
+      "parent_orientation_id": "2bbb957e90664a9bb6771278b0623daa",
+      "structure_object_id": "12cc8e80d2a94edfa57e315c689383a1",
+      "candidate_basis": "Synthetic audit: explicitly partial occupation must not qualify as fully occupied FCC.",
+      "interpretation_status": "hypothesized",
+      "twin_confirmed": false,
+      "method_version": "f3b_cubic_sigma3_v1"
+    },
+    "parent_object_id": "12cc8e80d2a94edfa57e315c689383a1",
+    "structure_object_id": "12cc8e80d2a94edfa57e315c689383a1",
+    "source_provenance": {
+      "status": "fixed_source_and_verified_derivations",
+      "source_object_id": "12cc8e80d2a94edfa57e315c689383a1",
+      "source": {
+        "bytes": 151,
+        "coordinate_unit_convention": "ASE XYZ/extXYZ Angstrom convention; not independently verified physical units",
+        "fixed_input_copy": true,
+        "format": "xyz",
+        "original_file_modified": false,
+        "path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_fcc.xyz",
+        "sha256": "2f8392b84573af500e78464cb4c81058e06e72f8defce59256c59bfbbf7de8a6"
+      },
+      "parser": {
+        "library": "ASE",
+        "version": "3.29.0",
+        "format": "xyz",
+        "warnings": []
+      },
+      "source_atoms_json_sha256": "502f38cade09e6373a3240a29cc66ba47ce57b0eff21bbc49da66b548b73cad0",
+      "derivation_chain": [],
+      "original_source_reread": false
+    },
+    "interpretation_status": "hypothesized",
+    "phase_identified": false,
+    "twin_confirmed": false,
+    "source_coordinates_modified": false,
+    "schema_version": 1,
+    "dm_called": false,
+    "computation_source": "explicit_external_python",
+    "software_provenance": {
+      "python": "3.13.18",
+      "ase": "3.29.0",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "module_sha256": "1887b50b8a2c08a2cc83cb4e627fe6015a02378070bd3369b63c8e1807366012",
+      "helper_modules_sha256": {
+        "orientation.py": "3a5f6f80708213c9daa9aab0dc90025e60033fc1701635e84bf2ec3ec28eefd2",
+        "reflection_compare.py": "127b5bb14aa6ff03761be057b29c55b554b9ad532b30dc126ec2aa691ad62fbe",
+        "registration_proposal.py": "1ab3c541fc62fb2d989810acdd0c11b87f3c3dae652b8ad0ecb842733eeb6367",
+        "analysis_revision.py": "5801dc8c607659eb282fbedcb455b0b96d8787155fddea48abd8c5f79f4154d5",
+        "twin_tools.py": "ec409a894fdab9dd2636fc5b1f97fec007b5058c6dc47a7ad3e3d5460c682827",
+        "twin_geometry.py": "eec0c9dc7c7761bed281963a5cf1ca0f39bc184ae132acb8cd01580168a4eae8",
+        "twin_observations.py": "0468fe1d0dbaeb3112b8a633cf66e959333bb3b731f44d044b057b2bedfa65d0"
+      }
+    },
+    "files_sha256": {},
+    "manifest_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/audits/scientific_algorithms/astra_evidence_20261101T231903/partial_fcc_workspace/objects/47525d753f014080872eaa827bb16973/object.json"
+  }
+}

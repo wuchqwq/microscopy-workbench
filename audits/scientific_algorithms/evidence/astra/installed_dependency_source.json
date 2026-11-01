@@ -1,0 +1,7 @@
+{
+  "diffsims_version": "0.7.0",
+  "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-20261101/.venv/lib/python3.13/site-packages/diffsims/generators/diffraction_generator.py",
+  "source_sha256": "a0023f6bfdb775e995afa9e1a657db3652f54c92529cad05648ed9164cdb3dbb",
+  "documentation_url": "https://diffsims.readthedocs.io/en/latest/reference/generated/diffsims.generators.diffraction_generator.DiffractionGenerator.html",
+  "documentation_version_scope": "Moving latest documentation was consulted for API/method context; executable evidence is pinned installed diffsims 0.7.0 and source hash."
+}
