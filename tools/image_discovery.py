@@ -9,10 +9,12 @@ from pathlib import Path
 import shutil
 
 FIELDS = {
-    "discovery": {"object_id", "entry", "window_sizes", "max_candidates", "regions", "previous_discovery_id", "max_size"},
+    "discovery": {"object_id", "entry", "selection_origin", "window_sizes", "max_candidates", "regions", "previous_discovery_id", "max_size"},
     "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id"},
 }
-VERSION = "image-first-discovery-v1"
+LEGACY_VERSION = "image-first-discovery-v1"
+VERSION = "image-first-discovery-v2"
+ORIGIN_BASIS = "caller_reported_not_authenticated"
 LIMITS = ["Visual/spatial observations are not confirmed phase, twin, dislocation or material strain",
           "Scores are heuristic priorities, not calibrated probabilities or physical curvature",
           "A missed candidate does not establish absence; noise and contrast can imitate anomalies",
@@ -50,7 +52,7 @@ def _source(workspace, ident, api):
             "source_context": api.automation.context_record(frame, context)}, values
 
 
-def _parameters(request, shape, api):
+def _parameters(request, shape, api, version=VERSION):
     entry = request.get("entry", "feature")
     api.need(entry in ("feature", "manual"), "entry must explicitly be feature or manual")
     sizes, count, size = request.get("window_sizes", [64] if entry == "feature" else []), request.get("max_candidates", 4), request.get("max_size", 512)
@@ -75,23 +77,39 @@ def _parameters(request, shape, api):
                          "candidate_explanations": _texts(region.get("candidate_explanations", []), api),
                          "unresolved": _texts(region.get("unresolved", []), api)})
     api.need(len({tuple(r["rect"]) for r in prepared}) == len(prepared), "Duplicate attention ROI is not a new observation")
-    return {"entry": entry, "window_sizes": sizes, "max_candidates": count, "regions": prepared, "max_size": size}
+    parameters = {"entry": entry, "window_sizes": sizes, "max_candidates": count, "regions": prepared, "max_size": size}
+    if version == LEGACY_VERSION:
+        api.need("selection_origin" not in request, "Legacy discovery has no selection_origin field", "CORRUPT_OBJECT")
+    elif entry == "manual":
+        origin = request.get("selection_origin", "unspecified")
+        api.need(type(origin) is str and origin in ("researcher", "agent", "unspecified"),
+                 "selection_origin must be researcher, agent or unspecified; it is caller-reported, not authenticated")
+        parameters["selection_origin"] = origin
+    else:
+        api.need("selection_origin" not in request, "selection_origin applies only to explicit manual ROIs")
+    return parameters
 
 
-def _candidate(value, entry, science, api):
+def _candidate(value, entry, science, api, version=VERSION, selection_origin=None):
     value = copy.deepcopy(value)
     value.setdefault("candidate_explanations", ["Image contrast/texture variation; physical cause is not distinguished"])
-    key = {"science": science, "rect": value["rect"], "entry": entry, "algorithm": VERSION}
+    key = {"science": science, "rect": value["rect"], "entry": entry, "algorithm": version}
+    manual_basis = "researcher_statement" if version == LEGACY_VERSION else "explicit_caller_supplied_roi"
     value.update(candidate_id=hashlib.sha256(api.canonical(key)).hexdigest()[:32],
-                 coordinate_space="source_pixels", entry_basis="researcher_statement" if entry == "manual" else "numerical_spatial_observation",
+                 coordinate_space="source_pixels", entry_basis=manual_basis if entry == "manual" else "numerical_spatial_observation",
                  interpretation_status="hypothesized", physical_conclusion=None)
+    if entry == "manual" and version != LEGACY_VERSION:
+        value.update(selection_origin=selection_origin, selection_origin_basis=ORIGIN_BASIS)
     return value
 
 
-def _manual(parameters, science, api):
+def _manual(parameters, science, api, version=VERSION):
+    limitation = ("Researcher attention is not numerical verification" if version == LEGACY_VERSION else
+                  "Explicit ROI selection is not numerical verification; its origin is caller-reported, not authenticated")
     return [_candidate({"rect": r["rect"], "score": None, "metrics": {}, "score_components": {},
                         "reasons": [r["reason"]], "candidate_explanations": r["candidate_explanations"],
-                        "unknowns": [*r["unresolved"], "Researcher attention is not numerical verification"]}, "manual", science, api)
+                        "unknowns": [*r["unresolved"], limitation]}, "manual", science, api, version,
+                       parameters.get("selection_origin"))
             for r in parameters["regions"]]
 
 
@@ -133,7 +151,7 @@ def _propose(workspace, request, metadata, directory, api):
         candidates = [_candidate(v, "feature", source["science"], api) for v in report["candidates"]]
     else:
         candidates = _manual(parameters, source["science"], api)
-        report = {"algorithm": "researcher-attention-v1", "quality": {"status": "researcher_statement_not_numerically_verified"},
+        report = {"algorithm": "explicit-roi-attention-v2", "quality": {"status": "caller_statement_not_numerically_verified"},
                   "cost": {"source_read_pixels": int(values.size), "feature_pixels": 0, "fft_pixels": 0}, "observations": [],
                   "stop_reason": None}
     report = {**report, "candidates": candidates, "source_science": source["science"], "parameters": parameters,
@@ -250,10 +268,11 @@ def action(workspace, name, request, metadata, directory, api):
 
 def validate_references(workspace, metadata, api):
     original = api.automation._saved_parameters(workspace, metadata, api)
-    api.need(original["action"] == metadata["kind"] and metadata.get("policy_version") == VERSION, "Discovery action/version changed", "CORRUPT_OBJECT")
+    version = metadata.get("policy_version")
+    api.need(original["action"] == metadata["kind"] and version in (LEGACY_VERSION, VERSION), "Discovery action/version changed", "CORRUPT_OBJECT")
     if metadata["kind"] == "discovery":
         source, values = _source(workspace, original["object_id"], api)
-        parameters = _parameters(original, values.shape, api)
+        parameters = _parameters(original, values.shape, api, version)
         report = api.read_json(Path(metadata["manifest_path"]).parent/"discovery-report.json")
         if "support_status" in metadata:
             api.need(metadata["support_status"] == report.get("support_status") == _support_status(parameters["entry"]),
@@ -266,9 +285,10 @@ def validate_references(workspace, metadata, api):
         api.need(len(metadata["candidates"]) <= parameters["max_candidates"], "Discovery candidate budget changed", "CORRUPT_OBJECT")
         for candidate in metadata["candidates"]:
             api.rectangle(candidate["rect"], values.shape)
-            api.need(candidate == _candidate(candidate, parameters["entry"], source["science"], api), "Candidate scientific identity changed", "CORRUPT_OBJECT")
+            api.need(candidate == _candidate(candidate, parameters["entry"], source["science"], api, version,
+                                             parameters.get("selection_origin")), "Candidate scientific identity changed", "CORRUPT_OBJECT")
         if parameters["entry"] == "manual":
-            api.need(metadata["candidates"] == _manual(parameters, source["science"], api), "Manual attention differs from original researcher statement", "CORRUPT_OBJECT")
+            api.need(metadata["candidates"] == _manual(parameters, source["science"], api, version), "Manual attention differs from original caller statement", "CORRUPT_OBJECT")
         overview, directory = workspace.object(metadata["overview_object_id"])
         child = api.automation._saved_parameters(workspace, overview, api)
         has_candidates = bool(metadata["candidates"])
