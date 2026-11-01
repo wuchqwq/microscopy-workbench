@@ -6,9 +6,10 @@ description: Compose ASE structure geometry, shared zone-axis orientation, kinem
 # Check a crystallographic hypothesis
 
 Apply [bounded automation scope and open scientific defects](../microscopy-automation/references/automation-scope.md)
-before candidate simulation or physical interpretation. In particular, extXYZ
-occupancy persistence is not yet repaired; do not treat a lossy saved summary
-as proof of full occupancy or a valid scattering/twin reference.
+before candidate simulation or physical interpretation. New v2 atom snapshots
+retain per-site fractions; partial/mixed models remain outside simulation/twin
+scope. Legacy snapshots remain readable, but new qualified checks require an
+explicit reopen of the original source and repeated declared derivations.
 
 The Agent may propose a few candidates from observed images, saved measurements
 and supplied material context. Complete structure simulations are not required
@@ -63,7 +64,8 @@ correspondences and test explicit geometric comparisons. Keep those proposals
 as hypotheses: do not assert `user_confirmed` merely to enter a registration
 tool that requires confirmed correspondences. State any explicit trial rotation
 used by `structure_compare`; report fitted and independently held-out points
-separately. Suggest the next discriminating observation when candidates remain.
+separately. Explain why the available observations cannot distinguish remaining
+candidates; do not plan new experiments in this workflow.
 
 For confirmed correspondences, `structure_register` estimates only the permitted
 proper in-plane rotation with independent experiment scale fixed, zero translation

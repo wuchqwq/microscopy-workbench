@@ -25,6 +25,7 @@ from ase.io import read as ase_read
 from crystallography.orientation import from_zone_axis
 from crystallography.reflection_compare import compare as compare_reflections, load_measurement
 from crystallography.analysis_revision import bind_geometry, comparison_revision
+from crystallography import occupancy as site_occupancy
 
 BACKEND = "external-structure-workspace"
 MAX_ATOMS = 4096
@@ -127,9 +128,12 @@ def validate_atoms(atoms):
 
 
 def atoms_data(atoms):
-    return {"symbols": atoms.get_chemical_symbols(), "positions_angstrom": atoms.positions.tolist(),
+    data = {"symbols": atoms.get_chemical_symbols(), "positions_angstrom": atoms.positions.tolist(),
             "cell_angstrom": atoms.cell.array.tolist(), "pbc": [bool(v) for v in atoms.pbc],
             "occupancy": atoms.info.get("occupancy")}
+    if site_occupancy.version(atoms) == 2:
+        data.update(site_occupancy.snapshot_fields(atoms))
+    return data
 
 
 def from_data(data):
@@ -139,7 +143,7 @@ def from_data(data):
     if data.get("occupancy") is not None:
         atoms.info["occupancy"] = data["occupancy"]
     validate_atoms(atoms)
-    return atoms
+    return site_occupancy.restore(atoms, data)
 
 
 def load_structure(source):
@@ -182,6 +186,7 @@ def load_structure(source):
                  "Only one complete XYZ configuration is supported; no implicit frame selection")
             atoms = ase_read(io.StringIO(text), format="extxyz", index=0)
         validate_atoms(atoms)
+        site_occupancy.initialize(atoms)
     return atoms, raw, [{"category": row.category.__name__, "message": str(row.message)} for row in caught]
 
 
@@ -189,13 +194,18 @@ def summary(atoms):
     # ASE Cell.rank counts nonzero vectors; it is not the matrix rank. Never
     # let a linearly dependent periodic basis yield pseudoinverse spacings.
     rank = int(np.linalg.matrix_rank(atoms.cell.array))
-    return {"atom_count": len(atoms), "formula": atoms.get_chemical_formula(), "length_unit": "angstrom",
+    result = {"atom_count": len(atoms), "formula": atoms.get_chemical_formula(), "length_unit": "angstrom",
             "cell_angstrom": atoms.cell.array.tolist(), "cell_rank": rank, "cell_nonzero_vector_count": int(atoms.cell.rank),
             "cell_parameters_angstrom_degrees": atoms.cell.cellpar().tolist(),
             "pbc": [bool(v) for v in atoms.pbc], "has_periodic_3d_cell": rank == 3 and bool(np.all(atoms.pbc)),
             "cell_standardized": False, "phase_identified": False,
             "occupancy_status": "ASE supplied occupancy metadata retained" if atoms.info.get("occupancy") else "no explicit disorder metadata",
             "uncertainty_status": "input numerical uncertainties not propagated"}
+    if site_occupancy.version(atoms) == 2:
+        admission = site_occupancy.assessment(atoms)
+        result.update(atom_model_version=2, occupancy_admission=admission,
+                      occupancy_status=admission["status"] + "; " + admission["basis"])
+    return result
 
 
 def render_atoms(atoms, directory, rotation, size):
@@ -331,10 +341,7 @@ def simulate(atoms, request, directory, ident, source_provenance=None, resolved_
     # atom/reflection work BEFORE invoking a native/JIT scientific dependency.
     need(np.linalg.matrix_rank(atoms.cell.array) == 3 and bool(np.all(atoms.pbc)), "Kinematic simulation requires a full-rank explicitly periodic 3D cell")
     need(float(np.linalg.cond(atoms.cell.array)) <= 1e6, "Cell is numerically ill-conditioned")
-    occupancy = atoms.info.get("occupancy")
-    need(not occupancy or all(type(row) is dict and len(row) == 1 and
-         all(finite(value) and value == 1. for value in row.values()) for row in occupancy.values()),
-         "Mixed/partial occupancy is retained for viewing but not qualified for simulation")
+    occupancy_admission = site_occupancy.require_full(atoms)
     need(bool(np.all(atoms.numbers > 0)), "Dummy/unknown elements cannot supply atomic scattering")
     voltage, radius, excitation = (request.get(key) for key in ("voltage_kv", "reciprocal_radius_inv_angstrom", "max_excitation_error_inv_angstrom"))
     need(finite(voltage) and 20 <= voltage <= 400, "voltage_kv must be explicit in 20..400")
@@ -478,7 +485,8 @@ def simulate(atoms, request, directory, ident, source_provenance=None, resolved_
                             "The library raster quantizes spot centers to integer pixels and overwrites coincident centers; it is qualitative only.",
                             "A compatible projection or reflection set is not unique phase confirmation.",
                             "No thermal displacement factors were supplied; empty library defaults are recorded."],
-            "engine": "diffsims.DiffractionGenerator.calculate_ed_data + get_diffraction_pattern", "phase_identified": False}
+            "engine": "diffsims.DiffractionGenerator.calculate_ed_data + get_diffraction_pattern", "phase_identified": False,
+            "occupancy_admission": occupancy_admission}
 
 
 class StructureWorkspace:
@@ -648,6 +656,7 @@ class StructureWorkspace:
             elif action == "measure":
                 metadata["measurement"] = measure(atoms, request)
             elif action in ("compare", "register"):
+                site_occupancy.require_full(atoms)
                 need(previous.get("kind") == "simulate" and previous.get("software_provenance", {}).get("diffsims") == "0.7.0",
                      "object_id must be an actual saved qualified diffsims simulation, not a structure/view/PNG")
                 _, simulation_directory = self.object(previous["object_id"])
@@ -734,6 +743,8 @@ class StructureWorkspace:
                                 experimental_sources=sources, experimental_source_files_modified=False,
                                 source_capture_semantics="fixed original image_measure manifest/request bytes; scientific calibration versions retained without re-reading live DM")
             elif action == "derive":
+                site_occupancy.require_current(atoms)
+                occupancy_model = site_occupancy.snapshot_fields(atoms)["occupancy_model"]
                 need(not (orientation is not None and "rotation_deg_xyz" in request),
                      "Choose orientation_id or active rotation_deg_xyz, never both")
                 repeat = request.get("repeat", [1, 1, 1])
@@ -749,6 +760,7 @@ class StructureWorkspace:
                     for angle, axis in zip(rotation, "xyz"):
                         atoms.rotate(angle, axis, center=(0, 0, 0), rotate_cell=True)
                 validate_atoms(atoms)
+                site_occupancy.initialize(atoms, inherited=occupancy_model)
                 write_new(directory / "atoms.json", canonical(atoms_data(atoms)) + b"\n")
                 metadata.pop("structure_object_id")
                 metadata.update(kind="structure", **summary(atoms), repeat=repeat, rotation_deg_xyz=rotation,
@@ -764,6 +776,7 @@ class StructureWorkspace:
                                              "scipy": importlib.metadata.version("scipy"),
                                              **({"diffsims": importlib.metadata.version("diffsims"), "diffpy.structure": importlib.metadata.version("diffpy.structure")} if action == "simulate" else {}),
                                              "module_sha256": sha(Path(__file__).read_bytes()),
+                                             "occupancy_policy_module_sha256": sha(Path(__file__).with_name("occupancy.py").read_bytes()),
                                              **({"qualification_module_sha256": sha((Path(__file__).parents[1] / "tools" / "crystal_qualification.py").read_bytes())} if action == "general_compare" else {}),
                                              "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py") + (("compare_batch.py",) if action == "compare_batch" else ()) + (("twin_tools.py", "twin_geometry.py", "twin_observations.py") if action in ("twin_orient", "twin_compare") else ()) + (("general_evidence.py", "twin_geometry.py", "twin_observations.py") if action == "general_compare" else ())}},
                         files_sha256={file.name: sha(file.read_bytes()) for file in directory.iterdir() if file.is_file()},

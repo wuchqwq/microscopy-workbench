@@ -62,6 +62,13 @@ jobs:
         run: |
           set -o pipefail
           python -B -m unittest discover -s tests -p 'test_twin*.py' -v 2>&1 | tee "$RUNNER_TEMP/f3b-evidence/regressions.log"
+      - name: Actual site occupancy persistence and simulation admission
+        shell: bash
+        env:
+          MICROSCOPY_OCCUPANCY_OUTPUT: ${{ runner.temp }}/f3b-evidence/site-occupancy
+        run: |
+          set -o pipefail
+          python -B tests/test_site_occupancy.py -v 2>&1 | tee "$RUNNER_TEMP/f3b-evidence/site-occupancy.log"
       - name: Actual compiled MCP and pinned diffsims round trip
         shell: bash
         env:

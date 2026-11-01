@@ -48,13 +48,15 @@ question, suitable inputs and a stated budget. Do not start these merely because
 FFT/ROI analysis is available. Single-domain/reference/carrier assumptions must
 be stated; a numerical GPA mask is not independent material-strain evidence.
 
-The three issues below are known **unfixed implementation defects**, not merely
+Occupancy persistence is repaired for new v2 atom snapshots: per-site fractions
+survive save/reload/derive, and only full ordered candidate models enter the
+current simulation/twin path. This verifies the supplied model, not experimental
+chemistry. Legacy snapshots retain their original interpretation and cannot gain
+qualification by reloading; explicitly reopen original input for new checks.
+
+The two issues below remain **unfixed implementation defects**, not merely
 method limits (audits #53/#55, semantics repair #57):
 
-- extXYZ per-site occupancy may be lost during structure persistence. Until
-  repaired, do not autonomously use extXYZ/occupancy-unqualified inputs for
-  scattering or twin admission. Viewing the input is not a physics certificate;
-  inspect original input/model provenance, not only the lossy saved summary.
 - Highly overlapping Fourier bands from different GPA objects may be counted as
   independent redundant topology evidence. Do not initiate an automated topology
   validation chain or accept `redundancy_validated=true` as independence proof

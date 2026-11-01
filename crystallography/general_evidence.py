@@ -14,7 +14,8 @@ from crystallography.reflection_compare import compare, registration
 from crystallography.twin_geometry import _independence
 
 
-VERSION = "general_crystallographic_evidence_v1"
+LEGACY_VERSION = "general_crystallographic_evidence_v1"
+VERSION = "general_crystallographic_evidence_v2"
 CONDITION_KEYS = ("voltage_kv", "reciprocal_radius_inv_angstrom", "max_excitation_error_inv_angstrom",
                   "scattering_params", "shape_factor", "shape_factor_width", "minimum_intensity_relative",
                   "debye_waller_factors", "with_direct_beam")
@@ -54,7 +55,7 @@ def _candidate_specs(request):
     return specs
 
 
-def _simulation(workspace, ident):
+def _simulation(workspace, ident, *, historical_policy=None):
     from crystallography.structure_tools import ID, atoms_data, canonical, json_file, need, read_bytes, sha
     from tools.crystal_qualification import qualify_structure
     # Check kind before recursive admission, so a coherent forged aggregate
@@ -76,6 +77,9 @@ def _simulation(workspace, ident):
          "Simulation orientation is not a saved orientation record", "CORRUPT_OBJECT")
     expected = workspace.orientation(orientation["orientation_id"], source_id, atoms)
     need(orientation == expected, "Simulation uses a different source structure/orientation", "CORRUPT_OBJECT")
+    if historical_policy != LEGACY_VERSION:
+        from crystallography.occupancy import require_full
+        require_full(atoms)
     original = json_file(workspace.root / "requests" / (saved["request_id"] + ".json"))["parameters"]
     need(original.get("action") == "simulate" and original.get("orientation_id") == orientation["orientation_id"] and
          original.get("object_id") == saved.get("parent_object_id") and
@@ -93,7 +97,8 @@ def _simulation(workspace, ident):
     _, source_directory = workspace.object(origin)
     need(provenance["source"]["format"] in ("cif", "xyz"), "Unsupported original structure source format", "CORRUPT_OBJECT")
     source_bytes = read_bytes(source_directory / ("source." + provenance["source"]["format"]))
-    qualification = qualify_structure(atoms, source_provenance=provenance, source_bytes=source_bytes, simulation=saved)
+    qualification = qualify_structure(atoms, source_provenance=provenance, source_bytes=source_bytes, simulation=saved,
+                                      policy_version=1 if historical_policy == LEGACY_VERSION else 2)
     need(qualification["kinematic_simulation"]["status"] == "qualified_saved_kinematic_model",
          "Saved candidate does not meet the declared source/site/occupancy/cell/kinematic qualification",
          "UNQUALIFIED_CRYSTAL_MODEL")
@@ -480,7 +485,8 @@ def validate_references(workspace, metadata):
     from crystallography.structure_tools import canonical, json_file, need, read_bytes, sha
     directory = workspace.root / "objects" / metadata["object_id"]
     original = json_file(workspace.root / "requests" / (metadata["request_id"] + ".json"))["parameters"]
-    need(original.get("action") == "general_compare" and metadata.get("policy_version") == VERSION and
+    policy = metadata.get("policy_version")
+    need(original.get("action") == "general_compare" and policy in (LEGACY_VERSION, VERSION) and
          metadata["parameters"] == {key: value for key, value in original.items() if key not in ("workspace", "action", "request_id")},
          "General evidence differs from its original request", "CORRUPT_OBJECT")
     specs = _candidate_specs(original)
@@ -518,7 +524,7 @@ def validate_references(workspace, metadata):
         sides = []
         for index, domain in enumerate(evidence["domains"]):
             ident = spec["simulation_a_object_id" if index == 0 else "simulation_b_object_id"]
-            saved, ref = _simulation(workspace, ident)
+            saved, ref = _simulation(workspace, ident, historical_policy=policy)
             simulations[ident] = saved
             need(ref == qualification.get(ident), "Candidate source, orientation or qualification changed", "CORRUPT_OBJECT")
             receipt = receipts.get((spec["label"], index))

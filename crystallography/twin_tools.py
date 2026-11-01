@@ -61,6 +61,8 @@ def orient(workspace, request, ident):
 
 
 def simulation(workspace, ident, structure_id, orientation_id):
+    from crystallography.occupancy import require_full
+    require_full(workspace.structure(ident)[1])
     saved, directory = workspace.object(ident)
     need(saved.get("kind") == "simulate" and saved.get("structure_object_id") == structure_id and
          saved.get("software_provenance", {}).get("diffsims") == "0.7.0" and
@@ -104,6 +106,8 @@ def run(workspace, request, directory):
     from crystallography.reflection_compare import registration
 
     relation_object, atoms, structure_id = workspace.structure(request.get("object_id"))
+    from crystallography.occupancy import require_full
+    require_full(atoms)
     relation = relation_object.get("twin_relation")
     need(relation_object.get("kind") == "orient" and type(relation) is dict and
          relation.get("method_version") == "f3b_cubic_sigma3_v1",

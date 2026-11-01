@@ -46,6 +46,16 @@ test('structure snapshots retain bounded geometry and separate proper display ro
  assert.throws(()=>validateStructureSnapshot({...source(),extra:true}),/Unexpected/);
 });
 
+test('versioned occupancy snapshots remain geometry-only display copies without rewriting the source',()=>{
+ const input={...source(),atom_model_version:2,occupancy:{'0':{Cu:1},'1':{Cu:.5}},
+  occupancy_model:{version:1,basis:'explicit_site_metadata',source_channels:['occupancy_array'],source_info_mapping:'none'}};
+ const before=structuredClone(input),result=validateStructureSnapshot(input);
+ assert.deepEqual(result,validateStructureSnapshot(source()));assert.deepEqual(input,before);
+ assert.equal(Object.hasOwn(result,'full_occupancy'),false);
+ for(const version of [null,1,3,true])assert.throws(()=>validateStructureSnapshot({...input,atom_model_version:version}),/Unrecognized/);
+ const {atom_model_version,...unversioned}=input;assert.throws(()=>validateStructureSnapshot(unversioned),/Unversioned/);
+});
+
 test('renderer contacts validate fixed atom identity, symmetry and whole-graph limits',()=>{
  const structure=validateStructureSnapshot(source());
  const atoms=structure.symbols.map((elem,index)=>({elem,index,x:structure.positions_angstrom[index][0],y:0,z:0,bonds:[1-index],bondOrder:[1]}));

@@ -72,7 +72,9 @@ function displayOrientation(value:unknown):DisplayOrientation|undefined{
  require(typeof value.convention==='string'&&value.convention.length<=256,'Orientation convention required');return JSON.parse(JSON.stringify(value)) as DisplayOrientation;
 }
 export function validateStructureSnapshot(value:unknown):StructureSnapshot{
- require(own(value,['object_id','symbols','positions_angstrom','cell_angstrom','pbc','occupancy','display_orientation']),'Unexpected structure snapshot fields');
+ require(own(value,['object_id','symbols','positions_angstrom','cell_angstrom','pbc','occupancy','display_orientation','atom_model_version','occupancy_model']),'Unexpected structure snapshot fields');
+ if(Object.hasOwn(value,'atom_model_version'))require(value.atom_model_version===2&&typeof value.occupancy_model==='object'&&value.occupancy_model!==null&&!Array.isArray(value.occupancy_model),'Unrecognized versioned atom snapshot');
+ else require(!Object.hasOwn(value,'occupancy_model'),'Unversioned occupancy snapshot');
  require(typeof value.object_id==='string'&&/^[a-f0-9]{32}$/.test(value.object_id),'An explicit saved structure object_id is required');
  require(Array.isArray(value.symbols)&&value.symbols.length>=1&&value.symbols.length<=4096&&value.symbols.every((s:unknown)=>typeof s==='string'&&elements.has(s)),'Need 1..4096 valid element symbols');
  require(Array.isArray(value.positions_angstrom)&&value.positions_angstrom.length===value.symbols.length&&value.positions_angstrom.every((p:unknown)=>Array.isArray(p)&&p.length===3&&p.every(finite)),'Finite bounded Cartesian positions in angstrom required');

@@ -84,7 +84,9 @@ class Qualification(unittest.TestCase):
         atoms.info["occupancy"] = {"0":{"Ni":1.},"1":{"Al":1.}}
         result = self.qualify(atoms, simulation=simulation_fixture())
         self.assertEqual(result["sites"]["elements"], ["Al", "Ni"])
-        self.assertEqual(result["occupancy"]["status"], "explicit_full_occupancy")
+        self.assertEqual(result["occupancy"]["status"], "full_ordered_candidate")
+        self.assertEqual(result["occupancy"]["policy_version"], 2)
+        self.assertEqual(qualify_structure(atoms, policy_version=1)["occupancy"]["status"], "explicit_full_occupancy")
         self.assertEqual(result["kinematic_simulation"]["status"], "qualified_saved_kinematic_model")
         self.assertAlmostEqual(measure(atoms,{"kind":"d_spacing","hkls":[[1,0,0]]})["value"],2.9,places=12)
         self.assertFalse(result["phase_identified"])
