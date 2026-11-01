@@ -1,0 +1,1294 @@
+[
+  {
+    "request": {
+      "action": "local_signature_compare",
+      "request_id": "round2-gpa-4",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+      "object_id": "b18310a2ce554c12b0dcfb715486936d",
+      "reference_index": 0,
+      "target_indices": [
+        1
+      ],
+      "angles_degrees": [
+        0.0
+      ],
+      "coordinate_domain": "pixel",
+      "tolerance": 0.001
+    },
+    "response": {
+      "ok": true,
+      "result": {
+        "state": "completed",
+        "backend": "external-image-workspace",
+        "request_id": "round2-gpa-4",
+        "object_id": "263f0babca5d4c228e1cd2192d64358a",
+        "kind": "local_signature_compare",
+        "created_utc": "2026-11-01T15:45:54.680571+00:00",
+        "parent_object_id": "b18310a2ce554c12b0dcfb715486936d",
+        "source_kind": "spatial_atlas",
+        "input_manifest_sha256": "b88eb180180b76125dea9d450eb40e342cdafa9bc4aa31dc82defc90b27af9cb",
+        "reference_index": 0,
+        "target_indices": [
+          1
+        ],
+        "angles_degrees": [
+          0.0
+        ],
+        "coordinate_domain": "pixel",
+        "coordinate_unit": "cycles/pixel",
+        "tolerance": 0.001,
+        "source_entries": [
+          {
+            "index": 0,
+            "index_kind": "region_index",
+            "source_status": "observed",
+            "source_context": {
+              "array_domain": null,
+              "coordinate_space": "selected_frame_pixels",
+              "dm_dataset_index": null,
+              "dm_plane_selection": null,
+              "dtype": "float32",
+              "frame_axis_role": "unspecified_sequence",
+              "frame_index": 0,
+              "frame_object_id": "576d1e5d835b444c8643562f815b34fc",
+              "rect_convention": "half-open [x0,y0,x1,y1] in the explicitly selected frame",
+              "shape_yx": [
+                64,
+                160
+              ],
+              "source_capture_files_sha256": null,
+              "source_capture_path": null,
+              "source_identity": {
+                "path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/same-unstrained-carriers.tiff",
+                "sha256": "cf1a26ee8073efa07bdf357a6053d61cdbf2a91abef96b0ca0ea0d47423dcd90",
+                "stat": {
+                  "ctime_ns": "1793547954490909200",
+                  "device": "16777240",
+                  "inode": "133049",
+                  "mtime_ns": "1793547954490909200",
+                  "size": 41232
+                }
+              },
+              "source_object_id": "1d952585fafa4774956dc7393c8bcfcb",
+              "user_context": null,
+              "xy_calibration": null
+            },
+            "mapping_evidence": null,
+            "rect": [
+              0,
+              0,
+              64,
+              64
+            ],
+            "overview_object_id": "78fea7d7c4a14edca404e89f76d09d8a",
+            "roi_object_id": "a72783ad48d94198a44aa333521b816b",
+            "view_object_id": "371956b938b543ab916379d28aa78e9f",
+            "fft_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+            "peaks_object_id": "91cc6c23be3b46c6b22c27bfd9a1eccf",
+            "measurements": [
+              {
+                "measurement_object_id": "671cab44d9b143c08ebed776db75c953",
+                "measurement_request_id": "auto-37522c456903ff03e604111035850139319e2eabe02d6163",
+                "frequency_cycles_per_pixel": [
+                  -0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "fda31ad499b142e498e5d1eb0b0938a6",
+                "measurement_request_id": "auto-88863134ac3698d9c8f9ff78938559887f97445c7baad508",
+                "frequency_cycles_per_pixel": [
+                  0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "f67a5764a7c14eea97bfc73fb35d4556",
+                "measurement_request_id": "auto-8ea4dca998ffd62d87c77ca1e6c3b01d3fffae172ca7babb",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  -0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "717d790200064940b288f14b1dab3374",
+                "measurement_request_id": "auto-780d2fd1354819e2b01b2ec3365b9cc0270c8cecf0dd10b1",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              }
+            ],
+            "families": [
+              {
+                "family_id": "family-1",
+                "vector_xy": [
+                  0.0,
+                  0.125
+                ],
+                "measurement_object_ids": [
+                  "717d790200064940b288f14b1dab3374",
+                  "f67a5764a7c14eea97bfc73fb35d4556"
+                ],
+                "members": [
+                  {
+                    "measurement_object_id": "717d790200064940b288f14b1dab3374",
+                    "frequency_cycles_per_pixel": [
+                      0.0,
+                      0.125
+                    ],
+                    "vector_xy": [
+                      0.0,
+                      0.125
+                    ],
+                    "sign_to_family_representative": 1
+                  },
+                  {
+                    "measurement_object_id": "f67a5764a7c14eea97bfc73fb35d4556",
+                    "frequency_cycles_per_pixel": [
+                      0.0,
+                      -0.125
+                    ],
+                    "vector_xy": [
+                      0.0,
+                      -0.125
+                    ],
+                    "sign_to_family_representative": -1
+                  }
+                ]
+              },
+              {
+                "family_id": "family-2",
+                "vector_xy": [
+                  0.125,
+                  0.0
+                ],
+                "measurement_object_ids": [
+                  "671cab44d9b143c08ebed776db75c953",
+                  "fda31ad499b142e498e5d1eb0b0938a6"
+                ],
+                "members": [
+                  {
+                    "measurement_object_id": "671cab44d9b143c08ebed776db75c953",
+                    "frequency_cycles_per_pixel": [
+                      -0.125,
+                      0.0
+                    ],
+                    "vector_xy": [
+                      -0.125,
+                      0.0
+                    ],
+                    "sign_to_family_representative": -1
+                  },
+                  {
+                    "measurement_object_id": "fda31ad499b142e498e5d1eb0b0938a6",
+                    "frequency_cycles_per_pixel": [
+                      0.125,
+                      0.0
+                    ],
+                    "vector_xy": [
+                      0.125,
+                      0.0
+                    ],
+                    "sign_to_family_representative": 1
+                  }
+                ]
+              }
+            ],
+            "geometry_status": "admitted",
+            "quality": {
+              "detection_truncated": false,
+              "has_two_noncollinear_families": true,
+              "localization_uncertainty": null,
+              "statistical_confidence": null
+            },
+            "xy_calibration": null,
+            "shape_yx": [
+              64,
+              64
+            ],
+            "fft_array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+            "scientific_grid_identity": {
+              "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+              "shape_yx": [
+                64,
+                64
+              ],
+              "dtype": "complex128",
+              "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+              "source_rect_xyxy": null,
+              "coordinate_space": "frequency_cycles_per_pixel"
+            },
+            "detection_quality": {
+              "detection_rect_xyxy": [
+                0,
+                0,
+                64,
+                64
+              ],
+              "display_selection_used": false,
+              "empty_reason": null,
+              "limitations": [
+                "Geometric peak candidates, not indexed reflections or phase identification",
+                "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+                "Conjugate peaks from a real image are not independent crystallographic evidence",
+                "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+                "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+              ],
+              "local_maxima_above_threshold": 4,
+              "returned_count": 4,
+              "selection_limit_reached": false,
+              "strongest_outside_dc_amplitude": 4095.9999703447697,
+              "threshold_amplitude": 409.599997034477
+            },
+            "override_measurement_object_ids": null,
+            "override_source": null,
+            "frequency_sampling_step_cycles_per_pixel": [
+              0.015625,
+              0.015625
+            ]
+          },
+          {
+            "index": 1,
+            "index_kind": "region_index",
+            "source_status": "observed",
+            "source_context": {
+              "array_domain": null,
+              "coordinate_space": "selected_frame_pixels",
+              "dm_dataset_index": null,
+              "dm_plane_selection": null,
+              "dtype": "float32",
+              "frame_axis_role": "unspecified_sequence",
+              "frame_index": 0,
+              "frame_object_id": "576d1e5d835b444c8643562f815b34fc",
+              "rect_convention": "half-open [x0,y0,x1,y1] in the explicitly selected frame",
+              "shape_yx": [
+                64,
+                160
+              ],
+              "source_capture_files_sha256": null,
+              "source_capture_path": null,
+              "source_identity": {
+                "path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/same-unstrained-carriers.tiff",
+                "sha256": "cf1a26ee8073efa07bdf357a6053d61cdbf2a91abef96b0ca0ea0d47423dcd90",
+                "stat": {
+                  "ctime_ns": "1793547954490909200",
+                  "device": "16777240",
+                  "inode": "133049",
+                  "mtime_ns": "1793547954490909200",
+                  "size": 41232
+                }
+              },
+              "source_object_id": "1d952585fafa4774956dc7393c8bcfcb",
+              "user_context": null,
+              "xy_calibration": null
+            },
+            "mapping_evidence": null,
+            "rect": [
+              96,
+              0,
+              160,
+              64
+            ],
+            "overview_object_id": "78fea7d7c4a14edca404e89f76d09d8a",
+            "roi_object_id": "60c6ab4c8d6d4d90b3c1aad9469d896e",
+            "view_object_id": "ff439040414a43aaa6ed0be016451e3c",
+            "fft_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+            "peaks_object_id": "2be9c3506fc845d3ac18ede8871ad171",
+            "measurements": [
+              {
+                "measurement_object_id": "2cb5cf21699a4a7cb317a9d6a6eafd99",
+                "measurement_request_id": "auto-8fa73c4ab5cc7492a8514bd4a2e972e6f2f546622153e2ce",
+                "frequency_cycles_per_pixel": [
+                  -0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "4c3a8742de584a898733e2e220dba22c",
+                "measurement_request_id": "auto-dac190b372810e9f1b0df208ef9e05caab641b53c18d59ba",
+                "frequency_cycles_per_pixel": [
+                  0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "a4a81d5b6bef4f169638d86a1db6f2ad",
+                "measurement_request_id": "auto-b6e4a910d148dddf7d73881bf7f1d4c22f3a13c4ce505650",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  -0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "3b00b974e81f4ab08ddba2730470e6b9",
+                "measurement_request_id": "auto-e8ee2c320080e349b1fb686ffd4d9ac54ac4ac00e30ce307",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              }
+            ],
+            "families": [
+              {
+                "family_id": "family-1",
+                "vector_xy": [
+                  0.0,
+                  0.125
+                ],
+                "measurement_object_ids": [
+                  "3b00b974e81f4ab08ddba2730470e6b9",
+                  "a4a81d5b6bef4f169638d86a1db6f2ad"
+                ],
+                "members": [
+                  {
+                    "measurement_object_id": "3b00b974e81f4ab08ddba2730470e6b9",
+                    "frequency_cycles_per_pixel": [
+                      0.0,
+                      0.125
+                    ],
+                    "vector_xy": [
+                      0.0,
+                      0.125
+                    ],
+                    "sign_to_family_representative": 1
+                  },
+                  {
+                    "measurement_object_id": "a4a81d5b6bef4f169638d86a1db6f2ad",
+                    "frequency_cycles_per_pixel": [
+                      0.0,
+                      -0.125
+                    ],
+                    "vector_xy": [
+                      0.0,
+                      -0.125
+                    ],
+                    "sign_to_family_representative": -1
+                  }
+                ]
+              },
+              {
+                "family_id": "family-2",
+                "vector_xy": [
+                  0.125,
+                  0.0
+                ],
+                "measurement_object_ids": [
+                  "2cb5cf21699a4a7cb317a9d6a6eafd99",
+                  "4c3a8742de584a898733e2e220dba22c"
+                ],
+                "members": [
+                  {
+                    "measurement_object_id": "2cb5cf21699a4a7cb317a9d6a6eafd99",
+                    "frequency_cycles_per_pixel": [
+                      -0.125,
+                      0.0
+                    ],
+                    "vector_xy": [
+                      -0.125,
+                      0.0
+                    ],
+                    "sign_to_family_representative": -1
+                  },
+                  {
+                    "measurement_object_id": "4c3a8742de584a898733e2e220dba22c",
+                    "frequency_cycles_per_pixel": [
+                      0.125,
+                      0.0
+                    ],
+                    "vector_xy": [
+                      0.125,
+                      0.0
+                    ],
+                    "sign_to_family_representative": 1
+                  }
+                ]
+              }
+            ],
+            "geometry_status": "admitted",
+            "quality": {
+              "detection_truncated": false,
+              "has_two_noncollinear_families": true,
+              "localization_uncertainty": null,
+              "statistical_confidence": null
+            },
+            "xy_calibration": null,
+            "shape_yx": [
+              64,
+              64
+            ],
+            "fft_array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+            "scientific_grid_identity": {
+              "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+              "shape_yx": [
+                64,
+                64
+              ],
+              "dtype": "complex128",
+              "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+              "source_rect_xyxy": null,
+              "coordinate_space": "frequency_cycles_per_pixel"
+            },
+            "detection_quality": {
+              "detection_rect_xyxy": [
+                0,
+                0,
+                64,
+                64
+              ],
+              "display_selection_used": false,
+              "empty_reason": null,
+              "limitations": [
+                "Geometric peak candidates, not indexed reflections or phase identification",
+                "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+                "Conjugate peaks from a real image are not independent crystallographic evidence",
+                "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+                "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+              ],
+              "local_maxima_above_threshold": 4,
+              "returned_count": 4,
+              "selection_limit_reached": false,
+              "strongest_outside_dc_amplitude": 4095.9999703447697,
+              "threshold_amplitude": 409.599997034477
+            },
+            "override_measurement_object_ids": null,
+            "override_source": null,
+            "frequency_sampling_step_cycles_per_pixel": [
+              0.015625,
+              0.015625
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "target_index": 1,
+            "status": "compatible_signature",
+            "candidates": [
+              {
+                "angle_degrees": 0.0,
+                "antipodal_angle_class_degrees": 0.0,
+                "rotation_matrix_xy": [
+                  [
+                    1.0,
+                    -0.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ]
+                ],
+                "proper_rotation_determinant": 1.0,
+                "matched_pairs": [
+                  {
+                    "reference_family_id": "family-1",
+                    "target_family_id": "family-1",
+                    "reference_measurement_object_ids": [
+                      "717d790200064940b288f14b1dab3374",
+                      "f67a5764a7c14eea97bfc73fb35d4556"
+                    ],
+                    "target_measurement_object_ids": [
+                      "3b00b974e81f4ab08ddba2730470e6b9",
+                      "a4a81d5b6bef4f169638d86a1db6f2ad"
+                    ],
+                    "residual": 0.0,
+                    "target_antipodal_sign": 1,
+                    "rotated_reference_vector_xy": [
+                      0.0,
+                      0.125
+                    ],
+                    "target_vector_xy": [
+                      0.0,
+                      0.125
+                    ]
+                  },
+                  {
+                    "reference_family_id": "family-2",
+                    "target_family_id": "family-2",
+                    "reference_measurement_object_ids": [
+                      "671cab44d9b143c08ebed776db75c953",
+                      "fda31ad499b142e498e5d1eb0b0938a6"
+                    ],
+                    "target_measurement_object_ids": [
+                      "2cb5cf21699a4a7cb317a9d6a6eafd99",
+                      "4c3a8742de584a898733e2e220dba22c"
+                    ],
+                    "residual": 0.0,
+                    "target_antipodal_sign": 1,
+                    "rotated_reference_vector_xy": [
+                      0.125,
+                      0.0
+                    ],
+                    "target_vector_xy": [
+                      0.125,
+                      0.0
+                    ]
+                  }
+                ],
+                "admissible_pairs": [
+                  {
+                    "reference_family_id": "family-1",
+                    "target_family_id": "family-1",
+                    "residual": 0.0,
+                    "target_antipodal_sign": 1
+                  },
+                  {
+                    "reference_family_id": "family-2",
+                    "target_family_id": "family-2",
+                    "residual": 0.0,
+                    "target_antipodal_sign": 1
+                  }
+                ],
+                "unmatched_reference_family_ids": [],
+                "unmatched_target_family_ids": [],
+                "all_selected_families_matched": true,
+                "assignment_ambiguous": false,
+                "accepted_descriptive_match": true,
+                "max_residual": 0.0,
+                "independent_validation": "not_tested_no_held_out_observations"
+              }
+            ],
+            "accepted_angles_degrees": [
+              0.0
+            ],
+            "accepted_antipodal_angle_classes": [
+              {
+                "representative": 0.0,
+                "submitted_angles_degrees": [
+                  0.0
+                ]
+              }
+            ],
+            "antipodal_equivalence_degrees": 180,
+            "angle_equivalence_policy": "Submitted angle differences exactly equal represented multiples of180 degrees; no fitted angular tolerance",
+            "has_two_noncollinear_families": true,
+            "detection_truncated": false,
+            "interpretation_status": "hypothesized",
+            "uncertainty": null,
+            "independent_validation": "not_tested_no_held_out_observations"
+          }
+        ],
+        "overview_object_id": "78fea7d7c4a14edca404e89f76d09d8a",
+        "sequence_object_id": null,
+        "correspondence_object_id": null,
+        "sequence_axis": null,
+        "rotation_convention": "q_target = Rccw(angle) @ q_reference, with antipodal equivalence; fixed scale1, translation0, no reflection",
+        "angle_scope": "image-coordinate angle only; pixel aspect and physical misorientation are not inferred",
+        "family_policy": "Actual representative, no averaging; signed/antipodal equality within64 binary64 eps of component scale only; never the matching tolerance",
+        "matching": "Existing SciPy maximum in-tolerance cardinality then minimum reciprocal residual, bounded dummy assignments; all admissible edges retained",
+        "interpretation_status": "hypothesized",
+        "uncertainty": null,
+        "independent_validation": "not_tested_no_held_out_observations",
+        "limitations": [
+          "Finite caller-supplied angles only; absence of a match is not exhaustive orientation exclusion",
+          "Descriptive selected-peak geometry only; no independent held-out validation or statistical confidence",
+          "Antipodal/conjugate observations are one family; real-image signatures retain a 180 degree equivalence",
+          "Extra peaks, non-detection and mixed-window signatures do not identify phases, twins, defects or boundaries",
+          "Peak amplitude thresholds are not signal-to-noise or detection confidence; localization uncertainty is unknown",
+          "FFT sampling interval and window width are not localization error or a physical domain boundary resolution",
+          "No fitted scale, mirror, translation, strain, intensity model or three-dimensional crystal orientation"
+        ],
+        "fft_recomputed": false,
+        "scientific_data_changed": false,
+        "contact_sheet_is_display_only": true,
+        "table_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/263f0babca5d4c228e1cd2192d64358a/relations.csv",
+        "relations_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/263f0babca5d4c228e1cd2192d64358a/relations.json",
+        "runtime_versions": {
+          "numpy": "2.5.4",
+          "scipy": "1.18.1"
+        },
+        "matching_engine_sha256": "127b5bb14aa6ff03761be057b29c55b554b9ad532b30dc126ec2aa691ad62fbe",
+        "schema_version": 1,
+        "computation": "explicit external Python; DM not called",
+        "dm_called": false,
+        "files_sha256": {
+          "relations.json": "003f9bd5150a238c2eba5b2e515a649d425442fea29ab8f370d97e92934573c1",
+          "preview.png": "5a32c4d1a538940f81c84bfdb9359b7760cac126fc92fae9cf8b664e4d367891",
+          "relations.csv": "6e8b32f32f622af888e7c47eaa0b70c824d734d0e7de0d3b016588565f5fc235"
+        },
+        "software_provenance": {
+          "python": "3.13.18",
+          "numpy": "2.5.4",
+          "Pillow": "12.3.0",
+          "tifffile": "2026.10.15",
+          "worker_sha256": "679575cbc6aa209a701a981a44f91371474fd95f6e8b7b73712c71fa9260ffab",
+          "helper_modules_sha256": {
+            "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+            "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+            "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+            "image_peaks.py": "3e2f56818684a4c5f6a52c1251f92826a7cb39bbe498ac1056d81d1703cee94c",
+            "image_automation.py": "2e74258d7a3f4e2bc930940a02b598f9199b52d4cf2032e173058a1dda564a6f",
+            "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+            "image_joint.py": "8b6f0614023ea8b819b4b82067157c882b1ca68a09814c12637800cc884a9c1d",
+            "image_spatial_atlas.py": "fde59458e3a3bd947fe3660a2969212f0ace3cd8c46423f446ec58b41d35ae59",
+            "image_domain_compare.py": "99bf6072f13f27f922447d7db4e79b859f23f05a37de342affc886fc4d730175",
+            "image_feature_field.py": "788995b4868da80367af6510ac14947ec0da8ac8cc8bc2964ec77c8b390d2b86",
+            "image_spatial_domains.py": "4d1ffd2ccea57b9482eed4b997cbbc1f124d8fd814926f89099cb7f369507151",
+            "image_field_increment.py": "f00f2700bc6394c72a7c0d06ddd9d253fac9839457a60eb09d6f190bce338149",
+            "image_active_analysis.py": "cbac7dbfb4f498560429f7f354b9a136b8b63bb409743829b5c2b6ad51aa9fa8",
+            "image_gpa.py": "5d87c901a67b6b731805a5905818d45d4dc773013e7a5662af683af6d67951ca",
+            "image_gpa_core.py": "e58e9a829c5c75d1e95d0ffe8c17aee6e5d1ef65062f0d8287988e7cd972c8be",
+            "image_topology.py": "b2a570ae148870662e66fb4b18768244f3ae2e59ab4e7bb5f68179a87f9fabaf",
+            "image_topology_core.py": "7727e456b7b5d7dbe8809a364d1c9842a50061f493604edc874e37161677edb0",
+            "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+            "image_discovery.py": "1de0c4890937116008d73e625fde6b7996cf5f27caf97f3cdc1a53f0ebcf6417",
+            "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+          }
+        },
+        "manifest_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/263f0babca5d4c228e1cd2192d64358a/object.json",
+        "image_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/263f0babca5d4c228e1cd2192d64358a/preview.png"
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "local_signature_compare",
+      "request_id": "round2-gpa-5",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace",
+      "object_id": "b18310a2ce554c12b0dcfb715486936d",
+      "reference_index": 0,
+      "target_indices": [
+        1
+      ],
+      "angles_degrees": [
+        0.0
+      ],
+      "coordinate_domain": "physical",
+      "tolerance": 0.001
+    },
+    "response": {
+      "ok": true,
+      "result": {
+        "state": "completed",
+        "backend": "external-image-workspace",
+        "request_id": "round2-gpa-5",
+        "object_id": "add568d57d7948018b10eb07dc4953b9",
+        "kind": "local_signature_compare",
+        "created_utc": "2026-11-01T15:45:54.966979+00:00",
+        "parent_object_id": "b18310a2ce554c12b0dcfb715486936d",
+        "source_kind": "spatial_atlas",
+        "input_manifest_sha256": "b88eb180180b76125dea9d450eb40e342cdafa9bc4aa31dc82defc90b27af9cb",
+        "reference_index": 0,
+        "target_indices": [
+          1
+        ],
+        "angles_degrees": [
+          0.0
+        ],
+        "coordinate_domain": "physical",
+        "coordinate_unit": "cycles/nm",
+        "tolerance": 0.001,
+        "source_entries": [
+          {
+            "index": 0,
+            "index_kind": "region_index",
+            "source_status": "observed",
+            "source_context": {
+              "array_domain": null,
+              "coordinate_space": "selected_frame_pixels",
+              "dm_dataset_index": null,
+              "dm_plane_selection": null,
+              "dtype": "float32",
+              "frame_axis_role": "unspecified_sequence",
+              "frame_index": 0,
+              "frame_object_id": "576d1e5d835b444c8643562f815b34fc",
+              "rect_convention": "half-open [x0,y0,x1,y1] in the explicitly selected frame",
+              "shape_yx": [
+                64,
+                160
+              ],
+              "source_capture_files_sha256": null,
+              "source_capture_path": null,
+              "source_identity": {
+                "path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/same-unstrained-carriers.tiff",
+                "sha256": "cf1a26ee8073efa07bdf357a6053d61cdbf2a91abef96b0ca0ea0d47423dcd90",
+                "stat": {
+                  "ctime_ns": "1793547954490909200",
+                  "device": "16777240",
+                  "inode": "133049",
+                  "mtime_ns": "1793547954490909200",
+                  "size": 41232
+                }
+              },
+              "source_object_id": "1d952585fafa4774956dc7393c8bcfcb",
+              "user_context": null,
+              "xy_calibration": null
+            },
+            "mapping_evidence": null,
+            "rect": [
+              0,
+              0,
+              64,
+              64
+            ],
+            "overview_object_id": "78fea7d7c4a14edca404e89f76d09d8a",
+            "roi_object_id": "a72783ad48d94198a44aa333521b816b",
+            "view_object_id": "371956b938b543ab916379d28aa78e9f",
+            "fft_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+            "peaks_object_id": "91cc6c23be3b46c6b22c27bfd9a1eccf",
+            "measurements": [
+              {
+                "measurement_object_id": "671cab44d9b143c08ebed776db75c953",
+                "measurement_request_id": "auto-37522c456903ff03e604111035850139319e2eabe02d6163",
+                "frequency_cycles_per_pixel": [
+                  -0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "fda31ad499b142e498e5d1eb0b0938a6",
+                "measurement_request_id": "auto-88863134ac3698d9c8f9ff78938559887f97445c7baad508",
+                "frequency_cycles_per_pixel": [
+                  0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "f67a5764a7c14eea97bfc73fb35d4556",
+                "measurement_request_id": "auto-8ea4dca998ffd62d87c77ca1e6c3b01d3fffae172ca7babb",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  -0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "717d790200064940b288f14b1dab3374",
+                "measurement_request_id": "auto-780d2fd1354819e2b01b2ec3365b9cc0270c8cecf0dd10b1",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              }
+            ],
+            "families": [],
+            "geometry_status": "incompatible",
+            "quality": {
+              "detection_truncated": false,
+              "has_two_noncollinear_families": false,
+              "localization_uncertainty": null,
+              "statistical_confidence": null
+            },
+            "xy_calibration": null,
+            "shape_yx": [
+              64,
+              64
+            ],
+            "fft_array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+            "scientific_grid_identity": {
+              "source_grid_object_id": "80b72d0935eb44eaa7fd0ba47a1e326e",
+              "shape_yx": [
+                64,
+                64
+              ],
+              "dtype": "complex128",
+              "array_sha256": "24355891744d2a4210741fcc4f86bb14b354cf8dc31cd57c0a38904bfe0eac32",
+              "source_rect_xyxy": null,
+              "coordinate_space": "frequency_cycles_per_pixel"
+            },
+            "detection_quality": {
+              "detection_rect_xyxy": [
+                0,
+                0,
+                64,
+                64
+              ],
+              "display_selection_used": false,
+              "empty_reason": null,
+              "limitations": [
+                "Geometric peak candidates, not indexed reflections or phase identification",
+                "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+                "Conjugate peaks from a real image are not independent crystallographic evidence",
+                "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+                "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+              ],
+              "local_maxima_above_threshold": 4,
+              "returned_count": 4,
+              "selection_limit_reached": false,
+              "strongest_outside_dc_amplitude": 4095.9999703447697,
+              "threshold_amplitude": 409.599997034477
+            },
+            "override_measurement_object_ids": null,
+            "override_source": null,
+            "frequency_sampling_step_cycles_per_pixel": [
+              0.015625,
+              0.015625
+            ],
+            "reason": "Active sourced real-space XY calibration is required for physical comparison"
+          },
+          {
+            "index": 1,
+            "index_kind": "region_index",
+            "source_status": "observed",
+            "source_context": {
+              "array_domain": null,
+              "coordinate_space": "selected_frame_pixels",
+              "dm_dataset_index": null,
+              "dm_plane_selection": null,
+              "dtype": "float32",
+              "frame_axis_role": "unspecified_sequence",
+              "frame_index": 0,
+              "frame_object_id": "576d1e5d835b444c8643562f815b34fc",
+              "rect_convention": "half-open [x0,y0,x1,y1] in the explicitly selected frame",
+              "shape_yx": [
+                64,
+                160
+              ],
+              "source_capture_files_sha256": null,
+              "source_capture_path": null,
+              "source_identity": {
+                "path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/same-unstrained-carriers.tiff",
+                "sha256": "cf1a26ee8073efa07bdf357a6053d61cdbf2a91abef96b0ca0ea0d47423dcd90",
+                "stat": {
+                  "ctime_ns": "1793547954490909200",
+                  "device": "16777240",
+                  "inode": "133049",
+                  "mtime_ns": "1793547954490909200",
+                  "size": 41232
+                }
+              },
+              "source_object_id": "1d952585fafa4774956dc7393c8bcfcb",
+              "user_context": null,
+              "xy_calibration": null
+            },
+            "mapping_evidence": null,
+            "rect": [
+              96,
+              0,
+              160,
+              64
+            ],
+            "overview_object_id": "78fea7d7c4a14edca404e89f76d09d8a",
+            "roi_object_id": "60c6ab4c8d6d4d90b3c1aad9469d896e",
+            "view_object_id": "ff439040414a43aaa6ed0be016451e3c",
+            "fft_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+            "peaks_object_id": "2be9c3506fc845d3ac18ede8871ad171",
+            "measurements": [
+              {
+                "measurement_object_id": "2cb5cf21699a4a7cb317a9d6a6eafd99",
+                "measurement_request_id": "auto-8fa73c4ab5cc7492a8514bd4a2e972e6f2f546622153e2ce",
+                "frequency_cycles_per_pixel": [
+                  -0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "4c3a8742de584a898733e2e220dba22c",
+                "measurement_request_id": "auto-dac190b372810e9f1b0df208ef9e05caab641b53c18d59ba",
+                "frequency_cycles_per_pixel": [
+                  0.125,
+                  0.0
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "a4a81d5b6bef4f169638d86a1db6f2ad",
+                "measurement_request_id": "auto-b6e4a910d148dddf7d73881bf7f1d4c22f3a13c4ce505650",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  -0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              },
+              {
+                "measurement_object_id": "3b00b974e81f4ab08ddba2730470e6b9",
+                "measurement_request_id": "auto-e8ee2c320080e349b1fb686ffd4d9ac54ac4ac00e30ce307",
+                "frequency_cycles_per_pixel": [
+                  0.0,
+                  0.125
+                ],
+                "pixel_period": 8.0,
+                "d_spacing": null,
+                "d_spacing_unit": null,
+                "calibration_dependency": null,
+                "scientific_grid_identity": {
+                  "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+                  "shape_yx": [
+                    64,
+                    64
+                  ],
+                  "dtype": "complex128",
+                  "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+                  "source_rect_xyxy": null,
+                  "coordinate_space": "frequency_cycles_per_pixel"
+                },
+                "interpretation_status": "hypothesized"
+              }
+            ],
+            "families": [],
+            "geometry_status": "incompatible",
+            "quality": {
+              "detection_truncated": false,
+              "has_two_noncollinear_families": false,
+              "localization_uncertainty": null,
+              "statistical_confidence": null
+            },
+            "xy_calibration": null,
+            "shape_yx": [
+              64,
+              64
+            ],
+            "fft_array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+            "scientific_grid_identity": {
+              "source_grid_object_id": "86e55aee0fcf482ab2266fa012af2eeb",
+              "shape_yx": [
+                64,
+                64
+              ],
+              "dtype": "complex128",
+              "array_sha256": "4fc851c9dfab71af5f315574886f8c6c229fd4497bdd999b1a69975388906bb4",
+              "source_rect_xyxy": null,
+              "coordinate_space": "frequency_cycles_per_pixel"
+            },
+            "detection_quality": {
+              "detection_rect_xyxy": [
+                0,
+                0,
+                64,
+                64
+              ],
+              "display_selection_used": false,
+              "empty_reason": null,
+              "limitations": [
+                "Geometric peak candidates, not indexed reflections or phase identification",
+                "Relative amplitude and local contrast are not signal-to-noise or detection confidence",
+                "Conjugate peaks from a real image are not independent crystallographic evidence",
+                "Sub-bin interpolation does not increase FFT resolution; localization uncertainty remains unknown",
+                "The complete saved FFT grid is searched; preview zoom, filtering and gamma are not numerical detection inputs"
+              ],
+              "local_maxima_above_threshold": 4,
+              "returned_count": 4,
+              "selection_limit_reached": false,
+              "strongest_outside_dc_amplitude": 4095.9999703447697,
+              "threshold_amplitude": 409.599997034477
+            },
+            "override_measurement_object_ids": null,
+            "override_source": null,
+            "frequency_sampling_step_cycles_per_pixel": [
+              0.015625,
+              0.015625
+            ],
+            "reason": "Active sourced real-space XY calibration is required for physical comparison"
+          }
+        ],
+        "relations": [
+          {
+            "target_index": 1,
+            "status": "incompatible",
+            "candidates": [],
+            "accepted_angles_degrees": [],
+            "reason": "Active sourced real-space XY calibration is required for physical comparison; Active sourced real-space XY calibration is required for physical comparison",
+            "interpretation_status": "hypothesized",
+            "uncertainty": null,
+            "independent_validation": "not_tested_no_held_out_observations"
+          }
+        ],
+        "overview_object_id": "78fea7d7c4a14edca404e89f76d09d8a",
+        "sequence_object_id": null,
+        "correspondence_object_id": null,
+        "sequence_axis": null,
+        "rotation_convention": "q_target = Rccw(angle) @ q_reference, with antipodal equivalence; fixed scale1, translation0, no reflection",
+        "angle_scope": "projected physical reciprocal-coordinate relation, not 3D crystal misorientation",
+        "family_policy": "Actual representative, no averaging; signed/antipodal equality within64 binary64 eps of component scale only; never the matching tolerance",
+        "matching": "Existing SciPy maximum in-tolerance cardinality then minimum reciprocal residual, bounded dummy assignments; all admissible edges retained",
+        "interpretation_status": "hypothesized",
+        "uncertainty": null,
+        "independent_validation": "not_tested_no_held_out_observations",
+        "limitations": [
+          "Finite caller-supplied angles only; absence of a match is not exhaustive orientation exclusion",
+          "Descriptive selected-peak geometry only; no independent held-out validation or statistical confidence",
+          "Antipodal/conjugate observations are one family; real-image signatures retain a 180 degree equivalence",
+          "Extra peaks, non-detection and mixed-window signatures do not identify phases, twins, defects or boundaries",
+          "Peak amplitude thresholds are not signal-to-noise or detection confidence; localization uncertainty is unknown",
+          "FFT sampling interval and window width are not localization error or a physical domain boundary resolution",
+          "No fitted scale, mirror, translation, strain, intensity model or three-dimensional crystal orientation"
+        ],
+        "fft_recomputed": false,
+        "scientific_data_changed": false,
+        "contact_sheet_is_display_only": true,
+        "table_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/add568d57d7948018b10eb07dc4953b9/relations.csv",
+        "relations_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/add568d57d7948018b10eb07dc4953b9/relations.json",
+        "runtime_versions": {
+          "numpy": "2.5.4",
+          "scipy": "1.18.1"
+        },
+        "matching_engine_sha256": "127b5bb14aa6ff03761be057b29c55b554b9ad532b30dc126ec2aa691ad62fbe",
+        "schema_version": 1,
+        "computation": "explicit external Python; DM not called",
+        "dm_called": false,
+        "files_sha256": {
+          "relations.json": "1ee4acde79b7572c57fe387199beaa70bdbf0bd455299d32492dab3ed7a6efd5",
+          "preview.png": "5a32c4d1a538940f81c84bfdb9359b7760cac126fc92fae9cf8b664e4d367891",
+          "relations.csv": "9bad8ad6166ae9666b8ab63d24e887573a63ffb57d025a41f519fc038ac2a995"
+        },
+        "software_provenance": {
+          "python": "3.13.18",
+          "numpy": "2.5.4",
+          "Pillow": "12.3.0",
+          "tifffile": "2026.10.15",
+          "worker_sha256": "679575cbc6aa209a701a981a44f91371474fd95f6e8b7b73712c71fa9260ffab",
+          "helper_modules_sha256": {
+            "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+            "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+            "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+            "image_peaks.py": "3e2f56818684a4c5f6a52c1251f92826a7cb39bbe498ac1056d81d1703cee94c",
+            "image_automation.py": "2e74258d7a3f4e2bc930940a02b598f9199b52d4cf2032e173058a1dda564a6f",
+            "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+            "image_joint.py": "8b6f0614023ea8b819b4b82067157c882b1ca68a09814c12637800cc884a9c1d",
+            "image_spatial_atlas.py": "fde59458e3a3bd947fe3660a2969212f0ace3cd8c46423f446ec58b41d35ae59",
+            "image_domain_compare.py": "99bf6072f13f27f922447d7db4e79b859f23f05a37de342affc886fc4d730175",
+            "image_feature_field.py": "788995b4868da80367af6510ac14947ec0da8ac8cc8bc2964ec77c8b390d2b86",
+            "image_spatial_domains.py": "4d1ffd2ccea57b9482eed4b997cbbc1f124d8fd814926f89099cb7f369507151",
+            "image_field_increment.py": "f00f2700bc6394c72a7c0d06ddd9d253fac9839457a60eb09d6f190bce338149",
+            "image_active_analysis.py": "cbac7dbfb4f498560429f7f354b9a136b8b63bb409743829b5c2b6ad51aa9fa8",
+            "image_gpa.py": "5d87c901a67b6b731805a5905818d45d4dc773013e7a5662af683af6d67951ca",
+            "image_gpa_core.py": "e58e9a829c5c75d1e95d0ffe8c17aee6e5d1ef65062f0d8287988e7cd972c8be",
+            "image_topology.py": "b2a570ae148870662e66fb4b18768244f3ae2e59ab4e7bb5f68179a87f9fabaf",
+            "image_topology_core.py": "7727e456b7b5d7dbe8809a364d1c9842a50061f493604edc874e37161677edb0",
+            "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+            "image_discovery.py": "1de0c4890937116008d73e625fde6b7996cf5f27caf97f3cdc1a53f0ebcf6417",
+            "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+          }
+        },
+        "manifest_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/add568d57d7948018b10eb07dc4953b9/object.json",
+        "image_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/workspace/objects/add568d57d7948018b10eb07dc4953b9/preview.png"
+      }
+    }
+  }
+]

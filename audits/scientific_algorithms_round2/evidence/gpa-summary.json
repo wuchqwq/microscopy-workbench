@@ -1,0 +1,1096 @@
+{
+  "source_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "git_tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "python": "3.13.18",
+  "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "scikit-image": "0.26.0",
+    "tifffile": "2026.10.15"
+  },
+  "probe_sha256": "11234c840f0f48def233950671c1e88a35d67f038187b8c9c709025a484521e2",
+  "cases": [
+    {
+      "name": "spatial_transfer",
+      "execution": "PASS",
+      "classification": "verified_slow_field_and_bandwidth_method_limit",
+      "parameters": {
+        "u_amplitude_px": 0.1
+      },
+      "results": [
+        {
+          "periods": 1,
+          "sigma": 0.008,
+          "analytic_strain_rms": 0.0017300936896794874,
+          "measured_to_true_rms_ratio": 0.8878746769436009,
+          "rms_error": 0.00019398746088185667,
+          "small_phase_gaussian_transfer": 0.8876220113087223,
+          "valid_pixels": 16384
+        },
+        {
+          "periods": 1,
+          "sigma": 0.018,
+          "analytic_strain_rms": 0.0017300936896794874,
+          "measured_to_true_rms_ratio": 0.9767022194694236,
+          "rms_error": 4.030735655455924e-05,
+          "small_phase_gaussian_transfer": 0.976727565347086,
+          "valid_pixels": 16384
+        },
+        {
+          "periods": 4,
+          "sigma": 0.008,
+          "analytic_strain_rms": 0.006943572946660037,
+          "measured_to_true_rms_ratio": 0.14831172909609872,
+          "rms_error": 0.005913830945733427,
+          "small_phase_gaussian_transfer": 0.14847352301779504,
+          "valid_pixels": 16384
+        },
+        {
+          "periods": 4,
+          "sigma": 0.018,
+          "analytic_strain_rms": 0.006943572946660037,
+          "measured_to_true_rms_ratio": 0.6850449097986817,
+          "rms_error": 0.0021870356619430194,
+          "small_phase_gaussian_transfer": 0.6860805599885884,
+          "valid_pixels": 16384
+        },
+        {
+          "periods": 8,
+          "sigma": 0.008,
+          "analytic_strain_rms": 0.013896560243969203,
+          "measured_to_true_rms_ratio": 5.321816115872117e-13,
+          "rms_error": 0.013896560243969184,
+          "small_phase_gaussian_transfer": 0.000485954999850973,
+          "valid_pixels": 16384
+        },
+        {
+          "periods": 8,
+          "sigma": 0.018,
+          "analytic_strain_rms": 0.013896560243969203,
+          "measured_to_true_rms_ratio": 0.22010761843578988,
+          "rms_error": 0.01083859650696343,
+          "small_phase_gaussian_transfer": 0.22156464189801525,
+          "valid_pixels": 16384
+        }
+      ],
+      "conclusion": "A valid tensor at every pixel does not give pixel-scale strain resolution."
+    },
+    {
+      "name": "saved_nonuniform",
+      "execution": "PASS",
+      "classification": "verified_saved_route",
+      "object_id": "f2b8c6f905f9422d987ad0f297188903",
+      "max_exx_error": 5.692926197625736e-05,
+      "result_report": {
+        "algorithm": "classical-two-g-gpa-finite-v1",
+        "shape_yx": [
+          256,
+          256
+        ],
+        "libraries": {
+          "numpy": "2.5.4",
+          "scipy": "1.18.1",
+          "scikit_image": "0.26.0"
+        },
+        "g_vectors_cycles_per_pixel": [
+          [
+            0.125,
+            0.0
+          ],
+          [
+            0.0,
+            0.125
+          ]
+        ],
+        "g_condition_number": 1.0,
+        "effective_g_vectors_cycles_per_pixel": [
+          [
+            0.125,
+            0.0
+          ],
+          [
+            0.0,
+            0.125
+          ]
+        ],
+        "effective_g_condition_number": 1.0,
+        "mask": {
+          "kind": "isotropic_gaussian_truncated",
+          "sigma_cycles_per_pixel": [
+            0.018,
+            0.018
+          ],
+          "truncation_sigma": 3.0,
+          "support_radius_cycles_per_pixel": [
+            0.05399999999999999,
+            0.05399999999999999
+          ]
+        },
+        "reference_mode": "fixed_g",
+        "reference_rect_xyxy": [
+          92,
+          92,
+          116,
+          116
+        ],
+        "reference_valid_pixels": 576,
+        "reference_valid_fraction": 1.0,
+        "reference_center_xy": [
+          103.5,
+          103.5
+        ],
+        "reference_phase_constants_radians": [
+          -0.04277494840642593,
+          3.848773152033876e-15
+        ],
+        "reference_phase_slopes_radians_per_pixel_xy": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ],
+        "reference_semantics": "constant_phase_gauge_only_preserves_uniform_deformation",
+        "coordinate_domain": "physical_cartesian_nm",
+        "calibration_nm_xy": [
+          0.02,
+          -0.03
+        ],
+        "displacement_convention": "Eulerian backdisplacement u_E(x)=x-X(x); phi=-2*pi*G*u_E",
+        "tensor_convention": "F_pixel=inverse(I-grad_x(u_E)); F=S*F_pixel*inverse(S); E=.5*(transpose(F)*F-I)",
+        "tensor_axes": "row component xy, column coordinate xy; arrays [y,x,2,2]",
+        "rotation_convention": "proper polar rotation atan2(F_yx-F_xy,F_xx+F_yy), radians; positive x toward y",
+        "edge_margin_pixels": 27,
+        "bandwidth_default_edge_margin_pixels": 27,
+        "edge_margin_semantics": "3 Gaussian real-space standard deviations, rounded up; finite-window guard, not an error bound",
+        "amplitude_floor_relative": 0.05,
+        "amplitude_thresholds": [
+          0.024999918386182565,
+          0.025000000140877134
+        ],
+        "numerical_band_floor": 1.4210854795281382e-14,
+        "unwrap": {
+          "implementation": "skimage.restoration.unwrap_phase",
+          "seed": 0,
+          "wrap_around": false
+        },
+        "quality": {
+          "phase_valid_pixels": 40804,
+          "tensor_valid_pixels": 40000,
+          "phase_valid_fraction": 0.62261962890625,
+          "tensor_valid_fraction": 0.6103515625,
+          "low_amplitude_pixels_per_reflection": [
+            0,
+            0
+          ],
+          "phase_residue_plaquettes_per_reflection": [
+            {
+              "positive": 0,
+              "negative": 0
+            },
+            {
+              "positive": 0,
+              "negative": 0
+            }
+          ],
+          "unwrap_discontinuity_pixels_per_reflection": [
+            0,
+            0
+          ],
+          "initial_connected_components": 1,
+          "disconnected_pixels_excluded": 0,
+          "unstable_deformation_pixels_excluded": 0
+        },
+        "interpretation_status": "hypothesized",
+        "limitations": [
+          "Single-domain two-dimensional image GPA; no phase, composition, 3D strain, defect or topology identification",
+          "Filtered geometric phase is an image-lattice measurement; image contrast and sublattice weighting can create apparent strain",
+          "Unknown phase aliasing, model error and scientific uncertainty are not quantified by these validity masks",
+          "No physical strain or rotation claim is available without explicit signed XY calibration",
+          "Bandpass masks and finite image boundaries limit spatial resolution; no independent specimen validation",
+          "Conditional single-domain projected image-lattice fields, not independently verified material strain, phase or defect identification",
+          "Geometric phase is extracted from selected Fourier bands; stored image or ptychography reconstruction phase is NOT geometric phase",
+          "Reference lattice and reference region are sourced assumptions; constant displacement gauge is unobservable",
+          "Sublattice contrast, imaging transfer, scan distortions and overlapping domains can produce pseudo-strain even with valid masks",
+          "Validity excludes known numerical failures, not unknown model errors; scientific uncertainty is unknown",
+          "No through-thickness, 3D strain, dislocation, twin or topological conclusion; reference/mask sensitivity needs separate revisions"
+        ],
+        "software": {
+          "scikit_image": "0.26.0",
+          "scipy": "1.18.1",
+          "numpy": "2.5.4"
+        }
+      },
+      "reads": {
+        "state": "completed",
+        "backend": "external-image-workspace",
+        "request_id": "round2-gpa-6",
+        "object_id": "ce13e2a2517148b199f29b264e8551f6",
+        "kind": "gpa_read",
+        "created_utc": "2026-11-01T15:43:36.604376+00:00",
+        "xy_calibration": {
+          "applies_to": {
+            "frame_index": 0,
+            "kind": "frame",
+            "object_id": "80421e154d7645ef8c0a0fbac47ba088",
+            "source_capture_files_sha256": null,
+            "source_identity": {
+              "path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/nonuniform.tiff",
+              "sha256": "10e92a4aa594d93c854950addb766d4afa7b4cb308ed61be068f20494238dc84",
+              "stat": {
+                "ctime_ns": "1793547816465132007",
+                "device": "16777240",
+                "inode": "132129",
+                "mtime_ns": "1793547816465132007",
+                "size": 262416
+              }
+            }
+          },
+          "calibration_id": "78b56f3742104c0bae9150e09a5165d5",
+          "coordinate_domain": "real_space",
+          "original_file_metadata_modified": false,
+          "previous_calibration_id": null,
+          "real_space_only": true,
+          "revision": 1,
+          "scope": "image",
+          "source": "user_statement_not_independently_verified",
+          "source_text": "Synthetic signed sampling; no instrument claim",
+          "status": "active",
+          "uncertainty_status": "unknown",
+          "value_unit_or_frame_depth_inferred": false,
+          "xy_scale": {
+            "uncertainty_convention": "absolute scale standard uncertainty when supplied; correlation and localization uncertainty unspecified",
+            "uncertainty_x": null,
+            "uncertainty_y": null,
+            "unit": "nm",
+            "x": 0.02,
+            "y": -0.03
+          }
+        },
+        "calibration_review": {
+          "candidate_interpretations": "not automatically confirmed",
+          "current_calibration_id": "78b56f3742104c0bae9150e09a5165d5",
+          "old_exports_immutable": true,
+          "old_measurement_object_id": null,
+          "physical_measurements": "record dependency when measured",
+          "pixel_anchor_policy": "scale-only revision preserves saved point coordinates",
+          "pixel_anchors_changed": false,
+          "previous_calibration_id": null
+        },
+        "parent_object_id": "f2b8c6f905f9422d987ad0f297188903",
+        "gpa_object_id": "f2b8c6f905f9422d987ad0f297188903",
+        "gpa_dependency": {
+          "object_id": "f2b8c6f905f9422d987ad0f297188903",
+          "request_id": "round2-gpa-5",
+          "manifest_sha256": "2ce9f9decd44ad890c351753b01943a46aeabb0d592c46a9aa9e6aad9163266d"
+        },
+        "shape_yx": [
+          256,
+          256
+        ],
+        "array_domain": "projected_gpa_fields",
+        "fft_recomputed": false,
+        "gpa_recomputed": false,
+        "coordinate_domain": "physical_cartesian_nm",
+        "material_strain_verified": false,
+        "calibration_dependency": {
+          "calibration_id": "78b56f3742104c0bae9150e09a5165d5",
+          "coordinate_domain": "real_space",
+          "revision": 1,
+          "source": "user_statement_not_independently_verified",
+          "status": "active"
+        },
+        "interpretation_status": "hypothesized",
+        "display_calibration_id": "78b56f3742104c0bae9150e09a5165d5",
+        "samples": [
+          {
+            "x_local": 96,
+            "y_local": 96,
+            "phase_valid": true,
+            "tensor_valid": true,
+            "invalid_reason": null,
+            "phase_1": -0.011468797694763389,
+            "phase_1_unit": "rad (geometric)",
+            "phase_2": -2.960594732333748e-16,
+            "phase_2_unit": "rad (geometric)",
+            "ux": 0.00029205053511080443,
+            "ux_unit": "nm",
+            "uy": -1.1308638867425828e-17,
+            "uy_unit": "nm",
+            "exx": -0.0016906371600090009,
+            "exx_unit": "dimensionless",
+            "eyy": 0.0,
+            "eyy_unit": "dimensionless",
+            "exy": 0.0,
+            "exy_unit": "dimensionless",
+            "rotation": 0.0,
+            "rotation_unit": "degree"
+          },
+          {
+            "x_local": 128,
+            "y_local": 128,
+            "phase_valid": true,
+            "tensor_valid": true,
+            "invalid_reason": null,
+            "phase_1": 0.04277494840642948,
+            "phase_1_unit": "rad (geometric)",
+            "phase_2": -2.960594732333748e-16,
+            "phase_2_unit": "rad (geometric)",
+            "ux": -0.001089255116701447,
+            "ux_unit": "nm",
+            "uy": -1.1308638867425828e-17,
+            "uy_unit": "nm",
+            "exx": -0.002388433585376326,
+            "exx_unit": "dimensionless",
+            "eyy": 0.0,
+            "eyy_unit": "dimensionless",
+            "exy": 0.0,
+            "exy_unit": "dimensionless",
+            "rotation": 0.0,
+            "rotation_unit": "degree"
+          },
+          {
+            "x_local": 0,
+            "y_local": 0,
+            "phase_valid": false,
+            "tensor_valid": false,
+            "invalid_reason": "outside reference-connected phase/derivative support; inspect saved masks",
+            "phase_1": null,
+            "phase_1_unit": "rad (geometric)",
+            "phase_2": null,
+            "phase_2_unit": "rad (geometric)",
+            "ux": null,
+            "ux_unit": "nm",
+            "uy": null,
+            "uy_unit": "nm",
+            "exx": null,
+            "exx_unit": "dimensionless",
+            "eyy": null,
+            "eyy_unit": "dimensionless",
+            "exy": null,
+            "exy_unit": "dimensionless",
+            "rotation": null,
+            "rotation_unit": "degree"
+          }
+        ],
+        "sampling": "exact integer grid; no interpolation; null invalid values are not zero",
+        "schema_version": 1,
+        "computation": "explicit external Python; DM not called",
+        "dm_called": false,
+        "files_sha256": {
+          "gpa-samples.json": "a44c59922034aebbe4d33878e0b8a7e1bc3540122297b395c81a8b877d2d0a2c",
+          "gpa-samples.csv": "1d6847983d9e5acd0f5ea6bb8ec32947df13d494572c9430b9f33ef599dbe7f5"
+        },
+        "software_provenance": {
+          "python": "3.13.18",
+          "numpy": "2.5.4",
+          "Pillow": "12.3.0",
+          "tifffile": "2026.10.15",
+          "worker_sha256": "679575cbc6aa209a701a981a44f91371474fd95f6e8b7b73712c71fa9260ffab",
+          "helper_modules_sha256": {
+            "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+            "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+            "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+            "image_peaks.py": "3e2f56818684a4c5f6a52c1251f92826a7cb39bbe498ac1056d81d1703cee94c",
+            "image_automation.py": "2e74258d7a3f4e2bc930940a02b598f9199b52d4cf2032e173058a1dda564a6f",
+            "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+            "image_joint.py": "8b6f0614023ea8b819b4b82067157c882b1ca68a09814c12637800cc884a9c1d",
+            "image_spatial_atlas.py": "fde59458e3a3bd947fe3660a2969212f0ace3cd8c46423f446ec58b41d35ae59",
+            "image_domain_compare.py": "99bf6072f13f27f922447d7db4e79b859f23f05a37de342affc886fc4d730175",
+            "image_feature_field.py": "788995b4868da80367af6510ac14947ec0da8ac8cc8bc2964ec77c8b390d2b86",
+            "image_spatial_domains.py": "4d1ffd2ccea57b9482eed4b997cbbc1f124d8fd814926f89099cb7f369507151",
+            "image_field_increment.py": "f00f2700bc6394c72a7c0d06ddd9d253fac9839457a60eb09d6f190bce338149",
+            "image_active_analysis.py": "cbac7dbfb4f498560429f7f354b9a136b8b63bb409743829b5c2b6ad51aa9fa8",
+            "image_gpa.py": "5d87c901a67b6b731805a5905818d45d4dc773013e7a5662af683af6d67951ca",
+            "image_gpa_core.py": "e58e9a829c5c75d1e95d0ffe8c17aee6e5d1ef65062f0d8287988e7cd972c8be",
+            "image_topology.py": "b2a570ae148870662e66fb4b18768244f3ae2e59ab4e7bb5f68179a87f9fabaf",
+            "image_topology_core.py": "7727e456b7b5d7dbe8809a364d1c9842a50061f493604edc874e37161677edb0",
+            "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+            "image_discovery.py": "1de0c4890937116008d73e625fde6b7996cf5f27caf97f3cdc1a53f0ebcf6417",
+            "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+          }
+        },
+        "manifest_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace/objects/ce13e2a2517148b199f29b264e8551f6/object.json"
+      },
+      "files_sha256": {
+        "phase_demodulated_wrapped.npy": "a4b0d2aa9d913d5b931b384e9fa52bcc1f04e7736413ffb68b220e74fe3f065c",
+        "strain_green_lagrange_xy.npy": "fbe52cfdaab7877e3f56876b4630fa87871fd5b43fcaaee16285829920ce8796",
+        "phase_unwrapped.npy": "aeaf633c05e85f2d11cb6b0f1d573ee728910142e0533ba8cfb932334ce81f7e",
+        "preview.png": "14e0939aa3c2bbf81ce275b18bc11e4d134631543c2b2f8d09f69c7670942cdb",
+        "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+        "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+        "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+        "complex_band.npy": "5a37a99661d3087746e87af5da68d453abb03e34b9fc400ad9cd1a741d9236c1",
+        "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+        "displacement_pixel_xy.npy": "5f0f35c007766ffe8f44acbcb4d568a1047163b994793bec98bbdc40cd0fc6ce",
+        "gpa-report.json": "a4a2b2f848aca26584129c72697a07f55f78f6b753941aecbe096185049d8011",
+        "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+        "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+        "gpa-summary.csv": "6e9377e2cd123f5c639093e1b1f4e0dacb1836c08b545e39a13d26bdd666b4a3",
+        "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+        "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+        "phase_wrapped.npy": "b7e50f934cabd042001aced9b67af5e2d7b62e18a2cc943182c8019cfbe60c1c",
+        "amplitude.npy": "489cf0c1e9a7d415c3fa7545571eb809238f3ef83e7043e50e788d1d0dca6dbb",
+        "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+        "deformation_gradient_pixel_xy.npy": "a8dd93c6b821b06ed52b1d3e3f582758ad84d18d1612265d207c50578e1cf7c8",
+        "deformation_gradient_xy.npy": "2ae276b39acb07e3b989d4f96a10062dc6bd875177a5696f47cd420019c04a34",
+        "displacement_nm_xy.npy": "aaf63507bfd3f0f04125cec62f2d9848158af0d1e7a5ab410f2144fb70ecfc37",
+        "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+      }
+    },
+    {
+      "name": "mixed_carriers",
+      "execution": "PASS",
+      "classification": "inapplicable_single_domain_assumption",
+      "results": [
+        {
+          "weight": 0.2,
+          "object_id": "b9fa128211934a359f84e41811e1466d",
+          "valid_fraction": 0.6103515625,
+          "exx_min": -0.0043815803695436695,
+          "exx_max": 0.007672321627778755,
+          "interpretation_status": "hypothesized",
+          "coordinate_domain": "image_coordinate",
+          "files_sha256": {
+            "phase_demodulated_wrapped.npy": "949beac4ad51dd826cfca5a8146918f30b2b592b3d58ed0dccdd7235bbba8f22",
+            "strain_green_lagrange_xy.npy": "4fbb0cdc8169058702083476c7a05c9cbc2ffcee004a0792a1496c3e7aee909f",
+            "phase_unwrapped.npy": "3d01bdf23debda04e3696f449ec3b328a2f65e327c813f2d72eac077b1499ab8",
+            "preview.png": "ae6047aa37985616f715752844c3d29b1c9aa27c8c3e5b8496a93b646c672a01",
+            "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+            "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+            "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+            "complex_band.npy": "ab767387b68314fedd7ea3b23e6927cd9ec9f859f7cd9aadc502c1210694c19f",
+            "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+            "displacement_pixel_xy.npy": "e63a406e4cd18a5a04bbc25ab8d8c1979e8d77e43bfb387fbad5e546fd4f3cfc",
+            "gpa-report.json": "c9afad3dce3bbf1616b43bf0ca06d533c3a95af5c4ce493ca857b70460dffbd2",
+            "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+            "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+            "gpa-summary.csv": "fe59f73e994c0b27a1c016b1999023c13032bb79a9b8c3ae9911b741c402b1b5",
+            "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+            "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+            "phase_wrapped.npy": "28250baa286453b2396329b81f3c2e2a808a10fc6b87d01574d310f3896433ca",
+            "amplitude.npy": "79e85e145cc267076b2a1abfb8a90eb6e338bfb9aadcb2a766c3d11d31f2dd4e",
+            "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+            "deformation_gradient_pixel_xy.npy": "50a90b4982d8114a8a5e28821cf679f3493813c73aa22d5fb52be249859a64cd",
+            "deformation_gradient_xy.npy": "50a90b4982d8114a8a5e28821cf679f3493813c73aa22d5fb52be249859a64cd",
+            "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+          }
+        },
+        {
+          "weight": 0.8,
+          "object_id": "9b1d272ea228441084581d8528359c34",
+          "valid_fraction": 0.6103515625,
+          "exx_min": -0.013198766241973803,
+          "exx_max": 0.13305009248825772,
+          "interpretation_status": "hypothesized",
+          "coordinate_domain": "image_coordinate",
+          "files_sha256": {
+            "phase_demodulated_wrapped.npy": "a691f6afbce8d865e1ecd20e7116653932520f59e62a19fbe855d103b2278959",
+            "strain_green_lagrange_xy.npy": "8a0b53fdee607d8e941db66875aa3869307d7a2bd61102e218c5cf783b54a933",
+            "phase_unwrapped.npy": "c8ffd5ebff41c47938715a3c876762919c1977d9766cf507565e30b1f711a5a1",
+            "preview.png": "201652f84f085319df7b7c3200e62fedbaba5e62a3e98dcd0020ea3a2eb28e0c",
+            "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+            "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+            "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+            "complex_band.npy": "a0bdc9aa4282abe87eb78d189b9cde4d64695aa35157fd33b33229c7d6eb8e1e",
+            "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+            "displacement_pixel_xy.npy": "d1d9b3ae3f7011639c8c1d2b8d613ebb1462580020a81fb229c8af94e5878c03",
+            "gpa-report.json": "5cc94581e65aed27b31ed8a4be49f7781339820aad135aa76cc910e720761913",
+            "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+            "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+            "gpa-summary.csv": "a41ae6e1e767dff7da04d42ff93807d4bbb2c5af66837290c28fb95a078223f2",
+            "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+            "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+            "phase_wrapped.npy": "a3cd5b0bbba803b831f6d8873b6b085a0b8c8e56b01d408b0587d7d54cc92534",
+            "amplitude.npy": "a93d63fad97b1e0b2fb1561e0b235a046f8d037449a9cb7ca1c382e2d58002f7",
+            "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+            "deformation_gradient_pixel_xy.npy": "98dc5f325aa6d033702a74c36abe06d6f39185219c17ec7230e20330ded7ec8c",
+            "deformation_gradient_xy.npy": "98dc5f325aa6d033702a74c36abe06d6f39185219c17ec7230e20330ded7ec8c",
+            "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+          }
+        },
+        {
+          "weight": 1.2,
+          "object_id": "a1361db29a8f4bf6adcb3b7af8e2e56e",
+          "valid_fraction": 0.6103515625,
+          "exx_min": -0.15923336969710533,
+          "exx_max": -0.016595391324810083,
+          "interpretation_status": "hypothesized",
+          "coordinate_domain": "image_coordinate",
+          "files_sha256": {
+            "phase_demodulated_wrapped.npy": "6d4eaf9bafc2beb37751515e85c3842eb0221aa01effb6e7e591a237c37c47f1",
+            "strain_green_lagrange_xy.npy": "e029020d49fcb88ab12dd169e0155a1d3e7b2ae4fc82eca853d905c6e63bbbd5",
+            "phase_unwrapped.npy": "37e66365d3c05e79c5d70d7d309a78872f7044eaec6707824985ce84cfb649d2",
+            "preview.png": "4a2cf629f40d3431e96f33d3cc7d08f31d9ce9be351c40039dba94a9075a5bb2",
+            "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+            "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+            "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+            "complex_band.npy": "8bcbde9df470367e43ea1fa7768b16973fcfaf337a08d5a0dd99c0bed05154e1",
+            "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+            "displacement_pixel_xy.npy": "36db1e5a99d2580505c2ba5cbdda3a8aa7ab29d63af819ceb793cbcc03d73eff",
+            "gpa-report.json": "69f064a73d192c182574332559e39a5d3b46e4bcf24c858724cef311f2c9baab",
+            "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+            "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+            "gpa-summary.csv": "be519da168ef7683c8d6321191c208402b965722a8892934cf3811d51c32d42a",
+            "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+            "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+            "phase_wrapped.npy": "c68c430a406535942c5c789290feccba97ae4eb6673f9d510e8868fec86e4faf",
+            "amplitude.npy": "9a4d6e079655ecc6af07b039393bf039aaf803c3f7640a8771cbfc01f89e4a84",
+            "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+            "deformation_gradient_pixel_xy.npy": "313b5098de9cd688de70f8b61cdeb12afd7536a688cca8a2e02cf1856ce90d28",
+            "deformation_gradient_xy.npy": "313b5098de9cd688de70f8b61cdeb12afd7536a688cca8a2e02cf1856ce90d28",
+            "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+          }
+        }
+      ],
+      "truth": "Sum of two unstrained, different-period projected layers. There is no unique single-domain displacement field.",
+      "conclusion": "Beat-phase gradients are calculable but cannot establish strain in either layer."
+    },
+    {
+      "name": "noise_acceptance",
+      "execution": "PASS",
+      "classification": "numerical_masks_not_signal_or_model_validation",
+      "results": [
+        {
+          "seed": 0,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.48443603515625,
+          "absolute_exx_p95": 0.250220050985877
+        },
+        {
+          "seed": 1,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4971160888671875,
+          "absolute_exx_p95": 0.27390854499962747
+        },
+        {
+          "seed": 2,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.51025390625,
+          "absolute_exx_p95": 0.26777955654251756
+        },
+        {
+          "seed": 3,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.5017852783203125,
+          "absolute_exx_p95": 0.27565954328506465
+        },
+        {
+          "seed": 4,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4690093994140625,
+          "absolute_exx_p95": 0.28398982803257233
+        },
+        {
+          "seed": 5,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4304656982421875,
+          "absolute_exx_p95": 0.2891799414538483
+        },
+        {
+          "seed": 6,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.502655029296875,
+          "absolute_exx_p95": 0.25179707047366523
+        },
+        {
+          "seed": 7,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4852142333984375,
+          "absolute_exx_p95": 0.27618520761925835
+        },
+        {
+          "seed": 8,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.502044677734375,
+          "absolute_exx_p95": 0.25851200563635673
+        },
+        {
+          "seed": 9,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.5000762939453125,
+          "absolute_exx_p95": 0.23020190083441586
+        },
+        {
+          "seed": 10,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4995574951171875,
+          "absolute_exx_p95": 0.2460450454104362
+        },
+        {
+          "seed": 11,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4936676025390625,
+          "absolute_exx_p95": 0.2644438859816772
+        },
+        {
+          "seed": 12,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.49359130859375,
+          "absolute_exx_p95": 0.2574053076318802
+        },
+        {
+          "seed": 13,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4671783447265625,
+          "absolute_exx_p95": 0.2591695985096517
+        },
+        {
+          "seed": 14,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.36822509765625,
+          "absolute_exx_p95": 0.24070119918438193
+        },
+        {
+          "seed": 15,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4968414306640625,
+          "absolute_exx_p95": 0.26112702123530596
+        },
+        {
+          "seed": 16,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.514556884765625,
+          "absolute_exx_p95": 0.2620626733863242
+        },
+        {
+          "seed": 17,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.507415771484375,
+          "absolute_exx_p95": 0.2361273625449567
+        },
+        {
+          "seed": 18,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4732513427734375,
+          "absolute_exx_p95": 0.20564516372847433
+        },
+        {
+          "seed": 19,
+          "outcome": "computed_hypothesized",
+          "valid_fraction": 0.4482269287109375,
+          "absolute_exx_p95": 0.282996323143247
+        }
+      ],
+      "saved_seed0": {
+        "object_id": "2e0b6e6aeb38480f8093bd6cbeeae830",
+        "report": {
+          "algorithm": "classical-two-g-gpa-finite-v1",
+          "shape_yx": [
+            256,
+            256
+          ],
+          "libraries": {
+            "numpy": "2.5.4",
+            "scipy": "1.18.1",
+            "scikit_image": "0.26.0"
+          },
+          "g_vectors_cycles_per_pixel": [
+            [
+              0.125,
+              0.0
+            ],
+            [
+              0.0,
+              0.125
+            ]
+          ],
+          "g_condition_number": 1.0,
+          "effective_g_vectors_cycles_per_pixel": [
+            [
+              0.125,
+              0.0
+            ],
+            [
+              0.0,
+              0.125
+            ]
+          ],
+          "effective_g_condition_number": 1.0,
+          "mask": {
+            "kind": "isotropic_gaussian_truncated",
+            "sigma_cycles_per_pixel": [
+              0.018,
+              0.018
+            ],
+            "truncation_sigma": 3.0,
+            "support_radius_cycles_per_pixel": [
+              0.05399999999999999,
+              0.05399999999999999
+            ]
+          },
+          "reference_mode": "fixed_g",
+          "reference_rect_xyxy": [
+            92,
+            92,
+            116,
+            116
+          ],
+          "reference_valid_pixels": 519,
+          "reference_valid_fraction": 0.9010416666666666,
+          "reference_center_xy": [
+            103.59730250481695,
+            103.07321772639692
+          ],
+          "reference_phase_constants_radians": [
+            0.9877671997282136,
+            0.5064973516872611
+          ],
+          "reference_phase_slopes_radians_per_pixel_xy": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0
+            ]
+          ],
+          "reference_semantics": "constant_phase_gauge_only_preserves_uniform_deformation",
+          "coordinate_domain": "image_coordinate",
+          "calibration_nm_xy": null,
+          "displacement_convention": "Eulerian backdisplacement u_E(x)=x-X(x); phi=-2*pi*G*u_E",
+          "tensor_convention": "F_pixel=inverse(I-grad_x(u_E)); F=S*F_pixel*inverse(S); E=.5*(transpose(F)*F-I)",
+          "tensor_axes": "row component xy, column coordinate xy; arrays [y,x,2,2]",
+          "rotation_convention": "proper polar rotation atan2(F_yx-F_xy,F_xx+F_yy), radians; positive x toward y",
+          "edge_margin_pixels": 27,
+          "bandwidth_default_edge_margin_pixels": 27,
+          "edge_margin_semantics": "3 Gaussian real-space standard deviations, rounded up; finite-window guard, not an error bound",
+          "amplitude_floor_relative": 0.05,
+          "amplitude_thresholds": [
+            0.004563577381461457,
+            0.004560831985539293
+          ],
+          "numerical_band_floor": 2.5940934059812302e-15,
+          "unwrap": {
+            "implementation": "skimage.restoration.unwrap_phase",
+            "seed": 0,
+            "wrap_around": false
+          },
+          "quality": {
+            "phase_valid_pixels": 35033,
+            "tensor_valid_pixels": 31748,
+            "phase_valid_fraction": 0.5345611572265625,
+            "tensor_valid_fraction": 0.48443603515625,
+            "low_amplitude_pixels_per_reflection": [
+              1318,
+              1330
+            ],
+            "phase_residue_plaquettes_per_reflection": [
+              {
+                "positive": 0,
+                "negative": 0
+              },
+              {
+                "positive": 0,
+                "negative": 0
+              }
+            ],
+            "unwrap_discontinuity_pixels_per_reflection": [
+              2284,
+              1750
+            ],
+            "initial_connected_components": 1,
+            "disconnected_pixels_excluded": 357,
+            "unstable_deformation_pixels_excluded": 0
+          },
+          "interpretation_status": "hypothesized",
+          "limitations": [
+            "Single-domain two-dimensional image GPA; no phase, composition, 3D strain, defect or topology identification",
+            "Filtered geometric phase is an image-lattice measurement; image contrast and sublattice weighting can create apparent strain",
+            "Unknown phase aliasing, model error and scientific uncertainty are not quantified by these validity masks",
+            "No physical strain or rotation claim is available without explicit signed XY calibration",
+            "Bandpass masks and finite image boundaries limit spatial resolution; no independent specimen validation",
+            "Conditional single-domain projected image-lattice fields, not independently verified material strain, phase or defect identification",
+            "Geometric phase is extracted from selected Fourier bands; stored image or ptychography reconstruction phase is NOT geometric phase",
+            "Reference lattice and reference region are sourced assumptions; constant displacement gauge is unobservable",
+            "Sublattice contrast, imaging transfer, scan distortions and overlapping domains can produce pseudo-strain even with valid masks",
+            "Validity excludes known numerical failures, not unknown model errors; scientific uncertainty is unknown",
+            "No through-thickness, 3D strain, dislocation, twin or topological conclusion; reference/mask sensitivity needs separate revisions"
+          ],
+          "software": {
+            "scikit_image": "0.26.0",
+            "scipy": "1.18.1",
+            "numpy": "2.5.4"
+          }
+        },
+        "files_sha256": {
+          "phase_demodulated_wrapped.npy": "b47522aab0e5d340c1750f41a0bcd3731cc90b09917fb5fa2094f4062cbf48a4",
+          "strain_green_lagrange_xy.npy": "ce1ee8315389b43da81da9d707b88d714d37d060767b10d059f393d0803a101b",
+          "phase_unwrapped.npy": "4b7d257a7bc39757540c498a4f9c944319306a7a64bf52d0a782559a880aaa60",
+          "preview.png": "3c04a4f1ca4660f2d3d17d62d66e64f547dc4aa9899bc21da7eda6fc0019ad6c",
+          "valid_tensor.npy": "f916642c6d60784ee571605f1c4d09682a331b12e7b77e5c956da563cee657dd",
+          "low_amplitude.npy": "e0a41639c82f03dfb8373f3c06fae4b7ad3f54c57381158f3fe1f26a1fc0b7fc",
+          "valid_displacement.npy": "5c9cd3a26876f82cafbac32f8668f376e2fcdeccb8de6d982031ef2e26b21308",
+          "complex_band.npy": "2104fedaa0c04cf5800cf1a38e30867627c873f2b15b7419dd812760ebfa4e30",
+          "rotation_radians.npy": "233105516b3f1d985623b28ad6172f0bc3d9380428f93c7dbf0eaf786eecd63d",
+          "displacement_pixel_xy.npy": "20ad58d111f8b42bfec3922f898004ad7112f4193bc319ecdeaee4ea6e98fe47",
+          "gpa-report.json": "8534356eb6c379ee233cde7e41882e4235236a36a78bd0f2a3b8c4da26a777f1",
+          "phase_unwrap_discontinuity.npy": "34496c560b78ed435409cfbe5700e72f4f83154aa47381a40a8b460292c24bc6",
+          "disconnected_invalid.npy": "00250031e57febd6852d60a27e29615daa6163db2ec198eb7d6c95e81e6a2d07",
+          "gpa-summary.csv": "127774a81348fa454aea8f1e78f6a770324934b4b9ff5f33544433820500cae3",
+          "valid_phase.npy": "f6066b1224c29926881ce444a61ee766a31cddf8db8fbab70bdedec0bacbc1ae",
+          "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+          "phase_wrapped.npy": "04886df5df316b8c4570146e445a8ce4820c4790eccb51f34243bdefbd2e7f61",
+          "amplitude.npy": "41b94b9645982c98c57f7165c309ae137a99b1bd80e642f1214fdd1c8e1c1578",
+          "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+          "deformation_gradient_pixel_xy.npy": "9df85adf172d61631fc06eddab9c1047d4aed0f34ce4e72ab061a888eed9277d",
+          "deformation_gradient_xy.npy": "9df85adf172d61631fc06eddab9c1047d4aed0f34ce4e72ab061a888eed9277d",
+          "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+        }
+      },
+      "computed_count": 20,
+      "conclusion": "Fixed-band noise can satisfy numerical support. This is not evidence for a lattice; no false-positive rate is qualified by 20 toy cases."
+    },
+    {
+      "name": "reference_components",
+      "execution": "PASS",
+      "classification": "verified_reference_abstention",
+      "failure_code": "GPA_REFERENCE_INVALID",
+      "quality": {
+        "phase_valid_pixels": 14342,
+        "tensor_valid_pixels": 13800,
+        "phase_valid_fraction": 0.218841552734375,
+        "tensor_valid_fraction": 0.2105712890625,
+        "low_amplitude_pixels_per_reflection": [
+          15104,
+          15360
+        ],
+        "phase_residue_plaquettes_per_reflection": [
+          {
+            "positive": 0,
+            "negative": 0
+          },
+          {
+            "positive": 0,
+            "negative": 0
+          }
+        ],
+        "unwrap_discontinuity_pixels_per_reflection": [
+          0,
+          0
+        ],
+        "initial_connected_components": 2,
+        "disconnected_pixels_excluded": 14342,
+        "unstable_deformation_pixels_excluded": 0
+      }
+    },
+    {
+      "name": "uncertainty",
+      "execution": "PASS",
+      "classification": "verified_first_order_declared_model",
+      "trials": 200000,
+      "seed": 20261101,
+      "input": {
+        "centre": [
+          31.0,
+          42.0
+        ],
+        "spots": [
+          {
+            "id": "0",
+            "xy": [
+              91.0,
+              63.0
+            ],
+            "sigma_px": [
+              0.08,
+              0.06
+            ]
+          },
+          {
+            "id": "1",
+            "xy": [
+              20.0,
+              109.0
+            ],
+            "sigma_px": [
+              0.05,
+              0.1
+            ]
+          }
+        ],
+        "calibration": {
+          "mode": "explicit",
+          "scale_xy": [
+            0.021,
+            -0.032
+          ],
+          "scale_sigma_xy": [
+            2e-05,
+            3e-05
+          ],
+          "unit": "1/nm",
+          "convention": "cycles_per_length",
+          "basis": "Independent synthetic input SD; XY scale terms uncorrelated"
+        },
+        "centre_sigma": [
+          0.07,
+          0.09
+        ]
+      },
+      "analytic": [
+        0.0013644824857788661,
+        0.00101674097159437,
+        0.14259069551888504
+      ],
+      "monte_carlo": [
+        0.0013615749939113928,
+        0.0010142870598858643,
+        0.1423620953789478
+      ],
+      "max_relative_difference": 0.002413507252154612,
+      "missing_centre_uncertainty": "UNKNOWN",
+      "full_geometry": {
+        "computation": "explicit external NumPy selected-point geometry",
+        "dm_called": false,
+        "center_xy": [
+          31.0,
+          42.0
+        ],
+        "center_sigma_px": [
+          0.07,
+          0.09
+        ],
+        "calibration": {
+          "mode": "explicit",
+          "scale_xy": [
+            0.021,
+            -0.032
+          ],
+          "zero_xy": [
+            0.0,
+            0.0
+          ],
+          "calibrated": true,
+          "geometry_usable": true,
+          "unit": "cycles/nm",
+          "scale_sigma_xy": [
+            2e-05,
+            3e-05
+          ],
+          "basis": "Independent synthetic input SD; XY scale terms uncorrelated",
+          "input": {
+            "mode": "explicit",
+            "scale_xy": [
+              0.021,
+              -0.032
+            ],
+            "scale_sigma_xy": [
+              2e-05,
+              3e-05
+            ],
+            "unit": "1/nm",
+            "convention": "cycles_per_length",
+            "basis": "Independent synthetic input SD; XY scale terms uncorrelated"
+          }
+        },
+        "spots": [
+          {
+            "id": "0",
+            "xy": [
+              91.0,
+              63.0
+            ],
+            "delta_xy": [
+              60.0,
+              21.0
+            ],
+            "absolute_coordinate_xy": [
+              1.911,
+              -2.016
+            ],
+            "g_xy_cycles_per_nm": [
+              1.26,
+              -0.672
+            ],
+            "relative_vector_xy": null,
+            "vector_length": 1.428,
+            "vector_unit": "cycles/nm",
+            "d_nm": 0.700280112044818,
+            "d_unavailable_reason": null,
+            "g_sigma": 0.0027824308532804908,
+            "d_sigma_nm": 0.0013644824857788661,
+            "uncertainty_status": "first_order_independent_inputs_shared_centre_and_scale",
+            "sigma_px": [
+              0.08,
+              0.06
+            ],
+            "length_ratio_to_first": 1.0
+          },
+          {
+            "id": "1",
+            "xy": [
+              20.0,
+              109.0
+            ],
+            "delta_xy": [
+              -11.0,
+              67.0
+            ],
+            "absolute_coordinate_xy": [
+              0.42000000000000004,
+              -3.488
+            ],
+            "g_xy_cycles_per_nm": [
+              -0.231,
+              -2.144
+            ],
+            "relative_vector_xy": null,
+            "vector_length": 2.1564083565039347,
+            "vector_unit": "cycles/nm",
+            "d_nm": 0.463734058989293,
+            "d_unavailable_reason": null,
+            "g_sigma": 0.004727944141788066,
+            "d_sigma_nm": 0.00101674097159437,
+            "uncertainty_status": "first_order_independent_inputs_shared_centre_and_scale",
+            "sigma_px": [
+              0.05,
+              0.1
+            ],
+            "length_ratio_to_first": 1.510089885506957
+          }
+        ],
+        "angles": [
+          {
+            "from": "0",
+            "to": "1",
+            "angle_deg": 68.07698365918219,
+            "sigma_deg": 0.14259069551888504,
+            "uncertainty_method": "linearized_unwrapped_angle; unreliable_at_0_or_180"
+          }
+        ],
+        "uncertainty_model": "Independent spot positions and independent x/y scale errors; centre and scales shared across spots. No distortion model or fitted covariance inferred.",
+        "limitations": [
+          "Geometry consumes supplied centre/spot coordinates; optional automatic localization is documented separately in detection evidence",
+          "Pixel/scale uncertainty is user supplied; missing terms remain unknown",
+          "Single-pattern geometry is not unique chemical phase evidence; dynamical scattering may produce forbidden reflections"
+        ]
+      }
+    },
+    {
+      "name": "covariance_and_endpoint",
+      "execution": "PASS",
+      "classification": "unsupported_covariance_and_documented_nonlinearity",
+      "shared_isotropic_scale_exact_angle_sigma": 0.0,
+      "independent_xy_model_sigma": 0.8102846845413955,
+      "endpoint_linearized_sigma": 0.06405862890754593,
+      "endpoint_mc_sigma": 0.03861650969185868,
+      "endpoint_mc_mean": 0.05117122577111639,
+      "warning": "linearized_unwrapped_angle; unreliable_at_0_or_180",
+      "conclusion": "No bug in the declared independent-XY linearized model; correlated scale and folded endpoints require a different input/output uncertainty model."
+    }
+  ],
+  "source_hashes": {
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/nonuniform.tiff": "10e92a4aa594d93c854950addb766d4afa7b4cb308ed61be068f20494238dc84",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/mixed-0.2.tiff": "dac7c733d7eae33406932fcfcea1cf313bd68b552b7b06e05a73470a84cb5562",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/mixed-0.8.tiff": "c9e796492525fc7250cbf8b2f5dab22eefb755e74f57d83dab82d2f555a874cb",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/mixed-1.2.tiff": "946c4aae8a4602fec948271283c170fa2b1c6b228741d5d7186d48912cbdc8de",
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/noise-seed0.tiff": "eda9d99324ff0e7510c7f9bfef4677c7f9cb730e8905e4d5f16e6c28ba57966d"
+  },
+  "source_files_unchanged": true
+}

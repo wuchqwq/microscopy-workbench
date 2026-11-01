@@ -1,0 +1,573 @@
+[
+  {
+    "request": {
+      "action": "open",
+      "request_id": "round2-gpa-1",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/nonuniform.tiff"
+    },
+    "response_sha256_canonical": "ba9744d6fae24356511d61d4414788f12084677d7ccbf637e5b3cb173fcdd171",
+    "ok": true,
+    "object_id": "4b6d918c59d047f0ad8373481144d8bd",
+    "kind": "tiff_source",
+    "files_sha256": {}
+  },
+  {
+    "request": {
+      "action": "frame",
+      "request_id": "round2-gpa-2",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "4b6d918c59d047f0ad8373481144d8bd",
+      "frame_index": 0
+    },
+    "response_sha256_canonical": "58b1c86ba23169deea05bdcf2107b24e30b1f3bf5d2fdf74aaebfac39468cec1",
+    "ok": true,
+    "object_id": "80421e154d7645ef8c0a0fbac47ba088",
+    "kind": "frame",
+    "files_sha256": {
+      "data.npy": "008c6d5248e206b84ec930fcafbf0a622ce494862e69d1a547ec00bc40912129"
+    }
+  },
+  {
+    "request": {
+      "action": "calibrate",
+      "request_id": "round2-gpa-3",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "80421e154d7645ef8c0a0fbac47ba088",
+      "scope": "image",
+      "xy_scale": {
+        "x": 0.02,
+        "y": -0.03,
+        "unit": "nm"
+      },
+      "source_text": "Synthetic signed sampling; no instrument claim"
+    },
+    "response_sha256_canonical": "35024c3b02008219c3450ebaefda43b4a0c6cbba8f6b3c705a78488f0de4e2b1",
+    "ok": true,
+    "object_id": "78b56f3742104c0bae9150e09a5165d5",
+    "kind": "calibration",
+    "files_sha256": {}
+  },
+  {
+    "request": {
+      "action": "fft",
+      "request_id": "round2-gpa-4",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "78b56f3742104c0bae9150e09a5165d5",
+      "window": "none",
+      "subtract_mean": true
+    },
+    "response_sha256_canonical": "bd6941291959ebf3bc28ddc97be34ea8239672376156a15b9e873f0959438d0b",
+    "ok": true,
+    "object_id": "83dd82645ccb4ce1b50432ddf899b115",
+    "kind": "fft",
+    "files_sha256": {
+      "preview.png": "7853aeef1b58189c2c506ffeef9d4c8fc8f48067c0758b56a3337bead32ac0a7",
+      "data.npy": "13a3194735b00dadbeeee6008e37a31d13eb7adda06a1a10017321a902b444e6"
+    }
+  },
+  {
+    "request": {
+      "action": "gpa",
+      "request_id": "round2-gpa-5",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "83dd82645ccb4ce1b50432ddf899b115",
+      "source_domain": "real_space_lattice",
+      "source_domain_text": "Synthetic audit: intentionally test this working assumption, not independent proof",
+      "g_vectors": [
+        [
+          0.125,
+          0.0
+        ],
+        [
+          0.0,
+          0.125
+        ]
+      ],
+      "mask_sigma": 0.018,
+      "reference_rect": [
+        92,
+        92,
+        116,
+        116
+      ],
+      "reference_mode": "fixed_g",
+      "reference_text": "Synthetic carrier reference at 1/8 cycles/pixel"
+    },
+    "response_sha256_canonical": "db61465653e3ebcb12c0ed95d79657e0dcf418bb81eb8328fda450da872963c3",
+    "ok": true,
+    "object_id": "f2b8c6f905f9422d987ad0f297188903",
+    "kind": "gpa",
+    "files_sha256": {
+      "phase_demodulated_wrapped.npy": "a4b0d2aa9d913d5b931b384e9fa52bcc1f04e7736413ffb68b220e74fe3f065c",
+      "strain_green_lagrange_xy.npy": "fbe52cfdaab7877e3f56876b4630fa87871fd5b43fcaaee16285829920ce8796",
+      "phase_unwrapped.npy": "aeaf633c05e85f2d11cb6b0f1d573ee728910142e0533ba8cfb932334ce81f7e",
+      "preview.png": "14e0939aa3c2bbf81ce275b18bc11e4d134631543c2b2f8d09f69c7670942cdb",
+      "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+      "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+      "complex_band.npy": "5a37a99661d3087746e87af5da68d453abb03e34b9fc400ad9cd1a741d9236c1",
+      "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+      "displacement_pixel_xy.npy": "5f0f35c007766ffe8f44acbcb4d568a1047163b994793bec98bbdc40cd0fc6ce",
+      "gpa-report.json": "a4a2b2f848aca26584129c72697a07f55f78f6b753941aecbe096185049d8011",
+      "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+      "gpa-summary.csv": "6e9377e2cd123f5c639093e1b1f4e0dacb1836c08b545e39a13d26bdd666b4a3",
+      "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+      "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+      "phase_wrapped.npy": "b7e50f934cabd042001aced9b67af5e2d7b62e18a2cc943182c8019cfbe60c1c",
+      "amplitude.npy": "489cf0c1e9a7d415c3fa7545571eb809238f3ef83e7043e50e788d1d0dca6dbb",
+      "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+      "deformation_gradient_pixel_xy.npy": "a8dd93c6b821b06ed52b1d3e3f582758ad84d18d1612265d207c50578e1cf7c8",
+      "deformation_gradient_xy.npy": "2ae276b39acb07e3b989d4f96a10062dc6bd875177a5696f47cd420019c04a34",
+      "displacement_nm_xy.npy": "aaf63507bfd3f0f04125cec62f2d9848158af0d1e7a5ab410f2144fb70ecfc37",
+      "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+    }
+  },
+  {
+    "request": {
+      "action": "gpa_read",
+      "request_id": "round2-gpa-6",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "f2b8c6f905f9422d987ad0f297188903",
+      "points": [
+        [
+          96,
+          96
+        ],
+        [
+          128,
+          128
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    "response_sha256_canonical": "dac94cbff1bff76bf46dcf8a2b576ccf00600a71f494b0a15298e6d5f92945d2",
+    "ok": true,
+    "object_id": "ce13e2a2517148b199f29b264e8551f6",
+    "kind": "gpa_read",
+    "files_sha256": {
+      "gpa-samples.json": "a44c59922034aebbe4d33878e0b8a7e1bc3540122297b395c81a8b877d2d0a2c",
+      "gpa-samples.csv": "1d6847983d9e5acd0f5ea6bb8ec32947df13d494572c9430b9f33ef599dbe7f5"
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "request_id": "round2-gpa-7",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/mixed-0.2.tiff"
+    },
+    "response_sha256_canonical": "f6795af7c01a69d1b247ff3049f40c45410d697bb97435669106f02021fbd7ca",
+    "ok": true,
+    "object_id": "bec5fe98256442dd936a4572c3c7e32b",
+    "kind": "tiff_source",
+    "files_sha256": {}
+  },
+  {
+    "request": {
+      "action": "frame",
+      "request_id": "round2-gpa-8",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "bec5fe98256442dd936a4572c3c7e32b",
+      "frame_index": 0
+    },
+    "response_sha256_canonical": "dda3ef6afc37d8598ebebe9ca7d3c9b6b470c7089f298ae96a708835d269dc54",
+    "ok": true,
+    "object_id": "5c8e3420109b4c55ad74c0a7c81bfdc1",
+    "kind": "frame",
+    "files_sha256": {
+      "data.npy": "8e01901ddb18569ba93a44a95f097fb6b971f43a2f8d41e1ec73405e73eb6313"
+    }
+  },
+  {
+    "request": {
+      "action": "fft",
+      "request_id": "round2-gpa-9",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "5c8e3420109b4c55ad74c0a7c81bfdc1",
+      "window": "none",
+      "subtract_mean": true
+    },
+    "response_sha256_canonical": "18e62f673e78118adaff98e4926cfa95b63fd5b7cfa8b7c2048863421f110abf",
+    "ok": true,
+    "object_id": "5e6c68a497774ffa9643a3157c1e9445",
+    "kind": "fft",
+    "files_sha256": {
+      "preview.png": "da37fc3952466113b7b5e0d80ef66e7b9245ec8cf25143208a485a7f38c08588",
+      "data.npy": "d13ba4bed7679d7a73b52bdb785f14f7b6a71ffd7f01e92d4dc7ad7d2228b98f"
+    }
+  },
+  {
+    "request": {
+      "action": "gpa",
+      "request_id": "round2-gpa-10",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "5e6c68a497774ffa9643a3157c1e9445",
+      "source_domain": "real_space_lattice",
+      "source_domain_text": "Synthetic audit: intentionally test this working assumption, not independent proof",
+      "g_vectors": [
+        [
+          0.125,
+          0.0
+        ],
+        [
+          0.0,
+          0.125
+        ]
+      ],
+      "mask_sigma": 0.018,
+      "reference_rect": [
+        92,
+        92,
+        116,
+        116
+      ],
+      "reference_mode": "fixed_g",
+      "reference_text": "Synthetic carrier reference at 1/8 cycles/pixel"
+    },
+    "response_sha256_canonical": "4e9edb5a4594cd16f2e221fab54e21d4f4ff119d27da285b9b54fa1be0953b3d",
+    "ok": true,
+    "object_id": "b9fa128211934a359f84e41811e1466d",
+    "kind": "gpa",
+    "files_sha256": {
+      "phase_demodulated_wrapped.npy": "949beac4ad51dd826cfca5a8146918f30b2b592b3d58ed0dccdd7235bbba8f22",
+      "strain_green_lagrange_xy.npy": "4fbb0cdc8169058702083476c7a05c9cbc2ffcee004a0792a1496c3e7aee909f",
+      "phase_unwrapped.npy": "3d01bdf23debda04e3696f449ec3b328a2f65e327c813f2d72eac077b1499ab8",
+      "preview.png": "ae6047aa37985616f715752844c3d29b1c9aa27c8c3e5b8496a93b646c672a01",
+      "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+      "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+      "complex_band.npy": "ab767387b68314fedd7ea3b23e6927cd9ec9f859f7cd9aadc502c1210694c19f",
+      "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+      "displacement_pixel_xy.npy": "e63a406e4cd18a5a04bbc25ab8d8c1979e8d77e43bfb387fbad5e546fd4f3cfc",
+      "gpa-report.json": "c9afad3dce3bbf1616b43bf0ca06d533c3a95af5c4ce493ca857b70460dffbd2",
+      "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+      "gpa-summary.csv": "fe59f73e994c0b27a1c016b1999023c13032bb79a9b8c3ae9911b741c402b1b5",
+      "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+      "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+      "phase_wrapped.npy": "28250baa286453b2396329b81f3c2e2a808a10fc6b87d01574d310f3896433ca",
+      "amplitude.npy": "79e85e145cc267076b2a1abfb8a90eb6e338bfb9aadcb2a766c3d11d31f2dd4e",
+      "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+      "deformation_gradient_pixel_xy.npy": "50a90b4982d8114a8a5e28821cf679f3493813c73aa22d5fb52be249859a64cd",
+      "deformation_gradient_xy.npy": "50a90b4982d8114a8a5e28821cf679f3493813c73aa22d5fb52be249859a64cd",
+      "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "request_id": "round2-gpa-11",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/mixed-0.8.tiff"
+    },
+    "response_sha256_canonical": "06489e4094a6fc293bc7c7005b89c9990b9c4ec64e69d03f6cb335985c908b4c",
+    "ok": true,
+    "object_id": "839dc997be3542e0b64af3bc999234b8",
+    "kind": "tiff_source",
+    "files_sha256": {}
+  },
+  {
+    "request": {
+      "action": "frame",
+      "request_id": "round2-gpa-12",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "839dc997be3542e0b64af3bc999234b8",
+      "frame_index": 0
+    },
+    "response_sha256_canonical": "62cd5d6246a8a3e663fb4f1ed1f047310ff00a1cf17727f309de2a6dd796bdbf",
+    "ok": true,
+    "object_id": "58665162a9ad4500bfe7360d6b0488e1",
+    "kind": "frame",
+    "files_sha256": {
+      "data.npy": "b45432233e6802226bc68efe126681e4973ae23b379c2ee9d860aeac55b023e4"
+    }
+  },
+  {
+    "request": {
+      "action": "fft",
+      "request_id": "round2-gpa-13",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "58665162a9ad4500bfe7360d6b0488e1",
+      "window": "none",
+      "subtract_mean": true
+    },
+    "response_sha256_canonical": "759c24ee3e191aed71fe4ac0536fd6149b49341eb30aea992bd54024ed58699e",
+    "ok": true,
+    "object_id": "b2b9775b011746a59f39ee8ff751f8d6",
+    "kind": "fft",
+    "files_sha256": {
+      "preview.png": "a7764599cecb4b0fb1ed57488cf755c75537503e3d9f17fe11c470831705d2a6",
+      "data.npy": "f48b742fe71f9f4fc422529d30525de6e49fa8ffbe355266e43ba7ed88f06b83"
+    }
+  },
+  {
+    "request": {
+      "action": "gpa",
+      "request_id": "round2-gpa-14",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "b2b9775b011746a59f39ee8ff751f8d6",
+      "source_domain": "real_space_lattice",
+      "source_domain_text": "Synthetic audit: intentionally test this working assumption, not independent proof",
+      "g_vectors": [
+        [
+          0.125,
+          0.0
+        ],
+        [
+          0.0,
+          0.125
+        ]
+      ],
+      "mask_sigma": 0.018,
+      "reference_rect": [
+        92,
+        92,
+        116,
+        116
+      ],
+      "reference_mode": "fixed_g",
+      "reference_text": "Synthetic carrier reference at 1/8 cycles/pixel"
+    },
+    "response_sha256_canonical": "d2c93fba91970a880569eb1a7b3e0baf7e1fcc156378d5f9889e4b9632be616e",
+    "ok": true,
+    "object_id": "9b1d272ea228441084581d8528359c34",
+    "kind": "gpa",
+    "files_sha256": {
+      "phase_demodulated_wrapped.npy": "a691f6afbce8d865e1ecd20e7116653932520f59e62a19fbe855d103b2278959",
+      "strain_green_lagrange_xy.npy": "8a0b53fdee607d8e941db66875aa3869307d7a2bd61102e218c5cf783b54a933",
+      "phase_unwrapped.npy": "c8ffd5ebff41c47938715a3c876762919c1977d9766cf507565e30b1f711a5a1",
+      "preview.png": "201652f84f085319df7b7c3200e62fedbaba5e62a3e98dcd0020ea3a2eb28e0c",
+      "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+      "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+      "complex_band.npy": "a0bdc9aa4282abe87eb78d189b9cde4d64695aa35157fd33b33229c7d6eb8e1e",
+      "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+      "displacement_pixel_xy.npy": "d1d9b3ae3f7011639c8c1d2b8d613ebb1462580020a81fb229c8af94e5878c03",
+      "gpa-report.json": "5cc94581e65aed27b31ed8a4be49f7781339820aad135aa76cc910e720761913",
+      "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+      "gpa-summary.csv": "a41ae6e1e767dff7da04d42ff93807d4bbb2c5af66837290c28fb95a078223f2",
+      "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+      "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+      "phase_wrapped.npy": "a3cd5b0bbba803b831f6d8873b6b085a0b8c8e56b01d408b0587d7d54cc92534",
+      "amplitude.npy": "a93d63fad97b1e0b2fb1561e0b235a046f8d037449a9cb7ca1c382e2d58002f7",
+      "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+      "deformation_gradient_pixel_xy.npy": "98dc5f325aa6d033702a74c36abe06d6f39185219c17ec7230e20330ded7ec8c",
+      "deformation_gradient_xy.npy": "98dc5f325aa6d033702a74c36abe06d6f39185219c17ec7230e20330ded7ec8c",
+      "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "request_id": "round2-gpa-15",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/mixed-1.2.tiff"
+    },
+    "response_sha256_canonical": "607f71df4d48d27146b5612054a4bdec16e8c55775ac84d86dc874a5a0777e06",
+    "ok": true,
+    "object_id": "e8a4ddab27694422afd81dccba8d0c08",
+    "kind": "tiff_source",
+    "files_sha256": {}
+  },
+  {
+    "request": {
+      "action": "frame",
+      "request_id": "round2-gpa-16",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "e8a4ddab27694422afd81dccba8d0c08",
+      "frame_index": 0
+    },
+    "response_sha256_canonical": "f314db2235646801b60ca682fd9672a1cf029cc017349e633f770731e378bcc5",
+    "ok": true,
+    "object_id": "7d4d9b45118b4d5882ab249447c6963e",
+    "kind": "frame",
+    "files_sha256": {
+      "data.npy": "277ebcc628bb6b9e2afa744cf5310ac3d32c697a8b9bbec36d932782fb105181"
+    }
+  },
+  {
+    "request": {
+      "action": "fft",
+      "request_id": "round2-gpa-17",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "7d4d9b45118b4d5882ab249447c6963e",
+      "window": "none",
+      "subtract_mean": true
+    },
+    "response_sha256_canonical": "8d4190d56a9433e2feed460f088312c249e4e49a80870e26690f0bf63778840b",
+    "ok": true,
+    "object_id": "86c674051abc43cdac532ce6029fd889",
+    "kind": "fft",
+    "files_sha256": {
+      "preview.png": "6b7541ea9f4e1abdccc91f296359e3868c1236b3abc074307021252e6de1fb18",
+      "data.npy": "b09a4958ee968b9e62c0e5b4573c5b02808a0e6c7e28aadb5f0d35a94ec92f56"
+    }
+  },
+  {
+    "request": {
+      "action": "gpa",
+      "request_id": "round2-gpa-18",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "86c674051abc43cdac532ce6029fd889",
+      "source_domain": "real_space_lattice",
+      "source_domain_text": "Synthetic audit: intentionally test this working assumption, not independent proof",
+      "g_vectors": [
+        [
+          0.125,
+          0.0
+        ],
+        [
+          0.0,
+          0.125
+        ]
+      ],
+      "mask_sigma": 0.018,
+      "reference_rect": [
+        92,
+        92,
+        116,
+        116
+      ],
+      "reference_mode": "fixed_g",
+      "reference_text": "Synthetic carrier reference at 1/8 cycles/pixel"
+    },
+    "response_sha256_canonical": "6481f2b50dbefc77ccaeede7069416c7a5c6c8a0fdb0633c2ec944df2f551589",
+    "ok": true,
+    "object_id": "a1361db29a8f4bf6adcb3b7af8e2e56e",
+    "kind": "gpa",
+    "files_sha256": {
+      "phase_demodulated_wrapped.npy": "6d4eaf9bafc2beb37751515e85c3842eb0221aa01effb6e7e591a237c37c47f1",
+      "strain_green_lagrange_xy.npy": "e029020d49fcb88ab12dd169e0155a1d3e7b2ae4fc82eca853d905c6e63bbbd5",
+      "phase_unwrapped.npy": "37e66365d3c05e79c5d70d7d309a78872f7044eaec6707824985ce84cfb649d2",
+      "preview.png": "4a2cf629f40d3431e96f33d3cc7d08f31d9ce9be351c40039dba94a9075a5bb2",
+      "valid_tensor.npy": "e301abaa588108481fa1b383ad172fff777f7dd273c7288e005794a1a97bcdfe",
+      "low_amplitude.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "valid_displacement.npy": "42c52dcc4d4a3e1695116f7c74f6caf4859b33e288dedd50f4f2ebca8c3efe37",
+      "complex_band.npy": "8bcbde9df470367e43ea1fa7768b16973fcfaf337a08d5a0dd99c0bed05154e1",
+      "rotation_radians.npy": "0d7e1ac1cfe5a173b4c0d5cace7fd8f270a517e4a2a8afea583f11e7e3416e72",
+      "displacement_pixel_xy.npy": "36db1e5a99d2580505c2ba5cbdda3a8aa7ab29d63af819ceb793cbcc03d73eff",
+      "gpa-report.json": "69f064a73d192c182574332559e39a5d3b46e4bcf24c858724cef311f2c9baab",
+      "phase_unwrap_discontinuity.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74",
+      "disconnected_invalid.npy": "f6f9b10752d4ed0f6cc9b9a1055a73a44a00cc3021e7ad54576d40c9d17b7b0e",
+      "gpa-summary.csv": "be519da168ef7683c8d6321191c208402b965722a8892934cf3811d51c32d42a",
+      "valid_phase.npy": "7b41635f468ed8f024da6759ee5e9570b11124ee2dd9862ea4e035401f13d48a",
+      "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+      "phase_wrapped.npy": "c68c430a406535942c5c789290feccba97ae4eb6673f9d510e8868fec86e4faf",
+      "amplitude.npy": "9a4d6e079655ecc6af07b039393bf039aaf803c3f7640a8771cbfc01f89e4a84",
+      "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+      "deformation_gradient_pixel_xy.npy": "313b5098de9cd688de70f8b61cdeb12afd7536a688cca8a2e02cf1856ce90d28",
+      "deformation_gradient_xy.npy": "313b5098de9cd688de70f8b61cdeb12afd7536a688cca8a2e02cf1856ce90d28",
+      "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+    }
+  },
+  {
+    "request": {
+      "action": "open",
+      "request_id": "round2-gpa-19",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "source_path": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/noise-seed0.tiff"
+    },
+    "response_sha256_canonical": "0a1ec3c9b5ada48e3d9538865d4d0f373aec10bc7211bcbc662cf91b824236b9",
+    "ok": true,
+    "object_id": "e7b99a825c6941ffa61c67151ed80b13",
+    "kind": "tiff_source",
+    "files_sha256": {}
+  },
+  {
+    "request": {
+      "action": "frame",
+      "request_id": "round2-gpa-20",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "e7b99a825c6941ffa61c67151ed80b13",
+      "frame_index": 0
+    },
+    "response_sha256_canonical": "772d076bd20124db040ebf77c088fdcb0a5b8d1ca15cd8e5ad2eb0ece639cda4",
+    "ok": true,
+    "object_id": "20499d1219b14e6393b1acac201e4433",
+    "kind": "frame",
+    "files_sha256": {
+      "data.npy": "ff9b3c10d8daed2b515fbfc5ab3a85eee041e8a878dc5a103ea8b824c2ec44b6"
+    }
+  },
+  {
+    "request": {
+      "action": "fft",
+      "request_id": "round2-gpa-21",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "20499d1219b14e6393b1acac201e4433",
+      "window": "none",
+      "subtract_mean": true
+    },
+    "response_sha256_canonical": "32bf37f2e0c9aca3689fe9dcee909e5cd351a491803245bab0ad4ad0421cd737",
+    "ok": true,
+    "object_id": "68d1a0666d14420994e7140c2606c643",
+    "kind": "fft",
+    "files_sha256": {
+      "preview.png": "7f47c047aa888ad18e80ea92937f5305b5a308f52c0229321d1dc1fb8195ea42",
+      "data.npy": "4b8840b4d0ee572cb202b6f33e7fc1f3c4e857c5b70c29029997ce2c2850963a"
+    }
+  },
+  {
+    "request": {
+      "action": "gpa",
+      "request_id": "round2-gpa-22",
+      "workspace": "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-gpa-1793547814561473000/workspace",
+      "object_id": "68d1a0666d14420994e7140c2606c643",
+      "source_domain": "real_space_lattice",
+      "source_domain_text": "Synthetic audit: intentionally test this working assumption, not independent proof",
+      "g_vectors": [
+        [
+          0.125,
+          0.0
+        ],
+        [
+          0.0,
+          0.125
+        ]
+      ],
+      "mask_sigma": 0.018,
+      "reference_rect": [
+        92,
+        92,
+        116,
+        116
+      ],
+      "reference_mode": "fixed_g",
+      "reference_text": "Synthetic carrier reference at 1/8 cycles/pixel"
+    },
+    "response_sha256_canonical": "89da8f436b235966d473ad108cc776333fc8f7d514996b0e5f21b91b5f957141",
+    "ok": true,
+    "object_id": "2e0b6e6aeb38480f8093bd6cbeeae830",
+    "kind": "gpa",
+    "files_sha256": {
+      "phase_demodulated_wrapped.npy": "b47522aab0e5d340c1750f41a0bcd3731cc90b09917fb5fa2094f4062cbf48a4",
+      "strain_green_lagrange_xy.npy": "ce1ee8315389b43da81da9d707b88d714d37d060767b10d059f393d0803a101b",
+      "phase_unwrapped.npy": "4b7d257a7bc39757540c498a4f9c944319306a7a64bf52d0a782559a880aaa60",
+      "preview.png": "3c04a4f1ca4660f2d3d17d62d66e64f547dc4aa9899bc21da7eda6fc0019ad6c",
+      "valid_tensor.npy": "f916642c6d60784ee571605f1c4d09682a331b12e7b77e5c956da563cee657dd",
+      "low_amplitude.npy": "e0a41639c82f03dfb8373f3c06fae4b7ad3f54c57381158f3fe1f26a1fc0b7fc",
+      "valid_displacement.npy": "5c9cd3a26876f82cafbac32f8668f376e2fcdeccb8de6d982031ef2e26b21308",
+      "complex_band.npy": "2104fedaa0c04cf5800cf1a38e30867627c873f2b15b7419dd812760ebfa4e30",
+      "rotation_radians.npy": "233105516b3f1d985623b28ad6172f0bc3d9380428f93c7dbf0eaf786eecd63d",
+      "displacement_pixel_xy.npy": "20ad58d111f8b42bfec3922f898004ad7112f4193bc319ecdeaee4ea6e98fe47",
+      "gpa-report.json": "8534356eb6c379ee233cde7e41882e4235236a36a78bd0f2a3b8c4da26a777f1",
+      "phase_unwrap_discontinuity.npy": "34496c560b78ed435409cfbe5700e72f4f83154aa47381a40a8b460292c24bc6",
+      "disconnected_invalid.npy": "00250031e57febd6852d60a27e29615daa6163db2ec198eb7d6c95e81e6a2d07",
+      "gpa-summary.csv": "127774a81348fa454aea8f1e78f6a770324934b4b9ff5f33544433820500cae3",
+      "valid_phase.npy": "f6066b1224c29926881ce444a61ee766a31cddf8db8fbab70bdedec0bacbc1ae",
+      "mask_frequency.npy": "ec62d750120433b7e811155667f6580a21698b8f90e7801e784cbb00d833c02c",
+      "phase_wrapped.npy": "04886df5df316b8c4570146e445a8ce4820c4790eccb51f34243bdefbd2e7f61",
+      "amplitude.npy": "41b94b9645982c98c57f7165c309ae137a99b1bd80e642f1214fdd1c8e1c1578",
+      "edge_invalid.npy": "74967eb2785ceeed02e9aabf7550e63b70eaaa6c224c362ecf1d6cc7d528c458",
+      "deformation_gradient_pixel_xy.npy": "9df85adf172d61631fc06eddab9c1047d4aed0f34ce4e72ab061a888eed9277d",
+      "deformation_gradient_xy.npy": "9df85adf172d61631fc06eddab9c1047d4aed0f34ce4e72ab061a888eed9277d",
+      "phase_residue.npy": "c66655caca2be42d0447c4085d411af51dad03f782c1bff6cc2f1b728a472a74"
+    }
+  }
+]

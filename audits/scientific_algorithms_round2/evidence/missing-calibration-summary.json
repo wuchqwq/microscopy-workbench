@@ -1,0 +1,163 @@
+{
+  "source_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "git_tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "python": "3.13.18",
+  "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "scikit-image": "0.26.0",
+    "tifffile": "2026.10.15"
+  },
+  "probe_sha256": "11234c840f0f48def233950671c1e88a35d67f038187b8c9c709025a484521e2",
+  "cases": [
+    {
+      "name": "missing_calibration",
+      "execution": "PASS",
+      "classification": "confirmed_historical_A02_excessive_negative_interpretation",
+      "expectation": "physical not_comparable / insufficient_evidence; no metric to test incompatibility",
+      "outputs": {
+        "pixel": {
+          "object_id": "263f0babca5d4c228e1cd2192d64358a",
+          "relations": [
+            {
+              "target_index": 1,
+              "status": "compatible_signature",
+              "candidates": [
+                {
+                  "angle_degrees": 0.0,
+                  "antipodal_angle_class_degrees": 0.0,
+                  "rotation_matrix_xy": [
+                    [
+                      1.0,
+                      -0.0
+                    ],
+                    [
+                      0.0,
+                      1.0
+                    ]
+                  ],
+                  "proper_rotation_determinant": 1.0,
+                  "matched_pairs": [
+                    {
+                      "reference_family_id": "family-1",
+                      "target_family_id": "family-1",
+                      "reference_measurement_object_ids": [
+                        "717d790200064940b288f14b1dab3374",
+                        "f67a5764a7c14eea97bfc73fb35d4556"
+                      ],
+                      "target_measurement_object_ids": [
+                        "3b00b974e81f4ab08ddba2730470e6b9",
+                        "a4a81d5b6bef4f169638d86a1db6f2ad"
+                      ],
+                      "residual": 0.0,
+                      "target_antipodal_sign": 1,
+                      "rotated_reference_vector_xy": [
+                        0.0,
+                        0.125
+                      ],
+                      "target_vector_xy": [
+                        0.0,
+                        0.125
+                      ]
+                    },
+                    {
+                      "reference_family_id": "family-2",
+                      "target_family_id": "family-2",
+                      "reference_measurement_object_ids": [
+                        "671cab44d9b143c08ebed776db75c953",
+                        "fda31ad499b142e498e5d1eb0b0938a6"
+                      ],
+                      "target_measurement_object_ids": [
+                        "2cb5cf21699a4a7cb317a9d6a6eafd99",
+                        "4c3a8742de584a898733e2e220dba22c"
+                      ],
+                      "residual": 0.0,
+                      "target_antipodal_sign": 1,
+                      "rotated_reference_vector_xy": [
+                        0.125,
+                        0.0
+                      ],
+                      "target_vector_xy": [
+                        0.125,
+                        0.0
+                      ]
+                    }
+                  ],
+                  "admissible_pairs": [
+                    {
+                      "reference_family_id": "family-1",
+                      "target_family_id": "family-1",
+                      "residual": 0.0,
+                      "target_antipodal_sign": 1
+                    },
+                    {
+                      "reference_family_id": "family-2",
+                      "target_family_id": "family-2",
+                      "residual": 0.0,
+                      "target_antipodal_sign": 1
+                    }
+                  ],
+                  "unmatched_reference_family_ids": [],
+                  "unmatched_target_family_ids": [],
+                  "all_selected_families_matched": true,
+                  "assignment_ambiguous": false,
+                  "accepted_descriptive_match": true,
+                  "max_residual": 0.0,
+                  "independent_validation": "not_tested_no_held_out_observations"
+                }
+              ],
+              "accepted_angles_degrees": [
+                0.0
+              ],
+              "accepted_antipodal_angle_classes": [
+                {
+                  "representative": 0.0,
+                  "submitted_angles_degrees": [
+                    0.0
+                  ]
+                }
+              ],
+              "antipodal_equivalence_degrees": 180,
+              "angle_equivalence_policy": "Submitted angle differences exactly equal represented multiples of180 degrees; no fitted angular tolerance",
+              "has_two_noncollinear_families": true,
+              "detection_truncated": false,
+              "interpretation_status": "hypothesized",
+              "uncertainty": null,
+              "independent_validation": "not_tested_no_held_out_observations"
+            }
+          ],
+          "files_sha256": {
+            "relations.json": "003f9bd5150a238c2eba5b2e515a649d425442fea29ab8f370d97e92934573c1",
+            "preview.png": "5a32c4d1a538940f81c84bfdb9359b7760cac126fc92fae9cf8b664e4d367891",
+            "relations.csv": "6e8b32f32f622af888e7c47eaa0b70c824d734d0e7de0d3b016588565f5fc235"
+          }
+        },
+        "physical": {
+          "object_id": "add568d57d7948018b10eb07dc4953b9",
+          "relations": [
+            {
+              "target_index": 1,
+              "status": "incompatible",
+              "candidates": [],
+              "accepted_angles_degrees": [],
+              "reason": "Active sourced real-space XY calibration is required for physical comparison; Active sourced real-space XY calibration is required for physical comparison",
+              "interpretation_status": "hypothesized",
+              "uncertainty": null,
+              "independent_validation": "not_tested_no_held_out_observations"
+            }
+          ],
+          "files_sha256": {
+            "relations.json": "1ee4acde79b7572c57fe387199beaa70bdbf0bd455299d32492dab3ed7a6efd5",
+            "preview.png": "5a32c4d1a538940f81c84bfdb9359b7760cac126fc92fae9cf8b664e4d367891",
+            "relations.csv": "9bad8ad6166ae9666b8ab63d24e887573a63ffb57d025a41f519fc038ac2a995"
+          }
+        }
+      }
+    }
+  ],
+  "source_hashes": {
+    "/Volumes/External SSD/mircograph/algorithm-audit-round2-20261101/analysis/algorithm-audit-round2-missing-calibration-1793547954490099000/same-unstrained-carriers.tiff": "cf1a26ee8073efa07bdf357a6053d61cdbf2a91abef96b0ca0ea0d47423dcd90"
+  },
+  "source_files_unchanged": true
+}
