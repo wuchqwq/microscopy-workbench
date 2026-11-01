@@ -133,3 +133,10 @@ test('accept-result refuses an older clean selection revision without adopting o
  assert.equal(calls.filter(call=>call.name!=='image_info').length,0);
  const accepted=await act('accept-result');assert.equal(accepted.status,200);assert.equal(panel.state().object.object_id,C);
 }));
+
+test('initial completed preview receipt does not leave shared-workspace handoff submitted',async()=>{
+ const workspace=mkdtempSync(path.join(tmpdir(),'initial-preview-receipt-')),frameId='e'.repeat(32),viewId='f'.repeat(32);
+ const frame={object_id:frameId,kind:'frame',frame_index:0,shape_yx:[32,32],annotations:[],panels:[]};
+ const client={async rpc(method){return{result:method==='tools/list'?{tools:['image_info','image_preview'].map(name=>({name,inputSchema:{}}))}:{}};},async tool(name,args){if(name==='image_info')return{data:frame};assert.equal(name,'image_preview');return{data:{object_id:viewId,kind:'view',parent_object_id:frameId,display:{},state:'completed',request_id:args.request_id,annotations:[],panels:[]},png:'iVBORw0KGgo='};},async close(){}};
+ let panel;try{panel=await createImagePanel({workspace,python:process.execPath,object_id:frameId,client});assert.equal(panel.state().last_operation.state,'completed');assert.equal(panel.state().last_operation.object_id,viewId);assert.equal(panel.state().object.object_id,viewId);}finally{await panel?.close();rmSync(workspace,{recursive:true,force:true});}
+});
