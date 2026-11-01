@@ -171,7 +171,12 @@ only late presentation was exercised in Chrome. Deterministic delayed reads,
 failed action cycles and stale acceptance are covered separately by the race
 and actual HTTP regressions above. Do not conflate these two claims.
 
-Global Codex configuration was unchanged (before/after SHA-256 equal). The
+The task performed no global Codex configuration or approval writes. Hashes
+matched at the start/end of browser testing. A later delivery read detected a
+changed hash of unknown origin; the microscopy MCP command/args still matched
+the initial record. The current config was left intact. A full field comparison
+of this later change is NOT_VERIFIED: this run retained only the initial hash
+and limited provider metadata, not a complete initial config snapshot. The
 existing cached chat connection still targets its previous provider. Default
 fresh-model activation/reconnection against this feature branch is NOT_TESTED;
 no approval override or global registration was used to manufacture that result.
