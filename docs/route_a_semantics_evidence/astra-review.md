@@ -1,0 +1,16 @@
+# Independent Route A scientific semantics review
+
+Reviewed baseline `4b16ea6a719ad11d001905144a9b3b1c9b621217` to implementation freeze `03027d1` (read began while changes were uncommitted). Read AGENTS.md and SCIENTIFIC_RESULT_CONTRACT.md. No blind-test input, truth, or grading artifacts were read. No production code was edited.
+
+## Findings at freeze
+
+1. P2 — joint-observation Panel path silently drops saved semantics. `tools/image_panel.mts:100–111` projects a joint record to its reference frame and rebuilds `sequenceEvidence` without semantics or projection status. `ui/image-panel/sequence-evidence.mts:12–39` has no semantics rendering. Trigger: open a new `joint_observations` object in Panel. Impact: the saved measurement-qualification unknowns and conditional interpretation are absent in the HTTP/current/UI route; future versions also lose the required unavailable delivery status. This is an additive delivery coverage issue, not a numerical algorithm error.
+2. P2 — historical peak results lose the not_recorded notice. `tools/image_panel.mts:46–48` removes `peak_detection`, while `ui/image-panel/result-semantics.mts:44` uses that field to distinguish scientific peak `fft_view` records from ordinary display views. Trigger: open a pre-Route-A peak result with no result_semantics. Impact: model is null and the notice is hidden instead of explaining that the saved legacy record has no three-layer assessment. Do not mark all fft_view objects as old scientific results; preserve bounded classification evidence.
+
+`panel-projection-repro.mjs` supplies controlled mock provider records to the actual Panel HTTP implementation. `results.json` and the per-case http-state.json files record the observed drops. This is actual HTTP projection evidence, not actual scientific computation or browser-gesture evidence. The root implementation agent was notified and reported work on finding 1; this report describes the reviewed freeze, not verification of subsequent edits.
+
+## Scientific adapter audit
+
+No additional blocking scientific-semantics defect found. Checked each emitted satisfied path against owning code: FFT rejects nonfinite spectrum; measurement checks coordinate space/bounds and finite geometry; numerical peak contrast and selection capacity use saved detector diagnostics; descriptor and finite comparison statuses retain module-specific scope; GPA finite conditional support and analytic transfer are implemented; topology uses per-circuit validity and actual saved Fourier-support dependence; registration distinguishes fit residual and held-out geometric consistency; finite candidate comparisons and batch completion retain conditional scope. This is code-level evidence, not a physical-validation claim or proof from aggregate test counts.
+
+Read-only historical handling leaves missing/future fields intact; new attachment happens at publication. Discovery v1 candidate identity/manual text reconstruction explicitly uses the legacy version, while v2 origin is caller-reported and defaults to unspecified. Route A Skills allow autonomous hypotheses while preserving unknowns and prohibit using user_confirmed authority for AI guesses. No algorithm or architecture rewrite is needed for the two delivery fixes.
