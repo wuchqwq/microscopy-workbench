@@ -96,7 +96,7 @@ class ManualLauncherTests(unittest.TestCase):
         self.assertEqual(sources_before, [path.read_bytes() for path in [self.source, *self.candidates]])
         self.assertFalse((self.root / "science").exists())
         self.assertFalse((self.root / ".git").exists())
-        return output, json.loads((output / "summary.json").read_text())
+        return output, json.loads((output / "summary.json").read_text(encoding="utf-8"))
 
     def test_new_non_git_output_keeps_isolated_read_only_cli_policy(self):
         output, summary = self.launch()
@@ -139,7 +139,7 @@ class ManualLauncherTests(unittest.TestCase):
         self.assertIn("verified calibration-consistent observation_view_object_id established before science", prompt)
         self.assertNotIn("pass the ORIGINAL saved observation_view_object_id", prompt)
         self.assertNotIn("analytic-truth-not-supplied", prompt)
-        self.assertEqual((output / "prompt.txt").read_text(), prompt)
+        self.assertEqual((output / "prompt.txt").read_text(encoding="utf-8"), prompt)
 
     def test_query_only_recovery_does_not_gain_calibration_or_presentation_writes(self):
         _, summary = self.launch(recovery=True)
