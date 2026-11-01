@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-02 Asia/Shanghai",
+  "main": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "source_sha": "7f0e523ba287de11c0913abd68f553655f008182",
+  "production_sha": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a",
+  "prs": [
+    {
+      "number": 54,
+      "head": "feature/shared-workspace-dual-entry",
+      "head_sha": "a6233f48dffbceea64d337fb8c4028ab489249cb",
+      "base": "main",
+      "base_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 57,
+      "head": "fix/scientific-evidence-admission",
+      "head_sha": "4141225653b41b134a76c5b2119888c01c481f54",
+      "base": "main",
+      "base_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 58,
+      "head": "fix/gpa-evidence-boundary",
+      "head_sha": "b238f9722b31c2959c871bba210c87977d94c2a8",
+      "base": "fix/scientific-evidence-admission",
+      "base_sha": "4141225653b41b134a76c5b2119888c01c481f54",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 59,
+      "head": "fix/structure-occupancy",
+      "head_sha": "f05b32f5ee659ce0fbab97998f6048364e56a454",
+      "base": "fix/gpa-evidence-boundary",
+      "base_sha": "b238f9722b31c2959c871bba210c87977d94c2a8",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 60,
+      "head": "fix/topology-band-dependence",
+      "head_sha": "7b48520a92fb086dbf29572a49c580bdb7292b64",
+      "base": "fix/structure-occupancy",
+      "base_sha": "f05b32f5ee659ce0fbab97998f6048364e56a454",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 61,
+      "head": "fix/flat-spectrum-peaks",
+      "head_sha": "31e0edeca7a9e07b8ec575e0781dfea5dec1ab0a",
+      "base": "fix/topology-band-dependence",
+      "base_sha": "7b48520a92fb086dbf29572a49c580bdb7292b64",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 62,
+      "head": "audit/evidence-boundary-repairs",
+      "head_sha": "37bba352ab9e2849a048cefda010842c04f657db",
+      "base": "main",
+      "base_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 63,
+      "head": "fix/fft-dc-roundoff",
+      "head_sha": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a",
+      "base": "fix/flat-spectrum-peaks",
+      "base_sha": "31e0edeca7a9e07b8ec575e0781dfea5dec1ab0a",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 64,
+      "head": "docs/peak-quality-guidance",
+      "head_sha": "7f0e523ba287de11c0913abd68f553655f008182",
+      "base": "fix/fft-dc-roundoff",
+      "base_sha": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a",
+      "merged": false,
+      "state": "open"
+    },
+    {
+      "number": 65,
+      "head": "test/fft-controlled-noise",
+      "head_sha": "bb8e5066dea7a4f7cd99a588cf880ad918050604",
+      "base": "fix/fft-dc-roundoff",
+      "base_sha": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a",
+      "merged": false,
+      "state": "open"
+    }
+  ]
+}
