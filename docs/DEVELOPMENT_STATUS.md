@@ -7,7 +7,7 @@ Mainline admission is not a new real-specimen, GUI, model or instrument qualific
 ## Current merged main — 2026-11-01 snapshot
 
 - Main after authorized merge-commit sequence: `14613c4f5fba5af941568d5c71413928c627bd9d` (PR #48 `cc41d46` followed by #49 `14613c4`). Its Git tree equals the integrated #49 head tree; refresh the live main before release or Mac migration.
-- #44/#46/#47 implementation ancestry is already contained in #48. #46 may retain an open historical PR despite its code being present in main; do **not** merge it again. #45 private specimen intake remains independent and unmerged.
+- #44/#46/#47 implementation ancestry is already contained in #48. #46's obsolete stacked PR was closed administratively as superseded; it was **not** merged separately and must not be merged again. #45 private specimen intake remains independent and unmerged.
 - The reviewed #49 PR-head 14 CI checks and public synthetic GUI/Agent tests are recorded; they are **not** automated results on the final GitHub main merge SHA. At audit time main had no push/check-run record. See [pre-Mac exact-HEAD gate and reproducible checklist](PRE_MAC_BASELINE_GATE.md).
 - The [GUI integration closeout](GUI_FIRST_INTEGRATION_CLOSEOUT.md) reports **PASS** for a separate public API helper normal cold close/reopen, preserved source/science hashes and read-only `restored_unvalidated` display. Formal **registered-MCP Panel** restart and same-window qualified reattachment remain **HOLD**; human usability, current-main macOS GUI and real-material physical interpretation remain separately untested/held.
 - No tag or complete desktop/physical-science release qualification follows from merging these PRs. Automatic F4b proposals retain original missed positives and EXPERIMENTAL status.
