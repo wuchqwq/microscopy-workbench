@@ -1,9 +1,10 @@
 # Two selected regions → conditional crystal evidence
 
-This integration candidate joins reviewed #44/#46 and #47 without merging them
-or main. Use `integration/manual-crystal-evidence` to try the combined route;
-the separate PRs and their qualification histories remain intact. No DM/GMS or
-private ABI is involved. Automatic feature proposals remain EXPERIMENTAL.
+Historical development: the initial candidate composed reviewed #44/#46 and
+#47 before integration into main through #48 and GUI continuation #49. The
+original PRs and qualification histories remain intact; do not merge their
+old branches a second time. No DM/GMS or private ABI is involved. Automatic
+feature proposals remain EXPERIMENTAL.
 
 ## Researcher and Agent
 
