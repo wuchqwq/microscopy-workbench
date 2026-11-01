@@ -44,13 +44,15 @@ class FlatSpectrum(unittest.TestCase):
 
     def test_real_weak_peaks_above_resolution_survive_near_resolution_abstains(self):
         n=63;y,x=np.indices((n,n))
-        for d in (1e-14,1e-12,1e-9):
+        for d in (1e-14,1e-12,1e-11,1e-9):
             # Analytic DFT of shifted delta plus phase-aligned cosine: 1+d at +/-q,
             # modulus1 elsewhere. Truth is this formula, not detector/inverse FFT.
             a=np.zeros((n,n));a[20,25]=1
             a+=(2*d/n**2)*np.cos(2*np.pi*(5*(x-25)+7*(y-20))/n)
             rows,_,q=self.detect(np.fft.fftshift(np.fft.fft2(a)))
-            if d==1e-14:
+            if d in (1e-14,1e-12):
+                # v3 includes the complete transform's L2 energy. v2 accepted
+                # d=1e-12; that original outcome is retained in audit evidence.
                 self.assertEqual(rows,[])  # Nonzero truth is explicitly unresolved, not absent.
             else:
                 self.assertTrue(rows)
@@ -59,7 +61,7 @@ class FlatSpectrum(unittest.TestCase):
 
     def test_direct_spectral_truth_and_intensity_scaling(self):
         for scale in (2.**-900,1.,2.**900):
-            for contrast,expected in ((1e-14,False),(1e-12,True),(1e-9,True)):
+            for contrast,expected in ((1e-14,False),(1e-12,False),(1e-11,True),(1e-9,True)):
                 f=np.full((63,67),scale,dtype=complex);f[20,25]*=1+contrast
                 rows,_,q=self.detect(f)
                 self.assertEqual(bool(rows),expected)

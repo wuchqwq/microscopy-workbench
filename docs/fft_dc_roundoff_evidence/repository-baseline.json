@@ -1,0 +1,72 @@
+{
+  "checked_date_local": "2026-11-02",
+  "timezone": "Asia/Shanghai",
+  "main": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "main_tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "shared_workspace_clean": true,
+  "prs": [
+    {
+      "number": 54,
+      "state": "open",
+      "merged": false,
+      "base": "main",
+      "base_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+      "head": "feature/shared-workspace-dual-entry",
+      "head_sha": "a6233f48dffbceea64d337fb8c4028ab489249cb"
+    },
+    {
+      "number": 57,
+      "state": "open",
+      "merged": false,
+      "base": "main",
+      "base_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+      "head": "fix/scientific-evidence-admission",
+      "head_sha": "4141225653b41b134a76c5b2119888c01c481f54"
+    },
+    {
+      "number": 58,
+      "state": "open",
+      "merged": false,
+      "base": "fix/scientific-evidence-admission",
+      "base_sha": "4141225653b41b134a76c5b2119888c01c481f54",
+      "head": "fix/gpa-evidence-boundary",
+      "head_sha": "b238f9722b31c2959c871bba210c87977d94c2a8"
+    },
+    {
+      "number": 59,
+      "state": "open",
+      "merged": false,
+      "base": "fix/gpa-evidence-boundary",
+      "base_sha": "b238f9722b31c2959c871bba210c87977d94c2a8",
+      "head": "fix/structure-occupancy",
+      "head_sha": "f05b32f5ee659ce0fbab97998f6048364e56a454"
+    },
+    {
+      "number": 60,
+      "state": "open",
+      "merged": false,
+      "base": "fix/structure-occupancy",
+      "base_sha": "f05b32f5ee659ce0fbab97998f6048364e56a454",
+      "head": "fix/topology-band-dependence",
+      "head_sha": "7b48520a92fb086dbf29572a49c580bdb7292b64"
+    },
+    {
+      "number": 61,
+      "state": "open",
+      "merged": false,
+      "base": "fix/topology-band-dependence",
+      "base_sha": "7b48520a92fb086dbf29572a49c580bdb7292b64",
+      "head": "fix/flat-spectrum-peaks",
+      "head_sha": "31e0edeca7a9e07b8ec575e0781dfea5dec1ab0a"
+    },
+    {
+      "number": 62,
+      "state": "open",
+      "merged": false,
+      "base": "main",
+      "base_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+      "head": "audit/evidence-boundary-repairs",
+      "head_sha": "37bba352ab9e2849a048cefda010842c04f657db"
+    }
+  ]
+}

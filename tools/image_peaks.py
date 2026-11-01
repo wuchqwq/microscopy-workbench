@@ -7,8 +7,8 @@ import math
 
 import numpy as np
 
-DETECTOR_VERSION = 2
-CONTRAST_POLICY = "binary64_fft_depth_neighborhood_contrast_v1"
+DETECTOR_VERSION = 3
+CONTRAST_POLICY = "binary64_fft_normwise_neighborhood_contrast_v1"
 
 
 def current(metadata):
@@ -47,10 +47,12 @@ def require_current_observations(workspace, source, api):
 def numerical_contrast(amplitude, eligible):
     """Conservative resolution policy, not a certified PocketFFT error bound.
 
-    Nominal binary64 complex-butterfly depth proxy k=8*sum(ceil(log2(n))).
-    Comparison span must exceed 2*gamma_k, gamma_k=k*u/(1-k*u). Eight models
-    nominal complex arithmetic, not the actual mixed-radix or Bluestein plan.
-    No SNR/localization/physical validity follows. Normalize before comparing.
+    Nominal relative error proxy eta=k*u, k=8*sum(ceil(log2(n))). If a
+    normwise relative error bound eta held, modulus span error would be at
+    most 2*eta/(1-eta)*norm(Fhat,2). The proxy is NOT certified for PocketFFT.
+    Use the complete FFT norm, including DC/excluded coefficients: a large
+    background contributes roundoff even when DC is not a peak candidate.
+    Max scaling avoids norm overflow. No per-peak/SNR/physical validity follows.
     """
     from scipy.ndimage import maximum_filter
     # Match the detector's local comparison support. Equal-height real peaks
@@ -60,20 +62,24 @@ def numerical_contrast(amplitude, eligible):
     support = maximum_filter(eligible, size=3, mode="constant")
     support[amplitude.shape[0]//2, amplitude.shape[1]//2] = False
     admitted = amplitude[support]
-    strongest = float(admitted.max()) if admitted.size else 0.
+    scale = float(amplitude.max())
+    scaled_norm = float(np.sqrt(np.sum((amplitude/scale)**2))) if scale > 0 else 0.
     depth = sum((int(n)-1).bit_length() for n in amplitude.shape)
     k, u = 8*depth, np.finfo(np.float64).eps/2
-    guard = 2*(k*u)/(1-k*u)
-    span = float(np.max(admitted/strongest)-np.min(admitted/strongest)) if strongest > 0 else 0.
-    resolved = strongest > 0 and span > guard
+    guard = 2*(k*u)/(1-k*u)*scaled_norm
+    span = float(np.max(admitted/scale)-np.min(admitted/scale)) if scale > 0 and admitted.size else 0.
+    resolved = scale > 0 and span > guard
     return {"policy": CONTRAST_POLICY, "status": "resolved_amplitude_variation" if resolved else "insufficient_evidence",
             "reason": None if resolved else "unresolved_numerical_contrast",
             "eligible_bin_count": int(np.count_nonzero(eligible)),
             "comparison_bin_count": int(admitted.size),
             "comparison_support": "union of eligible 3x3 neighborhoods excluding exact DC",
+            "normalization_scope": "complete FFT maximum including DC and excluded coefficients",
+            "complete_fft_max_amplitude": scale, "scaled_complete_fft_l2_norm": scaled_norm,
             "normalized_amplitude_span": span,
             "relative_resolution_guard": guard, "unit_roundoff": float(u),
-            "nominal_operation_depth": k, "certified_fft_error_bound": False,
+            "nominal_operation_depth": k, "nominal_relative_fft_error": float(k*u),
+            "certified_fft_error_bound": False, "individual_peak_resolution_established": False,
             "statistical_or_physical_validity": False}
 
 

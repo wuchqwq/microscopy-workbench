@@ -94,7 +94,7 @@ try:
             assert all(r['fft_reused'] for r in revised['regions'])
             for old,new in zip(atlas['regions'],revised['regions']):
                 assert old['fft_object_id']==new['fft_object_id'] and old['peaks_object_id']!=new['peaks_object_id']
-                assert metadata(new['peaks_object_id'])['peak_detection']['version']==2
+                assert metadata(new['peaks_object_id'])['peak_detection']['version']==3
             new_field=ok('feature_field',object_id=revised['object_id'],coordinate_domain='pixel',display_feature='family_count',max_size=256)
             status='insufficient_evidence' if target['case']=='impulse' else 'valid'
             assert all(s['status']==status for s in new_field['samples'])
