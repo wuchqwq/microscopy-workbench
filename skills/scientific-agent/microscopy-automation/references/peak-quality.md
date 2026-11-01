@@ -64,3 +64,5 @@ or a three-dimensional defect. This reference does not disable advanced APIs.
 
 For the source assumptions and deliberately unadopted methods, see the
 [literature review](../../../../docs/PEAK_QUALITY_LITERATURE_REVIEW.md).
+
+Read [Route A decisions](route-a-decisions.md) for independent numerical, measurement and interpretation layers, declared selection authorship, and recording a reasoned working preference without certification.

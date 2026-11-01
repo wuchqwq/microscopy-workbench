@@ -67,3 +67,9 @@ test('shared research workspace renders saved GPA evidence and clears it on non-
  assert.equal(detail.open,true);
  ui.render(state());assert.equal(nodes.get('gpa-evidence').hidden,true);assert.equal(nodes.get('gpa-evidence').children.length,0);
 });
+
+test('old last operation semantics cannot attach to the current scientific object',()=>{
+ const {ui,nodes}=setup(),s=state();s.last_operation={kind:'measure',object_id:E,result_semantics:{version:99,note:'OLD_MEASURE_ONLY'}};
+ ui.render(s);assert.equal(nodes.get('result-semantics').hidden,true);assert.doesNotMatch(text(nodes.get('result-semantics')),/OLD_MEASURE_ONLY/);
+ s.object.kind='fft';ui.render(s);assert.match(text(nodes.get('result-semantics')),/未记录/);assert.doesNotMatch(text(nodes.get('result-semantics')),/OLD_MEASURE_ONLY/);
+});

@@ -1,5 +1,6 @@
 // Presentation only; existing providers remain the numerical authority.
 import {roiObservationModel} from './roi-observations.mjs';
+import {renderResultSemantics} from './result-semantics.mjs';
 import {renderGpaEvidence} from './gpa-evidence.mjs';
 import type {PanelRoiSnapshot,RoiDependencySnapshot,RoiObservationModel} from './roi-observations.mjs';
 import type {BrowserDocument} from './browser-ports.mjs';
@@ -44,7 +45,7 @@ export class ResearchWorkspace {
   this.el('observation-draft-state').textContent=this.reasonDirty?'说明尚未保存；Agent 不会把它当作正式观察。':model.packet.draft_state.requires_user_commit?'有未完成草稿，请先保存或撤销。':'保存仅记录位置与理由，不确认物相。';
   this.el('agent-continue').disabled=busy||gesture||this.reasonDirty||model.packet.draft_state.requires_user_commit||(!usable.length&&!retained);this.el('save-observation-entry').disabled=busy||gesture||!current?.usable;
   const signature=JSON.stringify([model.rows,retained?.view_id]);if(signature!==this.rowSignature){this.rowSignature=signature;const list=this.el('roi-observations');list.replaceChildren();for(const r of model.rows){const li=this.node('li');li.className=r.selected?'selected-observation':'';const b=this.node('button',r.label);b.disabled=!r.usable;b.title=r.eligibility_reason;b.onclick=()=>this.run(()=>r.annotation_id&&this.options.onSelect(r.annotation_id));li.append(b,this.node('small',({saved:'已保存',saved_with_draft:'保存版＋未提交草稿',retracted:'已撤回',unusable:'当前网格不可用'} as Row)[r.status]),this.node('p',r.reason??'观察理由未知'),this.node('small',r.rect_xyxy?`处理窗口 [${r.rect_xyxy.join(', ')}]`:'未选择可用处理窗口'));list.append(li);}if(!model.rows.length){if(retained){for(const r of retained.observations){const li=this.node('li'),b=this.node('button',value(r.text)+'（原保存视图）');b.onclick=()=>this.run(async()=>{await this.options.onNavigate(retained.view_id);await this.options.onSelect(String(r.annotation_id));});li.append(b,this.node('p',value(r.reason)),this.node('small','历史观察引用，不会投到当前 FFT 上'));list.append(li);}}else list.append(this.node('li','暂无保存观察；当前选区与保存记录相互独立。'));}}
-  this.el('roi-warnings').replaceChildren(...model.warnings.map(w=>this.node('p',w)));renderGpaEvidence(this.el('gpa-evidence'),state.object,this.doc);this.renderEvidence(state.crystal_evidence,busy||gesture);
+  this.el('roi-warnings').replaceChildren(...model.warnings.map(w=>this.node('p',w)));renderGpaEvidence(this.el('gpa-evidence'),state.object,this.doc);renderResultSemantics(this.el('result-semantics'),state.object,this.doc);this.renderEvidence(state.crystal_evidence,busy||gesture);
  }
  showHandoff(state:PanelRoiSnapshot){if(this.reasonDirty)throw new Error('请先保存观察说明。');this.el('agent-prompt').value=agentContinuationText(roiObservationModel(state),state.panel_id,state.crystal_evidence);this.el('agent-copy-status').textContent='只交接已保存观察；复制后粘贴给已连接的 Agent。没有内嵌对话，也不会自动运行。';this.el('agent-handoff-dialog').showModal();}
  private renderEvidence(raw:unknown,disabled:boolean){
@@ -55,6 +56,7 @@ export class ResearchWorkspace {
   const source=row(p.source),nav=this.node('div');nav.className='evidence-navigation';const show=(label:string,objectId:unknown)=>{if(!id(objectId))return;const b=this.node('button',label);b.disabled=disabled;b.onclick=()=>this.run(()=>this.options.onNavigate(objectId));nav.append(b);};show('返回观察原图',source.observation_view_object_id);for(const [i,d]of rows(p.domains,2).entries())show(`查看 ROI ${i+1} 的已保存 FFT`,d.interaction_view_object_id??d.current_image_object_id??d.fft_object_id);host.append(nav);
   if(typeof p.image_png_base64==='string'&&p.image_png_base64.length<=4*1024*1024){const img=this.node('img');img.alt='有限候选与实际测量的保存比较图；不是科学数组';img.src='data:image/png;base64,'+p.image_png_base64;host.append(img);const enlarge=this.node('button','放大比较图（展示副本）');enlarge.onclick=()=>{this.el('crystal-image').src=img.src;this.el('crystal-image-status').textContent=crystalCurrentnessLabel(e.currentness);this.el('crystal-image-dialog').showModal();};host.append(enlarge);}
   for(const c of rows(p.candidates,3)){const section=this.node('section');section.append(this.node('h3',value(c.label)),this.node('p',crystalStatusLabel(c.status)));for(const [i,s]of rows(c.sides,2).entries())section.append(this.node('p',`ROI ${i+1}：匹配 ${count(s.matched_count)}；实验未匹配 ${count(s.unmatched_experimental_count)}；模拟未匹配 ${count(s.unmatched_simulated_count)}；歧义检查记录 ${count(s.ambiguity_count)}`));host.append(section);}
+  const semantics=this.node('section');renderResultSemantics(semantics,p,this.doc);host.append(semantics);
   const details=this.node('details');details.append(this.node('summary','参数、残差、未匹配与原记录（只读）'));const pre=this.node('pre');const {image_png_base64,...saved}=p;pre.textContent=JSON.stringify(saved,null,2);details.append(pre);host.append(details);
  }
 }

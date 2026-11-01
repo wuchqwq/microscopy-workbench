@@ -1,3 +1,4 @@
+import {renderResultSemantics} from './result-semantics.mjs';
 import type {BrowserElement} from './browser-ports.mjs';
 import type {DomainEvidence,DomainCandidate,EvidenceNavigation} from './evidence-contracts.mjs';
 import {validateSpatialDomainEvidence} from './evidence-contracts.mjs';
@@ -15,7 +16,7 @@ export function renderDomainEvidence(container: BrowserElement|null|undefined,ev
  const domains=evidence.kind==='domain_map';
  const field=['feature_field','spatial_field','field_extend','analysis_candidates'].includes(evidence.kind)||domains;
  const title=el('summary',evidence.kind==='analysis_candidates'?'下一步分析候选 · 启发式':evidence.kind==='field_extend'?'增量结构场 · 保存观测':domains?'空间结构域与边界 · 候选':evidence.kind==='spatial_field'?'多尺度结构特征场 · 保存观测':field?'空间结构特征场 · 稀疏观测':comparison?'局部频谱几何比较 · 候选证据':'空间 ROI 图谱 · 保存观测');
- const note=el('p',domains?'候选域表示相邻窗口在固定取向下的反射几何相容。允许旋转后的晶格几何相容另列，不用于合并取向域。边界带是有限窗口支持范围，不能当作边界定位精度；未采样及证据不足处保持未知。':'这些是指定窗口中的反射证据，不是物相、孪晶或位错确认；未分割完整结构域。峰位修订需保存测量并提交新图谱，旧表保留为历史。相反反射按同一几何族处理，不是独立验证。');note.className='help-text';
+ const note=el('p',domains?'候选域表示相邻窗口在固定取向下的反射几何相容。允许旋转后的晶格几何相容另列，不用于合并取向域。边界带是有限窗口支持范围，不能当作边界定位精度；未采样及证据不足处保持未知。':'这些是指定窗口中的频率候选，不是物相、孪晶或位错确认；未分割完整结构域。峰位修订需保存测量并提交新图谱，旧表保留为历史。相反反射按同一几何族处理，不是独立验证。');note.className='help-text';
  const provenance=el('p',`保存对象 ${evidence.object_id} · ${comparison?`${evidence.coordinate_unit}；容差 ${fmt(evidence.tolerance)}；不确定性未知；无独立留出验证`:'未改变源图；窗口重叠不表示独立证据'}`);provenance.className='help-text';
  const navigation=el('div');navigation.className='sequence-navigation';
  const button=(row:BrowserElement,text:string,id:string|undefined)=>{if(!id)return;const b=el('button',text);b.type='button';b.addEventListener('click',()=>Promise.resolve(show!(id)).catch(onError));row.append(b);};
@@ -30,7 +31,8 @@ export function renderDomainEvidence(container: BrowserElement|null|undefined,ev
   row.title=`科学 ROI ${JSON.stringify(entry.rect??entry.rect_xyxy??null)}；FFT ${entry.fft_object_id??'未知'}；定位不确定性未知`;
   navigation.append(row);
  }
- const contents=[title,note,provenance,navigation];
+ const semantic=el('section');renderResultSemantics(semantic,evidence as unknown as Record<string,unknown>,doc);
+ const contents=[title,note,provenance,navigation,semantic];
  if(evidence.kind==='analysis_candidates'){
   const stopping=evidence.stopping!,budget=evidence.budget!;
   const messages:Record<string,string>={user_stop:'用户要求停止',budget_exhausted:'预算耗尽',no_legal_actions:'没有合法新动作',data_quality_limited:'当前数据质量与可用方法受限',no_new_evidence:'连续追加未产生新证据',history_limit:'达到迭代或保存历史上限',continue:'可继续选择动作'};
@@ -60,7 +62,7 @@ export function renderDomainEvidence(container: BrowserElement|null|undefined,ev
    contents.splice(3,0,wrapper);
   }
   const scroll=el('div');scroll.className='results-scroll';const table=el('table');table.setAttribute('aria-label','局部结构特征');const header=el('tr');
-  for(const text of ['位置 / 源像素中心','有效性','频率族数','最短几何周期','方向 / °'])header.append(el('th',text));table.append(header);
+  for(const text of ['位置 / 源像素中心','原算法状态（非物理认证）','频率族数','最短几何周期','方向 / °'])header.append(el('th',text));table.append(header);
   for(const sample of entries){const row=el('tr');row.title=[...(sample.invalid_reasons??[]),sample.domain_unknown_reason].filter(Boolean).join('；');const f=sample.features??{};
    for(const value of [`${sample.sample_index!+1} · ${(sample.center_xy??[]).map(fmt).join(', ')}`,sample.domain_status?`${sample.status} / 域 ${sample.domain_status}`:sample.status,f.family_count??'—',`${fmt(f.shortest_period)} ${evidence.coordinate_domain==='physical'?'nm':'px'}`,(f.families??[]).map(v=>fmt(v.direction_angle_mod180_degrees)).join(' / ')||'—'])row.append(el('td',String(value)));table.append(row);}
   scroll.append(table);contents.push(scroll);

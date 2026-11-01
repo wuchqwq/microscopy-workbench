@@ -26,6 +26,7 @@ from crystallography.orientation import from_zone_axis
 from crystallography.reflection_compare import compare as compare_reflections, load_measurement
 from crystallography.analysis_revision import bind_geometry, comparison_revision
 from crystallography import occupancy as site_occupancy
+from tools import result_semantics
 
 BACKEND = "external-structure-workspace"
 MAX_ATOMS = 4096
@@ -543,6 +544,10 @@ class StructureWorkspace:
         if metadata.get("kind") == "crystal_evidence":
             from crystallography.general_evidence import validate_references
             validate_references(self, metadata)
+        try:
+            result_semantics.validate(metadata)
+        except (ValueError, TypeError, KeyError, AttributeError) as error:
+            raise StructureError(str(error), "CORRUPT_OBJECT") from error
         return metadata, directory
 
     def structure(self, ident):
@@ -776,6 +781,7 @@ class StructureWorkspace:
                                              "scipy": importlib.metadata.version("scipy"),
                                              **({"diffsims": importlib.metadata.version("diffsims"), "diffpy.structure": importlib.metadata.version("diffpy.structure")} if action == "simulate" else {}),
                                              "module_sha256": sha(Path(__file__).read_bytes()),
+                                             "result_semantics_module_sha256": sha(Path(result_semantics.__file__).read_bytes()),
                                              "occupancy_policy_module_sha256": sha(Path(__file__).with_name("occupancy.py").read_bytes()),
                                              **({"qualification_module_sha256": sha((Path(__file__).parents[1] / "tools" / "crystal_qualification.py").read_bytes())} if action == "general_compare" else {}),
                                              "helper_modules_sha256": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in ("orientation.py", "reflection_compare.py", "registration_proposal.py", "analysis_revision.py") + (("compare_batch.py",) if action == "compare_batch" else ()) + (("twin_tools.py", "twin_geometry.py", "twin_observations.py") if action in ("twin_orient", "twin_compare") else ()) + (("general_evidence.py", "twin_geometry.py", "twin_observations.py") if action == "general_compare" else ())}},
@@ -783,6 +789,7 @@ class StructureWorkspace:
                         manifest_path=str(directory / "object.json"))
         if (directory / "preview.png").is_file():
             metadata["image_path"] = str(directory / "preview.png")
+        result_semantics.attach(metadata)
         write_new(directory / "object.json", canonical(metadata) + b"\n")
         return metadata
 

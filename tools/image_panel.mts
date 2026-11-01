@@ -29,12 +29,13 @@ import type {DisplayParameters} from '../ui/image-panel/figure-export.mjs';
 import {resolveComposition} from '../lib/figure_composer_assets.mjs';
 import {attachCrystalEvidence,crystalEvidenceForState,restoreCrystalEvidenceSnapshot,rememberCrystalScienceEvent} from '../lib/panel_crystal_evidence.mjs';
 import {loadOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
+import {projectResultSemantics} from '../ui/image-panel/result-semantics.mjs';
 import {projectGpaEvidence} from '../ui/image-panel/gpa-evidence.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const objectId=/^[a-f0-9]{32}$/;
 const safeId=/^[A-Za-z0-9_-]{1,64}$/;
-function publicImageObject(value:Metadata):Metadata{const fields=['source_file_format','source_reader','dm_dataset_index','dm_dataset','dm_catalog','calibration_admission','dm_plane_selection'];return {...publicObject(value),...projectGpaEvidence(value),...Object.fromEntries(fields.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]))};}
+function publicImageObject(value:Metadata):Metadata{const fields=['source_file_format','source_reader','dm_dataset_index','dm_dataset','dm_catalog','calibration_admission','dm_plane_selection'];return {...publicObject(value),...projectGpaEvidence(value),...projectResultSemantics(value),...Object.fromEntries(fields.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]))};}
 function fail(message:string,status=400):never{const e=new Error(message) as Error&{status:number};e.status=status;throw e;}
 function fields(value:unknown,allowed:readonly string[]):asserts value is Metadata{if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!allowed.includes(k)))fail('Unexpected action fields');}
 function presentationUpdate(value:Metadata){if(value.presentation!==undefined)validate(value.presentation,annotationPresentation,'presentation');if(value.presentation_replace!==undefined&&(typeof value.presentation_replace!=='boolean'||value.presentation===undefined))fail('presentation_replace requires an explicit boolean and presentation metadata');}
@@ -84,7 +85,8 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const journalCall=async(name:string,args:Metadata):Promise<NativeImageReply>=>{if(!names.has(name))fail('Tool unavailable: '+name);const write=name!=='image_info'&&name!=='image_result';if(write){args={...args,request_id:`panel-${session}-${++sequence}`};writeJournal(path.join(journal,`${args.request_id}.request.json`),{name,arguments:args});lastOperation={state:'submitted',tool:name,request_id:args.request_id,object_id:args.object_id};saveSelection();}try{const r=(await client.tool(name,args)) as NativeImageReply;if(write)writeJournal(path.join(journal,`${args.request_id}.response.json`),{object_id:r.data.object_id,request_id:args.request_id,state:r.data.state});return r;}catch(caught){const error=caught as Error&{status?:number};if(write)error.message+=` Original request_id=${args.request_id}; query image_result with this ID. Do not automatically repeat the operation.`;throw error;}};
  const displayObject=async(r:NativeImageReply):Promise<NativeImageReply>=>{
   if((['spatial_atlas','local_signature_compare','feature_field','spatial_field','field_extend','analysis_candidates','domain_map'] as readonly unknown[]).includes(r.data.kind)){
-   const evidence=r.data;
+   const {result_semantics:omittedSemantics,...evidenceBase}=r.data;
+   const evidence={...evidenceBase,...projectResultSemantics(r.data)};
    if((['spatial_field','field_extend','analysis_candidates','domain_map'] as readonly unknown[]).includes(evidence.kind))validateSpatialDomainEvidence(evidence);
    // A comparison may explicitly use an unverified R2 reference: that row
    // has no overview, but other saved rows can still have an exact FFT view.
@@ -418,6 +420,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  staticFiles.set('/evidence-contracts.mjs',['evidence-contracts.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/roi-observations.mjs',['roi-observations.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/research-workspace.mjs',['research-workspace.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/result-semantics.mjs',['result-semantics.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/gpa-evidence.mjs',['gpa-evidence.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");

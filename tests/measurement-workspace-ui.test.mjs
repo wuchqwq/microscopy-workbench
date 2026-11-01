@@ -61,3 +61,10 @@ test('current bound mark names follow saved automatic labels in table/export wit
  state.object.object_id=C;assert.equal(workspace.displayEntry(current).name,current.name,'a late object selection cannot supply another mark name');
  assert.equal(reads,1,'name projection and export do not remeasure');assert.equal(JSON.stringify(records),original);
 });
+
+test('selected historical measurement retains its state beside optional result semantics',()=>{
+ const old={kind:'measure',object_id:A,status:'needs_remeasurement',points:[[0,0],[.125,0]],coordinate_space:'frequency_cycles_per_pixel'};
+ const details=Object.fromEntries(measurementDetails(old));assert.match(details['状态'],/待重测/);assert.match(details['三层结果说明'],/未记录/);assert.equal(details['原始结果'],A);
+ const future={...old,result_semantics:{version:99,note:'future'}};
+ const shown=Object.fromEntries(measurementDetails(future));assert.match(shown['状态'],/待重测/);assert.match(shown['三层结果说明'],/暂不可解释/);assert.match(shown['保存的资格记录'],/future/);
+});

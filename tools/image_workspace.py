@@ -23,6 +23,7 @@ from PIL import Image, ImageDraw, ImageFont
 import tifffile
 
 if __package__:
+    from . import result_semantics
     from .image_annotation_updates import plan_annotation_updates
     from . import image_calibration as calibration
     from . import image_numeric as numeric
@@ -43,6 +44,7 @@ if __package__:
     from . import image_method_loop as method_loop
     from . import image_discovery as discovery
 else:
+    import result_semantics
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
     import image_numeric as numeric
@@ -569,6 +571,10 @@ class Workspace:
             # Even a repeated qualified descendant re-reads its creator journal,
             # exact manifest and every own payload hash before any proof handoff.
             metadata, directory = self._object_record(ident)
+            try:
+                result_semantics.validate(metadata)
+            except (ValueError, TypeError, KeyError, AttributeError) as error:
+                raise WorkspaceError("CORRUPT_OBJECT", str(error)) from error
             closure = self._qualification_snapshots.get(ident)
             if closure is not None:
                 # _object_record has freshly checked this complete transitive
@@ -958,12 +964,13 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
+                                                                       ("result_semantics.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")
         if "data.npy" in files:
             metadata["array_path"] = str(directory / "data.npy")
+        result_semantics.attach(metadata)
         write_new(directory / "object.json", canonical(metadata) + b"\n")
         return metadata
 

@@ -1,3 +1,4 @@
+import {resultSemanticsModel} from './result-semantics.mjs';
 import type {MeasurementEntry,MeasurementRecord,MeasurementCurrent,MeasurementDisplayValue,MeasurementResponse,WorkflowState,DetailRows,PresentationDocument,PresentationElement,PresentationHost,BlobConstructorPort,URLPort} from './presentation-contracts.mjs';
 export type {MeasurementEntry,MeasurementCurrent,MeasurementResponse} from './presentation-contracts.mjs';
 // Platform declarations describe the existing browser APIs; no global ambient lib
@@ -41,7 +42,9 @@ export function measurementName(entry: MeasurementEntry){return entry.name??entr
 export function measurementStatus(entry: MeasurementEntry){return statusNames[entry.status as string]??'未知';}
 export function measurementDetails(entry: MeasurementEntry): DetailRows{
  const m=asRecord(entry),scope=entry.source??entry.scope??{},cal=m.xy_calibration??m.calibration_record,grid=m.scientific_grid_identity??scope.scientific_grid_identity??{};
+ const semantics=resultSemanticsModel(m as unknown as Record<string,unknown>);
  return [
+  ...(semantics?[["三层结果说明",semantics.headline],["保存的资格记录",semantics.assessment?JSON.stringify(semantics.assessment):'未记录；不补写评估']] as DetailRows:[]),
   ['类型',measurementType(entry)],['状态',measurementStatus(entry)+(entry.status_reason?' · '+entry.status_reason:'')],
   ['科学端点',Array.isArray(m.points)?JSON.stringify(m.points):'未知'],['坐标域',m.coordinate_space??'未知'],
   ['源帧',Number.isInteger(scope.frame_index)?String((scope.frame_index as number)+1):Number.isInteger(m.frame_index)?String((m.frame_index as number)+1):'未知'],

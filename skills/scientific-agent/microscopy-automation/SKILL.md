@@ -9,6 +9,10 @@ Before choosing tools, read [bounded automation scope](references/automation-sco
 Default to explicit ROI measurements and finite hypotheses; advanced scientific
 interpretations are not automatically validated by successful tool execution.
 
+
+For autonomous, evidence-grounded choices and three-layer saved results, read
+[Route A decisions](references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
+
 ## Image-first or existing evidence
 
 For two neighboring researcher-selected ROIs and explicit structure candidates,

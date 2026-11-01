@@ -5,6 +5,8 @@ They perform no scientific work and never write a provider request or object.
 """
 import copy
 import hashlib
+import json
+import math
 
 FIELDS = {"evidence": {"object_id", "manifest_sha256", "section", "offset", "limit"}}
 COMPACT_ACTIONS = {"get", "result", "spatial_field", "domain_map", "field_extend", "analysis_candidates", "discovery", "discovery_review"}
@@ -33,6 +35,73 @@ def _take(record, names):
     return {name: copy.deepcopy(record[name]) for name in names if name in record}
 
 
+def _semantics_projection(own):
+    """Exact bounded delivery; unknown future versions remain uninterpreted."""
+    if "result_semantics" not in own:
+        return {}
+    try:
+        nodes = 0
+        # Match the browser copier's JS string.length (UTF-16 code units).
+        def text_units(value):
+            return len(value.encode("utf-16-le", "surrogatepass")) // 2
+
+        def text(value):
+            return type(value) is str and 0 < text_units(value) <= 1024
+
+        def assessments(value):
+            states = ("satisfied", "issues_detected", "not_assessed", "insufficient_evidence")
+            return type(value) is list and len(value) <= 12 and all(
+                type(item) is dict and all(text(item.get(key)) for key in ("aspect", "scope", "basis")) and
+                type(item.get("status")) is str and item["status"] in states and
+                type(item.get("source_fields")) is list and len(item["source_fields"]) <= 8 and
+                all(text(field) for field in item["source_fields"]) for item in value)
+
+        def known(value):
+            if (type(value) is not dict or type(value.get("version")) not in (int, float) or value["version"] != 1 or
+                    value.get("scope") != "candidate_measurement_and_assisted_interpretation"):
+                return False
+            for section, field in (("numerical", "checks"), ("measurement_reliability", "assessments"),
+                                   ("interpretation", "assessments")):
+                layer = value.get(section)
+                if type(layer) is not dict or not text(layer.get("scope")) or not assessments(layer.get(field)):
+                    return False
+            return value["numerical"].get("execution") == "completed"
+
+        def visit(value, depth=0):
+            nonlocal nodes
+            nodes += 1
+            if nodes > 1024 or depth > 8:
+                raise ValueError("budget")
+            if type(value) is str:
+                if text_units(value) > 1024:
+                    raise ValueError("text")
+            elif type(value) is list:
+                if len(value) > 32:
+                    raise ValueError("list")
+                for child in value:
+                    visit(child, depth + 1)
+            elif type(value) is dict:
+                if len(value) > 32 or any(type(key) is not str or text_units(key) > 96 for key in value):
+                    raise ValueError("keys")
+                for child in value.values():
+                    visit(child, depth + 1)
+            elif value is not None and type(value) is not bool:
+                if type(value) not in (int, float) or not math.isfinite(value):
+                    raise ValueError("nonfinite or non-JSON")
+        value = own["result_semantics"]
+        visit(value)
+        if len(json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()) > 24 * 1024:
+            raise ValueError("bytes")
+        result = {"result_semantics": copy.deepcopy(value)}
+        if not known(value):
+            result["result_semantics_projection"] = {"status": "unavailable", "reason": "unrecognized_version_or_shape",
+                    "instruction": "Read the original immutable object; no assessment was inferred."}
+        return result
+    except (ValueError, TypeError, RecursionError, OverflowError, UnicodeError):
+        return {"result_semantics_projection": {"status": "unavailable", "reason": "invalid_or_over_budget",
+                "instruction": "Read the original immutable object; no assessment was truncated."}}
+
+
 def summary(workspace, metadata, api):
     own, digest = _binding(workspace, metadata, api)
     structural = own.get("kind") in ("spatial_field", "field_extend", "domain_map", "analysis_candidates")
@@ -49,6 +118,8 @@ def summary(workspace, metadata, api):
     # ordinary image/measurement records retain every original semantic field.
     if not structural:
         selected = copy.deepcopy(own)
+    selected.pop("result_semantics", None)
+    selected.update(_semantics_projection(own))
     selected.update(state="completed", evidence_format="image-evidence-summary-v1", authoritative_record=False,
                     inline_image=False,
                     manifest_sha256=digest,
@@ -115,5 +186,6 @@ def detail(workspace, request, api):
               "rows": copy.deepcopy(collection[offset:stop]), "next_offset": stop if stop < len(collection) else None,
               "scientific_data_changed": False, "new_fft_count": 0,
               "full_record": {"tool": "image_info", "arguments": {"object_id": own["object_id"]}}}
+    result.update(_semantics_projection(own))
     api.need(len(api.canonical(result)) <= MAX_DETAIL_BYTES, "Evidence page exceeds128 KiB; request fewer rows or the full original record", "EVIDENCE_BUDGET_EXCEEDED")
     return result
