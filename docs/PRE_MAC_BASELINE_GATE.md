@@ -7,7 +7,7 @@ Status snapshot: 2026-11-01. This is a **release gate/checklist**, not an execut
 - Reviewed GUI-first source: PR #49 `c02736f2f512be6fa6d102b3e27f5542cc35e9a4`.
 - GitHub merge commits: #48 `cc41d4606f8097cb0b776bfd805801587c21258c`, #49 `14613c4f5fba5af941568d5c71413928c627bd9d`.
 - Main at this audit: `14613c4f5fba5af941568d5c71413928c627bd9d`. Its Git tree matches merged #49's head tree `53da8b68e07b531326e2d7b8eb720a602f00e937`. **Refresh HEAD on every subsequent decision.**
-- #44, #46 and #47 scientific implementation commits are ancestors of the merged integration tree; #46 may have a separate stale PR state. #45 is independent private data intake, **not part of this baseline**.
+- #44, #46 and #47 scientific implementation commits are ancestors of the merged integration tree. The obsolete stacked #46 PR was closed administratively on 2026-11-01 as superseded, **without a separate merge**. #45 is independent private data intake, **not part of this baseline**.
 - No release tag is implied by an accepted PR or this document.
 
 ## What is qualified, and what is not
