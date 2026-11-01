@@ -1,0 +1,349 @@
+{
+  "schema_version": 1,
+  "evidence_date": "2026-11-01",
+  "scope": "Public synthetic/control metadata only. Independent guard review and scoped regressions, not final-HEAD CI, actual browser gestures, diffraction validation or human usability.",
+  "historical_records_preserved": true,
+  "baseline": {
+    "review_base": "PR #48 at 95c40b9",
+    "python_admission": {
+      "result": "PASS",
+      "tests": 7,
+      "elapsed_seconds": 73.411,
+      "execution": "Actual standalone Python image provider on generated float32 two-frame periodic TIFF, direct provider API in own temporary workspace; not MCP stdio or browser.",
+      "checks": [
+        "Saved atlas/line references recover without writes",
+        "Gaps/corner-only processing supports refuse",
+        "Missing/withdrawn calibration retains pixel observations",
+        "Field/domain-map selection binds exact source rectangles",
+        "Stale calibration, wrong FFT/ROI and foreign measurement refuse",
+        "Truncated observations remain quality-insufficient",
+        "Unrelated source and frame refuse"
+      ],
+      "unchanged_source_and_read_admission_hash_checks": true,
+      "physical_interpretation": "No specimen, phase, interface or twin qualification"
+    },
+    "node_http": {
+      "result": "PASS",
+      "tests": 17,
+      "execution": "Controlled metadata and actual owned loopback HTTP; no actual science worker or browser qualification.",
+      "checks": [
+        "Stale expected view refuses before tool dispatch",
+        "Newer/dirty drafts queue results and retain current edits",
+        "Original receipt recovery is exact; conflicting same-ID arguments refuse",
+        "Handoff keeps revised calibration and explicit withdrawal references"
+      ]
+    }
+  },
+  "controls": [
+    {
+      "name": "Drawn contact must not silently stand in for rounded FFT support",
+      "before": {
+        "result": "FAIL_UX_EXPLICITNESS",
+        "observation": "Canonical edges were correct and raw anchors preserved, but no explicit pair contact-change warning."
+      },
+      "fixed": {
+        "result": "PASS",
+        "execution": "Pure shared handoff/frontend conversion and isolated compiled regressions; not a GUI gesture.",
+        "geometry_or_threshold_changed": false,
+        "eligibility_changed": false,
+        "cases": [
+          {
+            "original_anchors": [
+              [
+                0,
+                0,
+                31.2,
+                32
+              ],
+              [
+                31.8,
+                0,
+                64,
+                32
+              ]
+            ],
+            "canonical_rectangles": [
+              [
+                0,
+                0,
+                32,
+                32
+              ],
+              [
+                31,
+                0,
+                64,
+                32
+              ]
+            ],
+            "original_contact": "gap_unknown",
+            "processing_contact": "overlap",
+            "warning_present": true,
+            "relation_changed": true,
+            "complete_pair_inspection": true
+          },
+          {
+            "original_anchors": [
+              [
+                0,
+                0,
+                31.2,
+                16
+              ],
+              [
+                31.2,
+                16,
+                63.2,
+                32
+              ]
+            ],
+            "canonical_rectangles": [
+              [
+                0,
+                0,
+                32,
+                16
+              ],
+              [
+                31,
+                16,
+                64,
+                32
+              ]
+            ],
+            "original_contact": "corner_only",
+            "processing_contact": "shared_edge",
+            "warning_present": true,
+            "relation_changed": true,
+            "complete_pair_inspection": true
+          },
+          {
+            "original_anchors": [
+              [
+                0,
+                0,
+                31.2,
+                32
+              ],
+              [
+                31.2,
+                0,
+                64,
+                32
+              ]
+            ],
+            "canonical_rectangles": [
+              [
+                0,
+                0,
+                32,
+                32
+              ],
+              [
+                31,
+                0,
+                64,
+                32
+              ]
+            ],
+            "original_contact": "shared_edge",
+            "processing_contact": "overlap",
+            "warning_present": true,
+            "relation_changed": true,
+            "complete_pair_inspection": true
+          },
+          {
+            "original_anchors": [
+              [
+                0,
+                0,
+                31.2,
+                32
+              ],
+              [
+                33.8,
+                0,
+                64,
+                32
+              ]
+            ],
+            "canonical_rectangles": [
+              [
+                0,
+                0,
+                32,
+                32
+              ],
+              [
+                33,
+                0,
+                64,
+                32
+              ]
+            ],
+            "original_contact": "gap_unknown",
+            "processing_contact": "gap_unknown",
+            "warning_present": false,
+            "relation_changed": false,
+            "complete_pair_inspection": true
+          }
+        ]
+      },
+      "budget": "At most 32 pair reports; overflow/ambiguous identity explicitly incomplete. No uninspected pair claimed absent.",
+      "interpretation": "Drawing/sampling support only; not evidence of a physical interface."
+    },
+    {
+      "name": "Third FFT from same frame/calibration is not either saved comparison support",
+      "before": {
+        "result": "FAIL",
+        "compiled_module_sha256": "f64f6d66f95cb8a9229ce296a142c3613aa96fcb3d89217577ad7cc438f19ad3",
+        "existing_card": {
+          "currentness": "current",
+          "reasons": []
+        },
+        "fresh_attachment": {
+          "currentness": "current",
+          "reasons": []
+        }
+      },
+      "fixed": {
+        "result": "PASS",
+        "compiled_module_sha256": "6d2f28410c5aa98c865fafac359a737e5abd6e73765b8afd7a52d57f413a7874",
+        "matching_saved_FFT_remains": "current",
+        "existing_card": {
+          "currentness": "needs_review",
+          "reasons": [
+            "different_saved_fft"
+          ]
+        },
+        "fresh_attachment": {
+          "currentness": "REFUSED",
+          "reasons": [
+            "Crystal evidence presentation: stale scientific binding: different_saved_fft"
+          ]
+        }
+      },
+      "execution": "Pure post-admission presentation-context fixture; no FFT calculated or full provider qualification asserted."
+    },
+    {
+      "name": "Preflight failure freezes original attachment request identity",
+      "before": {
+        "result": "FAIL_ID_CONTRACT",
+        "compiled_module_sha256": "9dcc0cca1d43315794500254bb534e43e7301c4212b4618c2f1e63f548c5c99a",
+        "request_records_after_refusal": 0,
+        "POSTs_after_refusal": 0,
+        "same_arguments_after_explicit_view_return": {
+          "recovered": false,
+          "presentation_status": "attached",
+          "currentness": "current",
+          "record_status": "completed"
+        },
+        "classification": "First refusal was pre-dispatch with no side effect; later call honestly returned recovered=false. No duplicate science or false recovery flag, but refused original ID was not frozen."
+      },
+      "fixed": {
+        "result": "PASS",
+        "compiled_module_sha256": "2dd8beb8a79fce7c675551a89caa58fe1a4729fb9341f2e3829470ca59cc8ed9",
+        "intent_asserted_inside_provider_admission": true,
+        "failed_record_count": 1,
+        "same_arguments_after_explicit_view_return": {
+          "same_error": true,
+          "provider_admissions_total": 1,
+          "POSTs_total": 0,
+          "original_failed_record_bytes_unchanged": true
+        },
+        "separately_authorized_new_ID": {
+          "recovered": false,
+          "currentness": "current"
+        },
+        "submitted_preflight_journal_injection": {
+          "error": "Evidence presentation request not found",
+          "original_receipt_GETs": 1,
+          "new_admissions": 0,
+          "new_POSTs": 0,
+          "record_bytes_unchanged": true
+        },
+        "total_admissions_with_one_explicit_new_ID": 2,
+        "total_POSTs_with_one_explicit_new_ID": 1
+      },
+      "execution": "Controlled provider callbacks and actual owned HTTP with new isolated workspaces/IDs. Submitted/preflight journal injected; not actual process kill or worker interruption."
+    },
+    {
+      "name": "Replacement FFT cannot bypass known corrected measurement",
+      "before": {
+        "result": "FAIL",
+        "compiled_module_sha256": "2038b15876b8f2789909a1ee9d0314b94e140edb01fd4750f2ee6b5d54fbae85",
+        "currentness": "current",
+        "known_corrected_measurement_in_new_comparison": false,
+        "sticky_after": []
+      },
+      "fixed": {
+        "result": "PASS",
+        "compiled_module_sha256": "2d44e42f7820690417846f9ce70735af5be53d4f07c7299dd2b617c9301bfa75",
+        "currentness": "REFUSED",
+        "reason": "required_fft_not_in_saved_comparison",
+        "sticky_after": [
+          "new_measurement_not_in_saved_comparison"
+        ]
+      },
+      "execution": "Pure current-task dependency bookkeeping; no actual GCE admission, simulation or scientific worker execution."
+    },
+    {
+      "name": "Removing a bare anchor cannot implicitly resolve missing measurement binding",
+      "before": {
+        "result": "FAIL",
+        "compiled_module_sha256": "2038b15876b8f2789909a1ee9d0314b94e140edb01fd4750f2ee6b5d54fbae85",
+        "currentness": "current",
+        "explicit_previous_measurement_ID_available": false,
+        "new_comparison_still_uses_old_measurement": true,
+        "sticky_after": []
+      },
+      "fixed": {
+        "result": "PASS",
+        "compiled_module_sha256": "2d44e42f7820690417846f9ce70735af5be53d4f07c7299dd2b617c9301bfa75",
+        "currentness": "REFUSED",
+        "reason": "removed_anchor_binding_unresolved",
+        "sticky_after": [
+          "saved_scientific_anchor_changed"
+        ]
+      },
+      "execution": "Pure current-task state fixture; no measurement identity inferred from text, position or ordinal."
+    }
+  ],
+  "isolated_new_regressions": {
+    "shared_ROI_model_and_handoff": {
+      "result": "PASS",
+      "tests": 15,
+      "elapsed_ms": 146.7495
+    },
+    "latest_evidence_source_currentness_recovery": {
+      "result": "PASS",
+      "tests": 18,
+      "elapsed_ms": 766.418
+    },
+    "typescript": "Scoped independent source compilations passed; not a final full-project typecheck."
+  },
+  "local_artifact_sha256": {
+    "probe.json": "ba9531615de0803bf559737e3e61ec75d2896c353389c487d7df3462c9c646a1",
+    "existing-tests.log": "ce89bbf8f33d6ca538d4add53d6e2167071a662f6d81d4def87ed058d421332f",
+    "provider-bindings.log": "db7dec642b94c399c66f85257326407ff9262a33ab1ff15dca45b6d6cf35f777",
+    "new-tests-r1.log": "4004d77346bc8b5c6a7f552b611aeb3ca9effd615112d3bad960a29f4d49e37f",
+    "evidence-scope-probe.json": "e87742abaf4e28384fdd51b1d29676618295d109111665c3b424bdfe95eb66b3",
+    "evidence-scope-fixed.json": "b29941a3865df3aa3b2d42abdd613536108bce541136a93b3c7e6ce76d0089e2",
+    "evidence-preflight-probe.json": "b2490ae2c5d67addb3da4e9ab451d5a05d55a2dda7381162dcbe0e070363d5af",
+    "evidence-preflight-fixed-r2.json": "3e5401bb4ae25660d06ee1900f62c6f86cbf6ce3dcecc9b4b5136428367f209b",
+    "sticky-context-before.json": "ca59bd26fa82bd076a462122eae34c0867bb0763bf0e4ec3ab80c6e070111fe8",
+    "sticky-context-fixed.json": "e21cf234d2ecdfe272ee2b6391edff05403a48df636cd065b9ee05e441b00d48",
+    "sticky-fixed-tests.log": "a2192fd52df4a88cb773d0e387f7081c734de7e91151c2686882481846c12d93"
+  },
+  "harness_history_note": "The first ad-hoc rounding probe mispredicted overlap at an exact integer-Y corner. Hand calculation showed shared-edge; only that probe expectation changed. Inputs/conversion were untouched. This was a probe-oracle mistake, not a product science failure.",
+  "not_tested_here": [
+    "Actual browser gestures",
+    "Human usability",
+    "Full real MCP scientific chain",
+    "Actual killed worker or lost process",
+    "Real specimen or private data",
+    "DM/GMS/native",
+    "Final-HEAD CI"
+  ],
+  "privacy": "Only public analytic/control fixtures and artifact digests. No private data, URLs, authentication material, global configuration or absolute local paths."
+}

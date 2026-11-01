@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "scope": "Actual Codex-operated Chrome -> owned Panel HTTP -> MCP stdio -> independent Python, public synthetic input only; not human usability or real specimen qualification",
+  "result": "PASS_LIMITED_BROWSER_RESEARCH_CONTINUATION",
+  "source": {
+    "shape_yx": [
+      96,
+      192
+    ],
+    "dtype": "float32",
+    "tiff_sha256": "d197fa273466a138c43b891ea3d2559055c9f77315c9eb92712adbf2defcde8e",
+    "signed_scale_nm_per_pixel": [
+      0.0225,
+      -0.0225
+    ],
+    "calibration_source": "user_statement_not_independently_verified",
+    "uncertainty": "unknown"
+  },
+  "observations": [
+    {
+      "roi": 1,
+      "annotation_id": "mark-c18e0666034e4f75bc781030",
+      "original_anchor": {
+        "source_object_id": "b42e77d4e9a6428db7d1530f04fce74b",
+        "coordinate_space": "source_pixels",
+        "coordinates": [
+          0.26433861982112744,
+          0.21106106853934983,
+          95.73771051676664,
+          95.94672244871822
+        ]
+      },
+      "rect_xyxy": [
+        0,
+        0,
+        96,
+        96
+      ],
+      "status": "hypothesized"
+    },
+    {
+      "roi": 2,
+      "annotation_id": "mark-d70f5dbc77114d9a81e871b8",
+      "original_anchor": {
+        "source_object_id": "b42e77d4e9a6428db7d1530f04fce74b",
+        "coordinate_space": "source_pixels",
+        "coordinates": [
+          96,
+          0.21106106853934983,
+          191.73566138017887,
+          95.94672244871822
+        ]
+      },
+      "rect_xyxy": [
+        96,
+        0,
+        192,
+        96
+      ],
+      "status": "hypothesized"
+    }
+  ],
+  "actual_browser_actions": [
+    "Draw/save both fractional source ROI rectangles and observation reasons",
+    "Copy explicit Agent continuation; refresh preserves both saved observations",
+    "Read admitted finite comparison in same Panel and open exact saved marked FFT",
+    "Drag original P6 from 0.125 to 0.1331965463510428 cycles/pixel; existing automatic remeasure saves original-ID record",
+    "See pending comparison survive return to original source",
+    "New runtime Agent revises only dependent atlas/review/comparison and attaches updated card",
+    "Refresh and new Chrome tab recover saved source, comparison and updated peak markers",
+    "Gamma 0.8 ->1.2; undo1.15 /redo1.2; save display without changing scientific arrays or measurement anchors",
+    "Evidence/settings sidebar switches retain typed uncommitted observation reason, handoff stays disabled; explicit test-draft discard"
+  ],
+  "unchanged_provider_files_after_display": 423,
+  "fft_count": 2,
+  "simulation_count": 2,
+  "display_only": {
+    "before_object_id": "8958e49addd74fbc9729dd094cd16991",
+    "after_object_id": "23a51e886802430db1e6e1048bf8d8f6",
+    "annotations_identical": true,
+    "xy_calibration_identical": true,
+    "comparison_payload_identical": true,
+    "gamma_before": 0.8,
+    "gamma_after": 1.2
+  },
+  "original_presentation_receipt": {
+    "request_id": "manual-crystal-c9deba80f1-present",
+    "recovered": true,
+    "mode": "Exact original image_panel_evidence arguments from independent MCP client; latest Panel state queried separately"
+  },
+  "limits": [
+    "Intentional synthetic anchor displacement is not a peak-localization accuracy result",
+    "Actual screenshots/default viewport only; no human participant",
+    "Cold helper-process restart of evidence card NOT_TESTED; restored snapshots remain unvalidated by contract",
+    "CSV browser download event timed out after click; no verified GUI-download artifact claimed",
+    "No real specimen, dynamical diffraction, unique phase/twin/3D interface or automatic model wake qualification"
+  ]
+}

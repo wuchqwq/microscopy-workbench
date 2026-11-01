@@ -1,0 +1,17 @@
+{
+  "scope": "Public synthetic/screenshots/numerical audit only; byte hashes do not independently establish scientific correctness",
+  "sha256": {
+    "after-peak-pending.png": "e57568ecad702449183af4def1f4808f0b518d2e3ec0eb74e25ff3e0ecd46acf",
+    "after-saved-observations.png": "18bcac546b66fd183d9ed30b1246c141a41695836d31cdfe9d997d2a4f946d81",
+    "after-updated-comparison.png": "1f3b0e6fde7a05cda95c17d1d48bdadc3b0331d4edf9c8cc748026d3429cd795",
+    "before-properties-save.png": "36847f09cc5abb9a572f922848ee2ed97f8034d093e841d542d318af44e174ba",
+    "before-start.png": "d940ac69a61dab39b845dd2b872f1e76f4f405ffeb8d738a9947cd03eb71e374",
+    "browser-evidence.json": "ab9c3e1be45d6ddea7403d03b3d489c86f333ee59800ba3b7df1d8822e1f80ae",
+    "comparison-expanded.png": "572c83e78ad470f94ab5ccbbf89322034aea4638452bfd91fdaf78097c453443",
+    "final-workbench.png": "adba61cc0a48a957f26c682c6852c308d3f914c4587e097622552c47ef1b5c8e",
+    "guard-controls.json": "f4eb32525520bf3a1dd40a630701fed581d9a1679fce5b9b3e5dd8ff001c27a4",
+    "model-evidence.json": "669cf373d58de51ac53397f0259cc897d89a6d568e4818616d4d9091380d770d",
+    "saved-measurement-audit.csv": "22aa8126dbaaa5d914e134344f54adae5ac936f146d69399cc23b81b63e4cbbe",
+    "source-pending.png": "2c21a524b6bb558c97a8aef2ed5bbf071489300dfef6c2365c5c2d75d10c1a42"
+  }
+}

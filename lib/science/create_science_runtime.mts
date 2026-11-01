@@ -42,7 +42,6 @@ export function createScienceRuntime({env=process.env,coordinator=new ExecutionC
     workspace:imageDirectory,python:env.MICROSCOPY_PYTHON||'python3',coordinator,
   }});
   const modules:RegistryModule[]=[image];
-  if(panel)modules.push(createImagePanelModule({imageWorkspace:image.workspace}));
   const providers:ScientificProviders={image:image.workspace};
   if(structureDirectory){
     const structure=createStructureModule({
@@ -52,6 +51,7 @@ export function createScienceRuntime({env=process.env,coordinator=new ExecutionC
     modules.push(structure);
     providers.structure=structure.workspace;
   }
+  if(panel)modules.splice(1,0,createImagePanelModule({imageWorkspace:image.workspace,structureWorkspace:providers.structure}));
   if(observer)modules.push(createExecutionModule({coordinator,providers:Object.fromEntries(
     Object.entries(providers).map(([name,workspace])=>[name,workspace.requestScope]))}));
   if(contextDirectory)modules.push(createAnalysisContextModule({directory:contextDirectory,providers}));

@@ -6,6 +6,8 @@ import {closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, rea
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {panelRoiHandoff} from './panel_roi_handoff.mjs';
+import {attachCrystalEvidence} from './panel_crystal_evidence.mjs';
+import type {CrystalEvidencePayload} from './panel_crystal_evidence.mjs';
 
 import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
 import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
@@ -14,8 +16,8 @@ import type {IdentityCheckedPanelState,OwnedPanelConnection,PanelFetch,PanelLaun
 // These slots retain unqualified JSON and thrown values. Local property reads
 // preserve the original runtime checks/coercions, without certifying the JSON.
 type RawSlots = Record<string,unknown>;
-interface ValidatedPanelArguments extends RawSlots {panel_id?:string;object_id?:string;request_id?:string;expected_object_id?:string;draft_revision?:number;}
-interface PanelMutationArguments extends ValidatedPanelArguments {object_id:string;request_id:string;}
+interface ValidatedPanelArguments extends RawSlots {panel_id?:string;object_id?:string;comparison_object_id?:string;observation_view_object_id?:string;request_id?:string;expected_object_id?:string;draft_revision?:number;}
+interface PanelMutationArguments extends ValidatedPanelArguments {request_id:string;}
 interface InFlightPanelOperation {name:string;args:PanelMutationArguments;promise:Promise<ToolResult>;}
 type PanelToolDefinition=ToolDefinition&{inputSchema:ToolInputSchema&{required:readonly string[]}};
 interface WrittenPanelRequest extends RawSlots {schema_version:1;request_id:string;name:string;arguments:PanelMutationArguments;panel_id:string;status:'submitted'|'completed'|'failed';response?:unknown;error?:unknown;}
@@ -29,6 +31,7 @@ export const imagePanelTools: PanelToolDefinition[]=[
   make('image_panel_current','Read exact current panel/object, source-coordinate selection, saved scoped research_observation reference and unsaved-draft status, plus the saved PNG. A twinning observation confirms only its explicitly recorded scope, not a twin law, orientation or HKL; synthetic_fixture is not human confirmation. With one live registered panel, panel_id may be omitted. This reads after the user says continue; it does not automatically wake the model. Unsaved browser tone/gesture drafts are described separately from the saved image.',{panel_id:objectId},[]),
   make('image_panel_show','Offer an existing result to an explicit panel. Save request_id first. expected_object_id and draft_revision bind the inspected view. Dirty/newer drafts queue the result for explicit user acceptance instead of overwriting them. Same ID returns the original presentation receipt, never repeats it; call image_panel_current for the latest view.',{panel_id:objectId,object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId},['panel_id','object_id','expected_object_id','draft_revision','request_id']),
 ];
+export const imagePanelEvidenceTool:PanelToolDefinition=make('image_panel_evidence','Attach an existing fully admitted general crystal comparison to an owned image Panel without replacing its scientific canvas. Requires the explicitly configured structure provider. Save request_id first; exact original arguments recover only the original attachment receipt, not a new calculation or current-state query. Stale frame/calibration/ROI or unsaved draft refuses; no model is awakened.',{panel_id:objectId,comparison_object_id:objectId,observation_view_object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId},['panel_id','comparison_object_id','expected_object_id','draft_revision','request_id']);
 export const IMAGE_PANEL_INSTRUCTIONS='Use image_panel_open to give the researcher a local shared view of an existing image object. Retain the returned panel_id internally. After the user circles a region and says continue, image_panel_current returns its exact source/frequency coordinates and unsaved draft state; use ordinary image_* tools for the chosen operation, then image_panel_show with the inspected object/draft revision. Do not claim automatic model wake. A queued result has not replaced the current view; the researcher explicitly accepts it without losing an unseen draft. Returned PNG is the saved immutable view, not a screenshot of unsaved local tone/gesture drafts. Panel connection records persist across MCP clients but are not a scientific state database; stopped panels are not automatically restarted.';
 
 const delay=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -37,7 +40,7 @@ const identical=(a:unknown,b:unknown)=>JSON.stringify(canonical(a))===JSON.strin
 const ownKeys=(value:unknown,keys:readonly string[]):value is RawSlots=>(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.includes(key))) as boolean;
 function validateId(value:unknown,label:string,request=false):asserts value is string{if(typeof value!=='string'||!(request?/^[A-Za-z0-9_-]{1,64}$/:/^[a-f0-9]{32}$/).test(value))throw new Error(`Invalid ${label}`);}
 function validateArguments(name:string,args:unknown):asserts args is ValidatedPanelArguments{
-  const entry=imagePanelTools.find(tool=>tool.name===name);if(!entry)throw new Error('Unknown panel tool');
+  const entry=[...imagePanelTools,imagePanelEvidenceTool].find(tool=>tool.name===name);if(!entry)throw new Error('Unknown panel tool');
   if(!ownKeys(args,Object.keys(entry.inputSchema.properties)))throw new Error('Panel arguments contain unknown fields');
   for(const required of entry.inputSchema.required)if(!Object.hasOwn(args,required))throw new Error(`Missing ${required}`);
   for(const [key,value] of Object.entries(args)){
@@ -56,7 +59,7 @@ function readJson(file:string,root:string,maxBytes=20*1024*1024):unknown{
   return JSON.parse(readFileSync(real,'utf8'));
 }
 function connection(value:unknown,panelId:string):OwnedPanelConnection{
-  if(!ownKeys(value,['schema_version','panel_id','port','token','pid'])||value.schema_version!==1||value.panel_id!==panelId||!Number.isInteger(value.port)||(value.port as number)<1||(value.port as number)>65535||typeof value.token!=='string'||!/^[a-f0-9]{48,64}$/.test(value.token)||!Number.isSafeInteger(value.pid)||(value.pid as number)<1)throw new Error('Invalid owned panel connection');
+  if(!ownKeys(value,['schema_version','panel_id','port','token','pid','evidence_token'])||value.schema_version!==1||value.panel_id!==panelId||!Number.isInteger(value.port)||(value.port as number)<1||(value.port as number)>65535||typeof value.token!=='string'||!/^[a-f0-9]{48,64}$/.test(value.token)||!Number.isSafeInteger(value.pid)||(value.pid as number)<1||value.evidence_token!==undefined&&(typeof value.evidence_token!=='string'||!/^[a-f0-9]{64}$/.test(value.evidence_token)))throw new Error('Invalid owned panel connection');
   return value as unknown as OwnedPanelConnection;
 }
 function waitWithoutCancelling<Result>(operation:Promise<Result>,signal?:AbortSignal):Promise<Result>{
@@ -71,16 +74,17 @@ function waitWithoutCancelling<Result>(operation:Promise<Result>,signal?:AbortSi
 
 export class ImagePanelManager {
   declare readonly workspace:string;declare readonly python:string;declare readonly inspect:NonNullable<PanelManagerOptions['inspect']>;declare readonly fetch:PanelFetch;
+  declare readonly inspectEvidence:PanelManagerOptions['inspectEvidence'];
   declare readonly readyTimeoutMs:number;declare readonly requestTimeoutMs:number;
   declare readonly directory:string;declare readonly requests:string;declare readonly panels:string;declare readonly active:Map<string,InFlightPanelOperation>;
   declare readonly launch:(request:PanelLaunch)=>unknown|PromiseLike<unknown>;
   // initialize() establishes this path before any public call accesses records.
   declare canonicalDirectory:string;
-  constructor({workspace,python,inspect,launch,fetchImpl=fetch,readyTimeoutMs=120000,requestTimeoutMs=120000}:PanelManagerOptions={}){
+  constructor({workspace,python,inspect,inspectEvidence,launch,fetchImpl=fetch,readyTimeoutMs=120000,requestTimeoutMs=120000}:PanelManagerOptions={}){
     if(!workspace||!path.isAbsolute(workspace))throw new Error('Panel workspace must be an absolute configured directory');
     if(typeof python!=='string'||!python)throw new Error('Panel requires a configured DM_IMAGE_PYTHON executable');
     if(typeof inspect!=='function')throw new Error('Panel requires the existing image inspector');
-    this.workspace=path.resolve(workspace);this.python=python;this.inspect=inspect;this.fetch=fetchImpl;this.readyTimeoutMs=readyTimeoutMs;this.requestTimeoutMs=requestTimeoutMs;
+    this.workspace=path.resolve(workspace);this.python=python;this.inspect=inspect;this.inspectEvidence=inspectEvidence;this.fetch=fetchImpl;this.readyTimeoutMs=readyTimeoutMs;this.requestTimeoutMs=requestTimeoutMs;
     this.directory=path.join(this.workspace,'panel-registry');this.requests=path.join(this.directory,'requests');this.panels=path.join(this.directory,'panels');this.active=new Map();
     this.launch=launch??(async({panel_id,connection_file,object_id})=>{
       if(!path.isAbsolute(this.python))throw new Error('Panel launch requires an absolute DM_IMAGE_PYTHON executable; configure the independent image environment');
@@ -93,9 +97,11 @@ export class ImagePanelManager {
   connectionFile(id:unknown){return path.join(this.panels,(id as string)+'.json');}
   getConnection(id:unknown){validateId(id,'panel_id');return connection(readJson(this.connectionFile(id),this.canonicalDirectory,4096),id);}
   async request(conn:OwnedPanelConnection,method:string,route:string,body?:unknown):Promise<unknown>{
+    const evidenceKey=method==='POST'&&route==='/api/evidence'?conn.evidence_token:null;
+    if(method==='POST'&&route==='/api/evidence'&&!evidenceKey)throw new Error('This saved Panel helper predates qualified evidence attachment; reopen a new Panel without replaying science');
     const origin=`http://127.0.0.1:${conn.port}`,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),method==='GET'?Math.min(this.requestTimeoutMs,3000):this.requestTimeoutMs);
     try{
-      const response=await this.fetch(origin+route,{method,headers:{'X-Panel-Token':conn.token,Origin:origin,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:controller.signal});
+      const response=await this.fetch(origin+route,{method,headers:{'X-Panel-Token':conn.token,Origin:origin,...(evidenceKey?{'X-Panel-Evidence-Key':evidenceKey}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:controller.signal});
       const text=await response.text();if(Buffer.byteLength(text)>20*1024*1024)throw new Error('Panel response exceeds bound');
       let value:unknown;try{value=JSON.parse(text);}catch{throw new Error('Invalid owned panel response');}
       if(!response.ok){const error:Error&{httpStatus?:number}=new Error(((value as RawSlots).error??`Panel HTTP ${response.status}`) as string);error.httpStatus=response.status;throw error;}
@@ -110,10 +116,14 @@ export class ImagePanelManager {
     const checked=state as IdentityCheckedPanelState;
     // MCP already exposes tools/list; avoid returning the entire catalog with
     // every selection, and never duplicate the base64 image inside text.
-    const {png_base64,clean_png_base64,domain_png_base64,tools,...view}=checked,conn=this.getConnection(panelId);
+    const {png_base64,clean_png_base64,domain_png_base64,tools,crystal_evidence,...baseView}=checked;
+    const crystal=crystal_evidence&&typeof crystal_evidence==='object'?crystal_evidence as RawSlots:null,payload=crystal?.payload&&typeof crystal.payload==='object'?crystal.payload as RawSlots:null;
+    const {image_png_base64:crystalPng,...crystalMetadata}=payload??{};
+    const view=crystal?{...baseView,crystal_evidence:{...crystal,payload:crystalMetadata}}:Object.hasOwn(checked,'crystal_evidence')?{...baseView,crystal_evidence}:baseView;
+    const conn=this.getConnection(panelId);
     const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:panelRoiHandoff(checked),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image.',automatic_model_wake:false};
     const content:ToolContent[]=[{type:'text',text:JSON.stringify(data,null,2)}];
-    for(const image of [png_base64,domain_png_base64])if(image!==null&&image!==undefined){
+    for(const image of [png_base64,domain_png_base64,crystalPng])if(image!==null&&image!==undefined){
       if(typeof image!=='string'||image.length>6*1024*1024)throw new Error('Invalid bounded saved panel PNG');
       const png=Buffer.from(image,'base64');if(png.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')throw new Error('Panel saved image is not PNG');
       content.push({type:'image',mimeType:'image/png',data:image});
@@ -146,10 +156,37 @@ export class ImagePanelManager {
       return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true});
     }
     if(record.status==='completed')return this.response(record.panel_id as string,record.response,{request_id:record.request_id,recovered:true,snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'});
-    const state=await this.request(this.getConnection(record.panel_id),'GET','/api/present?request_id='+encodeURIComponent(record.request_id as string));
-    if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==record.request_id||!['shown','queued'].includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Original panel presentation is not verified; no operation was repeated.');
-    record.status='completed';record.response=state;durableWrite(this.requestFile(record.request_id),record);
+    const evidence=record.name==='image_panel_evidence';
+    const state=await this.request(this.getConnection(record.panel_id),'GET',(evidence?'/api/evidence':'/api/present')+'?request_id='+encodeURIComponent(record.request_id as string));
+    if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==record.request_id||!(evidence?['attached']:['shown','queued']).includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Original panel presentation is not verified; no operation was repeated.');
+    record.status='completed';record.response=state;if(evidence)record.stage='completed';durableWrite(this.requestFile(record.request_id),record);
     return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true,snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'});
+  }
+  async mutateEvidence(args:PanelMutationArguments,file:string):Promise<ToolResult>{
+    const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name:'image_panel_evidence',arguments:args,panel_id:args.panel_id as string,status:'submitted',stage:'preflight'};
+    // NEW tool only: an accepted request identity is reserved before even a
+    // read-only qualification/preflight. Failed IDs cannot later become writes.
+    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_evidence',args);throw error;}
+    let dispatched=false;
+    try{
+      if(!this.inspectEvidence)throw new Error('Explicit structure provider is unavailable; no fallback is permitted');
+      const payload=await this.inspectEvidence(args.comparison_object_id as string) as CrystalEvidencePayload;
+      const current=await this.request(this.getConnection(args.panel_id),'GET','/api/state');
+      if((current as RawSlots).panel_id!==args.panel_id||((current as RawSlots).object as RawSlots)?.object_id!==args.expected_object_id)throw new Error('Stale owned Panel; read current state before attaching scientific evidence');
+      const observation=args.observation_view_object_id?await this.inspect(args.observation_view_object_id):undefined;
+      const evidence=attachCrystalEvidence(payload,current,args.request_id,observation);
+      const conn=this.getConnection(args.panel_id);
+      if(!conn.evidence_token)throw new Error('This saved Panel helper predates qualified evidence attachment; reopen a new Panel without replaying science');
+      record.stage='dispatching';durableWrite(file,record);dispatched=true;
+      const state=await this.request(conn,'POST','/api/evidence',{request_id:args.request_id,expected_object_id:args.expected_object_id,draft_revision:args.draft_revision,evidence});
+      if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==args.request_id||((state as RawSlots).presentation as RawSlots).status!=='attached')throw new Error('Evidence attachment response is unverified; query the original request_id.');
+      record.status='completed';record.stage='completed';record.response=state;durableWrite(file,record);
+      return this.response(args.panel_id as string,state,{request_id:args.request_id,recovered:false,snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'});
+    }catch(error){
+      const message=`${error instanceof Error?error.message:String(error)} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`;
+      if(!dispatched||(error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=message;durableWrite(file,record);}
+      throw new Error(message);
+    }
   }
   async mutate(name:string,args:PanelMutationArguments):Promise<ToolResult>{
     const file=this.requestFile(args.request_id);
@@ -158,7 +195,8 @@ export class ImagePanelManager {
       if(prior.schema_version!==1||prior.name!==name||!identical(prior.arguments,args))throw new Error('Panel request_id conflicts with its original operation/parameters');
       return this.recover(prior);
     }
-    await this.inspect(args.object_id);
+    if(name==='image_panel_evidence')return this.mutateEvidence(args,file);
+    await this.inspect(args.object_id as string);
     const panelId=name==='image_panel_open'?randomBytes(16).toString('hex'):args.panel_id as string;
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name,arguments:args,panel_id:panelId,status:'submitted'};
     // Exclusive/fsynced intent is saved before a child or HTTP mutation exists.
@@ -166,16 +204,16 @@ export class ImagePanelManager {
     try{
       let state:unknown;
       if(name==='image_panel_open'){
-        await this.launch({panel_id:panelId,object_id:args.object_id,connection_file:this.connectionFile(panelId)});
+        await this.launch({panel_id:panelId,object_id:args.object_id as string,connection_file:this.connectionFile(panelId)});
         state=await this.request(await this.waitForConnection(panelId),'GET','/api/state');
       }else{
         const {panel_id,request_id,object_id,expected_object_id,draft_revision}=args;
         state=await this.request(this.getConnection(panel_id),'POST','/api/present',{request_id,object_id,expected_object_id,draft_revision});
         if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==request_id||!['shown','queued'].includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Presentation response is unverified; query the original request_id.');
       }
-      record.status='completed';if(name==='image_panel_show')record.response=state;
+      record.status='completed';if(name!=='image_panel_open')record.response=state;
       durableWrite(file,record);
-      return this.response(panelId,state,{request_id:args.request_id,recovered:false,...(name==='image_panel_show'?{snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'}:{})});
+      return this.response(panelId,state,{request_id:args.request_id,recovered:false,...(name!=='image_panel_open'?{snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'}:{})});
     }catch(error){
       if((error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=(error as ThrownSlots).message;durableWrite(file,record);}
       throw new Error(`${(error as ThrownSlots).message} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`);

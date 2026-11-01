@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "result": "PASS_LIMITED_SYNTHETIC_FRESH_AGENT_GUI_HANDOFF_RECOVERY_AND_CORRECTION",
+  "scope": "Actual installed default Codex CLI sessions through formal MCP tools and public Skills; independent saved-array/direct-DFT/reciprocal-geometry checks. GUI gestures were performed by Codex in the parent acceptance; not human usability or real specimen qualification.",
+  "actual_model_identity": "Installed CLI default with no override; exact name not emitted/assumed",
+  "analysis": {
+    "result": "PASS_LIMITED_SYNTHETIC_GUI_HANDOFF_AND_MODEL",
+    "actual_mcp_calls": 18,
+    "actual_image_blocks": 13,
+    "elapsed_seconds": 158.20111579999866,
+    "source_frame_exact": true,
+    "saved_GUI_ROIs": [
+      {
+        "annotation_id": "mark-c18e0666034e4f75bc781030",
+        "original_anchor": {
+          "source_object_id": "b42e77d4e9a6428db7d1530f04fce74b",
+          "coordinate_space": "source_pixels",
+          "coordinates": [
+            0.26433861982112744,
+            0.21106106853934983,
+            95.73771051676664,
+            95.94672244871822
+          ]
+        },
+        "rect_xyxy": [
+          0,
+          0,
+          96,
+          96
+        ],
+        "status": "hypothesized"
+      },
+      {
+        "annotation_id": "mark-d70f5dbc77114d9a81e871b8",
+        "original_anchor": {
+          "source_object_id": "b42e77d4e9a6428db7d1530f04fce74b",
+          "coordinate_space": "source_pixels",
+          "coordinates": [
+            96,
+            0.21106106853934983,
+            191.73566138017887,
+            95.94672244871822
+          ]
+        },
+        "rect_xyxy": [
+          96,
+          0,
+          192,
+          96
+        ],
+        "status": "hypothesized"
+      }
+    ],
+    "original_observation_view": "5631c23b869b4fbe80b7c33beb381f0b",
+    "calibration_id": "af56380129e048519baed642be70ffc7",
+    "same_atlas_FFT_measurements_in_reviews_and_comparison": true,
+    "fft_count": 2,
+    "simulation_count": 2,
+    "full_field_count": 0,
+    "all_bin_DFT_max_errors": [
+      2.445513233188595e-09,
+      3.210347869589801e-09
+    ],
+    "DFT_tolerance_unchanged": 1e-07,
+    "simulation_q_errors": [
+      0.0,
+      0.0
+    ],
+    "measurement_q_max_error": 0.0,
+    "candidate_statuses": [
+      "compatible",
+      "incompatible"
+    ],
+    "attachment_request_id": "manual-crystal-c9deba80f1-present",
+    "attachment_arguments": {
+      "comparison_object_id": "1b164a3a969545bfa67874ecee79f42c",
+      "panel_id": "67b5d22fde996796bd26f148aa2bc968",
+      "expected_object_id": "5631c23b869b4fbe80b7c33beb381f0b",
+      "draft_revision": 8,
+      "observation_view_object_id": "5631c23b869b4fbe80b7c33beb381f0b",
+      "request_id": "manual-crystal-c9deba80f1-present"
+    },
+    "comparison_object_id": "1b164a3a969545bfa67874ecee79f42c",
+    "attached_card_currentness": "current",
+    "matched_unmatched_counts": [
+      {
+        "label": "Candidate A",
+        "sides": [
+          {
+            "matched_count": 6,
+            "unmatched_experimental_count": 0,
+            "unmatched_simulated_count": 2,
+            "ambiguity_count": 6
+          },
+          {
+            "matched_count": 6,
+            "unmatched_experimental_count": 0,
+            "unmatched_simulated_count": 2,
+            "ambiguity_count": 6
+          }
+        ]
+      },
+      {
+        "label": "Candidate B",
+        "sides": [
+          {
+            "matched_count": 0,
+            "unmatched_experimental_count": 6,
+            "unmatched_simulated_count": 20,
+            "ambiguity_count": 6
+          },
+          {
+            "matched_count": 0,
+            "unmatched_experimental_count": 6,
+            "unmatched_simulated_count": 20,
+            "ambiguity_count": 6
+          }
+        ]
+      }
+    ],
+    "all_prior_provider_files_unchanged": 21,
+    "global_config_unchanged": true,
+    "errors": [],
+    "phase_identified": false,
+    "twin_confirmed": false
+  },
+  "query_only_recovery": {
+    "result": "PASS_LIMITED_QUERY_ONLY_MODEL_RECOVERY",
+    "elapsed_seconds": 146.8559460999968,
+    "actual_mcp_calls": 28,
+    "actual_image_blocks": 19,
+    "actual_successful_scientific_reads": 26,
+    "distinct_original_objects_recovered": 25,
+    "all_provider_files_unchanged": 263,
+    "new_scientific_requests": 0,
+    "new_FFT": 0,
+    "new_simulations": 0,
+    "global_config_unchanged": true,
+    "actual_current_card_ref_and_currentness_verified": true,
+    "historical_presentation_receipt_recovered_by_model": false,
+    "presentation_scope": "image_panel_current reads live saved card; original attachment receipt is a separate namespace requiring exact original image_panel_evidence arguments, not in this read-only allowlist",
+    "errors": [],
+    "original_refs": [
+      {
+        "provider": "images",
+        "object_id": "f65fcc7bfed54a5ea072bd6648ea238b",
+        "request_id": "manual-crystal-c9deba80f1-atlas",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "1b164a3a969545bfa67874ecee79f42c",
+        "request_id": "manual-crystal-c9deba80f1-compare",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "14b62f478fbb486e89d94fcbd52f8ab2",
+        "request_id": "gui-source",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "b42e77d4e9a6428db7d1530f04fce74b",
+        "request_id": "gui-frame",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "5631c23b869b4fbe80b7c33beb381f0b",
+        "request_id": "panel-19e5fc8417f3303a-3",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "ef9b0ac7ff51443b9f47193b50c80aac",
+        "request_id": "manual-crystal-c9deba80f1-calibrate",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "a52d2b68fe8e41738228e34fbe19daec",
+        "request_id": "manual-crystal-c9deba80f1-discovery",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "62b8b710cf634fce9fe855a62ff6db65",
+        "request_id": "manual-crystal-c9deba80f1-review-1",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "b711134a7fa947ffb3c0e3594c86873d",
+        "request_id": "manual-crystal-c9deba80f1-review-2",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "847df68b0f8245ce83d7bebcca2ba928",
+        "request_id": "manual-crystal-c9deba80f1-open-a",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "03e250d7a2d34832983c8c1295b88071",
+        "request_id": "manual-crystal-c9deba80f1-open-b",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "6bdad63f08c54c06a1594d2350c9c25f",
+        "request_id": "manual-crystal-c9deba80f1-orient-a",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "e18fa644ce684cbcb31a8dff9c0ed3f2",
+        "request_id": "manual-crystal-c9deba80f1-orient-b",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "13e77c3962794bad82a7a74c551d9f28",
+        "request_id": "manual-crystal-c9deba80f1-sim-a",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "de2b8154da3b49f28a10d522967591ca",
+        "request_id": "manual-crystal-c9deba80f1-sim-b",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "1b164a3a969545bfa67874ecee79f42c",
+        "request_id": "manual-crystal-c9deba80f1-compare",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "f647b7df05f744c5a7cc2cf679eb9ff4",
+        "request_id": "auto-ef85f9b9e9d7e8dc07d39dcaef6bfcc82d83ebdfe5561a3e",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "2826fd1cc4a646f9a2d948ccf7807aed",
+        "request_id": "auto-34f4021167651a65796e30817a615c6bb33342992b24521c",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "e4f2504b29934875bafae534515653f8",
+        "request_id": "auto-b61a2b20c2a942173b3bcb258bcd5887e0d55b1ad2eebd0e",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "ae61fb0351624dd7a9c9f3b4dabd8b14",
+        "request_id": "auto-41c8ebe1c7ee5b29aa4bd61b2ffe8d773434f08f11c4d735",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "31b4d29e197e46cd9d511315b3fe582f",
+        "request_id": "auto-8b28faf97b1ff0d84b0a2056d06f5ed9e0c2b97a3acf73cf",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "images",
+        "object_id": "d5aa615a326741f3b3ea6e76ae7852b0",
+        "request_id": "auto-eadd4203366f45d517de9c4c2f00ddd64404f1d6f24361e1",
+        "query_tool": "image_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "562b8ab07f4441df9c3b8de38a3331a2",
+        "request_id": "crystal-192b1ec0ed613df6f3fa0ea450b6206844a3a76c",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "c55db0ca53a544e0823cfe0f9d177142",
+        "request_id": "crystal-2445e6fe27c4e2522c41ca33a7043eea54316098",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "30967a7a04994b4b86013590a260596c",
+        "request_id": "crystal-e27d6c63768d8ed4ba684d3facb315882e19187d",
+        "query_tool": "structure_result"
+      },
+      {
+        "provider": "structures",
+        "object_id": "f9ff5be40417466b8bf3cce2ab5135ee",
+        "request_id": "crystal-e86027844899b226835a64f6ff18137d0edc45d6",
+        "query_tool": "structure_result"
+      }
+    ]
+  },
+  "saved_GUI_correction_continuation": {
+    "result": "PASS_LIMITED_ACTUAL_GUI_CORRECTION_MODEL_CONTINUATION",
+    "elapsed_seconds": 189.04883070000142,
+    "actual_mcp_calls": 15,
+    "actual_image_blocks": 17,
+    "errors": [],
+    "source_files_unchanged": true,
+    "all_prior_provider_files_unchanged": 271,
+    "FFT_count": 2,
+    "simulation_count": 2,
+    "new_FFT": 0,
+    "new_simulations": 0,
+    "new_atlas": 1,
+    "new_review": 1,
+    "new_general_comparison": 1,
+    "target_region": 0,
+    "new_measurement_id": "c94f6ccbeefe41bc8d875199bb457fc6",
+    "exact_previous_measurement_id": "8b66f31fba054f46867830c582d466ed",
+    "replacement_bound_by": "saved remeasurement.previous_measurement_object_id and scientific_grid_identity, not peak label",
+    "other_ROI_measurements_and_matching_unchanged": true,
+    "FFT_peak_parameters_unchanged": true,
+    "registration_tolerance_candidates_unchanged": true,
+    "new_period_nm": 0.168923298812123,
+    "independent_period_nm": 0.168923298812123,
+    "old_candidate_statuses": [
+      "compatible",
+      "incompatible"
+    ],
+    "new_candidate_statuses": [
+      "incompatible",
+      "incompatible"
+    ],
+    "new_atlas_id": "e7146b491923461593c8e7001bfe3ba9",
+    "new_atlas_request_id": "gui-correction-551843661c-atlas",
+    "new_review_id": "120036b3d6154a1daac572102d72c7ca",
+    "new_review_request_id": "gui-correction-551843661c-review",
+    "new_comparison_id": "cb0c1bd98cda45879d4b1a3948b5776a",
+    "new_comparison_request_id": "gui-correction-551843661c-compare",
+    "attachment_arguments": {
+      "panel_id": "64edddf6b28465b04a25c07f03fa0f73",
+      "expected_object_id": "5631c23b869b4fbe80b7c33beb381f0b",
+      "draft_revision": 4,
+      "observation_view_object_id": "5631c23b869b4fbe80b7c33beb381f0b",
+      "comparison_object_id": "cb0c1bd98cda45879d4b1a3948b5776a",
+      "request_id": "gui-correction-551843661c-present"
+    },
+    "card_currentness": "current",
+    "new_original_outcomes_queried": true,
+    "global_config_unchanged": true,
+    "phase_identified": false,
+    "twin_confirmed": false
+  },
+  "source_sha256": {
+    "operator-texture.tiff": "d197fa273466a138c43b891ea3d2559055c9f77315c9eb92712adbf2defcde8e",
+    "candidate-a.cif": "6c13971eec98bceae0538fc821dc0a52578abb130ac313692fd3963c1855abca",
+    "candidate-b.cif": "9a2234df81309dc7d824748d91db92050fa045c1d53ad9d6363cea1d8a4ad50e"
+  },
+  "scientific_file_hashes": [
+    {
+      "provider": "images",
+      "object_id": "ae61fb0351624dd7a9c9f3b4dabd8b14",
+      "kind": "fft",
+      "file": "data.npy",
+      "sha256": "a9be8149f7f41f3e874572cd70b2b29edae8597af1b26b3f61d41a2f759a1e99"
+    },
+    {
+      "provider": "images",
+      "object_id": "b42e77d4e9a6428db7d1530f04fce74b",
+      "kind": "frame",
+      "file": "data.npy",
+      "sha256": "007e875fad8936bc32868f30f10e68fda211353cbfc9c84f9110b77233f34e76"
+    },
+    {
+      "provider": "images",
+      "object_id": "f647b7df05f744c5a7cc2cf679eb9ff4",
+      "kind": "fft",
+      "file": "data.npy",
+      "sha256": "ee6323156a03b612b7485a1a569d5ecb9a3ecfec0dee8bc744ae4d1840d943b8"
+    },
+    {
+      "provider": "structures",
+      "object_id": "13e77c3962794bad82a7a74c551d9f28",
+      "kind": "simulate",
+      "file": "input.npy",
+      "sha256": "36a9377c72d6a3d5db08842da1b7c7b45d1253d140c19a43a68b3dfdfc620593"
+    },
+    {
+      "provider": "structures",
+      "object_id": "13e77c3962794bad82a7a74c551d9f28",
+      "kind": "simulate",
+      "file": "reflections.json",
+      "sha256": "27da00173a771776b329e33711f246b6f4e0f302e6862d33bd403828a6911ec2"
+    },
+    {
+      "provider": "structures",
+      "object_id": "de2b8154da3b49f28a10d522967591ca",
+      "kind": "simulate",
+      "file": "input.npy",
+      "sha256": "583b99e1173328547f0e1e9ee9866ba6afd8250cd9b202cae06deeb20bc6b0ed"
+    },
+    {
+      "provider": "structures",
+      "object_id": "de2b8154da3b49f28a10d522967591ca",
+      "kind": "simulate",
+      "file": "reflections.json",
+      "sha256": "61395562c658dd3e4167f8ebc342957fef4ffa67bbf4d3da9e2d093604346787"
+    }
+  ],
+  "retained_semantics": [
+    "Original fractional ROI anchors and outward integer processing supports have different contact in this fixture; shared sampling edge is not a physical interface.",
+    "All source arrays, original FFTs, simulations and prior provider files were unchanged; correction creates immutable evidence revisions only.",
+    "Six ambiguity-table entries with false ambiguous_within_tolerance flags are not six ambiguous assignments.",
+    "Correct candidate becomes incompatible after deliberate saved peak displacement under unchanged tolerance; no expectation was forced by threshold changes.",
+    "Presentation IDs belong to their own namespace. Query-only model recovery reads live card and original scientific records; exact original attachment receipt is a separately scoped root check.",
+    "Initial operator statement and calibration remain synthetic/user-provided and independently unverified."
+  ],
+  "not_tested": [
+    "Human-operated usability",
+    "Automatic plugin or Skill discovery",
+    "Actual worker interruption/lost-response injection",
+    "Real-specimen physical interpretation",
+    "Dedicated Mac desktop",
+    "Native DM/GMS"
+  ]
+}

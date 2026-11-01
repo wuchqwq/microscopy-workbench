@@ -39,6 +39,15 @@ do not replay unknown children. For changed current evidence use an immutable
 revision with `previous_evidence_id`/`revision_note` and retain old comparisons.
 Return the actual PNG and existing image Panel references for review; a PNG is
 not the scientific array or proof of phase/twinning.
+If the connected provider advertises `image_panel_evidence`, return the saved
+general comparison to the same owned Panel through that restricted presentation
+tool. Bind the current object/draft revision and optionally the original saved
+`observation_view_object_id`, with a pre-saved presentation request ID. Keep the
+structure comparison separate from an image-provider canvas object. The card
+retains candidates, unmatched/ambiguous reflections and qualification limits;
+`needs_review` or `unvalidated_snapshot` cannot be described as current evidence.
+Reopening a helper restores a compact historical snapshot only; refresh it by
+explicit full-provider attachment, not an invented image ID or scientific replay.
 
 See the bundled `docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md` for the first-version
 support matrix. Tool availability and scientific applicability remain explicit.

@@ -12,6 +12,7 @@ import * as annotationPresentation from '../ui/image-panel/annotation-presentati
 import * as figureExport from '../ui/image-panel/figure-export.mjs';
 import {renderSequenceEvidence} from '../ui/image-panel/sequence-evidence.mjs';
 import {renderDomainEvidence} from '../ui/image-panel/domain-evidence.mjs';
+import {ResearchWorkspace} from '../ui/image-panel/research-workspace.mjs';
 import {DataProbes as ProviderDataProbes} from '../ui/image-panel/data-probes.mjs';
 import {MeasurementWorkspace as ProviderMeasurementWorkspace,requiresMeasurementJump} from '../ui/image-panel/measurement-workspace.mjs';
 import {performance} from 'node:perf_hooks';
@@ -44,13 +45,14 @@ async function harness(initial=fixture()){
   getBoundingClientRect(){return {left:0,top:0,width:this.width,height:this.height};}
   setPointerCapture(){}
  }
+ const bodyClasses=new Set(),body={classList:{add:(...keys)=>keys.forEach(k=>bodyClasses.add(k)),remove:(...keys)=>keys.forEach(k=>bodyClasses.delete(k)),contains:key=>bodyClasses.has(key),toggle:(key,on)=>{const next=on??!bodyClasses.has(key);if(next)bodyClasses.add(key);else bodyClasses.delete(key);return next;}}};
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,renderSequenceEvidence,renderDomainEvidence,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
-  document:{getElementById:$,createElement:tag=>new Element(tag),querySelectorAll:()=>[],addEventListener(){}},
+  document:{body,getElementById:$,createElement:tag=>new Element(tag),querySelectorAll:()=>[],addEventListener(){}},
   sessionStorage:{getItem:()=> 'synthetic-token',setItem(){}},location:{hash:'',pathname:'/'},history:{replaceState(){}},
   Option:class{constructor(text,value){this.text=text;this.value=value;}},
   Image:class{constructor(){this.width=128;this.height=96;}async decode(){}},
@@ -86,7 +88,7 @@ async function harness(initial=fixture()){
  const event=(type,x=10,y=10,extra={})=>{$('canvas').listeners[type]?.({clientX:x,clientY:y,pointerId:1,button:0,...extra});};
  const click=async id=>{await $(id).onclick();flush();};
  const draw=(kind='line')=>{$('mode').value=kind;event('pointerdown',10,10);event('pointermove',40,35);event('pointerup',40,35);flush();};
- return {$,calls,draftCalls,getCalls,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
+ return {$,bodyClasses,calls,draftCalls,getCalls,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},
   delayAction(promise){waitAction=promise;},
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
@@ -603,4 +605,23 @@ test('focus and fit retain ROI, unsaved display, marks and history without provi
  await h.click('fit-canvas');assert.deepEqual(h.inspect().draft,before.draft);assert.deepEqual(h.inspect().state.object,before.state.object);assert.equal(h.$('gamma').value,'1.4');assert.equal(h.inspect().dirty,true);
  await h.click('focus-image');assert.equal(h.$('focus-image').attributes['aria-pressed'],'false');assert.deepEqual(h.inspect().view,before.view);assert.equal(h.calls.length,calls);
  await h.click('undo');assert.equal(Number(h.$('gamma').value),1);assert.deepEqual(h.inspect().draft,before.draft);
+});
+
+test('first-frame observation with no annotations field still dispatches one bounded save and retains reason on failure',async()=>{
+ const initial=fixture();delete initial.object.annotations;
+ const h=await harness(initial);h.draw('rectangle');h.$('roi-reason').value='Synthetic operator observation';h.$('roi-reason').oninput();h.failAction('Deliberate save not confirmed; query original request');
+ await h.click('save-observation');await h.settle();
+ assert.equal(h.calls.length,1,'absent annotation array must not fail before provider dispatch');
+ assert.equal(h.calls[0].action,'mark');assert.equal(h.calls[0].params.note,'Synthetic operator observation');
+ assert.equal(h.calls[0].params.status,'hypothesized');assert.equal(h.calls[0].params.presentation.layer,'experimental');
+ assert.equal(h.$('roi-reason').value,'Synthetic operator observation','an unconfirmed save retains the typed reason');
+});
+
+test('display settings replace the evidence sidebar without losing the observation or display draft',async()=>{
+ const h=await harness();await h.click('toggle-research');
+ h.$('roi-reason').value='Still being written';h.$('roi-reason').oninput();h.$('gamma').value='1.4';h.$('gamma').oninput();
+ const before=h.inspect();await h.click('toggle-settings');
+ assert.equal(h.bodyClasses.has('research-open'),false);assert.equal(h.bodyClasses.has('properties-open'),true);assert.equal(h.$('research-panel').hidden,true);assert.equal(h.$('settings-panel').open,true);
+ await h.click('toggle-research');assert.equal(h.bodyClasses.has('properties-open'),false);assert.equal(h.bodyClasses.has('research-open'),true);
+ assert.equal(h.$('roi-reason').value,'Still being written');assert.equal(h.$('gamma').value,'1.4');assert.equal(h.inspect().dirty,true);assert.deepEqual(h.inspect().state.object,before.state.object);assert.equal(h.calls.length,0);
 });
