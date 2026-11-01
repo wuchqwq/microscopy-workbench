@@ -32,7 +32,15 @@ function known(v:unknown):v is Row {
   row(v.interpretation)&&string(v.interpretation.scope)&&assessments(v.interpretation.assessments);
 }
 export function projectResultSemantics(object:Row):Row {
- if(!own(object,'result_semantics'))return {};
+ if(!own(object,'result_semantics')){
+  // Keep the existing producer discriminator on legacy peak views. This is
+  // copied provenance, not an assessment synthesized for the historical record.
+  if(object.kind==='fft_view'&&own(object,'peak_detection')){
+   try{if(!row(object.peak_detection))throw Error('invalid peak discriminator');return {peak_detection:copyBounded(object.peak_detection)};}
+   catch{return {result_semantics_projection:{status:'unavailable',reason:'invalid_legacy_peak_discriminator'}};}
+  }
+  return {};
+ }
  try{
   const copied=copyBounded(object.result_semantics);
   return {result_semantics:copied,...(!known(copied)?{result_semantics_projection:{status:'unavailable',reason:'unrecognized_version_or_shape',instruction:'Read the original immutable object; no assessment was inferred.'}}:{})};
