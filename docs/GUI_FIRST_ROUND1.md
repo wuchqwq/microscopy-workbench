@@ -28,6 +28,13 @@ continues without it. Original pixels/files stay read-only.
    Connection details are attached automatically; no manual IDs/JSON required.
    This is an explicit continuation handoff, **not automatic model wake or an
    embedded chat**. Unsaved selections/reasons are not committed observations.
+   Pixel-only saved observations remain valid. If a later physical comparison
+   needs the explicitly supplied scale, retain the old observation as historical:
+   attach that same calibration record to a new wrapper of the saved marked
+   view, preview it, verify the original ROI IDs/anchors/reasons, and show it with
+   the current object/draft guard. Use this new calibrated observation view for
+   evidence attachment. Do not describe the old uncalibrated view as calibrated
+   or bypass a calibration-mismatch refusal.
 5. The Agent uses existing tools and can attach a fully admitted comparison with
    `image_panel_evidence`. Open **观察与证据** to see conditional statuses, counts,
    actual comparison image, unmatched/ambiguous evidence and expandable records.

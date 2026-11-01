@@ -30,6 +30,56 @@ ANALYSIS_TOOLS = [
 RECOVERY_TOOLS = ["image_info", "image_result", "structure_info", "structure_result", "image_panel_current"]
 
 
+def panel_selection_instructions():
+    """Keep historical ROI attention distinct from a newly calibrated view.
+
+    This is an explicit runtime-Agent task, not an automatic provider action.
+    A first-read pixel-only view cannot qualify a later physical comparison.
+    """
+    return (
+        "First read image_panel_current for the supplied Panel ID. Retain this first read's exact "
+        "view.object.object_id as original_observation_view_object_id, an immutable historical reference. "
+        "Start observation_view_object_id with that saved view, but update this presentation reference only "
+        "if the explicit calibration preparation below produces a new verified saved observation view. "
+        "Prefer the actual read-only roi_handoff packet: use the two usable saved_rectangles with "
+        "original_anchor and canonical rect_xyxy, keeping their IDs/text/status and the actual saved "
+        "observation reasons. Match each stable annotation_id to view.object.annotations to read its note; "
+        "a generic ROI label is not a replacement observation reason. No ROI coordinates are supplied in "
+        "this prompt. Inspect support_pairs/pair_inspection: outward processing bounds can have different "
+        "contact/overlap from drawn anchors; that conversion is not physical interface evidence. "
+        "If fewer than two saved rectangles are usable, their source/frame binding is invalid, or there "
+        "is a dirty draft or active gesture, stop and report the actual blocker. Do not discard a draft. "
+        "Before any FFT, measurement, simulation or comparison, establish one exact sourced calibration "
+        "for BOTH the scientific input and observation_view_object_id. If the saved observation already "
+        "has an active calibration consistent with the supplied task, preserve it and its observation "
+        "view; use scientific_input.direct_input_object_id or save a new request ID and execute the "
+        "packet's exact scientific_input.prepare_call to attach that existing record. Do not replace an "
+        "already correct calibration. An active but conflicting or withdrawn calibration is a blocker, "
+        "not permission to replace it or change the task to obtain agreement. "
+        "Only if the original saved observation is pixel-only and this operator task explicitly supplies "
+        "xy_scale and calibration_source_text, use the packet's exact frame_object_id to create ONE "
+        "image_calibrate record with scope=image, the supplied signed XY values and the actual supplied "
+        "provenance; unspecified uncertainty remains unknown. Then call image_calibrate on "
+        "original_observation_view_object_id with calibration_object_id set to that new existing record, "
+        "without repeating the scale statement. Call image_preview on this wrapper to create a NEW "
+        "calibrated saved observation view. Verify the same calibration ID/revision, exact source/frame "
+        "and panel source extents, and the original two annotation IDs, original anchors, reasons, "
+        "text/status and notes; do not redraw or invent marks. If any check fails, stop. Reread "
+        "image_panel_current and require the original clean view and observed draft revision, then "
+        "image_panel_show the new saved view using those guards. Reread and verify its roi_handoff. "
+        "Set observation_view_object_id to this NEW verified calibrated saved view, retaining "
+        "original_observation_view_object_id unchanged in the report. Use the same calibration record "
+        "and the new packet's direct input or exact existing-record prepare_call for the science. "
+        "The old pixel-only view is historical and must not be submitted as the calibrated presentation "
+        "binding. If no sourced scale is supplied, stop before physical crystal comparison; never infer "
+        "units. All writes require new pre-saved request IDs. This explicit new view is not permission "
+        "to replay a failed/unknown request, change any old array/view/receipt, or weaken admission. "
+        "Use only the packet-recorded rectangles and qualified scientific input for manual observation "
+        "and the exact two-window atlas. Do not round raw annotation coordinates yourself, reopen the "
+        "TIFF, substitute an unsaved selection, or revise calibration merely to make a comparison pass. "
+    )
+
+
 def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -192,13 +242,15 @@ def main():
     if args.panel_id:
         model_task.pop("regions")
         model_task["panel_id"] = args.panel_id
-        selection_note = ("First read image_panel_current for the supplied Panel ID. Retain this first read's exact view.object.object_id as the original saved observation_view_object_id; keep it even if you later show an atlas or FFT. Prefer its actual read-only roi_handoff packet: use the two usable saved_rectangles with original_anchor and canonical rect_xyxy, keeping their IDs/text/status and the actual saved observation reasons. Match their stable annotation_id to view.object.annotations to read note where supplied; a generic ROI label is not a replacement observation reason. No ROI coordinates are supplied in this prompt. Check source/frame/current calibration binding against the stated input. Inspect support_pairs/pair_inspection: outward processing bounds can have different contact/overlap from drawn anchors; do not infer a physical interface from that conversion or hide the warning. Use scientific_input.direct_input_object_id when supplied; if scientific_input.prepare_call is supplied, save a new request ID then call that exact image_calibrate recipe to attach the existing calibration record, not a newly declared scale. Do not round raw annotation coordinates yourself, reopen the TIFF, replace an already correct calibration, invent marks, or substitute an unsaved gesture/current selection for saved rectangles. If the packet has fewer than two usable adjacent saved rectangles or invalid binding, report the actual blocker. Use those packet-recorded rectangles and qualified scientific input for the manual observation and exact two-window atlas. ")
+        selection_note = panel_selection_instructions()
     question = ("A prior session supplied this handoff. Independently recover the actual original request outcomes, saved observation/FFT/measurement/review/simulation/comparison references and their conditional interpretation. Use query tools only; create no science, views, budgets, exports or new requests. Do not trust prior prose instead of actual saved records.\n"+args.handoff.read_text(encoding="utf-8") if recovery else
                 selection_note+
-                "Continue from the following two explicitly operator-selected neighboring ROIs. This is a public synthetic operator task, not a claim of human-confirmed material truth. Inspect the actual source image. Record the ROI reasons and supplied calibration provenance. Use the exact two ROI observations with existing tools; a whole-image sampling field is unnecessary. Share each ROI's same saved FFT/peak/measurement children between its image-first review and the general crystallographic comparison; do not separately compute a verification FFT. Each image_discovery_review accepts at most8 evidence_ids; use the saved FFT, peaks and bulk peak_measurements references instead of expanding every individual measurement ID beyond the schema budget. Inspect the two supplied structures, use their actual cell for shared orientations, and compare their qualified explicit projections under the one declared experimental registration. Retain alternatives and missing information as hypotheses. Return actual MCP image feedback without opening a browser. image_panel_show accepts image-provider view/overview/FFT IDs, not a structure comparison ID. In Panel mode, you must actually return the saved general comparison to the same GUI using the advertised image_panel_evidence tool: read image_panel_current immediately before attachment, save a new presentation request ID, supply comparison_object_id plus its current expected_object_id and view.edit_state.draft_revision, and pass the ORIGINAL saved observation_view_object_id retained from the first read. This is provider-qualified evidence beside the canvas, not a replacement scientific image. Optionally show the source/atlas/known FFT first, then reread current state before attaching. A stale or dirty attachment refusal is a real blocker, not permission to discard a draft, change source, silently retry unknown requests or mislabel the attachment current. Inspect image_panel_current after attachment and report its actual evidence.currentness, source/ROI/calibration references and unmatched counts. Do not claim it is visible merely because a PNG was returned.\n"
+                "Continue from the following two explicitly operator-selected neighboring ROIs. This is a public synthetic operator task, not a claim of human-confirmed material truth. Inspect the actual source image. Record the ROI reasons and supplied calibration provenance. Use the exact two ROI observations with existing tools; a whole-image sampling field is unnecessary. Share each ROI's same saved FFT/peak/measurement children between its image-first review and the general crystallographic comparison; do not separately compute a verification FFT. Each image_discovery_review accepts at most8 evidence_ids; use the saved FFT, peaks and bulk peak_measurements references instead of expanding every individual measurement ID beyond the schema budget. Inspect the two supplied structures, use their actual cell for shared orientations, and compare their qualified explicit projections under the one declared experimental registration. Retain alternatives and missing information as hypotheses. Return actual MCP image feedback without opening a browser. image_panel_show accepts image-provider view/overview/FFT IDs, not a structure comparison ID. In Panel mode, you must actually return the saved general comparison to the same GUI using the advertised image_panel_evidence tool: read image_panel_current immediately before attachment, save a new presentation request ID, supply comparison_object_id plus its current expected_object_id and view.edit_state.draft_revision, and pass the verified calibration-consistent observation_view_object_id established before science. Preserve its exact saved ID even if you later show an atlas or FFT; report the original historical observation separately when a new calibrated view was prepared. This is provider-qualified evidence beside the canvas, not a replacement scientific image. Optionally show the source/atlas/known FFT first, then reread current state before attaching. A stale or dirty attachment refusal is a real blocker, not permission to discard a draft, change source, silently retry unknown requests or mislabel the attachment current. Inspect image_panel_current after attachment and report its actual evidence.currentness, source/ROI/calibration references and unmatched counts. Do not claim it is visible merely because a PNG was returned.\n"
                 "Budget: exactly these two ROI supports; at most2 distinct source FFTs,2 saved candidate simulations,2 manual discovery/reason records,4 image-first reviews and2 general comparisons. No full spatial field, new algorithms, automatic feature detector, external scripts or phase/twin confirmation. Use image_spatial_atlas for the exact two supplied/Panel-recorded rectangles so all later evidence shares those existing scientific objects. Window=none, subtract_mean=true and peak refinement=none are the declared analytic-test settings; max_peaks at most8. Apply the supplied simulation/registration/tolerance conditions explicitly and identically to both candidates, without adjustment after seeing matches. New write request IDs start with "+prefix+"; preserve them before dispatch. If a tool is denied, report it; do not bypass.\nOperator task:\n"+json.dumps(model_task, ensure_ascii=False, indent=2))
     prompt = ("You are a fresh scientific runtime Agent using the installed plugin interface, not its developer. Use ONLY the configured microscopy_workbench MCP tools. No shell, filesystem, web, browser, implementation/oracle/report inspection or temporary scripts. Exact public Skills are provided below; no file read is needed. View actual returned images. Keep scientific arrays/calibration/source evidence separate from display and candidate interpretation. Do not declare a unique phase, twin or3D relation from geometric agreement. Return strict JSON (no Markdown) with decisions, sourced observations, actual original request IDs/object IDs for both providers, shared evidence references, candidate comparison statuses, image/Panel feedback and stopping reason/limits.\n"+question+"\n\n"+instructions)
-    argv = [codex,"exec","--ignore-user-config","--ephemeral","--json","--sandbox","read-only","-C",str(args.output)]
+    # Acceptance output is deliberately new and may live outside any Git checkout.
+    # This skips only the CLI's repository-location guard, not its read-only sandbox.
+    argv = [codex,"exec","--ignore-user-config","--skip-git-repo-check","--ephemeral","--json","--sandbox","read-only","-C",str(args.output)]
     for key,value in settings.items():
         argv += ["-c",key+"="+json.dumps(value, ensure_ascii=True)]
     argv += ["-o",str(args.output/"final.txt"),"-"]

@@ -36,6 +36,29 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: git diff --check "$COMPARISON_BASE" "$HEAD_SHA"
 
+  client-setup:
+    needs: changes
+    if: needs.changes.outputs.run_full_ci == 'true'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Private config preservation and isolated model-launch contracts
+        run: |
+          python -B tests/test_register_codex_mcp.py
+          python -B tests/manual_crystal_launcher_test.py
+
   node-smoke:
     needs: changes
     if: needs.changes.outputs.run_full_ci == 'true'

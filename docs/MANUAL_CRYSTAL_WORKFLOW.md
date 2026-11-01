@@ -1,9 +1,10 @@
 # Two selected regions → conditional crystal evidence
 
-This integration candidate joins reviewed #44/#46 and #47 without merging them
-or main. Use `integration/manual-crystal-evidence` to try the combined route;
-the separate PRs and their qualification histories remain intact. No DM/GMS or
-private ABI is involved. Automatic feature proposals remain EXPERIMENTAL.
+Historical development: the initial candidate composed reviewed #44/#46 and
+#47 before integration into main through #48 and GUI continuation #49. The
+original PRs and qualification histories remain intact; do not merge their
+old branches a second time. No DM/GMS or private ABI is involved. Automatic
+feature proposals remain EXPERIMENTAL.
 
 ## Researcher and Agent
 
@@ -91,3 +92,12 @@ The separate analytic truth is never supplied. Authorization is command-scoped
 to named tools; global config/auth/model are not changed. Public Skill text is
 supplied explicitly: automatic plugin discovery is separately NOT_TESTED. Exit
 code/image counts alone are not acceptance. See the [executed record](MANUAL_CRYSTAL_ACCEPTANCE.md).
+
+The acceptance output can be outside a Git checkout; the opt-in launcher passes
+`--skip-git-repo-check` only for that fresh model invocation. In Panel mode, a
+pixel-only observation and a newly calibrated comparison must not be mixed.
+Before science, the Agent establishes a new saved observation view using the
+same explicit calibration record and verifies the original saved ROI anchors
+and reasons. That new view is the presentation reference; the original remains
+historical. Already matching calibration is reused. Missing scale, dirty state,
+changed marks or a failed/unknown request remains a real stopping condition.

@@ -1,0 +1,89 @@
+{
+  "source_commit": "c1651b5346df55e91602d5c32b5d2f73e659bdd5",
+  "source_tree": "e2190e42fff936df7cbfe0d38af6daacc9ed5548",
+  "macos": "26.6 (25G72)",
+  "architecture": "arm64",
+  "hardware": "Apple M5 /24GiB",
+  "node_qualification": "22.23.4 /npm10.9.9",
+  "python": "3.13.18",
+  "science_versions": {
+    "python": "3.13.18",
+    "machine": "arm64",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "Pillow": "12.3.0",
+    "tifffile": "2026.10.15",
+    "ase": "3.29.0",
+    "diffsims": "0.7.0",
+    "scikit-image": "0.26.0"
+  },
+  "checks": {
+    "npm_ci": "PASS",
+    "typecheck": "PASS",
+    "npm_test": {
+      "pass": 395,
+      "skip": 5,
+      "fail": 0
+    },
+    "test_science": "PASS",
+    "compiled_compat": "PASS2/2",
+    "focused_recovery": "PASS23/23",
+    "general_crystal": "PASS",
+    "manual_crystal": "PASS",
+    "gpa": "PASS",
+    "topology": "PASS",
+    "integration_f4_gpa": "PASS"
+  },
+  "real_chrome_gui": "PASS: two saved observations/reasons, finite comparison, peak-anchor drag/remeasure, stale badge, actual fresh-model update, refresh, normal close/reopen and provider revalidation",
+  "peak": {
+    "old_fx": 0.125,
+    "new_fx": 0.13927734865173863,
+    "old_d_nm": 0.18,
+    "new_d_nm": 0.16154816427659735,
+    "candidate_a_roi1_before": [
+      6,
+      0
+    ],
+    "candidate_a_roi1_after": [
+      5,
+      1
+    ],
+    "candidate_a_roi2_before_after": [
+      6,
+      0
+    ],
+    "fft_count": 2,
+    "simulation_count": 2,
+    "unchanged_roi2_measurement_ids": 6,
+    "comparison_child_receipts_on_revision": 4
+  },
+  "recovery": {
+    "normal_cli_exit": 0,
+    "same_logical_panel": true,
+    "generation_before": 1,
+    "generation_after": 2,
+    "credentials_rotated": true,
+    "initial_state": "restored_unvalidated/unvalidated_snapshot",
+    "after_new_evidence_admission": "current/validated",
+    "unchanged_scientific_files": 441,
+    "science_operations_on_reopen": 0
+  },
+  "retained_failures": [
+    "Initial model comparison presentation refused different_calibration_revision; original failed ID remains failed",
+    "Output-retention harness paths with spaces failed before first science/compat tests; new-directory corrected attempts passed",
+    "Recovery host harness metadata/path assertions retained separately; no science requests replayed"
+  ],
+  "holds": [
+    "PR50/PR51 unmerged at qualification; exact main freeze not established",
+    "Original config pre-add only fingerprint retained, full preservation NOT_ESTABLISHED"
+  ],
+  "not_tested": [
+    "Human usability",
+    "Real-material physical accuracy",
+    "Automatic plugin/Skill discovery",
+    "Active science worker crash/power loss",
+    "Mac forced helper stop",
+    "image_panel_resume alternative entry"
+  ],
+  "privacy": "Only public synthetic data; no connection URLs/tokens/config bytes/user paths included"
+}
