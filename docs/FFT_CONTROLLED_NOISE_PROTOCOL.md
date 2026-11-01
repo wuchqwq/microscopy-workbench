@@ -52,3 +52,36 @@ Before assignment, the evaluator groups peaks by their **exact integer-bin conju
 Invoke, for example, `python tests/fixtures/evaluate_fft_noise.py --repository REPOSITORY --dataset DATASET --output NEW_OUTPUT`; use a separate new output for each old/new revision. `--self-test` tests only the independent oracle, with no detector. `run.json` records repository HEAD, loaded module hashes, generator manifest hash and runtime versions; `raw.jsonl` keeps source identity, all diagnostic rows and exceptions; `summary.json` and `summary.csv` retain counts and per-seed matches. Inspect and report errors and denominators, never treat errors as negatives.
 
 The independently implemented **public saved-chain parity subset** is preregistered as the noise-free D500 image and the Poisson D500 seed 100 image for each of all 13 scenes, plus the deterministic delta control: 27 images. It uses both windows and both refinements (108 full-image evaluations); both adjacent halves add 16, for 124 image-ROI-configuration evaluations, plus eight same-image adjacent comparisons and any required setup/read calls. Preserve actual saved public statuses and compare numerical results to the raw harness with explicit exact parity checks. This subset is fixed before outcomes and is not a selection based on observed noise results; read-noise-only and other doses remain in the full raw tier.
+
+## Coverage amendment before inspecting outcomes
+
+The raw old/new runs completed with2432 reported rows each. At this amendment
+only completion/counts have been read; no metric or status outcome has been
+inspected. A coverage review found that the27-source subset alone would not
+provide actual feature statuses across all16 seeds. Therefore additionally run
+`controlled_fft_saved.py --full-primary` on all510 manifest sources with the
+unchanged primary Hann/mean=true/quadratic request. Adjacent sources retain all
+three ROIs. That is608 ROI evaluations and49 comparisons; add the original
+delta's none/mean=false/quadratic control first, for609 ROI evaluations total.
+The original27-source/four-configuration subset is retained, not replaced.
+This adds public-status coverage, not a fitted threshold, selected seed or
+change to the matrix's input data. Secondary configurations remain complete
+in the raw tier and covered by the fixed public subset.
+
+All outcomes will be separated into confirmed implementation bugs, measurement
+uncertainty, method limitations and physical non-identifiability. A missing
+match or insufficient_evidence is not automatically a bug; no per-seed monotonic
+noise ordering is required. The study reports descriptive aggregate trends with
+denominators, not a calibrated microscopy error rate. `valid` is read with its
+saved numerical meaning, separately from measurement reliability and physical
+interpretation. Redefining its contract or adding per-peak significance remains
+paused pending the design discussion in the DC repair; this test increment
+does not implement that architecture.
+
+Model references checked2026-11-02: [NumPy Generator.poisson](https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.poisson.html)
+defines lambda as the expected count; [EMVA1288 Linear4.0](https://www.emva.org/wp-content/uploads/EMVA1288Linear_4.0Release.pdf)
+distinguishes counting and readout terms for optical sensors. That standard is
+not a qualification of this synthetic electron-count model or a specific
+electron detector. Here each simulated event contributes one count, efficiency
+and gain are assumed1, with no detector PSF, DQE, pileup, saturation, MTF,
+spatial/temporal correlation or dynamical specimen image formation modeled.
