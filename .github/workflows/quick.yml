@@ -107,6 +107,14 @@ jobs:
       - run: python -B tests/image_peaks_test.py
       - run: python -B tests/test_flat_spectrum.py -v
       - run: python -B tests/test_fft_dc_roundoff.py -v
+      - run: python -B tests/test_fft_preprocessing_oracle.py -v
+      - run: python -B tests/test_controlled_fft_backgrounds.py -v
+      - run: python -B tests/test_fft_summary_provenance.py -v
+      - run: python -B tests/test_controlled_fft_fixture.py -v
+      - run: python -B tests/fixtures/controlled_fft_noise.py "${{ runner.temp }}/controlled-fft-inputs" --smoke
+      - run: python -B tests/fixtures/evaluate_fft_noise.py --repository . --dataset "${{ runner.temp }}/controlled-fft-inputs" --output "${{ runner.temp }}/controlled-fft-raw"
+      - name: Validate noise harness execution without asserting random physical answers
+        run: python -c "import json; from pathlib import Path; rows=[json.loads(line) for line in Path(r'${{ runner.temp }}/controlled-fft-raw/raw.jsonl').read_text().splitlines()]; assert len(rows)==388; assert all(r['execution']=='ok' for r in rows)"
       - run: python -B tests/fixtures/flat_spectrum_saved.py create "${{ runner.temp }}/flat-spectrum-saved"
       - run: python -B tests/fixtures/fft_dc_saved.py create "${{ runner.temp }}/fft-dc-saved"
       - run: node dist/tests/fft-dc-science-smoke.mjs

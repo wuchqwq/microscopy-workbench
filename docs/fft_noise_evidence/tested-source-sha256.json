@@ -1,0 +1,13 @@
+{
+  "tests/test_fft_dc_roundoff.py": "142d385680ff646630118b52e3d116ca2159ee3691458de17a6086e4a179cfd7",
+  "tests/test_controlled_fft_fixture.py": "a96b6af41b015a30a1cf935e23759191891c95f09de77716d3b15b28a3d756c8",
+  "tests/test_fft_preprocessing_oracle.py": "caf8e388fc09a8d7d5a61a5ba4520ab857d5957b7c2dbb24201318054b2364fc",
+  "tests/test_controlled_fft_backgrounds.py": "865440b1dc05200a7f92a9554e6f6e880a942fe2cb8b8262f7fd5c019d0875f3",
+  "tests/test_fft_summary_provenance.py": "cc04bc0d7e800d788d7c919892b7e5960b7e95d90408fd930e495695223b7081",
+  "tests/fixtures/controlled_fft_saved.py": "7e0d8c62656e188fd3c2542758c87c9c4333213c54eefac8098547b085afc986",
+  "tests/fixtures/controlled_fft_backgrounds.py": "ac33b64169b9da55cdaeb400c6c25f26d1bbb7db60d588c9f5ec84f299ff1658",
+  "tests/fixtures/controlled_fft_noise.py": "e3dc6e248b1a0fc1e0df1f121c11a8121470b0fac1ca2a6656f31ed34bd9d497",
+  "tests/fixtures/controlled_fft_backgrounds.parameters.json": "ac14ab138befdd88d778ddf02ab85295f82e092a68d1855148769637b33a6f7e",
+  "tests/fixtures/summarize_fft_noise.py": "2fa4126c160eb4910495b66ffd76143022450f466887f88f18e96044a5368e47",
+  "tests/fixtures/evaluate_fft_noise.py": "c91a68d9fe93d1ddedd25a8845e080a32b4cbf17e4bd0ff8c1626f08a0beaa18"
+}
