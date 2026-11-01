@@ -31,6 +31,9 @@ let view={scale:1,x:0,y:0},toneCacheKey:string|null=null,paintFrame:number|null=
 let draftPending:DraftPublication|null=null,draftSending=false,draftError:unknown=null,autoFailed=false,autoSequence=0,autoTimer:unknown=null,fieldBefore:CompleteAnnotationEdit|null=null,autoSaving:Promise<void>|null=null,measuredMarkId='';
 let labelDraft:AnnotationPresentation|null=null,annotationLayout:AnnotationLayout|null=null,hoverId='';
 let labelTimer:unknown=null;
+// Invalidates an in-flight handoff even when an operation fails or the user
+// returns to the same selection. Readiness flags alone describe only now.
+let interactionEpoch=0;
 let figurePrefs={preset:'real-space',mode:'analysis',layers:{experimental:true,simulation_A:false,simulation_B:false},columns:'single',fontPt:8,legend:true,scaleBar:true,letter:''};
 const queuedEdits=new Map<string|undefined,QueuedEdit>(),userHistory=new UserActionHistory<AppHistoryEntry>(),savedViews=new SavedViewHistory();
 let lastUserDisplay:DisplayDraft|null=null;
@@ -41,7 +44,7 @@ const historyDraft=new DraftHistory({}),perf={frames:0,tone_count:0,overlay_coun
 const now=()=>performance.now(),message=(text:unknown,error=false)=>{$('message').textContent=text;$('message').classList.toggle('error',error);};
 const measurementWorkspace=new MeasurementWorkspace({getState:()=>state,api,onSelect:selectMeasurement,onJump:jumpMeasurement,onUpdate:updateMeasurement,onError:e=>message('结果读取未完成：'+(e as {message:string}).message,true)});
 const dataProbes=new DataProbes({getState:dataProbeState,api,onError:e=>message('原数组读取未完成：'+(e as {message:string}).message,true)});
-const researchWorkspace=new ResearchWorkspace({document,onSave:saveRoiObservation,onSelect:selectRoiObservation,onNavigate:async object_id=>{if(dirty()||busy||drag)throw new Error('先保存或撤销草稿，再查看保存证据；不会重算 FFT。');await act('show',{object_id});},onError:text=>message(text,true),onDraftChange:()=>{diagnostics();publishDraft({urgent:true});}});
+const researchWorkspace=new ResearchWorkspace({document,onSave:saveRoiObservation,onSelect:selectRoiObservation,onNavigate:async object_id=>{if(dirty()||busy||drag)throw new Error('先保存或撤销草稿，再查看保存证据；不会重算 FFT。');await act('show',{object_id});},onError:text=>message(text,true),onDraftChange:()=>{interactionEpoch++;diagnostics();publishDraft({urgent:true});}});
 function researchSnapshot():PanelRoiSnapshot {const edit=selectedId&&(editCoordinates||queuedEdits.get(selectedId)?.update.coordinates);return {...state,selection:draft,edit_state:{...state.edit_state,dirty:dirty(),gesture_active:Boolean(drag),annotation_edit:edit?{annotation_id:selectedId,coordinates:edit}:state.edit_state?.annotation_edit??null}} as unknown as PanelRoiSnapshot;}
 function openResearch(){if(imageFocused)toggleImageFocus();document.body.classList.remove('properties-open');document.body.classList.add('research-open');$('research-panel').hidden=false;diagnostics();}
 function closeResearch(){document.body.classList.remove('research-open');$('research-panel').hidden=true;}
@@ -61,7 +64,7 @@ function selectMeasurement(entry:MeasurementEntry|null){
  const mark=state.object.annotations?.find(value=>value.annotation_id===entry.annotation_id);
  if(mark){chooseMark(mark.annotation_id!);const panel=markPanel(mark);draft={kind:mark.kind,...mark.anchor!,panel,rendered:transformCoordinates(mark.anchor!.coordinates,panel,{inverse:true})} as AppSelection;}
  else{message('当前视图没有这条结果的保存标记；可显式跳到其原视图。');return;}
- measurementWorkspace.select(entry.object_id,{notify:false});marksDirty=true;showDraft();schedulePaint();
+ measurementWorkspace.select(entry.object_id,{notify:false});marksDirty=true;showDraft();record();schedulePaint();publishDraft({includeSelection:true,urgent:true});
 }
 async function jumpMeasurement(entry:MeasurementEntry|null){if(!entry)return;const r=await act('measurement-jump',{measurement_object_id:entry.object_id});if(r)measurementWorkspace.select(entry.object_id);}
 async function updateMeasurement(entry:MeasurementEntry|null){
@@ -129,7 +132,7 @@ async function api(url:'/api/action',body:StatefulActionRequest):Promise<AppStat
 async function api(url:'/api/state'):Promise<AppState>;
 async function api(url:'/api/revision'):Promise<AppRevision>;
 async function api(url:string,body?:Readonly<Record<string,unknown>>):Promise<unknown>;
-async function api(url:string,body?:Readonly<Record<string,unknown>>):Promise<unknown>{const response=await fetch(url,{method:body?'POST':'GET',headers:{'X-Panel-Token':token,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});const result=await response.json();if(!response.ok)throw new Error(((result as {error?:unknown}).error??'本地服务失败') as string);return result;}
+async function api(url:string,body?:Readonly<Record<string,unknown>>):Promise<unknown>{if(url==='/api/action'&&body&&body.action!=='draft')interactionEpoch++;const response=await fetch(url,{method:body?'POST':'GET',headers:{'X-Panel-Token':token,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});const result=await response.json();if(!response.ok)throw new Error(((result as {error?:unknown}).error??'本地服务失败') as string);return result;}
 function selection(){if(!draft)throw new Error('先在图中选择位置或区域');const {rendered,...s}=draft;return s;}
 function annotationEditDraft(){
  if(selectedId&&labelDraft)return {annotation_id:selectedId,presentation:labelDraft};
@@ -140,8 +143,8 @@ function annotationEditDraft(){
  }
  return {annotation_id:selectedId,...(editCoordinates?{coordinates:[...editCoordinates!]}:{}),...(fieldDirty?{text:$('mark-text').value,color:$('color').value,status:$('status').value}:{})};
 }
-function publishDraft({gesture_active=Boolean(drag),includeSelection=false,urgent=false}={}){
- if(!state)return Promise.resolve();const object_id=state.object.object_id,params={draft_revision:historyDraft.revision,dirty:dirty()||gesture_active,gesture_active,annotation_edit:annotationEditDraft(),...(includeSelection?{selection:draft?selection():null}:{})};
+function publishDraft({gesture_active=Boolean(drag),includeSelection=false,urgent=false,confirmPersistence=false}={}){
+ if(!state)return Promise.resolve();const object_id=state.object.object_id,params={draft_revision:historyDraft.revision,dirty:dirty()||gesture_active,gesture_active,annotation_edit:annotationEditDraft(),...(confirmPersistence?{confirm_persistence:true}:{}),...(includeSelection?{selection:draft?selection():null}:{})};
  draftPending={expected_object_id:object_id,action:'draft',lightweight:true,params,urgent:urgent||gesture_active};
  if(!draftSending){draftSending=true;draftPublisher=(async()=>{try{while(draftPending){if(!draftPending.urgent&&typeof setTimeout==='function')await new Promise(r=>setTimeout(r,70));const body=draftPending;draftPending=null;delete body.urgent;try{await api('/api/action',body);draftError=null;}catch(e){draftError=e;message('草稿交接未确认：'+(e as {message:string}).message,true);}}}finally{draftSending=false;}})();}
  return draftPublisher;
@@ -199,7 +202,7 @@ async function remeasureSavedEdit(target:MeasurementTarget){
 }
 function autoFields(){if(!selectedId)return;if(autoTimer!==null&&typeof clearTimeout==='function')clearTimeout(autoTimer);if(typeof setTimeout==='function')autoTimer=setTimeout(()=>{autoTimer=null;captureSelected();},350);}
 function snapshot(){return {draft,editCoordinates,labelDraft,selectedId,fieldDirty,display:displayDraft(),fields:{id:$('mark-id').value,text:$('mark-text').value,color:$('color').value,status:$('status').value}};}
-function record(){historyDraft.replace(snapshot());diagnostics();}
+function record(){interactionEpoch++;historyDraft.replace(snapshot());diagnostics();}
 function restoreSnapshot(value:LocalSnapshot){draft=(value as SelectionSnapshot).draft??null;editCoordinates=value.editCoordinates??null;labelDraft=value.labelDraft??null;selectedId=(value as SelectionSnapshot).selectedId??'';fieldDirty=value.fieldDirty??false;$('existing').value=selectedId;if(value.display){$('gamma').value=value.display.gamma;$('low').value=value.display.low;$('high').value=value.display.high;$('axes').checked=value.display.axes;$('scale').checked=value.display.scale;$('gamma-label').textContent=$('gamma').value;}if(value.fields)for(const [id,field]of [['mark-id','id'],['mark-text','text'],['color','color'],['status','status']])$(id).value=value.fields[field as keyof LocalSnapshot['fields']];syncPresentationFields();marksDirty=true;showDraft();schedulePaint();publishDraft({includeSelection:true});}
 function schedulePaint(){if(paintFrame===null)paintFrame=requestAnimationFrame(()=>{paintFrame=null;paint();});}
 function restoredSelection(value:AppSelection|null|undefined,panels:readonly WirePanel[]):AppSelection|null{if(!value)return null;const panel=panels.find(p=>p.source_object_id===value.source_object_id&&coordinateSpace(p)===value.coordinate_space&&equalRecords(p,value.panel));if(!panel)return null;try{return {...value,panel,rendered:transformCoordinates(value.coordinates,panel,{edges:['rectangle','polygon'].includes(value.kind),inverse:true})} as AppSelection;}catch{return null;}}
@@ -224,7 +227,7 @@ async function act(action:string,params:ActionParams={}){
   message(action==='show'&&params.source_view?'已按当前标定新建全帧显示；未恢复未知的旧显示配方，未重算 FFT。':action==='export'?`科学数据已保存到 ${r.last_operation?.output_dir??'工作区 exports 目录'}（不是浏览器图片下载）`:({select:'选择已交接；可继续使用当前选区。',measure:'测量完成；当前选区已保留。',show:'已打开保存视图；未重算 FFT。'} as Partial<Record<string,string>>)[action]??'已保存新版本；原像素与旧版本保留。');return r;
  }catch(e){message((e as {message:string}).message,true);}finally{busy=false;perf.action_last_ms=now()-start;diagnostics();await refreshMeasurements();if(queuedEdits.size)Promise.resolve().then(flushEdits);}
 }
-async function refresh(){const next=await api('/api/state');if(state&&(dirty()||drag)){if(next.object.object_id!==state.object.object_id)pending=next;else state={...state,pending_result:next.pending_result,state_revision:next.state_revision,research_observation:next.research_observation};renderObservation();showPending();message('已检查最新状态；本地草稿保持原样。');return;}if(next.pending_result&&state){state.pending_result=next.pending_result;state.research_observation=next.research_observation;renderObservation();showPending();return;}await load(next);}
+async function refresh(){const epoch=interactionEpoch,objectId=state?.object.object_id;const next=await api('/api/state');if(state&&(interactionEpoch!==epoch||state.object.object_id!==objectId)){if(next.object.object_id!==state.object.object_id){pending=next;showPending();}message('读取期间有新操作；当前视图与选择保持原样，请重新读取。');return;}if(state&&(dirty()||drag||busy)){if(next.object.object_id!==state.object.object_id)pending=next;else state={...state,pending_result:next.pending_result,state_revision:next.state_revision,research_observation:next.research_observation};renderObservation();showPending();message('已检查最新状态；本地草稿保持原样。');return;}if(next.pending_result&&state){state.pending_result=next.pending_result;state.research_observation=next.research_observation;renderObservation();showPending();return;}await load(next);}
 function renderObservation(){
  const observation=state.research_observation;
  $('research-feedback').hidden=!state.tools.some(t=>t.name==='image_context');
@@ -241,10 +244,10 @@ function renderMeasurement(){const last=state.last_operation,entry=selectedId?me
  '选线段或已知中心的倒空间峰后可测量；候选标记不等于物相确认';if(entry&&entry.status!=='current')$('measurement-summary').textContent='旧版数值（待重测或历史）：'+$('measurement-summary').textContent;}
 async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null}:{keepDisplay?:DisplayDraft|null;keepMark?:LocalSnapshot|null;role?:string|null}={}){
  const priorScope=state?workflowScope(state):null;
- const ticket=++loading,revision=historyDraft.revision,sameObject=state?.object.object_id===next.object.object_id,rect=viewport.getBoundingClientRect(),continued=relatedViewport(view,state,next,[rect.width,rect.height]),savedSelection=(sameObject||continued)&&draft?draft:next.selection;let decoded:BrowserElement|null=null;
- if(next.clean_png_base64||next.png_base64){decoded=new Image();decoded.src='data:image/png;base64,'+(next.clean_png_base64??next.png_base64);await decoded.decode();if(ticket!==loading)return;if(state&&(historyDraft.revision!==revision||drag)){pending=next;showPending();return;}}
+ const ticket=++loading,revision=historyDraft.revision,epoch=interactionEpoch,sameObject=state?.object.object_id===next.object.object_id,rect=viewport.getBoundingClientRect(),continued=relatedViewport(view,state,next,[rect.width,rect.height]),savedSelection=(sameObject||continued)&&draft?draft:next.selection;let decoded:BrowserElement|null=null;
+ if(next.clean_png_base64||next.png_base64){decoded=new Image();decoded.src='data:image/png;base64,'+(next.clean_png_base64??next.png_base64);await decoded.decode();if(ticket!==loading)return false;if(state&&(historyDraft.revision!==revision||interactionEpoch!==epoch||drag)){pending=next;showPending();return false;}}
  if(!state&&next.edit_state?.dirty)orphanedDraft=true;
- state=next;draft=restoredSelection(savedSelection,next.object.panels??[]);drag=null;editCoordinates=null;labelDraft=null;fieldDirty=false;toneCacheKey=null;marksDirty=true;const o=state.object,previous=selectedId;
+ interactionEpoch++;state=next;draft=restoredSelection(savedSelection,next.object.panels??[]);drag=null;editCoordinates=null;labelDraft=null;fieldDirty=false;toneCacheKey=null;marksDirty=true;const o=state.object,previous=selectedId;
  if(!sameObject&&!continued){figurePrefs.preset=o.annotations?.some(m=>['A','B','shared','unexplained'].includes(m.presentation?.category as string))?'multi-domain':o.panels?.some(p=>p.domain==='frequency')?'diffraction':'real-space';figurePrefs.legend=figurePrefs.preset!=='real-space';figurePrefs.layers={experimental:true,simulation_A:figurePrefs.preset!=='real-space',simulation_B:figurePrefs.preset!=='real-space'};}syncFigureControls();
  $('identity').textContent=`${state.frame_identity?`第 ${state.frame_identity.frame_index!+1} 帧 · `:''}${o.panels?.some(p=>p.domain==='frequency')?'FFT / 倒空间':importedComplex()?'复数图像':'科学图像'} · 原图只读`;$('calibration-summary').textContent=humanCalibration(o);$('source-badge').textContent=state.source_identity?.label??'来源待核对';$('source-name').textContent=state.source_identity?.filename??'';
  $('existing').replaceChildren(new Option('新增标记',''));for(const mark of o.annotations??[])if(mark.annotation_id)$('existing').append(new Option(`${mark.text||mark.annotation_id} · ${({hypothesized:'候选',user_confirmed:'用户确认',retracted:'撤回'} as Partial<Record<string,string>>)[mark.status as string]??mark.status}`,mark.annotation_id));selectedId=(o.annotations??[]).some(m=>m.annotation_id===previous)?previous:'';$('existing').value=selectedId;
@@ -263,7 +266,7 @@ async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null}:{ke
  // A reconnect must continue the shared monotonically increasing lease; a
  // fresh browser's local counter must never erase a newer panel draft.
  historyDraft.revision=Math.max(historyDraft.revision,state.edit_state?.draft_revision??0);
- historyDraft.reset(snapshot());lastUserDisplay=displayDraft();if(priorScope!==workflowScope(state))userHistory.reset();savedViews.remember(state,{replace:Boolean(continued),role});showDraft();paint();showPending();await publishDraft({includeSelection:true});
+ historyDraft.reset(snapshot());lastUserDisplay=displayDraft();if(priorScope!==workflowScope(state))userHistory.reset();savedViews.remember(state,{replace:Boolean(continued),role});showDraft();paint();showPending();const adoptedEpoch=interactionEpoch;await publishDraft({includeSelection:true});return interactionEpoch===adoptedEpoch&&!drag;
 }
 function resize(){stage.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.scale})`;$('zoom').value=view.scale;$('zoom-label').textContent=Math.round(view.scale*100)+'%';schedulePaint();}
 function fitView(){if(!image)return;const r=viewport.getBoundingClientRect();view=fitViewport([canvas.width,canvas.height],[r.width,r.height]);resize();}
@@ -302,7 +305,7 @@ function chooseMark(next:string){
 }
 canvas.addEventListener('pointerdown',event=>{
  if(!image||drag||![0,1].includes(event.button))return;const start=xy(event);if(event.button===1||spaceDown||$('mode').value==='pan'){drag={kind:'pan',pointerId:event.pointerId,startClient:[event.clientX,event.clientY],originalView:{...view}};canvas.setPointerCapture(event.pointerId);return;}
- let kind=($('mode').value==='edit'?'select':$('mode').value) as SelectionKind|'select'|'edit';const selectionBefore={draft:draft?JSON.parse(JSON.stringify(draft)):null,selectedId};let blankSelect=false;try{
+ interactionEpoch++;let kind=($('mode').value==='edit'?'select':$('mode').value) as SelectionKind|'select'|'edit';const selectionBefore={draft:draft?JSON.parse(JSON.stringify(draft)):null,selectedId};let blankSelect=false;try{
   if(kind==='select'&&selectedId){const selectedMark=state.object.annotations?.find(mark=>mark.annotation_id===selectedId);if(selectedMark?.anchor)markPanel(selectedMark);}
   const handleHit=figurePrefs.mode==='analysis'?hitMark(annotationLayout?.items.filter(i=>i.geometryVisible).map(i=>i.mark)??[],start,{scale:view.scale,radius:6}):null;
   const label=(!handleHit||handleHit.handle<0)&&(['select','edit'].includes(kind)||figurePrefs.mode==='figure')?(annotationLayout as (Omit<AnnotationLayout,'items'>&{items:AnnotationLayout['items']&{findLast(predicate:(item:AnnotationLayout['items'][number])=>boolean):AnnotationLayout['items'][number]|undefined}})|null)?.items.findLast(item=>item.label?.visible&&start[0]>=item.label.x&&start[0]<=item.label.x+item.label.width&&start[1]>=item.label.y&&start[1]<=item.label.y+item.label.height):null;
@@ -317,7 +320,7 @@ canvas.addEventListener('pointerdown',event=>{
 function updateDrag(event:BrowserEvent){if(drag!.kind==='pan'){view=panBy(drag!.originalView!,event.clientX-drag!.startClient![0],event.clientY-drag!.startClient![1]);resize();return;}drag!.end=xy(event);if(['rectangle','line','arrow'].includes(drag!.kind))Object.assign(drag!,constrainSelectionDrag(drag!.p!,drag!.originalStart!,drag!.end!,{kind:drag!.kind as SelectionKind,constrained:Boolean(event.shiftKey||event.ctrlKey)}));if(drag!.kind==='label'){const offset=drag!.originalOffset!.map((v,i)=>Math.max(-drag!.anchor![i],Math.min((i?canvas.height:canvas.width)-drag!.anchor![i]-drag!.labelSize![i],v+drag!.end![i]-drag!.start![i])));labelDraft={...labelDraft,label:{...labelDraft!.label!,offset,pinned:true}};return;}if(drag!.kind==='edit'){const from=transformCoordinates(drag!.start!,drag!.p!,{edges:drag!.edges}),to=transformCoordinates(drag!.end!,drag!.p!,{edges:drag!.edges}),delta=to.map((v,i)=>v-from[i]);editCoordinates=drag!.original!.map((v,i)=>drag!.handle!<0||Math.floor(i/2)===drag!.handle?v+delta[i%2]:v);}}
 canvas.addEventListener('pointermove',event=>{if(!drag){if($('numeric-data').open)try{const p=xy(event);dataProbes.observe(selectionFromDrag(state.object.panels??[],p,p,{kind:'point'}));}catch{dataProbes.clear();}if(figurePrefs.mode==='analysis'){const p=xy(event),hit=hitMark(annotationLayout?.items.filter(i=>i.geometryVisible).map(i=>i.mark)??[],p,{scale:view.scale}),next=hit?.mark.annotation_id??'';if(next!==hoverId){hoverId=next;schedulePaint();}}return;}if(event.pointerId!==drag!.pointerId)return;updateDrag(event);schedulePaint();});
 canvas.addEventListener('pointerleave',()=>dataProbes.clear());
-function cancelDrag(event:Pick<BrowserEvent,'pointerId'>){if(!drag||event.pointerId!==drag!.pointerId)return;if(drag!.kind==='label')labelDraft=null;if(drag!.kind==='edit')editCoordinates=drag!.previousEdit!;if(drag!.kind==='pan'){view=drag!.originalView!;resize();}drag=null;marksDirty=true;schedulePaint();publishDraft();message('已取消本次拖动；尚未提交任何修改。');}
+function cancelDrag(event:Pick<BrowserEvent,'pointerId'>){if(!drag||event.pointerId!==drag!.pointerId)return;const kind=drag.kind;if(drag!.kind==='label')labelDraft=null;if(drag!.kind==='edit')editCoordinates=drag!.previousEdit!;if(drag!.kind==='pan'){view=drag!.originalView!;resize();}drag=null;marksDirty=true;if(kind!=='pan')record();schedulePaint();publishDraft({includeSelection:kind!=='pan'});message('已取消本次拖动；尚未提交任何修改。');}
 canvas.addEventListener('pointercancel',cancelDrag);canvas.addEventListener('lostpointercapture',cancelDrag);
 canvas.addEventListener('pointerup',event=>{if(!drag||event.pointerId!==drag!.pointerId)return;const kind=drag!.kind,before=drag!.before;try{updateDrag(event);if(kind==='pan')return;if(drag!.blankSelect&&Math.hypot(drag!.end![0]-drag!.start![0],drag!.end![1]-drag!.start![1])*view.scale<3){draft=null;rememberSelection(drag!.selectionBefore!,{draft:null,selectedId:''});showDraft();return;}if(kind==='label'){const update={annotation_id:selectedId,presentation:labelDraft!};labelDraft=null;queueEdit(update,before);syncPresentationFields();return;}if(kind==='edit'){const update={annotation_id:selectedId,coordinates:[...editCoordinates!],text:$('mark-text').value,color:$('color').value,status:$('status').value};draft={...draft!,coordinates:[...editCoordinates!],rendered:transformCoordinates(editCoordinates!,drag!.p!,{edges:drag!.edges,inverse:true})};editCoordinates=null;fieldDirty=false;queueEdit(update,before);return;}const selected=selectionFromDrag(state.object.panels??[],drag!.start!,drag!.end!,{kind:kind as SelectionKind});draft={...selected,rendered:transformCoordinates(selected.coordinates,selected.panel,{edges:kind==='rectangle',inverse:true})};rememberSelection(drag!.selectionBefore??{draft:null,selectedId:''},{draft:JSON.parse(JSON.stringify(draft)),selectedId});showDraft();message('选择已定位；可直接测量或交给 Agent。');}catch(e){message((e as {message:string}).message,true);}finally{drag=null;if(kind!=='pan')record();paint();publishDraft({includeSelection:true,urgent:true});Promise.resolve().then(flushEdits);}});
 viewport.addEventListener('wheel',event=>{if(!image)return;event.preventDefault();const r=viewport.getBoundingClientRect();view=zoomAt(view,[event.clientX-r.left,event.clientY-r.top],Math.exp(-event.deltaY*.0015));resize();},{passive:false});
@@ -347,9 +350,15 @@ $('existing').onchange=()=>{if(!chooseMark($('existing').value))return;record();
 for(const id of ['mark-text','color','status'])$(id).oninput=()=>{if(!fieldBefore&&selectedId)fieldBefore=effectiveEdit(selectedId);fieldDirty=true;marksDirty=true;record();schedulePaint();publishDraft();autoFields();};
 $('save-mark').onclick=guarded(async()=>{if(selectedId){commitLabelDraft();captureSelected();return flushEdits();}const fields={text:$('mark-text').value,color:$('color').value,status:$('status').value};return act('mark',{selection:selection(),annotation_id:$('mark-id').value,...fields});});
 $('undo').onclick=()=>applyUserHistory('undo');$('redo').onclick=()=>applyUserHistory('redo');
-$('discard-local').onclick=guarded(async()=>{if(busy)throw new Error('原请求仍在保存，先查询其结果；本地编辑保留。');researchWorkspace.clearReason();drag=null;queuedEdits.clear();autoFailed=false;failedMeasurement=null;remeasuringMarks.clear();orphanedDraft=false;pending=null;await load(await api('/api/state'));message('本地草稿已撤回；保存过的科学版本仍保留。');});
-$('discard-draft').onclick=guarded(async()=>{orphanedDraft=false;if(pending){const next=pending;pending=null;await load(next);}else{editCoordinates=null;fieldDirty=false;const current=await api('/api/state');await load(current);await act('accept-result');}message('已查看保存版本；旧科学版本仍保留。');});
-$('accept-agent-result').onclick=guarded(async()=>{if(dirty()||drag)throw new Error('先保存、撤销或明确放弃草稿，再查看 Agent 结果');if(pending){pending=null;await load(await api('/api/state'));}return act('accept-result');});
+// A click authorizes this read only, never edits made while it is in flight.
+async function readSavedView(){
+ const epoch=interactionEpoch,objectId=state.object.object_id,next=await api('/api/state');
+ if(interactionEpoch!==epoch||state.object.object_id!==objectId||drag)throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');
+ if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');
+}
+$('discard-local').onclick=guarded(async()=>{if(busy)throw new Error('原请求仍在保存，先查询其结果；本地编辑保留。');interactionEpoch++;researchWorkspace.clearReason();drag=null;queuedEdits.clear();autoFailed=false;failedMeasurement=null;remeasuringMarks.clear();orphanedDraft=false;const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();message('本地草稿已撤回；保存过的科学版本仍保留。');});
+$('discard-draft').onclick=guarded(async()=>{interactionEpoch++;orphanedDraft=false;if(pending){const next=pending;if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');if(pending===next)pending=null;showPending();}else{editCoordinates=null;fieldDirty=false;await readSavedView();await act('accept-result');}message('已查看保存版本；旧科学版本仍保留。');});
+$('accept-agent-result').onclick=guarded(async()=>{if(dirty()||drag)throw new Error('先保存、撤销或明确放弃草稿，再查看 Agent 结果');if(pending){const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();}return act('accept-result');});
 const calibrate=(withdraw:boolean)=>act('calibrate',{coordinate_domain:state.object.xy_calibration?.coordinate_domain??'real_space',scope:$('scope').value,xy_scale:withdraw?null:{x:Number($('scale-x').value),y:Number($('scale-y').value),unit:$('unit').value},source_text:$('source').value});$('calibrate').onclick=guarded(()=>calibrate(false));$('withdraw').onclick=guarded(()=>calibrate(true));
 $('submit-observation').onclick=guarded(()=>act('research-observation',{source_text:$('observation-text').value,authority:$('observation-authority').value}));
 const revisionKey=(value:{state_revision?:number;object_id?:string;object?:{object_id:string};pending_result?:AppState['pending_result']})=>JSON.stringify([value.state_revision,value.object_id??value.object?.object_id,value.pending_result?.object_id,value.pending_result?.request_id]);
@@ -357,7 +366,23 @@ function setMode(mode:string){mode=mode==='edit'?'select':mode;$('mode').value=m
 for(const button of document.querySelectorAll('[data-mode]'))button.onclick=()=>setMode(button.dataset.mode!);
 $('toggle-research').onclick=()=>document.body.classList.contains('research-open')?closeResearch():openResearch();$('close-research').onclick=closeResearch;
 $('save-observation-entry').onclick=()=>{openResearch();$('roi-reason').focus();};
-$('agent-continue').onclick=guarded(async()=>{if(busy||drag||dirty())throw new Error('先保存或撤销草稿，再交给 Agent。');await draftPublisher;researchWorkspace.showHandoff(researchSnapshot());});
+$('agent-continue').onclick=guarded(async()=>{
+ const checkLocal=()=>{if(busy||drag||dirty())throw new Error('先保存或撤销草稿，再交给 Agent。');if(pending||state.pending_result)throw new Error('有待接纳结果；先处理当前结果，再交给 Agent。');};
+ checkLocal();
+ const objectId=state.object.object_id,revision=historyDraft.revision,epoch=interactionEpoch;
+ const identity=[state.panel_id,state.helper_session_id,state.panel_generation];
+ const checkVersion=()=>{checkLocal();if(interactionEpoch!==epoch||state.object.object_id!==objectId||historyDraft.revision!==revision||!equalRecords(identity,[state.panel_id,state.helper_session_id,state.panel_generation]))throw new Error('面板或草稿版本已改变；请重新查看当前状态后再交接。');};
+ // Confirm this browser's current draft, not merely the previous publisher.
+ // Draft acknowledgement and state reads create no scientific object/request.
+ await publishDraft({includeSelection:true,urgent:true,confirmPersistence:true});
+ if(draftError)throw new Error('交接状态保存未确认；编辑已保留，请确认连接后重试交接。');
+ checkVersion();
+ const latest=await api('/api/state');
+ checkVersion();
+ if(state.object.object_id!==objectId||historyDraft.revision!==revision||latest.object.object_id!==objectId||latest.edit_state?.draft_revision!==revision||
+    !equalRecords(identity,[latest.panel_id,latest.helper_session_id,latest.panel_generation]))throw new Error('面板或草稿版本已改变；请重新查看当前状态后再交接。');
+ researchWorkspace.showHandoff(latest as unknown as PanelRoiSnapshot);
+});
 $('close-agent-handoff').onclick=()=>$('agent-handoff-dialog').close();
 $('crystal-short-status').onclick=()=>{openResearch();$('crystal-evidence').scrollIntoView({block:'start'});};
 $('close-crystal-image').onclick=()=>$('crystal-image-dialog').close();

@@ -13,6 +13,15 @@ interpretations are not automatically validated by successful tool execution.
 For autonomous, evidence-grounded choices and three-layer saved results, read
 [Route A decisions](references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
 
+## Shared GUI and Agent entry
+
+For either a researcher-first Inspector or an Agent-first supplied image, read
+[shared workspace entry and handoff](references/shared-workspace.md). Reuse the
+same explicitly identified Panel/provider workspace. Human edits and pending
+results must be checked before continuing; no custom Agent runtime or mandatory
+full-image analysis is required. Model/client activation remains host-controlled
+and on demand.
+
 ## Image-first or existing evidence
 
 For two neighboring researcher-selected ROIs and explicit structure candidates,

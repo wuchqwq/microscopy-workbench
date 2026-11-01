@@ -2,7 +2,7 @@
 import {roiObservationModel} from './roi-observations.mjs';
 import {renderResultSemantics} from './result-semantics.mjs';
 import {renderGpaEvidence} from './gpa-evidence.mjs';
-import type {PanelRoiSnapshot,RoiDependencySnapshot,RoiObservationModel} from './roi-observations.mjs';
+import type {PanelRoiSnapshot,RoiDependencySnapshot,RoiObservationModel,PanelInteractionGate} from './roi-observations.mjs';
 import type {BrowserDocument} from './browser-ports.mjs';
 type Row=Record<string,unknown>;
 const row=(v:unknown):Row=>v&&typeof v==='object'&&!Array.isArray(v)?v as Row:{};
@@ -13,9 +13,18 @@ const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
 export function retainedObservationContext(raw:unknown){const envelope=row(raw),payload=row(envelope.payload),source=row(payload.source);if(!id(payload.object_id)||!id(source.observation_view_object_id))return null;return {view_id:source.observation_view_object_id,comparison_id:payload.object_id,currentness:envelope.currentness,observations:rows(payload.observations,100).filter(r=>typeof r.annotation_id==='string'&&r.annotation_id.length<=64&&Array.isArray(r.rect_xyxy)&&r.rect_xyxy.length===4&&r.rect_xyxy.every(v=>typeof v==='number'&&Number.isFinite(v))),latest:rows(envelope.latest_measurement_refs,16).filter(r=>id(r.object_id))};}
 export function crystalStatusLabel(v:unknown){return ({compatible:'在所给条件下相容',incompatible:'在所给条件下不相容',insufficient_evidence:'证据不足，保留候选'} as Record<string,string>)[String(v)]??'未判';}
 export function crystalCurrentnessLabel(v:unknown){return ({current:'已核对的保存证据',needs_review:'相关观察已改变 · 待更新',historical:'另一保存视图的证据',unvalidated_snapshot:'重连快照 · 待工具复核'} as Record<string,string>)[String(v)]??'尚未核对';}
+function handoffNotice(gate:PanelInteractionGate):string {
+ if(gate.reasons.includes('operation_unresolved'))return '原请求尚未确认；先查询原请求，不要重新提交计算。';
+ if(gate.reasons.includes('pending_result'))return '有待接纳结果；先明确查看或处理，不能自动覆盖当前工作。';
+ if(gate.reasons.includes('draft_save_failed'))return '草稿状态保存失败；确认保存成功后再交接，不丢弃当前编辑。';
+ if(gate.reasons.includes('draft_save_pending'))return '草稿状态正在保存；完成后重新读取面板再交接。';
+ if(gate.status==='unknown')return '面板交接状态不完整；重新读取当前状态，不把未知当作已保存。';
+ return '有未完成草稿，请先保存或撤销。';
+}
 export function agentContinuationText(model:RoiObservationModel,panelId:unknown,evidence?:unknown){
  const saved=model.rows.filter(r=>r.usable&&r.status==='saved');
  const retained=retainedObservationContext(evidence);
+ if(model.packet.interaction_gate.status!=='ready')throw new Error(handoffNotice(model.packet.interaction_gate));
  if((!saved.length&&!retained)||model.packet.draft_state.requires_user_commit)throw new Error('先保存观察并结束草稿；未保存选区不是正式科学 ROI。');
  const context=saved.length?saved.map((r,i)=>`${i+1}. ${r.label}：${r.reason??'观察理由未知，请先核对'}；源像素处理边界 [${r.rect_xyxy?.join(', ')}]。`):['当前是 FFT 或另一保存视图；以下是原观察引用，不是当前图上的新 ROI。',...retained!.observations.map((r,i)=>`${i+1}. ${value(r.text)}：${value(r.reason)}；原处理边界 [${(r.rect_xyxy as number[]).join(', ')}]。`)];
  return ['继续当前显微分析。先读取此面板的当前状态，只使用已保存且来源明确的观察：',...context,...model.warnings,...(retained?[`已保存比较 ${retained.comparison_id}；状态 ${crystalCurrentnessLabel(retained.currentness)}。请复核原观察视图 ${retained.view_id}，不要把旧比较当作更新后的结果。`,...retained.latest.map(r=>`当前修订测量 object_id=${r.object_id}，原 request_id=${value(r.request_id)}；先查询并核对科学坐标/源 FFT。`)]:[]),'根据问题选择已有科学工具，复用合法 FFT；比较结构前核对候选来源、取向、标定与必要条件。修改过的尺度或 ROI 不可冒充旧输入。返回证据到同一面板，保留未匹配与未判，不确认唯一物相或孪晶。','当前界面不会自动唤醒模型。请调用 image_panel_current'+(id(panelId)?`，panel_id="${panelId}"`:'（多个面板时先明确连接）')+'，重新检查草稿和当前引用后再处理。'].join('\n');
@@ -42,8 +51,8 @@ export class ResearchWorkspace {
   if(!this.reasonDirty&&this.selected!==(selected?.annotation_id??null)){this.selected=selected?.annotation_id??null;this.el('roi-reason').value=selected?.reason??'';}
   this.el('roi-reason').disabled=busy||gesture;
   this.el('save-observation').disabled=busy||gesture||!current?.usable;this.el('save-observation').textContent=selected?'更新这条观察说明':'保存 ROI 观察';
-  this.el('observation-draft-state').textContent=this.reasonDirty?'说明尚未保存；Agent 不会把它当作正式观察。':model.packet.draft_state.requires_user_commit?'有未完成草稿，请先保存或撤销。':'保存仅记录位置与理由，不确认物相。';
-  this.el('agent-continue').disabled=busy||gesture||this.reasonDirty||model.packet.draft_state.requires_user_commit||(!usable.length&&!retained);this.el('save-observation-entry').disabled=busy||gesture||!current?.usable;
+  this.el('observation-draft-state').textContent=this.reasonDirty?'说明尚未保存；Agent 不会把它当作正式观察。':model.packet.interaction_gate.status!=='ready'?handoffNotice(model.packet.interaction_gate):'保存仅记录位置与理由，不确认物相。';
+  this.el('agent-continue').disabled=busy||gesture||this.reasonDirty||model.packet.interaction_gate.status!=='ready'||(!usable.length&&!retained);this.el('save-observation-entry').disabled=busy||gesture||!current?.usable;
   const signature=JSON.stringify([model.rows,retained?.view_id]);if(signature!==this.rowSignature){this.rowSignature=signature;const list=this.el('roi-observations');list.replaceChildren();for(const r of model.rows){const li=this.node('li');li.className=r.selected?'selected-observation':'';const b=this.node('button',r.label);b.disabled=!r.usable;b.title=r.eligibility_reason;b.onclick=()=>this.run(()=>r.annotation_id&&this.options.onSelect(r.annotation_id));li.append(b,this.node('small',({saved:'已保存',saved_with_draft:'保存版＋未提交草稿',retracted:'已撤回',unusable:'当前网格不可用'} as Row)[r.status]),this.node('p',r.reason??'观察理由未知'),this.node('small',r.rect_xyxy?`处理窗口 [${r.rect_xyxy.join(', ')}]`:'未选择可用处理窗口'));list.append(li);}if(!model.rows.length){if(retained){for(const r of retained.observations){const li=this.node('li'),b=this.node('button',value(r.text)+'（原保存视图）');b.onclick=()=>this.run(async()=>{await this.options.onNavigate(retained.view_id);await this.options.onSelect(String(r.annotation_id));});li.append(b,this.node('p',value(r.reason)),this.node('small','历史观察引用，不会投到当前 FFT 上'));list.append(li);}}else list.append(this.node('li','暂无保存观察；当前选区与保存记录相互独立。'));}}
   this.el('roi-warnings').replaceChildren(...model.warnings.map(w=>this.node('p',w)));renderGpaEvidence(this.el('gpa-evidence'),state.object,this.doc);renderResultSemantics(this.el('result-semantics'),state.object,this.doc);this.renderEvidence(state.crystal_evidence,busy||gesture);
  }

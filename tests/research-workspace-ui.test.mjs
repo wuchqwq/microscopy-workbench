@@ -73,3 +73,31 @@ test('old last operation semantics cannot attach to the current scientific objec
  ui.render(s);assert.equal(nodes.get('result-semantics').hidden,true);assert.doesNotMatch(text(nodes.get('result-semantics')),/OLD_MEASURE_ONLY/);
  s.object.kind='fft';ui.render(s);assert.match(text(nodes.get('result-semantics')),/未记录/);assert.doesNotMatch(text(nodes.get('result-semantics')),/OLD_MEASURE_ONLY/);
 });
+
+
+for (const [name, patch, message] of [
+ ['queued Agent result', {pending_result:{object_id:E,request_id:'already-computed'}}, /待接纳/],
+ ['draft persistence pending', {draft_persistence:{pending:true,error:null}}, /保存/],
+ ['draft persistence failed', {draft_persistence:{pending:false,error:'private-disk-error'}}, /保存/],
+ ['scientific outcome unresolved', {last_operation:{state:'submitted',request_id:'original-write'}}, /原请求/],
+ ['missing draft state', {edit_state:null}, /状态/],
+]) {
+ test(`handoff blocks ${name} without accepting results or replaying a scientific request`,()=>{
+  const {ui,nodes,actions}=setup(),s={...state(),...patch},before=structuredClone(s);
+  ui.render(s);
+  assert.equal(nodes.get('agent-continue').disabled,true);
+  assert.match(nodes.get('observation-draft-state').textContent,message);
+  assert.throws(()=>agentContinuationText(roiObservationModel(s),P),message);
+  assert.throws(()=>ui.showHandoff(s),message);
+  assert.deepEqual(actions,[]);assert.deepEqual(s,before);
+  assert.doesNotMatch(nodes.get('observation-draft-state').textContent,/private-disk-error/);
+ });
+}
+
+test('resolved handoff re-enables the existing button, without inventing model wake or permission',()=>{
+ const {ui,nodes}=setup(),s=state();s.pending_result={object_id:E,request_id:'saved-result'};
+ ui.render(s);assert.equal(nodes.get('agent-continue').disabled,true);
+ s.pending_result=null;s.draft_persistence={pending:false,error:null};
+ ui.render(s);assert.equal(nodes.get('agent-continue').disabled,false);
+ assert.match(agentContinuationText(roiObservationModel(s),P),/image_panel_current/);
+});
