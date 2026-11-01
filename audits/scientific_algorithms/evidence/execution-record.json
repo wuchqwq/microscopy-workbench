@@ -1,0 +1,83 @@
+{
+  "recorded_at_utc": "2026-11-01T15:27:59.847975+00:00",
+  "user_review_date": "2026-11-01 Asia/Shanghai",
+  "source_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "git_tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "python": "3.13.18",
+  "node": "24.22.2",
+  "npm": "11.19.1",
+  "independent_reviewer": {
+    "task": "astra_scientific_review",
+    "spawn_model": "gpt-6-astra",
+    "fork_turns": "none",
+    "reasoning_effort": "high",
+    "tool_call_succeeded": true
+  },
+  "logs": {
+    "npm-test.log": {
+      "sha256": "50d4c7463b4c78ae6364a428554af145906cfbd99082c059885a556473db8013",
+      "bytes": 46021,
+      "last_lines": [
+        "✔ rendered profile has both numeric axes, a quantity title and keyboard/table-linked exact readout (0.88ms)",
+        "✔ ordinary profile plot preserves distinct high-baseline axis labels and exact readout (0.469292ms)",
+        "ℹ tests 400",
+        "ℹ suites 0",
+        "ℹ pass 395",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 5",
+        "ℹ todo 0",
+        "ℹ duration_ms 3970.272333"
+      ]
+    },
+    "science-smoke.log": {
+      "sha256": "be98da5f1ddc36067242c101ea0c3e1013f6353a0fe00f834b59cdcdf16a4f7b",
+      "bytes": 266,
+      "last_lines": [
+        "",
+        "> microscopy-core@0.1.0 test:science",
+        "> node dist/tests/standalone-science-smoke.mjs",
+        "",
+        "PASS: standalone TIFF -> signed calibration -> ROI FFT -> 0.8 nm measurement -> NPY export/direct DFT -> display-only revision -> restart recovery -> panel HTTP; source unchanged."
+      ]
+    },
+    "main-probes-r1.log": {
+      "sha256": "b93e2c8a52f432246561074023a5be30cea4c4b087f3b30de5815f10364578c7",
+      "bytes": 13065,
+      "last_lines": "See immutable JSON summaries for exact output."
+    },
+    "main-probes-r2.log": {
+      "sha256": "68f67a4b9ffa547420622b65ce79dd53333fd6bfc8494e0280adbe10eb8b8352",
+      "bytes": 12861,
+      "last_lines": "See immutable JSON summaries for exact output."
+    },
+    "edge-probes-r1.log": {
+      "sha256": "ef8e3f6ed96e2a339ed034ad7e82695a7d41488d56b3b62215dbc239142d7dd3",
+      "bytes": 6626,
+      "last_lines": "See immutable JSON summaries for exact output."
+    },
+    "edge-probes-r2.log": {
+      "sha256": "b5b528519cde44883f6b8d7b403101a27508cc3b92a6aaf139c0afb6c015b993",
+      "bytes": 6528,
+      "last_lines": "See immutable JSON summaries for exact output."
+    },
+    "typecheck.log": {
+      "sha256": "b54b24bb36861baaaf4cfc103c61a4a141ff5bc40af5f6c99df559b33391cc2a",
+      "bytes": 134,
+      "exit_code": 0,
+      "last_lines": [
+        "",
+        "> microscopy-core@0.1.0 typecheck",
+        "> tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.shared.json && tsc -p tsconfig.types.json",
+        ""
+      ]
+    }
+  },
+  "historical_evidence_hashes": {
+    "docs/examples/discovery/primary-comparison.csv": "493b52e89c169067b3ea6f026fb786aa23efc6d8439044e3516f240761254bc7",
+    "docs/examples/discovery/scale-diagnostic.json": "dd7e68d29ab4b32bfc80f054fab586bcdd71691fb62105d75eac66c145e2f813",
+    "docs/examples/method-loop/actual-comparison.csv": "278071d6bd14795aae3b02a57cc18ef9fbf018da2cf44152ca9e571a9882f727",
+    "docs/examples/method-loop/performance-closeout.csv": "8d4f25d6198562a15d0535e4251d6f6fce4836ee320602090700cfefc1770d8e"
+  }
+}

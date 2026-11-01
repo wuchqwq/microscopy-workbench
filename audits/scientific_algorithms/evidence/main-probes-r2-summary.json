@@ -1,0 +1,606 @@
+{
+  "source_sha": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+  "git_tree": "82facfce75c5909c510cb5014e228918904f5de4",
+  "python": "3.13.18",
+  "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "versions": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "tifffile": "2026.10.15",
+    "scikit-image": "0.26.0"
+  },
+  "cases": [
+    {
+      "probe": "fft_definition",
+      "execution": "PASS",
+      "classification": "verified_math",
+      "independent_oracle": "explicit negative-exponent finite DFT and cosine Hann formula",
+      "results": [
+        {
+          "shape": [
+            33,
+            41
+          ],
+          "window": "none",
+          "subtract_mean": false,
+          "max_abs_error": 6.9845310189262015e-12,
+          "fft_object_id": "ed9808bb611246aab49168ebe3897fb0",
+          "fft_sha256": "9c734bb25ef360d4c6f06dbfd49899d0962d4c2bc6999f6bc1c91340098622b0"
+        },
+        {
+          "shape": [
+            33,
+            41
+          ],
+          "window": "none",
+          "subtract_mean": true,
+          "max_abs_error": 2.0321522242738865e-12,
+          "fft_object_id": "7483ca292ae04d648425d3e6adca65be",
+          "fft_sha256": "40e122c1a1f148425bc7a66c9282b738d2e1e98b37d03347358fb09d7d9cd33a"
+        },
+        {
+          "shape": [
+            33,
+            41
+          ],
+          "window": "hann",
+          "subtract_mean": false,
+          "max_abs_error": 1.6316348023301045e-12,
+          "fft_object_id": "e7166550c2a240aeaecbe0f65422ea80",
+          "fft_sha256": "ed5012da0e9026aa30bcbcc48029f7ce42765b4e810471cc838c79f565884b56"
+        },
+        {
+          "shape": [
+            33,
+            41
+          ],
+          "window": "hann",
+          "subtract_mean": true,
+          "max_abs_error": 4.843704827523829e-13,
+          "fft_object_id": "f372b1c645b54c40b499b1eae06c2112",
+          "fft_sha256": "9bfeea19dcd4bcee490a16f4b11c98a2b8d9bae3aa0d923c4def3a7636a16427"
+        },
+        {
+          "shape": [
+            32,
+            40
+          ],
+          "window": "none",
+          "subtract_mean": false,
+          "max_abs_error": 5.191542776429965e-12,
+          "fft_object_id": "8372631b59ea47ee8d56784e9031ed20",
+          "fft_sha256": "9c9286ee711e08280c40708dde8c5e2d0dda2dfa615049b0471ca47f80b1b2b0"
+        },
+        {
+          "shape": [
+            32,
+            40
+          ],
+          "window": "none",
+          "subtract_mean": true,
+          "max_abs_error": 1.2551315579358048e-12,
+          "fft_object_id": "e76c38a1e6ca41f1b1fe5db8928b2369",
+          "fft_sha256": "86bc67395a297138e8daa141c68ec60bb470a2443a5cd8ca991ec83f91126f16"
+        },
+        {
+          "shape": [
+            32,
+            40
+          ],
+          "window": "hann",
+          "subtract_mean": false,
+          "max_abs_error": 1.5070924978206554e-12,
+          "fft_object_id": "e63af0b8f77d465caa1f67d73eed0558",
+          "fft_sha256": "877fa66cab1a0e7069513694993370d3ef20c3e03b19f7b10b050efaf4e6a05e"
+        },
+        {
+          "shape": [
+            32,
+            40
+          ],
+          "window": "hann",
+          "subtract_mean": true,
+          "max_abs_error": 3.842307841800228e-13,
+          "fft_object_id": "823fcad32cc54887b20c8dc02a10fc54",
+          "fft_sha256": "6ac578db326c0f8722cd7adf1bd25f37ad1a1131a550906a4c73d3f1a2c794c8"
+        }
+      ],
+      "elapsed_seconds": 0.030866041000990663
+    },
+    {
+      "probe": "calibration",
+      "execution": "PASS",
+      "classification": "verified_math",
+      "results": [
+        {
+          "scale": [
+            0.02,
+            -0.03
+          ],
+          "vector": [
+            3.90625,
+            -1.5625
+          ],
+          "period": 0.23769003286662638,
+          "angle": -21.80140948635181,
+          "expected": [
+            3.90625,
+            -1.5625
+          ],
+          "non_dc_d_spacing": null
+        },
+        {
+          "scale": [
+            -0.02,
+            0.03
+          ],
+          "vector": [
+            -3.90625,
+            1.5625
+          ],
+          "period": 0.23769003286662638,
+          "angle": 158.19859051364818,
+          "expected": [
+            -3.90625,
+            1.5625
+          ],
+          "non_dc_d_spacing": null
+        },
+        {
+          "scale": [
+            0.2,
+            -0.3
+          ],
+          "vector": [
+            0.390625,
+            -0.15625
+          ],
+          "period": 2.376900328666264,
+          "angle": -21.80140948635181,
+          "expected": [
+            0.390625,
+            -0.15625
+          ],
+          "non_dc_d_spacing": null
+        }
+      ],
+      "missing_scale_period": null,
+      "limitation": "Incorrect but finite user scale is accepted as an assumption; provenance does not verify metrology.",
+      "elapsed_seconds": 0.04024391699931584
+    },
+    {
+      "probe": "peaks_and_alias",
+      "execution": "PASS",
+      "classification": "method_limit",
+      "alias_samples_max_error": 5.095768645726166e-14,
+      "alias_peak_vectors": [
+        [
+          0.375,
+          -0.125
+        ],
+        [
+          -0.375,
+          0.125
+        ]
+      ],
+      "true_continuous_period_pixels": 1.5689290811054724,
+      "sampled_period_pixels": 2.5298221281347035,
+      "unresolved_mixture_windows": [
+        {
+          "shape": 48,
+          "window": "none",
+          "returned": 2,
+          "vectors": [
+            [
+              -0.10713027067799115,
+              -0.06294985991886255
+            ],
+            [
+              0.10713027067799115,
+              0.06294985991886255
+            ]
+          ],
+          "uncertainty": [
+            null,
+            null
+          ]
+        },
+        {
+          "shape": 48,
+          "window": "hann",
+          "returned": 2,
+          "vectors": [
+            [
+              0.11000935631248258,
+              0.0647389752152668
+            ],
+            [
+              -0.11000935631248258,
+              -0.0647389752152668
+            ]
+          ],
+          "uncertainty": [
+            null,
+            null
+          ]
+        },
+        {
+          "shape": 96,
+          "window": "none",
+          "returned": 2,
+          "vectors": [
+            [
+              0.10808153599466712,
+              0.06316758227291808
+            ],
+            [
+              -0.10808153599466712,
+              -0.06316758227291808
+            ]
+          ],
+          "uncertainty": [
+            null,
+            null
+          ]
+        },
+        {
+          "shape": 96,
+          "window": "hann",
+          "returned": 2,
+          "vectors": [
+            [
+              0.10873237786054128,
+              0.06472392471064363
+            ],
+            [
+              -0.10873237786054128,
+              -0.06472392471064363
+            ]
+          ],
+          "uncertainty": [
+            null,
+            null
+          ]
+        }
+      ],
+      "exact_flat_fft_peak_count": 0,
+      "floating_dft_impulse_peak_count": 12,
+      "noise_peak_count": 4,
+      "meaning": "Aliasing is unidentifiable from samples alone; high relative-amplitude peaks are not lattice evidence. Finite windows mix the two analytic carriers.",
+      "elapsed_seconds": 0.1430352919996949
+    },
+    {
+      "probe": "field_scope",
+      "execution": "PASS",
+      "classification": "output_semantics_error",
+      "finding": "A02",
+      "pixel_statuses": [
+        "compatible_signature",
+        "compatible_signature"
+      ],
+      "physical_relations": [
+        {
+          "target_index": 1,
+          "status": "incompatible",
+          "candidates": [],
+          "accepted_angles_degrees": [],
+          "reason": "Active sourced real-space XY calibration is required for physical comparison; Active sourced real-space XY calibration is required for physical comparison",
+          "interpretation_status": "hypothesized",
+          "uncertainty": null,
+          "independent_validation": "not_tested_no_held_out_observations"
+        },
+        {
+          "target_index": 2,
+          "status": "incompatible",
+          "candidates": [],
+          "accepted_angles_degrees": [],
+          "reason": "Active sourced real-space XY calibration is required for physical comparison; Active sourced real-space XY calibration is required for physical comparison",
+          "interpretation_status": "hypothesized",
+          "uncertainty": null,
+          "independent_validation": "not_tested_no_held_out_observations"
+        }
+      ],
+      "expected_without_scale": "not_comparable/insufficient_evidence, not incompatible",
+      "overlap_pixels": 2048,
+      "independence": "Two overlapping or nonadjacent compatible ROIs do not prove a connected material domain",
+      "gap_edges": [
+        {
+          "sample_indices": [
+            0,
+            1
+          ],
+          "status": "unknown",
+          "independence": "Overlapping/adjacent windows are correlated; descriptive comparison, not held-out validation"
+        }
+      ],
+      "original_comparison_id": "a4071fb72a2c48bf9ddac6adae724604",
+      "elapsed_seconds": 0.6978550839994568
+    },
+    {
+      "probe": "contrast_false_boundary",
+      "execution": "PASS",
+      "classification": "verified_guard_with_method_limit",
+      "carrier_frequencies_unchanged": true,
+      "detected_family_counts": [
+        3,
+        2
+      ],
+      "edge_status": "unknown",
+      "orientation_status": "partial_match",
+      "meaning": "Thresholded signature changes can reflect image transfer/amplitude, not structure; partial match remains unknown.",
+      "elapsed_seconds": 0.30636545900051715
+    },
+    {
+      "probe": "rank_and_chain",
+      "execution": "PASS",
+      "classification": "method_limit",
+      "near_collinear_angle_deg": 2.864788975654116e-07,
+      "near_collinear_status": "compatible_signature",
+      "chain_pair_statuses": [
+        "compatible_signature",
+        "compatible_signature",
+        "incompatible"
+      ],
+      "meaning": "Feature quality uses floating-point rank, not angular resolvability. Domain connected components establish local links only, not common orientation of every member.",
+      "elapsed_seconds": 0.0003185419991496019
+    },
+    {
+      "probe": "discovery_limits",
+      "execution": "PASS",
+      "classification": "method_limit",
+      "controls": [
+        {
+          "name": "constant",
+          "quality": {
+            "status": "no_observable_contrast",
+            "lag1_correlations_yx": [
+              0.0,
+              0.0
+            ]
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "No observable contrast at this precision; no automatic ROI proposed"
+        },
+        {
+          "name": "clean",
+          "quality": {
+            "status": "spatial_observation_available",
+            "lag1_correlations_yx": [
+              0.8512115171605993,
+              0.8512115171605993
+            ],
+            "mean_absolute_lag1_correlation": 0.8512115171605993,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "No candidate exceeded this finite heuristic threshold; narrow/weak changes can remain undetected"
+        },
+        {
+          "name": "amplitude_dip",
+          "quality": {
+            "status": "spatial_observation_available",
+            "lag1_correlations_yx": [
+              0.8511967753182151,
+              0.8511967753182151
+            ],
+            "mean_absolute_lag1_correlation": 0.8511967753182151,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "No candidate exceeded this finite heuristic threshold; narrow/weak changes can remain undetected"
+        },
+        {
+          "name": "noise",
+          "quality": {
+            "status": "quality_limited",
+            "lag1_correlations_yx": [
+              0.002806046503346596,
+              -0.0024597216223150413
+            ],
+            "mean_absolute_lag1_correlation": 0.002632884062830819,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 0,
+          "rects": [],
+          "physical_conclusion": null,
+          "stop": "Quality-limited image correlations: inspect manually or request context; no automatic refinement"
+        },
+        {
+          "name": "smooth_aperiodic_blob",
+          "quality": {
+            "status": "spatial_observation_available",
+            "lag1_correlations_yx": [
+              0.9996640661070677,
+              0.9996640661070678
+            ],
+            "mean_absolute_lag1_correlation": 0.9996640661070677,
+            "diagnostic_not_noise_classifier": true
+          },
+          "candidate_count": 4,
+          "rects": [
+            [
+              160,
+              96,
+              224,
+              160
+            ],
+            [
+              96,
+              160,
+              160,
+              224
+            ],
+            [
+              32,
+              96,
+              96,
+              160
+            ],
+            [
+              96,
+              32,
+              160,
+              96
+            ]
+          ],
+          "physical_conclusion": null,
+          "stop": "Candidates require independent scientific checks"
+        }
+      ],
+      "contrast_sign_invariance": true,
+      "historical_primary_benchmark": "Preserve examples/discovery/primary-comparison.csv; this different formula is not its rerun and does not replace misses.",
+      "elapsed_seconds": 0.04063483299978543
+    },
+    {
+      "probe": "method_stops",
+      "execution": "PASS",
+      "classification": "verified_guard",
+      "results": [
+        {
+          "name": "no_evidence",
+          "decision": {
+            "algorithm": "saved-gpa-method-followup-v1",
+            "status": "request_information",
+            "reason": "saved_gpa_required",
+            "interpretation_status": "hypothesized",
+            "material_defect_confirmed": false,
+            "heuristic": true,
+            "diagnostics": {},
+            "limitations": [
+              "Heuristic method selection and numerical quality guards are not confidence or scientific uncertainty",
+              "All material interpretations remain hypothesized; no material defect is confirmed",
+              "Contrast-only vortices can reproduce the same image and phase winding with zero material displacement",
+              "A clean finite ROI or zero net winding does not establish defect absence",
+              "First scope starts from saved GPA; domain-to-GPA selection and new source FFTs are excluded"
+            ]
+          },
+          "action": {
+            "kind": "request_information",
+            "reason": "saved_gpa_required",
+            "preconditions": [],
+            "parameters": {
+              "required_fields": [
+                "1..3 exact saved GPA records"
+              ]
+            },
+            "cost": {
+              "method_calls": 0,
+              "gpa_band_pixels": 0,
+              "topology_path_samples": 0,
+              "fft_pixels": 0
+            }
+          }
+        },
+        {
+          "name": "unknown_request",
+          "decision": {
+            "algorithm": "saved-gpa-method-followup-v1",
+            "status": "stop",
+            "reason": "original_request_outcome_unresolved",
+            "interpretation_status": "hypothesized",
+            "material_defect_confirmed": false,
+            "heuristic": true,
+            "diagnostics": {},
+            "limitations": [
+              "Heuristic method selection and numerical quality guards are not confidence or scientific uncertainty",
+              "All material interpretations remain hypothesized; no material defect is confirmed",
+              "Contrast-only vortices can reproduce the same image and phase winding with zero material displacement",
+              "A clean finite ROI or zero net winding does not establish defect absence",
+              "First scope starts from saved GPA; domain-to-GPA selection and new source FFTs are excluded"
+            ]
+          },
+          "action": {
+            "kind": "stop",
+            "reason": "original_request_outcome_unresolved",
+            "preconditions": [
+              "Recover original requests with image_result before any dependent method call"
+            ],
+            "parameters": {
+              "original_request_ids": [
+                "original-unknown"
+              ]
+            },
+            "cost": {
+              "method_calls": 0,
+              "gpa_band_pixels": 0,
+              "topology_path_samples": 0,
+              "fft_pixels": 0
+            }
+          }
+        },
+        {
+          "name": "conflicting_topology_retained",
+          "decision": {
+            "algorithm": "saved-gpa-method-followup-v1",
+            "status": "stop",
+            "reason": "topology_evidence_retained",
+            "interpretation_status": "hypothesized",
+            "material_defect_confirmed": false,
+            "heuristic": true,
+            "diagnostics": {
+              "topology_status": "inconsistent",
+              "topology_loop_group_statuses": [
+                "inconsistent"
+              ]
+            },
+            "limitations": [
+              "Heuristic method selection and numerical quality guards are not confidence or scientific uncertainty",
+              "All material interpretations remain hypothesized; no material defect is confirmed",
+              "Contrast-only vortices can reproduce the same image and phase winding with zero material displacement",
+              "A clean finite ROI or zero net winding does not establish defect absence",
+              "First scope starts from saved GPA; domain-to-GPA selection and new source FFTs are excluded"
+            ]
+          },
+          "action": {
+            "kind": "stop",
+            "reason": "topology_evidence_retained",
+            "preconditions": [
+              "Inspect every group, unavailable path and contrary observation; no automatic fit repair"
+            ],
+            "parameters": {},
+            "cost": {
+              "method_calls": 0,
+              "gpa_band_pixels": 0,
+              "topology_path_samples": 0,
+              "fft_pixels": 0
+            }
+          }
+        }
+      ],
+      "comparison_scope": "No new speed/success-rate benchmark; active strategy superiority remains NOT_TESTED.",
+      "elapsed_seconds": 5.337499896995723e-05
+    },
+    {
+      "probe": "reciprocal_fft",
+      "execution": "PASS",
+      "classification": "scope_probe",
+      "input_domain": "reciprocal",
+      "fft_domain": "frequency",
+      "fft_object_id": "9781ec23a2664a27bb8799a3506aab38",
+      "calibration_domain": "reciprocal_space",
+      "physical_frequency_axes": null,
+      "meaning": "Second transform is mathematically possible but is not the spatial-image lattice FFT; downstream source-domain guards must reject crystallographic misuse.",
+      "elapsed_seconds": 0.010859458001505118
+    }
+  ],
+  "source_file_sha256": {
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/dft-33.tiff": "792519a4537181666934d8e5796b1b38ec12bca1e183c6d8cb4d4ccb078feec6",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/dft-32.tiff": "4a962a7d9857f30cfc4ad6574504e5ed0d7852c6763297db6c56b24d49445061",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/metric.tiff": "20950410dce0e51d6209b45827066c4623b42fad2238af18a68aff78a589076d",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/aliased-grating.tiff": "af5dc607d9d6167f30819b589007ebfe5c16f132475b0d52c5c00cd25f49541b",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/mixed-48.tiff": "4bb9d1058b521bd0a94001a6b0571af557b6d6fefb90c67893597bf08b27e151",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/mixed-96.tiff": "0729cc4557d751980f47d9864b7886918ff60bd3e1197085da72a9043f69905b",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/same-periods.tiff": "cf1a26ee8073efa07bdf357a6053d61cdbf2a91abef96b0ca0ea0d47423dcd90",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/contrast-only-change.tiff": "7dc3a0081523705899e81d231d90c80590efc8ecb65714c2762a192f6c07ee44",
+    "/Volumes/External SSD/mircograph/algorithm-audit-20261101/analysis/scientific-algorithms-main-r2/declared-reciprocal.tiff": "44e40969fb2e5ee4902621454559ec58f95e33a914666d8d445fc54c65400f59"
+  },
+  "original_sources_unchanged": true,
+  "request_count": 59,
+  "test_code_sha256": "3e6465a9037dcd838e620a64fb10935daf893bc02eca870f255e6464d6f1b6b9"
+}
