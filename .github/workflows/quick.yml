@@ -209,6 +209,7 @@ jobs:
       - run: python -B tests/test_scientific_evidence_semantics.py
       - run: python -B tests/test_result_semantics.py
       - run: python -B tests/test_result_semantics_projection.py
+      - run: python -B tests/test_route_a_runtime.py
       - run: npm run test:gpa
         env:
           MICROSCOPY_PYTHON: python

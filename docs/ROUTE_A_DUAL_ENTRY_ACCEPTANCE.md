@@ -116,6 +116,7 @@ traces with this corrected reporting rule.
 - Locked `npm ci`, typecheck/build; full integrated Node suite **449 PASS / 5
   conditional SKIP**. Nine fixture/launcher tests passed. New intervention unit
   tests and existing dirty/pending/late-result guards remain distinct from GUI.
+- Both updated Skills passed skill-creator quick_validate with the locked scientific interpreter (the first system-Python invocation lacked PyYAML; no repository dependency was changed).
 - Integrated `npm run test:science` passed actual TIFF/calibration/FFT/measurement,
   direct-DFT/export, saved-display revision, restart recovery and Panel HTTP.
 - The #68 qualification separately includes 93 relevant Python tests and its
