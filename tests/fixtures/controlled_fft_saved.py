@@ -3,6 +3,8 @@
 Default: fixed 27-source subset (124 ROI evaluations, eight comparisons).
 --full-primary: all 510 sources, primary Hann/mean/quadratic only, plus the
 unwindowed delta stopping control (609 ROI evaluations, 49 comparisons).
+--background-holdout: all 85 separately preregistered background sources,
+primary Hann/mean/quadratic only (85 ROI evaluations, no comparisons).
 No data are generated and no diagnostic status is substituted for a public one.
 Run only after freezing the selected producer and producing its full raw tier:
   python controlled_fft_saved.py --repository CHECKOUT --dataset DATASET \
@@ -68,9 +70,19 @@ def identity(record):
             record.get('dose_expected_e_per_pixel'), record['seed'])
 
 
-def select_records(manifest, full_primary=False):
+def select_records(manifest, full_primary=False, background_holdout=False):
     if manifest.get('schema') != 'controlled-fft-noise-v2':
         raise ValueError('Expected controlled-fft-noise-v2 dataset manifest')
+    if background_holdout:
+        wanted = {(case, 'none' if seed is None else 'poisson_read' if case == 'read_noise' else 'poisson', 500., seed)
+                  for case in ('signal', 'digital_offset', 'physical_background', 'read_noise', 'affine')
+                  for seed in (None, *range(1000, 1016))}
+        records = manifest['records']
+        if (manifest.get('fixture') != 'controlled-backgrounds-holdout-v1' or len(records) != 85 or
+                {identity(r) for r in records} != wanted or len({r['file'] for r in records}) != 85 or
+                manifest.get('parameters_sha256') != 'ac14ab138befdd88d778ddf02ab85295f82e092a68d1855148769637b33a6f7e'):
+            raise ValueError('Background holdout differs from preregistered 85-source matrix')
+        return records
     wanted = {('delta_control', 'none', None, None)}
     wanted.update((case, model, 500., seed) for case in SCENES
                   for model, seed in (('none', None), ('poisson', 100)))
@@ -131,7 +143,7 @@ def raw_key(filename, window, refinement, roi=None):
     return (filename, window, refinement, None if roi is None else tuple(roi))
 
 
-def load_raw(path, records, full_primary=False):
+def load_raw(path, records, full_primary=False, background_holdout=False):
     """Read saved outputs only: never re-execute the raw evaluator here."""
     filenames = {record['file'] for record in records}
     expected_eval = {raw_key(record['file'], window, refinement, roi)
@@ -141,7 +153,7 @@ def load_raw(path, records, full_primary=False):
     expected_compare = {raw_key(record['file'], window, refinement)
                         for record in records if record['case'] == 'adjacent'
                         for window, refinement in configurations(record, full_primary)}
-    expected_counts = (609, 49) if full_primary else (124, 8)
+    expected_counts = (85, 0) if background_holdout else (609, 49) if full_primary else (124, 8)
     if (len(expected_eval), len(expected_compare)) != expected_counts:
         raise ValueError('Internal fixed mode coverage differs from expected ROI/comparison counts')
     evaluations, comparisons = {}, {}
@@ -172,7 +184,7 @@ class Harness:
     def __init__(self, output, worker):
         self.output, self.worker = output, worker
         self.workspace_path = output / 'workspace'
-        self.workspace = worker.Workspace(self.workspace_path, writable=True)
+        self.workspace = worker.Workspace(str(self.workspace_path), writable=True)
         self.calls = (output / 'calls.jsonl').open('w', buffering=1)
         self.results = (output / 'results.jsonl').open('w', buffering=1)
         self.csv_stream = (output / 'summary.csv').open('w', newline='', buffering=1)
@@ -352,11 +364,12 @@ def base_row(record, window, refinement):
             'source_sha256_array': record['sha256_array_float32_le_c']}
 
 
-def run(repository, dataset, raw_path, output, full_primary=False):
+def run(repository, dataset, raw_path, output, full_primary=False, background_holdout=False):
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=False)
-    mode = 'full-primary' if full_primary else 'fixed-subset'
-    expected_sources, expected_roi, expected_comparisons = ((510, 609, 49)
+    full_primary = full_primary or background_holdout
+    mode = 'background-holdout' if background_holdout else 'full-primary' if full_primary else 'fixed-subset'
+    expected_sources, expected_roi, expected_comparisons = (85, 85, 0) if background_holdout else ((510, 609, 49)
         if full_primary else (27, 124, 8))
     harness, protected, summary = None, {}, {'scope': 'public saved-chain raw parity',
         'mode': mode, 'expected_sources': expected_sources,
@@ -375,8 +388,8 @@ def run(repository, dataset, raw_path, output, full_primary=False):
         protected[manifest_path] = digest(manifest_path)
         protected[raw_path] = digest(raw_path)
         manifest = json.loads(manifest_path.read_text())
-        records = select_records(manifest, full_primary)
-        evaluations, comparisons = load_raw(raw_path, records, full_primary)
+        records = select_records(manifest, full_primary, background_holdout)
+        evaluations, comparisons = load_raw(raw_path, records, full_primary, background_holdout)
         for record in records:
             path = dataset/record['file']
             if path.parent.resolve() != dataset or path.is_symlink():
@@ -581,8 +594,12 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--full-primary', action='store_true',
                         help='All 510 sources: primary Hann/mean/quadratic plus initial no-window delta stop control; 609 ROI / 49 comparisons')
+    parser.add_argument('--background-holdout', action='store_true',
+                        help='Preregistered 85-source background holdout, primary Hann/mean/quadratic only')
     args = parser.parse_args()
-    return run(args.repository, args.dataset, args.raw, args.output, args.full_primary)
+    if args.full_primary and args.background_holdout:
+        parser.error('Choose one public coverage mode')
+    return run(args.repository, args.dataset, args.raw, args.output, args.full_primary, args.background_holdout)
 
 
 if __name__ == '__main__':
