@@ -12,9 +12,11 @@ are explicit; main and the running shared workspace are not changed.
 constant, but floating-point ripples could satisfy that inequality. The original
 63² float32 image has one unit pixel at (25,20), window none, no mean subtraction,
 threshold_rel=1, integer-bin refinement. NumPy 2.5.4 independently reproduced
-false peaks and a saved `spatial_field` marked valid with four families; the
-earlier audit recorded two under its environment. This variation is itself
-inconsistent with the known flat mathematical spectrum.
+false peaks and a saved `spatial_field` marked valid with four families. The
+earlier audit's prose said two families, but its preserved raw response also
+records four under NumPy 2.5.4/SciPy 1.18.1. That was a reporting error, not
+evidence of environment-dependent family counts; the original raw record is
+unchanged. Any such detected family contradicts the known flat spectrum.
 
 The oracle is the analytic DFT of a translated delta, not a round trip. Its
 modulus is |A| for every frequency. Multiplying that delta by a Hann window
