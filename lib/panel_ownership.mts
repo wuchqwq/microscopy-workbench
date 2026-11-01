@@ -1,7 +1,7 @@
 // Private owned-helper metadata only. Scientific records remain authoritative in
 // their providers; a checkpoint is never an admission of its saved evidence.
 import {randomBytes,createHash} from 'node:crypto';
-import {closeSync,existsSync,fsyncSync,mkdirSync,openSync,readFileSync,realpathSync,renameSync,statSync,unlinkSync,writeFileSync} from 'node:fs';
+import {closeSync,existsSync,fsyncSync,mkdirSync,openSync,readFileSync,readdirSync,realpathSync,renameSync,statSync,unlinkSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import type {OwnedPanelConnection} from './panel_manager_contracts.mjs';
 
@@ -41,17 +41,33 @@ export interface OwnedRegistration {
  readonly previousCheckpoint:Row|null;readonly previousConnection:OwnedPanelConnection|null;
  publish(panel:{server:{address():unknown};token:string;evidenceToken:string;state():unknown}):void;
  close(panel:{close():Promise<void>}):Promise<void>;
+ // Only the preparing caller, before invoking any helper entry/launch.
+ releaseUnlaunched():void;
 }
-function materialize(file:string,record:RegistrationRecord):OwnedRegistration{
+function materialize(file:string,record:RegistrationRecord,allowUnlaunchedRelease=false):OwnedRegistration{
  const d=dirs(record.workspace),lock=path.join(d.registry,'panels',record.panel_id+'.lock');
- const ownLock=()=>{const claim=json(lock,d.registry,4096);if(claim.nonce!==record.nonce||claim.helper_session_id!==record.helper_session_id)throw new Error('Owned helper registration lock does not match');};
- let checkpoint:Row|null=null;
+ const ownLock=()=>{const claim=json(lock,d.registry,4096);if(claim.schema_version!==1||claim.panel_id!==record.panel_id||claim.nonce!==record.nonce||claim.helper_session_id!==record.helper_session_id)throw new Error('Owned helper registration lock does not match');};
+ let checkpoint:Row|null=null,publicationStarted=false;
  if(record.previous){checkpoint=readOwnedPanelCheckpoint(record.workspace,record.previous);const digest=createHash('sha256').update(readFileSync(record.previous.checkpoint_file!)).digest('hex');if(digest!==record.checkpoint_sha256)throw new Error('Owned checkpoint changed after explicit resume submission');}
  return {panel_id:record.panel_id,helper_session_id:record.helper_session_id,generation:record.generation,journalDirectory:record.journal,registration_file:file,owner_nonce:record.nonce,checkpoint,previousCheckpoint:checkpoint,previousConnection:record.previous??null,
-  publish(panel){ownLock();const state=row(panel.state());if(state.panel_id!==record.panel_id||state.helper_session_id!==record.helper_session_id||state.panel_generation!==record.generation)throw new Error('Actual created helper does not match owned registration');
+  publish(panel){publicationStarted=true;ownLock();const state=row(panel.state());if(state.panel_id!==record.panel_id||state.helper_session_id!==record.helper_session_id||state.panel_generation!==record.generation)throw new Error('Actual created helper does not match owned registration');
    const currentFile=connectionPath(d.registry,record.panel_id);if(record.previous){const old=readOwnedPanelConnection(record.workspace,record.panel_id);if(JSON.stringify(old)!==JSON.stringify(record.previous))throw new Error('Previous owned connection changed during resume');assertOwnedPanelStopped(old);}else if(existsSync(currentFile))throw new Error('Owned Panel already registered');
    const checkpointFile=path.join(record.journal,'current-selection.json');const saved=json(checkpointFile,d.workspace);if(saved.panel_id!==record.panel_id||saved.helper_session_id!==record.helper_session_id||saved.panel_generation!==record.generation)throw new Error('New helper persisted checkpoint identity mismatch');
    const port=(panel.server.address() as {port?:number}|null)?.port;const conn=validateOwnedConnection({schema_version:2,panel_id:record.panel_id,helper_session_id:record.helper_session_id,generation:record.generation,port,token:panel.token,evidence_token:panel.evidenceToken,pid:process.pid,checkpoint_file:checkpointFile,status:'running'},record.panel_id);write(currentFile,conn);unlinkSync(lock);
+  },
+  releaseUnlaunched(){
+   // A resumed child cannot release its parent's claim, nor can a handle that
+   // has attempted publication. This is not a stale-lock or unknown-spawn API.
+   if(!allowUnlaunchedRelease||publicationStarted)throw new Error('Owned helper claim cannot be released after helper handoff/publication');
+   ownLock();
+   if(JSON.stringify(json(file,d.registry,16384))!==JSON.stringify(record))throw new Error('Owned registration changed before prelaunch rollback');
+   const currentFile=connectionPath(d.registry,record.panel_id);
+   if(record.previous){if(JSON.stringify(readOwnedPanelConnection(record.workspace,record.panel_id))!==JSON.stringify(record.previous))throw new Error('Previous owned connection changed before prelaunch rollback');}
+   else if(existsSync(currentFile))throw new Error('Owned helper already has a connection; claim retained');
+   if(realpathSync.native(record.journal)!==record.journal||readdirSync(record.journal).length!==0)throw new Error('Owned helper journal is not untouched; claim retained');
+   // Retain the attempt registration and empty journal for diagnosis. Release
+   // only this exact nonce's lock; no old checkpoint or provider file changes.
+   unlinkSync(lock);allowUnlaunchedRelease=false;
   },
   async close(panel){await panel.close();const current=readOwnedPanelConnection(record.workspace,record.panel_id);if(current.schema_version!==2||current.helper_session_id!==record.helper_session_id||current.generation!==record.generation||current.pid!==process.pid)throw new Error('Cannot close a different owned helper generation');write(connectionPath(d.registry,record.panel_id),{...current,status:'closed',closed_utc:new Date().toISOString()});}
  };
@@ -62,9 +78,12 @@ export function prepareOwnedPanelRegistration({workspace,panel_id}:{workspace:st
  const helper=randomBytes(16).toString('hex'),nonce=randomBytes(32).toString('hex'),lock=path.join(d.registry,'panels',panel_id+'.lock');
  const record:RegistrationRecord={schema_version:1,workspace:d.workspace,panel_id,helper_session_id:helper,generation:previous?(previous.generation!+1):1,journal:path.join(d.workspace,'panel-journals',helper),nonce,...(previous?{previous,checkpoint_sha256:createHash('sha256').update(readFileSync(previous.checkpoint_file!)).digest('hex')}:{})};
  write(lock,{schema_version:1,panel_id,helper_session_id:helper,nonce},true);
- const registrationFile=path.join(d.registry,'registrations',helper+'.json');write(registrationFile,record,true);mkdirSync(record.journal,{recursive:false});return materialize(registrationFile,record);
+ const registrationFile=path.join(d.registry,'registrations',helper+'.json');write(registrationFile,record,true);mkdirSync(record.journal,{recursive:false});return materialize(registrationFile,record,true);
 }
 export function loadOwnedPanelRegistration(workspace:string,file:string):OwnedRegistration{
  const d=dirs(workspace);const v=json(file,d.registry,16384) as RegistrationRecord;
- if(v.schema_version!==1||v.workspace!==d.workspace||!id(v.panel_id)||!id(v.helper_session_id)||!Number.isSafeInteger(v.generation)||v.generation<1||typeof v.nonce!=='string'||!/^[a-f0-9]{64}$/.test(v.nonce)||path.resolve(file)!==path.join(d.registry,'registrations',v.helper_session_id+'.json')||v.journal!==path.join(d.workspace,'panel-journals',v.helper_session_id))throw new Error('Invalid internal owned helper registration');return materialize(file,v);
+ if(v.schema_version!==1||v.workspace!==d.workspace||!id(v.panel_id)||!id(v.helper_session_id)||!Number.isSafeInteger(v.generation)||v.generation<1||typeof v.nonce!=='string'||!/^[a-f0-9]{64}$/.test(v.nonce)||path.resolve(file)!==path.join(d.registry,'registrations',v.helper_session_id+'.json')||v.journal!==path.join(d.workspace,'panel-journals',v.helper_session_id))throw new Error('Invalid internal owned helper registration');
+ const claim=json(path.join(d.registry,'panels',v.panel_id+'.lock'),d.registry,4096);
+ if(claim.schema_version!==1||claim.panel_id!==v.panel_id||claim.helper_session_id!==v.helper_session_id||claim.nonce!==v.nonce)throw new Error('Owned helper registration lock does not match');
+ return materialize(file,v);
 }

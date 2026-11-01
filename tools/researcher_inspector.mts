@@ -93,35 +93,47 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
  let owned:OwnedRegistration|undefined;
  if(ports.openPanel===undefined&&(existsSync(connectionFile)||!existsSync(pointer)))owned=prepareOwnedPanelRegistration({workspace,panel_id:session.session_id as string});
  if(!owned&&existsSync(pointer)&&fields(boundedJSON(pointer)).schema_version===2)throw new Error('Registered Inspector ownership is missing; do not invent a replacement registration');
- let bootstrap=createClient({workspace,python}),selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown,crystalEvidenceSnapshot:unknown;
- try{
-  const initialized=fields(await bootstrap.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-researcher-inspector',version:'1'}}));if(initialized.error)throw new Error(fields(initialized.error).message as string);
-  if(owned?.previousCheckpoint){
-   resumed=true;const selection=owned.previousCheckpoint;
-   selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
-   previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
-   numericResultRefs=selection.numeric_result_refs??null;crystalEvidenceSnapshot=selection.crystal_evidence??null;
-  }else if(existsSync(pointer)){
-   resumed=true;
-   const saved=fields(boundedJSON(inside(workspace,pointer)));
-   if(saved.schema_version!==1||saved.session_id!==session.session_id||!objectId.test((saved.run_id??'') as string))throw new Error('Saved panel binding is invalid');
-   const selectionPath=inside(workspace,path.join(directory,'panels',saved.run_id as string,'journal','current-selection.json'));
-   const selection=fields(boundedJSON(selectionPath));if(!objectId.test((selection.object_id??'') as string))throw new Error('Saved panel object identity is invalid');
-   selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
-   previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
-   numericResultRefs=Object.hasOwn(selection,'numeric_result_refs')?selection.numeric_result_refs:null;
-   crystalEvidenceSnapshot=selection.crystal_evidence??null;
-  }else{
-   const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
-   const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:(session.initial_frame as number)-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{}),...(session.initial_plane_axes!==undefined?{plane_axes:session.initial_plane_axes,plane_indices:session.initial_plane_indices}:{})});
-   selected=await call(bootstrap,'preview','image_preview',{object_id:frame.object_id,...(session.initial_component!==undefined?{component:session.initial_component}:{})});
-  }
- }finally{await bootstrap.close();}
- const runId=randomBytes(16).toString('hex'),runDirectory=path.join(directory,'panels',runId),journalDirectory=owned?.journalDirectory??path.join(runDirectory,'journal');mkdirSync(runDirectory,{recursive:true});
- durableNew(path.join(runDirectory,'run.json'),{schema_version:1,session_id:session.session_id,object_id:selected.object_id,created_utc:new Date().toISOString()});
+ let selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown,crystalEvidenceSnapshot:unknown;
+ const runId=randomBytes(16).toString('hex'),runDirectory=path.join(directory,'panels',runId),journalDirectory=owned?.journalDirectory??path.join(runDirectory,'journal');
  let panel,panelClient:PanelClient|undefined,published=false;
+ // Roll back only failures proved to precede openPanel. Once helper entry is
+ // invoked, its claim remains fail-closed even when the eventual outcome is
+ // unknown. Scientific startup requests retain their original query-only IDs.
  try{
+  let bootstrap:PanelClient|undefined;
+  try{
+   bootstrap=createClient({workspace,python});
+   const initialized=fields(await bootstrap.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-researcher-inspector',version:'1'}}));if(initialized.error)throw new Error(fields(initialized.error).message as string);
+   if(owned?.previousCheckpoint){
+    resumed=true;const selection=owned.previousCheckpoint;
+    selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
+    previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
+    numericResultRefs=selection.numeric_result_refs??null;crystalEvidenceSnapshot=selection.crystal_evidence??null;
+   }else if(existsSync(pointer)){
+    resumed=true;
+    const saved=fields(boundedJSON(inside(workspace,pointer)));
+    if(saved.schema_version!==1||saved.session_id!==session.session_id||!objectId.test((saved.run_id??'') as string))throw new Error('Saved panel binding is invalid');
+    const selectionPath=inside(workspace,path.join(directory,'panels',saved.run_id as string,'journal','current-selection.json'));
+    const selection=fields(boundedJSON(selectionPath));if(!objectId.test((selection.object_id??'') as string))throw new Error('Saved panel object identity is invalid');
+    selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
+    previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
+    numericResultRefs=Object.hasOwn(selection,'numeric_result_refs')?selection.numeric_result_refs:null;
+    crystalEvidenceSnapshot=selection.crystal_evidence??null;
+   }else{
+    const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
+    const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:(session.initial_frame as number)-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{}),...(session.initial_plane_axes!==undefined?{plane_axes:session.initial_plane_axes,plane_indices:session.initial_plane_indices}:{})});
+    selected=await call(bootstrap,'preview','image_preview',{object_id:frame.object_id,...(session.initial_component!==undefined?{component:session.initial_component}:{})});
+   }
+  }finally{await bootstrap?.close();}
+  mkdirSync(runDirectory,{recursive:true});
+  durableNew(path.join(runDirectory,'run.json'),{schema_version:1,session_id:session.session_id,object_id:selected.object_id,created_utc:new Date().toISOString()});
   if(ports.openPanel===undefined)panelClient=createClient({workspace,python});
+ }catch(error){
+  try{owned?.releaseUnlaunched();}
+  catch(rollbackError){throw new AggregateError([error,rollbackError],'Inspector prelaunch failed; ownership claim retained because safe rollback could not be verified');}
+  throw error;
+ }
+ try{
   panel=await openPanel({workspace,python,object_id:selected.object_id as string,journalDirectory,numeric_result_refs:numericResultRefs,crystal_evidence_snapshot:crystalEvidenceSnapshot,...(panelClient?{client:panelClient}:{}),...(owned?{panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,...(owned.previousCheckpoint?{resume_checkpoint:owned.previousCheckpoint}:{})}:{})});
   owned?.publish(panel);
   published=Boolean(owned);

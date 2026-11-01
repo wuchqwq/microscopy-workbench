@@ -92,3 +92,24 @@ test('interrupted preflight with no assigned generation cannot qualify legacy or
  }
  assert.equal(fetches,0);assert.equal(launches,0);
 }));
+
+test('unlaunched rollback retains attempt records and cannot release loaded or published helper claims',()=>fixture(async({workspace,start})=>{
+ const prepared=prepareOwnedPanelRegistration({workspace,panel_id:P}),registration=readFileSync(prepared.registration_file);
+ const loaded=loadOwnedPanelRegistration(workspace,prepared.registration_file);
+ assert.throws(()=>loaded.releaseUnlaunched(),/handoff\/publication/);
+ prepared.releaseUnlaunched();
+ assert.deepEqual(readFileSync(prepared.registration_file),registration,'Attempt history is retained, not rewritten');
+ assert.throws(()=>loadOwnedPanelRegistration(workspace,prepared.registration_file),/ENOENT|lock/,'Cancelled attempt must not later launch');
+ const next=prepareOwnedPanelRegistration({workspace,panel_id:P});assert.equal(next.generation,1);assert.notEqual(next.helper_session_id,prepared.helper_session_id);
+ await start(next);const before=readFileSync(path.join(workspace,'panel-registry','panels',P+'.json'));
+ assert.throws(()=>next.releaseUnlaunched(),/handoff\/publication/);assert.deepEqual(readFileSync(path.join(workspace,'panel-registry','panels',P+'.json')),before);
+}));
+
+test('rollback never removes a claim with a changed registration or nonempty helper journal',()=>fixture(async({workspace})=>{
+ const prepared=prepareOwnedPanelRegistration({workspace,panel_id:P}),claimFile=path.join(workspace,'panel-registry','panels',P+'.lock'),claim=readFileSync(claimFile),original=readFileSync(prepared.registration_file);
+ const changed=JSON.parse(original);changed.nonce='d'.repeat(64);writeFileSync(prepared.registration_file,JSON.stringify(changed));
+ assert.throws(()=>prepared.releaseUnlaunched(),/registration changed/);assert.deepEqual(readFileSync(claimFile),claim);
+ // This is a test-owned corruption fixture, not a product repair route.
+ writeFileSync(prepared.registration_file,original);writeFileSync(path.join(prepared.journalDirectory,'unknown-helper-progress'),'controlled checkpoint progress');
+ assert.throws(()=>prepared.releaseUnlaunched(),/journal.*untouched/);assert.deepEqual(readFileSync(claimFile),claim);
+}));
