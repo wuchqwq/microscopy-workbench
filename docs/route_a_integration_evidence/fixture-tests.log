@@ -1,0 +1,15 @@
+test_all_nine_inputs_are_deterministic_float32_images_and_truth_is_separate (test_route_a_runtime.RuntimeDraftTests.test_all_nine_inputs_are_deterministic_float32_images_and_truth_is_separate) ... ok
+test_cli_dry_run_never_spawns_process_or_science_workspace (test_route_a_runtime.RuntimeDraftTests.test_cli_dry_run_never_spawns_process_or_science_workspace) ... ok
+test_continue_requires_exact_panel_and_reference_only_schema (test_route_a_runtime.RuntimeDraftTests.test_continue_requires_exact_panel_and_reference_only_schema) ... ok
+test_explicit_projection_candidates_have_same_geometry_different_elements (test_route_a_runtime.RuntimeDraftTests.test_explicit_projection_candidates_have_same_geometry_different_elements) ... ok
+test_failed_event_is_recorded_even_when_outer_error_is_null (test_route_a_runtime.RuntimeDraftTests.test_failed_event_is_recorded_even_when_outer_error_is_null) ... ok
+test_missing_shared_workspace_skill_is_explicit (test_route_a_runtime.RuntimeDraftTests.test_missing_shared_workspace_skill_is_explicit) ... ok
+test_panel_prompt_reads_current_and_does_not_offer_source_reopen (test_route_a_runtime.RuntimeDraftTests.test_panel_prompt_reads_current_and_does_not_offer_source_reopen) ... ok
+test_synthetic_event_parser_marks_images_violations_and_unknown (test_route_a_runtime.RuntimeDraftTests.test_synthetic_event_parser_marks_images_violations_and_unknown) ... ok
+test_task_rejects_hidden_fields_and_mutated_source (test_route_a_runtime.RuntimeDraftTests.test_task_rejects_hidden_fields_and_mutated_source) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.232s
+
+OK
+/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/tmp3kar211i/launch

@@ -1,0 +1,152 @@
+[
+  {
+    "run": "agent-r08",
+    "entry": "image",
+    "mcp_calls": 18,
+    "failed_mcp_events": 0,
+    "image_blocks": 16,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r17-panel",
+    "entry": "panel",
+    "mcp_calls": 10,
+    "failed_mcp_events": 0,
+    "image_blocks": 9,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r29-first",
+    "entry": "image",
+    "mcp_calls": 7,
+    "failed_mcp_events": 0,
+    "image_blocks": 5,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r29-fixed",
+    "entry": "image",
+    "mcp_calls": 14,
+    "failed_mcp_events": 0,
+    "image_blocks": 12,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r29-resumable",
+    "entry": "continue",
+    "mcp_calls": 10,
+    "failed_mcp_events": 0,
+    "image_blocks": 7,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r36",
+    "entry": "image",
+    "mcp_calls": 14,
+    "failed_mcp_events": 0,
+    "image_blocks": 12,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r36-continue",
+    "entry": "continue",
+    "mcp_calls": 12,
+    "failed_mcp_events": 0,
+    "image_blocks": 9,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r42",
+    "entry": "image",
+    "mcp_calls": 15,
+    "failed_mcp_events": 0,
+    "image_blocks": 12,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r51",
+    "entry": "image",
+    "mcp_calls": 15,
+    "failed_mcp_events": 2,
+    "image_blocks": 11,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r63",
+    "entry": "image",
+    "mcp_calls": 14,
+    "failed_mcp_events": 2,
+    "image_blocks": 8,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r63-recovery",
+    "entry": "continue",
+    "mcp_calls": 5,
+    "failed_mcp_events": 1,
+    "image_blocks": 2,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r74",
+    "entry": "image",
+    "mcp_calls": 14,
+    "failed_mcp_events": 0,
+    "image_blocks": 12,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r74-valid-context",
+    "entry": "continue",
+    "mcp_calls": 11,
+    "failed_mcp_events": 2,
+    "image_blocks": 9,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r95",
+    "entry": "image",
+    "mcp_calls": 16,
+    "failed_mcp_events": 0,
+    "image_blocks": 13,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  },
+  {
+    "run": "agent-r95-compare",
+    "entry": "continue",
+    "mcp_calls": 16,
+    "failed_mcp_events": 2,
+    "image_blocks": 6,
+    "source_unchanged": true,
+    "prior_records_unchanged": true,
+    "non_mcp_or_unpermitted_actions": 0
+  }
+]

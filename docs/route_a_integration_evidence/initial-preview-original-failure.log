@@ -1,0 +1,31 @@
+✖ initial completed preview receipt does not leave shared-workspace handoff submitted (22.661583ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 73.249417
+
+✖ failing tests:
+
+test at dist/tests/image-panel-draft-transport.test.mjs:137:1
+✖ initial completed preview receipt does not leave shared-workspace handoff submitted (22.661583ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'submitted'
+  - 'completed'
+  
+      at TestContext.<anonymous> (file:///Volumes/External%20SSD/mircograph/route-a-dual-entry-20261102/dist/tests/image-panel-draft-transport.test.mjs:141:114)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'submitted',
+    expected: 'completed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

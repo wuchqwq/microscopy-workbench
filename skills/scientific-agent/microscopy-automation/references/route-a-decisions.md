@@ -64,3 +64,32 @@ Report conditional results and useful next *analysis* actions. Do not plan the
 next microscope acquisition, enforce a full structure-field pipeline, or force a
 unique phase/twin/defect choice. See [peak quality](peak-quality.md) for available
 diagnostics, parameter costs and targeted stopping conditions.
+
+
+## Keep a chosen ROI resumable
+
+When saving a ROI or peak that will be selected, edited or handed off later,
+provide a distinct stable `annotation_id` in the existing `image_annotate` request.
+Anonymous annotations are allowed for display, but cannot identify a saved ROI
+for handoff or an update. Their numerical measurements are not thereby invalid.
+After presenting a saved choice, read `image_panel_current` and check the actual
+`roi_handoff` row's usability and reason; a successful image_panel_show alone does
+not prove that the saved ROI can be continued. If a previous annotation is
+anonymous, keep the old object intact and create a new explicitly identified
+choice with its actor/reason; do not backfill the historical identity. If showing
+an FFT instead of the source ROI, name the saved ROI reference and the reason for
+that display, without pretending the spatial ROI is selected on the FFT grid.
+
+Respect the advertised note `maxLength`. Keep saved notes concise with stable evidence references; put the longer reasoning in the analysis answer. A schema refusal is not a numerical result. Query the original request if its outcome is unknown, and never claim a rejected note was saved.
+
+
+## Unknown writes include indirect tool effects
+
+`image_panel_open` may create a saved preview. Opening a Panel on the same input
+is therefore not a read-only workaround for an unresolved `image_preview`.
+Changing request ID, display-size cap or entry point does not make an equivalent
+write independent. After REQUEST_NOT_FOUND or a transport parse failure, retain
+the original request as unknown; use existing read-only object/result/current
+queries, and stop the affected write. Do not use another tool that implicitly
+performs the unresolved operation. Other already saved observations can still
+be discussed with their own sources and limitations.

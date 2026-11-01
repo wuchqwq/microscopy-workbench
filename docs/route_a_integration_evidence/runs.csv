@@ -1,0 +1,16 @@
+run,entry,mcp_calls,failed_mcp_events,image_blocks,source_unchanged,prior_records_unchanged,non_mcp_or_unpermitted_actions
+agent-r08,image,18,0,16,True,True,0
+agent-r17-panel,panel,10,0,9,True,True,0
+agent-r29-first,image,7,0,5,True,True,0
+agent-r29-fixed,image,14,0,12,True,True,0
+agent-r29-resumable,continue,10,0,7,True,True,0
+agent-r36,image,14,0,12,True,True,0
+agent-r36-continue,continue,12,0,9,True,True,0
+agent-r42,image,15,0,12,True,True,0
+agent-r51,image,15,2,11,True,True,0
+agent-r63,image,14,2,8,True,True,0
+agent-r63-recovery,continue,5,1,2,True,True,0
+agent-r74,image,14,0,12,True,True,0
+agent-r74-valid-context,continue,11,2,9,True,True,0
+agent-r95,image,16,0,13,True,True,0
+agent-r95-compare,continue,16,2,6,True,True,0
