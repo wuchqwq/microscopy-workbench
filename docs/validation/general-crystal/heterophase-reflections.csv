@@ -1,0 +1,31 @@
+candidate_side,measurement_object_id,h,k,l,residual_inv_angstrom,state
+BCC / ordered B2:0,52392501bf09466abb45d2869fb6dbf1,1,1,0,3.925231146709438e-17,matched_hypothesis
+BCC / ordered B2:0,f522001672614ead9593c6b06f2693b0,-1,-1,0,3.925231146709438e-17,matched_hypothesis
+BCC / ordered B2:0,712e5561f0734dfda65065fa9a6bda0c,-2,0,0,5.551115123125783e-17,matched_hypothesis
+BCC / ordered B2:0,2d52631b90cf43df9a5125d81d4dd082,2,0,0,5.551115123125783e-17,matched_hypothesis
+BCC / ordered B2:1,a528baca2c7742f9ba64f99b5850c814,-1,0,0,2.7755575615628914e-17,matched_hypothesis
+BCC / ordered B2:1,39899bdff05b47d58220734b25a92247,1,0,0,2.7755575615628914e-17,matched_hypothesis
+BCC / ordered B2:1,23721d9a5e154730a35788e1d3642802,0,1,0,2.7755575615628914e-17,matched_hypothesis
+BCC / ordered B2:1,58e6ef844fa6491b93fd62a9f58e1de5,0,-1,0,2.7755575615628914e-17,matched_hypothesis
+BCC / ordered B2:1,eb7aff18b2494e6a9948fd11ad64b5e0,1,1,0,3.925231146709438e-17,matched_hypothesis
+BCC / ordered B2:1,7f865619c7284152bfee7ee660a6e0e9,-1,-1,0,3.925231146709438e-17,matched_hypothesis
+wrong BCC / BCC:0,52392501bf09466abb45d2869fb6dbf1,1,1,0,3.925231146709438e-17,matched_hypothesis
+wrong BCC / BCC:0,f522001672614ead9593c6b06f2693b0,-1,-1,0,3.925231146709438e-17,matched_hypothesis
+wrong BCC / BCC:0,712e5561f0734dfda65065fa9a6bda0c,-2,0,0,5.551115123125783e-17,matched_hypothesis
+wrong BCC / BCC:0,2d52631b90cf43df9a5125d81d4dd082,2,0,0,5.551115123125783e-17,matched_hypothesis
+wrong BCC / BCC:1,eb7aff18b2494e6a9948fd11ad64b5e0,1,1,0,3.925231146709438e-17,matched_hypothesis
+wrong BCC / BCC:1,7f865619c7284152bfee7ee660a6e0e9,-1,-1,0,3.925231146709438e-17,matched_hypothesis
+wrong BCC / BCC:1,a528baca2c7742f9ba64f99b5850c814,,,,,unmatched
+wrong BCC / BCC:1,39899bdff05b47d58220734b25a92247,,,,,unmatched
+wrong BCC / BCC:1,23721d9a5e154730a35788e1d3642802,,,,,unmatched
+wrong BCC / BCC:1,58e6ef844fa6491b93fd62a9f58e1de5,,,,,unmatched
+projected alternative ordered B2 / B2:0,52392501bf09466abb45d2869fb6dbf1,1,1,0,3.925231146709438e-17,matched_hypothesis
+projected alternative ordered B2 / B2:0,f522001672614ead9593c6b06f2693b0,-1,-1,0,3.925231146709438e-17,matched_hypothesis
+projected alternative ordered B2 / B2:0,712e5561f0734dfda65065fa9a6bda0c,-2,0,0,5.551115123125783e-17,matched_hypothesis
+projected alternative ordered B2 / B2:0,2d52631b90cf43df9a5125d81d4dd082,2,0,0,5.551115123125783e-17,matched_hypothesis
+projected alternative ordered B2 / B2:1,a528baca2c7742f9ba64f99b5850c814,-1,0,0,2.7755575615628914e-17,matched_hypothesis
+projected alternative ordered B2 / B2:1,39899bdff05b47d58220734b25a92247,1,0,0,2.7755575615628914e-17,matched_hypothesis
+projected alternative ordered B2 / B2:1,23721d9a5e154730a35788e1d3642802,0,1,0,2.7755575615628914e-17,matched_hypothesis
+projected alternative ordered B2 / B2:1,58e6ef844fa6491b93fd62a9f58e1de5,0,-1,0,2.7755575615628914e-17,matched_hypothesis
+projected alternative ordered B2 / B2:1,eb7aff18b2494e6a9948fd11ad64b5e0,1,1,0,3.925231146709438e-17,matched_hypothesis
+projected alternative ordered B2 / B2:1,7f865619c7284152bfee7ee660a6e0e9,-1,-1,0,3.925231146709438e-17,matched_hypothesis

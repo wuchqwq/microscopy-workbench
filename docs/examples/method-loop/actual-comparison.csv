@@ -1,0 +1,9 @@
+case,strategy,method_attempts,method_calls,fft_pixels,gpa_band_pixels,topology_path_samples,actual_retained_band_path_samples,elapsed_ms,status,topology_object_id
+positive,active_saved_plan,2,2,0,131072,5328,2664,54375.4321,projected_topological_evidence,6c13d1a81c7b421c880cbe2ab9bfe6a9
+positive,fixed_additional_gpa_then_topology,2,2,0,131072,5328,2664,7386.964300000007,projected_topological_evidence,1d00685e2f4a4f1dbf632acf03b0f408
+smooth_hotspot,active_saved_plan,0,0,0,0,0,0,3617.260699999999,clean_finite_saved_phase_roi,
+smooth_hotspot,fixed_additional_gpa_then_topology,2,2,0,131072,5328,2664,7446.178,no_net_winding_detected,add6121ef5144595847f6d410c664ea4
+noise,active_saved_plan,0,0,0,0,0,0,3560.965299999996,phase_quality_limited,
+noise,fixed_additional_gpa_then_topology,2,2,0,131072,5328,2664,7354.840000000011,insufficient_loop_stability,1ca0d860484d4f7ca0a43a4e6fd6c2ae
+contrast_vortex,active_saved_plan,2,2,0,131072,5328,2664,30664.79860000001,projected_topological_evidence,52ea133dbc53412ea26c7e6dc3a76891
+contrast_vortex,fixed_additional_gpa_then_topology,2,2,0,131072,5328,2664,6262.913800000009,projected_topological_evidence,2b88f6fa392a4b759e2c88dddbe73442

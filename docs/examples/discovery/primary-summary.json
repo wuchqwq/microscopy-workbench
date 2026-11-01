@@ -1,0 +1,531 @@
+{
+  "status": "PASS_SOFTWARE_WITH_RETAINED_DETECTION_MISSES",
+  "scope": "Actual compiled stdio MCP/Python, public independent analytic image inputs; image attention candidates are not physical defect or phase conclusions",
+  "primary_report": {
+    "path": "analysis\\2026-10-31-f4b-mcp-r2\\report.json",
+    "sha256": "f41084b83fcaf14935b00965b678dc2cf87d2df1d3880a4b729853e17f667053",
+    "runtime_seconds": 217.8390513
+  },
+  "primary_settings": "Frozen64px image scan;128px complete field grid; manual oracle-assisted attention/control. Different costs explicitly reported; no equal-budget or superiority claim.",
+  "rows": [
+    {
+      "case": "amplitude_dip",
+      "strategy": "image_first",
+      "candidate_count": 0,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 1,
+      "false_attention_count": 0,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 2749.767,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 0,
+      "verification_elapsed_ms": null,
+      "observation_cost": {
+        "source_pixels": 65536,
+        "spatial_feature_pixels": 65536,
+        "sampled_windows": 49,
+        "gaussian_filter_passes": 5,
+        "spatial_filter_pixel_passes": 327680,
+        "summed_window_area_pixels": 200704,
+        "new_fft_pixels": 0
+      },
+      "saved_feature_settings": {
+        "boundary_mode": "reflect",
+        "coordinate_space": "source_array_indices",
+        "energy_reference": "Full-image median gradient energy, floored by0.05 times mean and numerical epsilon",
+        "gaussian_truncate": 4.0,
+        "gradient_sigma_pixels": 1.0,
+        "lag1_correlation_floor": 0.15,
+        "max_candidates": 4,
+        "nms_iou_max": 0.35,
+        "normalization": "Source median and p95-p5, fallback full range; heuristic only, not intensity calibration",
+        "rect_convention": "half-open XYXY pixels",
+        "sampling": "half-window offset grid; deterministic thinning if over budget",
+        "score_threshold": 0.18,
+        "tensor_sigma_pixels": 8.0,
+        "window_sizes": [
+          64
+        ]
+      }
+    },
+    {
+      "case": "amplitude_dip",
+      "strategy": "structure_field",
+      "candidate_count": 0,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 1,
+      "false_attention_count": 0,
+      "initial_fft_windows": 4,
+      "initial_fft_pixels": 65536,
+      "preparation_elapsed_ms": 21710.7706,
+      "unknown_field_samples": 0,
+      "verification_fft_pixels": 0,
+      "verification_elapsed_ms": null,
+      "observation_cost": {
+        "worker_processes": 1,
+        "startup_seconds": null,
+        "compute_seconds": 13.367884999956004,
+        "render_and_write_seconds": 0.028257500031031668,
+        "total_worker_seconds": 13.396142499987036,
+        "window_count": 4,
+        "fft_pixels": 65536,
+        "new_fft_count": 4,
+        "reused_fft_count": 0
+      },
+      "saved_feature_settings": null
+    },
+    {
+      "case": "amplitude_dip",
+      "strategy": "manual",
+      "candidate_count": 1,
+      "localized_truth_hits": 1,
+      "localized_truth_misses": 0,
+      "false_attention_count": 0,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 1660.7638000000006,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 4096,
+      "verification_elapsed_ms": 8288.799299999999,
+      "observation_cost": null,
+      "saved_feature_settings": null
+    },
+    {
+      "case": "orientation_interface",
+      "strategy": "image_first",
+      "candidate_count": 0,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 1,
+      "false_attention_count": 0,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 2639.7235,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 0,
+      "verification_elapsed_ms": null,
+      "observation_cost": {
+        "source_pixels": 65536,
+        "spatial_feature_pixels": 65536,
+        "sampled_windows": 49,
+        "gaussian_filter_passes": 5,
+        "spatial_filter_pixel_passes": 327680,
+        "summed_window_area_pixels": 200704,
+        "new_fft_pixels": 0
+      },
+      "saved_feature_settings": {
+        "boundary_mode": "reflect",
+        "coordinate_space": "source_array_indices",
+        "energy_reference": "Full-image median gradient energy, floored by0.05 times mean and numerical epsilon",
+        "gaussian_truncate": 4.0,
+        "gradient_sigma_pixels": 1.0,
+        "lag1_correlation_floor": 0.15,
+        "max_candidates": 4,
+        "nms_iou_max": 0.35,
+        "normalization": "Source median and p95-p5, fallback full range; heuristic only, not intensity calibration",
+        "rect_convention": "half-open XYXY pixels",
+        "sampling": "half-window offset grid; deterministic thinning if over budget",
+        "score_threshold": 0.18,
+        "tensor_sigma_pixels": 8.0,
+        "window_sizes": [
+          64
+        ]
+      }
+    },
+    {
+      "case": "orientation_interface",
+      "strategy": "structure_field",
+      "candidate_count": 2,
+      "localized_truth_hits": 1,
+      "localized_truth_misses": 0,
+      "false_attention_count": 0,
+      "initial_fft_windows": 4,
+      "initial_fft_pixels": 65536,
+      "preparation_elapsed_ms": 21619.888900000005,
+      "unknown_field_samples": 0,
+      "verification_fft_pixels": 4096,
+      "verification_elapsed_ms": 6125.498099999997,
+      "observation_cost": {
+        "worker_processes": 1,
+        "startup_seconds": null,
+        "compute_seconds": 13.135202599922195,
+        "render_and_write_seconds": 0.028900600038468838,
+        "total_worker_seconds": 13.164103199960664,
+        "window_count": 4,
+        "fft_pixels": 65536,
+        "new_fft_count": 4,
+        "reused_fft_count": 0
+      },
+      "saved_feature_settings": null
+    },
+    {
+      "case": "orientation_interface",
+      "strategy": "manual",
+      "candidate_count": 1,
+      "localized_truth_hits": 1,
+      "localized_truth_misses": 0,
+      "false_attention_count": 0,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 1772.0129999999917,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 4096,
+      "verification_elapsed_ms": 8380.410299999989,
+      "observation_cost": null,
+      "saved_feature_settings": null
+    },
+    {
+      "case": "clean",
+      "strategy": "image_first",
+      "candidate_count": 0,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 0,
+      "false_attention_count": 0,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 2720.299700000003,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 0,
+      "verification_elapsed_ms": null,
+      "observation_cost": {
+        "source_pixels": 65536,
+        "spatial_feature_pixels": 65536,
+        "sampled_windows": 49,
+        "gaussian_filter_passes": 5,
+        "spatial_filter_pixel_passes": 327680,
+        "summed_window_area_pixels": 200704,
+        "new_fft_pixels": 0
+      },
+      "saved_feature_settings": {
+        "boundary_mode": "reflect",
+        "coordinate_space": "source_array_indices",
+        "energy_reference": "Full-image median gradient energy, floored by0.05 times mean and numerical epsilon",
+        "gaussian_truncate": 4.0,
+        "gradient_sigma_pixels": 1.0,
+        "lag1_correlation_floor": 0.15,
+        "max_candidates": 4,
+        "nms_iou_max": 0.35,
+        "normalization": "Source median and p95-p5, fallback full range; heuristic only, not intensity calibration",
+        "rect_convention": "half-open XYXY pixels",
+        "sampling": "half-window offset grid; deterministic thinning if over budget",
+        "score_threshold": 0.18,
+        "tensor_sigma_pixels": 8.0,
+        "window_sizes": [
+          64
+        ]
+      }
+    },
+    {
+      "case": "clean",
+      "strategy": "structure_field",
+      "candidate_count": 0,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 0,
+      "false_attention_count": 0,
+      "initial_fft_windows": 4,
+      "initial_fft_pixels": 65536,
+      "preparation_elapsed_ms": 21244.52500000001,
+      "unknown_field_samples": 0,
+      "verification_fft_pixels": 0,
+      "verification_elapsed_ms": null,
+      "observation_cost": {
+        "worker_processes": 1,
+        "startup_seconds": null,
+        "compute_seconds": 12.763340699952096,
+        "render_and_write_seconds": 0.025264100055210292,
+        "total_worker_seconds": 12.788604800007306,
+        "window_count": 4,
+        "fft_pixels": 65536,
+        "new_fft_count": 4,
+        "reused_fft_count": 0
+      },
+      "saved_feature_settings": null
+    },
+    {
+      "case": "clean",
+      "strategy": "manual",
+      "candidate_count": 1,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 0,
+      "false_attention_count": 1,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 1709.2804000000033,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 4096,
+      "verification_elapsed_ms": 8454.808000000005,
+      "observation_cost": null,
+      "saved_feature_settings": null
+    },
+    {
+      "case": "white_noise",
+      "strategy": "image_first",
+      "candidate_count": 0,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 0,
+      "false_attention_count": 0,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 2675.5047000000195,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 0,
+      "verification_elapsed_ms": null,
+      "observation_cost": {
+        "source_pixels": 65536,
+        "spatial_feature_pixels": 65536,
+        "sampled_windows": 49,
+        "gaussian_filter_passes": 5,
+        "spatial_filter_pixel_passes": 327680,
+        "summed_window_area_pixels": 200704,
+        "new_fft_pixels": 0
+      },
+      "saved_feature_settings": {
+        "boundary_mode": "reflect",
+        "coordinate_space": "source_array_indices",
+        "energy_reference": "Full-image median gradient energy, floored by0.05 times mean and numerical epsilon",
+        "gaussian_truncate": 4.0,
+        "gradient_sigma_pixels": 1.0,
+        "lag1_correlation_floor": 0.15,
+        "max_candidates": 4,
+        "nms_iou_max": 0.35,
+        "normalization": "Source median and p95-p5, fallback full range; heuristic only, not intensity calibration",
+        "rect_convention": "half-open XYXY pixels",
+        "sampling": "half-window offset grid; deterministic thinning if over budget",
+        "score_threshold": 0.18,
+        "tensor_sigma_pixels": 8.0,
+        "window_sizes": [
+          64
+        ]
+      }
+    },
+    {
+      "case": "white_noise",
+      "strategy": "structure_field",
+      "candidate_count": 0,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 0,
+      "false_attention_count": 0,
+      "initial_fft_windows": 4,
+      "initial_fft_pixels": 65536,
+      "preparation_elapsed_ms": 23615.2531,
+      "unknown_field_samples": 4,
+      "verification_fft_pixels": 0,
+      "verification_elapsed_ms": null,
+      "observation_cost": {
+        "worker_processes": 1,
+        "startup_seconds": null,
+        "compute_seconds": 15.958421100047417,
+        "render_and_write_seconds": 0.032909899950027466,
+        "total_worker_seconds": 15.991330999997444,
+        "window_count": 4,
+        "fft_pixels": 65536,
+        "new_fft_count": 4,
+        "reused_fft_count": 0
+      },
+      "saved_feature_settings": null
+    },
+    {
+      "case": "white_noise",
+      "strategy": "manual",
+      "candidate_count": 1,
+      "localized_truth_hits": 0,
+      "localized_truth_misses": 0,
+      "false_attention_count": 1,
+      "initial_fft_windows": 0,
+      "initial_fft_pixels": 0,
+      "preparation_elapsed_ms": 1777.0068000000028,
+      "unknown_field_samples": null,
+      "verification_fft_pixels": 4096,
+      "verification_elapsed_ms": 8201.749899999995,
+      "observation_cost": null,
+      "saved_feature_settings": null
+    }
+  ],
+  "independent_numeric": {
+    "result": "PASS",
+    "source_arrays_equal": true,
+    "checks": [
+      {
+        "case": "amplitude_dip",
+        "strategy": "manual",
+        "fft_object_id": "a096582941c64423806e65a0cbd3fd79",
+        "all_bin_direct_dft_max_error": 1.7716904380295302e-12,
+        "measurements_checked": 4
+      },
+      {
+        "case": "orientation_interface",
+        "strategy": "structure_field",
+        "fft_object_id": "53b5d58a710b4a059950f641b2f8c023",
+        "all_bin_direct_dft_max_error": 4.093046876507938e-12,
+        "measurements_checked": 4
+      },
+      {
+        "case": "orientation_interface",
+        "strategy": "manual",
+        "fft_object_id": "ec9c5c63d5df41ecbbbc0f6ce145cc29",
+        "all_bin_direct_dft_max_error": 4.109394902586569e-12,
+        "measurements_checked": 4
+      },
+      {
+        "case": "clean",
+        "strategy": "manual",
+        "fft_object_id": "9ddb28a904b446129c8904afe4a658b4",
+        "all_bin_direct_dft_max_error": 3.54749624036827e-12,
+        "measurements_checked": 4
+      },
+      {
+        "case": "white_noise",
+        "strategy": "manual",
+        "fft_object_id": "c76f8fb55dd04a969ee37c546f8e4c8d",
+        "all_bin_direct_dft_max_error": 9.560034991321189e-13,
+        "measurements_checked": 4
+      }
+    ],
+    "scope": "Direct finite DFT and analytic signed metric; not repeated numpy.fft output or physical interpretation"
+  },
+  "recovery": {
+    "result": "PASS",
+    "fresh_protocol_client": true,
+    "new_science": 0,
+    "new_fft": 0,
+    "immutable_files": 1006
+  },
+  "quality_readonly_supplement": {
+    "result": "PASS_READ_ONLY_SUPPLEMENT",
+    "scope": "Projection correction from saved immutable metadata and original creator journals; no MCP calls or new scientific qualification",
+    "primary_report_sha256_before": "f41084b83fcaf14935b00965b678dc2cf87d2df1d3880a4b729853e17f667053",
+    "primary_report_sha256_after": "f41084b83fcaf14935b00965b678dc2cf87d2df1d3880a4b729853e17f667053",
+    "primary_report_unchanged": true,
+    "observations": [
+      {
+        "case": "amplitude_dip",
+        "object_id": "9748a6c612bb4b0c873508592aed3c17",
+        "request_id": "discovery-b57a8b9948-4",
+        "manifest_sha256": "fd3293fa11c444b1c70774ffdaf22d13f44e5c9f1666c0a0e1b37532e9bff552",
+        "quality": {
+          "diagnostic_not_noise_classifier": true,
+          "lag1_correlations_yx": [
+            0.8786145003030675,
+            0.816358867455433
+          ],
+          "mean_absolute_lag1_correlation": 0.8474866838792503,
+          "status": "spatial_observation_available"
+        },
+        "observation_status": "spatial_observation_available",
+        "stop_reason": "No candidate exceeded this finite heuristic threshold; narrow/weak changes can remain undetected",
+        "candidate_count": 0,
+        "own_payload_hashes": {
+          "discovery-report.json": "c4d2c9f75c658a6e34c3ad918b453a6e32823a703d0c0a043ce8e2530782b02a",
+          "preview.png": "bd7f62f7d9b036ea5b1e97461d745ea15143e5406456a442763f534bafc404aa"
+        },
+        "primary_projection_value": null
+      },
+      {
+        "case": "orientation_interface",
+        "object_id": "12d0fcd5b0d34f74b3cb9735f46b571d",
+        "request_id": "discovery-b57a8b9948-15",
+        "manifest_sha256": "ba6e477bf7450a130c0a8fd36e9ca8ce02e4518fb997d01838a4895dfb763f5d",
+        "quality": {
+          "diagnostic_not_noise_classifier": true,
+          "lag1_correlations_yx": [
+            0.8738719129075521,
+            0.8173458638258292
+          ],
+          "mean_absolute_lag1_correlation": 0.8456088883666906,
+          "status": "spatial_observation_available"
+        },
+        "observation_status": "spatial_observation_available",
+        "stop_reason": "No candidate exceeded this finite heuristic threshold; narrow/weak changes can remain undetected",
+        "candidate_count": 0,
+        "own_payload_hashes": {
+          "discovery-report.json": "579571205b609274a0d01f37ec5cc14d41f2087b2785d4ace7cfdc52ff7b7210",
+          "preview.png": "cc4e5a44a8d1dfc42856171e2af178f06bbb74fe8306fd8660053a909523a74e"
+        },
+        "primary_projection_value": null
+      },
+      {
+        "case": "clean",
+        "object_id": "5897de16dc0648119cb13033f2de96ef",
+        "request_id": "discovery-b57a8b9948-28",
+        "manifest_sha256": "2f19222cca4ab876559aef464544ceafd624e13008b482bd0a20cf5d080e2ab8",
+        "quality": {
+          "diagnostic_not_noise_classifier": true,
+          "lag1_correlations_yx": [
+            0.8786301874525692,
+            0.8163782854277896
+          ],
+          "mean_absolute_lag1_correlation": 0.8475042364401794,
+          "status": "spatial_observation_available"
+        },
+        "observation_status": "spatial_observation_available",
+        "stop_reason": "No candidate exceeded this finite heuristic threshold; narrow/weak changes can remain undetected",
+        "candidate_count": 0,
+        "own_payload_hashes": {
+          "discovery-report.json": "54c58c9b5e013ab20532bc69ad390c5a56223f570b29a7f177212577f4ec6ce5",
+          "preview.png": "4de8d6b2f97324af7b247cf95303634957f6ea92e5e86dd1e47c440cb029574c"
+        },
+        "primary_projection_value": null
+      },
+      {
+        "case": "white_noise",
+        "object_id": "d85763ca17c64012ad236c73efa3f1e0",
+        "request_id": "discovery-b57a8b9948-38",
+        "manifest_sha256": "6bde463a2bbb5166159f5ea7e106306bbd772c8c7925d06265d8a0bd68ad81f0",
+        "quality": {
+          "diagnostic_not_noise_classifier": true,
+          "lag1_correlations_yx": [
+            -0.005392908892782385,
+            -0.002400128006954557
+          ],
+          "mean_absolute_lag1_correlation": 0.0038965184498684713,
+          "status": "quality_limited"
+        },
+        "observation_status": "quality_limited",
+        "stop_reason": "Quality-limited image correlations: inspect manually or request context; no automatic refinement",
+        "candidate_count": 0,
+        "own_payload_hashes": {
+          "discovery-report.json": "a8d6b4f5ac6c37a39c7db3f6d87e2b277a5aa2d03015373e1656212ed9b394a3",
+          "preview.png": "51b03359527ffc8118e3ced9f5e9c33ac83063f8451ae7ca0e8b13290d6a7605"
+        },
+        "primary_projection_value": null
+      }
+    ],
+    "preservation": {
+      "object_manifest_count": 320,
+      "request_count": 321,
+      "existing_fft_count": 21,
+      "all_manifest_request_fft_hashes_unchanged": true,
+      "new_requests": 0,
+      "new_fft": 0,
+      "new_objects": 0
+    },
+    "note": "The original r2 observation_status projection was null; corrected future harness reads quality.status. Original r2 PASS report bytes are retained."
+  },
+  "checks": [
+    "Feature/manual proposals, evidence review and ROI revision add no FFT; shifted ROI refuses stale saved evidence; fresh protocol recovery creates no new science.",
+    "Every verification FFT agrees with direct finite DFT, all stored source pixels/dtypes match TIFF, signed anisotropic physical spacing is correct and absent scales remain unknown."
+  ],
+  "primary_detection_limit": "Fixed64px image scanning missed both positive inputs. Existing field also missed same-carrier contrast depression; field did identify the orientation boundary. Manual control attention is not an autonomous performance result.",
+  "manual_false_attention_note": "The clean/noise control ROI was deliberately supplied; counting its attention as false does not mean the tool claimed a physical defect.",
+  "retained_failures": [
+    {
+      "path": "analysis/2026-10-31-f4b-mcp-r1/report.json",
+      "sha256": "dcf40937523cea708fda051a62c38ec9a98f3ccb0b0183663aa349ad4549f5f0",
+      "reason": "Export harness compared JS-normalized0 to authoritative Python signed zero. Corrected assertion compares actual exported JSON bytes, not relaxed numeric tolerances."
+    },
+    {
+      "path": "analysis/discovery-measurement-counterexample-r1.log",
+      "reason": "Coherently rehashed direct measurement points initially accepted; committed original-request checks and numerical summaries now covered by regression."
+    },
+    {
+      "reason": "Finite1e149 outlier produced nonfinite image features; final defensive guard rejects nonfinite statistics before publication, normal thresholds/math unchanged."
+    }
+  ],
+  "NOT_TESTED": [
+    "browser gestures",
+    "real specimens",
+    "automatic plugin discovery",
+    "real worker interruption",
+    "general defect/phase identification"
+  ]
+}

@@ -58,6 +58,20 @@ async function panelFixture(input,run){
  const client={async rpc(method){return {result:method==='tools/list'?{tools:[{name:'image_info',inputSchema:{}}]}:{}};},async tool(name,args){assert.equal(name,'image_info');calls.push(args.object_id);assert.ok(records.has(args.object_id));return {data:structuredClone(records.get(args.object_id)),png};},async close(){}};
  let panel;try{panel=await createImagePanel({workspace,python:path.resolve('unused-python'),object_id:input.object_id,client});await run(panel,calls);}finally{await panel?.close();assert.equal(path.dirname(path.resolve(workspace)),path.resolve(tmpdir()));assert.ok(path.basename(workspace).startsWith('spatial-domain-panel-'));rmSync(workspace,{recursive:true,force:true});}
 }
+test('Panel serves the complete browser module import graph',async()=>{
+ await panelFixture(evidence(),async panel=>{
+  const origin=panel.url.split('/#')[0], pending=['/app.mjs'], seen=new Set();
+  while(pending.length){
+   const file=pending.pop();if(seen.has(file))continue;seen.add(file);
+   const response=await fetch(origin+file);
+   assert.equal(response.status,200,`Browser module ${file}`);
+   assert.match(response.headers.get('content-type'),/javascript/);
+   const source=await response.text();
+   for(const match of source.matchAll(/(?:from\s*|import\s*)['"](\.\/[^'"]+\.mjs)['"]/g))pending.push(new URL(match[1],origin+file).pathname);
+  }
+  assert.ok(seen.has('/evidence-contracts.mjs'));
+ });
+});
 for(const kind of ['spatial_field','domain_map'])test(`saved ${kind} opens original overview and retains scientific map through saved FFT navigation`,async()=>{
  const input=evidence(kind);await panelFixture(input,async(panel,calls)=>{
   assert.equal(panel.state().object.object_id,overviewId);assert.deepEqual(panel.state().domain_evidence,input);assert.equal(panel.state().domain_png_base64,png);assert.deepEqual(calls,[input.object_id,overviewId]);

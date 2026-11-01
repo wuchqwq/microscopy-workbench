@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "scope": "Final compiled read-only recovery after finite-statistic guard; not another model/benchmark",
+  "checks": [
+    {
+      "workspace": "2026-10-31-f4b-mcp-r2",
+      "object_count": 3,
+      "unchanged_files": 1017,
+      "new_requests": 0,
+      "new_fft": 0
+    },
+    {
+      "workspace": "2026-10-31-f4b-agent",
+      "object_count": 2,
+      "unchanged_files": 58,
+      "new_requests": 0,
+      "new_fft": 0
+    }
+  ]
+}

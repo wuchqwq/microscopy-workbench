@@ -1,0 +1,362 @@
+{
+  "result": "PASS",
+  "scope": "Actual formal MCP/Python/ASE/diffsims public synthetic evidence, not real specimen, twin law, unique phase or physical intensity validation",
+  "environment": {
+    "platform": "Windows x64",
+    "node": "24.16.0",
+    "python": "3.13.2",
+    "ase": "3.29.0",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "diffsims": "0.7.0",
+    "diffpy.structure": "3.5.0"
+  },
+  "runtime_ms": 114483.1572,
+  "cases": [
+    {
+      "case": "heterophase",
+      "object_id": "4f09ba0f966b4b88b39fe3ad6b313b51",
+      "request_id": "general-smoke-18",
+      "status": "insufficient_evidence",
+      "reason": "Multiple compatible projections or unresolved alternatives remain",
+      "candidate_pairs": [
+        {
+          "label": "BCC / ordered B2",
+          "status": "compatible",
+          "sides": [
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "d0735aace22b49e0a842bdd224c5b184",
+              "orientation_object_id": "319a6c69ab264eba8aacdb2bdd7f63f4",
+              "matched_count": 4,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 16
+            },
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "8069624979a143eebe2e67500965f4d1",
+              "orientation_object_id": "7714c58a8ae842e4a879e15e906b22c0",
+              "matched_count": 6,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 38
+            }
+          ]
+        },
+        {
+          "label": "wrong BCC / BCC",
+          "status": "incompatible",
+          "sides": [
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "d0735aace22b49e0a842bdd224c5b184",
+              "orientation_object_id": "319a6c69ab264eba8aacdb2bdd7f63f4",
+              "matched_count": 4,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 16
+            },
+            {
+              "status": "incompatible",
+              "reason": "The selected observations do not all match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "d0735aace22b49e0a842bdd224c5b184",
+              "orientation_object_id": "319a6c69ab264eba8aacdb2bdd7f63f4",
+              "matched_count": 2,
+              "unmatched_experimental_count": 4,
+              "unmatched_simulated_count": 18
+            }
+          ]
+        },
+        {
+          "label": "projected alternative ordered B2 / B2",
+          "status": "compatible",
+          "sides": [
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "8069624979a143eebe2e67500965f4d1",
+              "orientation_object_id": "7714c58a8ae842e4a879e15e906b22c0",
+              "matched_count": 4,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 40
+            },
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "8069624979a143eebe2e67500965f4d1",
+              "orientation_object_id": "7714c58a8ae842e4a879e15e906b22c0",
+              "matched_count": 6,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 38
+            }
+          ]
+        }
+      ],
+      "interpretation_status": "hypothesized",
+      "phase_identified": false,
+      "twin_law_tested": false
+    },
+    {
+      "case": "hexagonal",
+      "object_id": "32b3822f8c0e4697be543d4e38007e6b",
+      "request_id": "general-smoke-19",
+      "status": "compatible",
+      "reason": "One explicit pair is conditionally compatible within the finite tested set; no unique phase is established",
+      "candidate_pairs": [
+        {
+          "label": "HCP / HCP",
+          "status": "compatible",
+          "sides": [
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "afa467ec1c1444e3bde36bf9b0004dbc",
+              "orientation_object_id": "ace2fa5644a64456b7c627ee64eed225",
+              "matched_count": 6,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 32
+            },
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "afa467ec1c1444e3bde36bf9b0004dbc",
+              "orientation_object_id": "ace2fa5644a64456b7c627ee64eed225",
+              "matched_count": 6,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 32
+            }
+          ]
+        }
+      ],
+      "interpretation_status": "hypothesized",
+      "phase_identified": false,
+      "twin_law_tested": false
+    },
+    {
+      "case": "incomplete",
+      "object_id": "72b875272b184b1e9e0b38c77979e59a",
+      "request_id": "general-smoke-20",
+      "status": "insufficient_evidence",
+      "reason": "Multiple compatible projections or unresolved alternatives remain",
+      "candidate_pairs": [
+        {
+          "label": "incomplete observed directions",
+          "status": "insufficient_evidence",
+          "sides": [
+            {
+              "status": "insufficient_evidence",
+              "reason": "At least two resolved noncollinear reciprocal direction families are required",
+              "structure_object_id": "d0735aace22b49e0a842bdd224c5b184",
+              "orientation_object_id": "319a6c69ab264eba8aacdb2bdd7f63f4",
+              "matched_count": 1,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 19
+            },
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "8069624979a143eebe2e67500965f4d1",
+              "orientation_object_id": "7714c58a8ae842e4a879e15e906b22c0",
+              "matched_count": 6,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 38
+            }
+          ]
+        }
+      ],
+      "interpretation_status": "hypothesized",
+      "phase_identified": false,
+      "twin_law_tested": false
+    },
+    {
+      "case": "revision",
+      "object_id": "adebf2d73d514c58a3abf3d02d4d990b",
+      "request_id": "general-smoke-21",
+      "status": "compatible",
+      "reason": "One explicit pair is conditionally compatible within the finite tested set; no unique phase is established",
+      "candidate_pairs": [
+        {
+          "label": "BCC / ordered B2",
+          "status": "compatible",
+          "sides": [
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "d0735aace22b49e0a842bdd224c5b184",
+              "orientation_object_id": "319a6c69ab264eba8aacdb2bdd7f63f4",
+              "matched_count": 4,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 16
+            },
+            {
+              "status": "compatible",
+              "reason": "All selected observations match this explicit projected candidate within the declared tolerance",
+              "structure_object_id": "8069624979a143eebe2e67500965f4d1",
+              "orientation_object_id": "7714c58a8ae842e4a879e15e906b22c0",
+              "matched_count": 6,
+              "unmatched_experimental_count": 0,
+              "unmatched_simulated_count": 38
+            }
+          ]
+        }
+      ],
+      "interpretation_status": "hypothesized",
+      "phase_identified": false,
+      "twin_law_tested": false
+    }
+  ],
+  "checks": [
+    "Three actual pinned diffsims simulations (BCC, ordered B2 CsCl, HCP) preserve shared UVW orientations; independent analytic HKL and q coordinates agree. Exact source CIF P1 declarations are not falsely promoted to verified crystal symmetry.",
+    "Actual two-ROI source/frame/FFT/signed calibration and numerical observations match independent cosine truth; candidate comparison/revision/query add zero FFT and zero simulations.",
+    "Wrong-ROI input and conflicting original request refuse; a new MCP client recovers original outcomes, preserving all source arrays, old records and authoritative request bytes.",
+    "Correct heterophase BCC/B2 and HCP/HCP geometry is conditional; wrong BCC/BCC fails, shared projected B2/B2 alternative keeps joint verdict insufficient, and one direction cannot establish a two-dimensional relation."
+  ],
+  "integrity": {
+    "source_sha256": {
+      "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\bcc_b2_geometry.tiff": "6619877cde29903402de326473cfd4b03d78af6427df57bb5ab1dec6bea55d2b",
+      "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\bcc_fe_a4.cif": "4249388c34aed3c16286fd84dcbeadb6776ca991f495025e58a6b05d09fb786e",
+      "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\hcp_geometry.tiff": "5845b9a45422584122289511ff0a85050d84540f3311c32f4370316f2a801ddf",
+      "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\hcp_mg_a4_c6.cif": "a8b02bf464eabcf0853a9de2fc5601a20db25663acb99081a029c57c416ed432",
+      "F:\\microscopy-workbench-crystal-evidence\\analysis\\2026-10-31-general-crystal-r2\\fixture\\ordered_b2_cscl_a4.cif": "079a6423ca1a937980ee3ee27df2b314d77630abe3e8f75b4974f5d2e13f404d"
+    },
+    "scientific_files_unchanged": 46,
+    "recovery_files_unchanged": 621,
+    "counts": {
+      "fft": 4,
+      "simulate": 3
+    },
+    "recovery": [
+      {
+        "provider": "structure",
+        "object_id": "0713df25c13949d49fe6ee2c47741595",
+        "request_id": "general-smoke-3"
+      },
+      {
+        "provider": "structure",
+        "object_id": "b6395a91cfe947439cdd5d2cf50c3384",
+        "request_id": "general-smoke-6"
+      },
+      {
+        "provider": "structure",
+        "object_id": "51c755e42a7d45e7b361279d18434227",
+        "request_id": "general-smoke-9"
+      },
+      {
+        "provider": "image",
+        "object_id": "777993a223d64976b974c1a31214f39c",
+        "request_id": "general-smoke-13"
+      },
+      {
+        "provider": "image",
+        "object_id": "72e409470d4b413fbf188fd3509e2db7",
+        "request_id": "general-smoke-17"
+      },
+      {
+        "provider": "structure",
+        "object_id": "4f09ba0f966b4b88b39fe3ad6b313b51",
+        "request_id": "general-smoke-18"
+      },
+      {
+        "provider": "structure",
+        "object_id": "32b3822f8c0e4697be543d4e38007e6b",
+        "request_id": "general-smoke-19"
+      },
+      {
+        "provider": "structure",
+        "object_id": "72b875272b184b1e9e0b38c77979e59a",
+        "request_id": "general-smoke-20"
+      },
+      {
+        "provider": "structure",
+        "object_id": "adebf2d73d514c58a3abf3d02d4d990b",
+        "request_id": "general-smoke-21"
+      }
+    ]
+  },
+  "original_report_sha256": "7c6e93d59ab86cd20005784baa4f7a792a97f2eade79fa058ff8ed90f589b335",
+  "first_report_retained": {
+    "result": "PASS",
+    "runtime_ms": 117875.6261,
+    "sha256": "d3f9dce9f6a3a62b0a9276c078164add192f3706a5a98eb6d29c8eacca6a0183",
+    "display_issue": "Long titles overlapped; fixed wrapping/size only"
+  },
+  "between_run_scientific_arrays": {
+    "equal": true,
+    "files_compared": 12,
+    "scope": "Committed successful frame/FFT/simulation arrays and reflections; refused-operation empty directories retained separately",
+    "files": [
+      [
+        "fft",
+        "data.npy",
+        "25a47c54701576d785611adfaf3ded9d21490e60348a93bc930d74689d5314f5"
+      ],
+      [
+        "fft",
+        "data.npy",
+        "25a47c54701576d785611adfaf3ded9d21490e60348a93bc930d74689d5314f5"
+      ],
+      [
+        "fft",
+        "data.npy",
+        "5348580694305d2e7ee29498ccd9b05d4522780707519c82ab8a6cb30f4edbeb"
+      ],
+      [
+        "fft",
+        "data.npy",
+        "c5b76ad2ba0947929cebe2cc96a20b22adac61f44bd38e7aaefb3d168a171dcb"
+      ],
+      [
+        "frame",
+        "data.npy",
+        "976d95b67ddb3a8f860bc5bf4738e2331c194845a191257b967989415dc7e336"
+      ],
+      [
+        "frame",
+        "data.npy",
+        "a87aa0e8798eeb41e7e5e98dc1423ebf65937e8e951450a3f0bd52e45bcf28b8"
+      ],
+      [
+        "simulate",
+        "input.npy",
+        "3f937c86f97797d4828174a7107cea8761b07459c0ec293268f892af989fe465"
+      ],
+      [
+        "simulate",
+        "input.npy",
+        "4a68a115aaa761166c0cd5cfc59b4bb58f198d6e4932ac79fe91bf346a07e6e3"
+      ],
+      [
+        "simulate",
+        "input.npy",
+        "d3f8f6d3d64b607e6001b2859ac2dd63c69a2f79d4bc10a3ceb2f4392ac037cd"
+      ],
+      [
+        "simulate",
+        "reflections.json",
+        "6994db78b8fcefe020a1c1409d42d896b119090896a3717c1add802070d603f5"
+      ],
+      [
+        "simulate",
+        "reflections.json",
+        "ac4e9c818cc572939f3b7c37a646c39bab59903543238307fd39292fb78d9dc7"
+      ],
+      [
+        "simulate",
+        "reflections.json",
+        "bc38cd0e2057e440561aeafbbc8039684bea60d499d1312b4ab7aa9048dd3eab"
+      ]
+    ]
+  },
+  "not_tested": [
+    "real specimen",
+    "human GUI gestures",
+    "fresh model session",
+    "automatic phase/orientation search",
+    "unique 3D orientation or twin relation",
+    "dynamical scattering/HRTEM contrast/intensity comparison",
+    "worker interruption injection",
+    "Mac desktop or DM"
+  ],
+  "evidence_portability": "Evidence snapshots are not importable provider journals; rerun official smoke for an authoritative workspace."
+}

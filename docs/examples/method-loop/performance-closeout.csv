@@ -1,0 +1,9 @@
+case,strategy,before_seconds,final_seconds,scientific_calls_before,scientific_calls_final
+positive,active_saved_plan,26.4265412,15.7155623,2,2
+positive,fixed_additional_gpa_then_topology,6.290872599999995,5.039885599999998,2,2
+smooth_hotspot,active_saved_plan,2.797219999999994,1.6620659000000013,0,0
+smooth_hotspot,fixed_additional_gpa_then_topology,5.927120900000002,4.757237600000001,2,2
+noise,active_saved_plan,2.772963699999993,1.819292699999998,0,0
+noise,fixed_additional_gpa_then_topology,5.984633699999991,5.224256999999998,2,2
+contrast_vortex,active_saved_plan,26.34804479999999,16.45271979999999,2,2
+contrast_vortex,fixed_additional_gpa_then_topology,5.780959700000007,5.077141100000008,2,2

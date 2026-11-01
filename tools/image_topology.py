@@ -79,10 +79,19 @@ def _load(metadata, directory, name, api):
 
 
 def _source_bundle(workspace, ids, api, *, load=False):
+    return _source_bundle_records(((ident, *workspace.object(ident)) for ident in ids), api, load=load)
+
+
+def _source_bundle_records(records, api, *, load=False):
+    """Shared admission over freshly object()-qualified records, not user JSON.
+
+    The method adapter already needs those same records for policy evidence.
+    Keep grid/calibration/band checks here without traversing their graph twice.
+    No proof is retained across operations or subsequent object() calls.
+    """
     sources, first, phases, amplitudes, vectors, bands = [], None, [], [], [], []
     edge, first_record = None, None
-    for ident in ids:
-        metadata, directory = workspace.object(ident)
+    for ident, metadata, directory in records:
         api.need(metadata.get("kind") == "gpa" and metadata["parameters"]["reference_mode"] == "fixed_g",
                  "First topology scope requires exact fixed_g GPA records; views, fitted references and ordinary image phase are not accepted", "UNSUPPORTED_OPERATION")
         dependency = metadata["input_dependency"]

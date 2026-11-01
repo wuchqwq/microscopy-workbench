@@ -16,6 +16,13 @@ const workerBudgets = [
   'crystallography/structure_tools.py: <=4096 atoms; bounded source/object files and scientific manifests',
 ];
 const recipes:Record<string,Recipe> = {
+  structure_general_compare: {
+    inputs:['Two adjacent ROIRefs:exact saved field/FFT/measurement/source and current calibration','CandidatePairs:1..3 actual structure_simulate references with saved orientations','One shared fixed-scale/DC registration and explicit candidate basis'],
+    outputs:['GeneralCrystallographicEvidence:conditional geometry, qualification sections, unmatched/ambiguous child evidence','DisplayPNG and versioned immutable evidence; never an identified phase or twin law'],
+    kind:'general-crystallographic-evidence-write',
+    gates:['Configured image provider only; exact shared source/frame/array/calibration, positive ROI adjacency','Original structure sites/cell/occupancy/symmetry status and retained actual simulation certificate','Fixed independent scale1/DC0; no per-side fit, orientation search, intensity match or physical twin inference'],
+    budgets:['Exactly2 ROIs and1..3 candidate pairs; at most6 existing comparison child calls','Revision depth<=16; authoritative original requests and frozen input receipts; no FFT/simulation recomputation'],
+  },
   structure_twin_evidence: {
     inputs:['TwinEvidenceRef:exact saved F3b object ID','NumericalSection:comparison,section,offset,limit'],
     outputs:['EvidencePage:hashed immutable numerical rows including unmatched predictions; historical snapshot'],

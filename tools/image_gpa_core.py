@@ -15,7 +15,6 @@ import math
 from importlib.metadata import version
 
 import numpy as np
-from scipy import ndimage
 
 
 ALGORITHM_VERSION = "classical-two-g-gpa-finite-v1"
@@ -80,6 +79,7 @@ def _mask_geometry(g_vectors, sigma, shape):
 
 def _residues(phase, eligible):
     """Flag plaquette winding for masking, without interpreting defects."""
+    from scipy import ndimage
     dx = _wrap(np.diff(phase, axis=1))
     dy = _wrap(np.diff(phase, axis=0))
     circulation = dx[:-1, :] + dy[:, 1:] - dx[1:, :] - dy[:, :-1]
@@ -113,6 +113,7 @@ def _unwrap(phase, valid, seed):
 
 def _unwrap_discontinuities(unwrapped, wrapped, valid):
     """Exclude unavoidable branch jumps across masked holes or residues."""
+    from scipy import ndimage
     invalid = np.zeros_like(valid)
     for axis in (0, 1):
         left = (slice(None, -1), slice(None)) if axis == 0 else (slice(None), slice(None, -1))
@@ -143,6 +144,9 @@ def analyze(spectrum, g_vectors, mask_sigma, reference_rect, *,
     outputs contain NaN outside their saved masks. Complex bands, amplitudes,
     filter masks and wrapped phases are retained as unmasked diagnostics.
     """
+    # Saved-record validation uses only constants/geometry from this module.
+    # Load the unchanged numerical dependency only for an actual computation.
+    from scipy import ndimage
     values = np.asarray(spectrum)
     _need(values.ndim == 2 and values.dtype == np.dtype("complex128") and
           all(64 <= n <= 512 for n in values.shape),

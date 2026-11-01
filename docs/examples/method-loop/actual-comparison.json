@@ -1,0 +1,698 @@
+{
+  "schema": "public-f4-full-method-loop-actual-comparison-v1",
+  "result": "PASS",
+  "scope": "Actual Plugin MCP stdio + independent Python on four public analytic image-model fixtures; first fixed-g GPA/reflection/topology loop only",
+  "original_evidence": {
+    "full_path": "F:\\microscopy-workbench-f4-full\\analysis\\2026-10-30-f4-full-mcp-01\\report.json",
+    "sha256": "897a85c4a2d8220df12067ef10fd3cf70675f762a0cef59db9ae48153e641c93",
+    "started_utc": "2026-10-30T15:32:26.586Z",
+    "completed_utc": "2026-10-30T15:37:15.310Z",
+    "runtime_ms": 288723.4098
+  },
+  "late_read_only_supplement": {
+    "full_path": "F:\\microscopy-workbench-f4-full\\analysis\\2026-10-30-f4-full-mcp-01\\failed-recovery-supplement-r2.json",
+    "sha256": "f8aca09c89ffa80bafebc797314b2c78a22a801880b9af3022093769792106da",
+    "result": "PASS",
+    "scope": "New-client actual public MCP queries of original failed IDs. Standard preflight MCP errors are plain text; exact original errors and immutable provider-journal identities are both checked. No scientific rerun.",
+    "scientific_calls": 0,
+    "new_objects": 0,
+    "new_requests": 0,
+    "retained_report_unchanged": true,
+    "prior_harness_failure_retained": {
+      "file": "failed-recovery-supplement.json",
+      "sha256": "432e66a7f382f3f352383c5b77b9a98018575c3357bc93d251f804a7d60ab1a5",
+      "reason": "Late harness incorrectly assumed a plain-text standard MCP error was JSON; no production error or scientific tolerance change."
+    }
+  },
+  "versions": {
+    "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "scikit_image": "0.26.0"
+  },
+  "additional_budget_cap": {
+    "method_calls": 2,
+    "fft_pixels": 0,
+    "gpa_band_pixels": 131072,
+    "topology_path_samples": 5328
+  },
+  "budget_semantics": {
+    "initial_inputs": "One explicit 65536-pixel FFT and one two-band 131072-band-pixel GPA per case are common reused inputs, reported separately from additional comparison caps.",
+    "topology_reservation": "Conservative fixed API reservation: six possible retained bands times 888 supplied boundary samples = 5328; actual three-band topology uses 2664 band-path samples.",
+    "all_attempts": "Every failed, completed or unknown dispatch is charged its original reserved cost and keeps elapsed time; the actual preflight refusal control consumes one method-call reservation per refused original submission.",
+    "unused": "The strategies receive equal caps. Stopping early may leave unused budget; equal spent work is not required."
+  },
+  "timing_limitations": [
+    "One observed end-to-end run, not a controlled performance experiment; cold loading, validation and local audit overhead differ.",
+    "Active elapsed includes saved plan/step/next operations, child info reads and immutable-record audit; fixed elapsed includes the two direct scientific calls.",
+    "Positive active 54.4s versus fixed 7.4s; contrast active 30.7s versus fixed 6.3s. No active runtime speedup or universal strategy superiority is claimed."
+  ],
+  "truth_distinctions": {
+    "positive": {
+      "winding": [
+        -1,
+        0,
+        -1
+      ],
+      "b_pixel_xy": [
+        8,
+        0
+      ]
+    },
+    "smooth_hotspot": {
+      "winding": [
+        0,
+        0,
+        0
+      ],
+      "single_valued": true
+    },
+    "noise": {
+      "seed": 20261030,
+      "no_projected_evidence_on_preregistered_paths": true
+    },
+    "contrast_vortex": {
+      "winding": [
+        -1,
+        0,
+        -1
+      ],
+      "material_b_pixel_xy": [
+        0,
+        0
+      ],
+      "same_intensities_as_positive": true
+    }
+  },
+  "material_dislocation_confirmed": false,
+  "burgers_3d_unique": false,
+  "cases": [
+    {
+      "case": "positive",
+      "source_sha256": "abe7fba16828234109db518a732c466976e1b2a43a252557b581d720c22a6946",
+      "common_inputs": {
+        "source_id": "aee7f3ce58884bba951209ebee6c4239",
+        "frame_id": "2cfaee3c4df446df8b9a8b39b6e34b24",
+        "fft_id": "993f82820ce34c078cdda9e26685afda",
+        "seed_gpa_id": "a26f34f86756445fa20108d3b44a29f7",
+        "fft_pixels": 65536,
+        "gpa_band_pixels": 131072
+      },
+      "strategies": [
+        {
+          "strategy": "active_saved_plan",
+          "method_attempt_count": 2,
+          "reserved_cost": {
+            "method_calls": 2,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 131072,
+            "topology_path_samples": 5328
+          },
+          "actual_retained_band_path_samples": 2664,
+          "elapsed_ms": 54375.4321,
+          "status": "projected_topological_evidence",
+          "topology_object_id": "6c13d1a81c7b421c880cbe2ab9bfe6a9",
+          "attempts": [
+            {
+              "tool": "gpa",
+              "request_id": "method-977ed24e178a49ccaaeb92760f1de6b4-1",
+              "reserved": {
+                "method_calls": 1,
+                "gpa_band_pixels": 131072,
+                "topology_path_samples": 0,
+                "fft_pixels": 0
+              },
+              "elapsed_ms": 4779.4375,
+              "state": "completed"
+            },
+            {
+              "tool": "topology",
+              "request_id": "method-977ed24e178a49ccaaeb92760f1de6b4-2",
+              "reserved": {
+                "method_calls": 1,
+                "gpa_band_pixels": 0,
+                "topology_path_samples": 5328,
+                "fft_pixels": 0
+              },
+              "elapsed_ms": 18677.652400000003,
+              "state": "completed"
+            }
+          ],
+          "interpretation_status": "hypothesized",
+          "reflection_count": 3,
+          "loop_winding": [
+            [
+              -1,
+              0,
+              -1
+            ],
+            [
+              -1,
+              0,
+              -1
+            ]
+          ],
+          "b_pixel_xy": [
+            7.999999999999997,
+            0
+          ],
+          "original_ledger_attempts": [
+            {
+              "request_id": "method-977ed24e178a49ccaaeb92760f1de6b4-1",
+              "state": "completed",
+              "reserved_cost": {
+                "fft_pixels": 0,
+                "gpa_band_pixels": 131072,
+                "method_calls": 1,
+                "topology_path_samples": 0
+              },
+              "elapsed_ms": 1963.3533000014722,
+              "automatic_retry": false
+            },
+            {
+              "request_id": "method-977ed24e178a49ccaaeb92760f1de6b4-2",
+              "state": "completed",
+              "reserved_cost": {
+                "fft_pixels": 0,
+                "gpa_band_pixels": 0,
+                "method_calls": 1,
+                "topology_path_samples": 5328
+              },
+              "elapsed_ms": 14899.572200025432,
+              "automatic_retry": false
+            }
+          ]
+        },
+        {
+          "strategy": "fixed_additional_gpa_then_topology",
+          "method_attempt_count": 2,
+          "reserved_cost": {
+            "method_calls": 2,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 131072,
+            "topology_path_samples": 5328
+          },
+          "actual_retained_band_path_samples": 2664,
+          "elapsed_ms": 7386.964300000007,
+          "status": "projected_topological_evidence",
+          "topology_object_id": "1d00685e2f4a4f1dbf632acf03b0f408",
+          "attempts": [
+            {
+              "tool": "image_gpa",
+              "request_id": "method-fixed-positive-image_gpa",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 131072,
+                "topology_path_samples": 0
+              },
+              "elapsed_ms": 3985.708999999988,
+              "state": "completed"
+            },
+            {
+              "tool": "image_topology",
+              "request_id": "method-fixed-positive-image_topology",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 0,
+                "topology_path_samples": 5328
+              },
+              "elapsed_ms": 3401.0111999999936,
+              "state": "completed"
+            }
+          ],
+          "interpretation_status": "hypothesized",
+          "reflection_count": 3,
+          "loop_winding": [
+            [
+              -1,
+              0,
+              -1
+            ],
+            [
+              -1,
+              0,
+              -1
+            ]
+          ],
+          "b_pixel_xy": [
+            7.999999999999997,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "case": "smooth_hotspot",
+      "source_sha256": "73d75e342e9e40e938868f6ce19a4f5855b39cceb124fce2925803a5fa8786ba",
+      "common_inputs": {
+        "source_id": "c0698824f66d4187a49b3ef13efadba6",
+        "frame_id": "182bd8d43306498f9e7f243b453d90b4",
+        "fft_id": "234a2840a439431e91d20dd5fc3a59ff",
+        "seed_gpa_id": "bde6ba2cdb9a4dfb8e97cd5af3ffd37a",
+        "fft_pixels": 65536,
+        "gpa_band_pixels": 131072
+      },
+      "strategies": [
+        {
+          "strategy": "active_saved_plan",
+          "method_attempt_count": 0,
+          "reserved_cost": {
+            "method_calls": 0,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 0,
+            "topology_path_samples": 0
+          },
+          "actual_retained_band_path_samples": 0,
+          "elapsed_ms": 3617.260699999999,
+          "status": "clean_finite_saved_phase_roi",
+          "topology_object_id": null,
+          "attempts": [],
+          "interpretation_status": "hypothesized",
+          "original_ledger_attempts": []
+        },
+        {
+          "strategy": "fixed_additional_gpa_then_topology",
+          "method_attempt_count": 2,
+          "reserved_cost": {
+            "method_calls": 2,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 131072,
+            "topology_path_samples": 5328
+          },
+          "actual_retained_band_path_samples": 2664,
+          "elapsed_ms": 7446.178,
+          "status": "no_net_winding_detected",
+          "topology_object_id": "add6121ef5144595847f6d410c664ea4",
+          "attempts": [
+            {
+              "tool": "image_gpa",
+              "request_id": "method-fixed-smooth_hotspot-image_gpa",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 131072,
+                "topology_path_samples": 0
+              },
+              "elapsed_ms": 4178.859300000011,
+              "state": "completed"
+            },
+            {
+              "tool": "image_topology",
+              "request_id": "method-fixed-smooth_hotspot-image_topology",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 0,
+                "topology_path_samples": 5328
+              },
+              "elapsed_ms": 3267.217199999999,
+              "state": "completed"
+            }
+          ],
+          "interpretation_status": "hypothesized",
+          "reflection_count": 3,
+          "loop_winding": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "b_pixel_xy": [
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "case": "noise",
+      "source_sha256": "c968f5810acc2c364d8262e7f2d10f6f5cc7d32ff67ef50088a14a68dbb6547d",
+      "common_inputs": {
+        "source_id": "a612d5342bc74ce58f2ebd9292ab64fe",
+        "frame_id": "7b82d9e582f44279a44cc1ed6233b2d4",
+        "fft_id": "3d8bc3ba91f04a7eb6ca07eac2b9b4f9",
+        "seed_gpa_id": "e9f4f147f3ec4f709638af14602fc88e",
+        "fft_pixels": 65536,
+        "gpa_band_pixels": 131072
+      },
+      "strategies": [
+        {
+          "strategy": "active_saved_plan",
+          "method_attempt_count": 0,
+          "reserved_cost": {
+            "method_calls": 0,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 0,
+            "topology_path_samples": 0
+          },
+          "actual_retained_band_path_samples": 0,
+          "elapsed_ms": 3560.965299999996,
+          "status": "phase_quality_limited",
+          "topology_object_id": null,
+          "attempts": [],
+          "interpretation_status": "hypothesized",
+          "original_ledger_attempts": []
+        },
+        {
+          "strategy": "fixed_additional_gpa_then_topology",
+          "method_attempt_count": 2,
+          "reserved_cost": {
+            "method_calls": 2,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 131072,
+            "topology_path_samples": 5328
+          },
+          "actual_retained_band_path_samples": 2664,
+          "elapsed_ms": 7354.840000000011,
+          "status": "insufficient_loop_stability",
+          "topology_object_id": "1ca0d860484d4f7ca0a43a4e6fd6c2ae",
+          "attempts": [
+            {
+              "tool": "image_gpa",
+              "request_id": "method-fixed-noise-image_gpa",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 131072,
+                "topology_path_samples": 0
+              },
+              "elapsed_ms": 3939.9146000000037,
+              "state": "completed"
+            },
+            {
+              "tool": "image_topology",
+              "request_id": "method-fixed-noise-image_topology",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 0,
+                "topology_path_samples": 5328
+              },
+              "elapsed_ms": 3414.8139000000083,
+              "state": "completed"
+            }
+          ],
+          "interpretation_status": "hypothesized",
+          "reflection_count": 3,
+          "loop_winding": [
+            [
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null
+            ]
+          ],
+          "b_pixel_xy": null
+        }
+      ]
+    },
+    {
+      "case": "contrast_vortex",
+      "source_sha256": "abe7fba16828234109db518a732c466976e1b2a43a252557b581d720c22a6946",
+      "common_inputs": {
+        "source_id": "e313ee06e5ed4a9c826df0e91b194330",
+        "frame_id": "647e6798c53f4333bc247efbb0b9e740",
+        "fft_id": "caa908a7b1db407da426a4f90e178251",
+        "seed_gpa_id": "2414d1c0d3cf43c3bca4f6f38726cbc0",
+        "fft_pixels": 65536,
+        "gpa_band_pixels": 131072
+      },
+      "strategies": [
+        {
+          "strategy": "active_saved_plan",
+          "method_attempt_count": 2,
+          "reserved_cost": {
+            "method_calls": 2,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 131072,
+            "topology_path_samples": 5328
+          },
+          "actual_retained_band_path_samples": 2664,
+          "elapsed_ms": 30664.79860000001,
+          "status": "projected_topological_evidence",
+          "topology_object_id": "52ea133dbc53412ea26c7e6dc3a76891",
+          "attempts": [
+            {
+              "tool": "gpa",
+              "request_id": "method-ff8addcd5d144851b4cfbc807e5f310c-1",
+              "reserved": {
+                "method_calls": 1,
+                "gpa_band_pixels": 131072,
+                "topology_path_samples": 0,
+                "fft_pixels": 0
+              },
+              "elapsed_ms": 4288.100199999986,
+              "state": "completed"
+            },
+            {
+              "tool": "topology",
+              "request_id": "method-ff8addcd5d144851b4cfbc807e5f310c-2",
+              "reserved": {
+                "method_calls": 1,
+                "gpa_band_pixels": 0,
+                "topology_path_samples": 5328,
+                "fft_pixels": 0
+              },
+              "elapsed_ms": 6861.5625,
+              "state": "completed"
+            }
+          ],
+          "interpretation_status": "hypothesized",
+          "reflection_count": 3,
+          "loop_winding": [
+            [
+              -1,
+              0,
+              -1
+            ],
+            [
+              -1,
+              0,
+              -1
+            ]
+          ],
+          "b_pixel_xy": [
+            7.999999999999997,
+            0
+          ],
+          "original_ledger_attempts": [
+            {
+              "request_id": "method-ff8addcd5d144851b4cfbc807e5f310c-1",
+              "state": "completed",
+              "reserved_cost": {
+                "fft_pixels": 0,
+                "gpa_band_pixels": 131072,
+                "method_calls": 1,
+                "topology_path_samples": 0
+              },
+              "elapsed_ms": 1591.2622000323609,
+              "automatic_retry": false
+            },
+            {
+              "request_id": "method-ff8addcd5d144851b4cfbc807e5f310c-2",
+              "state": "completed",
+              "reserved_cost": {
+                "fft_pixels": 0,
+                "gpa_band_pixels": 0,
+                "method_calls": 1,
+                "topology_path_samples": 5328
+              },
+              "elapsed_ms": 3871.756099979393,
+              "automatic_retry": false
+            }
+          ]
+        },
+        {
+          "strategy": "fixed_additional_gpa_then_topology",
+          "method_attempt_count": 2,
+          "reserved_cost": {
+            "method_calls": 2,
+            "fft_pixels": 0,
+            "gpa_band_pixels": 131072,
+            "topology_path_samples": 5328
+          },
+          "actual_retained_band_path_samples": 2664,
+          "elapsed_ms": 6262.913800000009,
+          "status": "projected_topological_evidence",
+          "topology_object_id": "2b88f6fa392a4b759e2c88dddbe73442",
+          "attempts": [
+            {
+              "tool": "image_gpa",
+              "request_id": "method-fixed-contrast_vortex-image_gpa",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 131072,
+                "topology_path_samples": 0
+              },
+              "elapsed_ms": 3320.186300000001,
+              "state": "completed"
+            },
+            {
+              "tool": "image_topology",
+              "request_id": "method-fixed-contrast_vortex-image_topology",
+              "reserved": {
+                "method_calls": 1,
+                "fft_pixels": 0,
+                "gpa_band_pixels": 0,
+                "topology_path_samples": 5328
+              },
+              "elapsed_ms": 2942.6381999999867,
+              "state": "completed"
+            }
+          ],
+          "interpretation_status": "hypothesized",
+          "reflection_count": 3,
+          "loop_winding": [
+            [
+              -1,
+              0,
+              -1
+            ],
+            [
+              -1,
+              0,
+              -1
+            ]
+          ],
+          "b_pixel_xy": [
+            7.999999999999997,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "controls": {
+    "missing_information": "request_information without scientific child",
+    "information_patch": "new immutable proposal, original budget root retained, no scientific child",
+    "zero_budget": "no scientific child",
+    "actual_failed_preflight": {
+      "attempt_count": 2,
+      "spent": {
+        "method_calls": 2,
+        "fft_pixels": 0,
+        "gpa_band_pixels": 0,
+        "topology_path_samples": 0
+      },
+      "attempts": [
+        {
+          "slot": 1,
+          "request_id": "method-4f9162f6bb764c30a394dddcc6e3aa40-1",
+          "state": "failed",
+          "status": "failed",
+          "verified": true,
+          "method_attempt": {
+            "phase": "preflight",
+            "reserved_cost": {
+              "fft_pixels": 0,
+              "gpa_band_pixels": 0,
+              "method_calls": 1,
+              "topology_path_samples": 0
+            }
+          },
+          "reserved_cost": {
+            "fft_pixels": 0,
+            "gpa_band_pixels": 0,
+            "method_calls": 1,
+            "topology_path_samples": 0
+          },
+          "costs": {
+            "fft_pixels": 0,
+            "gpa_band_pixels": 0,
+            "method_calls": 1,
+            "topology_path_samples": 0
+          },
+          "elapsed_ms": 661.4342000102624,
+          "automatic_retry": false,
+          "request_ref": {
+            "provider": "external-image-workspace",
+            "workspace": "F:\\microscopy-workbench-f4-full\\analysis\\2026-10-30-f4-full-mcp-01\\workspace\\images",
+            "session": "workspace-journal-v1",
+            "request_id": "method-4f9162f6bb764c30a394dddcc6e3aa40-1"
+          },
+          "error": {
+            "code": "INVALID_ARGUMENT",
+            "message": "Select an action actually saved in this proposal"
+          },
+          "effective_state": "failed"
+        },
+        {
+          "slot": 2,
+          "request_id": "method-4f9162f6bb764c30a394dddcc6e3aa40-2",
+          "state": "failed",
+          "status": "failed",
+          "verified": true,
+          "method_attempt": {
+            "phase": "preflight",
+            "reserved_cost": {
+              "fft_pixels": 0,
+              "gpa_band_pixels": 0,
+              "method_calls": 1,
+              "topology_path_samples": 0
+            }
+          },
+          "reserved_cost": {
+            "fft_pixels": 0,
+            "gpa_band_pixels": 0,
+            "method_calls": 1,
+            "topology_path_samples": 0
+          },
+          "costs": {
+            "fft_pixels": 0,
+            "gpa_band_pixels": 0,
+            "method_calls": 1,
+            "topology_path_samples": 0
+          },
+          "elapsed_ms": 2213.7620999710634,
+          "automatic_retry": false,
+          "request_ref": {
+            "provider": "external-image-workspace",
+            "workspace": "F:\\microscopy-workbench-f4-full\\analysis\\2026-10-30-f4-full-mcp-01\\workspace\\images",
+            "session": "workspace-journal-v1",
+            "request_id": "method-4f9162f6bb764c30a394dddcc6e3aa40-2"
+          },
+          "error": {
+            "code": "INVALID_ARGUMENT",
+            "message": "Select an action actually saved in this proposal"
+          },
+          "effective_state": "failed"
+        }
+      ]
+    },
+    "fresh_recovery": {
+      "fresh_client": true,
+      "plan_step_count": 12,
+      "new_scientific_objects": 0,
+      "new_forward_fft": 0
+    },
+    "unknown_loss_injection": "NOT_TESTED in this actual smoke; separate journal/policy fault fixtures are a different scope"
+  },
+  "not_tested": [
+    "fresh ordinary model/researcher session",
+    "browser or GUI gestures",
+    "real specimen or material-defect accuracy",
+    "GMS/DM/vendor/hardware",
+    "lost-response/cancellation injection",
+    "general noise discrimination",
+    "active-strategy universal superiority",
+    "unique conventional 3D Burgers vector"
+  ],
+  "artifacts": {
+    "csv": "actual-comparison.csv",
+    "chart": "actual-comparison.png",
+    "unchanged_saved_positive_topology_preview": "actual-positive-topology.png"
+  }
+}

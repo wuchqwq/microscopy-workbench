@@ -1,0 +1,575 @@
+{
+  "status": "PASS",
+  "date": "2026-10-31",
+  "baseline": "558073eafae601001a5f1b0e9ace095b422d1954",
+  "scope": "Actual fresh Codex analysis and recovery, plus another fresh recovery on final optimized runtime; direct restricted MCP plus exact supplied public Skill text. No automatic plugin discovery claim.",
+  "sessions": [
+    {
+      "mode": "agent-analyze-01",
+      "thread_id": "01a18da9-2e38-7f42-a2bf-bac823f23b3a",
+      "elapsed_seconds": 83.82823039998766,
+      "allowed_tools": [
+        "image_info",
+        "image_result",
+        "image_method_plan",
+        "image_method_step",
+        "image_method_next"
+      ],
+      "global_config_unchanged": true,
+      "event_sha256": "d4130c5d385ce6dc5a094c20f983721cd8b8af33eca04551e0e63e8e2c9c4fe3",
+      "calls": [
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "a26f34f86756445fa20108d3b44a29f7",
+            "response_detail": "compact"
+          },
+          "object_id": "a26f34f86756445fa20108d3b44a29f7",
+          "original_request_id": "method-smoke-4",
+          "kind": "gpa",
+          "manifest_sha256": "2cbbdc0e6ff00460d74b42e44f2bbae4af5622dc792d00e7f8b294c0671f6179"
+        },
+        {
+          "tool": "image_method_plan",
+          "arguments": {
+            "request_id": "qualify-f4-plan-01",
+            "object_ids": [
+              "a26f34f86756445fa20108d3b44a29f7"
+            ],
+            "budget": {
+              "method_calls": 2,
+              "fft_pixels": 0,
+              "gpa_band_pixels": 131072,
+              "topology_path_samples": 5328
+            },
+            "information": {
+              "goal": "projected_topology",
+              "followup_g_vectors": [
+                [
+                  0.125,
+                  0
+                ],
+                [
+                  0.125,
+                  0.125
+                ]
+              ],
+              "followup_basis": "Explicit candidate periodic carrier directions in cycles/pixel; not confirmed material HKL",
+              "loops": [
+                {
+                  "loop_id": "inner",
+                  "rect": [
+                    80,
+                    80,
+                    176,
+                    176
+                  ],
+                  "orientation": "positive_image_xy"
+                },
+                {
+                  "loop_id": "outer",
+                  "rect": [
+                    64,
+                    64,
+                    192,
+                    192
+                  ],
+                  "orientation": "positive_image_xy"
+                }
+              ],
+              "model_assumption_text": "The simple complete projected closure model is only a working image model, not material-dislocation truth."
+            }
+          },
+          "object_id": "7b51da391a9740829380b0f6509c6efb",
+          "original_request_id": "qualify-f4-plan-01",
+          "kind": "method_plan",
+          "manifest_sha256": "812a6f6d4ad0279a0906794bd7240a616f027d34d199b0b8e964a787682f6891"
+        },
+        {
+          "tool": "image_method_step",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+            "root_plan_id": "7b51da391a9740829380b0f6509c6efb",
+            "object_id": "7b51da391a9740829380b0f6509c6efb",
+            "action_id": "3ef4c9e96914658b4b148af5671e841b",
+            "selection_reason": "Saved fixed_g GPA has localized low-amplitude/unwrap diagnostics within heuristic quality guards. The supplied diagonal carrier adds a third resolved direction for checking the working projected closure model, reusing the exact FFT and reference within budget."
+          },
+          "object_id": "2b96ae0455274a4ab326701ed2ab3f7f",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+          "kind": "method_step",
+          "manifest_sha256": "97df472f3c9551fad9b1fc80165edc9977ab7c42358330844bebc22789b4bbe3"
+        },
+        {
+          "tool": "image_method_next",
+          "arguments": {
+            "request_id": "qualify-f4-next-01",
+            "object_id": "2b96ae0455274a4ab326701ed2ab3f7f"
+          },
+          "object_id": "e3be58a5f9df457f9de28dfd75c0090c",
+          "original_request_id": "qualify-f4-next-01",
+          "kind": "method_plan",
+          "manifest_sha256": "782babaafcc2ba7c424e55e9eacd762d4be5627654c5d571aacc9e00b2485e4e"
+        },
+        {
+          "tool": "image_method_step",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+            "root_plan_id": "7b51da391a9740829380b0f6509c6efb",
+            "object_id": "e3be58a5f9df457f9de28dfd75c0090c",
+            "action_id": "288e9329ffab86eea3710fd59e02d245",
+            "selection_reason": "The completed GPA adds a third finite-resolution carrier family and remains within phase quality guards. The explicitly permitted nested circuits can test winding stability and directional consistency of the supplied working image model with the remaining bounded budget."
+          },
+          "object_id": "e98c2eaafac142fe8ec3dacdb5565f6d",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+          "kind": "method_step",
+          "manifest_sha256": "0f7ffc0824ffd5e2a979600dc154af54b383891f726c3b72801697f623a64a24"
+        },
+        {
+          "tool": "image_method_next",
+          "arguments": {
+            "request_id": "qualify-f4-next-02",
+            "object_id": "e98c2eaafac142fe8ec3dacdb5565f6d"
+          },
+          "object_id": "2c9942d0350a44a3be221134b1d568f6",
+          "original_request_id": "qualify-f4-next-02",
+          "kind": "method_plan",
+          "manifest_sha256": "4b29151f8623d18790436fb53663102f3be327d3b394d3af40ef539cc48153c2"
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+            "response_detail": "compact"
+          },
+          "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+          "original_request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+          "kind": "topology",
+          "manifest_sha256": "9e703b98e697c6af655eb61dd1c12a2a7c9b02f53f0046273c07a0f95b1673b3"
+        }
+      ]
+    },
+    {
+      "mode": "agent-recover-01",
+      "thread_id": "01a18dac-5dc5-7800-84ea-4978056ce112",
+      "elapsed_seconds": 76.13497329992242,
+      "allowed_tools": [
+        "image_info",
+        "image_result"
+      ],
+      "global_config_unchanged": true,
+      "event_sha256": "1d961a6381f4bc9f716e9b5a7dfb6b7ffddc9e225a2bde1c0e617874613b7d06",
+      "calls": [
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-plan-01",
+            "response_detail": "compact"
+          },
+          "object_id": "7b51da391a9740829380b0f6509c6efb",
+          "original_request_id": "qualify-f4-plan-01",
+          "kind": "method_plan",
+          "manifest_sha256": "812a6f6d4ad0279a0906794bd7240a616f027d34d199b0b8e964a787682f6891"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-2",
+            "response_detail": "full"
+          },
+          "object_id": "2cfaee3c4df446df8b9a8b39b6e34b24",
+          "original_request_id": "method-smoke-2",
+          "kind": "frame",
+          "manifest_sha256": "d9e87411464d2c0948f9de0f5b712a14b638ab11889f20c87c8b2edeb8ff06bb"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-3",
+            "response_detail": "full"
+          },
+          "object_id": "993f82820ce34c078cdda9e26685afda",
+          "original_request_id": "method-smoke-3",
+          "kind": "fft",
+          "manifest_sha256": "cd39e75139ffae11f93cc7f92de69b9613793bd10a2b1f01cccaadb247c05d13"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-4",
+            "response_detail": "full"
+          },
+          "object_id": "a26f34f86756445fa20108d3b44a29f7",
+          "original_request_id": "method-smoke-4",
+          "kind": "gpa",
+          "manifest_sha256": "2cbbdc0e6ff00460d74b42e44f2bbae4af5622dc792d00e7f8b294c0671f6179"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-plan-01",
+            "response_detail": "full"
+          },
+          "object_id": "7b51da391a9740829380b0f6509c6efb",
+          "original_request_id": "qualify-f4-plan-01",
+          "kind": "method_plan",
+          "manifest_sha256": "812a6f6d4ad0279a0906794bd7240a616f027d34d199b0b8e964a787682f6891"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+            "response_detail": "full"
+          },
+          "object_id": "2b96ae0455274a4ab326701ed2ab3f7f",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+          "kind": "method_step",
+          "manifest_sha256": "97df472f3c9551fad9b1fc80165edc9977ab7c42358330844bebc22789b4bbe3"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-958f80a7e543272778ac67b699d36f55b2c0ffa60d76f6a2",
+            "response_detail": "full"
+          },
+          "object_id": "2c25a0f0bc9642c4a637e1504dc56006",
+          "original_request_id": "auto-958f80a7e543272778ac67b699d36f55b2c0ffa60d76f6a2",
+          "kind": "gpa",
+          "manifest_sha256": "49ffe322c818757190bbcbc0cea155185e40a45f5637a7b40c6008904f7ff9e0"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+            "response_detail": "full"
+          },
+          "object_id": "e98c2eaafac142fe8ec3dacdb5565f6d",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+          "kind": "method_step",
+          "manifest_sha256": "0f7ffc0824ffd5e2a979600dc154af54b383891f726c3b72801697f623a64a24"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+            "response_detail": "full"
+          },
+          "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+          "original_request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+          "kind": "topology",
+          "manifest_sha256": "9e703b98e697c6af655eb61dd1c12a2a7c9b02f53f0046273c07a0f95b1673b3"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-next-01",
+            "response_detail": "full"
+          },
+          "object_id": "e3be58a5f9df457f9de28dfd75c0090c",
+          "original_request_id": "qualify-f4-next-01",
+          "kind": "method_plan",
+          "manifest_sha256": "782babaafcc2ba7c424e55e9eacd762d4be5627654c5d571aacc9e00b2485e4e"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-next-02",
+            "response_detail": "full"
+          },
+          "object_id": "2c9942d0350a44a3be221134b1d568f6",
+          "original_request_id": "qualify-f4-next-02",
+          "kind": "method_plan",
+          "manifest_sha256": "4b29151f8623d18790436fb53663102f3be327d3b394d3af40ef539cc48153c2"
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+            "response_detail": "compact"
+          },
+          "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+          "original_request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+          "kind": "topology",
+          "manifest_sha256": "9e703b98e697c6af655eb61dd1c12a2a7c9b02f53f0046273c07a0f95b1673b3"
+        }
+      ]
+    },
+    {
+      "mode": "agent-recover-final",
+      "thread_id": "01a18db9-0313-74a2-aaba-0f89976e9478",
+      "elapsed_seconds": 91.0937755999621,
+      "allowed_tools": [
+        "image_info",
+        "image_result"
+      ],
+      "global_config_unchanged": true,
+      "event_sha256": "80a2811b5f717dd29daba38aa545e22ca08ebd332b0abeb18c3c003358c49213",
+      "calls": [
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-2",
+            "response_detail": "compact"
+          },
+          "object_id": "2cfaee3c4df446df8b9a8b39b6e34b24",
+          "original_request_id": "method-smoke-2",
+          "kind": "frame",
+          "manifest_sha256": "d9e87411464d2c0948f9de0f5b712a14b638ab11889f20c87c8b2edeb8ff06bb"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-3",
+            "response_detail": "compact"
+          },
+          "object_id": "993f82820ce34c078cdda9e26685afda",
+          "original_request_id": "method-smoke-3",
+          "kind": "fft",
+          "manifest_sha256": "cd39e75139ffae11f93cc7f92de69b9613793bd10a2b1f01cccaadb247c05d13"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-4",
+            "response_detail": "compact"
+          },
+          "object_id": "a26f34f86756445fa20108d3b44a29f7",
+          "original_request_id": "method-smoke-4",
+          "kind": "gpa",
+          "manifest_sha256": "2cbbdc0e6ff00460d74b42e44f2bbae4af5622dc792d00e7f8b294c0671f6179"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-plan-01",
+            "response_detail": "compact"
+          },
+          "object_id": "7b51da391a9740829380b0f6509c6efb",
+          "original_request_id": "qualify-f4-plan-01",
+          "kind": "method_plan",
+          "manifest_sha256": "812a6f6d4ad0279a0906794bd7240a616f027d34d199b0b8e964a787682f6891"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+            "response_detail": "compact"
+          },
+          "object_id": "2b96ae0455274a4ab326701ed2ab3f7f",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+          "kind": "method_step",
+          "manifest_sha256": "97df472f3c9551fad9b1fc80165edc9977ab7c42358330844bebc22789b4bbe3"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-958f80a7e543272778ac67b699d36f55b2c0ffa60d76f6a2",
+            "response_detail": "compact"
+          },
+          "object_id": "2c25a0f0bc9642c4a637e1504dc56006",
+          "original_request_id": "auto-958f80a7e543272778ac67b699d36f55b2c0ffa60d76f6a2",
+          "kind": "gpa",
+          "manifest_sha256": "49ffe322c818757190bbcbc0cea155185e40a45f5637a7b40c6008904f7ff9e0"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-next-01",
+            "response_detail": "compact"
+          },
+          "object_id": "e3be58a5f9df457f9de28dfd75c0090c",
+          "original_request_id": "qualify-f4-next-01",
+          "kind": "method_plan",
+          "manifest_sha256": "782babaafcc2ba7c424e55e9eacd762d4be5627654c5d571aacc9e00b2485e4e"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+            "response_detail": "compact"
+          },
+          "object_id": "e98c2eaafac142fe8ec3dacdb5565f6d",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+          "kind": "method_step",
+          "manifest_sha256": "0f7ffc0824ffd5e2a979600dc154af54b383891f726c3b72801697f623a64a24"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+            "response_detail": "compact"
+          },
+          "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+          "original_request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+          "kind": "topology",
+          "manifest_sha256": "9e703b98e697c6af655eb61dd1c12a2a7c9b02f53f0046273c07a0f95b1673b3"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-next-02",
+            "response_detail": "compact"
+          },
+          "object_id": "2c9942d0350a44a3be221134b1d568f6",
+          "original_request_id": "qualify-f4-next-02",
+          "kind": "method_plan",
+          "manifest_sha256": "4b29151f8623d18790436fb53663102f3be327d3b394d3af40ef539cc48153c2"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-2",
+            "response_detail": "compact"
+          },
+          "object_id": "2cfaee3c4df446df8b9a8b39b6e34b24",
+          "original_request_id": "method-smoke-2",
+          "kind": "frame",
+          "manifest_sha256": "d9e87411464d2c0948f9de0f5b712a14b638ab11889f20c87c8b2edeb8ff06bb"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-3",
+            "response_detail": "compact"
+          },
+          "object_id": "993f82820ce34c078cdda9e26685afda",
+          "original_request_id": "method-smoke-3",
+          "kind": "fft",
+          "manifest_sha256": "cd39e75139ffae11f93cc7f92de69b9613793bd10a2b1f01cccaadb247c05d13"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-smoke-4",
+            "response_detail": "compact"
+          },
+          "object_id": "a26f34f86756445fa20108d3b44a29f7",
+          "original_request_id": "method-smoke-4",
+          "kind": "gpa",
+          "manifest_sha256": "2cbbdc0e6ff00460d74b42e44f2bbae4af5622dc792d00e7f8b294c0671f6179"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-plan-01",
+            "response_detail": "compact"
+          },
+          "object_id": "7b51da391a9740829380b0f6509c6efb",
+          "original_request_id": "qualify-f4-plan-01",
+          "kind": "method_plan",
+          "manifest_sha256": "812a6f6d4ad0279a0906794bd7240a616f027d34d199b0b8e964a787682f6891"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+            "response_detail": "compact"
+          },
+          "object_id": "2b96ae0455274a4ab326701ed2ab3f7f",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-1",
+          "kind": "method_step",
+          "manifest_sha256": "97df472f3c9551fad9b1fc80165edc9977ab7c42358330844bebc22789b4bbe3"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-958f80a7e543272778ac67b699d36f55b2c0ffa60d76f6a2",
+            "response_detail": "compact"
+          },
+          "object_id": "2c25a0f0bc9642c4a637e1504dc56006",
+          "original_request_id": "auto-958f80a7e543272778ac67b699d36f55b2c0ffa60d76f6a2",
+          "kind": "gpa",
+          "manifest_sha256": "49ffe322c818757190bbcbc0cea155185e40a45f5637a7b40c6008904f7ff9e0"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-next-01",
+            "response_detail": "compact"
+          },
+          "object_id": "e3be58a5f9df457f9de28dfd75c0090c",
+          "original_request_id": "qualify-f4-next-01",
+          "kind": "method_plan",
+          "manifest_sha256": "782babaafcc2ba7c424e55e9eacd762d4be5627654c5d571aacc9e00b2485e4e"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+            "response_detail": "compact"
+          },
+          "object_id": "e98c2eaafac142fe8ec3dacdb5565f6d",
+          "original_request_id": "method-7b51da391a9740829380b0f6509c6efb-2",
+          "kind": "method_step",
+          "manifest_sha256": "0f7ffc0824ffd5e2a979600dc154af54b383891f726c3b72801697f623a64a24"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+            "response_detail": "compact"
+          },
+          "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+          "original_request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+          "kind": "topology",
+          "manifest_sha256": "9e703b98e697c6af655eb61dd1c12a2a7c9b02f53f0046273c07a0f95b1673b3"
+        },
+        {
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "qualify-f4-next-02",
+            "response_detail": "compact"
+          },
+          "object_id": "2c9942d0350a44a3be221134b1d568f6",
+          "original_request_id": "qualify-f4-next-02",
+          "kind": "method_plan",
+          "manifest_sha256": "4b29151f8623d18790436fb53663102f3be327d3b394d3af40ef539cc48153c2"
+        },
+        {
+          "tool": "image_info",
+          "arguments": {
+            "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+            "response_detail": "full"
+          },
+          "object_id": "30d9b0b2b4374c62b0320687f0e12329",
+          "original_request_id": "auto-f1f9331b736ed4dde39b1434624e0605893bcd9ffed0eba0",
+          "kind": "topology",
+          "manifest_sha256": "9e703b98e697c6af655eb61dd1c12a2a7c9b02f53f0046273c07a0f95b1673b3"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    "gpa",
+    "topology",
+    "stop"
+  ],
+  "spent": {
+    "fft_pixels": 0,
+    "gpa_band_pixels": 131072,
+    "method_calls": 2,
+    "topology_path_samples": 5328
+  },
+  "recovery_immutable_files": 531,
+  "new_forward_fft": 0,
+  "new_scientific_children": 2,
+  "hypothesized_only": true,
+  "material_dislocation_confirmed": false,
+  "interpretation": "Conditional projected image-phase evidence; intensity-identical contrast vortex remains unresolved, no unique material dislocation or 3D Burgers vector.",
+  "NOT_TESTED": [
+    "automatic plugin discovery",
+    "GUI gestures",
+    "real specimens",
+    "interrupted real worker"
+  ],
+  "historical_blocked_sessions": "Prior fresh-agent-01 and fresh-agent-02 retained unchanged; this is a new explicitly authorized isolated-tool policy run.",
+  "final_runtime_source_sha256": {
+    "tools/image_gpa_core.py": "e58e9a829c5c75d1e95d0ffe8c17aee6e5d1ef65062f0d8287988e7cd972c8be",
+    "tools/image_method_loop.py": "815a9356f648e0b5f0f524689e737970b06d21af7f20df3d9465531a5f155a1e",
+    "tools/image_topology.py": "b2a570ae148870662e66fb4b18768244f3ae2e59ab4e7bb5f68179a87f9fabaf"
+  },
+  "session_runtime_scope": {
+    "agent-analyze-01": "committed 558073e",
+    "agent-recover-01": "committed 558073e",
+    "agent-recover-final": "optimized runtime qualified by final_runtime_source_sha256"
+  }
+}

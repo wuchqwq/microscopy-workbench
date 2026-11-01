@@ -10,6 +10,8 @@ import {automationTools,automationActions} from './image_automation_contract.mjs
 import {sequenceTools,sequenceActions} from './image_sequence_contract.mjs';
 import {domainTools,domainActions} from './image_domain_contract.mjs';
 import {activeTools,activeActions} from './image_active_contract.mjs';
+import {methodTools,methodActions} from './image_method_contract.mjs';
+import {discoveryTools,discoveryActions} from './image_discovery_contract.mjs';
 import {gpaTools,gpaActions} from './image_gpa_contract.mjs';
 import {topologyTools,topologyActions} from './image_topology_contract.mjs';
 import {evidenceTools,evidenceActions,withCompactEvidence,compactEvidenceTools} from './image_evidence_contract.mjs';
@@ -81,6 +83,8 @@ export const imageTools: ToolDefinition[]=[
   ...sequenceTools,
   ...domainTools,
   ...activeTools,
+  ...methodTools,
+  ...discoveryTools,
   ...evidenceTools,
   make('image_probe','Read up to64 original-array samples with a persistent read-only worker; no result object or request journal per probe. Nearest sample uses floor(index+0.5), with no clipping. Bind response to exact immutable object; physical/intensity units are not inferred.',{object_id:id,points:{...numericPoints,minItems:1,maxItems:64},coordinate_space:numericSpace,component:numericComponent},['object_id','points']),
   write('image_statistics','Save original-array ROI statistics: mean, population stddev(ddof0), minimum and maximum with binary64 reductions. Source rect and original FFT frequency_rect are distinct; complex component must be explicit. No display gamma/filter is applied.',{object_id:id,rect,frequency_rect:rect,component:numericComponent},['object_id']),
@@ -102,7 +106,7 @@ export const imageTools: ToolDefinition[]=[
   make('image_result','Query the pre-saved request ID without re-executing an operation. A missing/pending/failed record is not success.',{request_id:requestId},['request_id']),
 ].map(withCompactEvidence);
 export const IMAGE_INSTRUCTIONS='Explicit multi-source image tools use an independent Python environment and never connect to DM or replace a failed native operation. Choose source and frame IDs, use pixel ROI and fixed cross-frame display ranges. PNG is display only. Save request_id before every write; after cancellation query image_result. Unknown scale permits pixel exploration, but not nm/Angstrom spacings or physical depth. User context is revisable evidence. Validated native READ captures automatically activate sourced XY records when current axis units/domain agree; inspect calibration_admission and source. Use image_calibrate for user revisions with explicit scope/source_text and reciprocal_space for inverse-length calibration; never relabel real-space scale as diffraction calibration; legacy image_context.xy_scale is descriptive only. Sequence calibration follows selected frames; explicitly attach the record to an older saved FFT if needed. After calibration changes preview the new wrapper to redraw bars/physical frequency axes, then remeasure; old physical measurements/interpretations require review and old exports remain immutable. Physical FFT conversion divides cycles/pixel by signed axis scales, with no2pi; intensity units and physical depth remain separate. Optional crystallography is never required. For frequency zoom use image_preview frequency_rect in the original FFT bin grid; keep the full-spectrum reference and shared display range. Zoom never recomputes FFT, increases resolution, or re-centres DC. For an FFT figure, first try image_preview display_preset=fft_detail and inspect the returned image. Preserve the unfiltered texture/streaks; smoothing and background subtraction are optional explicit display treatments, never a default recipe. Use sparse short cyan arrows by default (3px wide, 6px head, maximum24px shaft); stop outside features. Use color=orange for an explicitly proposed second-phase candidate, keeping its hypothesized/user_confirmed/retracted status separate. Color never establishes a phase. Explicit styling overrides defaults; existing revisions keep their styles. Do not copy literature indices or physical scale onto uncalibrated data. Use image_center only to correct an established reciprocal scalar centre, never the mathematical DC of a saved external complex FFT. Use image_remeasure with the current wrapper and old measurement to reuse valid point anchors; only an originally explicit DC endpoint follows a centre correction. Source/frame/ROI/FFT grid must agree. A previously unknown scalar image can be explicitly declared reciprocal via image_calibrate declare_reciprocal=true with inverse scale and user source; known real-space or reconstruction meaning cannot be silently replaced.';
-const actions: Readonly<Record<string,string>>={...topologyActions,...gpaActions,...automationActions,...sequenceActions,...domainActions,...activeActions,...evidenceActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
+const actions: Readonly<Record<string,string>>={...discoveryActions,...methodActions,...topologyActions,...gpaActions,...automationActions,...sequenceActions,...domainActions,...activeActions,...evidenceActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
 
 export class ImageWorkspace {
   declare readonly workspace: string; declare readonly python: string; declare readonly timeoutMs: number;
@@ -185,8 +189,13 @@ export class ImageWorkspace {
         }
         // A failed/incomplete composition remains an MCP error, but exposes its
         // bounded original child receipts for recovery without filesystem reads.
-        if(code===0&&reply.ok===false&&payload.action==='result'&&reply.partial_results){
-          if(reply.request_id!==payload.query_request_id||(reply.partial_results as Record<string,unknown>).parent_request_id!==payload.query_request_id)throw new Error('Partial recovery returned a different original request');
+        if((code===0||code===1)&&reply.ok===false&&payload.action==='result'&&reply.partial_results){
+          const partial=reply.partial_results as Record<string,unknown>;
+          if(reply.request_id!==payload.query_request_id||partial.parent_request_id!==payload.query_request_id)throw new Error('Partial recovery returned a different original request');
+          if(typeof partial!=='object'||Array.isArray(partial)||partial.automatic_retry!==false||
+             !['unknown','failed'].includes(reply.state as string)||
+             code===1&&reply.backend!=='external-image-workspace'||
+             reply.backend!==undefined&&reply.backend!=='external-image-workspace')throw new Error('Invalid original partial recovery evidence');
           finish(resolve,{isError:true,content:[{type:'text',text:JSON.stringify(reply,null,2)}]});return;
         }
         if(code!==0||reply.ok!==true)throw new Error(((typeof reply.error==='object' ? `${(reply.error as Record<string,unknown>).code}: ${(reply.error as Record<string,unknown>).message}` : reply.error)||stderr||'Image operation failed') as string);

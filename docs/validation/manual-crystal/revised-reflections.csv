@@ -1,0 +1,25 @@
+candidate_side,measurement_object_id,h,k,l,residual_inv_angstrom,state
+FCC candidate a4:0,75658fe693884864bd2d8550f67944a7,-2,0,0,0.002000000000000113,matched_hypothesis
+FCC candidate a4:0,0c642ae7e31e41889f635130ec29cf55,2,0,0,5.551115123125783e-17,matched_hypothesis
+FCC candidate a4:0,85d471c9466f41408b9b5474c05b2314,0,2,0,5.551115123125783e-17,matched_hypothesis
+FCC candidate a4:0,b7e55ee00b9649dc8d80d8cb23e68ee2,0,-2,0,5.551115123125783e-17,matched_hypothesis
+FCC candidate a4:0,e3ac33c037e34d9794423fc4651453e6,2,2,0,7.850462293418876e-17,matched_hypothesis
+FCC candidate a4:0,52acaffdd06a424893687c85b665ac54,-2,-2,0,7.850462293418876e-17,matched_hypothesis
+FCC candidate a4:1,1c7e9fb576c04ffb9a30cf3c0bcdd102,-2,0,0,5.551115123125783e-17,matched_hypothesis
+FCC candidate a4:1,dc6000e0b2294340b946bfd4d7757b2e,2,0,0,5.551115123125783e-17,matched_hypothesis
+FCC candidate a4:1,34e2511ffadb42889a7a04a74e5a7cbe,0,2,0,5.551115123125783e-17,matched_hypothesis
+FCC candidate a4:1,3d0827ad91e746248708a9e9ca631c45,0,-2,0,5.551115123125783e-17,matched_hypothesis
+FCC candidate a4:1,920eef5715084e08b814e79fbbd67d4b,2,2,0,7.850462293418876e-17,matched_hypothesis
+FCC candidate a4:1,538f5274c026424f9086d2425be42a87,-2,-2,0,7.850462293418876e-17,matched_hypothesis
+wrong metric candidate a3.2:0,75658fe693884864bd2d8550f67944a7,,,,,unmatched
+wrong metric candidate a3.2:0,0c642ae7e31e41889f635130ec29cf55,,,,,unmatched
+wrong metric candidate a3.2:0,85d471c9466f41408b9b5474c05b2314,,,,,unmatched
+wrong metric candidate a3.2:0,b7e55ee00b9649dc8d80d8cb23e68ee2,,,,,unmatched
+wrong metric candidate a3.2:0,e3ac33c037e34d9794423fc4651453e6,,,,,unmatched
+wrong metric candidate a3.2:0,52acaffdd06a424893687c85b665ac54,,,,,unmatched
+wrong metric candidate a3.2:1,1c7e9fb576c04ffb9a30cf3c0bcdd102,,,,,unmatched
+wrong metric candidate a3.2:1,dc6000e0b2294340b946bfd4d7757b2e,,,,,unmatched
+wrong metric candidate a3.2:1,34e2511ffadb42889a7a04a74e5a7cbe,,,,,unmatched
+wrong metric candidate a3.2:1,3d0827ad91e746248708a9e9ca631c45,,,,,unmatched
+wrong metric candidate a3.2:1,920eef5715084e08b814e79fbbd67d4b,,,,,unmatched
+wrong metric candidate a3.2:1,538f5274c026424f9086d2425be42a87,,,,,unmatched
