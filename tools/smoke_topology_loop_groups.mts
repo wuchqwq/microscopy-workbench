@@ -50,7 +50,7 @@ const previousConfig=process.env.MICROSCOPY_PLUGIN_CONFIG;
 delete process.env.MICROSCOPY_PLUGIN_CONFIG;
 const makeClient=()=>new StdioImageClient({workspace,python,serverPath:path.join(repo,'server.mjs')});
 const clients=[makeClient()],first=clients[0],started=performance.now(),timings:Data[]=[],checks:string[]=[];
-const report:Data={schema:'public-synthetic-topology-loop-groups-mcp-v2',started_utc:new Date().toISOString(),scope:'Actual MCP stdio continuation of exact captured public v1 FFT/GPA/topology, grouped v2 revision, scientific export and fresh-client recovery',checks,timings,not_tested:['new FFT/GPA qualification','browser/GUI/Panel gestures or computer use','fresh ordinary model session','real specimen/material defect accuracy','cancellation/lost-response/worker interruption injection','native DM/GMS/vendor/hardware','unique conventional 3D Burgers vector','automatic core or domain localization']};
+const report:Data={schema:'public-synthetic-topology-loop-groups-mcp-v3',started_utc:new Date().toISOString(),scope:'Actual MCP stdio continuation of exact captured public v1 FFT/GPA/topology, grouped v3 revision, scientific export and fresh-client recovery',checks,timings,not_tested:['new FFT/GPA qualification','browser/GUI/Panel gestures or computer use','fresh ordinary model session','real specimen/material defect accuracy','cancellation/lost-response/worker interruption injection','native DM/GMS/vendor/hardware','unique conventional 3D Burgers vector','automatic core or domain localization']};
 let serial=0;
 const call=async(name:string,args:Data={},client=first)=>{
  const request_id=name==='image_info'?undefined:typeof args.request_id==='string'?args.request_id:`topology-groups-${path.basename(directory)}-${++serial}`,t=performance.now();
@@ -72,7 +72,7 @@ try{
  checks.push('Original request and image_info recover the exact captured v1 report, including its historical global-loop inconsistency; no rewrite or reinterpretation.');
  const parameters=Object.fromEntries(Object.entries(original).filter(([key])=>!['action','workspace','request_id'].includes(key)));
  const reply=await call('image_topology',{...parameters,previous_topology_id:identifier(ids.topology),max_size:512,burgers_candidates:[{label:'b8x',b_pixel_xy:[8,0]},{label:'wrong8y',b_pixel_xy:[0,8]}]}),saved=record(reply.data),newId=identifier(saved.object_id),newReport=record(saved.report);
- assert.notEqual(newId,ids.topology);assert.equal(newReport.algorithm,'saved-wrapped-phase-rectangular-topology-v2');
+ assert.notEqual(newId,ids.topology);assert.equal(newReport.algorithm,'saved-wrapped-phase-rectangular-topology-v3');
  assert.equal(newReport.status,'spatially_grouped_evidence');assert.equal(newReport.projected_burgers,null);
  assert.deepEqual(newReport.reflections,[]);assert.deepEqual(newReport.burgers_candidates,[]);
  assert.equal(saved.interpretation_status,'hypothesized');assert.equal(saved.material_dislocation_confirmed,false);assert.equal(saved.burgers_3d_unique,false);
@@ -103,7 +103,7 @@ try{
  execute(String.raw`
 import sys,pathlib,json,csv,numpy as np
 d=pathlib.Path(sys.argv[1]);r=json.loads((d/'topology-report.json').read_text(encoding='utf8'));rows=list(csv.DictReader((d/'topology-circuits.csv').open(encoding='utf8',newline='')))
-assert r['algorithm']=='saved-wrapped-phase-rectangular-topology-v2' and r['status']=='spatially_grouped_evidence'
+assert r['algorithm']=='saved-wrapped-phase-rectangular-topology-v3' and r['status']=='spatially_grouped_evidence'
 assert len(r['loop_groups'])==2 and r['projected_burgers'] is None
 assert len(rows)==9 and {'group_index','group_status'}.issubset(rows[0])
 assert {int(row['group_index']) for row in rows}=={0,1}
@@ -113,18 +113,18 @@ assert v.shape==(3,3) and v.all() and w.shape==(3,3)
 assert np.max(np.abs(w-np.array([[-1,0,-1],[-1,0,-1],[0,0,0]])))<1e-6
 `,[String(exported.output_dir)]);
  await assert.rejects(data('image_export',{object_id:newId,output_dir:exported.output_dir}),/OUTPUT_EXISTS|already exists/);
- checks.push('Grouped v2 export verifies file hashes, group-tagged CSV rows, all nine valid scientific winding observations and overwrite refusal.');
+ checks.push('Grouped v3 export verifies file hashes, group-tagged CSV rows, all nine valid scientific winding observations and overwrite refusal.');
  const fresh=makeClient();clients.push(fresh);await fresh.rpc('initialize');
  await assertLegacy(fresh);
  const recovered=await data('image_result',{request_id:saved.request_id},fresh),reopened=await data('image_info',{object_id:newId},fresh);
  assert.equal(recovered.object_id,newId);assert.deepEqual(recovered.report,newReport);assert.deepEqual(reopened.report,newReport);
  const after=counts();assert.deepEqual(after,{objects:before.objects+2,fft:before.fft,gpa:before.gpa,topology:before.topology+1,exports:before.exports+1});
  assert.deepEqual(objectRows().filter(row=>!beforeIds.has(row.object_id)).map(row=>row.kind).sort(),['export','topology']);assertOriginalBytes();
- checks.push('Fresh MCP client recovers exact v1 and v2 original-request/object reports; every captured historical file/source hash is unchanged and the only new objects are one topology and its export receipt, with no FFT/GPA added.');
+ checks.push('Fresh MCP client recovers exact v1 and v3 original-request/object reports; every captured historical file/source hash is unchanged and the only new objects are one topology and its export receipt, with no FFT/GPA added.');
  report.result='PASS';report.completed_utc=new Date().toISOString();report.runtime_ms=performance.now()-started;report.legacy={algorithm:receipt.algorithm,status:record(legacy.report).status,checked_original_file_count:Object.keys(existingFiles).length,source_hash_unchanged:true};
- report.grouped=newReport;report.counts={before,after};report.references={legacy_topology:ids.topology,legacy_request_id:original.request_id,v2_topology:newId,v2_request_id:saved.request_id,gpa:ids.gpa,fft:ids.fft};report.export=exported;
+ report.grouped=newReport;report.counts={before,after};report.references={legacy_topology:ids.topology,legacy_request_id:original.request_id,v3_topology:newId,v3_request_id:saved.request_id,gpa:ids.gpa,fft:ids.fft};report.export=exported;
  writeFileSync(path.join(directory,'report.json'),JSON.stringify(report,null,2));
- console.log('PASS: actual MCP v1 preservation, per-group v2 continuation, scientific group export and fresh recovery; no new FFT/GPA.');
+ console.log('PASS: actual MCP v1 preservation, per-group v3 continuation, scientific group export and fresh recovery; no new FFT/GPA.');
 }catch(caught){report.result='FAIL';report.error=caught instanceof Error?caught.stack:String(caught);report.runtime_ms=performance.now()-started;writeFileSync(path.join(directory,'report.json'),JSON.stringify(report,null,2));throw caught;}
 finally{
  for(const client of clients)await client.close();

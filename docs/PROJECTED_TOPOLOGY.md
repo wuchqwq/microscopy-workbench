@@ -114,6 +114,16 @@ not extra directional redundancy. A g sign reversal requires reversing its
 phase sign as well. GPA inputs with different FFTs, calibration bindings or
 widths cannot be pooled by matching their displayed appearance.
 
+New v3 additionally hashes and inspects the actual saved `mask_frequency.npy`
+supports across records. After exact alias deduplication, every retained pair
+must have disjoint nonzero supports, including the Fourier conjugate mapping,
+before redundant-direction validation is admitted. Any shared coefficient keeps
+the winding and all-row least-squares result as dependent conditional diagnostics
+and removes redundancy qualification in every loop group. This extends the
+existing within-GPA disjoint-band scope; it does not prove that any overlap is
+identical information, nor that disjoint bands are independent experiments.
+No overlap percentage or centre-distance threshold is fitted to the example.
+
 Supply `loops` containing two to eight explicit local integer rectangles, each
 with `rect` and `orientation` (`positive_image_xy` or `negative_image_xy`), and
 an optional `loop_id` matching `[A-Za-z][A-Za-z0-9_-]{0,39}`. Do not choose
@@ -238,10 +248,13 @@ FFT and source objects stay immutable. No new AnalysisContext role is invented.
 Original provider IDs and exact dependency/revision bindings remain authoritative.
 
 The current report algorithm is
-`saved-wrapped-phase-rectangular-topology-v2`, with grouping policy
+`saved-wrapped-phase-rectangular-topology-v3`, with grouping policy
 `strict_nesting_components_v1` and explicit inter-group `disjoint_support` or
 `overlap_non_nested` relationships. The report's explicit algorithm version
-determines its semantics. Historical
+determines its semantics. Historical v2 reports retain their original grouping
+but lack the cross-record support check; their `redundancy_validated` value is
+not upgraded to v3 qualification on reading. Create an explicit new topology
+revision to evaluate the existing phase arrays under v3. Historical
 `saved-wrapped-phase-rectangular-topology-v1` records used one global
 all-valid-loop consistency comparison, even for unrelated support. They remain
 readable and verifiable under that original algorithm, with their original

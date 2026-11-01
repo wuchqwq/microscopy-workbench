@@ -54,19 +54,21 @@ current simulation/twin path. This verifies the supplied model, not experimental
 chemistry. Legacy snapshots retain their original interpretation and cannot gain
 qualification by reloading; explicitly reopen original input for new checks.
 
-The two issues below remain **unfixed implementation defects**, not merely
-method limits (audits #53/#55, semantics repair #57):
+Topology v3 checks actual saved direct/conjugate Fourier support before granting
+cross-band redundancy. Reused support retains conditional diagnostics with
+`redundancy_validated=false`. Historical v1/v2 results retain their old meaning;
+create an explicit revision for the new check. Even disjoint supports are not
+independent experiments or evidence of a confirmed material defect.
 
-- Highly overlapping Fourier bands from different GPA objects may be counted as
-  independent redundant topology evidence. Do not initiate an automated topology
-  validation chain or accept `redundancy_validated=true` as independence proof
-  while this bug remains. Exact object IDs/hashes alone do not establish it.
+The issue below remains an **unfixed implementation defect**, not merely a
+method limit (audits #53/#55, semantics repair #57):
+
 - A numerically flat FFT amplitude can yield roundoff peaks. Inspect signal/peak
   support before interpreting a feature field; `status=valid` is not a guarantee
   of a lattice. Do not invent a new threshold in the chat to hide this defect.
 
-These remain repair blockers for their affected scientific paths. Warnings and
-this narrower default do not repair them. Direct scoped diagnostic testing is
+This remains a repair blocker for its affected scientific paths. Warnings and
+this narrower default do not repair it. Direct scoped diagnostic testing is
 still permitted with explicit disclosure; never silently reinterpret old objects.
 
 ## Evidence rules in every route

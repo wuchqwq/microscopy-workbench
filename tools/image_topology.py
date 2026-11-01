@@ -78,11 +78,12 @@ def _load(metadata, directory, name, api):
     return value
 
 
-def _source_bundle(workspace, ids, api, *, load=False):
-    return _source_bundle_records(((ident, *workspace.object(ident)) for ident in ids), api, load=load)
+def _source_bundle(workspace, ids, api, *, load=False, band_policy=False):
+    return _source_bundle_records(((ident, *workspace.object(ident)) for ident in ids), api,
+                                  load=load, band_policy=band_policy)
 
 
-def _source_bundle_records(records, api, *, load=False):
+def _source_bundle_records(records, api, *, load=False, band_policy=False):
     """Shared admission over freshly object()-qualified records, not user JSON.
 
     The method adapter already needs those same records for policy evidence.
@@ -91,6 +92,7 @@ def _source_bundle_records(records, api, *, load=False):
     """
     sources, first, phases, amplitudes, vectors, bands = [], None, [], [], [], []
     edge, first_record = None, None
+    frequency_masks = {}
     for ident, metadata, directory in records:
         api.need(metadata.get("kind") == "gpa" and metadata["parameters"]["reference_mode"] == "fixed_g",
                  "First topology scope requires exact fixed_g GPA records; views, fitted references and ordinary image phase are not accepted", "UNSUPPORTED_OPERATION")
@@ -102,6 +104,14 @@ def _source_bundle_records(records, api, *, load=False):
         api.need(common == first, "Topology GPA records must share the exact FFT, spatial grid/mapping, calibration and Gaussian bandwidth", "TOPOLOGY_SCOPE_MISMATCH")
         sources.append({**_dependency(metadata, directory, api), "band_files_sha256": {name: metadata["files_sha256"][name] for name in ("phase_demodulated_wrapped.npy", "amplitude.npy", "edge_invalid.npy")},
                         "g_vectors_cycles_per_pixel": metadata["parameters"]["g_vectors"]})
+        if band_policy:
+            # workspace.object() has verified these immutable saved array bytes.
+            frequency_masks[ident] = _load(metadata, directory, "mask_frequency", api)
+            masks = frequency_masks[ident]
+            api.need(np.isfinite(masks).all() and np.all((masks >= 0) & (masks <= 1)) and
+                     all(np.count_nonzero(mask) > 0 for mask in masks),
+                     "Invalid saved Fourier mask coefficients", "CORRUPT_OBJECT")
+            sources[-1]["band_files_sha256"]["mask_frequency.npy"] = metadata["files_sha256"]["mask_frequency.npy"]
         if not load:
             continue
         phase, amplitude, current_edge = (_load(metadata, directory, name, api) for name in ("phase_demodulated_wrapped", "amplitude", "edge_invalid"))
@@ -139,6 +149,9 @@ def _source_bundle_records(records, api, *, load=False):
         api.need(bands == plan, "Loaded topology band plan differs from its immutable sources", "CORRUPT_OBJECT")
     result = {"gpa_records": sources, "common": first, "retained_reflections": plan,
               "phase_basis": "original fixed_g requested reciprocal vectors; no fitted-reference basis substitution"}
+    if band_policy:
+        result["band_dependency"] = core.band_dependency([
+            frequency_masks[row["gpa_object_id"]][row["reflection_index"]] for row in plan])
     arrays = (np.asarray(phases), np.asarray(amplitudes), np.asarray(vectors), edge, bands) if load else None
     return result, arrays, first_record
 
@@ -197,7 +210,8 @@ def _preview(directory, metadata, phase, arrays, size, api):
 
 def action(workspace, request, metadata, directory, api):
     parameters, size = _parameters(request, api)
-    dependency, loaded, first_record = _source_bundle(workspace, parameters["object_ids"], api, load=True)
+    dependency, loaded, first_record = _source_bundle(workspace, parameters["object_ids"], api,
+                                                     load=True, band_policy=True)
     history = []
     if request.get("previous_topology_id"):
         old, old_dir = workspace.object(request["previous_topology_id"])
@@ -206,7 +220,8 @@ def action(workspace, request, metadata, directory, api):
         history = [*old.get("history", []), _dependency(old, old_dir, api)]
         api.need(len(history) <= 8, "Topology revision history budget is8", "BUDGET_EXCEEDED")
     phase, amplitude, vectors, edge, bands = loaded
-    output = core.analyze(phase, amplitude, vectors, parameters["loops"], edge_invalid=edge,
+    output = core.analyze_with_dependencies(phase, amplitude, vectors, parameters["loops"],
+                          band_dependency=dependency["band_dependency"], edge_invalid=edge,
                           amplitude_floor_relative=parameters["amplitude_floor_relative"],
                           calibration_nm_xy=dependency["common"]["calibration_nm_xy"],
                           burgers_candidates=parameters["burgers_candidates"])
@@ -241,7 +256,10 @@ def validate_references(workspace, metadata, api):
              journal.get("parameters_sha256") == hashlib.sha256(api.canonical(original)).hexdigest(),
              "Topology original request identity or parameters changed", "CORRUPT_OBJECT")
     parameters, _ = _parameters(original, api)
-    dependency, _, _ = _source_bundle(workspace, parameters["object_ids"], api)
+    algorithm = metadata["report"].get("algorithm")
+    api.need(algorithm in core.SUPPORTED_ALGORITHMS, "Unsupported topology algorithm", "CORRUPT_OBJECT")
+    current = algorithm == core.DEPENDENCY_ALGORITHM_VERSION
+    dependency, _, _ = _source_bundle(workspace, parameters["object_ids"], api, band_policy=current)
     api.need(metadata["parameters"] == parameters and metadata["input_dependency"] == dependency and
              metadata["dependency_sha256"] == hashlib.sha256(api.canonical({"input": dependency, "parameters": parameters})).hexdigest(),
              "Topology source/parameters no longer agree with the original request", "CORRUPT_OBJECT")
@@ -252,7 +270,11 @@ def validate_references(workspace, metadata, api):
              metadata["retained_reflections"] == dependency["retained_reflections"] and
              metadata["report"]["g_vectors_cycles_per_pixel"] == [row["g_vector_cycles_per_pixel"] for row in dependency["retained_reflections"]],
              "Topology scientific contract changed", "CORRUPT_OBJECT")
-    if metadata["report"]["algorithm"] == core.ALGORITHM_VERSION:
+    if current:
+        api.need(metadata["report"].get("band_dependency") == dependency["band_dependency"],
+                 "Topology band-dependency report differs from saved masks", "CORRUPT_OBJECT")
+        core.validate_dependency_inference(metadata["report"])
+    if metadata["report"]["algorithm"] in (core.ALGORITHM_VERSION, core.DEPENDENCY_ALGORITHM_VERSION):
         expected_groups, expected_relations = core.spatial_groups(parameters["loops"], metadata["shape_yx"])
         actual_groups = metadata["report"].get("loop_groups")
         api.need(type(actual_groups) is list and len(actual_groups) == len(expected_groups) and

@@ -5,7 +5,10 @@ path sampling, guards and per-group numerical inference; it is also retained so
 historical v1 manifests remain readable without reinterpretation.
 """
 import copy
+import hashlib
 from math import pi
+
+import numpy as np
 
 try:
     from . import image_topology_legacy_v1 as legacy
@@ -14,12 +17,94 @@ except ImportError:
 
 ALGORITHM_VERSION = "saved-wrapped-phase-rectangular-topology-v2"
 LEGACY_ALGORITHM_VERSION = legacy.ALGORITHM_VERSION
-SUPPORTED_ALGORITHMS = (LEGACY_ALGORITHM_VERSION, ALGORITHM_VERSION)
+DEPENDENCY_ALGORITHM_VERSION = "saved-wrapped-phase-rectangular-topology-v3"
+SUPPORTED_ALGORITHMS = (LEGACY_ALGORITHM_VERSION, ALGORITHM_VERSION, DEPENDENCY_ALGORITHM_VERSION)
 TopologyError = legacy.TopologyError
 MAX_CONDITION = legacy.MAX_CONDITION
 MAX_PATH_SAMPLES = legacy.MAX_PATH_SAMPLES
 INTEGER_RESIDUAL_TOLERANCE = legacy.INTEGER_RESIDUAL_TOLERANCE
 VECTOR_RESIDUAL_TOLERANCE_CYCLES = legacy.VECTOR_RESIDUAL_TOLERANCE_CYCLES
+
+
+def band_dependency(masks):
+    """Necessary support qualification, never statistical/physical independence.
+
+    Consume actual saved truncated masks, not reconstructed centre distances.
+    Signed Fourier coefficients of a real image also share their conjugates.
+    No tunable overlap cutoff: new cross-record redundancy uses the same
+    disjoint-support scope already required within each admitted GPA pair.
+    """
+    arrays = np.asarray(masks, dtype=np.float64)
+    if arrays.ndim != 3 or not 2 <= len(arrays) <= 6 or not np.isfinite(arrays).all() or np.any(arrays < 0):
+        raise TopologyError("Invalid Fourier masks for topology dependency assessment")
+    supports = arrays > 0
+    counts = np.count_nonzero(supports, axis=(1, 2))
+    if np.any(counts == 0):
+        raise TopologyError("Empty topology Fourier support")
+    h, w = arrays.shape[1:]
+    iy, ix = (2*(h//2)-np.arange(h)) % h, (2*(w//2)-np.arange(w)) % w
+    pairs = []
+    for i in range(len(arrays)):
+        for j in range(i+1, len(arrays)):
+            conjugate = arrays[j][np.ix_(iy, ix)]
+            direct = int(np.count_nonzero(supports[i] & supports[j]))
+            friedel = int(np.count_nonzero(supports[i] & (conjugate > 0)))
+            pairs.append({"reflection_indices": [i, j], "shared_coefficients": direct,
+                          "shared_conjugate_coefficients": friedel,
+                          "disjoint_modulo_conjugacy": direct == friedel == 0})
+    qualified = all(row["disjoint_modulo_conjugacy"] for row in pairs)
+    return {"policy": "saved_mask_disjoint_support_modulo_conjugacy_v1",
+            "qualified_cross_band_support": qualified,
+            "reason_codes": [] if qualified else ["reused_fourier_coefficients"],
+            "reflection_supports": [{"reflection_index": i, "shape_yx": [h,w],
+                "nonzero_coefficients": int(counts[i]),
+                "float64_c_order_sha256": hashlib.sha256(a.tobytes(order="C")).hexdigest()}
+                for i,a in enumerate(arrays)], "pairs": pairs,
+            "phase_dependency": "fixed_g phase_demodulated_wrapped before constant gauge and plane fitting; no unwrapped displacement/strain used",
+            "common_observation": "all bands share one saved source FFT",
+            "statistical_independence_established": False,
+            "physical_model_validated": False}
+
+
+def _qualify_inference(inference, dependency):
+    inference["cross_band_support_qualified"] = dependency["qualified_cross_band_support"]
+    inference["least_squares_scope"] = "conditional fit of all retained rows; overlapping channels can reweight the solution"
+    inference["leave_one_out_scope"] = "algebraic channel consistency; not independent experimental validation"
+    inference["statistical_independence_established"] = False
+    if not dependency["qualified_cross_band_support"]:
+        inference["redundancy_validated"] = False
+
+
+def analyze_with_dependencies(phases, amplitudes, g_vectors, loops, *, band_dependency, **options):
+    """v3 adds support admission to unchanged v2 winding/fitting diagnostics."""
+    if len(band_dependency.get("reflection_supports", [])) != len(g_vectors):
+        raise TopologyError("Fourier dependency coverage differs from retained phase channels")
+    output = analyze(phases, amplitudes, g_vectors, loops, **options)
+    report = output["report"]
+    report["algorithm"] = DEPENDENCY_ALGORITHM_VERSION
+    report["band_dependency"] = copy.deepcopy(band_dependency)
+    for scope in [report, *report["loop_groups"]]:
+        if scope["projected_burgers"] is not None:
+            _qualify_inference(scope["projected_burgers"], band_dependency)
+        if not band_dependency["qualified_cross_band_support"] and scope["status"] == "projected_topological_evidence":
+            scope["status"] = "constrained_candidate_without_redundancy"
+    report["limitations"].extend([
+        "Disjoint Fourier support is a necessary admission condition, not proof of independent observations, noise or physical interpretation",
+        "Overlapping direct or conjugate bands retain conditional winding/least-squares diagnostics but cannot validate redundant topology; all rows can reweight the fitted closure"])
+    return output
+
+
+def validate_dependency_inference(report):
+    dependency = report["band_dependency"]
+    for scope in [report, *report.get("loop_groups", [])]:
+        inference = scope.get("projected_burgers")
+        if inference is not None:
+            expected = copy.deepcopy(inference)
+            _qualify_inference(expected, dependency)
+            if expected != inference:
+                raise TopologyError("Saved topology fit overstates its Fourier support qualification")
+        if not dependency["qualified_cross_band_support"] and scope.get("status") == "projected_topological_evidence":
+            raise TopologyError("Reused Fourier support cannot promote projected topology redundancy")
 
 
 def spatial_groups(loops, shape):
