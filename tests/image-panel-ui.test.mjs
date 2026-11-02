@@ -103,7 +103,7 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
  const renderSource=readFileSync(new URL('../ui/image-panel/viewer-render.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
  const script=renderSource+'\n'+source.replace(/^import .*from '\.\/[^']+\.mjs';\r?\n/gm,'')
   .replace('refresh().then(','globalThis.ready=refresh().then(')
-  +'\nglobalThis.selectMeasurementUI=selectMeasurement;globalThis.pollUI=pollRevision;globalThis.activateWindowUI=activateWindow;globalThis.finishWindowMetadata=()=>windowWorkspace.awaitStableMetadata();globalThis.finishRoiSave=()=>typeof roiCreationSave===\'undefined\'?Promise.resolve():roiCreationSave??Promise.resolve();globalThis.finishSaves=async()=>{do{if(autoSaving)await autoSaving;await Promise.resolve();}while(autoSaving);};globalThis.inspect=()=>({draft,drag,editCoordinates,state,pending,dirty:dirty(),view,draftRevision:historyDraft.revision,queuedEdits:[...queuedEdits],autoFailed,busy,windowSwitch,roiCreationRecovery:typeof roiCreationRecovery===\'undefined\'?null:roiCreationRecovery,observationSavePhase});';
+  +'\nglobalThis.selectMeasurementUI=selectMeasurement;globalThis.pollUI=pollRevision;globalThis.activateWindowUI=activateWindow;globalThis.finishWindowMetadata=()=>windowWorkspace.awaitStableMetadata();globalThis.finishRoiSave=()=>typeof roiCreationSave===\'undefined\'?Promise.resolve():roiCreationSave??Promise.resolve();globalThis.finishSaves=async()=>{do{if(autoSaving)await autoSaving;await Promise.resolve();}while(autoSaving);};globalThis.inspectAnnotationLayout=()=>annotationLayout;globalThis.inspect=()=>({draft,drag,editCoordinates,state,pending,selectedId,undoCount:userHistory.undoItems.length,redoCount:userHistory.redoItems.length,dirty:dirty(),view,draftRevision:historyDraft.revision,queuedEdits:[...queuedEdits],autoFailed,busy,windowSwitch,roiCreationRecovery:typeof roiCreationRecovery===\'undefined\'?null:roiCreationRecovery,observationSavePhase});';
  vm.runInNewContext(script,sandbox,{filename:'ui/image-panel/app.mjs'});await sandbox.ready;
  const flush=()=>{for(const [id,callback] of [...frames]){frames.delete(id);callback();}};
  const event=(type,x=10,y=10,extra={})=>{$('canvas').listeners[type]?.({clientX:x,clientY:y,pointerId:1,button:0,...extra});};
@@ -117,7 +117,7 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
   actionResult(value){nextActionResult=typeof value==='function'?value:copy(value);},
   measureResponse(value){measurementResponse=typeof value==='function'?value:copy(value);},delayMeasurement(promise){waitMeasurement=promise;},
   recoverResponse(value){recoveryResponse=copy(value);},
-  key:(key,extra={})=>documentListeners.get('keydown')?.({key,code:key===' '?'Space':'',target:activeElement??$('canvas'),ctrlKey:false,metaKey:false,preventDefault(){},...extra}),active:()=>activeElement,
+  key:(key,extra={})=>documentListeners.get('keydown')?.({key,code:key===' '?'Space':'',target:activeElement??$('canvas'),ctrlKey:false,metaKey:false,preventDefault(){},...extra}),active:()=>activeElement,layout:()=>copy(sandbox.inspectAnnotationLayout()),
   resizeLayout(){for(const observer of layoutObservers)observer.callback();flush();},layoutObserved:()=>layoutObservers.flatMap(o=>o.observed),
   activateWindow(id){const entry=sandbox.inspect().state.window_collection?.windows.find(value=>value.window_id===id);return sandbox.activateWindowUI(id,entry?.object_id);},finishWindows:()=>sandbox.finishWindowMetadata(),delayActivation(value){waitActivation=value;},loseActivationReply(){lostActivation=true;},activationFinished:()=>activationWork,waitActivationStarted:()=>activationStarted?Promise.resolve():new Promise(resolve=>activationListeners.push(resolve)),failImageDecode(){decodeFailure=true;},failStateRead(){stateFailure=true;},
   coalesceDrafts(){coalesceDrafts=true;},setServer(value){server=copy(value);},server:()=>copy(server)};
@@ -905,6 +905,107 @@ function roiStroke(h,mode,start,end){h.$('mode').value=mode;h.event('pointerdown
 function savedRectangleFixture(){
  const s=handoffFixture();s.object.annotations=[{annotation_id:'roi-stable',kind:'rectangle',text:'ROI saved',note:'',color:'cyan',status:'hypothesized',purpose:'resumable_observation',observation_contract_version:1,selection_origin:'researcher',selection_origin_basis:'caller_reported_not_authenticated',presentation:{label:{visible:false}},anchor:{source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:[40,32,120,92]}}];return s;
 }
+
+function selectSavedRoi(h,annotationId='roi-stable'){
+ h.$('existing').value=annotationId;h.$('existing').onchange();h.$('mode').value='select';h.flush();
+}
+function overlappingRoiFixture({label=false}={}){
+ const initial=savedRectangleFixture(),other=copy(initial.object.annotations[0]);other.annotation_id='overlapping-roi';other.anchor.coordinates=[21,13,147,107];other.text='Other ROI';
+ other.presentation={label:label?{text:'B label',visible:true,pinned:true,offset:[19,19],font_size:12}:{visible:false}};initial.object.annotations.push(other);return initial;
+}
+
+test('direct ROI: a verified new stroke returns to selection before another canvas click',async()=>{
+ const h=await harness(emptyRoiFixture());roiStroke(h,'roi',[10.25,11.75],[44.625,45.125]);await h.finishRoi();await h.settle();
+ assert.equal(h.$('mode').value,'select');const saved=h.server().object.annotations[0];assert.equal(h.inspect().selectedId,saved.annotation_id);assert.equal(h.inspect().roiCreationRecovery,null);assert.equal(h.calls.filter(call=>call.action==='mark').length,1);
+});
+
+test('direct ROI: canvas Delete retracts one saved ROI and a single undo restores its stable identity',async()=>{
+ const h=await harness(savedRectangleFixture()),original=copy(h.server().object.annotations[0]);selectSavedRoi(h);h.$('canvas').focus();const undoBefore=h.inspect().undoCount;let prevented=0;
+ h.key('Delete',{target:h.$('canvas'),preventDefault(){prevented++;}});await h.settle();await h.finish();
+ assert.equal(prevented,1);assert.equal(h.server().object.annotations[0].status,'retracted');assert.equal(h.inspect().draft,null);assert.equal(h.inspect().selectedId,'');assert.equal(h.inspect().undoCount,undoBefore+1);
+ assert.deepEqual(h.calls.map(call=>call.action),['edit']);assert.equal(h.calls[0].params.updates[0].annotation_id,original.annotation_id);
+ await h.click('undo');await h.finish();assert.equal(h.server().object.annotations[0].status,original.status);assert.equal(h.server().object.annotations[0].annotation_id,original.annotation_id);assert.deepEqual(h.server().object.annotations[0].anchor,original.anchor);assert.equal(h.inspect().undoCount,undoBefore);assert.equal(h.calls.some(call=>call.action==='mark'||call.action==='fft'),false);
+});
+
+test('direct ROI: canvas Delete clears a temporary box locally and undo restores it without provider writes',async()=>{
+ const h=await harness(emptyRoiFixture());roiStroke(h,'rectangle',[20,20],[100,80]);h.$('canvas').focus();const before=copy(h.inspect().draft),undoBefore=h.inspect().undoCount;let prevented=0;
+ h.key('Delete',{target:h.$('canvas'),preventDefault(){prevented++;}});h.flush();await h.settle();assert.equal(prevented,1);assert.equal(h.inspect().draft,null);assert.equal(h.inspect().selectedId,'');assert.equal(h.inspect().undoCount,undoBefore+1);assert.equal(h.calls.length,0);
+ await h.click('undo');assert.deepEqual(h.inspect().draft,before);assert.equal(h.calls.length,0);assert.equal(h.server().object.annotations.length,0);
+});
+
+test('direct ROI: Delete leaves text entry, noncanvas focus, modal help and an empty canvas untouched',async()=>{
+ for(const target of ['INPUT','TEXTAREA','SELECT','contenteditable','noncanvas','help','empty']){
+  const h=await harness(target==='empty'?emptyRoiFixture():savedRectangleFixture());if(target!=='empty')selectSavedRoi(h);
+  let element=h.$('canvas');if(['INPUT','TEXTAREA','SELECT'].includes(target)){element=h.$('typing-control');element.tagName=target;element.value='Text stays editable';}
+  if(target==='contenteditable'){element=h.$('editable-text');element.tagName='SPAN';element.isContentEditable=true;element.contentEditable='true';element.textContent='Editable body text';}
+  if(target==='noncanvas'){element=h.$('fft');element.tagName='BUTTON';}
+  if(target==='help')h.$('usage-dialog').open=true;element.focus();const before=h.inspect(),saved=h.server();let prevented=0;
+  h.key('Delete',{target:element,preventDefault(){prevented++;}});await h.settle();await h.finish();
+  assert.equal(prevented,0,target);assert.deepEqual(h.inspect().draft,before.draft,target);assert.equal(h.inspect().selectedId,before.selectedId,target);assert.deepEqual(h.server().object.annotations,saved.object.annotations,target);assert.equal(h.calls.length,0,target);
+  if(['INPUT','TEXTAREA','SELECT'].includes(target))assert.equal(element.value,'Text stays editable');if(target==='contenteditable')assert.equal(element.textContent,'Editable body text');
+ }
+});
+
+test('direct ROI: selected resize controls outrank overlapping bodies and labels without promoting the whole box',async()=>{
+ for(const [handle,point]of [['nw',[20,20]],['n',[60,20]],['ne',[100,20]],['e',[100,50]],['se',[100,80]],['s',[60,80]],['sw',[20,80]],['w',[20,50]]]){
+  const h=await harness(overlappingRoiFixture());selectSavedRoi(h);h.event('pointerdown',...point);assert.equal(h.inspect().selectedId,'roi-stable',handle);assert.equal(h.inspect().drag.kind,'edit',handle);assert.equal(h.inspect().drag.rectangle_handle,handle);h.event('pointercancel');h.flush();await h.finish();assert.equal(h.calls.length,0);
+ }
+ const labelled=await harness(overlappingRoiFixture({label:true}));selectSavedRoi(labelled);const label=labelled.layout().items.find(item=>item.id==='overlapping-roi').label;assert.equal(label.visible,true);assert.ok(20>=label.x&&20<=label.x+label.width&&20>=label.y&&20<=label.y+label.height,'the fixture label actually covers the selected NW handle');labelled.event('pointerdown',20,20);assert.equal(labelled.inspect().selectedId,'roi-stable');assert.equal(labelled.inspect().drag.kind,'edit');labelled.event('pointercancel');labelled.flush();
+ const body=await harness(overlappingRoiFixture());selectSavedRoi(body);body.event('pointerdown',60,50);assert.equal(body.inspect().selectedId,'overlapping-roi','ordinary body picking still follows paint order');body.event('pointercancel');body.flush();assert.equal(body.calls.length,0);
+});
+
+test('direct ROI: many pointer moves form one undo step and Escape restores the selection preceding a new stroke',async()=>{
+ const h=await harness(savedRectangleFixture()),original=copy(h.server().object.annotations[0].anchor.coordinates);selectSavedRoi(h);const undoBefore=h.inspect().undoCount;
+ h.event('pointerdown',60,50);for(const point of [[62,52],[65,55],[68,58]])h.event('pointermove',...point);h.event('pointerup',70,60);h.flush();await h.settle();await h.finish();assert.equal(h.inspect().undoCount,undoBefore+1);assert.deepEqual(h.server().object.annotations[0].anchor.coordinates,[50,42,130,102]);
+ await h.click('undo');await h.finish();assert.equal(h.inspect().undoCount,undoBefore);assert.deepEqual(h.server().object.annotations[0].anchor.coordinates,original);
+ const before=copy(h.inspect().draft),selectedId=h.inspect().selectedId,calls=h.calls.length;h.$('mode').value='rectangle';h.event('pointerdown',5,5);h.event('pointermove',15,15);h.key('Escape',{target:h.$('canvas')});h.flush();await h.finish();assert.equal(h.inspect().drag,null);assert.deepEqual(h.inspect().draft,before);assert.equal(h.inspect().selectedId,selectedId);assert.equal(h.inspect().undoCount,undoBefore);assert.equal(h.calls.length,calls);
+});
+
+test('direct ROI: undo keeps a still-bound ROI selection aligned without replacing an independently retained temporary box',async()=>{
+ for(const independent of [false,true]){
+  const h=await harness(savedRectangleFixture()),original=copy(h.server().object.annotations[0].anchor.coordinates);selectSavedRoi(h);h.event('pointerdown',60,50);h.event('pointerup',70,60);h.flush();await h.settle();await h.finish();const moved=copy(h.inspect().draft.coordinates);assert.deepEqual(moved,[50,42,130,102]);
+  if(independent){h.$('existing').value='';h.$('existing').onchange();h.flush();assert.equal(h.inspect().selectedId,'');assert.deepEqual(h.inspect().draft.coordinates,moved);}
+  await h.click('undo');await h.finish();assert.deepEqual(h.server().object.annotations[0].anchor.coordinates,original);assert.deepEqual(h.inspect().draft.coordinates,independent?moved:original);
+  assert.equal(h.server().object.annotations[0].annotation_id,'roi-stable');assert.equal(h.calls.some(call=>call.action==='mark'||call.action==='fft'),false);
+ }
+});
+
+test('direct ROI: deletion refuses dirty, pending, unknown, unfinished and historical states without losing their selection',async()=>{
+ for(const blocked of ['reason','fields','pending','unknown','gesture','historical']){
+  const f=blocked==='historical'?windowActivationFixture():null,initial=f?f.source:savedRectangleFixture();if(f){initial.object.annotations=copy(savedRectangleFixture().object.annotations);initial.window_collection.windows[0].latest_observation_view_object_id='7'.repeat(32);}
+  if(blocked==='pending')initial.pending_result={object_id:'c'.repeat(32),request_id:'keep-pending-result'};
+  if(blocked==='unknown')initial.last_operation={state:'submitted',request_id:'keep-original-unknown'};
+  const h=await harness(initial,f?{windowStates:[f.target]}:{});if(f)await h.finishWindows();selectSavedRoi(h);h.$('canvas').focus();
+  if(blocked==='reason'){h.$('roi-reason').value='Keep unsaved observation';h.$('roi-reason').oninput();}
+  if(blocked==='fields'){h.$('mark-text').value='Keep unsaved annotation label';h.$('mark-text').oninput();}
+  if(blocked==='gesture'){h.event('pointerdown',60,50);h.event('pointermove',65,55);}
+  await h.settle();const before=h.inspect(),saved=h.server(),calls=h.calls.length;let prevented=0;h.key('Delete',{target:h.$('canvas'),preventDefault(){prevented++;}});await h.settle();
+  assert.equal(prevented,0,blocked);assert.equal(h.calls.length,calls,blocked);assert.equal(h.inspect().selectedId,before.selectedId,blocked);assert.deepEqual(h.inspect().draft,before.draft,blocked);assert.deepEqual(h.server().object.annotations,saved.object.annotations,blocked);assert.deepEqual(h.inspect().state.pending_result,before.state.pending_result,blocked);assert.deepEqual(h.inspect().state.last_operation,before.state.last_operation,blocked);
+  if(blocked==='reason')assert.equal(h.$('roi-reason').value,'Keep unsaved observation');if(blocked==='fields')assert.equal(h.$('mark-text').value,'Keep unsaved annotation label');if(blocked==='gesture'){h.event('pointercancel');h.flush();}
+ }
+});
+
+test('direct ROI: the explicit delete button uses the same saved-ROI gate and never deletes a selected peak',async()=>{
+ const h=await harness(savedRectangleFixture());selectSavedRoi(h);h.$('delete-roi').focus();await h.click('delete-roi');await h.finish();assert.equal(h.server().object.annotations[0].status,'retracted');assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'edit');
+ const peak=await harness(humanPointFixture());peak.$('existing').value='human-A';peak.$('existing').onchange();peak.$('canvas').focus();let prevented=0;peak.key('Delete',{target:peak.$('canvas'),preventDefault(){prevented++;}});await peak.settle();assert.equal(prevented,0);assert.equal(peak.calls.length,0);assert.equal(peak.server().object.annotations[0].status,'hypothesized');
+});
+
+test('direct ROI: a retracted ROI cannot be reselected for FFT and becomes selectable only after undo restores its same identity',async()=>{
+ const retired=savedRectangleFixture();retired.object.annotations[0].status='retracted';const legacy=await harness(retired);
+ selectSavedRoi(legacy);assert.equal(legacy.inspect().selectedId,'');assert.equal(legacy.inspect().draft,null);await legacy.click('fft');assert.equal(legacy.calls.length,0,'a hidden historical rectangle cannot become an FFT input through a forced dropdown change');
+ const h=await harness(savedRectangleFixture()),original=copy(h.server().object.annotations[0]);selectSavedRoi(h);h.$('canvas').focus();h.key('Delete',{target:h.$('canvas')});await h.settle();await h.finish();assert.equal(h.server().object.annotations[0].status,'retracted');
+ const option=()=>h.$('existing').children.find(value=>value.value===original.annotation_id);assert.equal(option().disabled,true);const count=h.calls.length;selectSavedRoi(h);assert.equal(h.inspect().selectedId,'');assert.equal(h.inspect().draft,null);await h.click('fft');assert.equal(h.calls.length,count);
+ await h.click('undo');await h.finish();assert.equal(h.server().object.annotations[0].annotation_id,original.annotation_id);assert.equal(h.server().object.annotations[0].status,original.status);assert.deepEqual(h.server().object.annotations[0].anchor,original.anchor);assert.equal(option().disabled,false);selectSavedRoi(h);assert.equal(h.inspect().selectedId,original.annotation_id);assert.deepEqual(h.inspect().draft.coordinates,original.anchor.coordinates);assert.equal(h.calls.some(call=>call.action==='mark'||call.action==='fft'),false);
+ const mixed=savedRectangleFixture(),active=copy(mixed.object.annotations[0]);mixed.object.annotations[0].status='retracted';active.annotation_id='active-roi';active.anchor.coordinates=[70,40,130,100];mixed.object.annotations.push(active);const preserving=await harness(mixed);selectSavedRoi(preserving,'active-roi');const savedSelection=copy(preserving.inspect().draft);selectSavedRoi(preserving);assert.equal(preserving.inspect().selectedId,'active-roi');assert.deepEqual(preserving.inspect().draft,savedSelection);assert.equal(preserving.calls.length,0,'refusing a withdrawn row must not discard an existing legal selection');
+});
+
+test('direct ROI: property retraction clears its still-bound selection but preserves a later independent temporary ROI',async()=>{
+ const h=await harness(savedRectangleFixture());selectSavedRoi(h);h.$('status').value='retracted';h.$('status').oninput();await h.click('save-mark');await h.finish();
+ assert.equal(h.server().object.annotations[0].status,'retracted');assert.equal(h.inspect().selectedId,'');assert.equal(h.inspect().draft,null);const count=h.calls.length;await h.click('fft');assert.equal(h.calls.length,count,'the retracted saved rectangle cannot remain an implicit FFT selection');assert.equal(h.calls[0].action,'edit');assert.equal(h.calls[0].params.updates[0].annotation_id,'roi-stable');
+ const later=await harness(savedRectangleFixture());selectSavedRoi(later);let release;later.delayAction(new Promise(resolve=>{release=resolve;}));later.$('status').value='retracted';later.$('status').oninput();const saving=later.click('save-mark');await later.settle();
+ roiStroke(later,'rectangle',[5,5],[15,15]);const temporary=copy(later.inspect().draft);assert.equal(later.inspect().selectedId,'');assert.deepEqual(temporary.coordinates,[25,17,35,27]);release();await saving;await later.finish();
+ assert.equal(later.server().object.annotations[0].status,'retracted');assert.equal(later.inspect().selectedId,'');assert.deepEqual(later.inspect().draft,temporary,'a late retraction acknowledgement must preserve a new independent selection');await later.click('fft');const fft=later.calls.find(call=>call.action==='fft');assert.ok(fft);assert.deepEqual(fft.params.selection.coordinates,temporary.coordinates);assert.equal(later.calls.filter(call=>call.action==='edit').length,1);
+});
 
 test('ROI tool saves one stable rectangle with an empty reason and verifies it with two real state reads',async()=>{
  const h=await harness(emptyRoiFixture()),reads=h.getCalls.length;roiStroke(h,'roi',[10.25,11.75],[44.625,45.125]);await h.finishRoi();await h.settle();

@@ -3,6 +3,7 @@
 export type RectangleHandle='nw'|'n'|'ne'|'e'|'se'|'s'|'sw'|'w'|'move';
 export type Rectangle=readonly [number,number,number,number];
 export interface RectangleResizeHandle {handle:Exclude<RectangleHandle,'move'>;point:readonly [number,number];}
+export interface RectangleHitOptions {scale?:number;radius?:number;}
 
 const handles:readonly Exclude<RectangleHandle,'move'>[]=['nw','n','ne','e','se','s','sw','w'];
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
@@ -20,16 +21,37 @@ export function rectangleHandles(value:readonly number[]):readonly RectangleResi
  return handles.map((handle,index)=>({handle,point:points[index]}));
 }
 
-export function rectangleHitTest(value:readonly number[],point:readonly number[],{scale=1,radius=8}:{scale?:number;radius?:number}={}):RectangleHandle|null {
+function hitParameters(value:readonly number[],point:readonly number[],{scale=1,radius=8}:RectangleHitOptions):{box:Rectangle;reach:number}|null {
  const box=rectangle(value);if(!box||point.length!==2||!point.every(Number.isFinite)||!Number.isFinite(scale)||scale<=0||!Number.isFinite(radius)||radius<0)return null;
  const reach=radius/scale;if(!Number.isFinite(reach))return null;
+ return {box,reach};
+}
+function resizeHandle(box:Rectangle,point:readonly number[],reach:number):Exclude<RectangleHandle,'move'>|null {
+ // Screen-sized targets can otherwise cover an entire small ROI. Preserve a
+ // central body target without changing anchors or making a selected body
+ // outrank another overlapping ROI. Extremely small handles still overlap;
+ // zooming in is needed to distinguish all eight targets comfortably.
+ const [left,top,right,bottom]=box,cx=left+(right-left)/2,cy=top+(bottom-top)/2;
+ const halfWidth=Math.min((right-left)/4,reach/2),halfHeight=Math.min((bottom-top)/4,reach/2);
+ if(point[0]>=left&&point[0]<=right&&point[1]>=top&&point[1]<=bottom&&Math.abs(point[0]-cx)<=halfWidth&&Math.abs(point[1]-cy)<=halfHeight)return null;
  let nearest:RectangleResizeHandle|null=null,distance=Infinity;
  for(const candidate of rectangleHandles(box)){
   const d=Math.hypot(point[0]-candidate.point[0],point[1]-candidate.point[1]);
   if(d<distance){nearest=candidate;distance=d;}
  }
- if(nearest&&distance<=reach)return nearest.handle;
- const [left,top,right,bottom]=box;
+ return nearest&&distance<=reach?nearest.handle:null;
+}
+
+// Only selected resize controls should receive priority over ordinary paint
+// order. A null result deliberately leaves body/label picking to the caller.
+export function rectangleResizeHandleHitTest(value:readonly number[],point:readonly number[],options:RectangleHitOptions={}):Exclude<RectangleHandle,'move'>|null {
+ const hit=hitParameters(value,point,options);return hit?resizeHandle(hit.box,point,hit.reach):null;
+}
+
+export function rectangleHitTest(value:readonly number[],point:readonly number[],options:RectangleHitOptions={}):RectangleHandle|null {
+ const hit=hitParameters(value,point,options);if(!hit)return null;
+ const handle=resizeHandle(hit.box,point,hit.reach);if(handle)return handle;
+ const [left,top,right,bottom]=hit.box,reach=hit.reach;
  return point[0]>=left-reach&&point[0]<=right+reach&&point[1]>=top-reach&&point[1]<=bottom+reach?'move':null;
 }
 
