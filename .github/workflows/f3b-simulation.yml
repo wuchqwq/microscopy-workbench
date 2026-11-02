@@ -1,33 +1,58 @@
 name: F3b actual simulation
 on:
   pull_request:
-    paths:
-      - '.github/workflows/f3b-simulation.yml'
-      - 'crystallography/**'
-      - 'lib/**'
-      - 'tools/**'
-      - 'ui/**'
-      - 'tests/**'
-      - 'package*.json'
-      - 'requirements*.txt'
-      - 'tsconfig*'
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/f3b-simulation.yml'
-      - 'crystallography/**'
-      - 'lib/**'
-      - 'tools/**'
-      - 'ui/**'
-      - 'tests/**'
-      - 'package*.json'
-      - 'requirements*.txt'
-      - 'tsconfig*'
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  changes:
+    name: Classify changes / documentation check
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      run_full_ci: ${{ steps.classify.outputs.run_full_ci }}
+      run_engineering: ${{ steps.classify.outputs.run_engineering }}
+      run_images: ${{ steps.classify.outputs.run_images }}
+      run_spatial: ${{ steps.classify.outputs.run_spatial }}
+      run_gpa: ${{ steps.classify.outputs.run_gpa }}
+      run_topology: ${{ steps.classify.outputs.run_topology }}
+      run_crystal: ${{ steps.classify.outputs.run_crystal }}
+      run_skills: ${{ steps.classify.outputs.run_skills }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test scope and gate contracts
+        run: |
+          python3 -B tests/ci_scope_test.py
+          python3 -B tests/ci_gate_test.py
+      - name: Determine test scope
+        id: classify
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git rev-parse HEAD
+          bash scripts/ci_scope.sh | tee -a "$GITHUB_OUTPUT"
+      - name: Check changed-file whitespace
+        if: steps.classify.outputs.comparison_base != ''
+        shell: bash
+        env:
+          COMPARISON_BASE: ${{ steps.classify.outputs.comparison_base }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git diff --check "$COMPARISON_BASE" "$HEAD_SHA"
+
   actual-diffsims-mcp:
+    needs: changes
+    if: needs.changes.outputs.run_crystal == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -53,7 +78,6 @@ jobs:
           python --version > "$RUNNER_TEMP/f3b-evidence/python.txt"
           node --version > "$RUNNER_TEMP/f3b-evidence/node.txt"
       - run: npm ci
-      - run: npm run typecheck
       - run: npm run build
       - name: Install actual optional scattering provider
         run: python -m pip install -r requirements-images.txt -r requirements-structure-tools.txt
@@ -104,3 +128,18 @@ jobs:
           path: ${{ runner.temp }}/f3b-evidence
           if-no-files-found: error
           retention-days: 14
+
+  ci-gate:
+    name: Simulation CI gate
+    if: ${{ always() }}
+    needs: [changes, actual-diffsims-mcp]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Require success for every selected check
+        env:
+          CI_NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 -B scripts/ci_gate.py f3b

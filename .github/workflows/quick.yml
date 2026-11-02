@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   changes:
     name: Classify changes / documentation check
@@ -13,13 +16,22 @@ jobs:
     timeout-minutes: 3
     outputs:
       run_full_ci: ${{ steps.classify.outputs.run_full_ci }}
+      run_engineering: ${{ steps.classify.outputs.run_engineering }}
+      run_images: ${{ steps.classify.outputs.run_images }}
+      run_spatial: ${{ steps.classify.outputs.run_spatial }}
+      run_gpa: ${{ steps.classify.outputs.run_gpa }}
+      run_topology: ${{ steps.classify.outputs.run_topology }}
+      run_crystal: ${{ steps.classify.outputs.run_crystal }}
+      run_skills: ${{ steps.classify.outputs.run_skills }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Test change classification
-        run: python3 -B tests/ci_scope_test.py
+      - name: Test scope and gate contracts
+        run: |
+          python3 -B tests/ci_scope_test.py
+          python3 -B tests/ci_gate_test.py
       - name: Determine test scope
         id: classify
         shell: bash
@@ -27,9 +39,11 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: bash scripts/ci_scope.sh >> "$GITHUB_OUTPUT"
-      - name: Check documentation whitespace
-        if: steps.classify.outputs.run_full_ci == 'false'
+        run: |
+          git rev-parse HEAD
+          bash scripts/ci_scope.sh | tee -a "$GITHUB_OUTPUT"
+      - name: Check changed-file whitespace
+        if: steps.classify.outputs.comparison_base != ''
         shell: bash
         env:
           COMPARISON_BASE: ${{ steps.classify.outputs.comparison_base }}
@@ -38,7 +52,7 @@ jobs:
 
   client-setup:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_engineering == 'true'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -61,7 +75,7 @@ jobs:
 
   node-smoke:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_engineering == 'true'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -76,12 +90,11 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm ci
-      - run: npm run typecheck
       - run: node --check server.mjs
       - run: npm test
   dm4-reader:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_images == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -137,7 +150,7 @@ jobs:
           MICROSCOPY_PYTHON: python
   spatial-evidence:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_spatial == 'true'
     runs-on: ubuntu-latest
     # Same fixed scientific controls; allow cold provider verification on hosted
     # runners. Keep per-call trace so a hang cannot masquerade as slow science.
@@ -173,7 +186,7 @@ jobs:
 
   active-analysis:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_spatial == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -201,7 +214,7 @@ jobs:
 
   classical-gpa:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_gpa == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -232,7 +245,7 @@ jobs:
 
   projected-topology:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_topology == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -267,7 +280,7 @@ jobs:
 
   f4-gpa-integration:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_gpa == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -287,9 +300,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: python -m pip install -r requirements-gpa.txt
-      - run: npm run test:science
-        env:
-          MICROSCOPY_PYTHON: python
+      # The common science smoke runs once in ui-science-smoke.
       - run: npm run test:integration:f4-gpa
         env:
           MICROSCOPY_PYTHON: python
@@ -304,7 +315,7 @@ jobs:
 
   projected-twin:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_crystal == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -329,7 +340,7 @@ jobs:
 
   compiled-compatibility:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_engineering == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -344,10 +355,64 @@ jobs:
         with:
           python-version: '3.13'
       - run: npm ci
-      - run: npm run typecheck
       - run: npm run build
       - run: python -m pip install -r requirements-images.txt
       - run: npm run test:runtime:parity
       - run: npm run test:compiled:compat
         env:
           MICROSCOPY_PYTHON: python
+
+  ui-science-smoke:
+    needs: changes
+    if: needs.changes.outputs.run_engineering == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-images.txt
+      - name: Minimal real science and saved Panel boundary (not browser gestures)
+        run: npm run test:science
+        env:
+          MICROSCOPY_PYTHON: python
+
+  skill-contract:
+    needs: changes
+    if: needs.changes.outputs.run_skills == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - name: Packaged Skill references and discoverable tool contracts (no model claims)
+        run: node --test --test-name-pattern='packaged Skills reference' dist/tests/plugin-package.test.mjs
+
+  ci-gate:
+    name: Scoped CI gate
+    if: ${{ always() }}
+    needs: [changes, client-setup, node-smoke, compiled-compatibility, ui-science-smoke, dm4-reader, spatial-evidence, active-analysis, classical-gpa, f4-gpa-integration, projected-topology, projected-twin, skill-contract]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Require success for every selected check
+        env:
+          CI_NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 -B scripts/ci_gate.py quick
