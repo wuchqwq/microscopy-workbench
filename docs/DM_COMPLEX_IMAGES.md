@@ -17,7 +17,7 @@ inferred from complex storage.
 ## Open, view and continue
 
 ```powershell
-node tools/researcher_inspector.mjs `
+npm run inspect -- `
   --source 'C:\data\ordinary-complex.dm4' `
   --workspace 'C:\analysis\complex-workspace' `
   --python 'C:\analysis\image-env\Scripts\python.exe' `
@@ -152,7 +152,7 @@ To reproduce without IDs, from this checkout:
 
 ```sh
 python examples/make_complex_trial.py /absolute/new-fixture-directory
-node tools/researcher_inspector.mjs --source /absolute/new-fixture-directory/complex-field.dm4 --workspace /absolute/new-analysis --python /absolute/venv/python --component amplitude
+npm run inspect -- --source /absolute/new-fixture-directory/complex-field.dm4 --workspace /absolute/new-analysis --python /absolute/venv/python --component amplitude
 # Later: omit --source/--component and reopen the same --workspace.
 ```
 

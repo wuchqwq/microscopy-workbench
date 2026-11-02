@@ -7,10 +7,12 @@ Agent 仍可选用同一工具和不可变结果。这里没有另一个计算�
 ## 直接打开与重开
 
 先准备 Node.js 18+，以及安装了 `requirements-images.txt` 的独立 Python 3.10+
-环境。不要在 GMS Python 内安装依赖。第一次运行：
+环境。不要在 GMS Python 内安装依赖。在源码仓库根目录先运行 `npm ci` 和
+`npm run build`；若使用已构建的独立运行包，在该包根目录直接运行下面的命令。
+`npm run inspect -- --help` 查看帮助。第一次运行：
 
 ```powershell
-node tools/researcher_inspector.mjs `
+npm run inspect -- `
   --source 'C:\data\sequence.tiff' `
   --workspace 'C:\analysis\my-sequence' `
   --python 'C:\analysis\image-env\Scripts\python.exe' `
@@ -29,7 +31,7 @@ node tools/researcher_inspector.mjs `
 完成后在终端按 Ctrl+C 正常退出。保留整个工作区，之后运行：
 
 ```powershell
-node tools/researcher_inspector.mjs `
+npm run inspect -- `
   --workspace 'C:\analysis\my-sequence' `
   --python 'C:\analysis\image-env\Scripts\python.exe'
 ```
@@ -126,7 +128,7 @@ CSV 中的结果引用属于原验证工作区，样例文件本身不替代完�
 
 ```powershell
 C:\analysis\image-env\Scripts\python.exe examples/make_microscopy_trial.py C:\analysis\inspector-fixture
-node tools/researcher_inspector.mjs `
+npm run inspect -- `
   --source 'C:\analysis\inspector-fixture\periodic-sequence.tiff' `
   --workspace 'C:\analysis\inspector-fixture-workspace' `
   --python 'C:\analysis\image-env\Scripts\python.exe'

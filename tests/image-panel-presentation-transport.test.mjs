@@ -23,7 +23,7 @@ const cleanBytes=Buffer.from('89504e470d0a1a0a00000000','hex');
 const cleanHash=createHash('sha256').update(cleanBytes).digest('hex');
 const scaleBar={visible:true,label:'0.1 nm',length_pixels:5};
 
-async function fixture(run,{calibrated=false,spectral=false,changedGrid=false,lostReply=null,reorderedKeys=false}={}){
+async function fixture(run,{calibrated=false,spectral=false,changedGrid=false,lostReply=null,reorderedKeys=false,annotationMismatch=null}={}){
  const workspace=mkdtempSync(path.join(tmpdir(),'dm-presentation-transport-')),calls=[];
  const panelGrid=spectral?{domain:'frequency',source_object_id:F,fft_shape_yx:[32,32],image_rect_xyxy:[0,0,32,32]}:grid;
  const initialMark=spectral?{...clone(mark),anchor:{coordinate_space:'frequency_cycles_per_pixel',source_object_id:F,coordinates:[.125,.125]}}:clone(mark);
@@ -44,8 +44,11 @@ async function fixture(run,{calibrated=false,spectral=false,changedGrid=false,lo
    if(name==='image_annotate'){
     const annotations=args.annotations??[...clone(records.get(args.object_id).annotations)];
     for(const update of args.updates??[]){const current=annotations.find(value=>value.annotation_id===update.annotation_id);Object.assign(current,update);}
-    const data={...clone(base),object_id:D,parent_object_id:args.object_id,request_id:args.request_id,kind:'annotate',annotations};
+    const data={...clone(base),state:'completed',object_id:D,parent_object_id:args.object_id,request_id:args.request_id,kind:'annotate',annotations};
     if(reorderedKeys){data.panels=reversedKeys(data.panels);data.scientific_grid_identity=reversedKeys(data.scientific_grid_identity);}
+    if(annotationMismatch==='grid')data.scientific_grid_identity={...data.scientific_grid_identity,array_sha256:'2'.repeat(64)};
+    if(annotationMismatch==='mapping')data.panels=[{...panelGrid,image_rect_xyxy:[0,0,31,32]}];
+    if(annotationMismatch==='missing')delete data.scientific_grid_identity;
     records.set(D,data);return {data:clone(data),png:cleanBytes.toString('base64')};
    }
    assert.equal(name,'image_preview');
@@ -65,7 +68,7 @@ async function fixture(run,{calibrated=false,spectral=false,changedGrid=false,lo
  panel=await createImagePanel({workspace,python:path.resolve('unused-python'),object_id:A,client});
  const origin=panel.url.split('/#')[0],headers={'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json'};
  const act=async(action,params={},extra={})=>{const response=await fetch(origin+'/api/action',{method:'POST',headers,body:JSON.stringify({expected_object_id:panel.state().object.object_id,draft_revision:panel.state().edit_state.draft_revision,action,params,...extra})});return {status:response.status,data:await response.json()};};
- try{await run({panel,act,calls,origin,initialMark,panelGrid});}finally{await panel.close();rmSync(workspace,{recursive:true,force:true});}
+ try{await run({panel,act,calls,origin,initialMark,panelGrid,records});}finally{await panel.close();rmSync(workspace,{recursive:true,force:true});}
 }
 
 test('spatial measurements bind the selected saved view or annotation without intermediate context or calibration writes',async()=>{
@@ -97,6 +100,23 @@ test('spatial measurements bind the selected saved view or annotation without in
   }finally{await panel?.close();rmSync(workspace,{recursive:true,force:true});}
  }
 });
+
+test('favicon is an empty public response while API authentication and strict CSP stay intact',async()=>fixture(async({origin})=>{
+ const icon=await fetch(origin+'/favicon.ico');assert.equal(icon.status,204);assert.equal(await icon.text(),'');
+ assert.match(icon.headers.get('content-security-policy'),/style-src 'self';/);assert.doesNotMatch(icon.headers.get('content-security-policy'),/unsafe-inline/);
+ assert.equal((await fetch(origin+'/api/state')).status,403);
+}));
+
+for(const annotationMismatch of ['grid','mapping','missing'])test(`automatic annotation adoption rejects ${annotationMismatch} mismatch after provider save, preserving the original result`,async()=>fixture(async({panel,act,calls,records})=>{
+ const before=clone(panel.state().object),reply=await act('edit',{updates:[{annotation_id:'first',coordinates:[8,9]}],auto_commit:true});
+ assert.equal(reply.status,409);assert.match(reply.data.error,/exact same scientific grid and render mapping/);
+ assert.deepEqual(panel.state().object,before,'Panel must not adopt the incompatible saved object');
+ const original=calls.find(c=>c.name==='image_annotate').args.request_id;
+ assert.equal(records.get(D).request_id,original,'provider object is saved before Panel adoption rejection');
+ assert.equal(panel.state().last_operation.object_id,D);assert.equal(panel.state().last_operation.state,'completed');
+ const journal=JSON.parse(readFileSync(path.join(panel.journal,original+'.response.json'),'utf8'));
+ assert.equal(journal.object_id,D);assert.equal(journal.request_id,original);
+},{annotationMismatch}));
 
 test('fresh source display is restricted to the current frame and never dispatches FFT',async()=>fixture(async({act,calls})=>{
  const before=calls.length;assert.equal((await act('show',{object_id:A,source_view:true})).status,409);assert.equal(calls.length,before);

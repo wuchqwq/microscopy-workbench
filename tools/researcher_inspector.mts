@@ -20,7 +20,7 @@ interface InspectorPorts {createClient?:(args:{workspace:string;python:string})=
 
 
 const objectId=/^[a-f0-9]{32}$/;
-const HELP='node tools/researcher_inspector.mjs --source ABS_TIFF_OR_DM3_OR_DM4 --workspace ABS_DIRECTORY --python ABS_PYTHON [--frame 1] [--dataset 1] [--component real|imag|amplitude|power] [--plane-axes Y,X --plane-indices 0,*,*]. DM dataset numbers start at 1; omit only when exactly one eligible scientific dataset exists. Reopen with the same workspace/python; source, initial frame and dataset may be omitted.';
+const HELP='npm run inspect -- --source ABS_TIFF_OR_DM3_OR_DM4 --workspace ABS_DIRECTORY --python ABS_PYTHON [--frame 1] [--dataset 1] [--component real|imag|amplitude|power] [--plane-axes Y,X --plane-indices 0,*,*]. In a source checkout, run npm ci and npm run build first; the built runtime package can run npm run inspect directly. DM dataset numbers start at 1; omit only when exactly one eligible scientific dataset exists. Reopen with the same workspace/python; source, initial frame and dataset may be omitted.';
 function validatePlaneOptions(options: {plane_axes?:unknown;plane_indices?:unknown}){const axes=options.plane_axes,indices=options.plane_indices;if((axes===undefined)!==(indices===undefined))throw new Error('Supply both plane selectors');if(axes!==undefined&&(!Array.isArray(axes)||axes.length!==2||axes.some(v=>!Number.isInteger(v)||v<0||v>5)||axes[0]===axes[1]||!Array.isArray(indices)||indices.length<2||indices.length>6||axes.some(v=>v>=indices!.length)||indices.some((v,i)=>axes.includes(i)?v!==null:!Number.isSafeInteger(v)||v<0)))throw new Error('Invalid explicit DM plane selectors');}
 function durableNew(file:string,value:unknown){const fd=openSync(file,'wx');try{writeFileSync(fd,JSON.stringify(value,null,2)+'\n');fsyncSync(fd);}finally{closeSync(fd);}}
 function boundedJSON(file:string):unknown{if(statSync(file).size>1024*1024)throw new Error('Inspector record exceeds 1 MiB');return JSON.parse(readFileSync(file,'utf8'));}
@@ -145,7 +145,8 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
   async close(){await (closing??=(owned?owned.close(panel):panel.close()));}};
 }
 
-if(isDirectInvocation(import.meta.url)){
+if(isDirectInvocation(import.meta.url)&&process.argv.length===3&&process.argv[2]==='--help')process.stdout.write(HELP+'\n');
+else if(isDirectInvocation(import.meta.url)){
  let instance:Awaited<ReturnType<typeof startResearcherInspector>>;
  try{
   instance=await startResearcherInspector(parseResearcherArgs(process.argv.slice(2)));

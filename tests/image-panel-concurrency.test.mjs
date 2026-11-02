@@ -17,6 +17,17 @@ async function fixture(fn){
  const act=(action,params={},revision=panel.state().edit_state.draft_revision)=>post('/api/action',{expected_object_id:panel.state().object.object_id,draft_revision:revision,action,params});
  try{await fn({panel,post,act,entered,release,calls,origin,headers,workspace});}finally{release();await panel.close();rmSync(workspace,{recursive:true,force:true});}
 }
+test('explicit handoff confirmation flushes the coalesced draft before its final state read',async()=>fixture(async({panel,act,workspace,calls})=>{
+ const coalesced=await act('draft',{draft_revision:1,dirty:false,gesture_active:false});
+ assert.equal(coalesced.data.draft_persistence.pending,true);
+ const confirmed=await act('draft',{draft_revision:2,dirty:false,gesture_active:false,confirm_persistence:true});
+ assert.deepEqual(confirmed.data.draft_persistence,{pending:false,error:null});
+ assert.equal(panel.state().draft_persistence.pending,false);
+ const checkpoint=JSON.parse(readFileSync(path.join(panel.journal,'current-selection.json'),'utf8'));
+ assert.equal(checkpoint.object_id,a);assert.equal(checkpoint.edit_state.draft_revision,2);assert.equal(checkpoint.edit_state.dirty,false);
+ assert.equal(calls.filter(c=>c.name!=='image_info').length,0,'handoff persistence must not create a scientific result');
+}));
+
 test('a new draft is accepted while a real server write waits; late result cannot switch the visible base',async()=>fixture(async({panel,act,entered,release,calls})=>{
  const waiting=act('preview',{gamma:2},0);await entered;
  const draft=await act('draft',{draft_revision:1,dirty:true,gesture_active:false,selection:selected});

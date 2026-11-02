@@ -457,6 +457,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{
    const origin=`http://127.0.0.1:${(server.address() as AddressInfo).port}`;if(req.headers.host!==`127.0.0.1:${(server.address() as AddressInfo).port}`)fail('Invalid Host',403);const url=new URL(req.url!,origin);
+   if(req.method==='GET'&&url.pathname==='/favicon.ico'){res.statusCode=204;res.end();return;}
    if(req.method==='GET'&&staticFiles.has(url.pathname)){const [file,type]=staticFiles.get(url.pathname)!;res.setHeader('Content-Type',type);res.end(readFileSync(path.join(root,'ui','image-panel',file)));return;}
    const supplied=req.headers['x-panel-token'];if(typeof supplied!=='string'||Buffer.byteLength(supplied)!==Buffer.byteLength(token)||!timingSafeEqual(Buffer.from(supplied),Buffer.from(token)))fail('Panel token required',403);
    if(req.headers.origin&&req.headers.origin!==origin)fail('Cross-origin requests refused',403);

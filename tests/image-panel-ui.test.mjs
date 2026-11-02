@@ -27,7 +27,7 @@ function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(pan
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
 async function harness(initial=fixture()){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map();let probeTimerId=0;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map();let probeTimerId=0,coalesceDrafts=false;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -64,7 +64,7 @@ async function harness(initial=fixture()){
    if(!options.body){getCalls.push(url);if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/measurements?'))return {ok:true,json:async()=>({current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false})};if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
    if(options.body){const body=JSON.parse(options.body);
     if(url==='/api/probe'){probeCalls.push(body);return {ok:true,json:async()=>({object_id:body.expected_object_id,kind:'probe',component:body.component,coordinate_space:body.coordinate_space,samples:[{point:body.coordinates,array_index_xy:body.coordinates,value:17}]})};}
-    if(body.action==='draft'){draftCalls.push(body);if(waitDraft)await waitDraft;if(draftFailure){const error=draftFailure;draftFailure=null;return {ok:false,json:async()=>({error})};}if(body.params.selection)server.selection=copy(body.params.selection);server.edit_state={...copy(body.params),base_object_id:server.object.object_id};return {ok:true,json:async()=>body.lightweight?{object_id:server.object.object_id,edit_state:copy(server.edit_state)}:copy(server)};}
+    if(body.action==='draft'){draftCalls.push(body);if(waitDraft)await waitDraft;if(draftFailure){const error=draftFailure;draftFailure=null;return {ok:false,json:async()=>({error})};}if(body.params.selection)server.selection=copy(body.params.selection);if(coalesceDrafts)server.draft_persistence={pending:body.params.confirm_persistence!==true&&server.edit_state?.dirty===body.params.dirty&&server.edit_state?.gesture_active===body.params.gesture_active,error:null};server.edit_state={...copy(body.params),base_object_id:server.object.object_id};return {ok:true,json:async()=>body.lightweight?{object_id:server.object.object_id,edit_state:copy(server.edit_state)}:copy(server)};}
     calls.push(body);assert.equal(body.expected_object_id,server.object.object_id);if(waitAction)await waitAction;if(body.action==='measure'&&waitMeasurement)await waitMeasurement;
     if(actionFailure){server.last_operation={state:'submitted',request_id:'controlled-lost-request'};const error=actionFailure;actionFailure=null;return {ok:false,json:async()=>({error})};}
     if(['edit','edit-layout'].includes(body.action)&&body.params.auto_commit){
@@ -98,7 +98,7 @@ async function harness(initial=fixture()){
   actionResult(value){nextActionResult=copy(value);},
   measureResponse(value){measurementResponse=typeof value==='function'?value:copy(value);},delayMeasurement(promise){waitMeasurement=promise;},
   recoverResponse(value){recoveryResponse=copy(value);},
-  setServer(value){server=copy(value);},server:()=>copy(server)};
+  coalesceDrafts(){coalesceDrafts=true;},setServer(value){server=copy(value);},server:()=>copy(server)};
 }
 
 test('measure then hand off uses the same anchored selection without redrawing',async()=>{
@@ -748,6 +748,50 @@ test('resumable save declares stable researcher intent and reads actual handoff 
  assert.match(p.annotation_id,/^[A-Za-z0-9_-]{1,64}$/);assert.equal(p.purpose,'resumable_observation');assert.equal(p.selection_origin,'researcher');assert.equal(p.note,'  Inspect supplied texture, physical cause unknown  ');
  assert.ok(h.getCalls.slice(reads).filter(p=>p==='/api/state').length>=2,'Saved annotation and clean current handoff both need real readback');
  assert.match(h.$('message').textContent,/已保存并读回可接续.*调用者声明.*不确认物相/);assert.equal(h.inspect().dirty,false);
+});
+
+test('observation save confirms coalesced handoff persistence and renders the final readback without reload',async()=>{
+ const s=handoffFixture();s.object.annotations=[];const h=await harness(s);h.coalesceDrafts();h.draw('rectangle');
+ h.$('roi-reason').value='Saved with actual handoff acknowledgement';h.$('roi-reason').oninput();
+ await h.click('save-observation');await h.settle();
+ assert.equal(h.calls.length,1);assert.equal(h.draftCalls.at(-1).params.confirm_persistence,true);
+ assert.equal(h.server().draft_persistence.pending,false);assert.equal(h.inspect().state.draft_persistence.pending,false);
+ assert.equal(h.$('agent-continue').disabled,false);assert.match(h.$('message').textContent,/已保存并读回可接续/);
+ assert.match(h.$('research-count').textContent,/1 处已保存/);
+ const trace=JSON.parse(h.$('performance-data').textContent).observation_save;
+ assert.equal(trace.outcome,'ready');assert.ok(trace.elapsed_ms.readback_2_end>=trace.elapsed_ms.readback_2_start);
+ assert.ok(trace.elapsed_ms.final_ui>=trace.elapsed_ms.readback_2_end);
+});
+
+test('saved object awaiting readback is distinguished from submission and keeps reason locked until verification',async()=>{
+ const s=handoffFixture();s.object.annotations=[];const h=await harness(s);h.draw('rectangle');
+ h.$('roi-reason').value='Retain until checked';h.$('roi-reason').oninput();let submit,read;
+ h.delayAction(new Promise(resolve=>submit=resolve));h.delayState(new Promise(resolve=>read=resolve));
+ const saving=h.click('save-observation');await h.settle();
+ assert.match(h.$('observation-draft-state').textContent,/正在提交/);assert.equal(h.server().object.annotations.length,0);
+ submit();await h.settle();assert.equal(h.server().object.annotations.length,1);
+ assert.match(h.$('observation-draft-state').textContent,/对象已保存.*核对交接/);
+ assert.equal(h.$('roi-reason').disabled,true);assert.equal(h.$('roi-reason').value,'Retain until checked');assert.equal(h.$('agent-continue').disabled,true);
+ read();await saving;assert.equal(h.$('roi-reason').disabled,false);assert.equal(h.$('agent-continue').disabled,false);
+});
+
+test('pending saved result with no draft never asks for an imaginary discard or invents Agent provenance',async()=>{
+ const s=handoffFixture();s.pending_result={object_id:'d'.repeat(32),request_id:'agent-word-in-id-is-not-provenance'};const h=await harness(s);
+ assert.equal(h.$('pending-result').hidden,false);assert.equal(h.$('discard-draft').hidden,true);
+ assert.equal(h.$('accept-agent-result').disabled,false);assert.match(h.$('pending-message').textContent,/有新结果等待查看/);
+ assert.doesNotMatch(h.$('pending-message').textContent,/草稿|Agent/);assert.equal(h.$('accept-agent-result').textContent,'查看保存结果');
+ h.$('gamma').value='1.8';h.$('gamma').oninput();assert.equal(h.$('discard-draft').hidden,false);assert.equal(h.$('accept-agent-result').disabled,true);
+ assert.match(h.$('pending-message').textContent,/保存、撤销或明确放弃/);
+ h.$('gamma').value='1';h.$('gamma').oninput();assert.equal(h.$('discard-draft').hidden,true);assert.equal(h.$('accept-agent-result').disabled,false);
+ assert.deepEqual(h.calls,[]);assert.deepEqual(h.server().pending_result,s.pending_result);
+});
+
+test('pending result cannot be accepted during a gesture and an orphaned draft still offers explicit discard',async()=>{
+ const s=handoffFixture();s.pending_result={object_id:'d'.repeat(32),request_id:'saved-result'};const h=await harness(s);
+ h.$('mode').value='rectangle';h.event('pointerdown',10,10);h.flush();assert.equal(h.$('accept-agent-result').disabled,true);
+ assert.equal(h.$('discard-draft').hidden,true);assert.match(h.$('pending-message').textContent,/结束当前手势/);
+ h.event('pointercancel',10,10);h.flush();assert.equal(h.$('accept-agent-result').disabled,false);assert.deepEqual(h.calls,[]);
+ s.edit_state.dirty=true;const orphan=await harness(s);assert.equal(orphan.$('discard-draft').hidden,false);assert.equal(orphan.$('accept-agent-result').disabled,true);
 });
 
 test('resumable oversized Unicode draft is retained verbatim with no provider dispatch',async()=>{

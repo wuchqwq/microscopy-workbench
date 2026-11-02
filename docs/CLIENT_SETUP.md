@@ -92,7 +92,7 @@ establish Windows access control. Backups inside a Git checkout are refused.
 ## No-model GUI and first check
 
 ```sh
-node tools/researcher_inspector.mjs --source /absolute/input.tiff --workspace /absolute/new-workspace --python /absolute/venv/bin/python
+npm run inspect -- --source /absolute/input.tiff --workspace /absolute/new-workspace --python /absolute/venv/bin/python
 ```
 
 Use equivalent quoted absolute Windows paths. Keep the local process running;
