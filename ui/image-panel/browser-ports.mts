@@ -22,6 +22,7 @@ export interface BrowserElement extends Omit<PresentationElement,'querySelector'
  onwheel:((event:BrowserEvent)=>unknown)|null;ondblclick:((event:BrowserEvent)=>unknown)|null;
  setAttribute(name:string,value:unknown):void;
  append(...children:BrowserElement[]):void;replaceChildren(...children:BrowserElement[]):void;
+ remove?():void;
  querySelector(selector:string):BrowserElement|null;querySelectorAll(selector:string):Iterable<BrowserElement>;
  addEventListener(name:string,listener:(event:BrowserEvent)=>unknown,options?:unknown):void;
  getBoundingClientRect():{left:number;top:number;width:number;height:number};setPointerCapture(id:number):void;releasePointerCapture(id:number):void;

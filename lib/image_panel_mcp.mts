@@ -125,7 +125,7 @@ export class ImagePanelManager {
     const {image_png_base64:crystalPng,...crystalMetadata}=payload??{};
     const view=crystal?{...baseView,crystal_evidence:{...crystal,payload:crystalMetadata}}:Object.hasOwn(checked,'crystal_evidence')?{...baseView,crystal_evidence}:baseView;
     const conn=this.getConnection(panelId);
-    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:panelRoiHandoff(checked),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image.',automatic_model_wake:false};
+    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:panelRoiHandoff(checked),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image. Window collection entries are retained saved-view references; object, selection and edit_state describe only the active scientific view. Other windows are read-only displays, not additional active inputs.',automatic_model_wake:false};
     const content:ToolContent[]=[{type:'text',text:JSON.stringify(data,null,2)}];
     for(const image of [png_base64,domain_png_base64,crystalPng])if(image!==null&&image!==undefined){
       if(typeof image!=='string'||image.length>6*1024*1024)throw new Error('Invalid bounded saved panel PNG');

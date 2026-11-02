@@ -14,6 +14,7 @@ import * as observationContract from '../ui/image-panel/observation-contract.mjs
 import {renderSequenceEvidence} from '../ui/image-panel/sequence-evidence.mjs';
 import {renderDomainEvidence} from '../ui/image-panel/domain-evidence.mjs';
 import {ResearchWorkspace} from '../ui/image-panel/research-workspace.mjs';
+import {WindowWorkspace,readWindowCollection} from '../ui/image-panel/window-workspace.mjs';
 import {DataProbes as ProviderDataProbes} from '../ui/image-panel/data-probes.mjs';
 import {MeasurementWorkspace as ProviderMeasurementWorkspace,requiresMeasurementJump} from '../ui/image-panel/measurement-workspace.mjs';
 import {performance} from 'node:perf_hooks';
@@ -53,7 +54,7 @@ async function harness(initial=fixture()){
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WindowWorkspace,readWindowCollection,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
   document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
@@ -116,6 +117,22 @@ test('usage help opens and closes without changing drafts, selected ROI, camera,
  await h.click('close-usage-help');assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),h.$('open-usage-help'));
  assert.equal(h.$('roi-reason').value,'Keep this unsaved observation');assert.equal(h.$('gamma').value,'1.8');assert.deepEqual(h.inspect(),before);
  assert.deepEqual([h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length],counts);
+});
+
+test('same-object window layout readback preserves the ROI reason draft, selection and camera',async()=>{
+ const initial=fixture();initial.state_revision=1;initial.window_collection={schema_version:1,revision:1,frame_object_id:sourceId,active_window_id:'1'.repeat(32),windows:[{window_id:'1'.repeat(32),object_id:viewId,role:'source',title:'来源图像',layout:{x:0,y:0,width:1,height:1,z:1}}]};
+ const h=await harness(initial);h.draw('rectangle');h.$('roi-reason').value='Keep reason and active selection while windows move';h.$('roi-reason').oninput();await h.settle();const before=h.inspect(),mode=h.$('mode').value,calls=h.calls.length;
+ const latest=h.server();latest.state_revision++;latest.window_collection.revision++;latest.window_collection.windows[0].layout={x:.1,y:.1,width:.8,height:.8,z:2};h.setServer(latest);await h.click('reload');
+ const after=h.inspect();assert.equal(after.state.window_collection.revision,2);assert.deepEqual(after.draft,before.draft);assert.deepEqual(after.view,before.view);assert.equal(after.draftRevision,before.draftRevision);assert.equal(after.dirty,true);assert.equal(h.$('roi-reason').value,'Keep reason and active selection while windows move');assert.equal(h.$('mode').value,mode);assert.equal(h.calls.length,calls);
+});
+
+test('window-capacity pending explains closing a display without demanding nonexistent drafts',async()=>{
+ const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'already-saved-result',reason:'window_capacity'};initial.window_collection={schema_version:1,revision:1,frame_object_id:sourceId,active_window_id:'1'.repeat(32),windows:Array.from({length:5},(_,i)=>({window_id:String(i+1).repeat(32),object_id:i===0?viewId:String(i+2).repeat(32),role:i===0?'source':'fft',title:i===0?'来源图像':'FFT '+i,layout:{x:0,y:0,width:1,height:1,z:i+1}}))};
+ const h=await harness(initial);assert.match(h.$('pending-message').textContent,/显示窗口已满/);assert.match(h.$('pending-message').textContent,/不会删除科学结果/);assert.doesNotMatch(h.$('pending-message').textContent,/放弃未保存草稿/);assert.equal(h.$('discard-draft').hidden,true);assert.equal(h.inspect().dirty,false);assert.equal(h.calls.length,0);
+});
+test('repeated FFT clicks keep the first capacity-pending identity without dispatching another calculation',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const before=h.inspect().draft,pendingResult=h.server();pendingResult.pending_result={object_id:'c'.repeat(32),request_id:'first-fft-result',reason:'window_capacity'};h.actionResult(pendingResult);await h.click('fft');await h.click('fft');
+ assert.equal(h.calls.filter(call=>call.action==='fft').length,1);assert.equal(h.inspect().state.pending_result.request_id,'first-fft-result');assert.equal(h.inspect().state.object.object_id,viewId);assert.deepEqual(h.inspect().draft,before);assert.equal(h.$('fft').disabled,true);assert.match(h.$('message').textContent,/不要重复计算/);
 });
 
 test('usage help Escape cancellation restores its invoking focus without consuming a draft or pending result',async()=>{
@@ -894,6 +911,23 @@ test('resumable save declares stable researcher intent and reads actual handoff 
  assert.match(p.annotation_id,/^[A-Za-z0-9_-]{1,64}$/);assert.equal(p.purpose,'resumable_observation');assert.equal(p.selection_origin,'researcher');assert.equal(p.note,'  Inspect supplied texture, physical cause unknown  ');
  assert.ok(h.getCalls.slice(reads).filter(p=>p==='/api/state').length>=2,'Saved annotation and clean current handoff both need real readback');
  assert.match(h.$('message').textContent,/已保存并读回可接续.*调用者声明.*不确认物相/);assert.equal(h.inspect().dirty,false);
+});
+test('a new ROI observation is verified under an existing pending result without accepting that result',async()=>{
+ const s=handoffFixture();s.object.annotations=[];s.pending_result={object_id:'d'.repeat(32),request_id:'older-saved-result'};const h=await harness(s);h.draw('rectangle');h.$('roi-reason').value='Save this observation before dealing with the pending result';h.$('roi-reason').oninput();const reads=h.getCalls.length;
+ await h.click('save-observation');await h.settle();assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'mark');assert.deepEqual(h.server().pending_result,s.pending_result);assert.deepEqual(h.inspect().state.pending_result,s.pending_result);assert.equal(h.inspect().dirty,false);
+ assert.equal(h.getCalls.slice(reads).filter(url=>url==='/api/state').length,2);assert.equal(h.draftCalls.at(-1).params.confirm_persistence,true);assert.equal(h.$('agent-continue').disabled,true);assert.match(h.$('message').textContent,/已保存并读回核对.*待查看结果.*交给 Agent/);assert.equal(JSON.parse(h.$('performance-data').textContent).observation_save.outcome,'saved_handoff_blocked');
+});
+test('updating a saved observation reason under pending keeps its identity and performs both readbacks',async()=>{
+ const s=handoffFixture(),mark=s.object.annotations[0];Object.assign(mark,{purpose:'resumable_observation',observation_contract_version:1,selection_origin:'researcher',selection_origin_basis:'caller_reported_not_authenticated'});s.selection={...copy(mark.anchor),kind:'rectangle',panel:copy(panel)};s.pending_result={object_id:'d'.repeat(32),request_id:'older-saved-result'};
+ const h=await harness(s);h.$('existing').value=mark.annotation_id;h.$('existing').onchange();h.$('roi-reason').value='Updated reason, original pending still needs review';h.$('roi-reason').oninput();const saved=h.server();saved.object.object_id='e'.repeat(32);saved.object.annotations[0].note=h.$('roi-reason').value;h.actionResult(saved);const reads=h.getCalls.length;
+ await h.click('save-observation');await h.settle();assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'edit');assert.equal(h.calls[0].params.updates[0].annotation_id,mark.annotation_id);assert.equal(h.inspect().state.object.annotations[0].annotation_id,mark.annotation_id);assert.equal(h.inspect().state.object.annotations[0].note,'Updated reason, original pending still needs review');assert.equal(h.inspect().dirty,false);
+ assert.deepEqual(h.inspect().state.pending_result,s.pending_result);assert.equal(h.getCalls.slice(reads).filter(url=>url==='/api/state').length,2);assert.equal(h.$('agent-continue').disabled,true);assert.match(h.$('message').textContent,/已保存并读回核对.*待查看结果/);
+});
+test('a newer reason during pending observation readback remains a draft without replaying the save',async()=>{
+ for(const updateExisting of [false,true]){
+  const s=handoffFixture(),mark=s.object.annotations[0];if(updateExisting){Object.assign(mark,{purpose:'resumable_observation',observation_contract_version:1,selection_origin:'researcher',selection_origin_basis:'caller_reported_not_authenticated'});s.selection={...copy(mark.anchor),kind:'rectangle',panel:copy(panel)};}else s.object.annotations=[];s.pending_result={object_id:'d'.repeat(32),request_id:'older-saved-result'};const h=await harness(s);if(updateExisting){h.$('existing').value=mark.annotation_id;h.$('existing').onchange();}else h.draw('rectangle');h.$('roi-reason').value='Submitted while pending';h.$('roi-reason').oninput();if(updateExisting){const saved=h.server();saved.object.object_id='e'.repeat(32);saved.object.annotations[0].note='Submitted while pending';h.actionResult(saved);}let release;h.delayState(new Promise(resolve=>{release=resolve;}));
+  const saving=h.click('save-observation');await h.settle();assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,updateExisting?'edit':'mark');h.$('roi-reason').value='Newer reason must remain local';h.$('roi-reason').oninput();release();await saving;await h.settle();assert.equal(h.$('roi-reason').value,'Newer reason must remain local');assert.equal(h.inspect().dirty,true);assert.equal(h.calls.length,1);assert.deepEqual(h.inspect().state.pending_result,s.pending_result);assert.equal(h.server().object.annotations[0].note,'Submitted while pending');assert.match(h.$('message').textContent,/新编辑.*保留新草稿/);
+ }
 });
 
 test('observation save confirms coalesced handoff persistence and renders the final readback without reload',async()=>{

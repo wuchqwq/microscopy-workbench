@@ -26,14 +26,15 @@
   </nav>
   <article class="canvas-area">
     <div id="research-strip" class="research-strip" aria-label="科研接续"><button id="toggle-research">观察与证据 <span id="research-count">0 处已保存观察</span></button><button id="crystal-short-status" disabled title="查看已保存的有限候选比较">尚无结构比较证据</button><button id="save-observation-entry" disabled>保存当前 ROI 观察</button><button id="agent-continue" disabled>交给 Agent 继续</button></div>
-    <div id="figure-toolbar" class="figure-toolbar" aria-label="标注样式与图面"><label class="sr-only" for="annotation-preset">标注预设</label><select id="annotation-preset"><option value="real-space">Real-space</option><option value="diffraction">FFT / Diffraction</option><option value="multi-domain">Multi-domain</option></select><button id="figure-mode" aria-pressed="false">分析模式</button><span id="layer-summary">实验与候选叠加</span><button id="figure-options">论文图片 ↗</button></div>
+    <details id="figure-tools" class="figure-tools"><summary>出图与标注样式</summary><div id="figure-toolbar" class="figure-toolbar" aria-label="标注样式与图面"><label class="sr-only" for="annotation-preset">标注预设</label><select id="annotation-preset"><option value="real-space">Real-space</option><option value="diffraction">FFT / Diffraction</option><option value="multi-domain">Multi-domain</option></select><button id="figure-mode" aria-pressed="false">分析模式</button><span id="layer-summary">实验与候选叠加</span><button id="figure-options">论文图片 ↗</button></div></details>
     <div id="pending-result" class="pending-notice" hidden><span id="pending-message"></span><div><button id="discard-draft">放弃草稿，查看保存结果</button><button id="accept-agent-result">查看保存结果</button></div></div>
     <nav id="view-navigation" class="view-navigation" aria-label="保存视图导航"><button id="view-back" title="返回上一个保存视图">← 返回</button><button id="view-forward" title="前进到保存视图">前进 →</button><button id="return-spatial" aria-describedby="spatial-return-status" hidden disabled>返回空间观察</button><button id="view-original" title="打开本帧已保存的原图视图">原图</button><span id="view-current" aria-live="polite">当前视图</span><small>打开已有结果，不重算 FFT</small><button id="fit-canvas" title="按可用空间缩放，只改变相机（F）">适应画布</button><button id="focus-image" aria-pressed="false" title="暂时收起结果和属性；选区、草稿和结果保留">专注图像</button></nav>
     <p id="spatial-return-status" class="spatial-return-status" role="status" hidden></p>
-    <div id="viewport"><div id="image-stage"><canvas id="base-canvas" aria-label="干净图像底图"></canvas><canvas id="marks-canvas" aria-label="已保存标注"></canvas><canvas id="canvas" aria-label="显微图像交互画布"></canvas><div id="annotation-layer" aria-label="可编辑科学标注"></div></div></div>
+    <div id="window-controls" class="window-controls" hidden><span id="window-count" role="status"></span><button id="tile-windows" type="button">平铺窗口</button><button id="single-window" type="button" aria-pressed="false">单图编辑</button><details class="window-index"><summary>窗口列表</summary><div id="window-list"></div></details></div>
+    <div id="window-desktop" class="window-desktop"><div id="viewport"><div id="image-stage"><canvas id="base-canvas" aria-label="干净图像底图"></canvas><canvas id="marks-canvas" aria-label="已保存标注"></canvas><canvas id="canvas" aria-label="显微图像交互画布"></canvas><div id="annotation-layer" aria-label="可编辑科学标注"></div></div></div></div>
     <div id="canvas-context" class="canvas-context" aria-label="当前选区操作"><span id="selection">圈选区域或点选峰位</span><div class="selection-actions"><button id="apply-roi" title="查看选定区域">查看选区</button><button id="fft" title="对当前实空间选区计算 FFT">FFT</button><button id="measure" title="测量当前峰位或线段">测量</button><button id="roi-statistics">统计当前 ROI</button><button id="line-profile">强度剖面</button><button id="share" class="quiet-button" title="可选：把当前科学坐标交给 Agent">AI 交接 <span aria-hidden="true">↗</span></button><button id="full" class="quiet-button" title="恢复完整频谱视图">完整频谱</button></div></div>
     <div id="canvas-footer" class="canvas-footer"><div class="status-copy"><div id="message" role="status">正在连接本地科学工具…</div><span id="draft-status">原图只读</span></div><div class="history-actions"><button id="undo" class="icon-button" title="撤销本地草稿" aria-label="撤销草稿">↶</button><button id="redo" class="icon-button" title="恢复本地草稿" aria-label="恢复草稿">↷</button></div><div class="zoom-control"><label for="zoom" class="sr-only">画布缩放</label><input id="zoom" type="range" min="0.1" max="16" step="0.05" value="1"><output id="zoom-label">100%</output></div></div>
-    <details id="measurement-workspace" class="measurement-workspace" open>
+    <details id="measurement-workspace" class="measurement-workspace">
       <summary>数据结果 <span id="measurement-count">0</span><span class="workspace-hint">原数组与保存记录 · 可拖动上沿调整高度</span></summary>
       <div id="results-resizer" role="separator" aria-label="调整结果区高度" aria-orientation="horizontal" tabindex="0"></div>
       <div id="measurement-content" class="measurement-content">
@@ -70,7 +71,7 @@
 <dialog id="usage-dialog" class="usage-dialog" aria-labelledby="usage-title">
   <div class="dialog-heading"><h2 id="usage-title">使用说明</h2><button id="close-usage-help" aria-label="关闭使用说明">关闭</button></div>
   <div class="usage-content">
-    <p class="usage-flow"><strong>从一个 ROI 开始：</strong>点左侧“ROI”并框选 → “保存当前 ROI 观察”填写理由 → “保存 ROI 观察”并等待读回 → “FFT” → 点选或修订峰并“测量” → 明确返回空间视图继续观察。</p>
+    <p class="usage-flow"><strong>从一个 ROI 开始：</strong>点左侧“ROI”并框选 → 可直接“FFT”探索 → 点选或修订峰并“测量” → “返回空间观察”后继续选择另一处。需要记录时再用“保存当前 ROI 观察”填写理由、保存并等待读回；临时选区不必先保存为正式观察。</p>
     <p>这份说明只帮助阅读和操作当前工作台。打开、关闭或按 Esc 退出，不提交计算，也不丢弃草稿、选区或相机位置。Tab 可切换控件，Enter 可操作按钮或展开条目。</p>
     <details open><summary>1. 打开图像、选择帧和核对标定</summary>
       <p>图像由本地启动器或已连接的 Agent 打开；当前页面没有文件选择按钮。首次启动用 <code>npm run inspect -- --source 绝对图像路径 --workspace 新工作区绝对路径 --python 独立Python绝对路径</code>。源码仓库先运行 <code>npm ci</code> 和 <code>npm run build</code>。</p>
@@ -114,6 +115,12 @@
       <p>分别看数值是否已计算、测量可靠性有哪些依据或未知项、候选解释在什么条件下相容。像素周期差异不自动等于材料应变，有限候选相容不等于唯一物相或孪晶确认。原始数据与来源记录继续保留，研究者决定下一步。</p>
     </details>
     <details><summary>9. 窄窗口与面板</summary><p>“观察与证据”和“对象属性”使用现有侧栏，窄窗口中以抽屉覆盖图像区域；导航与底部选区操作保留在外侧。面板内容可滚动，保存按钮在“保存观察”内；顶部“×”可收起面板，草稿仍保留。窗口改变大小时不会自动移动相机，视野不合适可点“适应画布”。</p></details>
+    <details><summary>10. 多处 ROI 与图像窗口比较</summary>
+      <p>同一源帧最多保留五个图像窗口，可分别查看两处 ROI 的局部图和 FFT。拖动标题移动窗口，拖右下角调整大小；“平铺窗口”把它们排列比较，“单图编辑”只显示当前图，其余窗口引用仍保留。</p>
+      <p>只有标为“当前编辑”的窗口接收科学工具操作。其他窗口标为“只读对照”，可以滚轮缩放、拖动查看或点“适应”；这些操作不会切换编辑目标。第一阶段先用“返回空间观察”回到对应来源图，再框选另一处；尚未保存的原始浮点框不会因此自动恢复。</p>
+      <p>“关闭”或“窗口列表”中的“关闭显示”只卸载只读窗口，保存对象、测量和历史仍保留。当前编辑窗口不能直接关闭。窗口已满时，新结果已保存但等待显示；先关闭一个只读窗口，再点“查看保存结果”，不要重复计算。窄窗口默认显示当前图，仍可用窗口列表关闭不需要的只读显示。</p>
+      <p>每份 FFT 的计算窗口和来源单独保留；并排不表示标定一致或物理解释已确认。“出图与标注样式”和数据结果默认收起，需要时展开。</p>
+    </details>
   </div>
 </dialog>
 <script type="module" src="/app.mjs"></script>

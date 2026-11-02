@@ -3,6 +3,7 @@ import type {AnnotationPresentation,AnnotationLabel,MeasurementRecord,Calibratio
 import type {NumericReply,ProfileResult,ProbeResult} from './data-probe-contracts.mjs';
 import type {SequenceEvidence,DomainEvidence} from './evidence-contracts.mjs';
 import type {WirePanel,WireSelection,XY,SelectionKind,ScientificCoordinateSpace,CoordinateArray,ObjectId} from './coordinates.mjs';
+import type {WindowCollection} from './window-workspace.mjs';
 export interface AppAnchor extends ScientificAnchor {readonly coordinate_space:ScientificCoordinateSpace;readonly coordinates:readonly number[];}
 export interface AppMark extends FigureMark {readonly kind:SelectionKind;readonly anchor?:AppAnchor;}
 export interface AppDisplay extends Readonly<Record<string,unknown>> {readonly gamma?:number;readonly display_range?:readonly number[];readonly spectrum_axes?:boolean;readonly scale_bar?:boolean;readonly component?:string;}
@@ -16,8 +17,9 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
  numeric_results?:Partial<Record<'statistics'|'profile',ProfileResult|null>>;numeric_result_recovery?:{readonly state?:string;readonly results?:Readonly<Record<string,{readonly state?:string}>>};
  png_base64?:string|null;clean_png_base64?:string|null;domain_png_base64?:string|null;clean_png_sha256?:string|null;
  sequence_evidence?:SequenceEvidence|null;domain_evidence?:DomainEvidence|null;render_base_id?:string;display_source_object_id?:string;
- pending_result?:{readonly object_id?:string;readonly request_id?:string}|null;research_observation?:{readonly authority?:string;readonly source_text?:string;readonly current_view_relation?:string}|null;
+ pending_result?:{readonly object_id?:string;readonly request_id?:string;readonly reason?:string}|null;research_observation?:{readonly authority?:string;readonly source_text?:string;readonly current_view_relation?:string}|null;
  spatial_return?:{readonly version:1;readonly status:'ready'|'unavailable';readonly view_object_id?:string;readonly frame_object_id?:string;readonly reason_code?:string};
+ window_collection?:WindowCollection;
  edit_state?:{readonly dirty?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
  figure_base?:FigureBase;
 }
