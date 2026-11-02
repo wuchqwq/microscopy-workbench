@@ -30,7 +30,7 @@ export interface BrowserElement extends Omit<PresentationElement,'querySelector'
 }
 export interface BrowserDocument extends Omit<PresentationDocument,'getElementById'|'createElement'> {
  getElementById(id:string):BrowserElement|null;createElement(tag:string):BrowserElement;createElementNS(namespace:string,tag:string):BrowserElement;
- readonly body:BrowserElement;readonly hidden:boolean;querySelector(selector:string):BrowserElement|null;querySelectorAll(selector:string):Iterable<BrowserElement>;
+ readonly body:BrowserElement;readonly hidden:boolean;readonly activeElement?:BrowserElement|null;querySelector(selector:string):BrowserElement|null;querySelectorAll(selector:string):Iterable<BrowserElement>;
  addEventListener(name:string,listener:(event:BrowserEvent)=>unknown):void;
 }
 export interface CanvasContext {

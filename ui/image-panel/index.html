@@ -5,7 +5,7 @@
   <div class="brand"><span class="brand-mark" aria-hidden="true">⌘</span><strong>Microscopy Workbench</strong><span class="brand-caption">Image Panel</span></div>
   <div class="source-heading"><div class="source-line"><span id="source-badge" class="source-badge">来源待核实</span><span id="source-name">正在读取图像来源…</span></div><span id="identity" class="image-identity"></span></div>
   <div class="frame-row" aria-label="图像帧"><button id="previous-frame" class="icon-button" aria-label="上一帧" title="上一帧">‹</button><label class="frame-label">帧<input id="frame" type="number" min="1" value="1"></label><button id="set-frame" class="icon-button" aria-label="查看所填帧" title="查看所填帧">↵</button><button id="next-frame" class="icon-button" aria-label="下一帧" title="下一帧">›</button></div>
-  <span id="autosave-status" class="save-indicator" role="status">原图只读</span><button id="export" class="primary-button export-button" title="导出 PNG、科学 NPY 与参数"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 12v5h14v-5"/></svg><span>科学数据</span></button>
+  <span id="autosave-status" class="save-indicator" role="status">原图只读</span><button id="export" class="primary-button export-button" title="导出 PNG、科学 NPY 与参数"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 12v5h14v-5"/></svg><span>科学数据</span></button><button id="open-usage-help" aria-haspopup="dialog" aria-controls="usage-dialog">使用说明</button>
 </header>
 <main class="workbench">
   <nav class="canvas-tools" aria-label="画布工具">
@@ -66,6 +66,51 @@
 <dialog id="figure-dialog"><form method="dialog"><div class="dialog-heading"><h2>论文出图</h2><button aria-label="关闭出图设置">×</button></div></form><p>底图、矢量标注与可编辑配方，共用一个坐标映射。</p><div class="row"><label>目标版面<select id="figure-columns"><option value="single">单栏 · 85 mm</option><option value="double">双栏 · 180 mm</option></select></label><label>文字起点 / pt<input id="figure-font" type="number" min="7" max="12" value="8"></label></div><div class="check-row"><label><input id="figure-legend" type="checkbox" checked> 图例</label><label><input id="figure-scale" type="checkbox" checked> 有标定时显示比例尺</label></div><label>子图编号<input id="figure-letter" maxlength="8" placeholder="a"></label><button id="export-figure" class="primary-button wide-button">下载 SVG / PNG / 配方</button><label class="recipe-load">重新载入图面配方<input id="import-figure" type="file" accept="application/json,.json"></label><details class="recipe-fallback"><summary>无法选择文件？粘贴配方</summary><label>粘贴 figure.json 内容<textarea id="recipe-text" maxlength="512000" spellcheck="false"></textarea></label><button id="load-recipe-text" class="wide-button">载入粘贴的配方</button></details><p id="figure-export-status" role="status">300 dpi 排版输出；放大 PNG 不增加原始数据分辨率。科学 NPY 与原请求记录使用顶部导出。</p></dialog>
 <dialog id="composer-dialog" class="composer-dialog"><form method="dialog"><div class="dialog-heading"><h2>组合图版</h2><button aria-label="关闭组合图版">×</button></div></form><p>加入明确的保存视图或当前有效剖面。排版与导出不重算科学结果，也不覆盖当前图像草稿。</p><div class="row"><label>布局<select id="composer-layout"><option value="2x2">2 × 2 · 四幅图</option><option value="1x3">1 × 3 · 三幅图</option></select></label><label>统一字号 / pt<input id="composer-font" type="number" min="7" max="12" value="8"></label></div><div class="check-row"><label><input id="composer-roi-outlines" type="checkbox" checked> 在原图显示对应 ROI 框</label><label><input id="composer-legend" type="checkbox" checked> 显示紧凑图例</label></div><label>下幅标题<input id="composer-title" maxlength="80" placeholder="留空使用当前视图名称"></label><div class="composer-actions"><button id="composer-add-image">加入当前保存视图</button><button id="composer-add-profile">加入最近有效剖面</button><button id="composer-default-titles">使用默认标题</button></div><ol id="composer-slots" aria-label="图版子图"></ol><p id="composer-status" role="status">先加入原图、ROI、FFT 或剖面。</p><img id="composer-preview" alt="组合图版预览" hidden><button id="composer-export" class="primary-button wide-button">下载完整 SVG / PNG / 布局</button><label class="recipe-load">恢复 composition.json<input id="composer-import" type="file" accept="application/json,.json"></label><p class="help-text">固定 180 mm / 300 dpi，按 a–d 自动编号。JSON 保存资产身份、标定和布局；恢复需要原工作区中的保存资产，不自动重算缺失结果。</p></dialog>
 <dialog id="agent-handoff-dialog"><div class="dialog-heading"><h2>交给 Agent 继续</h2><button id="close-agent-handoff" aria-label="关闭交接提示">×</button></div><p>只读取已保存观察。此处没有内嵌 Agent 对话，不会自动唤醒模型。</p><textarea id="agent-prompt" readonly aria-label="给 Agent 的继续提示"></textarea><button id="copy-agent-prompt" class="primary-button wide-button">复制继续提示</button><p id="agent-copy-status" role="status"></p></dialog>
+<dialog id="usage-dialog" class="usage-dialog" aria-labelledby="usage-title">
+  <div class="dialog-heading"><h2 id="usage-title">使用说明</h2><button id="close-usage-help" aria-label="关闭使用说明">关闭</button></div>
+  <div class="usage-content">
+    <p class="usage-flow"><strong>从一个 ROI 开始：</strong>点左侧“ROI”并框选 → “保存当前 ROI 观察”填写理由 → “保存 ROI 观察”并等待读回 → “FFT” → 点选或修订峰并“测量” → 明确返回空间视图继续观察。</p>
+    <p>这份说明只帮助阅读和操作当前工作台。打开、关闭或按 Esc 退出，不提交计算，也不丢弃草稿、选区或相机位置。Tab 可切换控件，Enter 可操作按钮或展开条目。</p>
+    <details open><summary>1. 打开图像、选择帧和核对标定</summary>
+      <p>图像由本地启动器或已连接的 Agent 打开；当前页面没有文件选择按钮。首次启动用 <code>npm run inspect -- --source 绝对图像路径 --workspace 新工作区绝对路径 --python 独立Python绝对路径</code>。源码仓库先运行 <code>npm ci</code> 和 <code>npm run build</code>。</p>
+      <p>TIFF 的“帧”输入框从 1 开始，按 Enter 或用前后箭头切换。DM 数据集或多维平面在启动时明确选择：<code>--dataset</code>、<code>--plane-axes</code> 与 <code>--plane-indices</code>；不把深度自动解释成时间帧。</p>
+      <p>“观察与证据”和“对象属性”显示来源及当前标定。未知物理标尺时仍可做像素域观察；频率保留 cycles/px，不凭空给出 nm 间距。补充标定须在“显示与高级设置”中填写实际来源。</p>
+    </details>
+    <details><summary>2. ROI、峰位、测量线与移动图像</summary>
+      <p>左侧“ROI”（R）拖出矩形；“峰位”（P）点一个位置；“测量”（L）拖出线段；“选择”（V）选择或拖动已有标记。这些工具不同，点一下峰位不会框选 ROI，也不会认证它是真峰。</p>
+      <p>“平移”（H）或按住空格拖动移动视野，滚轮缩放；“适应画布”（F）只调整相机。Shift / Ctrl 可约束新 ROI 为源像素对齐正方形、新线段为水平或垂直，不约束已有标记的修订。</p>
+      <p>选区是当前操作位置，尚不是已保存观察。“查看选区”用于打开局部视图；“统计当前 ROI”读取该区域的科学数组统计。</p>
+    </details>
+    <details><summary>3. 保存观察与理解保存状态</summary>
+      <p>在空间图框选后，点“保存当前 ROI 观察”，写清看到了什么或为什么选择这里，再点“保存 ROI 观察”。已有观察可“更新这条观察说明”；列表中的位置、理由和稳定观察 ID 一起保留。</p>
+      <dl><dt>正在提交观察</dt><dd>请求尚在等待，不能据此认定保存成功；不要连续重按。</dd><dt>观察已保存 · 正在核对交接</dt><dd>保存对象已返回，身份、锚点和交接状态仍在读回校验。</dd><dt>ROI 观察已保存并读回可接续</dt><dd>本次保存与当前交接已核对，可以继续；不代表物理解释已确认。</dd><dt>本地草稿 / 说明尚未保存</dt><dd>仍有未提交的说明、标记或显示修改。保存中的观察计数可能暂未翻转，请看流程结束后的状态。</dd></dl>
+      <p>仅画选区不会自动保存观察理由。原始图像、旧观察和历史修订保留；“撤回全部本地草稿”须由你明确选择。</p>
+    </details>
+    <details><summary>4. FFT、峰修订与测量</summary>
+      <p>先在空间图选择矩形，再点“FFT”。窗函数与去均值选项在“显示与高级设置”里的“FFT 选项”。已有 FFT 上的频域选区不能再次当空间 ROI 计算 FFT。</p>
+      <p>频域中用“峰位”点选，再点底部“测量”；空间图用测量线测两点距离。“数据结果”的“测量”页查看保存值、标定和来源。GUI 不提供通用自动找峰或物相认证按钮；Agent 可通过现有工具提出待研究者检查的峰或候选。</p>
+      <p>用“选择”拖动已有科学标记，松手保存新修订；拖动文字只改标签排版。已有绑定测量时界面会尝试重测，旧测量仍保留；重测失败时先恢复原请求，不把旧数值当作新峰的结果。未保存或未核对的修订不会因为文字看起来正确就成为可靠测量。</p>
+    </details>
+    <details><summary>5. 返回空间图：哪些按钮返回什么</summary>
+      <p>“完整频谱”只恢复 FFT 自己的完整频域窗口，不返回空间图。“← 返回”和“前进 →”打开本次浏览器会话已经查看过的保存视图，不重算 FFT；刷新或重开后不保证保留这条浏览序列。</p>
+      <p>导航的“原图”打开同帧已知的全帧保存视图；没有该显示配方时按钮叫“全帧（新显示）”，按当前标定新建空间源帧预览。它不等于恢复先前带 ROI 理由、旧标定和显示范围的观察视图。</p>
+      <p>晶体比较证据中有原观察引用时，还会出现“返回观察原图”。没有合格引用或按钮不可用时，请保留当前工作，请 Agent 读取来源并呈现对应的保存空间视图；不要把任意数组 ID 当作保存预览。返回前先处理草稿。</p>
+    </details>
+    <details><summary>6. 自己操作与交给 Agent 接续</summary>
+      <p>你可以先操作 GUI 再请 AI 继续；也可以接管 Agent 已打开的同一 Panel。完成保存并核对后，点“交给 Agent 继续”，再点“复制继续提示”，粘贴给已连接的 Agent。当前 GUI 没有内嵌聊天，不会自动唤醒模型。</p>
+      <p>底部“AI 交接”只交接当前选择；它不代替保存正式 ROI 观察。Agent 应重新读当前 Panel、确认草稿和来源后再处理，不沿用已过时的截图或标定。</p>
+      <p>出现“有新结果等待查看”时，可继续核对当前工作，再明确点“查看保存结果”。只有真有草稿才显示“放弃草稿，查看保存结果”；先保存、撤销或明确放弃，不能让晚到结果覆盖新编辑。</p>
+    </details>
+    <details><summary>7. 出错、未知结果与正常恢复</summary>
+      <p>保存失败或请求结果未知时，保留原 request ID 和草稿。在“显示与高级设置”→“诊断与原请求恢复”中使用“查询上次原请求”，或请 Agent 用同一个 ID 查询。不要换 ID、换入口或再次计算来猜测原请求结果。</p>
+      <p>“检查 Agent 结果”重新读取当前状态，不表示必须接纳待查看结果。服务端已保存、Panel 允许接纳、浏览器已显示是三个不同状态；409 接纳拒绝不能单独证明后端没有生成对象。</p>
+      <p>关闭前确认保存和读回已完成，再在启动终端按 Ctrl+C 正常停止 helper。重开时使用相同的 <code>--workspace</code> 与 <code>--python</code>，首次的 <code>--source</code> 可省略；启动器恢复可验证的保存对象和引用，不自动重算 FFT。若还有草稿，按恢复提示明确处理；关闭浏览器页签不等于停止终端 helper。</p>
+    </details>
+    <details><summary>8. 如何阅读科学结果</summary>
+      <p>分别看数值是否已计算、测量可靠性有哪些依据或未知项、候选解释在什么条件下相容。像素周期差异不自动等于材料应变，有限候选相容不等于唯一物相或孪晶确认。原始数据与来源记录继续保留，研究者决定下一步。</p>
+    </details>
+  </div>
+</dialog>
 <script type="module" src="/app.mjs"></script>
 <dialog id="crystal-image-dialog" class="crystal-image-dialog"><div class="dialog-heading"><h2>有限候选比较 · 展示图</h2><button id="close-crystal-image" aria-label="关闭比较展示图">×</button></div><p id="crystal-image-status"></p><img id="crystal-image" alt="保存的几何比较图，不是科学数组"><p>缩放仅方便查看；数值、未匹配反射及计算来源保留在证据卡中。相容不等于唯一物相或孪晶确认。</p></dialog>
 </body></html>

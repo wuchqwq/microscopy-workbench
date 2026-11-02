@@ -27,7 +27,7 @@ function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(pan
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
 async function harness(initial=fixture()){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map();let probeTimerId=0,coalesceDrafts=false;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map();let probeTimerId=0,coalesceDrafts=false,activeElement=null;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -46,6 +46,8 @@ async function harness(initial=fixture()){
   getBoundingClientRect(){return {left:0,top:0,width:this.width,height:this.height};}
   setPointerCapture(){}
   showModal(){this.open=true;}
+  close(){if(!this.open)return;this.open=false;this.listeners.close?.({target:this});}
+  focus(){activeElement=this;}
  }
  const bodyClasses=new Set(),body={classList:{add:(...keys)=>keys.forEach(k=>bodyClasses.add(k)),remove:(...keys)=>keys.forEach(k=>bodyClasses.delete(k)),contains:key=>bodyClasses.has(key),toggle:(key,on)=>{const next=on??!bodyClasses.has(key);if(next)bodyClasses.add(key);else bodyClasses.delete(key);return next;}}};
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
@@ -54,7 +56,7 @@ async function harness(initial=fixture()){
  const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
-  document:{body,getElementById:$,createElement:tag=>new Element(tag),querySelectorAll:()=>[],addEventListener(){}},
+  document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
   sessionStorage:{getItem:()=> 'synthetic-token',setItem(){}},location:{hash:'',pathname:'/'},history:{replaceState(){}},
   Option:class{constructor(text,value){this.text=text;this.value=value;}},
   Image:class{constructor(){this.width=128;this.height=96;}async decode(){if(waitDecode)await waitDecode;}},
@@ -98,8 +100,40 @@ async function harness(initial=fixture()){
   actionResult(value){nextActionResult=copy(value);},
   measureResponse(value){measurementResponse=typeof value==='function'?value:copy(value);},delayMeasurement(promise){waitMeasurement=promise;},
   recoverResponse(value){recoveryResponse=copy(value);},
+  key:(key,extra={})=>documentListeners.get('keydown')?.({key,code:key===' '?'Space':'',target:activeElement??$('canvas'),ctrlKey:false,metaKey:false,preventDefault(){},...extra}),active:()=>activeElement,
   coalesceDrafts(){coalesceDrafts=true;},setServer(value){server=copy(value);},server:()=>copy(server)};
 }
+
+test('usage help opens and closes without changing drafts, selected ROI, camera, mode or provider calls',async()=>{
+ const h=await harness();h.$('viewport').width=512;h.$('viewport').height=512;h.draw('rectangle');
+ h.$('roi-reason').value='Keep this unsaved observation';h.$('roi-reason').oninput();h.$('gamma').value='1.8';h.$('gamma').oninput();await h.settle();
+ h.$('open-usage-help').focus();const before=h.inspect(),mode=h.$('mode').value,counts=[h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length];
+ await h.click('open-usage-help');assert.equal(h.$('usage-dialog').open,true);assert.equal(h.active(),h.$('close-usage-help'));
+ for(const key of ['f','v','r','p','l','h','Escape'])h.key(key);
+ h.key('z',{ctrlKey:true});assert.equal(h.$('mode').value,mode);assert.deepEqual(h.inspect(),before);
+ await h.click('close-usage-help');assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),h.$('open-usage-help'));
+ assert.equal(h.$('roi-reason').value,'Keep this unsaved observation');assert.equal(h.$('gamma').value,'1.8');assert.deepEqual(h.inspect(),before);
+ assert.deepEqual([h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length],counts);
+});
+
+test('usage help Escape cancellation restores its invoking focus without consuming a draft or pending result',async()=>{
+ const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'already-saved-result'};
+ const h=await harness(initial);h.$('roi-reason').value='Keep reason';h.$('roi-reason').oninput();await h.settle();
+ h.$('roi-reason').focus();const before=h.inspect(),counts=[h.calls.length,h.draftCalls.length,h.getCalls.length];
+ await h.click('open-usage-help');let prevented=false;h.$('usage-dialog').listeners.cancel({preventDefault(){prevented=true;}});
+ assert.equal(prevented,true);assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),h.$('roi-reason'));
+ assert.deepEqual(h.inspect(),before);assert.deepEqual([h.calls.length,h.draftCalls.length,h.getCalls.length],counts);
+});
+
+test('usage help is a labelled native dialog with a header entry and current navigation/recovery names',()=>{
+ const html=readFileSync(new URL('../ui/image-panel/index.html',import.meta.url),'utf8'),header=html.slice(0,html.indexOf('</header>'));
+ assert.match(header,/<button id="open-usage-help" aria-haspopup="dialog" aria-controls="usage-dialog">使用说明<\/button>/);
+ const start=html.indexOf('<dialog id="usage-dialog"'),help=html.slice(start,html.indexOf('</dialog>',start));
+ assert.match(help,/aria-labelledby="usage-title"/);assert.match(help,/aria-label="关闭使用说明"/);
+ for(const name of ['保存当前 ROI 观察','保存 ROI 观察','完整频谱','全帧（新显示）','前进 →','查询上次原请求','检查 Agent 结果','复制继续提示'])assert.ok(help.includes(name),name);
+ assert.match(help,/刷新或重开后不保证保留这条浏览序列/);assert.match(help,/不会自动唤醒模型/);
+ assert.doesNotMatch(help,/<script|\sstyle=|on(?:click|keydown)=/i);
+});
 
 test('measure then hand off uses the same anchored selection without redrawing',async()=>{
  const h=await harness();h.draw();const selection=h.inspect().draft;
