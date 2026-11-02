@@ -17,6 +17,22 @@ const spectrum=(ident,rect=[0,0,16,16])=>({object_id:ident,kind:'fft',parent_obj
 const select=(rect,panel)=>({kind:'rectangle',source_object_id:F,coordinate_space:'source_pixels',coordinates:rect,panel});
 const cal=n=>({calibration_id:id(900+n),revision:n,status:'active',source:'user_statement_not_independently_verified',xy_scale:{x:n*.02,y:n*.02,unit:'nm'}});
 
+test('visible window titles remain distinct after closing and opening an FFT',()=>{
+ const store=new PanelWindowStore();store.admit(spatial(),frame);store.admit(spectrum(id(10)),frame);store.admit(spectrum(id(11)),frame);
+ const first=store.snapshot().windows.find(win=>win.object_id===id(10));store.close(store.snapshot().revision,first.window_id);store.admit(spectrum(id(12)),frame);
+ const titles=store.snapshot().windows.map(win=>win.title);assert.equal(new Set(titles).size,titles.length,'Open FFT windows need distinct human-readable titles');
+});
+
+test('newly active windows are raised without resetting their display geometry',()=>{
+ const store=new PanelWindowStore();store.admit(spatial(),frame);store.admit(spectrum(id(10)),frame);
+ const before=store.snapshot();store.updateLayouts(before.revision,before.windows.map(win=>({window_id:win.window_id,layout:{...win.layout,z:win.role==='fft'?100:20}})));
+ store.admit(spatial(),frame);let after=store.snapshot(),active=after.windows.find(win=>win.window_id===after.active_window_id);
+ assert.equal(active.role,'source');assert.ok(active.layout.z>Math.max(...after.windows.filter(win=>win!==active).map(win=>win.layout.z)),'Returning source must be visible above readonly windows');assert.deepEqual({...active.layout,z:0},{...before.windows[0].layout,z:0});
+ store.admit(spectrum(id(11)),frame);after=store.snapshot();active=after.windows.find(win=>win.window_id===after.active_window_id);assert.ok(active.layout.z>Math.max(...after.windows.filter(win=>win!==active).map(win=>win.layout.z)),'New FFT must not open behind an older raised window');
+ store.updateLayouts(after.revision,after.windows.map(win=>({window_id:win.window_id,layout:{...win.layout,z:10000}})));store.admit(spatial(),frame);after=store.snapshot();active=after.windows.find(win=>win.window_id===after.active_window_id);
+ assert.ok(after.windows.every(win=>win.layout.z<=10000),'A long session must still publish a bounded stacking order');assert.ok(active.layout.z>Math.max(...after.windows.filter(win=>win!==active).map(win=>win.layout.z)));
+});
+
 test('same-frame source, two ROI views and two FFTs retain five identities without numerical comparison claims',()=>{
  const store=new PanelWindowStore();store.admit(spatial(),frame);store.admit(spatial(id(10),[2,2,20,20]),frame);store.admit(spectrum(id(11),[2,2,20,20]),frame);store.admit(spatial(id(12),[30,30,50,50]),frame);store.admit(spectrum(id(13),[30,30,50,50]),frame);
  const value=store.snapshot();assert.equal(value.windows.length,5);assert.deepEqual(value.windows.map(w=>w.role),['source','roi','fft','roi','fft']);assert.equal(value.windows.at(-1).window_id,value.active_window_id);assert.equal(value.windows.some(w=>w.source_reference),false);assert.equal(JSON.stringify(value).includes('png_base64'),false);

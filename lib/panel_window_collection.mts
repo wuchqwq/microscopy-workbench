@@ -71,7 +71,8 @@ export class PanelWindowStore {
   if(!record){
    if(this.records.length>=PANEL_WINDOW_LIMIT)error('Five image windows are already open; close a read-only window before accepting the saved result');
    const sourceWindow=!d.frequency&&!this.records.some(r=>r.entry.role==='source');
-   const role=d.frequency?'fft':sourceWindow?'source':'roi',count=this.records.filter(r=>r.entry.role===role).length+1,n=this.records.length;
+   const role=d.frequency?'fft':sourceWindow?'source':'roi',prefix=role==='fft'?'FFT':'局部图',n=this.records.length;
+   let count=1;while(role!=='source'&&this.records.some(r=>r.entry.title===`${prefix} ${count}`))count++;
    record={entry:{window_id:randomBytes(16).toString('hex'),object_id:d.object_id,role,title:role==='source'?'来源图像':role==='fft'?`FFT ${count}`:`局部图 ${count}`,layout:{x:(n%2)*.48,y:Math.floor(n/2)*.08,width:n?.52:1,height:n?.72:1,z:n}},grid_key:d.grid_key,asset_fingerprint:d.fingerprint,input_calibration:null};
    // Initial placement is bounded even at the fifth entry. Only display
    // metadata is generated here; this is not an inferred scientific relation.
@@ -85,6 +86,13 @@ export class PanelWindowStore {
    if(!existing){record.input_calibration=clone(inputCalibration??null);record.entry.source_reference={input_view_object_id:source.view_object_id,frame_object_id:source.frame_object_id,raw_fft_object_id:source.fft_object_id,processing_rect_xyxy:[...source.source_rect_xyxy],calibration_relation:'unknown'};}
   }
   if(record.entry.source_reference){const a=record.input_calibration,b=value.xy_calibration??null;record.entry.source_reference.calibration_relation=a==null||b==null?'unknown':same(a,b)?'same':'different';}
+  if(this.activeId!==record.entry.window_id){
+   let highest=Math.max(-1,...this.records.filter(r=>r!==record).map(r=>r.entry.layout.z));
+   if(record.entry.layout.z<=highest){
+    if(highest>=9999){[...this.records].sort((a,b)=>a.entry.layout.z-b.entry.layout.z).forEach((r,i)=>r.entry.layout.z=i);highest=Math.max(-1,...this.records.filter(r=>r!==record).map(r=>r.entry.layout.z));}
+    record.entry.layout.z=highest+1;
+   }
+  }
   this.activeId=record.entry.window_id;this.revision++;
  }
  updateLayouts(revision:unknown,updates:unknown):void {
