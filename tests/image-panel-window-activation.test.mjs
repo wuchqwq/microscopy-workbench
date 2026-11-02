@@ -35,10 +35,10 @@ async function fixture(run){
   assert.ok(value,'Missing controlled object '+args.object_id);return {data:structuredClone(value),png:value.files_sha256?png:null};
  },async close(){}});
  const start=async()=>{owned=prepareOwnedPanelRegistration({workspace,panel_id:P});panelInstance=await createImagePanel({workspace,python:path.resolve('unused-python'),object_id:owned.checkpoint?.object_id??V,client:client(),panel_id:P,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,journalDirectory:owned.journalDirectory,...(owned.checkpoint?{resume_checkpoint:owned.checkpoint}:{})});owned.publish(panelInstance);live.push({owned,panel:panelInstance});};
- const post=async(route,body)=>{const origin=panelInstance.url.split('/#')[0],r=await fetch(origin+route,{method:'POST',headers:{'X-Panel-Token':panelInstance.token,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
+ const post=async(route,body)=>{const origin=panelInstance.url.split('/#')[0],r=await fetch(origin+route,{method:'POST',headers:{'X-Panel-Token':panelInstance.token,Origin:origin,'Content-Type':'application/json',Connection:'close'},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
  const state=()=>panelInstance.state();
  const act=(action,params={},extra={})=>post('/api/action',{expected_object_id:state().object.object_id,draft_revision:state().edit_state.draft_revision,action,params,...extra});
- const get=async route=>{const r=await fetch(panelInstance.url.split('/#')[0]+route,{headers:{'X-Panel-Token':panelInstance.token}});return {status:r.status,data:await r.json()};};
+ const get=async route=>{const r=await fetch(panelInstance.url.split('/#')[0]+route,{headers:{'X-Panel-Token':panelInstance.token,Connection:'close'}});return {status:r.status,data:await r.json()};};
  const context=async(selection,camera=cameraA,selected_annotation_id=null)=>{
   const current=state(),published=await act('draft',{draft_revision:current.edit_state.draft_revision+1,dirty:false,gesture_active:false,selection,confirm_persistence:true});assert.equal(published.status,200,published.data.error);
   const saved=await act('window-context',{collection_revision:state().window_collection.revision,camera,selected_annotation_id});assert.equal(saved.status,200,saved.data.error);return saved;
