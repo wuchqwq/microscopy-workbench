@@ -1,0 +1,187 @@
+{
+  "frozen_sha": "30e368228bde6eac550f972bcfc2675d3101013a",
+  "tasks": [
+    {
+      "task": "u38",
+      "actual_mcp_calls": 14,
+      "tools": [
+        "image_open",
+        "image_open",
+        "image_frame",
+        "image_preview",
+        "image_panel_open",
+        "image_fft",
+        "image_fft",
+        "image_peaks",
+        "image_peaks",
+        "image_panel_current",
+        "image_annotate",
+        "image_result",
+        "image_panel_show",
+        "image_panel_current"
+      ],
+      "actual_image_blocks": 10,
+      "prior_provider_files_unchanged": true,
+      "sources_unchanged": true,
+      "protocol_violations": [],
+      "failures": [
+        {
+          "id": "item_1",
+          "server": "microscopy_workbench",
+          "tool": "image_open",
+          "arguments": {
+            "path": "/Volumes/External SSD/mircograph/resumable-blind-frozen-20261102/public/u38.tiff",
+            "request_id": "route-a-af773c166a-open"
+          },
+          "error": {
+            "message": "tool call error: tool call failed for `microscopy_workbench/image_open`\n\nCaused by:\n    Mcp error: -32602: arguments.source_path: 缺少必填参数"
+          },
+          "status": "failed",
+          "result_is_error": null,
+          "actual_image_blocks": 0
+        }
+      ],
+      "saved_explicit_marks": [
+        {
+          "object_id": "1826c98654d847b581954f17f1afa80b",
+          "request_id": "route-a-af773c166a-rois",
+          "annotation_id": "u38-left-texture",
+          "origin": "agent",
+          "basis": "caller_reported_not_authenticated",
+          "note_utf16_units": 266,
+          "anchor": {
+            "coordinate_space": "source_pixels",
+            "coordinates": [
+              16,
+              64,
+              112,
+              160
+            ],
+            "source_object_id": "f1c2678c8df44251a24327ec86f08f4b"
+          }
+        },
+        {
+          "object_id": "1826c98654d847b581954f17f1afa80b",
+          "request_id": "route-a-af773c166a-rois",
+          "annotation_id": "u38-right-texture",
+          "origin": "agent",
+          "basis": "caller_reported_not_authenticated",
+          "note_utf16_units": 275,
+          "anchor": {
+            "coordinate_space": "source_pixels",
+            "coordinates": [
+              128,
+              64,
+              224,
+              160
+            ],
+            "source_object_id": "f1c2678c8df44251a24327ec86f08f4b"
+          }
+        }
+      ],
+      "qualification": "PASS bounded evidence, pixel-only unknowns, explicit resumable notes and actual readback; reporting caveats below",
+      "reporting_caveats": [
+        "Final call count differs by one from event trace"
+      ]
+    },
+    {
+      "task": "u81",
+      "actual_mcp_calls": 11,
+      "tools": [
+        "image_panel_current",
+        "image_info",
+        "image_fft",
+        "image_peaks",
+        "image_fft",
+        "image_peaks",
+        "image_peak_measurements",
+        "image_annotate",
+        "image_panel_current",
+        "image_panel_show",
+        "image_panel_current"
+      ],
+      "actual_image_blocks": 10,
+      "prior_provider_files_unchanged": true,
+      "sources_unchanged": true,
+      "protocol_violations": [],
+      "failures": [],
+      "saved_explicit_marks": [
+        {
+          "object_id": "3e0fc06996cc46afbf8be21014e78d84",
+          "request_id": "route-a-a03aaffa99-save-roi",
+          "annotation_id": "route-a-u81-texture-support",
+          "origin": "agent",
+          "basis": "caller_reported_not_authenticated",
+          "note_utf16_units": 626,
+          "anchor": {
+            "coordinate_space": "source_pixels",
+            "coordinates": [
+              29,
+              35,
+              181,
+              187
+            ],
+            "source_object_id": "2e90815649a447469cb39d7487efdedb"
+          }
+        },
+        {
+          "object_id": "963648f53b4e419783222f4ebf9b5136",
+          "request_id": "blind-setup-u81-4",
+          "annotation_id": "operator-support-b7",
+          "origin": "unspecified",
+          "basis": "caller_reported_not_authenticated",
+          "note_utf16_units": 133,
+          "anchor": {
+            "coordinate_space": "source_pixels",
+            "coordinates": [
+              29,
+              35,
+              181,
+              187
+            ],
+            "source_object_id": "2e90815649a447469cb39d7487efdedb"
+          }
+        }
+      ],
+      "qualification": "PASS bounded evidence, pixel-only unknowns, explicit resumable notes and actual readback; reporting caveats below",
+      "reporting_caveats": [
+        "Final call count differs by one from event trace",
+        "Final prose says none then Hann; actual execution order was Hann then none. Both saved references are correct. New Agent-authored overlay replaces current ROI row, with original support ID/origin explicitly cited and immutable parent retained."
+      ]
+    },
+    {
+      "task": "u24",
+      "actual_mcp_calls": 4,
+      "tools": [
+        "image_result",
+        "image_panel_current",
+        "image_info",
+        "image_panel_current"
+      ],
+      "actual_image_blocks": 2,
+      "prior_provider_files_unchanged": true,
+      "sources_unchanged": true,
+      "protocol_violations": [],
+      "failures": [
+        {
+          "id": "item_1",
+          "server": "microscopy_workbench",
+          "tool": "image_result",
+          "arguments": {
+            "request_id": "blind-setup-u24-5"
+          },
+          "error": null,
+          "status": "failed",
+          "result_is_error": null,
+          "actual_image_blocks": 0
+        }
+      ],
+      "saved_explicit_marks": [],
+      "qualification": "PASS bounded unknown-outcome readonly stop; no new writes; original reservation unchanged",
+      "reporting_caveats": []
+    }
+  ],
+  "scope": "First outcomes; no prompt corrections/reruns; real formal MCP; no browser or real operator",
+  "model_requested": "gpt-6.1-sol",
+  "model_identity_note": "CLI argv explicitly requests gpt-6.1-sol; event stream does not independently expose backend identity. Sol review subagents are explicitly selected with the collaboration tool."
+}

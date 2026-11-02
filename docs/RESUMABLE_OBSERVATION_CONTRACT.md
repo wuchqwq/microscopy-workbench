@@ -63,9 +63,11 @@ qualification uses `unspecified` and a `test_operator_protocol_simulation` note.
   eligibility rules; anonymous saved rectangles remain unavailable for handoff.
   UI/continuation labels say origin was not recorded, not `researcher`.
 - The four fields survive sparse reconstruction, reprojection, Panel
-  `originalMark` replacement, current handoff, model display and copied
-  continuation text. The latter includes the stable annotation ID and the
-  caller-reported origin qualification.
+  `originalMark` replacement, current handoff and model display. Copied
+  continuation text for current saved ROI rows includes the stable annotation
+  ID and caller-reported origin qualification. The existing retained crystal-
+  evidence fallback links the historical observation view; callers must read
+  that view for per-annotation identity/origin.
 
 New MCP/GUI writes retain the existing limit of **1000 UTF-16 code units**
 (JavaScript string length); 500 supplementary-plane emoji consume 1000 units.
