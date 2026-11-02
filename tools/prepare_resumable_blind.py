@@ -14,6 +14,7 @@ def main():
  p.add_argument('--repository',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
  p.add_argument('--python',required=True);p.add_argument('--codex',required=True);p.add_argument('--node',required=True)
  p.add_argument('--expected-head',required=True);p.add_argument('--model',default='gpt-6.1-sol')
+ p.add_argument('--seed-offset',type=int,default=0,help='Predeclare a fresh independent input set before execution; never tune after observing results')
  a=p.parse_args();repo=a.repository.resolve();out=a.output.resolve()
  head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
  if head!=a.expected_head: raise ValueError('Frozen HEAD mismatch')
@@ -27,7 +28,7 @@ def main():
  records=[]
  for i,label in enumerate(('u38','u81','u24')):
   # Fresh independent periods/seeds, distinct from #69's 256-pixel templates.
-  seed=867031+97*i;qs=[(.0793,.0271),(-.0417,.1069)] if i!=1 else [(.0937,-.0523),(.0967,-.0509)]
+  seed=867031+a.seed_offset+97*i;qs=[(.0793,.0271),(-.0417,.1069)] if i!=1 else [(.0937,-.0523),(.0967,-.0509)]
   y,x=np.indices((224,240));contrast=.009 if i==1 else .19;ideal=320*(1+sum(contrast*np.cos(2*np.pi*(qx*x+qy*y)+.37*i) for qx,qy in qs))
   arr=np.random.default_rng(seed).poisson(ideal).astype('float32');source=out/'public'/(label+'.tiff')
   tifffile.imwrite(source,arr,metadata=None,photometric='minisblack')
