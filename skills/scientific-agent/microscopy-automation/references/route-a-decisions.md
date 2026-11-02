@@ -85,11 +85,26 @@ Respect the advertised note `maxLength`. Keep saved notes concise with stable ev
 
 ## Unknown writes include indirect tool effects
 
-`image_panel_open` may create a saved preview. Opening a Panel on the same input
-is therefore not a read-only workaround for an unresolved `image_preview`.
+`image_panel_open` opens an explicitly saved preview/view. `PREVIEW_REQUIRED`
+means that this open did not dispatch rendering. Recover the original preview
+first and open its returned saved object, rather than asking another entry to
+render the same input.
 Changing request ID, display-size cap or entry point does not make an equivalent
 write independent. After REQUEST_NOT_FOUND or a transport parse failure, retain
 the original request as unknown; use existing read-only object/result/current
 queries, and stop the affected write. Do not use another tool that implicitly
 performs the unresolved operation. Other already saved observations can still
 be discussed with their own sources and limitations.
+
+
+Preview admission persists across client reconnects and known aliases of the same
+fixed source/frame. `PREVIEW_OUTCOME_UNRESOLVED` names the original request.
+`image_result` reads it without replay. A completed result may be shown directly.
+For a deliberate new rendering, pass its saved view as `object_id`, or provide
+`resolved_preview` with the exact original request/object. When a composed tool
+requires the raw frame, first use `image_preview_acknowledge` with those exact
+references and a new recorded receipt request ID. This acknowledges a resolved
+outcome; it does not certify the image, authorize an unknown preview, or prove a
+human saw it. Recover that receipt by its own `image_result` ID. Unknown or
+corrupt records remain blocked: do not delete admission files, infer non-dispatch
+from NOT_FOUND, wait for a TTL, or choose another ID/size as recovery.

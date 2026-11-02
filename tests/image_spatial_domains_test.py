@@ -14,6 +14,7 @@ import tifffile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 import image_spatial_domains as domains
 
 
@@ -21,7 +22,7 @@ class SpatialDomains(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp=tempfile.TemporaryDirectory(prefix="public-spatial-domains-")
-        cls.root=Path(cls.temp.name);cls.workspace=cls.root/"workspace";cls.n=0
+        cls.root=Path(cls.temp.name).resolve();cls.workspace=cls.root/"workspace";cls.n=0
         y,x=np.indices((128,192))
         a=2*np.cos(2*np.pi*10*x/64+.7)+np.cos(2*np.pi*10*y/64-.3)
         b=2*np.cos(2*np.pi*(8*x+6*y)/64+.2)+np.cos(2*np.pi*(-6*x+8*y)/64+.4)
@@ -47,6 +48,7 @@ class SpatialDomains(unittest.TestCase):
         if action not in ("get","result"):request.setdefault("request_id","spatial-domain-test-%d"%cls.n)
         response=worker.execute(request)
         if bool(response["ok"])!=ok:raise AssertionError(response)
+        if ok:acknowledge_received_previews(worker, cls.workspace, response["result"])
         return response["result"] if ok else response
 
     def arrays(self):

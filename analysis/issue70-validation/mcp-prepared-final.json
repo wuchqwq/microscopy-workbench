@@ -1,0 +1,566 @@
+{
+  "result": "PASS",
+  "scope": "actual MCP, exact controlled power loss after prepared fsync; not a general crash recovery claim",
+  "calls": [
+    {
+      "name": "image_open",
+      "args": {
+        "source_path": "/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/public.tiff",
+        "request_id": "source"
+      },
+      "result": {
+        "state": "completed",
+        "backend": "external-image-workspace",
+        "request_id": "source",
+        "object_id": "38a59fe947f54d15b646909cccd797a6",
+        "kind": "tiff_source",
+        "created_utc": "2026-11-02T10:11:26.242024+00:00",
+        "source_identity": {
+          "path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/public.tiff",
+          "stat": {
+            "size": 4320,
+            "mtime_ns": "1793614285701361889",
+            "ctime_ns": "1793614285701361889",
+            "inode": "1233152",
+            "device": "16777230"
+          },
+          "sha256": "2b105304d78ec8d96fe41a459411d7cb3283447d9c42e9bf2807ee52ccc08d4f"
+        },
+        "page_count": 1,
+        "pages": [
+          {
+            "frame_index": 0,
+            "shape_yx": [
+              32,
+              32
+            ],
+            "dtype": "float32",
+            "axes": [
+              "y",
+              "x"
+            ],
+            "decoded_bytes": 4096,
+            "photometric_code": 1,
+            "compression_code": 1
+          }
+        ],
+        "frame_axis_role": "unspecified_sequence",
+        "pixel_data_loaded": false,
+        "source_hash_method": "streaming complete file SHA-256; no whole-volume pixel decode",
+        "schema_version": 1,
+        "computation": "explicit external Python; DM not called",
+        "dm_called": false,
+        "files_sha256": {},
+        "software_provenance": {
+          "python": "3.13.18",
+          "numpy": "2.5.4",
+          "Pillow": "12.3.0",
+          "tifffile": "2026.10.15",
+          "worker_sha256": "379e5f5607c2e5d52f2abee978856126737ee6d4440e0ce030ff3b06ac8f4d38",
+          "helper_modules_sha256": {
+            "preview_admission.py": "bee75e891cbf6210229fb67e0473f0f971e3e1c7bc05aa62ed775f8dc831cc00",
+            "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d",
+            "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+            "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+            "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+            "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+            "image_automation.py": "145c710e699b11799d1d831ba37b3596af50774b6e3dd0cf017134502c274190",
+            "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+            "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+            "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+            "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+            "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+            "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+            "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+            "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+            "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+            "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+            "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+            "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+            "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+            "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+            "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+          }
+        },
+        "manifest_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/38a59fe947f54d15b646909cccd797a6/object.json"
+      }
+    },
+    {
+      "name": "image_frame",
+      "args": {
+        "object_id": "38a59fe947f54d15b646909cccd797a6",
+        "frame_index": 0,
+        "request_id": "frame"
+      },
+      "result": {
+        "state": "completed",
+        "backend": "external-image-workspace",
+        "request_id": "frame",
+        "object_id": "cf5f0ed855d64b26984fae629396a815",
+        "kind": "frame",
+        "created_utc": "2026-11-02T10:11:26.335501+00:00",
+        "parent_object_id": "38a59fe947f54d15b646909cccd797a6",
+        "source_object_id": "38a59fe947f54d15b646909cccd797a6",
+        "frame_index": 0,
+        "frame_axis_role": "unspecified_sequence",
+        "shape_yx": [
+          32,
+          32
+        ],
+        "dtype": "float32",
+        "axes": [
+          "y",
+          "x"
+        ],
+        "source_identity": {
+          "path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/public.tiff",
+          "sha256": "2b105304d78ec8d96fe41a459411d7cb3283447d9c42e9bf2807ee52ccc08d4f",
+          "stat": {
+            "ctime_ns": "1793614285701361889",
+            "device": "16777230",
+            "inode": "1233152",
+            "mtime_ns": "1793614285701361889",
+            "size": 4320
+          }
+        },
+        "intensity_calibration_applied": false,
+        "intensity_semantics": "raw pixel intensity",
+        "calibration": {
+          "status": "unknown",
+          "unit": null
+        },
+        "user_context": null,
+        "schema_version": 1,
+        "computation": "explicit external Python; DM not called",
+        "dm_called": false,
+        "files_sha256": {
+          "data.npy": "fa1625383ed08b873d44ee7b6aa6347fb4f118998c05ebcab19e601f1218335a"
+        },
+        "software_provenance": {
+          "python": "3.13.18",
+          "numpy": "2.5.4",
+          "Pillow": "12.3.0",
+          "tifffile": "2026.10.15",
+          "worker_sha256": "379e5f5607c2e5d52f2abee978856126737ee6d4440e0ce030ff3b06ac8f4d38",
+          "helper_modules_sha256": {
+            "preview_admission.py": "bee75e891cbf6210229fb67e0473f0f971e3e1c7bc05aa62ed775f8dc831cc00",
+            "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d",
+            "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+            "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+            "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+            "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+            "image_automation.py": "145c710e699b11799d1d831ba37b3596af50774b6e3dd0cf017134502c274190",
+            "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+            "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+            "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+            "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+            "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+            "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+            "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+            "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+            "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+            "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+            "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+            "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+            "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+            "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+            "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+          }
+        },
+        "manifest_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/cf5f0ed855d64b26984fae629396a815/object.json",
+        "array_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/cf5f0ed855d64b26984fae629396a815/data.npy"
+      }
+    },
+    {
+      "name": "image_preview",
+      "args": {
+        "object_id": "cf5f0ed855d64b26984fae629396a815",
+        "request_id": "never-submitted"
+      },
+      "error": "错误: spawn /var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/does-not-exist ENOENT. Query image_result with original request_id=never-submitted; do not automatically resubmit. {\"phase\":\"spawn\",\"preview_phase\":\"reserve\",\"preview_dispatch_by_this_attempt\":\"not_dispatched\",\"provider_reported_state\":null,\"submission_state\":\"not_submitted\",\"request_id\":\"never-submitted\",\"provider\":\"external-image-workspace\",\"workspace\":\"/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace\",\"exit_code\":null,\"stdout_bytes\":0,\"stdout_sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"stderr_tail\":\"\"}"
+    },
+    {
+      "name": "image_preview",
+      "args": {
+        "object_id": "cf5f0ed855d64b26984fae629396a815",
+        "request_id": "ready"
+      },
+      "result": {
+        "state": "completed",
+        "backend": "external-image-workspace",
+        "request_id": "ready",
+        "object_id": "821e6c9bf50a4aedbcec95fa05a89bc2",
+        "kind": "view",
+        "created_utc": "2026-11-02T10:11:26.527844+00:00",
+        "parent_object_id": "cf5f0ed855d64b26984fae629396a815",
+        "user_context": null,
+        "source_object_id": "cf5f0ed855d64b26984fae629396a815",
+        "source_rect_xyxy": [
+          0,
+          0,
+          32,
+          32
+        ],
+        "source_shape_yx": [
+          32,
+          32
+        ],
+        "rect_convention": "half-open pixel edges [x0,y0,x1,y1]",
+        "dtype": "float32",
+        "shape_yx": [
+          32,
+          32
+        ],
+        "axes": [
+          "y",
+          "x"
+        ],
+        "display": {
+          "display_range": [
+            0,
+            1023
+          ],
+          "range_source": "shared_raw_minmax",
+          "gamma": 1,
+          "max_size": 1024,
+          "upscale": false,
+          "interpolation": "lanczos",
+          "constant_range": false,
+          "display_only": true,
+          "quantitative": false,
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": null
+        },
+        "array_domain": "spatial",
+        "scientific_semantics": null,
+        "scientific_context": null,
+        "panels": [
+          {
+            "domain": "spatial_pixels",
+            "source_object_id": "cf5f0ed855d64b26984fae629396a815",
+            "source_rect_xyxy": [
+              0,
+              0,
+              32,
+              32
+            ],
+            "image_rect_xyxy": [
+              0,
+              0,
+              32,
+              32
+            ],
+            "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+            "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y"
+          }
+        ],
+        "scale_bar": null,
+        "display_calibration_id": null,
+        "schema_version": 1,
+        "computation": "explicit external Python; DM not called",
+        "dm_called": false,
+        "files_sha256": {
+          "preview.png": "688a3935b1a75ddfb1a0c44228b815e3e2daffced2405166d4ceb2fbbe9f90cf",
+          "data.npy": "fa1625383ed08b873d44ee7b6aa6347fb4f118998c05ebcab19e601f1218335a"
+        },
+        "software_provenance": {
+          "python": "3.13.18",
+          "numpy": "2.5.4",
+          "Pillow": "12.3.0",
+          "tifffile": "2026.10.15",
+          "worker_sha256": "379e5f5607c2e5d52f2abee978856126737ee6d4440e0ce030ff3b06ac8f4d38",
+          "helper_modules_sha256": {
+            "preview_admission.py": "bee75e891cbf6210229fb67e0473f0f971e3e1c7bc05aa62ed775f8dc831cc00",
+            "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d",
+            "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+            "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+            "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+            "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+            "image_automation.py": "145c710e699b11799d1d831ba37b3596af50774b6e3dd0cf017134502c274190",
+            "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+            "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+            "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+            "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+            "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+            "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+            "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+            "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+            "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+            "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+            "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+            "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+            "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+            "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+            "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+          }
+        },
+        "preview_execution": {
+          "version": 1,
+          "request_id": "ready",
+          "object_id": "821e6c9bf50a4aedbcec95fa05a89bc2",
+          "resource_key": "e0ed61b32f48bc997c043f49c23945ff51f7f0f0530304bf829defb9d4dd3f0f"
+        },
+        "manifest_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/821e6c9bf50a4aedbcec95fa05a89bc2/object.json",
+        "image_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/821e6c9bf50a4aedbcec95fa05a89bc2/preview.png",
+        "array_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/821e6c9bf50a4aedbcec95fa05a89bc2/data.npy"
+      }
+    },
+    {
+      "name": "image_preview",
+      "args": {
+        "object_id": "821e6c9bf50a4aedbcec95fa05a89bc2",
+        "request_id": "prepared-original"
+      },
+      "error": "错误: Unexpected end of JSON input. Query image_result with original request_id=prepared-original; do not automatically resubmit. {\"phase\":\"response_decode\",\"preview_phase\":\"dispatch\",\"preview_dispatch_by_this_attempt\":\"not_inferred\",\"provider_reported_state\":null,\"submission_state\":\"outcome_unknown\",\"request_id\":\"prepared-original\",\"provider\":\"external-image-workspace\",\"workspace\":\"/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace\",\"exit_code\":73,\"stdout_bytes\":0,\"stdout_sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"stderr_tail\":\"\"}"
+    },
+    {
+      "name": "image_result",
+      "args": {
+        "request_id": "prepared-original"
+      },
+      "error": "错误: INCOMPLETE_REQUEST: Original request is incomplete or unreadable; preserved without replay. Query image_result with original request_id=prepared-original; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":null,\"preview_dispatch_by_this_attempt\":\"not_inferred\",\"provider_reported_state\":\"unknown\",\"submission_state\":\"outcome_unknown\",\"request_id\":\"prepared-original\",\"provider\":\"external-image-workspace\",\"workspace\":\"/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace\",\"exit_code\":1,\"stdout_bytes\":260,\"stdout_sha256\":\"0c5ede48645cacf7012363593ede00a2fc579370aeb761c712ada0372a6c4c5d\",\"stderr_tail\":\"\"}"
+    },
+    {
+      "name": "image_preview",
+      "args": {
+        "object_id": "821e6c9bf50a4aedbcec95fa05a89bc2",
+        "request_id": "prepared-original"
+      },
+      "error": "错误: INCOMPLETE_REQUEST: Original request is incomplete or unreadable; preserved without replay. Query image_result with original request_id=prepared-original; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":\"reserve\",\"preview_dispatch_by_this_attempt\":\"not_dispatched\",\"provider_reported_state\":\"unknown\",\"submission_state\":\"outcome_unknown\",\"request_id\":\"prepared-original\",\"provider\":\"external-image-workspace\",\"workspace\":\"/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace\",\"exit_code\":1,\"stdout_bytes\":260,\"stdout_sha256\":\"0c5ede48645cacf7012363593ede00a2fc579370aeb761c712ada0372a6c4c5d\",\"stderr_tail\":\"\"}"
+    },
+    {
+      "name": "image_preview",
+      "args": {
+        "object_id": "cf5f0ed855d64b26984fae629396a815",
+        "request_id": "replacement-32",
+        "max_size": 32
+      },
+      "error": "错误: PREVIEW_OUTCOME_UNRESOLVED: PREVIEW_OUTCOME_UNRESOLVED: original request_id=prepared-original; original_provider_state=unknown; read the original outcome. A new ID, Panel or display size is not recovery. Continue only by explicitly referencing the resolved original result.. Query image_result with original request_id=replacement-32; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":\"reserve\",\"preview_dispatch_by_this_attempt\":\"not_dispatched\",\"provider_reported_state\":\"failed\",\"submission_state\":\"provider_reported_failure\",\"request_id\":\"replacement-32\",\"provider\":\"external-image-workspace\",\"workspace\":\"/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace\",\"exit_code\":1,\"stdout_bytes\":413,\"stdout_sha256\":\"92d507ac1c5e6714933f860a37de6784de05ab24c6fc504a442ad0905dedd563\",\"stderr_tail\":\"\"}"
+    },
+    {
+      "name": "image_preview",
+      "args": {
+        "object_id": "cf5f0ed855d64b26984fae629396a815",
+        "request_id": "replacement-1024",
+        "max_size": 1024
+      },
+      "error": "错误: PREVIEW_OUTCOME_UNRESOLVED: PREVIEW_OUTCOME_UNRESOLVED: original request_id=prepared-original; original_provider_state=unknown; read the original outcome. A new ID, Panel or display size is not recovery. Continue only by explicitly referencing the resolved original result.. Query image_result with original request_id=replacement-1024; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":\"reserve\",\"preview_dispatch_by_this_attempt\":\"not_dispatched\",\"provider_reported_state\":\"failed\",\"submission_state\":\"provider_reported_failure\",\"request_id\":\"replacement-1024\",\"provider\":\"external-image-workspace\",\"workspace\":\"/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace\",\"exit_code\":1,\"stdout_bytes\":415,\"stdout_sha256\":\"487b331fcc0d59a38ea36fbf8fb668a25628fbfb50e5b2854f6b6baca05b3543\",\"stderr_tail\":\"\"}"
+    },
+    {
+      "name": "image_panel_open",
+      "args": {
+        "object_id": "cf5f0ed855d64b26984fae629396a815",
+        "request_id": "panel-after-unknown"
+      },
+      "error": "错误: PREVIEW_REQUIRED: Panel open was not submitted; explicitly recover/create a saved preview and open its returned object_id. No preview was dispatched."
+    },
+    {
+      "name": "image_info",
+      "args": {
+        "object_id": "821e6c9bf50a4aedbcec95fa05a89bc2"
+      },
+      "result": {
+        "state": "completed",
+        "backend": "external-image-workspace",
+        "array_domain": "spatial",
+        "array_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/821e6c9bf50a4aedbcec95fa05a89bc2/data.npy",
+        "axes": [
+          "y",
+          "x"
+        ],
+        "computation": "explicit external Python; DM not called",
+        "created_utc": "2026-11-02T10:11:26.527844+00:00",
+        "display": {
+          "constant_range": false,
+          "display_only": true,
+          "display_range": [
+            0,
+            1023
+          ],
+          "gamma": 1,
+          "interpolation": "lanczos",
+          "max_size": 1024,
+          "quantitative": false,
+          "range_source": "shared_raw_minmax",
+          "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+          "scale_bar": true,
+          "scale_bar_calibration_dependency": null,
+          "upscale": false
+        },
+        "display_calibration_id": null,
+        "dm_called": false,
+        "dtype": "float32",
+        "files_sha256": {
+          "data.npy": "fa1625383ed08b873d44ee7b6aa6347fb4f118998c05ebcab19e601f1218335a",
+          "preview.png": "688a3935b1a75ddfb1a0c44228b815e3e2daffced2405166d4ceb2fbbe9f90cf"
+        },
+        "image_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/821e6c9bf50a4aedbcec95fa05a89bc2/preview.png",
+        "kind": "view",
+        "manifest_path": "/private/var/folders/lt/qyfnjyls3x93pgxp7mr3h5200000gn/T/preview-prepared-mcp-Ggw9F8/workspace/objects/821e6c9bf50a4aedbcec95fa05a89bc2/object.json",
+        "object_id": "821e6c9bf50a4aedbcec95fa05a89bc2",
+        "panels": [
+          {
+            "domain": "spatial_pixels",
+            "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y",
+            "image_rect_xyxy": [
+              0,
+              0,
+              32,
+              32
+            ],
+            "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+            "source_object_id": "cf5f0ed855d64b26984fae629396a815",
+            "source_rect_xyxy": [
+              0,
+              0,
+              32,
+              32
+            ]
+          }
+        ],
+        "parent_object_id": "cf5f0ed855d64b26984fae629396a815",
+        "preview_execution": {
+          "object_id": "821e6c9bf50a4aedbcec95fa05a89bc2",
+          "request_id": "ready",
+          "resource_key": "e0ed61b32f48bc997c043f49c23945ff51f7f0f0530304bf829defb9d4dd3f0f",
+          "version": 1
+        },
+        "rect_convention": "half-open pixel edges [x0,y0,x1,y1]",
+        "request_id": "ready",
+        "scale_bar": null,
+        "schema_version": 1,
+        "scientific_context": null,
+        "scientific_semantics": null,
+        "shape_yx": [
+          32,
+          32
+        ],
+        "software_provenance": {
+          "Pillow": "12.3.0",
+          "helper_modules_sha256": {
+            "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+            "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+            "image_automation.py": "145c710e699b11799d1d831ba37b3596af50774b6e3dd0cf017134502c274190",
+            "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+            "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+            "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d",
+            "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+            "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+            "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+            "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+            "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+            "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+            "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+            "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+            "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+            "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+            "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+            "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+            "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+            "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+            "preview_admission.py": "bee75e891cbf6210229fb67e0473f0f971e3e1c7bc05aa62ed775f8dc831cc00",
+            "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d"
+          },
+          "numpy": "2.5.4",
+          "python": "3.13.18",
+          "tifffile": "2026.10.15",
+          "worker_sha256": "379e5f5607c2e5d52f2abee978856126737ee6d4440e0ce030ff3b06ac8f4d38"
+        },
+        "source_object_id": "cf5f0ed855d64b26984fae629396a815",
+        "source_rect_xyxy": [
+          0,
+          0,
+          32,
+          32
+        ],
+        "source_shape_yx": [
+          32,
+          32
+        ],
+        "user_context": null
+      }
+    }
+  ],
+  "trace": [
+    {
+      "action": "open",
+      "phase": null,
+      "request_id": "source",
+      "exit": 0
+    },
+    {
+      "action": "frame",
+      "phase": null,
+      "request_id": "frame",
+      "exit": 0
+    },
+    {
+      "action": "view",
+      "phase": "reserve",
+      "request_id": "ready",
+      "exit": 0
+    },
+    {
+      "action": "view",
+      "phase": "dispatch",
+      "request_id": "ready",
+      "exit": 0
+    },
+    {
+      "action": "preview_acknowledge",
+      "phase": null,
+      "request_id": "received-f4f7c0ccdf3ef23da2823d90d12075f685dafda6a582329e",
+      "exit": 0
+    },
+    {
+      "action": "view",
+      "phase": "reserve",
+      "request_id": "prepared-original",
+      "exit": 0
+    },
+    {
+      "action": "view",
+      "phase": "dispatch",
+      "request_id": "prepared-original",
+      "exit": 73
+    },
+    {
+      "action": "result",
+      "phase": null,
+      "request_id": null,
+      "exit": 1
+    },
+    {
+      "action": "view",
+      "phase": "reserve",
+      "request_id": "prepared-original",
+      "exit": 1
+    },
+    {
+      "action": "view",
+      "phase": "reserve",
+      "request_id": "replacement-32",
+      "exit": 1
+    },
+    {
+      "action": "view",
+      "phase": "reserve",
+      "request_id": "replacement-1024",
+      "exit": 1
+    },
+    {
+      "action": "get",
+      "phase": null,
+      "request_id": null,
+      "exit": 0
+    },
+    {
+      "action": "get",
+      "phase": null,
+      "request_id": null,
+      "exit": 0
+    }
+  ],
+  "source_sha256": "2b105304d78ec8d96fe41a459411d7cb3283447d9c42e9bf2807ee52ccc08d4f"
+}

@@ -12,6 +12,7 @@ import tifffile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 import image_automation as automation
 import image_spatial_atlas as atlas
 
@@ -42,6 +43,7 @@ class SpatialAtlas(unittest.TestCase):
             request.setdefault("request_id", "atlas-test-%d" % self.counter)
         result = worker.execute(request)
         self.assertEqual(result["ok"], ok, result)
+        if ok:acknowledge_received_previews(worker, request["workspace"], result["result"])
         return result["result"] if ok else result
 
     def open_frame(self, values, name):

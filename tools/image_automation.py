@@ -30,10 +30,32 @@ def run_child(workspace, request, label, action, **parameters):
     if module is None:
         module = sys.modules["__main__"]
     request_id = child_request_id(request["request_id"], label)
-    result = module._execute(dict(action=action, workspace=str(workspace.root),
-                                  request_id=request_id, **parameters))
+    # Only receipts actually returned to this parent invocation can acknowledge
+    # its next child render. Disk completion alone is not caller receipt.
+    receipts = module.preview_child_receipts.get()
+    if receipts is None:
+        receipts = getattr(workspace, "_consumed_preview_children", {})
+    resource = None
+    if action == "view":
+        _, resource = module.preview_admission._binding(workspace, parameters["object_id"], module)
+        if resource in receipts and "resolved_preview" not in parameters:
+            parameters = {**parameters, "resolved_preview": receipts[resource]}
+    scientific = {key: value for key, value in parameters.items() if key != "resolved_preview"}
+    original_path = workspace.root / "requests" / (request_id + ".json")
+    if action == "view" and original_path.exists():
+        saved = module.read_json(original_path)
+        expected = dict(action=action, workspace=str(workspace.root), request_id=request_id, **scientific)
+        module.need(saved.get("parameters_sha256") == hashlib.sha256(module.canonical(expected)).hexdigest(),
+                    "Original child parameters changed", "REQUEST_CONFLICT")
+        result = module._execute(dict(action="result", workspace=str(workspace.root), query_request_id=request_id))
+    else:
+        result = module._execute(dict(action=action, workspace=str(workspace.root),
+                                      request_id=request_id, **parameters))
     module.need(result.get("ok"), "Batch child %s did not complete: %s. Query original child ID; do not replay unknown work" %
                 (request_id, result.get("error")), "BATCH_CHILD_FAILED")
+    if action == "view":
+        receipts[resource] = {"request_id": request_id, "object_id": result["object_id"]}
+        workspace._consumed_preview_children = receipts
     return result
 
 

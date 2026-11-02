@@ -118,6 +118,10 @@ jobs:
       - run: python -B tests/fixtures/flat_spectrum_saved.py create "${{ runner.temp }}/flat-spectrum-saved"
       - run: python -B tests/fixtures/fft_dc_saved.py create "${{ runner.temp }}/fft-dc-saved"
       - run: node dist/tests/fft-dc-science-smoke.mjs
+      - run: python -B tests/test_preview_admission.py
+      - run: npm run test:preview-recovery
+        env:
+          MICROSCOPY_PYTHON: python
       - run: python -B tests/image_automation_test.py
       - run: python -B tests/image_sequence_test.py
       - run: python -B tests/image_joint_test.py

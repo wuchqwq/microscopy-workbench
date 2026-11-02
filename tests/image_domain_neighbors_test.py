@@ -16,6 +16,7 @@ import tifffile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 import image_spatial_domains as domains
 
 
@@ -89,6 +90,7 @@ class RealWorkerCompatibility(unittest.TestCase):
                 if action not in ("get","result"):request["request_id"]="contact-worker-%d"%n
                 response=worker.execute(request)
                 self.assertTrue(response["ok"],response)
+                acknowledge_received_previews(worker, workspace, response["result"])
                 return response["result"]
             frame=call("frame",object_id=call("open",source_path=str(source))["object_id"],frame_index=0)
             field=call("spatial_field",object_id=frame["object_id"],rect=[0,0,32,32],window_sizes=[32],stride_xy=[32,32],max_windows=1,
