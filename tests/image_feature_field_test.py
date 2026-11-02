@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import image_feature_field as field
 import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 
 
 class SparseField(unittest.TestCase):
@@ -49,6 +50,7 @@ class SparseField(unittest.TestCase):
             request.setdefault("request_id", "field-test-%d" % self.n)
         response = worker.execute(request)
         self.assertEqual(response["ok"], ok, response)
+        if ok:acknowledge_received_previews(worker, self.workspace, response["result"])
         return response["result"] if ok else response
 
     def open_frames(self, values, name):

@@ -38,3 +38,14 @@ folders and are not historical evidence replacements.
 NOT_TESTED: full scientific matrices, legacy history migration without the
 frozen producer, browser/GUI gestures, actual model behavior, real specimen or
 physical qualification. Existing frozen evidence files were not modified.
+
+Additional receiving-wrapper review: `image_feature_field_test.py` likewise
+acknowledges only successful delivered responses. Its targeted unittest run
+(`-m unittest discover -s tests -p image_feature_field_test.py`) PASS: 6 tests.
+`test_general_evidence.py` uses the already-updated twin-observation receiving
+fixture, so needed no separate code change; targeted inherited-path validation
+(`-m unittest discover -s tests -p test_general_evidence.py`) PASS: 13 tests.
+Read-only inspection of `test_general_recovery.py` and
+`test_crystal_qualification.py` found no image-worker receiving wrapper or
+repeated image composite needing acknowledgement; no changes or additional
+science runs were made for those two files.
