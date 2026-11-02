@@ -175,7 +175,11 @@ print(json.dumps({'result':'PASS','source_array_equal':True,'all_bin_direct_dft_
 `,[numericInput])));
  const beforeRecovery=immutable(),fresh=makeClient();clients.push(fresh);await fresh.rpc('initialize');
  for(const saved of recovery){const restored=await data(saved.provider==='structure'?'structure_result':'image_result',{request_id:saved.request_id},fresh);assert.equal(restored.object_id,saved.object_id);}
- let recoveredWrongRoi='';try{await data('image_result',{request_id:wrongRoiRequest},fresh);}catch(error){recoveredWrongRoi=error instanceof Error?error.message:String(error);}assert.equal(recoveredWrongRoi,wrongRoiError);
+ let recoveredWrongRoi='';try{await data('image_result',{request_id:wrongRoiRequest},fresh);}catch(error){recoveredWrongRoi=error instanceof Error?error.message:String(error);}
+ // The original scientific refusal stays exact; the separate worker's raw
+ // stdout fingerprint describes that transport attempt, not journal identity.
+ const withoutTransportHash=(message:string)=>message.replace(/("stdout_sha256":")[a-f0-9]{64}"/,'$1[transport-specific]"');
+ assert.equal(withoutTransportHash(recoveredWrongRoi),withoutTransportHash(wrongRoiError));
  assert.deepEqual(immutable(),beforeRecovery);assert.deepEqual(science(),protectedScience);assert.deepEqual(counts(),{fft:2,simulate:2,full_fields:0});
  for(const [file,digest] of Object.entries(row(fixture.source_sha256)))assert.equal(hash(file),digest);
  const copies:Row[]=[];
@@ -183,7 +187,7 @@ print(json.dumps({'result':'PASS','source_array_equal':True,'all_bin_direct_dft_
  report.discovery=discovery;report.atlas=atlas;report.manual_reviews=reviews;report.comparison=comparison;
  report.revision={measurement:corrected,atlas:revisedAtlas,review_a:revisedReview,unchanged_review_b:reviews[1].object_id,comparison:revisedComparison,delta_cycles_per_pixel:.0005};
  report.references={source_path:fixture.source_path,image_source:opened.object_id,frame:frame.object_id,calibrated_frame:calibrated.object_id,discovery:discovery.object_id,atlas:atlas.object_id,ffts:fftIds,manual_reviews:reviews.map(r=>r.object_id),models:Object.fromEntries(Object.entries(models).map(([k,v])=>[k,v.object_id])),simulations:Object.fromEntries(Object.entries(simulations).map(([k,v])=>[k,v.object_id])),comparison:comparison.object_id,revised_atlas:revisedAtlas.object_id,revised_comparison:revisedComparison.object_id};
- report.independent_numeric=independent;report.refusals={wrong_roi:wrongRoiError,wrong_roi_original_request:wrongRoiRequest,failed_request_recovered_identically:true,stale_calibration_refused:true};report.evidence_copies=copies;
+ report.independent_numeric=independent;report.refusals={wrong_roi:wrongRoiError,wrong_roi_original_request:wrongRoiRequest,failed_request_semantics_recovered:true,transport_stdout_hash_may_differ:true,stale_calibration_refused:true};report.evidence_copies=copies;
  report.integrity={counts:counts(),protected_scientific_files:Object.keys(protectedScience).length,old_files_preserved:Object.keys(beforeRevision).length,recovery_files_unchanged:Object.keys(beforeRecovery).length,source_sha256:fixture.source_sha256,recovery};
  checks.push('Actual FCC shared-orientation diffsims tables agree with independent HKL/q, correct candidate fits and wrong metric candidate refuses geometrically; all results remain hypotheses, not a unique material or twin identification.');
  checks.push('Conflicting original ID, foreign-ROI evidence and stale calibration refuse. A fresh MCP client recovers original successful and failed outcomes without adding scientific computation or altering original records.');

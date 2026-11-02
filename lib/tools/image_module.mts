@@ -69,6 +69,13 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
     gates: ['Exact uint16/float32 TIFF frame/axis and source-stability checks; frame index is not physical depth'],
     budgets: ['One admitted scalar XY plane; no full-stack decode'],
   },
+  image_preview_acknowledge: {
+    inputs:['OriginalPreviewRef:explicit original request and exact completed object (or confirmed failed original)'],
+    outputs:['OperationalReceipt:no scientific object; recovery by original acknowledgement request ID'],
+    kind:'preview-acknowledgement',requestId:'required',
+    gates:['Provider-validated original journal, intent/fence binding; unknown originals cannot be acknowledged'],
+    budgets:['Preview-only durable admission; no rendering, scientific arrays or model calls'],
+  },
   image_preview: {
     inputs: ['ScientificArrayRef or ImageViewRef:explicit frame/ROI/comparison/saved complex FFT', 'DisplayParameters:source pixel ROI or original fftshift-bin frequency_rect'],
     outputs: ['ImageViewRef:immutable display recipe and scientific coordinate mappings', 'DisplayPNG:nonquantitative, original scientific arrays unchanged'],

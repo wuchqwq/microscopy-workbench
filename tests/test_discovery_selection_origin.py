@@ -18,6 +18,7 @@ import tifffile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 
 
 LEGACY_SHA = "7f0e523ba287de11c0913abd68f553655f008182"
@@ -54,6 +55,7 @@ class WorkerFixture(unittest.TestCase):
         response = worker.execute(cls.request(action, **arguments))
         if not response.get("ok"):
             raise AssertionError(response)
+        acknowledge_received_previews(worker, cls.workspace, response["result"])
         return response["result"]
 
 

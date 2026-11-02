@@ -14,6 +14,9 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tests" / "fixtures"))
 from dm4_fixture import write_dm3, write_dm4
+sys.path.insert(0, str(ROOT / "tools"))
+import image_workspace as worker_api
+from preview_test_support import acknowledge_received_previews
 
 
 class DMComplex(unittest.TestCase):
@@ -39,6 +42,7 @@ class DMComplex(unittest.TestCase):
                                 input=json.dumps(request), text=True, capture_output=True, timeout=30)
         result = json.loads(worker.stdout)
         self.assertEqual(result["ok"], ok, result)
+        if ok:acknowledge_received_previews(worker_api, self.workspace, result["result"])
         return result["result"] if ok else result
 
     def opened(self, dtype="complex64", version=4):
@@ -72,10 +76,11 @@ class DMComplex(unittest.TestCase):
 
     def test_preview_requires_component_revisions_crop_keep_both_parts_and_recover(self):
         _, _, frame = self.opened()
-        bad = self.call("view", ok=False, object_id=frame["object_id"])
+        bad = self.call("view", ok=False, object_id=frame["object_id"], request_id="complex-missing-component")
         self.assertEqual(bad["error"]["code"], "COMPONENT_REQUIRED")
         for component in ("real", "imag", "amplitude", "power"):
-            view = self.call("view", object_id=frame["object_id"], component=component, max_size=128, upscale=True)
+            view = self.call("view", object_id=frame["object_id"], component=component, max_size=128, upscale=True,
+                             **({"resolved_preview":{"request_id":"complex-missing-component"}} if component=="real" else {}))
             np.testing.assert_array_equal(self.array(view), self.known.astype(np.complex64))
             self.assertEqual(view["display"]["component"], component)
             self.assertTrue(view["display"]["complex_data_unchanged"])

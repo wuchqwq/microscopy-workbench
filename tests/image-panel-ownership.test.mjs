@@ -18,7 +18,7 @@ async function fixture(fn){
  const workspace=mkdtempSync(path.join(tmpdir(),'panel-owned-')),live=[],calls=[],records=new Map([[A,image]]);let launches=0;
  const client=()=>({async rpc(method){return {result:method==='tools/list'?{tools:['image_info','image_result'].map(name=>({name,inputSchema:{}}))}:{}};},async tool(name,args){calls.push({name,args});assert.equal(name,'image_info','Ownership must never compute/replay science');assert.ok(records.has(args.object_id));return {data:structuredClone(records.get(args.object_id)),png};},async close(){}});
  const start=async owned=>{const panel=await createImagePanel({workspace,python:path.resolve('unused-python'),object_id:A,client:client(),panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,journalDirectory:owned.journalDirectory,...(owned.checkpoint?{resume_checkpoint:owned.checkpoint}:{})});owned.publish(panel);live.push({owned,panel});return panel;};
- const manager=()=>new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async id=>{assert.equal(id,A);return {content:[]};},launch:async request=>{launches++;const owned=loadOwnedPanelRegistration(workspace,request.registration_file);return start(owned);}});
+ const manager=()=>new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async id=>{assert.equal(id,A);return {content:[{type:'image',mimeType:'image/png',data:'iVBORw0KGgo='}]};},launch:async request=>{launches++;const owned=loadOwnedPanelRegistration(workspace,request.registration_file);return start(owned);}});
  try{await fn({workspace,live,calls,records,start,manager,launches:()=>launches});}finally{for(const {owned,panel} of live.reverse()){try{await owned.close(panel);}catch{try{await panel.close();}catch{}}}rmSync(workspace,{recursive:true,force:true});}
 }
 test('official fresh registration exposes exact live helper and binds checkpoint tuple; legacy schemas unchanged',()=>fixture(async({workspace,start,manager})=>{
@@ -56,7 +56,7 @@ test('normal closed generation explicitly resumes once, preserves exact draft, r
 test('cross-client per-panel claim remains exclusive while caller stops waiting; original ID recovers one helper',()=>fixture(async({workspace,start})=>{
  const old=prepareOwnedPanelRegistration({workspace,panel_id:P}),panel=await start(old);await old.close(panel);let release,entered,launches=0;
  const gate=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve);
- const manager=()=>new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async()=>({content:[]}),launch:async req=>{launches++;entered();await gate;return start(loadOwnedPanelRegistration(workspace,req.registration_file));}});
+ const manager=()=>new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async()=>({content:[{type:'image',mimeType:'image/png',data:'iVBORw0KGgo='}]}),launch:async req=>{launches++;entered();await gate;return start(loadOwnedPanelRegistration(workspace,req.registration_file));}});
  const m=manager(),controller=new AbortController(),args={panel_id:P,request_id:'cancel-wait-resume'},waiting=m.call('image_panel_resume',args,controller.signal);await started;controller.abort();await assert.rejects(waiting,/Stopped waiting/);
  await assert.rejects(manager().call('image_panel_resume',{panel_id:P,request_id:'competing-resume'}),/EEXIST/);assert.equal(launches,1);release();
  let recovered;for(let n=0;n<40;n++){try{recovered=data(await manager().call('image_panel_resume',args));break;}catch(error){if(!String(error).includes('unverified'))throw error;await new Promise(resolve=>setTimeout(resolve,10));}}
@@ -77,7 +77,7 @@ test('tampered checkpoint binding and legacy ownership refuse before launch',()=
 }));
 test('unknown launch outcome does not launch again from another manager/client',()=>fixture(async({workspace,start,launches})=>{
  const owned=prepareOwnedPanelRegistration({workspace,panel_id:P}),panel=await start(owned);await owned.close(panel);let attempts=0;
- const manager=()=>new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async()=>({content:[]}),launch:async()=>{attempts++;throw new Error('Controlled lost launch outcome');}});
+ const manager=()=>new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async()=>({content:[{type:'image',mimeType:'image/png',data:'iVBORw0KGgo='}]}),launch:async()=>{attempts++;throw new Error('Controlled lost launch outcome');}});
  const args={panel_id:P,request_id:'unknown-launch'};await assert.rejects(manager().call('image_panel_resume',args),/lost launch outcome/);await assert.rejects(manager().call('image_panel_resume',args),/unverified/);assert.equal(attempts,1);assert.equal(launches(),0);
  const record=JSON.parse(readFileSync(path.join(workspace,'panel-registry','requests','unknown-launch.json')));assert.equal(record.status,'submitted');assert.equal(record.stage,'launching');
  await assert.rejects(manager().call('image_panel_resume',{panel_id:P,request_id:'different-id-after-unknown'}),/EEXIST/);assert.equal(attempts,1);
@@ -85,7 +85,7 @@ test('unknown launch outcome does not launch again from another manager/client',
 test('interrupted preflight with no assigned generation cannot qualify legacy or malformed completed receipts',()=>fixture(async({workspace,start})=>{
  const owned=prepareOwnedPanelRegistration({workspace,panel_id:P}),panel=await start(owned);await owned.close(panel);
  const connFile=path.join(workspace,'panel-registry','panels',P+'.json');writeFileSync(connFile,JSON.stringify({schema_version:1,panel_id:P,port:1234,token:'c'.repeat(48),pid:process.pid}));let fetches=0,launches=0;
- const m=new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async()=>({content:[]}),fetchImpl:async()=>{fetches++;return {ok:true,status:200,text:async()=>JSON.stringify({panel_id:P,object:image})};},launch:async()=>{launches++;}});m.initialize();
+ const m=new ImagePanelManager({workspace,python:path.resolve('unused-python'),inspect:async()=>({content:[{type:'image',mimeType:'image/png',data:'iVBORw0KGgo='}]}),fetchImpl:async()=>{fetches++;return {ok:true,status:200,text:async()=>JSON.stringify({panel_id:P,object:image})};},launch:async()=>{launches++;}});m.initialize();
  for(const [status,stage] of [['submitted','preflight'],['completed','completed']]){
   const request_id='interrupted-'+status,args={panel_id:P,request_id};writeFileSync(path.join(workspace,'panel-registry','requests',request_id+'.json'),JSON.stringify({schema_version:1,name:'image_panel_resume',arguments:args,panel_id:P,request_id,status,stage,response:{panel_id:P,object:image}}));
   await assert.rejects(m.call('image_panel_resume',args),/no qualified assigned helper generation/);

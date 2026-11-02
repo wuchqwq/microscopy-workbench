@@ -6,6 +6,7 @@ Python >=3.10 with requirements-images.txt belongs outside GMS Python.
 """
 import hashlib
 import copy
+from contextvars import ContextVar
 import io
 import json
 import math
@@ -23,6 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 import tifffile
 
 if __package__:
+    from . import preview_admission
     from . import result_semantics
     from .image_annotation_updates import plan_annotation_updates
     from . import image_calibration as calibration
@@ -44,6 +46,7 @@ if __package__:
     from . import image_method_loop as method_loop
     from . import image_discovery as discovery
 else:
+    import preview_admission
     import result_semantics
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -91,7 +94,8 @@ FIELDS = {
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
-    "view": {"object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar", "component"},
+    "preview_acknowledge": {"preview_request_id", "object_id"},
+    "view": {"resolved_preview", "object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar", "component"},
     "compare": {"object_ids", "rect", "display_range", "gamma", "max_size"},
     "fft": {"object_id", "rect", "window", "subtract_mean", "max_size"},
     "peaks": {"object_id", "max_peaks", "min_separation_bins", "exclude_dc_radius_bins", "threshold_rel", "refinement", "max_size"},
@@ -105,6 +109,9 @@ FIELDS = {
     "get": {"object_id"}, "result": {"query_request_id"},
 }
 
+
+# Receipts consumed synchronously within one parent execution, never across calls.
+preview_child_receipts = ContextVar("preview_child_receipts", default=None)
 
 class WorkspaceError(ValueError):
     def __init__(self, code, message):
@@ -964,7 +971,13 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("result_semantics.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
+                                                                       ("preview_admission.py", "result_semantics.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
+        intent_path = self.root / "preview-admission-v1" / "intents" / (metadata["request_id"] + ".json")
+        if intent_path.exists():
+            admitted = preview_admission._intent(self.root / "preview-admission-v1", metadata["request_id"], sys.modules[__name__])
+            need(admitted["state"] == "dispatched", "Published preview has no dispatched intent", "PREVIEW_ADMISSION_CORRUPT")
+            metadata["preview_execution"] = {"version": 1, "request_id": metadata["request_id"],
+                                             "object_id": metadata["object_id"], "resource_key": admitted["resource_key"]}
         metadata["manifest_path"] = str(directory / "object.json")
         if "preview.png" in files:
             metadata["image_path"] = str(directory / "preview.png")
@@ -1900,7 +1913,7 @@ def overlay(image, annotations, panels, reproject=False, updates=None):
     return image, result
 
 
-def _execute(request):
+def _execute_core(request, preview_dispatch_authorized=False):
     need(type(request) is dict and type(request.get("action")) is str, "One JSON object with action is required")
     action = request["action"]
     need(action in FIELDS and set(request) <= FIELDS[action] | {"workspace", "action", "request_id"}, "Unknown action/argument")
@@ -1927,16 +1940,21 @@ def _execute(request):
         ident = request.get("query_request_id")
         need(type(ident) is str and REQUEST_ID.fullmatch(ident), "query_request_id requires the original saved identity")
         path = workspace.root / "requests" / (ident + ".json")
+        if not path.is_file():
+            admitted = preview_admission.outcome(workspace, ident, sys.modules[__name__])
+            if admitted is not None:
+                return admitted
         need(path.is_file(), "Original request not found", "REQUEST_NOT_FOUND")
         try:
             saved = read_json(path)
         except (OSError, ValueError, WorkspaceError):
             return pending(ident)
-        if saved["state"] in ("completed", "failed"):
+        if saved["state"] in ("completed", "failed", "not_submitted"):
             need(saved.get("request_id") == ident and saved.get("response", {}).get("request_id") == ident,
                  "Stored request/response belongs to another original ID", "CORRUPT_OBJECT")
             if saved["state"] == "completed":
-                workspace.object(saved["response"]["object_id"])
+                if saved.get("parameters", {}).get("action") != "preview_acknowledge":
+                    workspace.object(saved["response"]["object_id"])
             elif saved.get("parameters", {}).get("action") == "joint_observations":
                 return {**saved["response"], "partial_results": joint.recovery(workspace, saved, sys.modules[__name__])}
             elif saved.get("parameters", {}).get("action") == "spatial_atlas":
@@ -1978,11 +1996,15 @@ def _execute(request):
             return pending(ident)
         need(previous.get("parameters_sha256") == fingerprint, "Same request_id has different action/parameters", "REQUEST_CONFLICT")
         if previous.get("state") == "completed":
-            workspace.object(previous["response"]["object_id"])
+            if previous.get("parameters", {}).get("action") != "preview_acknowledge":
+                workspace.object(previous["response"]["object_id"])
             return previous["response"]
-        if previous.get("state") == "failed":
+        if previous.get("state") in ("failed", "not_submitted"):
             return previous["response"]
-        return pending(ident)
+        if action == "view" and previous.get("state") == "preview_reserved" and preview_dispatch_authorized:
+            stream = journal.open("r+", encoding="utf-8")
+        else:
+            return pending(ident)
     record = {"schema_version": 1, "request_id": ident, "state": "prepared", "parameters": normalized, "parameters_sha256": fingerprint}
     # A method submission consumes its deterministic attempt slot even when
     # preflight refuses it. Dispatch updates are fsynced before child work.
@@ -2007,9 +2029,13 @@ def _execute(request):
                 update()
             workspace.method_attempt_update = method_attempt_update
         try:
-            metadata = workspace.action(action, normalized, uuid.uuid4().hex)
-            response = {"ok": True, "state": "completed", "backend": BACKEND, "request_id": ident, **metadata}
-            record.update(state="completed", response=response, object_manifest_sha256=sha_file(metadata["manifest_path"]))
+            if action == "preview_acknowledge":
+                response = preview_admission.acknowledge(workspace, normalized, sys.modules[__name__])
+                record.update(state="completed", response=response, operational_receipt=True)
+            else:
+                metadata = workspace.action(action, normalized, uuid.uuid4().hex)
+                response = {"ok": True, "state": "completed", "backend": BACKEND, "request_id": ident, **metadata}
+                record.update(state="completed", response=response, object_manifest_sha256=sha_file(metadata["manifest_path"]))
         except Exception as error:
             response = failure(error, ident)
             record.update(state="failed", response=response)
@@ -2030,7 +2056,7 @@ def pending(request_id):
             "error": {"code": "INCOMPLETE_REQUEST", "message": "Original request is incomplete or unreadable; preserved without replay"}}
 
 
-def execute(request):
+def _execute_response(request):
     try:
         # Presentation is not a scientific request parameter or journal identity.
         detail = request.get("response_detail", "full") if type(request) is dict else "full"
@@ -2038,6 +2064,8 @@ def execute(request):
         scientific = {key: value for key, value in request.items() if key != "response_detail"} if type(request) is dict else request
         need(detail == "full" or scientific.get("action") in evidence.COMPACT_ACTIONS, "Compact evidence is unavailable for this action")
         response = _execute(scientific)
+        if response.get("preview_admission") is not None:
+            return response
         if response.get("ok") and detail == "compact":
             try:
                 readonly_workspace = Workspace(scientific["workspace"], False)
@@ -2066,6 +2094,55 @@ def execute(request):
         return response
     except Exception as error:
         return failure(error, request.get("request_id") if type(request) is dict else None)
+
+
+def _execute(request):
+    """Preview reserve is separate from scientific dispatch; other tools unchanged."""
+    if type(request) is not dict or request.get("action") != "view":
+        return _execute_core(request)
+    try:
+        phase = request.get("_preview_phase")
+        ticket = request.get("_preview_ticket")
+        scientific = {key: value for key, value in request.items() if key not in ("_preview_phase", "_preview_ticket")}
+        need(phase in (None, "reserve", "dispatch", "abort"), "Unknown internal preview phase")
+        # Validate the public field set before creating any admission intent.
+        need(set(scientific) <= FIELDS["view"] | {"workspace", "action", "request_id", "response_detail"}, "Unknown preview argument")
+        ident = scientific.get("request_id")
+        need(type(ident) is str and REQUEST_ID.fullmatch(ident), "Original preview request_id required")
+        ws = Workspace(scientific.get("workspace"), True)
+        journal = ws.root / "requests" / (ident + ".json")
+        if journal.exists() and phase not in ("dispatch", "abort"):
+            intent_path = ws.root / "preview-admission-v1" / "intents" / (ident + ".json")
+            if intent_path.exists():
+                preview_admission.validate_parameters(ws, {key: value for key, value in scientific.items() if key != "response_detail"}, sys.modules[__name__])
+            else:
+                need("resolved_preview" not in scientific, "Legacy original preview parameters differ", "REQUEST_CONFLICT")
+            return _execute_core({key: value for key, value in scientific.items() if key != "resolved_preview"})
+        admission_request = {key: value for key, value in scientific.items() if key != "response_detail"}
+        declared = admission_request.get("resolved_preview")
+        need(declared is None or type(declared) is dict and set(declared) <= {"request_id", "object_id"} and
+             type(declared.get("request_id")) is str and REQUEST_ID.fullmatch(declared["request_id"]) and
+             ("object_id" not in declared or type(declared["object_id"]) is str and OBJECT_ID.fullmatch(declared["object_id"])),
+             "resolved_preview requires an original request_id and optional completed object_id")
+        if phase in (None, "reserve"):
+            reserved = preview_admission.prepare(ws, admission_request, sys.modules[__name__])
+            if phase == "reserve":
+                return {"ok": True, "preview_admission": reserved}
+            ticket = reserved["ticket"]
+        dispatched = preview_admission.dispatch(ws, admission_request, ticket, sys.modules[__name__], abort=phase == "abort")
+        if phase == "abort":
+            return {"ok": True, "preview_admission": dispatched}
+        return _execute_core({key: value for key, value in scientific.items() if key != "resolved_preview"}, preview_dispatch_authorized=True)
+    except Exception as error:
+        return failure(error, request.get("request_id"))
+
+
+def execute(request):
+    token = preview_child_receipts.set({})
+    try:
+        return _execute_response(request)
+    finally:
+        preview_child_receipts.reset(token)
 
 
 def main():

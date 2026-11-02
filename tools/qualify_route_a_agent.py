@@ -22,7 +22,7 @@ TASK_KEYS = {"schema_version", "task_id", "source_path", "source_sha256", "frame
 BUDGET_KEYS = {"maximum_roi_supports", "maximum_distinct_ffts", "maximum_simulations", "maximum_science_calls"}
 CANDIDATE_KEYS = {"label", "source_path", "zone_axis_uvw", "in_plane_direction_uvw", "basis"}
 TOOLS = [
-    "image_open", "image_frame", "image_preview", "image_info", "image_result", "image_context",
+    "image_open", "image_frame", "image_preview", "image_preview_acknowledge", "image_info", "image_result", "image_context",
     "image_calibrate", "image_fft", "image_peaks", "image_peak_measurements", "image_measure",
     "image_remeasure", "image_annotate", "image_spatial_atlas", "image_local_signature_compare",
     "image_feature_field", "image_panel_open", "image_panel_current", "image_panel_show",

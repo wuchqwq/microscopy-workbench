@@ -16,6 +16,8 @@ import tifffile
 ROOT=Path(os.environ.get('MICROSCOPY_TEST_REPOSITORY',Path(__file__).resolve().parents[2]))
 sys.path.insert(0,str(ROOT/'tools'))
 import image_workspace as worker
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from preview_test_support import acknowledge_received_previews
 MODE=sys.argv[1];OUT=Path(sys.argv[-1]).resolve();OUT.mkdir(parents=True,exist_ok=False)
 BASE=OUT if MODE=='create' else Path(sys.argv[2]).resolve()
 W=BASE/'workspace';calls=[];targets=[]
@@ -36,6 +38,7 @@ def call(action,**params):
 
 def ok(action,**params):
     value=call(action,**params);assert value['ok'],value
+    acknowledge_received_previews(worker,W,value['result'])
     return value['result']
 
 
@@ -78,6 +81,7 @@ try:
             expected={k:v for k,v in old['response'].items() if k!='ok'}
             assert ok('result',query_request_id=old['request_id'])==expected
             assert worker.execute(old['parameters'])['result']==expected
+            if expected.get('kind')=='preview_acknowledgement':continue
             got=ok('get',object_id=expected['object_id'])
             if 'peak_table' in expected:
                 assert got['peak_table']==expected['peak_table'] and 'version' not in got['peak_detection']

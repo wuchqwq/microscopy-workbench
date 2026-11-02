@@ -13,6 +13,7 @@ import tifffile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 import image_field_increment as increment
 import image_spatial_domains as spatial
 import image_automation as automation
@@ -44,6 +45,7 @@ class Increment(unittest.TestCase):
         if action not in ("get","result"):request.setdefault("request_id","increment-test-%d"%cls.n)
         result=worker.execute(request)
         if bool(result["ok"])!=ok:raise AssertionError(result)
+        if ok:acknowledge_received_previews(worker, cls.workspace, result["result"])
         return result["result"] if ok else result
 
     def count_ffts(self):

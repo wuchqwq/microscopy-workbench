@@ -49,6 +49,7 @@ function publicObject(value:Metadata):Metadata{
 }
 export class StdioImageClient implements PanelClient {
  declare child:ChildProcessWithoutNullStreams;declare next:number;declare pending:Map<unknown,PendingRPC>;declare stderr:string;
+ private receivedRenderReferences?:Set<string>;private acknowledgedPreviewReferences?:Set<string>;
  constructor({workspace,python,serverPath=path.join(root,'server.mjs')}:StdioClientOptions){
   this.child=spawn(process.execPath,[serverPath],{env:{...process.env,DM_MCP_BACKEND:'images',DM_IMAGE_WORKSPACE:workspace,DM_IMAGE_PYTHON:python,MICROSCOPY_IMAGE_WORKSPACE:workspace,MICROSCOPY_PYTHON:python,MICROSCOPY_STRUCTURE_WORKSPACE:'',MICROSCOPY_CONTEXT_WORKSPACE:'',MICROSCOPY_EXECUTION_OBSERVABILITY:'0'},stdio:['pipe','pipe','pipe'],windowsHide:true});
   this.next=1;this.pending=new Map();let buffer='';this.stderr='';
@@ -58,7 +59,35 @@ export class StdioImageClient implements PanelClient {
  }
  rejectAll(error:unknown){for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(error);}this.pending.clear();}
  rpc(method:string,params:Readonly<Record<string,unknown>>={}):Promise<unknown>{return new Promise<unknown>((resolve,reject)=>{const id=this.next++,timer=setTimeout(()=>{this.pending.delete(id);reject(new Error('Stopped waiting; query the journaled original request_id. Do not resubmit automatically.'));},130000);this.pending.set(id,{resolve,reject,timer});this.child.stdin.write(JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n');});}
- async tool(name:string,args:Readonly<Record<string,unknown>>):Promise<ImageToolReply>{const msg=(await this.rpc('tools/call',{name,arguments:args})) as Metadata;if(msg.error||(msg.result as Metadata|undefined)?.isError)throw new Error(((msg.error as Metadata|undefined)?.message??((msg.result as Metadata|undefined)?.content as Metadata[]|undefined)?.find(c=>c.type==='text')?.text??'MCP operation failed') as string);const data:unknown=JSON.parse((((msg as Metadata).result as Metadata).content as Metadata[]).find(c=>c.type==='text')!.text as string);const png=(((msg as Metadata).result as Metadata).content as Metadata[]).find(c=>c.type==='image'&&c.mimeType==='image/png');return {data,png:png?.data};}
+ private async acknowledgeDeliveredPreviews(name:string,data:Metadata):Promise<void>{
+  const renderingWrites=new Set(['image_preview','image_compare','image_annotate','image_fft_batch','image_spatial_atlas','image_joint_observations','image_roi_propose','image_discovery','image_spatial_field','image_field_extend','image_feature_field','image_domain_map']);
+  if(!renderingWrites.has(name))return;
+  // Performance cache of THIS receiving client's successful immutable-reference
+  // traversal. Never admission authority, never populated by read-only calls.
+  const inspected=this.receivedRenderReferences??=new Set<string>(),acknowledged=this.acknowledgedPreviewReferences??=new Set<string>();
+  if(inspected.size>4096)inspected.clear();if(acknowledged.size>4096)acknowledged.clear();
+  // This is the receiving MCP client, after a complete reply was decoded. The
+  // server never assumes its own completion/serialization proves delivery.
+  const refs=new Set<string>(),records:Metadata[]=[data];
+  const collect=(v:unknown):void=>{if(!v||typeof v!=='object')return;if(Array.isArray(v)){for(const x of v)collect(x);return;}for(const [key,x] of Object.entries(v)){if((key==='view_object_id'||key==='overview_object_id'||key.endsWith('_view_object_id')||key==='render_base_object_id'||key==='roi_object_id')&&typeof x==='string'&&objectId.test(x))refs.add(x);else if(x&&typeof x==='object')collect(x);}};
+  collect(data);
+  if(refs.size>100)throw new Error('Delivered preview reference budget exceeded; acknowledge explicitly');
+  const seen=new Set<string>();let complete=true;
+  while([...refs].some(ref=>!seen.has(ref)&&!inspected.has(ref))){if(seen.size>=100)throw new Error('Delivered render-reference budget exceeded; acknowledge explicitly');const object_id=[...refs].find(ref=>!seen.has(ref)&&!inspected.has(ref))!;seen.add(object_id);const response=(await this.rpc('tools/call',{name:'image_info',arguments:{object_id}})) as Metadata;if(response.error||(response.result as Metadata|undefined)?.isError){complete=false;continue;}const block=((response.result as Metadata).content as Metadata[]).find(c=>c.type==='text');if(block&&typeof block.text==='string'){const record=JSON.parse(block.text) as Metadata;if(record.object_id!==object_id)throw new Error('Delivered reference returned a different object');records.push(record);collect(record);}else complete=false;}
+  const done=new Set<string>();
+  for(const record of records){const ref=record.preview_execution as Metadata|undefined;if(ref?.version!==1||!safeId.test(String(ref.request_id))||ref.object_id!==record.object_id||done.has(String(ref.request_id)))continue;done.add(String(ref.request_id));const key=String(ref.request_id)+':'+String(ref.object_id);if(acknowledged.has(key))continue;
+   const request_id='received-'+createHash('sha256').update(key).digest('hex').slice(0,48),response=(await this.rpc('tools/call',{name:'image_preview_acknowledge',arguments:{preview_request_id:ref.request_id,object_id:ref.object_id,request_id}})) as Metadata;
+   if(response.error||(response.result as Metadata|undefined)?.isError)throw new Error('Preview acknowledgement remains unconfirmed; preserve original result and query its request');
+   const block=((response.result as Metadata|undefined)?.content as Metadata[]|undefined)?.find(c=>c.type==='text'),receipt=block&&typeof block.text==='string'?JSON.parse(block.text) as Metadata:null;
+   if(receipt?.state!=='completed'||receipt.kind!=='preview_acknowledgement'||receipt.request_id!==request_id||receipt.preview_request_id!==ref.request_id||receipt.original_object_id!==ref.object_id||receipt.operational_receipt!==true||receipt.scientific_object_created!==false)throw new Error('Invalid preview acknowledgement receipt; preserve the original request');
+   acknowledged.add(key);
+  }
+  if(complete)for(const ident of seen)inspected.add(ident);
+ }
+ async tool(name:string,args:Readonly<Record<string,unknown>>):Promise<ImageToolReply>{const msg=(await this.rpc('tools/call',{name,arguments:args})) as Metadata;if(msg.error||(msg.result as Metadata|undefined)?.isError)throw new Error(((msg.error as Metadata|undefined)?.message??((msg.result as Metadata|undefined)?.content as Metadata[]|undefined)?.find(c=>c.type==='text')?.text??'MCP operation failed') as string);const data:unknown=JSON.parse((((msg as Metadata).result as Metadata).content as Metadata[]).find(c=>c.type==='text')!.text as string);const png=(((msg as Metadata).result as Metadata).content as Metadata[]).find(c=>c.type==='image'&&c.mimeType==='image/png');
+  try{await this.acknowledgeDeliveredPreviews(name,data as Metadata);}catch(error){console.error('Saved scientific result is preserved; '+(error as Error).message);}
+  return {data,png:png?.data};}
+
  async close(){if(this.child.exitCode===null)await new Promise<void>(resolve=>{this.child.once('exit',resolve);this.child.stdin.end();});}
 }
 function originalMark(mark:Metadata):Metadata{if(!mark.anchor)fail('A legacy mark has no unique scientific anchor; replace it through MCP first');return {...Object.fromEntries(['annotation_id','kind','status','text','note','color','line_width','arrowhead_size','arrow_length','presentation'].filter(k=>mark[k]!==undefined).map(k=>[k,mark[k]])),...mark.anchor};}
@@ -118,7 +147,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    if(base.kind==='tiff_source')return {...r,png:null};
    renderKind=base.kind;renderDtype=base.dtype;
   }
-  return journalCall('image_preview',{object_id:r.data.object_id,...((['complex64','complex128'] as readonly unknown[]).includes(renderDtype)&&!(['fft','fft_view'] as readonly unknown[]).includes(renderKind)&&(effectiveDisplay as Metadata|undefined)?.component!==undefined?{component:(effectiveDisplay as Metadata).component}:{})});
+  fail('PREVIEW_REQUIRED: open an explicitly saved preview object. Panel does not create a preview as a fallback; recover any original preview request before submitting new work.');
  };
  // Prepare immutable render assets before committing the visible identity. A
  // draft can arrive while ancestry lookup/worker I/O is waiting.
@@ -333,7 +362,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'measure',scientificBefore,r.data,{annotation_id:mark?.annotation_id,source_object_id:selected.source_object_id});
    selection=selected;saveSelection();return state();
   }
-  else if(body.action==='calibrate'){fields(p,['scope','xy_scale','source_text','coordinate_domain']);r=await displayObject(await journalCall('image_calibrate',{object_id:current.object_id,...p}));}
+  else if(body.action==='calibrate'){fields(p,['scope','xy_scale','source_text','coordinate_domain']);const calibrated=await journalCall('image_calibrate',{object_id:current.object_id,...p});r=await journalCall('image_preview',{object_id:calibrated.data.object_id});}
   else if(body.action==='figure-base'){
    fields(p,[]);
    const spectral=((current.panels??[]) as Metadata[]).some(panel=>panel.domain==='frequency');

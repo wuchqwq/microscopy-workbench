@@ -20,6 +20,7 @@ import image_domain_compare as comparison
 import image_joint as joint
 import image_peaks
 import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 
 
 ANGLE = math.degrees(math.atan2(3, 4))
@@ -310,6 +311,7 @@ class WorkerIntegration(unittest.TestCase):
                     request.setdefault("request_id", "compare-integration-%d" % counter)
                 response = worker.execute(request)
                 self.assertEqual(response["ok"], ok, response)
+                if ok:acknowledge_received_previews(worker, workspace, response["result"])
                 return response["result"] if ok else response
 
             opened = call("open", source_path=str(filename))

@@ -13,6 +13,7 @@ import tifffile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 
 
 class DiscoveryWorkspace(unittest.TestCase):
@@ -76,6 +77,7 @@ class DiscoveryWorkspace(unittest.TestCase):
         response = worker.execute(cls.request(action, **arguments))
         if not response.get("ok"):
             raise AssertionError(response)
+        acknowledge_received_previews(worker, cls.workspace, response["result"])
         return response["result"]
 
     def refuse(self, action, **arguments):
@@ -273,6 +275,7 @@ class DiscoveryWorkspace(unittest.TestCase):
         request = self.request("discovery",**self.proposal_args)
         first = worker.execute(request)
         self.assertTrue(first["ok"],first)
+        acknowledge_received_previews(worker, self.workspace, first["result"])
         before = self.count()
         again = worker.execute(copy.deepcopy(request))
         self.assertEqual(again["result"]["object_id"],first["result"]["object_id"])

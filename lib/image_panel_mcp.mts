@@ -28,7 +28,7 @@ const objectId: ArgumentSchema={type:'string',pattern:'^[a-f0-9]{32}$',minLength
 const requestId: ArgumentSchema={type:'string',pattern:'^[A-Za-z0-9_-]+$',minLength:1,maxLength:64,description:'Save before submission. Reuse this original ID to query the same operation after cancellation; never invent another ID to retry an uncertain operation.'};
 const make=(name:string,description:string,properties:Readonly<Record<string,ArgumentSchema>>,required:readonly string[]):PanelToolDefinition=>({name,description,inputSchema:{type:'object',additionalProperties:false,properties,required}});
 export const imagePanelTools: PanelToolDefinition[]=[
-  make('image_panel_open','Open an existing image object in an owned local browser panel and return its URL and saved PNG. No user path, script or arbitrary URL is accepted. The panel survives MCP client disconnect; same request ID recovers its original panel, never launches another.',{object_id:objectId,request_id:requestId},['object_id','request_id']),
+  make('image_panel_open','Open an explicitly saved preview/view object in an owned local browser panel; PREVIEW_REQUIRED means no rendering was dispatched. Recover any original preview request before creating another. Open the returned saved view and return its URL and saved PNG. No user path, script or arbitrary URL is accepted. The panel survives MCP client disconnect; same request ID recovers its original panel, never launches another.',{object_id:objectId,request_id:requestId},['object_id','request_id']),
   make('image_panel_current','Read exact current panel/object, source-coordinate selection, saved scoped research_observation reference and unsaved-draft status, plus the saved PNG. A twinning observation confirms only its explicitly recorded scope, not a twin law, orientation or HKL; synthetic_fixture is not human confirmation. With one live registered panel, panel_id may be omitted. This reads after the user says continue; it does not automatically wake the model. Unsaved browser tone/gesture drafts are described separately from the saved image.',{panel_id:objectId},[]),
   make('image_panel_show','Offer an existing result to an explicit panel. Save request_id first. expected_object_id and draft_revision bind the inspected view. Dirty/newer drafts queue the result for explicit user acceptance instead of overwriting them. Same ID returns the original presentation receipt, never repeats it; call image_panel_current for the latest view.',{panel_id:objectId,object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId},['panel_id','object_id','expected_object_id','draft_revision','request_id']),
 ];
@@ -213,7 +213,9 @@ export class ImagePanelManager {
     }
     if(name==='image_panel_evidence')return this.mutateEvidence(args,file);
     if(name==='image_panel_resume')return this.resume(args,file);
-    await this.inspect(args.object_id as string);
+    const inspected=await this.inspect(args.object_id as string);
+    const inspectedBlocks=(inspected as {content?:unknown}|undefined)?.content;
+    if(name==='image_panel_open'&&(!Array.isArray(inspectedBlocks)||!inspectedBlocks.some((block:unknown)=>block&&typeof block==='object'&&(block as RawSlots).type==='image'&&(block as RawSlots).mimeType==='image/png')))throw new Error('PREVIEW_REQUIRED: Panel open was not submitted; explicitly recover/create a saved preview and open its returned object_id. No preview was dispatched.');
     const panelId=name==='image_panel_open'?randomBytes(16).toString('hex'):args.panel_id as string;
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name,arguments:args,panel_id:panelId,status:'submitted'};
     // Exclusive/fsynced intent is saved before a child or HTTP mutation exists.

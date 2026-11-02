@@ -13,6 +13,7 @@ import tifffile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from tools import image_workspace as image
+from preview_test_support import acknowledge_received_previews
 from crystallography.twin_observations import load_domains
 
 
@@ -47,6 +48,7 @@ class TwinObservations(unittest.TestCase):
                                   "request_id": "twin-observations-%d" % cls.serial, **parameters})
         if not response.get("ok"):
             raise AssertionError(response)
+        acknowledge_received_previews(image, cls.workspace, response["result"])
         return response["result"]
 
     @classmethod

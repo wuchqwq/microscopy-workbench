@@ -1,0 +1,452 @@
+{
+  "scope": "controlled completed-but-response-discarded scenario; not a reproduction of historical r63 parse cause",
+  "baseline_sha": "adf8860e852fb3ca447cd3a4c6e6e3e2d7788c19",
+  "distinct_view_ids": [
+    "f1d9538d20e649a881dadff9362b0505",
+    "286e6be1302f4a19822adf5f93cdcd89"
+  ],
+  "unexpected_duplicate_preview": true,
+  "calls": [
+    {
+      "request": {
+        "workspace": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace",
+        "action": "open",
+        "source_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/public.tiff",
+        "request_id": "original-open"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "state": "completed",
+          "backend": "external-image-workspace",
+          "request_id": "original-open",
+          "object_id": "3914b6353b8148b0aebb3c4a17e22910",
+          "kind": "tiff_source",
+          "created_utc": "2026-11-02T09:05:13.712032+00:00",
+          "source_identity": {
+            "path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/public.tiff",
+            "stat": {
+              "size": 4320,
+              "mtime_ns": "1793610313711102221",
+              "ctime_ns": "1793610313711102221",
+              "inode": "363266",
+              "device": "16777240"
+            },
+            "sha256": "b1db6be4d5236d3ddb3734b52bb1c1baf2de4c142d103edc81729935fb62ad81"
+          },
+          "page_count": 1,
+          "pages": [
+            {
+              "frame_index": 0,
+              "shape_yx": [
+                32,
+                32
+              ],
+              "dtype": "float32",
+              "axes": [
+                "y",
+                "x"
+              ],
+              "decoded_bytes": 4096,
+              "photometric_code": 1,
+              "compression_code": 1
+            }
+          ],
+          "frame_axis_role": "unspecified_sequence",
+          "pixel_data_loaded": false,
+          "source_hash_method": "streaming complete file SHA-256; no whole-volume pixel decode",
+          "schema_version": 1,
+          "computation": "explicit external Python; DM not called",
+          "dm_called": false,
+          "files_sha256": {},
+          "software_provenance": {
+            "python": "3.13.18",
+            "numpy": "2.5.4",
+            "Pillow": "12.3.0",
+            "tifffile": "2026.10.15",
+            "worker_sha256": "8a3bb1c03f48f734f63f3d77e1a4b32568eeddd9cdfb8b88acf0b57fa792678a",
+            "helper_modules_sha256": {
+              "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d",
+              "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+              "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+              "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+              "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+              "image_automation.py": "a0da78e434b262b969f5ee26e322336016f8f2928bf286c665103c17c8e583fd",
+              "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+              "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+              "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+              "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+              "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+              "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+              "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+              "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+              "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+              "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+              "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+              "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+              "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+              "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+              "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+            }
+          },
+          "manifest_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/3914b6353b8148b0aebb3c4a17e22910/object.json"
+        }
+      }
+    },
+    {
+      "request": {
+        "workspace": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace",
+        "action": "frame",
+        "object_id": "3914b6353b8148b0aebb3c4a17e22910",
+        "frame_index": 0,
+        "request_id": "original-frame"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "state": "completed",
+          "backend": "external-image-workspace",
+          "request_id": "original-frame",
+          "object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+          "kind": "frame",
+          "created_utc": "2026-11-02T09:05:13.715721+00:00",
+          "parent_object_id": "3914b6353b8148b0aebb3c4a17e22910",
+          "source_object_id": "3914b6353b8148b0aebb3c4a17e22910",
+          "frame_index": 0,
+          "frame_axis_role": "unspecified_sequence",
+          "shape_yx": [
+            32,
+            32
+          ],
+          "dtype": "float32",
+          "axes": [
+            "y",
+            "x"
+          ],
+          "source_identity": {
+            "path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/public.tiff",
+            "sha256": "b1db6be4d5236d3ddb3734b52bb1c1baf2de4c142d103edc81729935fb62ad81",
+            "stat": {
+              "ctime_ns": "1793610313711102221",
+              "device": "16777240",
+              "inode": "363266",
+              "mtime_ns": "1793610313711102221",
+              "size": 4320
+            }
+          },
+          "intensity_calibration_applied": false,
+          "intensity_semantics": "raw pixel intensity",
+          "calibration": {
+            "status": "unknown",
+            "unit": null
+          },
+          "user_context": null,
+          "schema_version": 1,
+          "computation": "explicit external Python; DM not called",
+          "dm_called": false,
+          "files_sha256": {
+            "data.npy": "fc9e4e678f464ff49dd45d29f6f570dcbf322eea665dc7f817d7dae70214e78b"
+          },
+          "software_provenance": {
+            "python": "3.13.18",
+            "numpy": "2.5.4",
+            "Pillow": "12.3.0",
+            "tifffile": "2026.10.15",
+            "worker_sha256": "8a3bb1c03f48f734f63f3d77e1a4b32568eeddd9cdfb8b88acf0b57fa792678a",
+            "helper_modules_sha256": {
+              "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d",
+              "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+              "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+              "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+              "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+              "image_automation.py": "a0da78e434b262b969f5ee26e322336016f8f2928bf286c665103c17c8e583fd",
+              "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+              "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+              "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+              "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+              "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+              "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+              "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+              "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+              "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+              "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+              "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+              "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+              "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+              "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+              "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+            }
+          },
+          "manifest_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/0b79a62f29cd4aaaa2ffba287308a6ed/object.json",
+          "array_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/0b79a62f29cd4aaaa2ffba287308a6ed/data.npy"
+        }
+      }
+    },
+    {
+      "request": {
+        "workspace": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace",
+        "action": "view",
+        "object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+        "max_size": 512,
+        "request_id": "lost-response-original"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "state": "completed",
+          "backend": "external-image-workspace",
+          "request_id": "lost-response-original",
+          "object_id": "f1d9538d20e649a881dadff9362b0505",
+          "kind": "view",
+          "created_utc": "2026-11-02T09:05:13.719512+00:00",
+          "parent_object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+          "user_context": null,
+          "source_object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+          "source_rect_xyxy": [
+            0,
+            0,
+            32,
+            32
+          ],
+          "source_shape_yx": [
+            32,
+            32
+          ],
+          "rect_convention": "half-open pixel edges [x0,y0,x1,y1]",
+          "dtype": "float32",
+          "shape_yx": [
+            32,
+            32
+          ],
+          "axes": [
+            "y",
+            "x"
+          ],
+          "display": {
+            "display_range": [
+              100.0,
+              107.0
+            ],
+            "range_source": "shared_raw_minmax",
+            "gamma": 1.0,
+            "max_size": 512,
+            "upscale": false,
+            "interpolation": "lanczos",
+            "constant_range": false,
+            "display_only": true,
+            "quantitative": false,
+            "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+            "scale_bar": true,
+            "scale_bar_calibration_dependency": null
+          },
+          "array_domain": "spatial",
+          "scientific_semantics": null,
+          "scientific_context": null,
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "source_object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+              "source_rect_xyxy": [
+                0,
+                0,
+                32,
+                32
+              ],
+              "image_rect_xyxy": [
+                0,
+                0,
+                32,
+                32
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y"
+            }
+          ],
+          "scale_bar": null,
+          "display_calibration_id": null,
+          "schema_version": 1,
+          "computation": "explicit external Python; DM not called",
+          "dm_called": false,
+          "files_sha256": {
+            "preview.png": "e73536fcdefdb97e65e666b62a4e910a1937290cd86f29b3dd67b19f272dd396",
+            "data.npy": "fc9e4e678f464ff49dd45d29f6f570dcbf322eea665dc7f817d7dae70214e78b"
+          },
+          "software_provenance": {
+            "python": "3.13.18",
+            "numpy": "2.5.4",
+            "Pillow": "12.3.0",
+            "tifffile": "2026.10.15",
+            "worker_sha256": "8a3bb1c03f48f734f63f3d77e1a4b32568eeddd9cdfb8b88acf0b57fa792678a",
+            "helper_modules_sha256": {
+              "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d",
+              "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+              "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+              "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+              "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+              "image_automation.py": "a0da78e434b262b969f5ee26e322336016f8f2928bf286c665103c17c8e583fd",
+              "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+              "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+              "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+              "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+              "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+              "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+              "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+              "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+              "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+              "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+              "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+              "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+              "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+              "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+              "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+            }
+          },
+          "manifest_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/f1d9538d20e649a881dadff9362b0505/object.json",
+          "image_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/f1d9538d20e649a881dadff9362b0505/preview.png",
+          "array_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/f1d9538d20e649a881dadff9362b0505/data.npy"
+        }
+      }
+    },
+    {
+      "request": {
+        "workspace": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace",
+        "action": "view",
+        "object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+        "max_size": 1024,
+        "request_id": "replacement-entry"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "state": "completed",
+          "backend": "external-image-workspace",
+          "request_id": "replacement-entry",
+          "object_id": "286e6be1302f4a19822adf5f93cdcd89",
+          "kind": "view",
+          "created_utc": "2026-11-02T09:05:13.740872+00:00",
+          "parent_object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+          "user_context": null,
+          "source_object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+          "source_rect_xyxy": [
+            0,
+            0,
+            32,
+            32
+          ],
+          "source_shape_yx": [
+            32,
+            32
+          ],
+          "rect_convention": "half-open pixel edges [x0,y0,x1,y1]",
+          "dtype": "float32",
+          "shape_yx": [
+            32,
+            32
+          ],
+          "axes": [
+            "y",
+            "x"
+          ],
+          "display": {
+            "display_range": [
+              100.0,
+              107.0
+            ],
+            "range_source": "shared_raw_minmax",
+            "gamma": 1.0,
+            "max_size": 1024,
+            "upscale": false,
+            "interpolation": "lanczos",
+            "constant_range": false,
+            "display_only": true,
+            "quantitative": false,
+            "resampling": "Pillow LANCZOS display resizing; optional enlargement adds no measured detail; scientific array unchanged",
+            "scale_bar": true,
+            "scale_bar_calibration_dependency": null
+          },
+          "array_domain": "spatial",
+          "scientific_semantics": null,
+          "scientific_context": null,
+          "panels": [
+            {
+              "domain": "spatial_pixels",
+              "source_object_id": "0b79a62f29cd4aaaa2ffba287308a6ed",
+              "source_rect_xyxy": [
+                0,
+                0,
+                32,
+                32
+              ],
+              "image_rect_xyxy": [
+                0,
+                0,
+                32,
+                32
+              ],
+              "pixel_center_mapping": "source_x=x0+(image_x-panel_left+0.5)*source_width/panel_width-0.5; analogous y",
+              "edge_mapping": "source_x=x0+(image_x-panel_left)*source_width/panel_width; analogous y"
+            }
+          ],
+          "scale_bar": null,
+          "display_calibration_id": null,
+          "schema_version": 1,
+          "computation": "explicit external Python; DM not called",
+          "dm_called": false,
+          "files_sha256": {
+            "preview.png": "e73536fcdefdb97e65e666b62a4e910a1937290cd86f29b3dd67b19f272dd396",
+            "data.npy": "fc9e4e678f464ff49dd45d29f6f570dcbf322eea665dc7f817d7dae70214e78b"
+          },
+          "software_provenance": {
+            "python": "3.13.18",
+            "numpy": "2.5.4",
+            "Pillow": "12.3.0",
+            "tifffile": "2026.10.15",
+            "worker_sha256": "8a3bb1c03f48f734f63f3d77e1a4b32568eeddd9cdfb8b88acf0b57fa792678a",
+            "helper_modules_sha256": {
+              "result_semantics.py": "a86883ae8bcb9240db918a0725fe9a595cd2f7d599a793ebf36c79f717f5323d",
+              "image_annotation_updates.py": "143f0defd03f07da0bb48bb5de2d9cfbf4203758d7734bab8517abef698dca6d",
+              "image_calibration.py": "a83eed47448ff99e02b24ca15f88bac4ab48ab037c0435f1e384705bd1a6af6f",
+              "image_numeric.py": "641830182bd1f295ef6724c1aa1a256b9a9c0e4b7f9cd8fd19cbc80677019738",
+              "image_peaks.py": "35f204e4531ac3c7246613d112dbbb76c1288c33bebe280eb8d6bbed9ecb2867",
+              "image_automation.py": "a0da78e434b262b969f5ee26e322336016f8f2928bf286c665103c17c8e583fd",
+              "image_sequence.py": "2d40279a5a75c0cfd8a9c17e49389d7214ebcac7350be33548b4e3e942bb4e3d",
+              "image_joint.py": "17b4431f7a41066749b7cb35be7100cf1c6ec3feb699efd25fc1c686049ddd5e",
+              "image_spatial_atlas.py": "c7166339d6c232a681d3ddd0a8df36169aa69cf51a982ee6fe4f113d359e4b39",
+              "image_domain_compare.py": "7133237da48cee514a4461e92a56f6e2b0f86f1c5c0aa6c4c16319ffa5d52209",
+              "image_feature_field.py": "95089449d04a261f257984c1749b1ec6d109d56ac6c0e74b96894572f808dc68",
+              "image_spatial_domains.py": "23f5ff9c49277b411cd20aa9adcf255b025ddb246a269c907a2eead69a7e1469",
+              "image_field_increment.py": "e43b49e47bd3975c32afb41bd9075dcbd393c3eb77cbbd4d5735b3361375f2bf",
+              "image_active_analysis.py": "04cbb9f8694e5a231581b6548fd72fd8ecde76e17a7263cf1f02b5de9bab5e91",
+              "image_gpa.py": "92f3e795a4bd18615b7559895c93304154677ede4414811217c9a2126fe48189",
+              "image_gpa_core.py": "8076f5f14229b349cff215919bb8cd55df601d7e0cdd321f5812c3655494322c",
+              "image_topology.py": "bad6ad1bd52bc375d6ff9d7c5de6730f09afe26e5e2907bfe00809e1cb795618",
+              "image_topology_core.py": "ba1d8d8719f3588723c5115d5b81a6d346da46e680e4adf2887864f9b0e78ad0",
+              "image_topology_legacy_v1.py": "5cd6c6ff2de301f973d3c759a31018ad95bb77bb5f0c96cef5d85f057946ab4b",
+              "image_discovery.py": "acdc684a87bb3cf3c10c569e9ddedc7ffe99be05c87b35a2ed902ed543d4a17a",
+              "image_discovery_core.py": "aa1588bef1b7ca1504dd0514ce4d3e735f275762d5638fbecfbef66ddc2bf08d"
+            }
+          },
+          "manifest_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/286e6be1302f4a19822adf5f93cdcd89/object.json",
+          "image_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/286e6be1302f4a19822adf5f93cdcd89/preview.png",
+          "array_path": "/Volumes/External SSD/mircograph/preview-recovery-fix-20261102/analysis/issue70-original/workspace/objects/286e6be1302f4a19822adf5f93cdcd89/data.npy"
+        }
+      }
+    }
+  ],
+  "original_files_sha256": {
+    "public.tiff": "b1db6be4d5236d3ddb3734b52bb1c1baf2de4c142d103edc81729935fb62ad81",
+    "workspace/requests/original-frame.json": "5f7baeb15f481ca8e00dc1e047a6c2860df014e68a52a1c2cf7feefb8d5a33e6",
+    "workspace/requests/replacement-entry.json": "32bec925eda07e9e8c499df7e6c95bbbd6edbfb02363278c3c196b11b236f1a6",
+    "workspace/requests/original-open.json": "58a17fec196974406db112a2cf50725d91e819756b59add025a3da47dbd19d35",
+    "workspace/requests/lost-response-original.json": "894dfffd1ce3534a1227129c2e81ffbad5f5038175d210d70a82857167c4dcde",
+    "workspace/objects/286e6be1302f4a19822adf5f93cdcd89/preview.png": "e73536fcdefdb97e65e666b62a4e910a1937290cd86f29b3dd67b19f272dd396",
+    "workspace/objects/286e6be1302f4a19822adf5f93cdcd89/data.npy": "fc9e4e678f464ff49dd45d29f6f570dcbf322eea665dc7f817d7dae70214e78b",
+    "workspace/objects/286e6be1302f4a19822adf5f93cdcd89/object.json": "c4f42c1af3e62e01570e7d5f3f89c3fa5a3631621090bc22b7a4c85d97fe1932",
+    "workspace/objects/0b79a62f29cd4aaaa2ffba287308a6ed/data.npy": "fc9e4e678f464ff49dd45d29f6f570dcbf322eea665dc7f817d7dae70214e78b",
+    "workspace/objects/0b79a62f29cd4aaaa2ffba287308a6ed/object.json": "da9c79b39f78ee217aa6c1f34bd5714b38d44876300d0ab6fd1d0dc9c32f01ce",
+    "workspace/objects/3914b6353b8148b0aebb3c4a17e22910/object.json": "a71640a0f897aa7e951b51b4f5417be2533ca35b07b0aa5ba93c90f8f12b3eae",
+    "workspace/objects/f1d9538d20e649a881dadff9362b0505/preview.png": "e73536fcdefdb97e65e666b62a4e910a1937290cd86f29b3dd67b19f272dd396",
+    "workspace/objects/f1d9538d20e649a881dadff9362b0505/data.npy": "fc9e4e678f464ff49dd45d29f6f570dcbf322eea665dc7f817d7dae70214e78b",
+    "workspace/objects/f1d9538d20e649a881dadff9362b0505/object.json": "f6350d78d0f8106e6db1d5fc187b4f5a2668fa0ad5c825f8f95c8fbf9bdb1837"
+  }
+}

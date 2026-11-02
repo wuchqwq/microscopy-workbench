@@ -13,6 +13,7 @@ import tifffile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 import image_active_analysis as active
 
 
@@ -146,6 +147,7 @@ class ActualProvider(unittest.TestCase):
         cls.serial+=1;request={"action":action,"workspace":str(cls.workspace),"request_id":"active-test-%d"%cls.serial,**parameters}
         response=worker.execute(request)
         if not response.get("ok"):raise AssertionError(response)
+        acknowledge_received_previews(worker, cls.workspace, response["result"])
         return response["result"]
     def test_saved_proposal_recovery_no_fft_and_coherent_tamper_is_refused(self):
         before=list((self.workspace/"requests").iterdir())
