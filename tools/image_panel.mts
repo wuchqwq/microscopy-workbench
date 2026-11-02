@@ -702,7 +702,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   }
  }}catch(error){await client.close();throw error;}
  try{await new Promise<void>((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});saveSelection();}catch(caught){const error=caught as Error&{status?:number};await client.close();throw error;}
- return {server,client,url:`http://127.0.0.1:${(server.address() as AddressInfo).port}/#${token}`,token,evidenceToken,journal,state,async close(){try{await new Promise<void>(resolve=>server.close(resolve as (error?:Error)=>void));saveSelection();}finally{if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}await client.close();}}};
+ return {server,client,url:`http://127.0.0.1:${(server.address() as AddressInfo).port}/#${token}`,token,evidenceToken,journal,state,async close(){try{await new Promise<void>(resolve=>{server.close(resolve as (error?:Error)=>void);server.closeIdleConnections?.();});saveSelection();}finally{if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}await client.close();}}};
 }
 if(isDirectInvocation(import.meta.url)){
  const options:Record<string,string>={};for(let i=2;i<process.argv.length;i+=2){const key=process.argv[i],value=process.argv[i+1];if(!(['--workspace','--python','--object','--port','--selection','--connection-file','--panel-id','--owned-registration'] as readonly unknown[]).includes(key)||!value)throw new Error('Usage: node tools/image_panel.mjs --workspace ABS --python ABS --object ID [--port 0]; --selection ABS_CURRENT_SELECTION_JSON');options[key.slice(2)]=value;}
