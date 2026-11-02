@@ -84,10 +84,12 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
     calls.push(body);assert.equal(body.expected_object_id,server.object.object_id);if(waitAction)await waitAction;if(body.action==='measure'&&waitMeasurement)await waitMeasurement;
     if(actionFailure){server.last_operation={state:'submitted',request_id:'controlled-lost-request'};const error=actionFailure;actionFailure=null;return {ok:false,json:async()=>({error})};}
     if(['edit','edit-layout'].includes(body.action)&&body.params.auto_commit){
+     const previousObject=server.object.object_id;
      const result=nextActionResult?copy(nextActionResult):copy(server);nextActionResult=null;
      for(const update of body.params.updates){const mark=result.object.annotations.find(m=>m.annotation_id===update.annotation_id);assert.ok(mark,'autosave must update an existing stable mark');for(const [field,value]of Object.entries(update)){if(field==='coordinates')mark.anchor.coordinates=copy(value);else if(!['annotation_id','presentation_replace'].includes(field))mark[field]=copy(value);}}
      if(result.object.object_id===server.object.object_id)result.object.object_id=(++actionSequence).toString(16).padStart(32,'0');
      result.state_revision=(server.state_revision??0)+1;result.edit_state=copy(server.edit_state);result.auto_edit_committed=true;server=result;
+     if(windowStates.length){const collection=server.window_collection,entry=collection?.windows.find(value=>value.window_id===collection.active_window_id&&value.object_id===previousObject);if(entry){entry.object_id=server.object.object_id;if(entry.view_context)entry.view_context.object_id=server.object.object_id;collection.revision++;savedWindowStates.set(server.object.object_id,copy(server));}}
     }else if(nextActionResult){server=copy(nextActionResult);nextActionResult=null;}
     if(body.action==='mark'){const {panel:selectionPanel,...anchor}=body.params.selection;server.object.annotations.push({annotation_id:body.params.annotation_id,kind:anchor.kind,anchor:copy(anchor),text:body.params.text,color:body.params.color,status:body.params.status,note:body.params.note,...(body.params.purpose?{purpose:body.params.purpose,observation_contract_version:1,selection_origin:body.params.selection_origin,selection_origin_basis:'caller_reported_not_authenticated'}:{})});server.object.object_id=(++actionSequence).toString(16).padStart(32,'0');server.state_revision=(server.state_revision??0)+1;server.selection=copy(body.params.selection);}
     if(body.action==='measure'||body.action==='select')server.selection=copy(body.params.selection);
@@ -136,8 +138,29 @@ test('window activation confirms source context, restores target camera and uses
 test('window activation round trip restores the original fractional ROI without using its integer processing support',async()=>{
  const f=windowActivationFixture(),h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();const oldSelection=h.inspect().draft;await h.activateWindow(f.targetWindow);await h.activateWindow(f.sourceWindow);await h.settle();assert.deepEqual(h.inspect().draft.coordinates,oldSelection.coordinates);assert.notDeepEqual(h.inspect().draft.coordinates,[30,20,62,49]);assert.equal(h.inspect().view.scale,1.75);assert.equal(h.inspect().state.object.object_id,viewId);const revisions=h.calls.filter(value=>value.action==='activate-window').map(value=>value.draft_revision);assert.ok(revisions[1]>revisions[0]);assert.equal(h.inspect().windowSwitch,null);
 });
+test('saved-view back and forward activate registered windows without branching their existing history',async()=>{
+ const f=windowActivationFixture(),h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();await h.activateWindow(f.targetWindow);
+ await h.click('view-back');assert.equal(h.inspect().state.object.object_id,f.source.object.object_id);assert.equal(h.inspect().view.scale,1.75);assert.equal(h.$('view-back').disabled,true);assert.equal(h.$('view-forward').disabled,false);
+ await h.click('view-forward');assert.equal(h.inspect().state.object.object_id,f.target.object.object_id);assert.equal(h.inspect().view.scale,2.25);assert.equal(h.$('view-back').disabled,false);assert.equal(h.$('view-forward').disabled,true);
+ assert.deepEqual(h.calls.map(value=>value.action),['activate-window','activate-window','activate-window']);assert.deepEqual(h.calls.map(value=>value.params.window_id),[f.targetWindow,f.sourceWindow,f.targetWindow]);assert.equal(h.inspect().windowSwitch,null);
+});
+test('saved-view navigation keeps an unknown activation frozen and never falls back to show or replays it',async()=>{
+ const f=windowActivationFixture(),h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();await h.activateWindow(f.targetWindow);h.loseActivationReply();await h.click('view-back');assert.equal(h.inspect().windowSwitch.phase,'recovery');const requests=h.calls.length;
+ await h.click('view-back');await h.click('view-forward');assert.equal(h.calls.length,requests);assert.equal(h.calls.some(value=>value.action==='show'),false);assert.equal(h.inspect().windowSwitch.phase,'recovery');
+ await h.click('window-switch-check');assert.equal(h.inspect().state.object.object_id,f.source.object.object_id);assert.equal(h.inspect().windowSwitch,null);assert.equal(h.$('view-forward').disabled,false);assert.equal(h.calls.length,requests);
+});
 test('window activation refuses local reason drafts and pending results without dispatching navigation',async()=>{
  for(const pendingResult of [false,true]){const f=windowActivationFixture();if(pendingResult)f.source.pending_result={object_id:'c'.repeat(32),request_id:'retained-result'};const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();if(!pendingResult){h.$('roi-reason').value='Keep this local reason';h.$('roi-reason').oninput();}await assert.rejects(h.activateWindow(f.targetWindow));assert.equal(h.calls.filter(value=>value.action==='activate-window').length,0);assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.inspect().windowSwitch,null);if(!pendingResult)assert.equal(h.$('roi-reason').value,'Keep this local reason');}
+});
+test('window activation refuses until delayed autosave, remeasurement and numeric-label saving finish, without freezing or dispatching',async()=>{
+ const f=windowActivationFixture();f.source.object.annotations=[copy(twoMeasuredLines().object.annotations[0])];const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();
+ let releaseEdit,releaseMeasurement;h.delayAction(new Promise(resolve=>{releaseEdit=resolve;}));h.delayMeasurement(new Promise(resolve=>{releaseMeasurement=resolve;}));h.measureResponse(measuredFromSelection);
+ selectLine(h,'A');h.event('pointerdown',55,18);h.event('pointerup',65,18);h.flush();await h.settle();assert.equal(h.calls.filter(value=>value.action==='edit').length,1);assert.equal(h.inspect().busy,true);
+ await assert.rejects(h.activateWindow(f.targetWindow),/保存或重新测量/);assert.equal(h.inspect().windowSwitch,null);assert.equal(h.calls.filter(value=>value.action==='activate-window').length,0);
+ releaseEdit();await h.settle();assert.equal(h.calls.filter(value=>value.action==='measure').length,1);assert.equal(h.server().object.annotations[0].presentation.label.visible,false);
+ await assert.rejects(h.activateWindow(f.targetWindow),/保存或重新测量/);assert.equal(h.inspect().windowSwitch,null);assert.equal(h.calls.filter(value=>value.action==='activate-window').length,0);
+ releaseMeasurement();await h.finish();await h.finishWindows();const saved=h.server().object.annotations[0];assert.deepEqual(saved.anchor.coordinates,[25,30,85,30]);assert.equal(saved.presentation.label.text,'d = 1.2 nm');assert.equal(saved.presentation.label.visible,true);assert.deepEqual(h.calls.map(value=>value.action),['edit','measure','edit']);assert.equal(h.inspect().dirty,false);assert.equal(h.inspect().windowSwitch,null);
+ await h.activateWindow(f.targetWindow);assert.equal(h.inspect().state.object.object_id,f.target.object.object_id);assert.equal(h.inspect().windowSwitch,null);assert.equal(h.calls.filter(value=>value.action==='activate-window').length,1);
 });
 test('window activation keeps scientific inputs frozen after decode failure until a fenced display recovery',async()=>{
  const f=windowActivationFixture(),h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();h.failImageDecode();await h.activateWindow(f.targetWindow);assert.equal(h.inspect().windowSwitch.phase,'recovery');assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.server().object.object_id,f.target.object.object_id);const before=h.inspect(),count=h.calls.length,mode=h.$('mode').value;h.event('pointerdown',10,10);h.event('pointermove',30,30);h.event('pointerup',30,30);h.key('p');await h.click('fft');await h.click('save-observation');assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.$('mode').value,mode);assert.equal(h.calls.length,count);
@@ -778,6 +801,17 @@ test('explicit pending-result discard clears the submitted observation draft int
  const target=fixture();target.object.object_id='c'.repeat(32);h.actionResult(target);await h.click('discard-draft');
  assert.equal(h.inspect().dirty,false);assert.equal(h.inspect().state.object.object_id,target.object.object_id);assert.equal(h.$('pending-result').hidden,true);assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'accept-result');assert.match(h.$('message').textContent,/已查看保存版本/);
 });
+for(const button of ['discard-local','discard-draft'])for(const failure of ['state-read','image-decode'])test(`${button} retains unsaved reason and annotation fields when its ${failure} fails`,async()=>{
+ const initial=annotated();if(button==='discard-draft')initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};
+ const h=await harness(initial);h.$('existing').value='line-a';h.$('existing').onchange();h.$('mark-text').value='Keep this unsaved annotation';h.$('mark-text').oninput();h.$('roi-reason').value='Keep this observation reason';h.$('roi-reason').oninput();await h.settle();
+ if(failure==='state-read')h.failStateRead();else h.failImageDecode();await h.click(button);
+ assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.$('roi-reason').value,'Keep this observation reason');assert.equal(h.$('mark-text').value,'Keep this unsaved annotation');assert.equal(h.inspect().dirty,true);assert.deepEqual(h.calls,[]);assert.match(h.$('message').textContent,failure==='state-read'?/current-state read failure/:/image decode failure/);
+ await h.click('save-mark');await h.finish();assert.equal(h.server().object.annotations[0].text,'Keep this unsaved annotation','failed read must preserve the field edit, not just its visible text');assert.equal(h.$('roi-reason').value,'Keep this observation reason');
+});
+test('discarding a cached pending display keeps its draft and notice when the fresh saved-state read fails',async()=>{
+ const h=await harness(annotated());h.$('roi-reason').value='Keep before checking pending';h.$('roi-reason').oninput();await h.settle();const latest=h.server();latest.object.object_id='d'.repeat(32);h.setServer(latest);await h.click('reload');const pending=h.inspect().pending;assert.ok(pending);
+ h.failStateRead();await h.click('discard-draft');assert.equal(h.inspect().state.object.object_id,viewId);assert.deepEqual(h.inspect().pending,pending);assert.equal(h.$('roi-reason').value,'Keep before checking pending');assert.equal(h.inspect().dirty,true);assert.deepEqual(h.calls,[]);
+});
 test('explicit pending discard never consumes a new observation reason written during its saved-state read',async()=>{
  const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};const h=await harness(initial);h.$('roi-reason').value='Old draft';h.$('roi-reason').oninput();await h.settle();let release;h.delayState(new Promise(resolve=>release=resolve));
  const discarding=h.click('discard-draft');await h.settle();h.$('roi-reason').value='New reason during discard read';h.$('roi-reason').oninput();release();await discarding;
@@ -794,7 +828,7 @@ test('pending discard preserves an unknown original request and its reason draft
 test('a newly discovered unknown request stops pending acceptance after the saved-state read',async()=>{
  const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};const h=await harness(initial);h.$('roi-reason').value='Explicitly discarded old draft';h.$('roi-reason').oninput();await h.settle();
  const latest=copy(h.server());latest.last_operation={state:'submitted',request_id:'newly-discovered-original'};h.setServer(latest);await h.click('discard-draft');
- assert.equal(h.calls.length,0);assert.equal(h.inspect().state.last_operation.request_id,'newly-discovered-original');assert.equal(h.inspect().state.object.object_id,viewId);assert.match(h.$('message').textContent,/读回发现原请求尚未确认/);assert.doesNotMatch(h.$('message').textContent,/已查看保存版本/);
+ assert.equal(h.calls.length,0);assert.equal(h.inspect().state.last_operation.request_id,'newly-discovered-original');assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.$('roi-reason').value,'Explicitly discarded old draft');assert.equal(h.inspect().dirty,true);assert.match(h.$('message').textContent,/读回发现原请求尚未确认/);assert.doesNotMatch(h.$('message').textContent,/已查看保存版本/);
 });
 
 test('human workflow: result tabs expose one result type without changing the scientific object',async()=>{

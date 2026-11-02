@@ -4,7 +4,7 @@ import http from 'node:http';
 import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import type {ChildProcessWithoutNullStreams} from 'node:child_process';
 import type {AddressInfo} from 'node:net';
-import type {PanelMetadata as Metadata,PanelClient,ImageToolReply,PanelState,PanelSelection,PanelEditState,PanelFrameIdentity,PanelDraftAcknowledgment,PanelWindowViewContext} from '../lib/image_panel_contracts.mjs';
+import type {PanelMetadata as Metadata,PanelClient,ImageToolReply,PanelState,PanelSelection,PanelEditState,PanelFrameIdentity,PanelDraftAcknowledgment,PanelWindowViewContext,PanelWindowEntry} from '../lib/image_panel_contracts.mjs';
 interface NativeImageReply {data:Metadata;png?:unknown;sequenceEvidence?:unknown;domainEvidence?:unknown;domainPng?:unknown;}
 interface PreparedView {object:Metadata;png:unknown;clean:unknown;digest:string|null;baseId:unknown;display:unknown;displayId:unknown;sequenceEvidence?:unknown;domainEvidence?:unknown;domainPng?:unknown;}
 interface PendingView {prepared:PreparedView;frameIdentity:PanelFrameIdentity|null;request_id:unknown;annotationIds?:unknown[];preserve_selection?:boolean;spatialReturnReference?:SpatialReturnReference|null;spatialReturnReason?:string;inputViewContext?:PanelWindowViewContext|null;viewContextRestore?:PanelWindowViewContext|null;navigationLease?:boolean;reason?:'unsaved_draft'|'window_capacity';}
@@ -303,6 +303,22 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   const checkWindowTransition=()=>{
    if(body.expected_object_id!==current.object_id||body.draft_revision!==editState.draft_revision||editState.dirty||editState.gesture_active||editState.annotation_edit||pendingResult||selectionTimer!==null||selectionPersistenceError||lastOperation?.state==='submitted')fail('Save and confirm the exact current draft, finish gestures, and resolve the pending/original request before switching image windows',409);
   };
+  const beginNavigation=()=>{checkWindowTransition();return {selection:structuredClone(selection),operation:structuredClone(lastOperation),collection_revision:windowStore.snapshot().revision};};
+  const confirmNavigation=(before:ReturnType<typeof beginNavigation>,operation:Metadata|null=before.operation)=>{
+   checkWindowTransition();windowStore.requireRevision(before.collection_revision);
+   if(!sameRecord(selection,before.selection)||!sameRecord(lastOperation,operation))fail('Current interaction changed during saved navigation; existing edits and requests are retained',409);
+  };
+  const navigationTargetContext=async(entry:PanelWindowEntry|undefined,prepared:PreparedView,frame:PanelFrameIdentity|null)=>{
+   const context=entry&&entry.object_id===prepared.object.object_id?qualifyPanelWindowContext(entry.view_context,prepared.object,checkSelection):null;
+   let reference:SpatialReturnReference|null=null,reason='no_saved_return';
+   if(entry?.role==='fft'&&entry.source_reference){
+    const source=entry.source_reference;
+    try{reference=readSpatialReturnReference({version:1,view_object_id:source.input_view_object_id,frame_object_id:source.frame_object_id,fft_object_id:source.raw_fft_object_id,source_rect_xyxy:source.processing_rect_xyxy});}
+    catch{reason='invalid_reference';}
+    if(reference){try{await qualifySpatialReturn(reference);const offered=spatialReturnState(reference,prepared.object,frame);reason=offered.status==='ready'?'':offered.reason_code??'different_fft';}catch(error){reason=returnFailure(error);}}
+   }
+   return {context,reference,reason};
+  };
   if(body.action==='window-camera'){
    fields(p,['collection_revision','window_id','object_id','camera']);windowStore.updateCamera(p.collection_revision,p.window_id,p.object_id,p.camera);stateRevision++;saveSelection();return state();
   }
@@ -314,28 +330,41 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    const context:PanelWindowViewContext={version:1,object_id:current.object_id as string,panel_mapping_fingerprint:panelWindowMappingFingerprint(current),camera:readPanelWindowCamera(p.camera),selection_candidate:selection===null?null:checkSelection(selection,current),selected_annotation_id:selected as string|null};
    windowStore.setContext(p.collection_revision,active,current,context);stateRevision++;saveSelection();return state();
   }
-  if(body.action==='activate-window'){
-   fields(p,['collection_revision','window_id']);checkWindowTransition();
-   const entry=windowStore.lookup(p.window_id,p.collection_revision),sourceSelection=structuredClone(selection),sourceOperation=structuredClone(lastOperation),collectionFrame=windowStore.snapshot().frame_object_id;
-   const saved=await readWindowSaved(entry.object_id);
-   if(saved.frame?.frame_object_id!==collectionFrame||!windowStore.assetMatches(entry.window_id,saved.object,saved.frame))fail('Saved activation target no longer matches its admitted frame, grid or asset',409);
-   const prepared=await prepareCurrent({data:saved.object,png:saved.png}),context=qualifyPanelWindowContext(entry.view_context,prepared.object,checkSelection);
-   let reference:SpatialReturnReference|null=null,reason='no_saved_return';
-   if(entry.role==='fft'&&entry.source_reference){
-    const source=entry.source_reference;
-    try{reference=readSpatialReturnReference({version:1,view_object_id:source.input_view_object_id,frame_object_id:source.frame_object_id,fft_object_id:source.raw_fft_object_id,source_rect_xyxy:source.processing_rect_xyxy});}
-    catch{reason='invalid_reference';}
-    if(reference){try{await qualifySpatialReturn(reference);const offered=spatialReturnState(reference,prepared.object,saved.frame);reason=offered.status==='ready'?'':offered.reason_code??'different_fft';}catch(error){reason=returnFailure(error);}}
+  if(body.action==='activate-window'||body.action==='show'){
+   const activation=body.action==='activate-window';fields(p,activation?['collection_revision','window_id']:['object_id','source_view']);
+   const before=beginNavigation(),collection=windowStore.snapshot();let entry:PanelWindowEntry|undefined,reply:NativeImageReply,frame:PanelFrameIdentity|null;
+   if(activation)entry=windowStore.lookup(p.window_id,p.collection_revision);
+   else{
+    if(!objectId.test(String(p.object_id)))fail('Explicit existing object_id required');if(p.source_view!==undefined&&p.source_view!==true)fail('source_view must be true when provided');
+    if(p.source_view&&p.object_id!==frameIdentity?.frame_object_id)fail('Source view must name this exact frame',409);
+    if(!p.source_view)entry=collection.windows.find(window=>window.object_id===p.object_id);
    }
-   // A direct draft publication can arrive while any immutable read awaits.
-   // Validate every target and lease before changing the single current view.
-   checkWindowTransition();const latest=windowStore.lookup(entry.window_id,p.collection_revision);
-   if(latest.object_id!==entry.object_id||!windowStore.assetMatches(entry.window_id,saved.object,saved.frame)||!sameRecord(selection,sourceSelection)||!sameRecord(lastOperation,sourceOperation))fail('Current interaction changed during window activation; existing edits and requests are retained',409);
+   if(entry){
+    const saved=await readWindowSaved(entry.object_id);frame=saved.frame;
+    if(frame?.frame_object_id!==collection.frame_object_id||!windowStore.assetMatches(entry.window_id,saved.object,frame))fail('Saved navigation target no longer matches its admitted frame, grid or asset',409);
+    reply={data:saved.object,png:saved.png};
+   }else if(p.source_view){const target=await withCurrentContext(p.object_id);reply=await journalCall('image_preview',{object_id:target});frame=await findFrameIdentity(reply.data);}
+   else{reply=await displayObject(await journalCall('image_info',{object_id:p.object_id}));frame=await findFrameIdentity(reply.data);}
+   const prepared=await prepareCurrent(reply),ownOperation=p.source_view?structuredClone(lastOperation):before.operation;
+   // An explicitly shown new rendering may revise a retained FFT on its exact
+   // raw FFT identity. Its own relation is usable; another FFT's global P3 is not.
+   const panels=prepared.object.panels as Metadata[]|undefined,rawFFT=panels?.length===1&&panels[0].domain==='frequency'?panels[0].source_object_id:null;
+   const related=entry??collection.windows.find(window=>{const source=window.source_reference;return window.role==='fft'&&source!==undefined&&source.raw_fft_object_id===rawFFT&&source.frame_object_id===frame?.frame_object_id;});
+   const {context,reference,reason}=await navigationTargetContext(related,prepared,frame);
+   // Both entry points consume the same global lease. Direct draft publication
+   // during any read must abort navigation, never become a replacement pending.
+   confirmNavigation(before,ownOperation);
+   if(entry){const latest=windowStore.lookup(entry.window_id,before.collection_revision);if(latest.object_id!==entry.object_id||!windowStore.assetMatches(entry.window_id,reply.data,frame))fail('Saved navigation target changed during readback',409);}
+   if(!windowStore.canAdmit(prepared.object,frame)){
+    if(!safeId.test(String(reply.data.request_id??'')))fail('Close a read-only window before opening this saved view; its original request identity cannot be queued',409);
+    pendingResult={prepared,frameIdentity:frame,request_id:reply.data.request_id,reason:'window_capacity',spatialReturnReference:reference,spatialReturnReason:reason,viewContextRestore:context,navigationLease:true};
+    lastOperation={action:'show',object_id:prepared.object.object_id,request_id:reply.data.request_id,state:'completed_pending_view'};saveSelection();return state();
+   }
    const successor=editState.draft_revision+1;if(!Number.isSafeInteger(successor))fail('Draft revision exhausted',409);
-   editState={...editState,draft_revision:successor};commitCurrent(prepared);frameIdentity=saved.frame;adoptSpatialReturn(reference,reason);syncWindows();
+   editState={...editState,draft_revision:successor};commitCurrent(prepared);frameIdentity=frame;adoptSpatialReturn(reference,reason);syncWindows();
    selection=context?.selection_candidate??null;editState={...editState,selection:structuredClone(selection),base_object_id:current.object_id};
-   const active=windowStore.snapshot();if(active.active_window_id)windowStore.setContext(active.revision,active.active_window_id,current,context);
-   lastOperation={action:'activate-window',object_id:current.object_id,window_id:entry.window_id,state:'completed'};saveSelection();return state();
+   const active=windowStore.snapshot();if(entry&&active.active_window_id)windowStore.setContext(active.revision,active.active_window_id,current,context);
+   lastOperation={action:body.action,object_id:current.object_id,...(entry?{window_id:entry.window_id}:{}),...(prepared.object.request_id?{request_id:prepared.object.request_id}:{}),state:'completed'};saveSelection();return state();
   }
   // Display-only operations share the exact current identity but never consume
   // its draft lease, pending result, original request, or scientific selection.
@@ -504,11 +533,6 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
     }
    }
    catch(error){spatialReturnReason=returnFailure(error);try{spatialReturnReference=readSpatialReturnReference(spatialReturnReference);}catch{spatialReturnReference=null;}stateRevision++;saveSelection();fail('Spatial return unavailable: '+spatialReturnReason,409);}
-  }
-  else if(body.action==='show'){
-   fields(p,['object_id','source_view']);if(!objectId.test(((p.object_id??'' as string) as string)))fail('Explicit existing object_id required');if(p.source_view!==undefined&&p.source_view!==true)fail('source_view must be true when provided');
-   if(p.source_view){if(p.object_id!==frameIdentity?.frame_object_id)fail('Source view must name this exact frame',409);const target=await withCurrentContext(p.object_id);r=await journalCall('image_preview',{object_id:target});}
-   else r=await displayObject(await journalCall('image_info',{object_id:p.object_id}));
   }
   else if(body.action==='recover'){fields(p,['request_id']);if(p.request_id!==undefined&&(typeof p.request_id!=='string'||!safeId.test(p.request_id)))fail('Valid original request_id required');let operation=lastOperation;const original=p.request_id??operation?.request_id;if(!safeId.test(((original??'' as string) as string)))fail('No valid saved request to query');if(p.request_id!==undefined){if(!existsSync(path.join(journal,`${original}.request.json`)))fail('Original request is not journaled by this panel',404);if(operation?.request_id!==original)operation={request_id:original};}r=await journalCall('image_result',{request_id:original});if(!r.data.object_id)fail('Original request has not returned an image object');if(operation!.action==='figure-base'){if(operation!.figure_step==='scale'){figureBars.set(current.object_id,r.data.scale_bar??null);return {...state(),figure_base_recovery:{state:'scale_render_saved_clean_render_not_submitted',request_id:original,object_id:r.data.object_id}};}return figureAsset(r);}if(operation!.action==='restore-figure-display')figureRestore=operation!.figure_restore as Metadata|null;if(r.data.kind==='context'&&(r.data.user_context as Metadata|undefined)?.research_observation)return saveResearchObservation(r.data);if((['statistics','profile'] as readonly unknown[]).includes(r.data.kind)){numericResults[r.data.kind as 'statistics'|'profile']=r.data;lastOperation=r.data;saveSelection();return state();}if((['measure','export'] as readonly unknown[]).includes(r.data.kind)){if(r.data.kind==='measure')crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'measure',scientificBefore,r.data,{annotation_id:operation?.annotation_id});lastOperation=publicImageObject(r.data);saveSelection();return state();}if(r.data.kind==='annotate')crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'edit',scientificBefore,r.data);if(r.data.kind==='calibration')crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'calibrate',scientificBefore,r.data);r=await displayObject(r);}
   else fail('Unknown panel action');

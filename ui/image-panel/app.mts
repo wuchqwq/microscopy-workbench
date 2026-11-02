@@ -88,12 +88,13 @@ async function persistWindowContext(){
 async function activateWindow(windowId:string,targetObject:string){
  if(windowSwitch)return;
  if(!state?.panel_mapping_fingerprint)throw new Error('当前服务未提供可核对的窗口映射，保留单图编辑。');
- if(drag||observationSavePhase||autoFailed||orphanedDraft||pending||state.pending_result||state.last_operation?.state==='submitted'||busy&&!autoSaving)throw new Error('先结束手势、保存或处理待查看结果与原请求，再编辑另一窗口。');
+ if(drag||observationSavePhase||autoFailed||orphanedDraft||pending||state.pending_result||state.last_operation?.state==='submitted')throw new Error('先结束手势、保存或处理待查看结果与原请求，再编辑另一窗口。');
+ if(autoSaving||queuedEdits.size||remeasuringMarks.size)throw new Error('正在保存或重新测量当前标记；请等待数值标签保存完成后，再明确点击编辑另一窗口。');
+ if(busy)throw new Error('当前操作尚未完成，请等待后再编辑另一窗口。');
  if(researchWorkspace.reasonDirty||editCoordinates||fieldDirty||labelDraft||JSON.stringify(displayDraft())!==displayBaseline)throw new Error('先保存、撤销或明确放弃当前草稿，再编辑另一窗口。');
  const transition:WindowSwitch={phase:'preparing',window_id:windowId,object_id:targetObject,source_object_id:state.object.object_id,source_draft_revision:historyDraft.revision,auto_sequence:autoSequence};switchState(transition);
  let sent=false;
  try{
-  while(autoSaving||queuedEdits.size){if(autoFailed||autoSequence!==transition.auto_sequence)throw new Error('等待保存期间出现新编辑；草稿保留，切换尚未提交。');await(autoSaving??flushEdits());}
   if(dirty()||drag||pending||state.pending_result||state.last_operation?.state==='submitted')throw new Error('当前保存状态尚未就绪，编辑保留。');
   await persistWindowContext();await windowWorkspace.awaitStableMetadata();
   const target=state.window_collection?.windows.find(entry=>entry.window_id===windowId);if(!target||target.object_id!==targetObject)throw new Error('所选窗口已关闭或其结果版本已改变；请重新核对窗口列表。');
@@ -267,7 +268,11 @@ async function returnToSpatialObservation(){
  await act('return-spatial');
 }
 async function navigateSavedView(target:SavedViewEntry|null|undefined){
- if(!target)return;if(dirty()||busy||drag){message('先保存或撤销草稿，再切换保存视图。',true);return;}
+ if(!target||target.id===state.object.object_id)return;
+ const window=!target.freshSourceView&&state.window_collection?.windows.find(entry=>entry.object_id===target.id);
+ if(window){await activateWindow(window.window_id,window.object_id);return;}
+ if(windowSwitch||autoFailed||state.last_operation?.state==='submitted'){message('先核对当前窗口及原请求，再切换保存视图；不会通过导航隐藏未知结果。',true);return;}
+ if(dirty()||busy||drag||pending||state.pending_result||observationSavePhase){message('先保存或撤销草稿，并处理待查看结果，再切换保存视图。',true);return;}
  await act('show',{object_id:target.id,...(target.freshSourceView?{source_view:true}:{})});
 }
 async function api(url:'/api/probe',body:Readonly<Record<string,unknown>>):Promise<ProbeResult>;
@@ -412,10 +417,13 @@ function renderMeasurement(){const last=state.last_operation,entry=selectedId?me
  finite(m?.distance_pixels)?`图像坐标距离 ${m.distance_pixels} px`:
  finite(m?.frequency_distance_cycles_per_pixel)?`频率差 ${m.frequency_distance_cycles_per_pixel} cycles/pixel`:
  '选线段或已知中心的倒空间峰后可测量；候选标记不等于物相确认';if(entry&&entry.status!=='current')$('measurement-summary').textContent='旧版数值（待重测或历史）：'+$('measurement-summary').textContent;}
-async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forceWindowContext=false,publishSelection=true}:{keepDisplay?:DisplayDraft|null;keepMark?:LocalSnapshot|null;role?:string|null;forceWindowContext?:boolean;publishSelection?:boolean}={}){
+async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forceWindowContext=false,publishSelection=true,discardAuthorizedDraft=false}:{keepDisplay?:DisplayDraft|null;keepMark?:LocalSnapshot|null;role?:string|null;forceWindowContext?:boolean;publishSelection?:boolean;discardAuthorizedDraft?:boolean}={}){
  const priorScope=state?workflowScope(state):null;
  const ticket=++loading,revision=historyDraft.revision,epoch=interactionEpoch,sameObject=state?.object.object_id===next.object.object_id,rect=viewport.getBoundingClientRect(),continued=relatedViewport(view,state,next,[rect.width,rect.height]),context=resumableWindowContext(next),restoreContext=Boolean(context&&(forceWindowContext||!state||!sameObject&&!continued)),savedSelection=forceWindowContext?(Object.hasOwn(next,'selection')?next.selection:context?.selection_candidate as AppSelection|null):!sameObject&&next.selection?next.selection:(sameObject||continued)&&draft?draft:next.selection;let decoded:BrowserElement|null=null;
  if(next.clean_png_base64||next.png_base64){decoded=new Image();decoded.src='data:image/png;base64,'+(next.clean_png_base64??next.png_base64);await decoded.decode();if(ticket!==loading)return false;if(state&&(historyDraft.revision!==revision||interactionEpoch!==epoch||drag)){pending=next;showPending();return false;}}
+ // Discard applies only after this exact saved view has been read and decoded.
+ // A failed read/decode or newer interaction must retain the authorized draft.
+ if(discardAuthorizedDraft){clearExplicitLocalDraft();autoFailed=false;}
  if(!state&&next.edit_state?.dirty)orphanedDraft=true;
  interactionEpoch++;state=next;draft=restoredSelection(savedSelection,next.object.panels??[]);drag=null;editCoordinates=null;labelDraft=null;fieldDirty=false;toneCacheKey=null;marksDirty=true;const o=state.object,previous=selectedId;
  if(!sameObject&&!continued){figurePrefs.preset=o.annotations?.some(m=>['A','B','shared','unexplained'].includes(m.presentation?.category as string))?'multi-domain':o.panels?.some(p=>p.domain==='frequency')?'diffraction':'real-space';figurePrefs.legend=figurePrefs.preset!=='real-space';figurePrefs.layers={experimental:true,simulation_A:figurePrefs.preset!=='real-space',simulation_B:figurePrefs.preset!=='real-space'};}syncFigureControls();
@@ -524,20 +532,23 @@ for(const id of ['mark-text','color','status'])$(id).oninput=()=>{if(!fieldBefor
 $('save-mark').onclick=guarded(async()=>{if(selectedId){commitLabelDraft();captureSelected();return flushEdits();}const fields={text:$('mark-text').value,color:$('color').value,status:$('status').value};return act('mark',{selection:selection(),annotation_id:$('mark-id').value,...fields});});
 $('undo').onclick=()=>applyUserHistory('undo');$('redo').onclick=()=>applyUserHistory('redo');
 // A click authorizes this read only, never edits made while it is in flight.
-async function readSavedView(){
+async function readSavedView({discardAuthorizedDraft=false}={}){
  const epoch=interactionEpoch,objectId=state.object.object_id,next=await api('/api/state');
  if(interactionEpoch!==epoch||state.object.object_id!==objectId||drag)throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');
- if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');
+ if(discardAuthorizedDraft&&next.last_operation?.state==='submitted'){
+  if(next.object.object_id===objectId){state={...state,last_operation:next.last_operation,pending_result:next.pending_result,state_revision:Math.max(state.state_revision??0,next.state_revision??0)};mirrorWindowCollection(next);}else{pending=next;showPending();}
+  throw new Error('读回发现原请求尚未确认；先查询原请求，草稿与待查看结果保留。');
+ }
+ if(!await load(next,{discardAuthorizedDraft}))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');
 }
-const discardLocalDraft=guarded(async()=>{if(busy)throw new Error('原请求仍在保存，先查询其结果；本地编辑保留。');interactionEpoch++;clearExplicitLocalDraft();autoFailed=false;const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();message('本地草稿已撤回；保存过的科学版本仍保留。');});$('discard-local').onclick=()=>windowSwitch?recoverWindowDisplay(true):discardLocalDraft();
+const discardLocalDraft=guarded(async()=>{if(busy||autoFailed||state.last_operation?.state==='submitted')throw new Error('原请求仍未确认，先查询其结果；本地编辑保留。');interactionEpoch++;const previous=pending;await readSavedView({discardAuthorizedDraft:true});if(pending===previous)pending=null;showPending();message('本地草稿已撤回；保存过的科学版本仍保留。');});$('discard-local').onclick=()=>windowSwitch?recoverWindowDisplay(true):discardLocalDraft();
 const discardPendingDraft=guarded(async()=>{
  if(busy||drag||observationSavePhase)throw new Error('先完成当前保存、校验或手势；草稿仍保留。');
  if(autoFailed||state.last_operation?.state==='submitted')throw new Error('原请求尚未确认；先查询原请求，草稿仍保留。');
- interactionEpoch++;researchWorkspace.clearReason();orphanedDraft=false;
- if(pending){const next=pending;if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');if(pending===next)pending=null;showPending();}
+ interactionEpoch++;
+ if(pending){const previous=pending;await readSavedView({discardAuthorizedDraft:true});if(pending===previous)pending=null;showPending();}
  else{
-  editCoordinates=null;fieldDirty=false;await readSavedView();
-  if(autoFailed||state.last_operation?.state==='submitted')throw new Error('读回发现原请求尚未确认；先查询原请求，未接纳待查看结果。');
+  await readSavedView({discardAuthorizedDraft:true});
   if(!await act('accept-result'))return;
  }
  if(pending||state.pending_result||dirty()||drag){message('保存版本尚未完全接续；较新草稿保留，请核对后继续。');return;}

@@ -54,7 +54,7 @@ async function fixture(run,{calibrated=false,spectral=false,changedGrid=false,lo
    assert.equal(name,'image_preview');
    const scaled=args.scale_bar===true,id=scaled?C:(++previewSequence===1?B:previewSequence.toString(16).padStart(32,'0'));
    const parent=records.get(args.object_id),controls=Object.fromEntries(Object.entries(args).filter(([key])=>!['request_id','object_id'].includes(key)));
-   const data={...clone(base),object_id:id,parent_object_id:args.object_id,request_id:args.request_id,display:{...clone(parent.display),...controls},annotations:args.gamma!==undefined?clone(parent.annotations):[],scale_bar:scaled?scaleBar:{visible:false}};
+   const data={...clone(base),object_id:id,parent_object_id:args.object_id,request_id:args.request_id,state:'completed',display:{...clone(parent.display),...controls},annotations:args.gamma!==undefined?clone(parent.annotations):[],scale_bar:scaled?scaleBar:{visible:false}};
    if(reorderedKeys)data.panels=reversedKeys(data.panels);
    if(changedGrid&&!scaled)data.panels=[{...panelGrid,image_rect_xyxy:[0,0,31,32]}];
    if(!scaled){
@@ -121,7 +121,7 @@ for(const annotationMismatch of ['grid','mapping','missing'])test(`automatic ann
 test('fresh source display is restricted to the current frame and never dispatches FFT',async()=>fixture(async({act,calls})=>{
  const before=calls.length;assert.equal((await act('show',{object_id:A,source_view:true})).status,409);assert.equal(calls.length,before);
  assert.equal((await act('show',{object_id:F,source_view:false})).status,400);assert.equal(calls.length,before);
- const reply=await act('show',{object_id:F,source_view:true});assert.equal(reply.status,200);
+ const reply=await act('show',{object_id:F,source_view:true});assert.equal(reply.status,200,reply.data.error);
  assert.deepEqual(calls.slice(before).filter(c=>c.name!=='image_info').map(c=>({name:c.name,object_id:c.args.object_id})),[{name:'image_preview',object_id:F}]);
 }));
 

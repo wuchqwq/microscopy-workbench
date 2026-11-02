@@ -151,3 +151,32 @@ test('view-context cannot accept a forged selection or annotation and mapping fi
  const wrong=await h.act('window-context',{collection_revision:revision,camera:cameraB,selected_annotation_id:'not-on-this-image'});assert.equal(wrong.status,409);assert.deepEqual(h.state(),before);assert.equal(before.panel_mapping_fingerprint,panelWindowMappingFingerprint(before.object));
  const active=h.windowFor(V),asset=await h.get(`/api/window-asset?window_id=${active.window_id}&revision=${revision}`);assert.equal(asset.status,200,asset.data.error);assert.equal(asset.data.panel_mapping_fingerprint,active.view_context.panel_mapping_fingerprint);
 }));
+
+test('ordinary saved show refuses unresolved requests and dirty leases before reading its target',()=>fixture(async h=>{
+ const raw=await firstFFT(h);await h.act('return-spatial');
+ await h.act('draft',{draft_revision:h.state().edit_state.draft_revision+1,dirty:true,gesture_active:false,selection:picked(a),confirm_persistence:true});
+ let before=h.state(),calls=h.calls.length;assert.equal((await h.act('show',{object_id:raw})).status,409);assert.equal(h.calls.length,calls);assert.deepEqual(h.state(),before);
+ await h.act('draft',{draft_revision:h.state().edit_state.draft_revision+1,dirty:false,gesture_active:false,selection:picked(a),confirm_persistence:true});
+ h.unknownFFT();assert.equal((await h.act('fft',{selection:picked(a)})).status,400);before=h.state();calls=h.calls.length;
+ assert.equal((await h.act('show',{object_id:raw})).status,409);assert.equal(h.calls.length,calls);assert.deepEqual(h.state().last_operation,before.last_operation);assert.equal(h.state().object.object_id,V);
+ assert.equal((await h.act('show',{object_id:F,source_view:true})).status,409);assert.equal(h.calls.length,calls);
+}));
+
+test('ordinary saved show fences same-object ABA and restores each registered FFT own return context',()=>fixture(async h=>{
+ const rawA=await firstFFT(h);await h.act('return-spatial');await h.context(picked(b),cameraB,null);assert.equal((await h.act('fft',{selection:picked(b)})).status,200);const rawB=h.state().object.object_id;
+ assert.equal((await h.act('show',{object_id:rawA})).status,200);assert.equal(h.state().spatial_return.status,'ready');assert.equal((await h.act('return-spatial')).status,200);assert.deepEqual(h.state().selection.coordinates,a);
+ const before=h.state();assert.equal((await h.act('show',{object_id:rawB})).status,200);assert.equal((await h.act('show',{object_id:V})).status,200);assert.equal(h.state().edit_state.draft_revision,before.edit_state.draft_revision+2);
+ const current=h.state(),late=await h.act('draft',{draft_revision:before.edit_state.draft_revision,dirty:false,gesture_active:false,selection:picked(b),confirm_persistence:true},{draft_revision:before.edit_state.draft_revision});assert.equal(late.status,409);assert.deepEqual(h.state(),current);assert.equal(h.calls.filter(call=>call.name==='image_fft').length,2);
+}));
+
+test('ordinary saved show rejects a newer draft after target reads without replacing current or pending',()=>fixture(async h=>{
+ const raw=await firstFFT(h);await h.act('return-spatial');const before=h.state(),gate=h.hold(raw),operation=h.act('show',{object_id:raw});
+ try{await Promise.race([gate.started,operation.then(r=>assert.fail('Saved show did not reach held read: '+r.status))]);assert.equal((await h.act('draft',{draft_revision:before.edit_state.draft_revision+1,dirty:true,gesture_active:false,selection:picked(b),confirm_persistence:true})).status,200);}finally{gate.release();}
+ const rejected=await operation;assert.equal(rejected.status,409,rejected.data.error);assert.equal(h.state().object.object_id,V);assert.deepEqual(h.state().selection.coordinates,b);assert.equal(h.state().edit_state.dirty,true);assert.deepEqual(h.state().pending_result,before.pending_result);assert.deepEqual(h.state().last_operation,before.last_operation);
+}));
+
+test('saved show of an unpaired FFT clears another FFT return rather than inheriting its source',()=>fixture(async h=>{
+ const raw=await firstFFT(h),unpaired=h.save(spectral(id(888),[30,30,50,50]));assert.equal((await h.act('show',{object_id:unpaired.object_id})).status,200);
+ assert.equal(h.state().spatial_return.status,'unavailable');assert.equal(h.state().spatial_return.reason_code,'no_saved_return');assert.equal((await h.act('return-spatial')).status,409);
+ assert.equal((await h.act('show',{object_id:raw})).status,200);assert.equal(h.state().spatial_return.status,'ready');
+}));
