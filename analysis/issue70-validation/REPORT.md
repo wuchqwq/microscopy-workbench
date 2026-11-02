@@ -64,3 +64,23 @@ Measurement uncertainty: unchanged and not quantified by this runtime work.
 Method limitations and physical non-identifiability: unchanged. A safe receipt
 says nothing about whether a lattice, phase, strain or defect interpretation is
 scientifically established. Route A and explicit uncertainty remain in force.
+
+## CI-driven receiving-client follow-up
+
+The first #75 CI run at 36309fa exposed remaining test clients that did not
+acknowledge delivered composite previews. Exact initial failures and the run URL
+are retained in initial-ci-failures.json. Test-only follow-ups 051f42b/660afb1
+adapt those receiving boundaries; no production code or Skills changed. See
+docs/PREVIEW_RECEIVING_FIXTURE_VALIDATION.md for the bounded additional commands,
+26 + 19 tests, three legacy-producer skips, 38 saved-chain calls and six bounded
+controlled-harness calls. No broad noise matrix was repeated.
+
+The compiled-baseline compatibility test initially rejected the deliberately
+added ACK tool, optional resolved_preview input, saved-only Panel description and
+bounded diagnostic suffix. It now enumerates only these approved extensions,
+keeps old schemas/required inputs and original failure code otherwise exact, and
+asserts NOT_FOUND stays outcome_unknown. Actual frozen-JS workspace to relocated
+compiled MCP test: 2 PASS, unchanged old scientific files and one saved FFT.
+Both earlier failing and final passing logs are retained. CI also independently
+ran DM-complex with its optional dependency: all four cases PASS; local absence
+of that dependency is still reported separately above.

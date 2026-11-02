@@ -131,9 +131,21 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // F1a/F4-lite add the explicitly enumerated tools and optional context selections. Keep the frozen
   // comparison exact for every pre-existing field; authorize only these named
   // additive changes, never drop descriptions or weaken old scientific tests.
-  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology'];
+  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge'];
   assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
   const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
+  // #70 intentionally changes preview admission, not old scientific arguments.
+  const preview=retainedSchema.find(tool=>tool.name==='image_preview'),oldPreview=schema.find(tool=>tool.name==='image_preview');
+  const resolved=preview.inputSchema.properties.resolved_preview;
+  assert.deepEqual(resolved.required,['request_id']);assert.equal(resolved.additionalProperties,false);
+  assert.deepEqual(Object.keys(resolved.properties).sort(),['object_id','request_id']);
+  assert.ok(!preview.inputSchema.required.includes('resolved_preview'));
+  delete preview.inputSchema.properties.resolved_preview;
+  assert.ok(preview.description.endsWith(oldPreview.description),'Only recovery guidance prefixes the old render description');
+  assert.match(preview.description,/new ID or size does not recover/);preview.description=oldPreview.description;
+  const panelOpen=retainedSchema.find(tool=>tool.name==='image_panel_open');
+  assert.match(panelOpen.description,/explicitly saved preview\/view/);assert.match(panelOpen.description,/PREVIEW_REQUIRED means no rendering was dispatched/);
+  panelOpen.description=schema.find(tool=>tool.name==='image_panel_open').description;
   // Presentation controls are explicitly additive and must never become a
   // required scientific parameter or alter old full-return behavior.
   for(const name of ['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_info','image_result']){
@@ -145,7 +157,14 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
   for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
   assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except the named optional presentation controls and additive F1a/F4 tools');
-  assert.deepEqual(await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}}),{...refused,id:current.next},'Original-request error remains compatible');
+  const unknown=await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}});
+  const oldText=refused.result.content[0].text,newText=unknown.result.content[0].text;
+  assert.ok(newText.startsWith(oldText+'. Query image_result with original request_id=unknown-original-request;'));
+  const diagnostic=JSON.parse(newText.slice(newText.indexOf(' {')+1));
+  assert.equal(diagnostic.request_id,'unknown-original-request');assert.equal(diagnostic.provider,'external-image-workspace');
+  assert.equal(diagnostic.submission_state,'outcome_unknown','NOT_FOUND must not be reinterpreted as proven non-dispatch');
+  unknown.result.content[0].text=oldText;
+  assert.deepEqual(unknown,{...refused,id:current.next},'Only bounded original-request diagnostics extend the old refusal');
   assert.deepEqual(await current.tool('image_result',{request_id:'frozen-fft'}),fft);
   assert.deepEqual(await current.tool('image_info',{object_id:measure.object_id}),await current.tool('image_result',{request_id:'frozen-measure'}));
   const restored=await current.tool('analysis_read',{analysis_id:'frozen-public-analysis'});
