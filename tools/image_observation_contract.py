@@ -7,6 +7,10 @@ INPUT_FIELDS = ("purpose", "selection_origin")
 
 
 def fields(item, anchor, note, previous, incoming, need):
+    # Only omission may inherit intent; an explicit null is not a legacy absence.
+    if "purpose" in item:
+        need(type(item["purpose"]) is str and item["purpose"] == PURPOSE,
+             "Unsupported annotation purpose; omit the field to preserve existing intent")
     purpose = item.get("purpose", (previous or {}).get("purpose"))
     if purpose is None:
         need("selection_origin" not in item, "selection_origin requires purpose=resumable_observation")
