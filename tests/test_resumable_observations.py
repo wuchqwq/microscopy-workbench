@@ -122,6 +122,36 @@ class ResumableObservation(unittest.TestCase):
         upgraded=self.call("annotate",object_id=legacy["object_id"],updates=[dict(annotation_id="explicit-roi",purpose="resumable_observation",selection_origin="unspecified")])
         self.assertEqual(self.mark(upgraded)["selection_origin"],"unspecified")
 
+    def test_explicit_invalid_purpose_cannot_remove_or_bypass_intent(self):
+        replacement = {key: value for key, value in self.input.items()
+                       if key not in ("purpose", "selection_origin")}
+        for purpose in (None, False, 0, "", [], {}, "display_only"):
+            for route in ("create", "replacement", "sparse"):
+                with self.subTest(purpose=purpose, route=route):
+                    target = self.view if route == "create" else self.saved
+                    payload = ({"updates": [{"annotation_id": "explicit-roi", "purpose": purpose}]}
+                               if route == "sparse" else
+                               {"annotations": [{**replacement, "purpose": purpose}]})
+                    before = set((self.workspace / "objects").glob("*/object.json"))
+                    response = self.execute("annotate", object_id=target["object_id"], **payload)
+                    self.assertFalse(response["ok"], response)
+                    self.assertIn("Unsupported annotation purpose", response["error"]["message"])
+                    self.assertEqual(set((self.workspace / "objects").glob("*/object.json")), before)
+
+    def test_omitted_purpose_preserves_contract_and_original_receipt(self):
+        replacement = {key: value for key, value in self.input.items()
+                       if key not in ("purpose", "selection_origin")}
+        parent = self.mark(self.saved)
+        replaced = self.call("annotate", object_id=self.saved["object_id"],
+                             annotations=[replacement])
+        for record in (replaced, self.edit(note=self.input["note"]),
+                       self.call("get", object_id=self.saved["object_id"]),
+                       self.call("result", query_request_id=self.saved["request_id"])):
+            mark = self.mark(record)
+            for key in ("annotation_id", "purpose", "observation_contract_version",
+                        "selection_origin", "selection_origin_basis", "anchor", "note"):
+                self.assertEqual(mark[key], parent[key], key)
+
     def test_old_anonymous_and_codepoint_budget_reproject_without_upgrading(self):
         # New worker legacy contract remains supported. Separately retained frozen-worker
         # originals are read/recovered/reprojected by the formal MCP smoke.
