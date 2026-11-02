@@ -83,6 +83,13 @@ choice with its actor/reason; do not backfill the historical identity. If showin
 an FFT instead of the source ROI, name the saved ROI reference and the reason for
 that display, without pretending the spatial ROI is selected on the FFT grid.
 
+When forwarding existing annotations in a replacement overlay, preserve their
+scientific notes and origin declarations verbatim. Paraphrasing a saved reason
+is a new scientific-note revision: declare its actual new actor (`agent` for
+your revision), rather than carrying the previous actor or `unspecified` merely
+because the ROI is unchanged. Prefer a sparse update or a separately identified
+Agent note when that expresses the intended revision more clearly.
+
 Respect the advertised note `maxLength` (1000 UTF-16 code units for new MCP writes;
 supplementary characters count twice). Never truncate a draft to obtain acceptance. Keep saved notes concise with stable evidence references; put the longer reasoning in the analysis answer. A schema refusal is not a numerical result. Query the original request if its outcome is unknown, and never claim a rejected note was saved.
 
