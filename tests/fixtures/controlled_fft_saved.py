@@ -25,6 +25,9 @@ import sys
 import time
 import traceback
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from preview_test_support import acknowledge_received_previews
+
 sys.dont_write_bytecode = True
 SCENES = ('uniform', 'one', 'two', 'weak', 'near_doublet',
           'resolvable_doublet', 'off_bin', 'adjacent', 'background_slope',
@@ -258,6 +261,8 @@ class Harness:
         self.capture_committed()
         if not response.get('ok'):
             raise RuntimeError('Worker returned failure: '+canonical(response))
+        acknowledge_received_previews(self.worker, self.workspace_path, response['result'])
+        self.capture_committed()
         ident = response['result']['object_id']
         metadata, _ = self.workspace.object(ident)
         return metadata
