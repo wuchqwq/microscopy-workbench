@@ -11,7 +11,7 @@ In the separate image Python environment (never GMS Python):
 
 ```powershell
 & 'C:\analysis\image-env\Scripts\python.exe' -m pip install -r requirements-images.txt -r requirements-dm4.txt
-node tools/researcher_inspector.mjs `
+npm run inspect -- `
   --source 'C:\data\adf.dm4' `
   --workspace 'C:\analysis\adf-workspace' `
   --python 'C:\analysis\image-env\Scripts\python.exe'
@@ -115,7 +115,7 @@ other axis. For a synthetic shape `[2,3,4]`, this example returns `data[:,1,:].T
 with output shape `[4,2]`:
 
 ```powershell
-node tools/researcher_inspector.mjs `
+npm run inspect -- `
   --source 'C:\data\volume.dm3' --workspace 'C:\analysis\plane-workspace' `
   --python 'C:\analysis\image-env\Scripts\python.exe' `
   --plane-axes '2,0' --plane-indices '*,1,*'

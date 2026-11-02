@@ -96,7 +96,7 @@ fixture only:
 Create the public fixture with
 `python examples/make_microscopy_trial.py /absolute/new-fixture-directory`.
 Reproduce with its periodic TIFF and an independent Python environment:
-`node tools/researcher_inspector.mjs --source /absolute/periodic-sequence.tiff
+`npm run inspect -- --source /absolute/periodic-sequence.tiff
 --workspace /absolute/new-workspace --python /absolute/venv/python`.
 Set synthetic XY = 0.02 nm/pixel, choose source ROI [16,16,112,80), save Original,
 ROI, FFT and a line profile, then add their saved versions to Composer. Toggle

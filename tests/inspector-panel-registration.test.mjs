@@ -5,10 +5,17 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,unlinkSync,existsSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {startResearcherInspector} from '../tools/researcher_inspector.mjs';
 import {ImagePanelManager} from '../lib/image_panel_mcp.mjs';
 import {readOwnedPanelConnection,readOwnedPanelCheckpoint} from '../lib/panel_ownership.mjs';
 const id=n=>n.toString(16).padStart(32,'0'),T=id(1),F=id(2),V=id(3),png='iVBORw0KGgo=';
+test('compiled inspector help uses the package script and exits without opening a scientific workspace',()=>{
+ const result=spawnSync(process.execPath,[fileURLToPath(new URL('../tools/researcher_inspector.mjs',import.meta.url)),'--help'],{encoding:'utf8',timeout:10000,windowsHide:true});
+ assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/npm run inspect -- --source/);assert.match(result.stdout,/npm run build/);
+ assert.doesNotMatch(result.stdout,/node tools\/researcher_inspector\.mjs/);assert.equal(result.stderr,'');
+});
 function fixture(){
  const calls=[],base={ok:true,state:'completed',backend:'external-image-workspace'};
  const objects={

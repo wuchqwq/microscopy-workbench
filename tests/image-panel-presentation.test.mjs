@@ -13,7 +13,8 @@ test('presentation keeps scientific anchors, confirmation, and source objects re
  assert.equal(layout.items[0].id,'actual-annotation-id');assert.equal(layout.items[0].selected,true);
  assert.deepEqual(layout.items[0].anchor,[45.25,71.125]);assert.equal(layout.items[0].label.text,'(1 -1 0)');
  assert.deepEqual(layout.items[0].label.offset,[8,-20]);assert.deepEqual([layout.items[0].label.x,layout.items[0].label.y],[53.25,51.125]);
- renderAnnotationsSVG(layout,{interactive:true});assert.deepEqual(marks,before);
+ const interactive=renderAnnotationsSVG(layout,{interactive:true});assert.deepEqual(marks,before);
+ assert.match(interactive,/class="annotation-label-draggable"/);assert.doesNotMatch(interactive,/\sstyle\s*=/);
  assert.ok(layout.legend.some(row=>row.status==='user_confirmed'));assert.equal(marks[0].text,'old text');
 });
 
