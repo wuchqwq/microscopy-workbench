@@ -18,13 +18,20 @@ export interface PanelDraftPersistence {pending:boolean;error:string|null;}
 export interface PanelDraftAcknowledgment {schema_version:1;panel_id:string|null;object_id:unknown;state_revision:number;edit_state:PanelEditState;selection:PanelSelection|null;research_observation:PanelMetadata|null;draft_persistence:PanelDraftPersistence;}
 export interface PanelPendingResult {object_id:unknown;request_id:unknown;reason:'unsaved_draft'|'window_capacity';scientific_operation_complete:true;}
 export interface PanelWindowLayout {x:number;y:number;width:number;height:number;z:number;}
+export interface PanelWindowCamera {scale:number;center_image_xy:readonly [number,number];}
+export interface PanelWindowViewContext {
+ version:1;object_id:string;panel_mapping_fingerprint:string;camera:PanelWindowCamera;
+ selection_candidate:PanelSelection|null;selected_annotation_id:string|null;
+}
 export interface PanelWindowSourceReference {
  input_view_object_id:string;frame_object_id:string;raw_fft_object_id:string;processing_rect_xyxy:readonly number[];
  calibration_relation:'same'|'different'|'unknown';
+ input_view_context?:PanelWindowViewContext;
 }
 export interface PanelWindowEntry {
  window_id:string;object_id:string;role:'source'|'roi'|'fft';title:string;layout:PanelWindowLayout;
  source_reference?:PanelWindowSourceReference;
+ view_context?:PanelWindowViewContext;
 }
 export interface PanelWindowCollection {
  schema_version:1;revision:number;frame_object_id:string|null;active_window_id:string|null;windows:PanelWindowEntry[];
@@ -32,6 +39,7 @@ export interface PanelWindowCollection {
 }
 export interface PanelWindowAsset {
  schema_version:1;collection_revision:number;window_id:string;object_id:string;object:PanelMetadata;png_base64:string;
+ panel_mapping_fingerprint?:string;
 }
 // Navigation availability only, never a scientific/evidence qualification.
 export interface PanelSpatialReturnState {version:1;status:'ready'|'unavailable';view_object_id?:string;frame_object_id?:string;reason_code?:string;}
@@ -47,4 +55,5 @@ export interface PanelState {
  draft_persistence:PanelDraftPersistence;edit_state:PanelEditState;pending_result:PanelPendingResult|null;
  spatial_return:PanelSpatialReturnState;
  window_collection?:PanelWindowCollection;
+ panel_mapping_fingerprint?:string;
 }

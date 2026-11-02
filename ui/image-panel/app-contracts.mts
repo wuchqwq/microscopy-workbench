@@ -20,6 +20,7 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
  pending_result?:{readonly object_id?:string;readonly request_id?:string;readonly reason?:string}|null;research_observation?:{readonly authority?:string;readonly source_text?:string;readonly current_view_relation?:string}|null;
  spatial_return?:{readonly version:1;readonly status:'ready'|'unavailable';readonly view_object_id?:string;readonly frame_object_id?:string;readonly reason_code?:string};
  window_collection?:WindowCollection;
+ panel_mapping_fingerprint?:string;
  edit_state?:{readonly dirty?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
  figure_base?:FigureBase;
 }
