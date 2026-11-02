@@ -1,9 +1,14 @@
 name: Standalone provider smoke
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
   push:
     branches: [main]
   workflow_dispatch:
+  merge_group:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 permissions:
   contents: read
 jobs:
@@ -13,13 +18,24 @@ jobs:
     timeout-minutes: 3
     outputs:
       run_full_ci: ${{ steps.classify.outputs.run_full_ci }}
+      run_node: ${{ steps.classify.outputs.run_node }}
+      run_client: ${{ steps.classify.outputs.run_client }}
+      run_images: ${{ steps.classify.outputs.run_images }}
+      run_spatial: ${{ steps.classify.outputs.run_spatial }}
+      run_active: ${{ steps.classify.outputs.run_active }}
+      run_gpa: ${{ steps.classify.outputs.run_gpa }}
+      run_topology: ${{ steps.classify.outputs.run_topology }}
+      run_integration: ${{ steps.classify.outputs.run_integration }}
+      run_crystal: ${{ steps.classify.outputs.run_crystal }}
+      run_compat: ${{ steps.classify.outputs.run_compat }}
+      run_boundary: ${{ steps.classify.outputs.run_boundary }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Test change classification
-        run: python3 -B tests/ci_scope_test.py
+        run: python3 -B -m unittest discover -s tests -p 'ci_*_test.py' -v
       - name: Determine test scope
         id: classify
         shell: bash
@@ -28,8 +44,8 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: bash scripts/ci_scope.sh >> "$GITHUB_OUTPUT"
-      - name: Check documentation whitespace
-        if: steps.classify.outputs.run_full_ci == 'false'
+      - name: Check changed-file whitespace
+        if: github.event_name == 'pull_request' && steps.classify.outputs.comparison_base != ''
         shell: bash
         env:
           COMPARISON_BASE: ${{ steps.classify.outputs.comparison_base }}
@@ -38,8 +54,9 @@ jobs:
 
   client-setup:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_client == 'true'
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
@@ -61,8 +78,9 @@ jobs:
 
   node-smoke:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_node == 'true'
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
         node: ['18', '22']
@@ -76,12 +94,11 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm ci
-      - run: npm run typecheck
       - run: node --check server.mjs
       - run: npm test
   dm4-reader:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_images == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -137,7 +154,7 @@ jobs:
           MICROSCOPY_PYTHON: python
   spatial-evidence:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_spatial == 'true'
     runs-on: ubuntu-latest
     # Same fixed scientific controls; allow cold provider verification on hosted
     # runners. Keep per-call trace so a hang cannot masquerade as slow science.
@@ -173,7 +190,7 @@ jobs:
 
   active-analysis:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_active == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -201,7 +218,7 @@ jobs:
 
   classical-gpa:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_gpa == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -232,7 +249,7 @@ jobs:
 
   projected-topology:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_topology == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -267,7 +284,7 @@ jobs:
 
   f4-gpa-integration:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_integration == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -287,9 +304,6 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: python -m pip install -r requirements-gpa.txt
-      - run: npm run test:science
-        env:
-          MICROSCOPY_PYTHON: python
       - run: npm run test:integration:f4-gpa
         env:
           MICROSCOPY_PYTHON: python
@@ -304,7 +318,7 @@ jobs:
 
   projected-twin:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_crystal == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -329,7 +343,7 @@ jobs:
 
   compiled-compatibility:
     needs: changes
-    if: needs.changes.outputs.run_full_ci == 'true'
+    if: needs.changes.outputs.run_compat == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -344,10 +358,48 @@ jobs:
         with:
           python-version: '3.13'
       - run: npm ci
-      - run: npm run typecheck
       - run: npm run build
       - run: python -m pip install -r requirements-images.txt
       - run: npm run test:runtime:parity
       - run: npm run test:compiled:compat
         env:
           MICROSCOPY_PYTHON: python
+
+  science-boundary:
+    needs: changes
+    if: needs.changes.outputs.run_boundary == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-images.txt
+      - run: npm ci
+      - run: npm run build
+      - run: python -m pip install -r requirements-images.txt
+      - run: npm run test:science
+        env:
+          MICROSCOPY_PYTHON: python
+
+  ci-gate:
+    name: CI scope gate
+    if: always()
+    needs: [changes, client-setup, node-smoke, dm4-reader, spatial-evidence, active-analysis, classical-gpa, projected-topology, f4-gpa-integration, projected-twin, compiled-compatibility, science-boundary]
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Require every affected job to succeed
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: python3 -B scripts/ci_gate.py quick
