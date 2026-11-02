@@ -102,13 +102,14 @@ export class ImagePanelManager {
     if(conn.schema_version===2&&conn.status==='closed')throw new Error('Owned Panel helper was normally closed; use explicit image_panel_resume with a saved new request_id');
     const evidenceKey=method==='POST'&&route==='/api/evidence'?conn.evidence_token:null;
     if(method==='POST'&&route==='/api/evidence'&&!evidenceKey)throw new Error('This saved Panel helper predates qualified evidence attachment; reopen a new Panel without replaying science');
-    const origin=`http://127.0.0.1:${conn.port}`,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),method==='GET'?Math.min(this.requestTimeoutMs,3000):this.requestTimeoutMs);
+    const readonlyHandoff=method==='GET'&&route.startsWith('/api/roi-handoff?');
+    const origin=`http://127.0.0.1:${conn.port}`,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),method==='GET'&&!readonlyHandoff?Math.min(this.requestTimeoutMs,3000):this.requestTimeoutMs);
     try{
       const response=await this.fetch(origin+route,{method,headers:{'X-Panel-Token':conn.token,Origin:origin,...(evidenceKey?{'X-Panel-Evidence-Key':evidenceKey}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:controller.signal});
       const text=await response.text();if(Buffer.byteLength(text)>20*1024*1024)throw new Error('Panel response exceeds bound');
       let value:unknown;try{value=JSON.parse(text);}catch{throw new Error('Invalid owned panel response');}
       if(!response.ok){const error:Error&{httpStatus?:number}=new Error(((value as RawSlots).error??`Panel HTTP ${response.status}`) as string);error.httpStatus=response.status;throw error;}
-      if(conn.schema_version===2&&route==='/api/state'&&((value as RawSlots).helper_session_id!==conn.helper_session_id||(value as RawSlots).panel_generation!==conn.generation))throw new Error('Owned helper generation does not match its connection');
+      if(conn.schema_version===2&&(route==='/api/state'||readonlyHandoff)&&((value as RawSlots).helper_session_id!==conn.helper_session_id||(value as RawSlots).panel_generation!==conn.generation))throw new Error('Owned helper generation does not match its connection');
       return value;
     }finally{clearTimeout(timer);}
   }
@@ -134,6 +135,18 @@ export class ImagePanelManager {
     }
     return {content};
   }
+  private async currentResponse(panelId:string,state:unknown):Promise<ToolResult>{
+    const view=state as RawSlots;
+    if(view.multi_roi_handoff_schema_version!==1)return this.response(panelId,state,{multi_roi_handoff:null});
+    const object=view.object as RawSlots,draft=view.edit_state as RawSlots,collection=view.window_collection as RawSlots;
+    validateId(object?.object_id,'active handoff object_id');
+    if(![view.state_revision,draft?.draft_revision,collection?.revision].every(value=>Number.isSafeInteger(value)&&(value as number)>=0))throw new Error('ROI handoff requires exact current revisions');
+    const query=new URLSearchParams({expected_object_id:object.object_id as string,state_revision:String(view.state_revision),draft_revision:String(draft.draft_revision),collection_revision:String(collection.revision)});
+    const raw=await this.request(this.getConnection(panelId),'GET','/api/roi-handoff?'+query),packet=raw as RawSlots;
+    if(!packet||packet.schema_version!==1||packet.read_only!==true||packet.panel_id!==panelId||packet.active_view_object_id!==object.object_id||packet.state_revision!==view.state_revision||packet.draft_revision!==draft.draft_revision||packet.collection_revision!==collection.revision||packet.frame_object_id!==((view.frame_identity as RawSlots|null)?.frame_object_id??null)||packet.helper_session_id!==view.helper_session_id||packet.panel_generation!==view.panel_generation||!['validated','partial','unavailable'].includes(String(packet.validation_status))||!Array.isArray(packet.source_observations)||packet.source_observations.length>10||!Array.isArray(packet.fft_relations)||packet.fft_relations.length>5)throw new Error('ROI handoff does not match the inspected active view, lease or collection; read current again');
+    for(const source of packet.source_observations){if(!source||typeof source!=='object'||!Array.isArray((source as RawSlots).observations)||((source as RawSlots).observations as unknown[]).length>100)throw new Error('ROI handoff observation budget is invalid');}
+    return this.response(panelId,state,{multi_roi_handoff:packet});
+  }
   async current(args:ValidatedPanelArguments):Promise<ToolResult>{
     let panelId=args.panel_id;
     if(!panelId){
@@ -143,9 +156,9 @@ export class ImagePanelManager {
         const id=name.slice(0,-5);try{const conn=this.getConnection(id),state=await this.request(conn,'GET','/api/state');if((state as RawSlots).panel_id!==id)throw new Error('Wrong panel identity');live.push({id,state});}catch{/* A stopped or malformed panel is not selected by recency. */}
       }));
       if(live.length!==1)throw new Error(`Expected exactly one live registered panel; found ${live.length}. Specify the retained panel_id.`);
-      return this.response(live[0].id,live[0].state);
+      return this.currentResponse(live[0].id,live[0].state);
     }
-    return this.response(panelId,await this.request(this.getConnection(panelId),'GET','/api/state'));
+    return this.currentResponse(panelId,await this.request(this.getConnection(panelId),'GET','/api/state'));
   }
   async waitForConnection(panelId:string,helperSession?:string){
     const started=Date.now();

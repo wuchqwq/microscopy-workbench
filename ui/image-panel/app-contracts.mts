@@ -4,6 +4,7 @@ import type {NumericReply,ProfileResult,ProbeResult} from './data-probe-contract
 import type {SequenceEvidence,DomainEvidence} from './evidence-contracts.mjs';
 import type {WirePanel,WireSelection,XY,SelectionKind,ScientificCoordinateSpace,CoordinateArray,ObjectId} from './coordinates.mjs';
 import type {WindowCollection} from './window-workspace.mjs';
+import type {RectangleHandle} from './roi-editing.mjs';
 export interface AppAnchor extends ScientificAnchor {readonly coordinate_space:ScientificCoordinateSpace;readonly coordinates:readonly number[];}
 export interface AppMark extends FigureMark {readonly kind:SelectionKind;readonly anchor?:AppAnchor;}
 export interface AppDisplay extends Readonly<Record<string,unknown>> {readonly gamma?:number;readonly display_range?:readonly number[];readonly spectrum_axes?:boolean;readonly scale_bar?:boolean;readonly component?:string;}
@@ -21,6 +22,7 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
  spatial_return?:{readonly version:1;readonly status:'ready'|'unavailable';readonly view_object_id?:string;readonly frame_object_id?:string;readonly reason_code?:string};
  window_collection?:WindowCollection;
  panel_mapping_fingerprint?:string;
+ multi_roi_handoff_schema_version?:1;
  edit_state?:{readonly dirty?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
  figure_base?:FigureBase;
 }
@@ -35,8 +37,8 @@ export interface LocalSnapshot extends SelectionSnapshot {editCoordinates:readon
 export type AppHistoryEntry=({kind:'annotation';before:AnnotationEdit;after:AnnotationEdit}|{kind:'display';before:DisplayDraft;after:DisplayDraft}|{kind:'selection';before:SelectionSnapshot;after:SelectionSnapshot})&{label:string;scope:string|undefined};
 export interface MeasurementTarget {previousMeasurement?:string;id:string|undefined;submittedObject:string;savedObject:string;sequence:number;geometryRevision:number;anchor:AppAnchor;kind:SelectionKind;status?:string;panel:WirePanel;calibration:CalibrationView|null;numericLabel:AnnotationLabel|null|undefined;request_id?:string|null;}
 export interface DraftPublication extends Readonly<Record<string,unknown>> {expected_object_id:string;action:'draft';lightweight:true;params:Readonly<Record<string,unknown>>;urgent?:boolean;}
-interface GestureSlots {pointerId?:number;start?:XY;end?:XY;originalStart?:XY;startClient?:XY;originalView?:ViewTransform;mark?:AppMark;p?:WirePanel;edges?:boolean;handle?:number;original?:readonly number[];before?:CompleteAnnotationEdit|null;previousEdit?:readonly number[]|null;originalOffset?:readonly number[];labelSize?:readonly number[];anchor?:readonly number[];selectionBefore?:SelectionSnapshot;blankSelect?:boolean;}
-export type DragState=(GestureSlots&{kind:'pan';pointerId:number;startClient:XY;originalView:ViewTransform})|(GestureSlots&{kind:'label';pointerId:number;start:XY;end:XY;originalOffset:readonly number[];labelSize:readonly number[];anchor:readonly number[]})|(GestureSlots&{kind:'edit';start:XY;end:XY;mark:AppMark;p:WirePanel;edges:boolean;handle:number;original:readonly number[];previousEdit:readonly number[]|null})|(GestureSlots&{kind:SelectionKind;start:XY;end:XY;originalStart:XY;p:WirePanel;selectionBefore:SelectionSnapshot;blankSelect:boolean});
+interface GestureSlots {pointerId?:number;start?:XY;end?:XY;originalStart?:XY;startClient?:XY;originalView?:ViewTransform;mark?:AppMark;p?:WirePanel;edges?:boolean;handle?:number;rectangle_handle?:RectangleHandle;create_roi?:boolean;original?:readonly number[];before?:CompleteAnnotationEdit|null;previousEdit?:readonly number[]|null;originalOffset?:readonly number[];labelSize?:readonly number[];anchor?:readonly number[];selectionBefore?:SelectionSnapshot;blankSelect?:boolean;}
+export type DragState=(GestureSlots&{kind:'pan';pointerId:number;startClient:XY;originalView:ViewTransform})|(GestureSlots&{kind:'label';pointerId:number;start:XY;end:XY;originalOffset:readonly number[];labelSize:readonly number[];anchor:readonly number[]})|(GestureSlots&{kind:'edit';start:XY;end:XY;mark:AppMark;p:WirePanel;edges:boolean;handle:number;original:readonly number[];previousEdit:readonly number[]|null})|(GestureSlots&{kind:'selection-edit';start:XY;end:XY;p:WirePanel;original:readonly number[];rectangle_handle:RectangleHandle;selectionBefore:SelectionSnapshot})|(GestureSlots&{kind:SelectionKind;start:XY;end:XY;originalStart:XY;p:WirePanel;selectionBefore:SelectionSnapshot;blankSelect:boolean});
 export interface ActionParams extends Readonly<Record<string,unknown>> {source_view?:boolean;}
 export type CompositionDraft=Omit<CompositionRecipe,'slots'>&{slots:(CompositionSlot|ShallowCompositionSlot)[]};
 export interface StatefulActionRequest extends Readonly<Record<string,unknown>> {action:string;lightweight?:false;}

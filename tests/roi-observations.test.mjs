@@ -13,6 +13,13 @@ const fixture=()=>({object:{object_id:V,kind:'annotate',panels:[structuredClone(
  frame_identity:{frame_object_id:F,frame_index:0},source_identity:{label:'用户指定 TIFF',filename:'public.tiff'},state_revision:1,selection:null,
  edit_state:{dirty:false,gesture_active:false,annotation_edit:null,draft_revision:0}});
 
+test('geometry-only saved ROI has an unknown reason rather than its generated label',()=>{
+ const input=fixture();input.object.annotations[0].text='ROI 1';input.object.annotations[0].note='';
+ const model=roiObservationModel(input);assert.equal(model.rows[0].label,'ROI 1');assert.equal(model.rows[0].reason,null);
+ assert.equal(model.rows[0].status,'saved');assert.equal(model.rows[0].usable,true);assert.equal(model.rows[1].reason,'Researcher observation, not a material conclusion');
+ delete input.object.annotations[0].note;assert.equal(roiObservationModel(input).rows[0].reason,null,'A historical label alone is not a recorded reason');
+});
+
 test('MCP and frontend export exactly one shared pure coordinate implementation',()=>{
  assert.equal(panelRoiHandoff,mcpHandoff);
  const input=fixture(),before=structuredClone(input),model=roiObservationModel(input);

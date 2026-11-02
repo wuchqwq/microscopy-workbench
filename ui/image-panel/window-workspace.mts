@@ -5,7 +5,7 @@ export interface WindowLayout {x:number;y:number;width:number;height:number;z:nu
 export interface WindowSourceReference {input_view_object_id:string;frame_object_id:string;raw_fft_object_id:string;processing_rect_xyxy:readonly number[];calibration_relation:'same'|'different'|'unknown';input_view_context?:WindowViewContext;}
 export interface WindowCamera {scale:number;center_image_xy:readonly [number,number];}
 export interface WindowViewContext {version:1;object_id:string;panel_mapping_fingerprint:string;camera:WindowCamera;selection_candidate:unknown;selected_annotation_id:string|null;}
-export interface WindowEntry {window_id:string;object_id:string;role:'source'|'roi'|'fft';title:string;layout:WindowLayout;source_reference?:WindowSourceReference;view_context?:WindowViewContext;}
+export interface WindowEntry {window_id:string;object_id:string;role:'source'|'roi'|'fft';title:string;layout:WindowLayout;source_reference?:WindowSourceReference;view_context?:WindowViewContext;latest_observation_view_object_id?:string;}
 export interface WindowCollection {schema_version:1;revision:number;frame_object_id:string|null;active_window_id:string|null;windows:readonly WindowEntry[];unavailable_reason?:string;}
 interface HostState {object:{object_id:string};state_revision?:number;window_collection?:WindowCollection;panel_mapping_fingerprint?:string;}
 interface WindowOptions {
@@ -40,6 +40,7 @@ export function readWindowCollection(raw:unknown):WindowCollection|null {
  for(const value of raw.windows){
   if(!record(value)||!boundedId(value.window_id)||seen.has(value.window_id)||!objectId(value.object_id)||!['source','roi','fft'].includes(String(value.role))||typeof value.title!=='string'||value.title.length>120||!record(value.layout))return null;
   seen.add(value.window_id);const r=value.layout;
+  if(value.latest_observation_view_object_id!==undefined&&!objectId(value.latest_observation_view_object_id))return null;
   if(![r.x,r.y,r.width,r.height,r.z].every(finite)||[r.x,r.y].some(v=>(v as number)<0||(v as number)>1)||[r.width,r.height].some(v=>(v as number)<=0||(v as number)>1)||(r.x as number)+(r.width as number)>1.000001||(r.y as number)+(r.height as number)>1.000001||(r.z as number)<0||(r.z as number)>1000000)return null;
   if(value.source_reference!==undefined){const s=value.source_reference;if(!record(s)||![s.input_view_object_id,s.frame_object_id,s.raw_fft_object_id].every(objectId)||s.frame_object_id!==raw.frame_object_id||!Array.isArray(s.processing_rect_xyxy)||s.processing_rect_xyxy.length!==4||!s.processing_rect_xyxy.every(v=>Number.isSafeInteger(v)&&v>=0)||s.processing_rect_xyxy[0]>=s.processing_rect_xyxy[2]||s.processing_rect_xyxy[1]>=s.processing_rect_xyxy[3]||!['same','different','unknown'].includes(String(s.calibration_relation)))return null;}
  }

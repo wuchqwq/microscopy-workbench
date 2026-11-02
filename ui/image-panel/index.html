@@ -11,7 +11,7 @@
   <nav class="canvas-tools" aria-label="画布工具">
     <div class="tool-group">
       <button class="tool-button" data-mode="select" aria-label="选择与拖动标注" aria-pressed="true" title="选择与拖动标注 (V)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 3 14 9-7 1-3 7-4-17Z"/></svg><span>选择</span></button>
-      <button class="tool-button" data-mode="rectangle" aria-label="框选 ROI" aria-pressed="false" title="框选 ROI (R)；Shift / Ctrl：源像素对齐正方形"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4H4v3m13-3h3v3M4 17v3h3m13-3v3h-3M8 5h8M5 8v8m3 3h8m3-11v8"/></svg><span>ROI</span></button>
+      <button class="tool-button" data-mode="roi" aria-label="添加 ROI，松手保存位置" aria-pressed="false" title="添加 ROI (R)，松手保存位置；Shift / Ctrl：源像素对齐正方形"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4H4v3m13-3h3v3M4 17v3h3m13-3v3h-3M8 5h8M5 8v8m3 3h8m3-11v8"/></svg><span>ROI</span></button>
       <button class="tool-button" data-mode="point" aria-label="点选峰位" aria-pressed="false" title="点选峰位 (P)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg><span>峰位</span></button>
       <button class="tool-button" data-mode="line" aria-label="绘制测量线" aria-pressed="false" title="测量线 (L)；Shift / Ctrl：水平或垂直"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 13-13 4 4L8 21l-4-4Zm4-4 2 2m2-6 2 2m2-6 2 2"/></svg><span>测量</span></button>
       <button class="tool-button" data-mode="arrow" aria-label="绘制箭头标注" aria-pressed="false" title="箭头标注 (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5m-9 0h9v9"/></svg><span>标注</span></button>
@@ -22,18 +22,18 @@
       <button id="toggle-properties" class="tool-button" aria-label="对象属性" aria-expanded="false" aria-controls="properties-panel" title="显示对象属性"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 12h14M5 19h14"/><circle cx="9" cy="5" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="19" r="2"/></svg><span>属性</span></button>
       <button id="toggle-settings" class="tool-button" aria-label="显示与高级设置" aria-controls="settings-panel" title="显示、标定与高级设置"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16M8 3v6m8 0v6M10 15v6"/></svg><span>设置</span></button>
     </div>
-    <label class="sr-only">鼠标工具<select id="mode"><option value="select">选择／直接拖动标注</option><option value="rectangle">框 ROI</option><option value="point">点选峰／位置</option><option value="line">线段／测量</option><option value="arrow">短箭头</option><option value="edit">拖动已有标注</option><option value="pan">平移视野</option></select></label>
+    <label class="sr-only">鼠标工具<select id="mode"><option value="select">选择／直接拖动标注</option><option value="roi">添加 ROI（松手保存位置）</option><option value="rectangle">临时矩形（不保存）</option><option value="point">点选峰／位置</option><option value="line">线段／测量</option><option value="arrow">短箭头</option><option value="edit">拖动已有标注</option><option value="pan">平移视野</option></select></label>
   </nav>
   <article class="canvas-area">
     <div id="research-strip" class="research-strip" aria-label="科研接续"><button id="toggle-research">观察与证据 <span id="research-count">0 处已保存观察</span></button><button id="crystal-short-status" disabled title="查看已保存的有限候选比较">尚无结构比较证据</button><button id="save-observation-entry" disabled>保存当前 ROI 观察</button><button id="agent-continue" disabled>交给 Agent 继续</button></div>
     <details id="figure-tools" class="figure-tools"><summary>出图与标注样式</summary><div id="figure-toolbar" class="figure-toolbar" aria-label="标注样式与图面"><label class="sr-only" for="annotation-preset">标注预设</label><select id="annotation-preset"><option value="real-space">Real-space</option><option value="diffraction">FFT / Diffraction</option><option value="multi-domain">Multi-domain</option></select><button id="figure-mode" aria-pressed="false">分析模式</button><span id="layer-summary">实验与候选叠加</span><button id="figure-options">论文图片 ↗</button></div></details>
     <div id="pending-result" class="pending-notice" hidden><span id="pending-message"></span><div><button id="discard-draft">放弃草稿，查看保存结果</button><button id="accept-agent-result">查看保存结果</button></div></div>
-    <nav id="view-navigation" class="view-navigation" aria-label="保存视图导航"><button id="view-back" title="返回上一个保存视图">← 返回</button><button id="view-forward" title="前进到保存视图">前进 →</button><button id="return-spatial" aria-describedby="spatial-return-status" hidden disabled>返回空间观察</button><button id="view-original" title="打开本帧已保存的原图视图">原图</button><span id="view-current" aria-live="polite">当前视图</span><small>打开已有结果，不重算 FFT</small><button id="fit-canvas" title="按可用空间缩放，只改变相机（F）">适应画布</button><button id="focus-image" aria-pressed="false" title="暂时收起结果和属性；选区、草稿和结果保留">专注图像</button></nav>
+    <nav id="view-navigation" class="view-navigation" aria-label="保存视图导航"><button id="view-back" title="返回上一个保存视图">← 返回</button><button id="view-forward" title="前进到保存视图">前进 →</button><button id="return-spatial" aria-describedby="spatial-return-status" hidden disabled>返回空间观察</button><button id="view-latest-roi" hidden disabled>查看最新 ROI</button><button id="view-original" title="打开本帧已保存的原图视图">原图</button><span id="view-current" aria-live="polite">当前视图</span><small>打开已有结果，不重算 FFT</small><button id="fit-canvas" title="按可用空间缩放，只改变相机（F）">适应画布</button><button id="focus-image" aria-pressed="false" title="暂时收起结果和属性；选区、草稿和结果保留">专注图像</button></nav>
     <p id="spatial-return-status" class="spatial-return-status" role="status" hidden></p>
     <div id="window-switch-notice" class="window-switch-notice" role="status" hidden><span id="window-switch-message"></span><button id="window-switch-check" type="button" hidden>核对并继续显示</button></div>
     <div id="window-controls" class="window-controls" hidden><span id="window-count" role="status"></span><button id="tile-windows" type="button">平铺窗口</button><button id="single-window" type="button" aria-pressed="false">单图编辑</button><details class="window-index"><summary>窗口列表</summary><div id="window-list"></div></details></div>
     <div id="window-desktop" class="window-desktop"><div id="viewport"><div id="image-stage"><canvas id="base-canvas" aria-label="干净图像底图"></canvas><canvas id="marks-canvas" aria-label="已保存标注"></canvas><canvas id="canvas" aria-label="显微图像交互画布"></canvas><div id="annotation-layer" aria-label="可编辑科学标注"></div></div></div></div>
-    <div id="canvas-context" class="canvas-context" aria-label="当前选区操作"><span id="selection">圈选区域或点选峰位</span><div class="selection-actions"><button id="apply-roi" title="查看选定区域">查看选区</button><button id="fft" title="对当前实空间选区计算 FFT">FFT</button><button id="measure" title="测量当前峰位或线段">测量</button><button id="roi-statistics">统计当前 ROI</button><button id="line-profile">强度剖面</button><button id="share" class="quiet-button" title="可选：把当前科学坐标交给 Agent">AI 交接 <span aria-hidden="true">↗</span></button><button id="full" class="quiet-button" title="恢复完整频谱视图">完整频谱</button></div></div>
+    <div id="canvas-context" class="canvas-context" aria-label="当前选区操作"><span id="current-roi" class="roi-current-label" role="status" aria-live="polite">当前 ROI：未选择</span><span id="selection">圈选区域或点选峰位</span><div class="selection-actions"><button id="add-roi" title="添加另一处 ROI，松手保存位置">添加 ROI</button><button id="select-roi" title="选择 ROI；拖内部移动，拖八个控制点缩放">选择／调整 ROI</button><button id="apply-roi" title="查看选定区域">查看选区</button><button id="fft" title="对当前实空间选区计算 FFT">FFT</button><button id="measure" title="测量当前峰位或线段">测量</button><button id="roi-statistics">统计当前 ROI</button><button id="line-profile">强度剖面</button><button id="share" class="quiet-button" title="可选：把当前科学坐标交给 Agent">AI 交接 <span aria-hidden="true">↗</span></button><button id="full" class="quiet-button" title="恢复完整频谱视图">完整频谱</button></div></div>
     <div id="canvas-footer" class="canvas-footer"><div class="status-copy"><div id="message" role="status">正在连接本地科学工具…</div><span id="draft-status">原图只读</span></div><div class="history-actions"><button id="undo" class="icon-button" title="撤销本地草稿" aria-label="撤销草稿">↶</button><button id="redo" class="icon-button" title="恢复本地草稿" aria-label="恢复草稿">↷</button></div><div class="zoom-control"><label for="zoom" class="sr-only">画布缩放</label><input id="zoom" type="range" min="0.1" max="16" step="0.05" value="1"><output id="zoom-label">100%</output></div></div>
     <details id="measurement-workspace" class="measurement-workspace">
       <summary>数据结果 <span id="measurement-count">0</span><span class="workspace-hint">原数组与保存记录 · 可拖动上沿调整高度</span></summary>
@@ -72,7 +72,7 @@
 <dialog id="usage-dialog" class="usage-dialog" aria-labelledby="usage-title">
   <div class="dialog-heading"><h2 id="usage-title">使用说明</h2><button id="close-usage-help" aria-label="关闭使用说明">关闭</button></div>
   <div class="usage-content">
-    <p class="usage-flow"><strong>从一个 ROI 开始：</strong>点左侧“ROI”并框选 → 可直接“FFT”探索 → 点选或修订峰并“测量” → “返回空间观察”后继续选择另一处。需要记录时再用“保存当前 ROI 观察”填写理由、保存并等待读回；临时选区不必先保存为正式观察。</p>
+    <p class="usage-flow"><strong>从多个 ROI 开始：</strong>点“添加 ROI”（R）框选，松手保存 ROI 1、ROI 2、ROI 3 的位置；每次等保存读回完成再画下一处。点“选择／调整 ROI”（V）后点击框内移动，拖八个控制点调整大小；FFT 仅在明确点击时计算。需要说明观察时选择对应 ROI、填写理由并保存。快速探索也可在选择工具的空白处拖出临时框，直接 FFT，不必保存。</p>
     <p>这份说明只帮助阅读和操作当前工作台。打开、关闭或按 Esc 退出，不提交计算，也不丢弃草稿、选区或相机位置。Tab 可切换控件，Enter 可操作按钮或展开条目。</p>
     <details open><summary>1. 打开图像、选择帧和核对标定</summary>
       <p>图像由本地启动器或已连接的 Agent 打开；当前页面没有文件选择按钮。首次启动用 <code>npm run inspect -- --source 绝对图像路径 --workspace 新工作区绝对路径 --python 独立Python绝对路径</code>。源码仓库先运行 <code>npm ci</code> 和 <code>npm run build</code>。</p>
@@ -80,9 +80,9 @@
       <p>“观察与证据”和“对象属性”显示来源及当前标定。未知物理标尺时仍可做像素域观察；频率保留 cycles/px，不凭空给出 nm 间距。补充标定须在“显示与高级设置”中填写实际来源。</p>
     </details>
     <details><summary>2. ROI、峰位、测量线与移动图像</summary>
-      <p>左侧“ROI”（R）拖出矩形；“峰位”（P）点一个位置；“测量”（L）拖出线段；“选择”（V）选择或拖动已有标记。这些工具不同，点一下峰位不会框选 ROI，也不会认证它是真峰。</p>
+      <p>“添加 ROI”（R）在空间图拖出矩形并保存位置，理由留空表示尚未说明观察，不确认物相。“选择”（V）可从内部选中任一已保存 ROI 并移动；四角和四边控制点可缩放，坐标限制在准确源面板内。临时矩形也可移动或缩放，但不会自动写入保存对象。FFT 图上的 ROI 工具只建立临时频域框。</p>
       <p>“平移”（H）或按住空格拖动移动视野，滚轮缩放；“适应画布”（F）只调整相机。Shift / Ctrl 可约束新 ROI 为源像素对齐正方形、新线段为水平或垂直，不约束已有标记的修订。</p>
-      <p>选区是当前操作位置，尚不是已保存观察。“查看选区”用于打开局部视图；“统计当前 ROI”读取该区域的科学数组统计。</p>
+      <p>“添加 ROI”完成保存和读回后，可继续添加 ROI 1、2、3；“选择／调整 ROI”让 FFT 和统计作用于当前选中的框。“临时矩形（不保存）”仅是当前操作位置。“查看选区”打开局部视图；“统计当前 ROI”读取该区域的科学数组统计。</p>
     </details>
     <details><summary>3. 保存观察与理解保存状态</summary>
       <p>在空间图框选后，点“保存当前 ROI 观察”，写清看到了什么或为什么选择这里，再点“保存 ROI 观察”。已有观察可“更新这条观察说明”；列表中的位置、理由和稳定观察 ID 一起保留。</p>
@@ -103,6 +103,7 @@
     </details>
     <details><summary>6. 自己操作与交给 Agent 接续</summary>
       <p>你可以先操作 GUI 再请 AI 继续；也可以接管 Agent 已打开的同一 Panel。完成保存并核对后，点“交给 Agent 继续”，再点“复制继续提示”，粘贴给已连接的 Agent。当前 GUI 没有内嵌聊天，不会自动唤醒模型。</p>
+      <p>多 ROI 交接同时列出已保存的各个框、未填写的理由，以及各 FFT 生成时的区域和当前 ROI 的关系。你可以停在 FFT 上交接，空间观察从准确来源另行读取；改过位置的框不会被写成旧 FFT 的输入。引用不可用或状态改变时保留未知，先重新读取，不自动补算。</p>
       <p>底部“AI 交接”只交接当前选择；它不代替保存正式 ROI 观察。Agent 应重新读当前 Panel、确认草稿和来源后再处理，不沿用已过时的截图或标定。</p>
       <p>出现“有新结果等待查看”时，可继续核对当前工作，再明确点“查看保存结果”。只有真有草稿才显示“放弃草稿，查看保存结果”；先保存、撤销或明确放弃，不能让晚到结果覆盖新编辑。</p>
     </details>
@@ -117,8 +118,8 @@
     </details>
     <details><summary>9. 窄窗口与面板</summary><p>“观察与证据”和“对象属性”使用现有侧栏，窄窗口中以抽屉覆盖图像区域；导航与底部选区操作保留在外侧。面板内容可滚动，保存按钮在“保存观察”内；顶部“×”可收起面板，草稿仍保留。窗口改变大小时不会自动移动相机，视野不合适可点“适应画布”。</p></details>
     <details><summary>10. 多处 ROI 与图像窗口比较</summary>
-      <p>同一源帧最多保留五个图像窗口，可分别查看两处 ROI 的局部图和 FFT。点击窗口内容或边框可置顶；拖动标题移动窗口，拖右下角调整大小。“平铺窗口”把它们排列比较，“单图编辑”只显示当前图，其余窗口引用仍保留。置顶只改变遮挡顺序；要修改另一张图，点击它的“编辑此图”。</p>
-      <p>只有标为“当前编辑”的窗口接收科学工具操作。其他窗口标为“只读对照”，可以滚轮缩放、拖动查看或点“适应”；这些操作不会切换编辑目标。第一阶段先用“返回空间观察”回到对应来源图，再框选另一处；尚未保存的原始浮点框不会因此自动恢复。</p>
+      <p>同一源帧最多保留五个图像窗口，可分别查看两处 ROI 的局部图和 FFT。点击窗口内容或边框可置顶；拖动标题移动窗口，拖右下角调整大小。“平铺窗口”把它们排列比较，“单图编辑”只显示当前图，其余窗口引用仍保留。置顶只改变遮挡顺序；要修改另一张图，点击它的“编辑此图”。</p><p>“返回空间观察”仍打开该 FFT 的准确历史输入；后来保存的 ROI 不会被改写。历史来源图显示“查看最新 ROI”时，先明确打开最新保存视图再新增或调整 ROI；历史图仍可使用临时选区探索，不会自动跳转。</p>
+      <p>只有标为“当前编辑”的窗口接收科学工具操作。其他窗口标为“只读对照”，可以滚轮缩放、拖动查看或点“适应”；这些操作不会切换编辑目标。“编辑此图”明确切换操作目标，保留该窗已经核对的相机和选区。新 GUI FFT 的输入浮点框单独记录；旧记录缺失时不从整数边界猜测。</p>
       <p>“关闭”或“窗口列表”中的“关闭显示”只卸载只读窗口，保存对象、测量和历史仍保留。当前编辑窗口不能直接关闭。窗口已满时，新结果已保存但等待显示；先关闭一个只读窗口，再点“查看保存结果”，不要重复计算。窄窗口默认显示当前图，仍可用窗口列表关闭不需要的只读显示。</p>
       <p>每份 FFT 的计算窗口和来源单独保留；并排不表示标定一致或物理解释已确认。“出图与标注样式”和数据结果默认收起，需要时展开。</p>
     </details>

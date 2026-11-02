@@ -241,7 +241,7 @@ export function roiObservationModel(state:PanelRoiSnapshot,previous?:RoiDependen
   selection.coordinate_space===row.original_anchor.coordinate_space&&same(selection.coordinates,row.original_anchor.coordinates));
  const rows:RoiObservationRow[]=packet.saved_rectangles.map((row,index)=>{
   const original=row.annotation_id?originals.get(row.annotation_id):null;
-  const label=row.text?.trim()||`ROI ${index+1}`,reason=boundedText(original?.note,4096)?.trim()||row.text?.trim()||null;
+  const label=row.text?.trim()||`ROI ${index+1}`,reason=boundedText(original?.note,4096)?.trim()||null;
   const editing=row.annotation_id!==null&&edit?.annotation_id===row.annotation_id;
   const geometryDraft=editing&&edit?.coordinates!==undefined&&!same(edit.coordinates,row.original_anchor.coordinates);
   return {annotation_id:row.annotation_id,label,reason,

@@ -4,7 +4,7 @@ import http from 'node:http';
 import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import type {ChildProcessWithoutNullStreams} from 'node:child_process';
 import type {AddressInfo} from 'node:net';
-import type {PanelMetadata as Metadata,PanelClient,ImageToolReply,PanelState,PanelSelection,PanelEditState,PanelFrameIdentity,PanelDraftAcknowledgment,PanelWindowViewContext,PanelWindowEntry} from '../lib/image_panel_contracts.mjs';
+import type {PanelMetadata as Metadata,PanelClient,ImageToolReply,PanelState,PanelSelection,PanelEditState,PanelFrameIdentity,PanelDraftAcknowledgment,PanelWindowViewContext,PanelWindowEntry,PanelMultiRoiHandoff,PanelSourceObservations,PanelSourceRoiObservation,PanelFftRoiRelation,PanelFftObservationMatch} from '../lib/image_panel_contracts.mjs';
 interface NativeImageReply {data:Metadata;png?:unknown;sequenceEvidence?:unknown;domainEvidence?:unknown;domainPng?:unknown;}
 interface PreparedView {object:Metadata;png:unknown;clean:unknown;digest:string|null;baseId:unknown;display:unknown;displayId:unknown;sequenceEvidence?:unknown;domainEvidence?:unknown;domainPng?:unknown;}
 interface PendingView {prepared:PreparedView;frameIdentity:PanelFrameIdentity|null;request_id:unknown;annotationIds?:unknown[];preserve_selection?:boolean;spatialReturnReference?:SpatialReturnReference|null;spatialReturnReason?:string;inputViewContext?:PanelWindowViewContext|null;viewContextRestore?:PanelWindowViewContext|null;navigationLease?:boolean;reason?:'unsaved_draft'|'window_capacity';}
@@ -35,6 +35,8 @@ import {projectGpaEvidence} from '../ui/image-panel/gpa-evidence.mjs';
 import {readSpatialReturnReference,validateSpatialReturn,spatialReturnState,SpatialReturnError} from '../lib/panel_spatial_return.mjs';
 import type {SpatialReturnReference} from '../lib/panel_spatial_return.mjs';
 import {PanelWindowStore,panelWindowMappingFingerprint,readPanelWindowCamera,qualifyPanelWindowContext} from '../lib/panel_window_collection.mjs';
+import {panelRoiHandoff,roiObservationModel} from '../ui/image-panel/roi-observations.mjs';
+import type {PanelRoiSnapshot} from '../ui/image-panel/roi-observations.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const objectId=/^[a-f0-9]{32}$/;
@@ -259,7 +261,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const sourceIdentity=()=>sources.get(current.object_id)??describeSource(current,(current.user_context as Metadata|undefined)?.data_meaning);
  const draftPersistence=()=>({pending:selectionTimer!==null,error:selectionPersistenceError});
  const draftAck=():PanelDraftAcknowledgment=>({schema_version:1,panel_id,object_id:current.object_id,state_revision:stateRevision,edit_state:structuredClone(editState),selection,research_observation:observationState(),draft_persistence:draftPersistence()});
- const state=():PanelState=>{const value:PanelState={schema_version:1,panel_id,...(helper_session_id?{helper_session_id,panel_generation}:{}),sequence_evidence:sequenceEvidence,domain_evidence:domainEvidence,domain_png_base64:domainPng,numeric_results:numericResults,numeric_result_recovery:numericRecovery,backend:'external-image-workspace',state_revision:stateRevision,object:publicImageObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),spatial_return:spatialReturnState(spatialReturnReference,current,frameIdentity,spatialReturnReason),window_collection:windowStore.snapshot(),panel_mapping_fingerprint:panelWindowMappingFingerprint(current),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:pendingResult.reason??'unsaved_draft',scientific_operation_complete:true}:null};return {...value,crystal_evidence:crystalEvidenceForState(crystalEvidence,value)};};
+ const state=():PanelState=>{const value:PanelState={schema_version:1,panel_id,...(helper_session_id?{helper_session_id,panel_generation}:{}),sequence_evidence:sequenceEvidence,domain_evidence:domainEvidence,domain_png_base64:domainPng,numeric_results:numericResults,numeric_result_recovery:numericRecovery,backend:'external-image-workspace',state_revision:stateRevision,object:publicImageObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),spatial_return:spatialReturnState(spatialReturnReference,current,frameIdentity,spatialReturnReason),window_collection:windowStore.snapshot(),panel_mapping_fingerprint:panelWindowMappingFingerprint(current),multi_roi_handoff_schema_version:1,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:pendingResult.reason??'unsaved_draft',scientific_operation_complete:true}:null};return {...value,crystal_evidence:crystalEvidenceForState(crystalEvidence,value)};};
  function writeSelection(){if(!current)return;const evidence=crystalEvidenceForState(crystalEvidence,state());const snapshot=evidence?(()=>{const {image_png_base64,...payload}=evidence.payload;void image_png_base64;return {...evidence,payload};})():null;const temp=path.join(journal,`.selection-${randomBytes(6).toString('hex')}.json`);writeJournal(temp,{schema_version:1,panel_id,...(helper_session_id?{helper_session_id,panel_generation}:{}),object_id:current.object_id,state_revision:stateRevision,frame_identity:frameIdentity,selection,edit_state:editState,spatial_return_reference:spatialReturnReference,window_collection:windowStore.checkpoint(),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,...(pendingResult.reason==='window_capacity'?{reason:'window_capacity'}:{}),...(pendingResult.inputViewContext!==undefined?{input_view_context:pendingResult.inputViewContext}:{}),...(pendingResult.viewContextRestore!==undefined?{view_context_restore:pendingResult.viewContextRestore}:{}),...(pendingResult.navigationLease?{navigation_lease:true}:{}),...(pendingResult.spatialReturnReference!==undefined?{spatial_return_reference:pendingResult.spatialReturnReference}:{} )}:null,last_operation:lastOperation,numeric_result_refs:numericResultRefs(),crystal_evidence:snapshot,research_observation:observationState(),updated_utc:new Date().toISOString()});renameSync(temp,path.join(journal,'current-selection.json'));selectionPersistenceError=null;}
  // Only the replaceable gesture handoff snapshot is coalesced. Scientific
  // request/response journals keep their original before-dispatch fsync path.
@@ -378,6 +380,9 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   // path as an automatic annotation revision; the old pending entry survives.
   const pendingAnnotationSave=Boolean(pendingResult)&&(body.action==='mark'||body.action==='edit');
   if(pendingAnnotationSave&&lastOperation?.state==='submitted')fail('Original request is unresolved; query its original request_id before saving an annotation',409);
+  const writeParams=p as Metadata,currentPanels=current.panels as Metadata[]|undefined;
+  const spatialRoiWrite=currentPanels?.length===1&&currentPanels[0].domain==='spatial_pixels'&&(body.action==='mark'&&(writeParams.selection as Metadata|undefined)?.kind==='rectangle'||body.action==='edit'&&Array.isArray(writeParams.updates)&&writeParams.updates.some((update:Metadata)=>((current.annotations??[]) as Metadata[]).some(mark=>mark.annotation_id===update?.annotation_id&&mark.kind==='rectangle')));
+  if(spatialRoiWrite){const collection=windowStore.snapshot(),active=collection.windows.find(window=>window.window_id===collection.active_window_id);if(active?.latest_observation_view_object_id&&active.latest_observation_view_object_id!==current.object_id)fail('This is a historical ROI source; explicitly open the retained latest observation view before changing its ROIs',409);}
   const opensImage=(['frame','roi','fft','show','return-spatial','preview','calibrate','restore-figure-display','measurement-jump'] as readonly unknown[]).includes(body.action)||body.action==='edit-layout'&&(p as Metadata).auto_commit===false;
   if(pendingResult&&opensImage)fail('Resolve the pending saved result before opening another scientific view; close a read-only window if capacity is full',409);
   const scientificBefore=state();
@@ -555,6 +560,11 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(layoutEdit||autoEdit){
    if(!sameRecord(prepared.object.panels??[],current.panels??[])||!sameRecord(prepared.object.scientific_grid_identity??null,current.scientific_grid_identity??null))fail('Automatic annotation adoption requires the exact same scientific grid and render mapping',409);
   }
+  if((body.action==='mark'||body.action==='edit')&&annotationIds.some(id=>((prepared.object.annotations??[]) as Metadata[]).some(mark=>mark.annotation_id===id&&mark.kind==='rectangle'))){
+   if(!sameRecord(prepared.object.panels??[],current.panels??[])||!sameRecord(prepared.object.scientific_grid_identity??null,current.scientific_grid_identity??null))fail('Saved ROI observations require the exact current scientific grid and render mapping',409);
+   windowStore.rememberObservations(prepared.object,nextFrame);
+  }
+  if(['preview','calibrate','restore-figure-display'].includes(body.action as string))windowStore.continueObservations(current,prepared.object,nextFrame);
   if(autoEdit){
    const newerDraft=editState.draft_revision!==startedRevision||editState.gesture_active,latestEdit=structuredClone(editState),latestSelection=selection;
    commitCurrent(prepared,{annotationIds});frameIdentity=nextFrame;syncWindows();
@@ -612,6 +622,101 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   const response={...state(),presentation:{request_id:body.request_id,status:'attached',object_id:envelope.payload.object_id,scientific_object_created:false}};
   writeJournal(path.join(evidenceDirectory,`${body.request_id}.response.json`),response);return response;
  };
+ const inspectRoiHandoff=async(snapshot:PanelState):Promise<PanelMultiRoiHandoff>=>{
+  // A saved-source read is not another active selection. Freeze the full
+  // operational snapshot and reject any lease/layout/edit change during reads.
+  const before=JSON.stringify(snapshot),active=panelRoiHandoff(snapshot as unknown as PanelRoiSnapshot),collection=snapshot.window_collection!;
+  const frameId=objectId.test(String(snapshot.frame_identity?.frame_object_id))?snapshot.frame_identity!.frame_object_id as string:null;
+  const packet:PanelMultiRoiHandoff={schema_version:1,read_only:true,validation_status:'unavailable',panel_id:snapshot.panel_id,
+   ...(snapshot.helper_session_id?{helper_session_id:snapshot.helper_session_id,panel_generation:snapshot.panel_generation}:{}),
+   active_view_object_id:snapshot.object.object_id as string,state_revision:snapshot.state_revision,draft_revision:snapshot.edit_state.draft_revision,collection_revision:collection.revision,frame_object_id:frameId,
+   interaction_gate:structuredClone(active.interaction_gate),active_handoff:active,source_observations:[],fft_relations:[],
+   semantics:'Read-only saved references, not permission, scientific confirmation, or a second active input. Current selections and drafts belong only to active_handoff. Later observations never rewrite an FFT input; equal integer processing support does not establish original floating ROI identity.'};
+  type Saved=Awaited<ReturnType<typeof readWindowSaved>>;
+  const reads=new Map<string,Promise<Saved>>(),read=(id:string):Promise<Saved>=>{
+   let value=reads.get(id);if(!value){if(reads.size>=20)fail('ROI handoff immutable read budget exceeded',409);value=readWindowSaved(id);reads.set(id,value);}return value;
+  };
+  const candidates=new Map<string,Set<PanelSourceObservations['roles'][number]>>();
+  const add=(id:unknown,role:PanelSourceObservations['roles'][number])=>{if(!objectId.test(String(id)))return;const roles=candidates.get(id as string)??new Set<PanelSourceObservations['roles'][number]>();roles.add(role);candidates.set(id as string,roles);};
+  const spatial=(value:Metadata,frame:PanelFrameIdentity|null)=>{
+   const panels=value.panels;return Boolean(frameId&&frame?.frame_object_id===frameId&&value.array_domain!=='frequency'&&Array.isArray(panels)&&panels.length===1&&(panels[0] as Metadata)?.domain==='spatial_pixels'&&(panels[0] as Metadata).source_object_id===frameId);
+  };
+  if(spatial(snapshot.object,snapshot.frame_identity))add(snapshot.object.object_id,'active_spatial');
+  const currentSourceIds=new Set<string>();
+  for(const entry of collection.windows){
+   if(entry.role==='source'||entry.role==='roi'){add(entry.object_id,'retained_spatial');currentSourceIds.add(entry.latest_observation_view_object_id??entry.object_id);}
+   if(entry.latest_observation_view_object_id){add(entry.latest_observation_view_object_id,'latest_observation');currentSourceIds.add(entry.latest_observation_view_object_id);}
+   if(entry.role==='fft'&&entry.source_reference)add(entry.source_reference.input_view_object_id,'fft_input');
+  }
+  if(candidates.size>10)fail('ROI handoff source-reference budget exceeded',409);
+  for(const [id,roles]of candidates){
+   const source:PanelSourceObservations={object_id:id,roles:[...roles],status:'unavailable',reason_code:'saved_source_unavailable',frame_object_id:frameId,handoff:null,observations:[]};
+   try{
+    const saved=await read(id);if(!spatial(saved.object,saved.frame))throw new Error('source_frame_or_domain_mismatch');
+    const retained=collection.windows.find(entry=>entry.object_id===id&&(entry.role==='source'||entry.role==='roi'));
+    if(retained&&!windowStore.assetMatches(retained.window_id,saved.object,saved.frame))throw new Error('retained_source_asset_changed');
+    const latestEntries=collection.windows.filter(entry=>entry.latest_observation_view_object_id===id);
+    if(latestEntries.some(entry=>!windowStore.observationMatches(entry.window_id,saved.object,saved.frame)))throw new Error('latest_source_asset_changed');
+    const savedSnapshot={...snapshot,object:saved.object,frame_identity:saved.frame,selection:null,
+     edit_state:{...snapshot.edit_state,dirty:false,gesture_active:false,selection:null,annotation_edit:null},pending_result:null,last_operation:null,draft_persistence:{pending:false,error:null}} as unknown as PanelRoiSnapshot;
+    const model=roiObservationModel(savedSnapshot),handoff=model.packet;
+    if(handoff.inspection_status!=='bounded_snapshot'||handoff.pair_inspection.status==='ambiguous_annotation_identity')throw new Error(handoff.inspection_status!=='bounded_snapshot'?handoff.inspection_status:'ambiguous_annotation_identity');
+    // The rows describe immutable saved geometry; the global active gate is
+    // retained so no historical source packet can authorize a dirty handoff.
+    source.handoff={...handoff,interaction_gate:structuredClone(active.interaction_gate),draft_state:structuredClone(active.draft_state),current_selection:null};
+    const marks=Array.isArray(saved.object.annotations)?saved.object.annotations as Metadata[]:[];
+    source.observations=model.rows.map<PanelSourceRoiObservation>(row=>{
+     const matches=marks.filter(mark=>mark.annotation_id===row.annotation_id),note=matches.length===1?matches[0].note:null;
+     const reason=typeof note==='string'&&note.length<=1000&&note.trim()?note.trim():null;
+     return {...row,label:row.label.length<=256?row.label:'ROI（原标签超预算）',reason,reason_status:reason?'recorded':'unknown',selected:false};
+    });
+    source.status='validated';source.reason_code=null;
+   }catch(error){const reason=(error as Error).message;source.reason_code=['source_frame_or_domain_mismatch','retained_source_asset_changed','latest_source_asset_changed','annotation_budget_exceeded','panel_budget_exceeded','ambiguous_annotation_identity'].includes(reason)?reason:'saved_source_unavailable';}
+   packet.source_observations.push(source);
+  }
+  for(const entry of collection.windows.filter(window=>window.role==='fft')){
+   const source=entry.source_reference,relation:PanelFftRoiRelation={window_id:entry.window_id,display_object_id:entry.object_id,raw_fft_object_id:source?.raw_fft_object_id??null,input_view_object_id:source?.input_view_object_id??null,status:'unknown',reason_code:'no_saved_input_reference',processing_rect_xyxy:source?[...source.processing_rect_xyxy]:null,input_float_coordinates:null,input_annotation_id:null,calibration_relation:'unknown',current_observation_matches:[]};
+   try{
+    const display=await read(entry.object_id);if(display.frame?.frame_object_id!==frameId||!windowStore.assetMatches(entry.window_id,display.object,display.frame))throw new Error('fft_display_asset_changed');
+    if(!source){const panels=display.object.panels as Metadata[]|undefined;if(panels?.length===1&&panels[0].domain==='frequency'&&objectId.test(String(panels[0].source_object_id)))relation.raw_fft_object_id=panels[0].source_object_id as string;packet.fft_relations.push(relation);continue;}
+    const reference=readSpatialReturnReference({version:1,view_object_id:source.input_view_object_id,frame_object_id:source.frame_object_id,fft_object_id:source.raw_fft_object_id,source_rect_xyxy:source.processing_rect_xyxy});
+    const input=await read(source.input_view_object_id),raw=await read(source.raw_fft_object_id);
+    if(reference.frame_object_id!==frameId||!spatial(input.object,input.frame))throw new Error('fft_input_frame_mismatch');
+    validateSpatialReturn(reference,input.object,input.png,input.frame,raw.object,raw.frame);
+    if(spatialReturnState(reference,display.object,display.frame).status!=='ready')throw new Error('fft_display_root_mismatch');
+    const inputPacket=packet.source_observations.find(saved=>saved.object_id===source.input_view_object_id&&saved.status==='validated');
+    if(!inputPacket)throw new Error('fft_input_observation_unavailable');
+    const context=qualifyPanelWindowContext(source.input_view_context,input.object,checkSelection),selection=context?.selection_candidate;
+    if(selection?.kind==='rectangle'&&selection.coordinate_space==='source_pixels'&&sameRecord(selectionRectangle(selection as unknown as Selection),source.processing_rect_xyxy)){
+     relation.input_float_coordinates=[...selection.coordinates];
+     const marks=inputPacket.observations.filter(mark=>mark.annotation_id===context!.selected_annotation_id&&mark.usable&&sameRecord(mark.original_anchor.coordinates,selection.coordinates));
+     if(marks.length===1)relation.input_annotation_id=marks[0].annotation_id;
+    }
+    const inputCalibration=input.object.xy_calibration??null,currentCalibration=display.object.xy_calibration??null;
+    relation.calibration_relation=inputCalibration===null||currentCalibration===null?'unknown':sameRecord(inputCalibration,currentCalibration)?'same':'different';
+    for(const currentSource of packet.source_observations.filter(saved=>saved.status==='validated'&&currentSourceIds.has(saved.object_id))){
+     for(const mark of currentSource.observations){
+      let compared:PanelFftObservationMatch['relation']='unknown';
+      if(mark.usable&&mark.annotation_id!==null&&relation.input_annotation_id!==null&&mark.annotation_id===relation.input_annotation_id&&relation.input_float_coordinates)compared=sameRecord(mark.original_anchor.coordinates,relation.input_float_coordinates)?'exact_original_geometry':'changed_geometry';
+      else if(mark.usable&&mark.annotation_id!==null&&sameRecord(mark.rect_xyxy,source.processing_rect_xyxy))compared='same_processing_window';
+      relation.current_observation_matches.push({source_view_object_id:currentSource.object_id,annotation_id:mark.annotation_id,relation:compared});
+     }
+    }
+    relation.status='validated';relation.reason_code=relation.input_float_coordinates?null:'original_float_context_unknown';
+   }catch{relation.status='unavailable';relation.reason_code='saved_fft_input_unavailable';}
+   packet.fft_relations.push(relation);
+  }
+  for(const source of packet.source_observations){
+   if(source.roles.includes('fft_input')&&!packet.fft_relations.some(relation=>relation.status==='validated'&&relation.input_view_object_id===source.object_id)){
+    const independentRoles=source.roles.filter(role=>role!=='fft_input');
+    if(independentRoles.length)source.roles=independentRoles;
+    else{source.status='unavailable';source.reason_code='unqualified_fft_input_reference';source.handoff=null;source.observations=[];}
+   }
+  }
+  if(JSON.stringify(state())!==before)fail('Panel changed while reading ROI handoff; read the current state again without replaying science',409);
+  const validated=packet.source_observations.some(source=>source.status==='validated')||packet.fft_relations.some(relation=>relation.status==='validated'),incomplete=packet.source_observations.some(source=>source.status!=='validated')||packet.fft_relations.some(relation=>relation.status!=='validated');
+  packet.validation_status=validated?incomplete?'partial':'validated':'unavailable';return packet;
+ };
  const staticFiles=new Map([['/',['index.html','text/html; charset=utf-8']],['/app.mjs',['app.mjs','text/javascript; charset=utf-8']],['/coordinates.mjs',['coordinates.mjs','text/javascript; charset=utf-8']],['/style.css',['style.css','text/css; charset=utf-8']],['/viewer-state.mjs',['viewer-state.mjs','text/javascript; charset=utf-8']],['/viewer-render.mjs',['viewer-render.mjs','text/javascript; charset=utf-8']],['/annotation-presentation.mjs',['annotation-presentation.mjs','text/javascript; charset=utf-8']],['/figure-export.mjs',['figure-export.mjs','text/javascript; charset=utf-8']],['/measurement-workspace.mjs',['measurement-workspace.mjs','text/javascript; charset=utf-8']],['/data-probes.mjs',['data-probes.mjs','text/javascript; charset=utf-8']],['/user-workflow.mjs',['user-workflow.mjs','text/javascript; charset=utf-8']]]);
  staticFiles.set('/figure-composer.mjs',['figure-composer.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/sequence-evidence.mjs',['sequence-evidence.mjs','text/javascript; charset=utf-8']);
@@ -624,6 +729,8 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  staticFiles.set('/gpa-evidence.mjs',['gpa-evidence.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/window-workspace.mjs',['window-workspace.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/window-source-overlay.mjs',['window-source-overlay.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/roi-editing.mjs',['roi-editing.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/multi-roi-handoff.mjs',['multi-roi-handoff.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{
@@ -634,6 +741,13 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    if(req.headers.origin&&req.headers.origin!==origin)fail('Cross-origin requests refused',403);
    res.setHeader('Content-Type','application/json');
    if(req.method==='GET'&&url.pathname==='/api/state'){res.end(JSON.stringify(state()));return;}
+   if(req.method==='GET'&&url.pathname==='/api/roi-handoff'){
+    const keys=['expected_object_id','state_revision','draft_revision','collection_revision'];
+    if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))fail('Exact current ROI-handoff identity and revisions required');
+    const snapshot=state(),revision=(key:string)=>{const value=url.searchParams.get(key);if(!/^\d{1,16}$/.test(value??'')||!Number.isSafeInteger(Number(value)))fail('Invalid ROI-handoff revision');return Number(value);};
+    if(url.searchParams.get('expected_object_id')!==snapshot.object.object_id||revision('state_revision')!==snapshot.state_revision||revision('draft_revision')!==snapshot.edit_state.draft_revision||revision('collection_revision')!==snapshot.window_collection!.revision)fail('Stale ROI-handoff inspection; read the current state again',409);
+    const packet=await inspectRoiHandoff(snapshot),body=JSON.stringify(packet);if(Buffer.byteLength(body)>8*1024*1024)fail('ROI-handoff packet exceeds its bounded metadata budget',409);res.end(body);return;
+   }
    if(req.method==='GET'&&url.pathname==='/api/window-asset'){
     if([...url.searchParams.keys()].some(key=>!['window_id','revision'].includes(key))||url.searchParams.getAll('window_id').length!==1||url.searchParams.getAll('revision').length!==1||!/^\d{1,16}$/.test(url.searchParams.get('revision')??''))fail('Explicit saved window identity and collection revision required');
     const revision=Number(url.searchParams.get('revision')),entry=windowStore.lookup(url.searchParams.get('window_id'),revision),saved=await readWindowSaved(entry.object_id);

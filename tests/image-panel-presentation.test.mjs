@@ -78,6 +78,18 @@ test('crowded labels yield to peaks; analysis selection can reveal detail while 
  const hidden=point('hidden',[10,10],{label:{text:'Important',figure_visible:false,important:true}});assert.equal(layoutAnnotations([hidden],{...options,mode:'figure'}).items[0].label.visible,false);
 });
 
+test('only the selected rectangle exposes eight screen-sized resize handles in analysis mode',()=>{
+ const rectangles=[{annotation_id:'A',kind:'rectangle',coordinates:[20,30,80,90],text:'ROI 1'},{annotation_id:'B',kind:'rectangle',coordinates:[100,30,160,90],text:'ROI 2'}],before=structuredClone(rectangles);
+ for(const scale of [1,3]){
+  const layout=layoutAnnotations(rectangles,{...options,preset:'real-space',selectedId:'A',scale}),svg=renderAnnotationsSVG(layout,{interactive:true,figureLayout:{legend:false}}),handles=svg.match(/<g data-part="handles"[^>]*>([\s\S]*?)<\/g>/g)??[];
+  assert.equal(handles.length,1);assert.equal((handles[0].match(/<rect /g)??[]).length,8);
+  const size=String(6/scale);assert.equal((handles[0].match(new RegExp(`width="${size}" height="${size}"`,'g'))??[]).length,8);
+  assert.match(handles[0],new RegExp(`x="${50-3/scale}" y="${30-3/scale}"`),'top edge midpoint is an explicit resize target');
+ }
+ const figure=layoutAnnotations(rectangles,{...options,mode:'figure',selectedId:'A'});assert.doesNotMatch(renderAnnotationsSVG(figure),/data-part="handles"/);
+ const none=layoutAnnotations(rectangles,{...options,preset:'real-space'});assert.doesNotMatch(renderAnnotationsSVG(none),/data-part="handles"/);assert.deepEqual(rectangles,before);
+});
+
 test('crystallographic typography renders only entered indices with overlines and g subscripts',()=>{
  assert.equal(presentationText(' g1  (hyp.) '),'g₁');assert.equal(presentationText('g_12'),'g₁₂');
  assert.equal(crystallographicSVGText('(1-10)'),'('+'1<tspan text-decoration="overline">1</tspan>0)');

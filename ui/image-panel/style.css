@@ -102,3 +102,4 @@ body.window-switching #canvas{pointer-events:none;cursor:wait}
 .single-image-window .image-window-resize{display:none}
 .measurement-workspace.empty-results .measurement-content{height:auto;min-height:0}
 @media(max-width:850px){.window-controls{gap:5px;padding:5px 8px}.window-controls #window-count{flex-basis:100%}.window-desktop{min-height:160px}.image-window-titlebar{padding-left:6px}.image-window-titlebar strong{font-size:11px}}
+.roi-current-label{display:block;flex-basis:100%;font-size:12px;line-height:1.45;color:var(--muted,#aeb8c6)}
