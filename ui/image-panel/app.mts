@@ -116,6 +116,10 @@ function diagnostics(){
  }
  for(const [id,target]of [['view-back',savedViews.target(-1)],['view-forward',savedViews.target(1)],['view-original',savedViews.original(state)]] as const)if($(id))$(id).disabled=!target||busy||Boolean(drag)||target.id===state?.object?.object_id;
  const sourceTarget=savedViews.original(state);$('view-original').textContent=sourceTarget?.freshSourceView?'全帧（新显示）':'原图';$('view-original').title=sourceTarget?.freshSourceView?'没有已保存的原图显示配方；使用当前标定新建全帧预览，不重算 FFT':'打开本帧已保存的原图视图';
+ const frequencyView=state?.object?.panels?.some(p=>p.domain==='frequency'),returnReady=state?.spatial_return?.version===1&&state.spatial_return.status==='ready'&&Boolean(state.spatial_return.view_object_id),unresolvedReturn=autoFailed||state?.last_operation?.state==='submitted',returnBlocked=dirty()||busy||Boolean(drag)||Boolean(pending||state?.pending_result)||unresolvedReturn;
+ $('return-spatial').hidden=!frequencyView;$('return-spatial').disabled=!returnReady||returnBlocked;
+ $('return-spatial').title=!returnReady?spatialReturnReason():unresolvedReturn?'原请求尚未确认；先查询原请求，不通过导航隐藏未知结果。':returnBlocked?'先保存或撤销草稿、结束手势并处理待查看结果，再返回空间观察。':'打开计算此 FFT 前的保存空间观察，恢复该版本的 ROI、说明与标定；不重算 FFT。';
+ $('spatial-return-status').hidden=!frequencyView||Boolean(returnReady);$('spatial-return-status').textContent=returnReady?'':spatialReturnReason();
  $('complex-component').disabled=busy||Boolean(drag);$('apply-complex-component').disabled=busy||Boolean(drag)||!importedComplex();
  if($('view-current'))$('view-current').textContent=savedViews.entries[savedViews.index]?.role??'当前视图';
  if(state)researchWorkspace.render(researchSnapshot(),{busy,gesture:Boolean(drag),observationSavePhase});
@@ -147,6 +151,18 @@ function applyUserHistory(direction:string){
   selectedId=(state.object.annotations??[]).some(m=>m.annotation_id===(value as SelectionSnapshot)?.selectedId)?(value as SelectionSnapshot).selectedId:'';syncMarkFields(false);draft=restored;record();showDraft();schedulePaint();publishDraft({includeSelection:true,urgent:true});
  }
  userHistory.finish(direction,item);diagnostics();message((undo?'已撤销：':'已恢复：')+item.label+(item.kind==='annotation'?'；保存补偿版本，历史记录保留。':item.kind==='display'?'；当前为显示草稿，保存显示后可导出。':''));
+}
+function spatialReturnReason(){
+ const code=state?.spatial_return?.reason_code;
+ if(code==='different_calibration')return '保存空间观察与原始 FFT 的标定依赖不匹配；不会把另一标定版本冒充原观察。';
+ const reasons:Record<string,string>={no_saved_return:'此 FFT 没有已核对的空间观察引用；已有源帧入口不等于原观察。',legacy_checkpoint_missing:'旧工作区记录没有空间观察返回引用；不会猜测原观察。',invalid_reference:'空间观察返回引用无效；当前视图保留。',target_unavailable:'暂时无法读回保存空间观察；当前视图保留，恢复来源后正常重开工作区以重新核对。',missing_saved_preview:'原空间观察没有可读取的保存预览；不会自动生成替代图。',invalid_saved_preview:'原空间观察预览校验未通过；当前视图保留。',not_spatial:'引用目标不是明确的单一空间视图；当前视图保留。',different_frame:'原空间观察与当前源帧不匹配；不会切换到其他帧。',different_fft:'此 FFT 不属于记录的空间观察转换；不会按同帧或最近记录猜测。',different_fft_support:'FFT 支撑范围与原观察转换记录不匹配；当前视图保留。',already_at_spatial_view:'当前已是对应的保存空间观察。'};
+ return reasons[code??'no_saved_return']??'空间观察引用暂不可用；当前视图保留，请检查来源或重新读取状态。';
+}
+async function returnToSpatialObservation(){
+ if(state?.spatial_return?.version!==1||state.spatial_return.status!=='ready'||!state.spatial_return.view_object_id){message(spatialReturnReason(),true);return;}
+ if(autoFailed||state.last_operation?.state==='submitted'){message('原请求尚未确认；先查询原请求，不通过导航隐藏未知结果。',true);return;}
+ if(dirty()||busy||drag||pending||state.pending_result){message('先保存或撤销草稿、结束手势并处理待查看结果，再返回空间观察。',true);return;}
+ await act('return-spatial');
 }
 async function navigateSavedView(target:SavedViewEntry|null|undefined){
  if(!target)return;if(dirty()||busy||drag){message('先保存或撤销草稿，再切换保存视图。',true);return;}
@@ -244,7 +260,7 @@ function showPending(){
 async function act(action:string,params:ActionParams={}){
  if(['frame','roi','fft','export','preview','select'].includes(action)&&selectedId&&(editCoordinates||fieldDirty))captureSelected();
  if(busy){message('上一项保存仍在等待；可继续观察、缩放和平移。');return;}if(pending&&!['research-observation','accept-result','recover'].includes(action)){message('请先处理待查看结果；当前草稿仍保留。',true);return;}
- if(dirty()&&['frame','roi','fft','calibrate','accept-result','show','measurement-jump'].includes(action)){message('先保存或撤销当前草稿，再切换科学视图；缩放、平移和选择仍可继续。',true);return;}
+ if(dirty()&&['frame','roi','fft','calibrate','accept-result','show','return-spatial','measurement-jump'].includes(action)){message('先保存或撤销当前草稿，再切换科学视图；缩放、平移和选择仍可继续。',true);return;}
  const sentRevision=historyDraft.revision,start=now(),local=snapshot(),keepDisplay=dirty()&&['edit','mark'].includes(action)&&JSON.stringify(displayDraft())!==displayBaseline,keepMark=action==='preview'&&(editCoordinates||fieldDirty);busy=true;diagnostics();
  try{await draftPublisher;const r=await api('/api/action',{expected_object_id:state.object.object_id,draft_revision:sentRevision,action,params});
   if(observationSavePhase==='submitting'&&observationSaveTrace)observationSaveTrace.elapsed_ms.action_response=now()-observationSaveStarted;
@@ -256,12 +272,12 @@ async function act(action:string,params:ActionParams={}){
   if(r.pending_result&&r.object.object_id===state.object.object_id){state={...state,pending_result:r.pending_result,state_revision:r.state_revision};showPending();message('计算完成；新结果等待查看，期间的新草稿保持原样。');return r;}
   if(historyDraft.revision!==sentRevision||drag){pending=r;showPending();message('保存完成；较新的草稿保持原样，结果等待接续。');return r;}
   if(r.object.object_id===state.object.object_id&&['select','measure','export','statistics','profile'].includes(action)){state={...state,last_operation:r.last_operation,selection:r.selection,state_revision:r.state_revision,crystal_evidence:r.crystal_evidence};renderMeasurement();if(['statistics','profile'].includes(action))dataProbes.renderResult(r.last_operation);}
-  else await load(r,{keepDisplay:keepDisplay?local.display:null,keepMark:keepMark?local:null,role:action==='roi'?'ROI':action==='fft'?'FFT':action==='frame'?'原图':action==='show'&&params.source_view?'全帧（新显示）':null});
+  else {const adopted=await load(r,{keepDisplay:keepDisplay?local.display:null,keepMark:keepMark?local:null,role:action==='return-spatial'?'空间观察':action==='roi'?'ROI':action==='fft'?'FFT':action==='frame'?'原图':action==='show'&&params.source_view?'全帧（新显示）':null});if(action==='return-spatial'&&!adopted){message(pending?'空间目标已读回；较新的编辑已保留，目标等待明确接纳。':'空间目标已读回；显示接续期间有新编辑，请核对当前视图与草稿。');return r;}}
   if(['measure','statistics','profile'].includes(action))setResultsTab(action==='measure'?'measurements':action);
-  message(action==='show'&&params.source_view?'已按当前标定新建全帧显示；未恢复未知的旧显示配方，未重算 FFT。':action==='export'?`科学数据已保存到 ${r.last_operation?.output_dir??'工作区 exports 目录'}（不是浏览器图片下载）`:({select:'选择已交接；可继续使用当前选区。',measure:'测量完成；当前选区已保留。',show:'已打开保存视图；未重算 FFT。'} as Partial<Record<string,string>>)[action]??'已保存新版本；原像素与旧版本保留。');return r;
- }catch(e){message((e as {message:string}).message,true);}finally{busy=false;perf.action_last_ms=now()-start;diagnostics();await refreshMeasurements();if(queuedEdits.size)Promise.resolve().then(flushEdits);}
+  message(action==='show'&&params.source_view?'已按当前标定新建全帧显示；未恢复未知的旧显示配方，未重算 FFT。':action==='export'?`科学数据已保存到 ${r.last_operation?.output_dir??'工作区 exports 目录'}（不是浏览器图片下载）`:({select:'选择已交接；可继续使用当前选区。',measure:'测量完成；当前选区已保留。',show:'已打开保存视图；未重算 FFT。','return-spatial':'已返回对应的保存空间观察；原 ROI、说明、标定与历史版本保留，未重算 FFT。'} as Partial<Record<string,string>>)[action]??'已保存新版本；原像素与旧版本保留。');return r;
+ }catch(e){if(action==='return-spatial'){const expected=state.object.object_id;try{const latest=await api('/api/state');if(state.object.object_id===expected){if(latest.object.object_id===expected&&Number.isSafeInteger(latest.state_revision)&&latest.state_revision>=state.state_revision)state={...state,spatial_return:latest.spatial_return,state_revision:latest.state_revision,pending_result:latest.pending_result};else if(latest.object.object_id!==expected){pending=latest;showPending();}}}catch{/* Preserve the original error and all local edits if qualification readback also fails. */}}message((e as {message:string}).message,true);}finally{busy=false;perf.action_last_ms=now()-start;diagnostics();await refreshMeasurements();if(queuedEdits.size)Promise.resolve().then(flushEdits);}
 }
-async function refresh(){const epoch=interactionEpoch,objectId=state?.object.object_id;const next=await api('/api/state');if(state&&(interactionEpoch!==epoch||state.object.object_id!==objectId)){if(next.object.object_id!==state.object.object_id){pending=next;showPending();}message('读取期间有新操作；当前视图与选择保持原样，请重新读取。');return;}if(state&&(dirty()||drag||busy)){if(next.object.object_id!==state.object.object_id)pending=next;else state={...state,pending_result:next.pending_result,state_revision:next.state_revision,research_observation:next.research_observation};renderObservation();showPending();message('已检查最新状态；本地草稿保持原样。');return;}if(next.pending_result&&state){state.pending_result=next.pending_result;state.research_observation=next.research_observation;renderObservation();showPending();return;}await load(next);}
+async function refresh(){const epoch=interactionEpoch,objectId=state?.object.object_id;const next=await api('/api/state');if(state&&(interactionEpoch!==epoch||state.object.object_id!==objectId)){if(next.object.object_id!==state.object.object_id){pending=next;showPending();}message('读取期间有新操作；当前视图与选择保持原样，请重新读取。');return;}if(state&&(dirty()||drag||busy)){if(next.object.object_id!==state.object.object_id)pending=next;else state={...state,pending_result:next.pending_result,state_revision:next.state_revision,research_observation:next.research_observation,spatial_return:next.spatial_return};renderObservation();diagnostics();message('已检查最新状态；本地草稿保持原样。');return;}if(next.pending_result&&state){state.pending_result=next.pending_result;state.research_observation=next.research_observation;if(next.object.object_id===state.object.object_id){state.spatial_return=next.spatial_return;state.state_revision=next.state_revision;}renderObservation();diagnostics();return;}await load(next);}
 function renderObservation(){
  const observation=state.research_observation;
  $('research-feedback').hidden=!state.tools.some(t=>t.name==='image_context');
@@ -484,6 +500,7 @@ $('composer-export').onclick=compositionGuard(async()=>{const saved=compositionC
 $('composer-import').onchange=compositionGuard(async()=>{const file=$('composer-import').files?.[0];if(!file)return;if(file.size>512*1024)throw new Error('布局 JSON 超过 512 KiB');const ticket=compositionRevision;$('composer-status').textContent='正在只读核对布局引用；不切换当前图像或覆盖草稿…';const input:unknown=JSON.parse(await file.text()),saved=validateComposition(input);const resolved=await api('/api/composition/resolve',{composition:saved});if(ticket!==compositionRevision)throw new Error('载入期间图版已变化，没有覆盖新布局');composition=saved;compositionPanels=resolved.panels;compositionRevision++;renderComposition();$('composer-status').textContent='已恢复布局及原保存资产；当前科学图像与未保存草稿保持原样。';});
 $('view-forward').onclick=guarded(()=>navigateSavedView(savedViews.target(1)));
 $('view-original').onclick=guarded(()=>navigateSavedView(savedViews.original(state)));
+$('return-spatial').onclick=guarded(returnToSpatialObservation);
 for(const tab of ['measurements','statistics','profile']){
  const button=$('results-tab-'+tab);if(button){button.onclick=()=>setResultsTab(tab);button.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const names=['measurements','statistics','profile'],i=names.indexOf(tab),next=event.key==='Home'?0:event.key==='End'?2:(i+(event.key==='ArrowRight'?1:2))%3;setResultsTab(names[next]);$('results-tab-'+names[next])?.focus?.();};}
 }

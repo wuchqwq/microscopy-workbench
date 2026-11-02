@@ -17,6 +17,8 @@ export interface PanelFrameIdentity {frame_object_id:unknown;frame_index:number;
 export interface PanelDraftPersistence {pending:boolean;error:string|null;}
 export interface PanelDraftAcknowledgment {schema_version:1;panel_id:string|null;object_id:unknown;state_revision:number;edit_state:PanelEditState;selection:PanelSelection|null;research_observation:PanelMetadata|null;draft_persistence:PanelDraftPersistence;}
 export interface PanelPendingResult {object_id:unknown;request_id:unknown;reason:'unsaved_draft';scientific_operation_complete:true;}
+// Navigation availability only, never a scientific/evidence qualification.
+export interface PanelSpatialReturnState {version:1;status:'ready'|'unavailable';view_object_id?:string;frame_object_id?:string;reason_code?:string;}
 export interface PanelState {
  schema_version:1;panel_id:string|null;backend:'external-image-workspace';state_revision:number;
  helper_session_id?:string|null;panel_generation?:number|null;
@@ -27,4 +29,5 @@ export interface PanelState {
  numeric_result_recovery:{state:string;results:Record<string,PanelMetadata>};
  tools:{name:unknown;inputSchema:unknown}[];selection:PanelSelection|null;last_operation:PanelMetadata|null;research_observation:PanelMetadata|null;
  draft_persistence:PanelDraftPersistence;edit_state:PanelEditState;pending_result:PanelPendingResult|null;
+ spatial_return:PanelSpatialReturnState;
 }

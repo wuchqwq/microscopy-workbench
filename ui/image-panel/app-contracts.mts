@@ -8,7 +8,7 @@ export interface AppMark extends FigureMark {readonly kind:SelectionKind;readonl
 export interface AppDisplay extends Readonly<Record<string,unknown>> {readonly gamma?:number;readonly display_range?:readonly number[];readonly spectrum_axes?:boolean;readonly scale_bar?:boolean;readonly component?:string;}
 export interface AppCalibration extends CalibrationView {readonly scope?:string;readonly source_type?:string;readonly x?:unknown;readonly y?:unknown;readonly unit?:unknown;}
 export interface AppObject extends FigureObject {readonly annotations:readonly AppMark[];readonly panels:readonly DisplayPanel[];readonly display?:AppDisplay;readonly scale_bar?:import('./figure-contracts.mjs').ScaleBarRecord;readonly xy_calibration?:AppCalibration;readonly calibration_record?:AppCalibration;readonly calibration?:AppCalibration;}
-export interface AppOperation extends NumericReply,Omit<MeasurementRecord,'scientific_grid_identity'> {readonly annotation_id?:string;readonly annotation_ids?:readonly string[];readonly action?:string;readonly output_dir?:string;}
+export interface AppOperation extends NumericReply,Omit<MeasurementRecord,'scientific_grid_identity'> {readonly annotation_id?:string;readonly annotation_ids?:readonly string[];readonly action?:string;readonly output_dir?:string;readonly state?:string;}
 export interface AppState extends Omit<FigureState,'object'|'effective_display'> {
  [key:string]:unknown;
  object:AppObject;state_revision:number;effective_display?:AppDisplay|null;selection?:AppSelection|null;last_operation?:AppOperation|null;
@@ -17,6 +17,7 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
  png_base64?:string|null;clean_png_base64?:string|null;domain_png_base64?:string|null;clean_png_sha256?:string|null;
  sequence_evidence?:SequenceEvidence|null;domain_evidence?:DomainEvidence|null;render_base_id?:string;display_source_object_id?:string;
  pending_result?:{readonly object_id?:string;readonly request_id?:string}|null;research_observation?:{readonly authority?:string;readonly source_text?:string;readonly current_view_relation?:string}|null;
+ spatial_return?:{readonly version:1;readonly status:'ready'|'unavailable';readonly view_object_id?:string;readonly frame_object_id?:string;readonly reason_code?:string};
  edit_state?:{readonly dirty?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
  figure_base?:FigureBase;
 }

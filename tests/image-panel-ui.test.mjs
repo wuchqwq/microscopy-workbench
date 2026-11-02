@@ -604,6 +604,62 @@ test('directly reopened ROI explicitly requests a fresh full-frame display inste
  assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'show');assert.deepEqual(h.calls[0].params,{object_id:sourceId,source_view:true});assert.match(h.$('message').textContent,/未恢复未知的旧显示配方/);assert.equal(h.$('view-original').disabled,true);
 });
 
+function returnableFft(){
+ const value=fixture();value.object.object_id='c'.repeat(32);value.object.kind='fft';value.object.panels=[{domain:'frequency',source_object_id:'d'.repeat(32),fft_shape_yx:[96,128],image_rect_xyxy:[0,0,128,96]}];value.frame_identity={frame_object_id:sourceId,frame_index:0};value.state_revision=6;
+ value.spatial_return={version:1,status:'ready',view_object_id:viewId,frame_object_id:sourceId};return value;
+}
+test('directly reopened FFT returns through the validated server reference without replaying FFT or preview',async()=>{
+ const h=await harness(returnableFft());assert.equal(h.$('view-back').disabled,true);assert.equal(h.$('return-spatial').hidden,false);assert.equal(h.$('return-spatial').disabled,false);
+ const saved=fixture();saved.object.annotations=[{annotation_id:'saved-roi',kind:'rectangle',purpose:'roi_observation',text:'ROI 1',note:'saved reason',anchor:{kind:'rectangle',coordinate_space:'source_pixels',source_object_id:sourceId,coordinates:[24,16,80,64]}}];h.actionResult(saved);await h.click('return-spatial');
+ assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'return-spatial');assert.equal(h.calls[0].expected_object_id,'c'.repeat(32));assert.deepEqual(h.calls[0].params,{});
+ assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.inspect().state.object.annotations[0].note,'saved reason');assert.equal(h.$('return-spatial').hidden,true);assert.match(h.$('message').textContent,/已返回对应的保存空间观察/);
+ assert.equal(h.$('view-back').disabled,false);assert.equal(h.calls.some(c=>['fft','preview'].includes(c.action)),false);
+});
+test('legacy or unqualified FFT shows why spatial return is unavailable and never guesses from a frame',async()=>{
+ for(const code of ['no_saved_return','legacy_checkpoint_missing','different_fft','different_frame','target_unavailable']){
+  const initial=returnableFft();initial.spatial_return={version:1,status:'unavailable',reason_code:code};const h=await harness(initial),before=h.inspect();
+  assert.equal(h.$('return-spatial').disabled,true);assert.equal(h.$('spatial-return-status').hidden,false);assert.ok(h.$('spatial-return-status').textContent.length>10);
+  await h.click('return-spatial');assert.equal(h.calls.length,0);assert.deepEqual(h.inspect(),before);
+ }
+});
+test('spatial return keeps unsaved display and observation drafts and refuses pending results',async()=>{
+ for(const draftKind of ['display','reason','pending']){
+  const initial=returnableFft();if(draftKind==='pending')initial.pending_result={object_id:'e'.repeat(32),request_id:'pending-other-roi'};
+  const h=await harness(initial);if(draftKind==='display'){h.$('gamma').value='1.8';h.$('gamma').oninput();}if(draftKind==='reason'){h.$('roi-reason').value='unsaved reason';h.$('roi-reason').oninput();}await h.settle();
+  const before=h.inspect(),reason=h.$('roi-reason').value;assert.equal(h.$('return-spatial').disabled,true);await h.click('return-spatial');
+  assert.equal(h.calls.length,0);assert.deepEqual(h.inspect(),before);assert.equal(h.$('roi-reason').value,reason);assert.match(h.$('message').textContent,/先保存或撤销草稿/);
+ }
+});
+test('spatial return is blocked during a live gesture without consuming its coordinates',async()=>{
+ const h=await harness(returnableFft());h.$('mode').value='point';h.event('pointerdown',40,35);h.event('pointermove',44,36);const before=h.inspect();await h.click('return-spatial');
+ assert.equal(h.calls.length,0);assert.deepEqual(h.inspect(),before);assert.match(h.$('message').textContent,/结束手势/);
+});
+test('spatial return keeps an unresolved original request visible instead of replacing its recovery state',async()=>{
+ const initial=returnableFft();initial.last_operation={state:'submitted',request_id:'unconfirmed-original'};const h=await harness(initial),before=h.inspect();
+ assert.equal(h.$('return-spatial').disabled,true);assert.match(h.$('return-spatial').title,/先查询原请求/);await h.click('return-spatial');
+ assert.equal(h.calls.length,0);assert.deepEqual(h.inspect(),before);assert.equal(h.inspect().state.last_operation.request_id,'unconfirmed-original');assert.match(h.$('message').textContent,/原请求尚未确认/);
+});
+test('spatial return does not claim the GUI switched when a newer selection arrived during PNG decoding',async()=>{
+ const h=await harness(returnableFft());let release;h.delayDecode(new Promise(resolve=>release=resolve));h.actionResult(fixture());
+ const returning=h.click('return-spatial');await h.settle();assert.equal(h.calls.length,1);h.draw('rectangle');const selection=copy(h.inspect().draft);
+ release();await returning;await h.settle();
+ assert.equal(h.server().object.object_id,viewId);assert.equal(h.inspect().state.object.object_id,'c'.repeat(32));assert.deepEqual(h.inspect().draft,selection);assert.equal(h.inspect().pending.object.object_id,viewId);
+ assert.match(h.$('message').textContent,/空间目标已读回.*较新的编辑已保留.*等待明确接纳/);assert.doesNotMatch(h.$('message').textContent,/已返回对应/);assert.equal(h.calls.length,1);
+});
+test('spatial return qualification failure updates the button while preserving edits made during the lookup',async()=>{
+ const initial=returnableFft(),h=await harness(initial);let release;h.delayAction(new Promise(resolve=>release=resolve));const returning=h.click('return-spatial');await h.settle();
+ const unavailable=copy(initial);unavailable.state_revision=7;unavailable.spatial_return={version:1,status:'unavailable',reason_code:'target_unavailable'};h.setServer(unavailable);h.failAction('Spatial return unavailable: target_unavailable');
+ h.$('gamma').value='1.8';h.$('gamma').oninput();release();await returning;await h.settle();
+ assert.equal(h.inspect().state.object.object_id,initial.object.object_id);assert.equal(h.inspect().state.spatial_return.status,'unavailable');assert.equal(h.inspect().state.state_revision,7);assert.equal(Number(h.$('gamma').value),1.8);assert.equal(h.inspect().dirty,true);
+ assert.equal(h.$('return-spatial').disabled,true);assert.match(h.$('spatial-return-status').textContent,/暂时无法读回/);assert.equal(h.calls.length,1);assert.ok(h.getCalls.includes('/api/state'));
+});
+test('spatial return qualification polling updates same-object navigation without clearing an observation draft',async()=>{
+ const initial=returnableFft(),h=await harness(initial);h.$('roi-reason').value='Keep this newer reason';h.$('roi-reason').oninput();await h.settle();
+ const unavailable=copy(h.server());unavailable.state_revision=7;unavailable.spatial_return={version:1,status:'unavailable',reason_code:'invalid_saved_preview'};h.setServer(unavailable);await h.poll();
+ assert.equal(h.inspect().state.object.object_id,initial.object.object_id);assert.equal(h.inspect().state.spatial_return.status,'unavailable');assert.equal(h.inspect().state.state_revision,7);
+ assert.equal(h.$('roi-reason').value,'Keep this newer reason');assert.equal(h.inspect().dirty,true);assert.match(h.$('spatial-return-status').textContent,/预览校验未通过/);assert.equal(h.calls.length,0);
+});
+
 test('human workflow: result tabs expose one result type without changing the scientific object',async()=>{
  const h=await harness();await h.click('results-tab-profile');assert.equal(h.$('results-profile').hidden,false);assert.equal(h.$('results-measurements').hidden,true);assert.equal(h.$('numeric-data').open,true);await h.click('results-tab-measurements');assert.equal(h.$('numeric-data').open,false);assert.equal(h.calls.length,0);
 });
