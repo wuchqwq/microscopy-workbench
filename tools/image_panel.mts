@@ -89,7 +89,11 @@ export class StdioImageClient implements PanelClient {
   try{await this.acknowledgeDeliveredPreviews(name,data as Metadata);}catch(error){console.error('Saved scientific result is preserved; '+(error as Error).message);}
   return {data,png:png?.data};}
 
- async close(){if(this.child.exitCode===null)await new Promise<void>(resolve=>{this.child.once('exit',resolve);this.child.stdin.end();});}
+ async close(){
+  // A signal-stopped child retains exitCode=null; its exit event already fired.
+  if(this.child.exitCode!==null||this.child.signalCode!==null)return;
+  await new Promise<void>(resolve=>{this.child.once('exit',resolve);this.child.stdin.end();});
+ }
 }
 function originalMark(mark:Metadata):Metadata{if(!mark.anchor)fail('A legacy mark has no unique scientific anchor; replace it through MCP first');return {...Object.fromEntries(['annotation_id','kind','status','text','note','color','line_width','arrowhead_size','arrow_length','presentation','purpose','selection_origin'].filter(k=>mark[k]!==undefined).map(k=>[k,mark[k]])),...mark.anchor};}
 export async function createImagePanel({workspace,python,object_id,port=0,panel_id=null,helper_session_id,panel_generation,resume_checkpoint,client:givenClient,journalDirectory,numeric_result_refs,crystal_evidence_snapshot}:ImagePanelOptions={}){
