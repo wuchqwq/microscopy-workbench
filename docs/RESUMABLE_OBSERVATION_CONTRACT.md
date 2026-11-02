@@ -2,8 +2,10 @@
 
 The approved #72 route is an explicit optional intent on the existing annotation,
 not a new scientific object, authentication system or physical qualification.
-The implementation is based on main `adf8860e852fb3ca447cd3a4c6e6e3e2d7788c19`
-(tree `59f8bfe66164ea2c63e56c563f56de8797b2b494`). It does not implement #70.
+The original implementation was based on main `adf8860e852fb3ca447cd3a4c6e6e3e2d7788c19`
+(tree `59f8bfe66164ea2c63e56c563f56de8797b2b494`). The cumulative #76 branch
+also includes #75; its separate preview-recovery behavior is specified in
+[PREVIEW_RECOVERY_CONTRACT.md](PREVIEW_RECOVERY_CONTRACT.md), not by this contract.
 
 ## Input and saved record
 
@@ -48,6 +50,10 @@ qualification uses `unspecified` and a `test_operator_protocol_simulation` note.
 
 ## Revisions and compatibility
 
+- Omitted `purpose` inherits existing intent; an explicitly supplied value must
+  be `resumable_observation`. Python independently rejects null and other invalid
+  values in new, replacement and sparse inputs. Rejection creates no new
+  scientific object and never strips the saved parent's contract.
 - Sparse updates retain stable identity, intent and unspecified fields. An
   actual anchor or scientific `note` change without an explicitly supplied
   actor produces `selection_origin="unspecified"` in the new revision.
@@ -107,6 +113,9 @@ reprojection. A bounded formal MCP save/read/reconnect chain also covers actual
 Panel replacement, stale presentation, normal helper close/resume and old
 frozen-worker records, with source/arrays/manifests/request hashes unchanged.
 
-Browser gestures and model behavior are **NOT_TESTED** in this change. The user
-paused GUI qualification; DOM/API-port and protocol tests do not replace it.
+The initial backend-only qualification above did not test model behavior.
+Subsequent cumulative-PR Agent runs, including retained PARTIAL outcomes, are in
+[the final report](../analysis/issue72-final-validation/REPORT.md); they do not
+establish unattended reliability. Browser gestures remain **NOT_TESTED** at the
+user's request; DOM/API-port and protocol tests do not replace them.
 No FFT, physical assumptions, scientific threshold or old evidence status changes.
