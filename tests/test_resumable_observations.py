@@ -9,6 +9,7 @@ import numpy as np
 import tifffile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools import image_workspace as worker
+from preview_test_support import acknowledge_received_previews
 
 
 class ResumableObservation(unittest.TestCase):
@@ -28,7 +29,8 @@ class ResumableObservation(unittest.TestCase):
                          annotation_id="explicit-roi",purpose="resumable_observation",
                          selection_origin="agent",note="Inspect this supplied support; physical cause remains unknown")
         cls.saved = cls.call("annotate", object_id=cls.view["object_id"], annotations=[cls.input])
-        cls.protected = {p:p.read_bytes() for p in cls.root.rglob("*") if p.is_file()}
+        cls.protected = {p:p.read_bytes() for p in cls.root.rglob("*")
+                         if p.is_file() and "preview-admission-v1" not in p.parts}
 
     @classmethod
     def tearDownClass(cls):
@@ -51,6 +53,8 @@ class ResumableObservation(unittest.TestCase):
         response = cls.execute(action, **kwargs)
         if not response.get("ok"):
             raise AssertionError(response)
+        if action not in ("get", "result"):
+            acknowledge_received_previews(worker, cls.workspace, response["result"])
         return response["result"]
 
     def mark(self, record):

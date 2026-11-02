@@ -1,0 +1,44 @@
+{
+  "scope": "Actual formal MCP and registered Panel protocol; test_operator_protocol_simulation, no human-author claim",
+  "GUI": "NOT_TESTED",
+  "model": "NOT_TESTED",
+  "source_sha256": "f3e53160e1e42a9ad6c229bb84facd8d678bc3f954e89fbb05068271fa17c9d9",
+  "checks": [
+    "Required stable ID/origin and 1002 UTF-16 note rejected before worker journal; no truncation or replay.",
+    "Actual Panel mark/originalMark replacement preserves the preceding observation intent, version, actor and scientific note. Protocol test uses unspecified, not researcher.",
+    "Actual saved current handoff, sparse layout, reprojection, explicit actor, omitted actor on note revision and stale presentation guard pass.",
+    "New-client original request recovery is exact; source/old arrays/manifests/journals unchanged; unknown request is queried only.",
+    "Normal owned Panel close/resume keeps exact annotation identity/origin and creates no new scientific records.",
+    "Frozen baseline anonymous ROI/2048-codepoint annotation actual MCP reads, original-request recovery, reprojection and every original hash unchanged."
+  ],
+  "legacy": {
+    "frozen_base": {
+      "sha": "adf8860e852fb3ca447cd3a4c6e6e3e2d7788c19",
+      "tree": "59f8bfe66164ea2c63e56c563f56de8797b2b494",
+      "worker_sha256": "8a3bb1c03f48f734f63f3d77e1a4b32568eeddd9cdfb8b88acf0b57fa792678a",
+      "python": "3.13.18 (main, Oct 26 2026, 13:59:02) [Clang 23.1.3 ]"
+    },
+    "results": [
+      {
+        "original_object_id": "bc4eeaf598c74e7883ebffe64d8c70ed",
+        "original_request_id": "original-3",
+        "new_display_id": "6f6dc86d4f4643c69347bb1a612f5283",
+        "note_length_utf16": 72,
+        "anonymous": true
+      },
+      {
+        "original_object_id": "1b7eb35e2b9c4c95b43352ace213c741",
+        "original_request_id": "original-4",
+        "new_display_id": "e7dc41b049f04819afeefda713a8238b",
+        "note_length_utf16": 2048,
+        "anonymous": false
+      }
+    ],
+    "files_unchanged": 18
+  },
+  "status": "PASS",
+  "current": {
+    "panel_id": "0193d18a3a160935da6546690cf54ef1",
+    "object_id": "01f51bc42dda4fd98638eea1ea4d35fe"
+  }
+}

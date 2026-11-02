@@ -121,6 +121,18 @@ class RuntimeDraftTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "public schema"):
             launcher.continuation_input(args.continuation)
 
+    def test_uncoached_holdout_keeps_writes_and_provides_no_expected_steps(self):
+        args = self.args("panel")
+        args.uncoached = True
+        task, _, _, _, prompt, allowed = launcher.prepare(args)
+        self.assertNotIn(task["source_path"], prompt)
+        self.assertIn(args.panel_id, prompt)
+        self.assertNotIn("First call", prompt)
+        self.assertNotIn("Query each supplied old request", prompt)
+        for name in ("image_open", "image_frame", "image_preview", "image_panel_open", "image_annotate", "image_preview_acknowledge"):
+            self.assertIn(name, allowed)
+        self.assertTrue(launcher.read_json(args.output/"launch.json")["uncoached_task_only"])
+
     def test_missing_shared_workspace_skill_is_explicit(self):
         args = self.args()
         (args.repository/launcher.SKILLS[3]).unlink()

@@ -29,7 +29,8 @@ const call=async(name:string,args:Row={},transport=client)=>{
  try{const data=row((await transport.tool(name,parameters)).data);appendFileSync(path.join(directory,'calls.jsonl'),JSON.stringify(redactInterventionLog({phase:'after',name,data}))+'\n');return data;}catch(e){appendFileSync(path.join(directory,'calls.jsonl'),JSON.stringify({phase:'error',name,error:(e as Error).message,replay:false})+'\n');throw e;}
 };
 const files=(d:string):string[]=>readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(path.join(d,e.name)):e.isFile()?[path.join(d,e.name)]:[]);
-const inventory=(d:string)=>Object.fromEntries(files(d).map(f=>[f,hash(f)]));
+// Original science is immutable; the operational current-owner index may advance.
+const inventory=(d:string)=>Object.fromEntries(['objects','requests'].flatMap(n=>files(path.join(d,n))).map(f=>[f,hash(f)]));
 const unchanged=(old:Record<string,string>)=>{for(const [f,h]of Object.entries(old))assert.equal(hash(f),h,f);};
 try{
  await client.rpc('initialize');const opened=await call('image_open',{source_path:source}),frame=await call('image_frame',{object_id:opened.object_id,frame_index:0}),view=await call('image_preview',{object_id:frame.object_id,max_size:128});
