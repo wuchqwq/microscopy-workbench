@@ -60,4 +60,5 @@ button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min
  .selection-actions{min-width:0;max-width:100%;flex:1 1 100%;flex-wrap:wrap;row-gap:6px}
  .selection-actions button{flex:0 0 auto}
  .selection-actions .quiet-button{margin-left:0}
+ .measurement-content{min-height:0;overflow:auto}
 }

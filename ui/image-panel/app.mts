@@ -53,6 +53,11 @@ const researchWorkspace=new ResearchWorkspace({document,onSave:saveRoiObservatio
 function researchSnapshot():PanelRoiSnapshot {const edit=selectedId&&(editCoordinates||queuedEdits.get(selectedId)?.update.coordinates);return {...state,selection:draft,edit_state:{...state.edit_state,dirty:dirty(),gesture_active:Boolean(drag),annotation_edit:edit?{annotation_id:selectedId,coordinates:edit}:state.edit_state?.annotation_edit??null}} as unknown as PanelRoiSnapshot;}
 function syncDrawerBounds(){
  const host=$('workbench').getBoundingClientRect(),area=viewport.getBoundingClientRect(),narrow=host.width>0&&host.width<=850&&host.height>0&&area.height>0;
+ const content=$('measurement-content'),results=$('measurement-workspace'),contentBox=content.getBoundingClientRect(),resultsBox=results.getBoundingClientRect();
+ // Preserve the user's height preference; cap only what can fit beside the
+ // current controls and the existing minimum image viewport. Content scrolls.
+ const resultLimit=narrow&&results.open?Math.max(0,Math.floor(host.top+host.height-resultsBox.top-resultsBox.height+contentBox.height+area.height-160))+'px':'';
+ if(content.style.maxHeight!==resultLimit)content.style.maxHeight=resultLimit;
  const top=narrow?Math.max(0,area.top-host.top)+'px':'',bottom=narrow?Math.max(0,host.top+host.height-area.top-area.height)+'px':'';
  for(const id of ['research-panel','properties-panel']){const style=$(id).style;if(style.top!==top)style.top=top;if(style.bottom!==bottom)style.bottom=bottom;}
 }
@@ -418,7 +423,7 @@ async function readSavedView(){
  if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');
 }
 $('discard-local').onclick=guarded(async()=>{if(busy)throw new Error('原请求仍在保存，先查询其结果；本地编辑保留。');interactionEpoch++;researchWorkspace.clearReason();drag=null;queuedEdits.clear();autoFailed=false;failedMeasurement=null;remeasuringMarks.clear();orphanedDraft=false;const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();message('本地草稿已撤回；保存过的科学版本仍保留。');});
-$('discard-draft').onclick=guarded(async()=>{interactionEpoch++;orphanedDraft=false;if(pending){const next=pending;if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');if(pending===next)pending=null;showPending();}else{editCoordinates=null;fieldDirty=false;await readSavedView();await act('accept-result');}message('已查看保存版本；旧科学版本仍保留。');});
+$('discard-draft').onclick=guarded(async()=>{if(busy||drag||observationSavePhase)throw new Error('先完成当前保存、校验或手势；草稿仍保留。');if(autoFailed||state.last_operation?.state==='submitted')throw new Error('原请求尚未确认；先查询原请求，草稿仍保留。');interactionEpoch++;researchWorkspace.clearReason();orphanedDraft=false;if(pending){const next=pending;if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');if(pending===next)pending=null;showPending();}else{editCoordinates=null;fieldDirty=false;await readSavedView();if(!await act('accept-result'))return;}if(pending||state.pending_result||dirty()||drag){message('保存版本尚未完全接续；较新草稿保留，请核对后继续。');return;}message('已查看保存版本；旧科学版本仍保留。');});
 $('accept-agent-result').onclick=guarded(async()=>{if(dirty()||drag)throw new Error('先保存、撤销或明确放弃草稿，再查看保存结果');if(pending){const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();}return act('accept-result');});
 const calibrate=(withdraw:boolean)=>act('calibrate',{coordinate_domain:state.object.xy_calibration?.coordinate_domain??'real_space',scope:$('scope').value,xy_scale:withdraw?null:{x:Number($('scale-x').value),y:Number($('scale-y').value),unit:$('unit').value},source_text:$('source').value});$('calibrate').onclick=guarded(()=>calibrate(false));$('withdraw').onclick=guarded(()=>calibrate(true));
 $('submit-observation').onclick=guarded(()=>act('research-observation',{source_text:$('observation-text').value,authority:$('observation-authority').value}));
@@ -454,6 +459,7 @@ $('crystal-short-status').onclick=()=>{openResearch();$('crystal-evidence').scro
 $('close-crystal-image').onclick=()=>$('crystal-image-dialog').close();
 $('toggle-properties').onclick=()=>{closeResearch();document.body.classList.toggle('properties-open');syncDrawerPresentation();};$('close-properties').onclick=()=>{document.body.classList.remove('properties-open');syncDrawerPresentation();};
 $('toggle-settings').onclick=()=>{closeResearch();document.body.classList.add('properties-open');$('settings-panel').open=true;syncDrawerPresentation();};
+$('settings-panel').addEventListener('toggle',syncDrawerPresentation);
 for(const id of ['label-text','label-size','marker-shape','label-visible','geometry-visible','label-leader','label-pinned'])$(id).oninput=editPresentation;
 $('annotation-preset').onchange=()=>{figurePrefs.preset=$('annotation-preset').value;syncFigureControls();schedulePaint();message('仅切换标注显示预设；科学坐标与确认状态保持原样。');};
 $('figure-mode').onclick=()=>{figurePrefs.mode=figurePrefs.mode==='figure'?'analysis':'figure';syncFigureControls();schedulePaint();message(figurePrefs.mode==='figure'?'出图模式：可继续拖动文字；科学锚点已锁定。':'分析模式：圆圈移动改变科学点位，文字移动只改变排版。');};
@@ -525,7 +531,8 @@ async function pollRevision(){
 (globalThis as typeof globalThis & BrowserEnvironment).addEventListener?.('beforeunload',event=>{if(dirty()||drag){event.preventDefault();event.returnValue='';}});
 const resizer=$('results-resizer');
 if(resizer){let resizing:{y:number;height:number}|null=null;resizer.onpointerdown=event=>{resizing={y:event.clientY,height:document.querySelector('.measurement-content')!.getBoundingClientRect().height};resizer.setPointerCapture(event.pointerId);};resizer.onpointermove=event=>{if(resizing)document.querySelector('.measurement-content')!.style.height=Math.max(130,Math.min(innerHeight*.55,resizing.height+resizing.y-event.clientY))+'px';};resizer.onpointerup=()=>{resizing=null;};resizer.onpointercancel=()=>{resizing=null;};resizer.onkeydown=event=>{if(['ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const content=document.querySelector('.measurement-content');content!.style.height=Math.max(130,content!.getBoundingClientRect().height+(event.key==='ArrowUp'?20:-20))+'px';}};}
-const drawerResizeObserver=typeof ResizeObserver==='undefined'?null:new ResizeObserver(syncDrawerBounds);drawerResizeObserver?.observe($('workbench'));drawerResizeObserver?.observe(viewport);
+const drawerResizeObserver=typeof ResizeObserver==='undefined'?null:new ResizeObserver(syncDrawerBounds);
+for(const id of ['workbench','viewport','research-strip','figure-toolbar','view-navigation','pending-result','spatial-return-status','canvas-context','canvas-footer','measurement-workspace','measurement-content'])drawerResizeObserver?.observe($(id));
 (globalThis as typeof globalThis & BrowserEnvironment).addEventListener?.('resize',syncDrawerBounds);
 syncDrawerPresentation();
 refresh().then(()=>{if(image)fitView();syncDrawerPresentation();message(orphanedDraft?'检测到先前未保存的草稿记录；请明确撤回草稿后继续。':'滚轮缩放 · 空格拖动 · 移动标注松手即保存');if(typeof setTimeout==='function')setTimeout(pollRevision,1500);}).catch(e=>message((e as {message:string}).message,true));

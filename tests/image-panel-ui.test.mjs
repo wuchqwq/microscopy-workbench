@@ -668,7 +668,7 @@ test('spatial return labels its read-only wait separately from a scientific save
 });
 test('narrow drawer bounds follow the actual viewport without moving camera, ROI or reason drafts',async()=>{
  const h=await harness();h.draw('rectangle');h.$('roi-reason').value='Keep the unsaved reason';h.$('roi-reason').oninput();h.$('gamma').value='1.8';h.$('gamma').oninput();await h.settle();
- const before=h.inspect(),counts=[h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length];assert.deepEqual(h.layoutObserved(),['workbench','viewport']);
+ const before=h.inspect(),counts=[h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length];for(const id of ['workbench','viewport','pending-result','view-navigation','measurement-content'])assert.ok(h.layoutObserved().includes(id));
  h.$('workbench').getBoundingClientRect=()=>({left:0,top:62,width:760,height:738});h.$('viewport').getBoundingClientRect=()=>({left:56,top:220,width:704,height:310});h.resizeLayout();
  for(const id of ['research-panel','properties-panel']){assert.equal(h.$(id).style.top,'158px');assert.equal(h.$(id).style.bottom,'270px');}
  h.$('viewport').getBoundingClientRect=()=>({left:56,top:260,width:704,height:250});h.resizeLayout();assert.equal(h.$('research-panel').style.top,'198px');assert.equal(h.$('research-panel').style.bottom,'290px');
@@ -679,8 +679,36 @@ test('existing drawers stay mutually exclusive and expose their expanded state w
  const h=await harness();h.draw('rectangle');h.$('roi-reason').value='Keep reason across drawers';h.$('roi-reason').oninput();await h.settle();const selected=h.inspect().draft;
  await h.click('toggle-research');assert.equal(h.$('toggle-research').attributes['aria-expanded'],'true');assert.equal(h.$('toggle-properties').attributes['aria-expanded'],'false');
  await h.click('toggle-settings');assert.equal(h.$('research-panel').hidden,true);assert.equal(h.$('toggle-research').attributes['aria-expanded'],'false');assert.equal(h.$('toggle-properties').attributes['aria-expanded'],'true');assert.equal(h.$('toggle-settings').attributes['aria-expanded'],'true');
+ h.$('settings-panel').open=false;h.$('settings-panel').listeners.toggle();assert.equal(h.$('toggle-settings').attributes['aria-expanded'],'false');
  await h.click('close-properties');assert.equal(h.$('toggle-properties').attributes['aria-expanded'],'false');await h.click('toggle-research');assert.equal(h.$('toggle-research').attributes['aria-expanded'],'true');
  assert.deepEqual(h.inspect().draft,selected);assert.equal(h.$('roi-reason').value,'Keep reason across drawers');assert.equal(h.inspect().dirty,true);assert.equal(h.calls.length,0);
+});
+test('expanded narrow results use the remaining height without replacing a manual height or moving the camera',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const before=h.inspect(),counts=[h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length];
+ h.$('workbench').getBoundingClientRect=()=>({left:0,top:62,width:760,height:738});h.$('viewport').getBoundingClientRect=()=>({left:56,top:282.59375,width:704,height:160});h.$('measurement-workspace').open=true;h.$('measurement-workspace').getBoundingClientRect=()=>({left:56,top:568.59375,width:704,height:315.796875});h.$('measurement-content').getBoundingClientRect=()=>({left:56,top:604.390625,width:704,height:280});h.$('measurement-content').style.height='280px';h.resizeLayout();
+ assert.equal(h.$('measurement-content').style.maxHeight,'195px');assert.equal(h.$('measurement-content').style.height,'280px');
+ // More status text moves a minimum-height viewport without resizing it.
+ h.$('viewport').getBoundingClientRect=()=>({left:56,top:310,width:704,height:160});h.$('measurement-workspace').getBoundingClientRect=()=>({left:56,top:596,width:704,height:315.796875});h.resizeLayout();assert.equal(h.$('research-panel').style.top,'248px');assert.equal(h.$('measurement-content').style.maxHeight,'168px');
+ h.$('measurement-workspace').open=false;h.resizeLayout();assert.equal(h.$('measurement-content').style.maxHeight,'');h.$('measurement-workspace').open=true;h.$('workbench').getBoundingClientRect=()=>({left:0,top:62,width:1200,height:738});h.resizeLayout();assert.equal(h.$('measurement-content').style.maxHeight,'');
+ assert.deepEqual(h.inspect(),before);assert.deepEqual([h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length],counts);
+});
+test('explicit pending-result discard clears the submitted observation draft intent and actually adopts the saved result',async()=>{
+ const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};const h=await harness(initial);h.$('roi-reason').value='Draft authorized for discard';h.$('roi-reason').oninput();await h.settle();
+ const target=fixture();target.object.object_id='c'.repeat(32);h.actionResult(target);await h.click('discard-draft');
+ assert.equal(h.inspect().dirty,false);assert.equal(h.inspect().state.object.object_id,target.object.object_id);assert.equal(h.$('pending-result').hidden,true);assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'accept-result');assert.match(h.$('message').textContent,/已查看保存版本/);
+});
+test('explicit pending discard never consumes a new observation reason written during its saved-state read',async()=>{
+ const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};const h=await harness(initial);h.$('roi-reason').value='Old draft';h.$('roi-reason').oninput();await h.settle();let release;h.delayState(new Promise(resolve=>release=resolve));
+ const discarding=h.click('discard-draft');await h.settle();h.$('roi-reason').value='New reason during discard read';h.$('roi-reason').oninput();release();await discarding;
+ assert.equal(h.$('roi-reason').value,'New reason during discard read');assert.equal(h.inspect().dirty,true);assert.equal(h.calls.length,0);assert.equal(h.inspect().state.object.object_id,viewId);assert.match(h.$('message').textContent,/读取期间有新操作/);
+});
+test('a rejected pending acceptance is not reported as a successful view switch',async()=>{
+ const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};const h=await harness(initial);h.$('roi-reason').value='Discard this draft';h.$('roi-reason').oninput();await h.settle();h.failAction('Controlled pending acceptance rejected');await h.click('discard-draft');
+ assert.equal(h.inspect().state.object.object_id,viewId);assert.match(h.$('message').textContent,/Controlled pending acceptance rejected/);assert.doesNotMatch(h.$('message').textContent,/已查看保存版本/);
+});
+test('pending discard preserves an unknown original request and its reason draft until recovery',async()=>{
+ const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};initial.last_operation={state:'submitted',request_id:'unknown-original'};const h=await harness(initial);h.$('roi-reason').value='Keep until original request resolves';h.$('roi-reason').oninput();await h.settle();await h.click('discard-draft');
+ assert.equal(h.$('roi-reason').value,'Keep until original request resolves');assert.equal(h.calls.length,0);assert.equal(h.inspect().state.last_operation.request_id,'unknown-original');assert.match(h.$('message').textContent,/先查询原请求/);
 });
 
 test('human workflow: result tabs expose one result type without changing the scientific object',async()=>{
