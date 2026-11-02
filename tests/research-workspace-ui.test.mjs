@@ -101,3 +101,22 @@ test('resolved handoff re-enables the existing button, without inventing model w
  ui.render(s);assert.equal(nodes.get('agent-continue').disabled,false);
  assert.match(agentContinuationText(roiObservationModel(s),P),/image_panel_current/);
 });
+
+test('rejected over-budget observation keeps exact Unicode draft and surfaces its length',async()=>{
+ const {ui,nodes,actions}=setup(),s=state();ui.render(s);
+ const {checkObservationNote}=await import('../ui/image-panel/observation-contract.mjs');
+ ui.options.onSave=reason=>checkObservationNote(reason,'note');
+ const long='😀'.repeat(501);nodes.get('roi-reason').value=long;nodes.get('roi-reason').oninput();
+ await nodes.get('save-observation').onclick();ui.render(s);
+ assert.equal(nodes.get('roi-reason').value,long);assert.equal(ui.reasonDirty,true);
+ assert.ok(actions.some(([kind,message])=>kind==='error'&&/note: actual_length=1002; limit=1000 UTF-16.*no truncation/.test(message)));
+ assert.equal(nodes.get('agent-continue').disabled,true);
+});
+
+
+test('raw observation whitespace counts toward write budget and is never silently trimmed to pass',async()=>{
+ const {ui,nodes,actions}=setup(),s=state();ui.render(s);
+ const {checkObservationNote}=await import('../ui/image-panel/observation-contract.mjs');ui.options.onSave=reason=>checkObservationNote(reason,'note');
+ const long='x'.repeat(1000)+' ';nodes.get('roi-reason').value=long;nodes.get('roi-reason').oninput();await nodes.get('save-observation').onclick();
+ assert.equal(nodes.get('roi-reason').value,long);assert.ok(actions.some(([kind,message])=>kind==='error'&&/actual_length=1001/.test(message)));assert.equal(ui.reasonDirty,true);
+});

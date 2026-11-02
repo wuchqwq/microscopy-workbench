@@ -69,7 +69,10 @@ diagnostics, parameter costs and targeted stopping conditions.
 ## Keep a chosen ROI resumable
 
 When saving a ROI or peak that will be selected, edited or handed off later,
-provide a distinct stable `annotation_id` in the existing `image_annotate` request.
+provide `purpose:resumable_observation`, a distinct stable `annotation_id`, and
+`selection_origin:agent` in the existing `image_annotate` request. The saved origin
+is caller-reported, not authenticated; use `unspecified` when that declaration is
+unknown. Keep the original researcher selection separate from an Agent revision.
 Anonymous annotations are allowed for display, but cannot identify a saved ROI
 for handoff or an update. Their numerical measurements are not thereby invalid.
 After presenting a saved choice, read `image_panel_current` and check the actual
@@ -80,7 +83,15 @@ choice with its actor/reason; do not backfill the historical identity. If showin
 an FFT instead of the source ROI, name the saved ROI reference and the reason for
 that display, without pretending the spatial ROI is selected on the FFT grid.
 
-Respect the advertised note `maxLength`. Keep saved notes concise with stable evidence references; put the longer reasoning in the analysis answer. A schema refusal is not a numerical result. Query the original request if its outcome is unknown, and never claim a rejected note was saved.
+When forwarding existing annotations in a replacement overlay, preserve their
+scientific notes and origin declarations verbatim. Paraphrasing a saved reason
+is a new scientific-note revision: declare its actual new actor (`agent` for
+your revision), rather than carrying the previous actor or `unspecified` merely
+because the ROI is unchanged. Prefer a sparse update or a separately identified
+Agent note when that expresses the intended revision more clearly.
+
+Respect the advertised note `maxLength` (1000 UTF-16 code units for new MCP writes;
+supplementary characters count twice). Never truncate a draft to obtain acceptance. Keep saved notes concise with stable evidence references; put the longer reasoning in the analysis answer. A schema refusal is not a numerical result. Query the original request if its outcome is unknown, and never claim a rejected note was saved.
 
 
 ## Unknown writes include indirect tool effects

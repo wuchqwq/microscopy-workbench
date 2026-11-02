@@ -63,7 +63,10 @@ export function validate(value: unknown, schema: ArgumentSchema, label = 'argume
     : typeof value === t);
   if (!matches) throw new RpcError(-32602, `${label}: 类型应为 ${types.join('/')}`);
   if (schema.enum && !schema.enum.includes(value)) throw new RpcError(-32602, `${label}: 不是允许的取值`);
-  if (typeof value === 'string' && (value.length < (schema.minLength ?? 0) || value.length > (schema.maxLength ?? Infinity) || (schema.pattern && !new RegExp(schema.pattern).test(value)))) {
+  if (typeof value === 'string' && (value.length < (schema.minLength ?? 0) || value.length > (schema.maxLength ?? Infinity))) {
+    throw new RpcError(-32602, `${label}: actual_length=${value.length}; limit=${schema.maxLength ?? 'none'}; minimum=${schema.minLength ?? 0}; UTF-16 code units; validation rejected before dispatch; not_submitted; no truncation`);
+  }
+  if (typeof value === 'string' && schema.pattern && !new RegExp(schema.pattern).test(value)) {
     throw new RpcError(-32602, `${label}: 字符串长度或格式错误`);
   }
   if (typeof value === 'number' && ((schema.minimum !== undefined && value < schema.minimum) || (schema.maximum !== undefined && value > schema.maximum))) throw new RpcError(-32602, `${label}: 超出允许范围`);

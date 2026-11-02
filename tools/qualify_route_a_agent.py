@@ -153,7 +153,21 @@ def tool_events(path, allowed):
             "scope": "MCP-returned image blocks are not browser gestures or proof that a GUI was seen"}
 
 
-def build_prompt(task, entry, panel_id, continuation, skill_text, prefix):
+def build_prompt(task, entry, panel_id, continuation, skill_text, prefix, uncoached=False):
+    if uncoached:
+        # Qualification mode: task facts + frozen public Skills, no expected steps,
+        # fault answer, hidden truth, source inspection or corrective follow-up.
+        public = dict(task)
+        if entry != "image":
+            public.pop("source_path")
+        return ("You are a microscopy analysis assistant. Carry out the user's bounded public task using the supplied Workbench tools and Skills. "
+                "Only the configured MCP tools are permitted; no shell, filesystem, browser, web, generator or assessor access. "
+                "Report actual actions and evidence, interpretations and remaining unknowns. Do not claim browser gestures. "
+                "Return a JSON report; choose the analysis yourself. New request IDs use prefix: "+prefix+
+                "\nPublic task:\n"+json.dumps(public,ensure_ascii=False)+
+                "\nCurrent entry facts:\n"+json.dumps({"entry":entry,"panel_id":panel_id,"continuation":continuation},ensure_ascii=False)+
+                "\nFrozen public Skills:\n"+skill_text)
+
     public = dict(task)
     opening = "Use formal tools to open the supplied image and its zero-based frame, inspect actual returned images, and open a Panel for this same scientific workspace. Record its exact Panel ID."
     if entry in ("panel", "continue"):
@@ -233,7 +247,7 @@ def prepare(args):
     executable = repo/"dist/tools/plugin_server.mjs"
     explicit_file(executable)
     allowed = list(TOOLS)
-    if args.entry != "image":
+    if args.entry != "image" and not getattr(args, "uncoached", False):
         allowed = [t for t in allowed if t not in ("image_open", "image_frame", "image_panel_open")]
     if not settings_data["structures"]:
         allowed = [t for t in allowed if not t.startswith("structure_")]
@@ -253,7 +267,7 @@ def prepare(args):
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     prefix = "route-a-"+uuid.uuid4().hex[:10]+"-"
-    prompt = build_prompt(task, args.entry, args.panel_id, continuation, skill_text, prefix)
+    prompt = build_prompt(task, args.entry, args.panel_id, continuation, skill_text, prefix, getattr(args, "uncoached", False))
     argv = [args.codex, "exec", "--ignore-user-config", "--skip-git-repo-check", "--ephemeral", "--json", "--sandbox", "read-only", "-C", str(output)]
     if args.model:
         argv += ["--model", args.model]
@@ -264,6 +278,7 @@ def prepare(args):
          "task_sha256": sha(args.task), "request_prefix": prefix, "allowed_tools": allowed,
          "provided_skills": [{"path": str(p), "sha256": sha(p)} for p in paths],
          "model_requested": args.model or "CLI default (identity not yet observed)",
+         "uncoached_task_only": getattr(args, "uncoached", False),
          "scope": "Explicit public Skills and authorized synthetic tool allowlist; not automatic Skill discovery",
          "global_config": "Not read or written by launcher; --ignore-user-config supplied",
          "dry_run": args.dry_run})
@@ -280,6 +295,7 @@ def main(argv=None):
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--entry", choices=("image", "panel", "continue"), default="image")
     parser.add_argument("--panel-id")
+    parser.add_argument("--uncoached", action="store_true", help="Task facts and public Skills only; no expected analysis/recovery steps. Keep write tools advertised.")
     parser.add_argument("--continuation", type=Path)
     parser.add_argument("--model", help="Explicit requested model; not proof of actual identity")
     parser.add_argument("--codex", default=shutil.which("codex"))

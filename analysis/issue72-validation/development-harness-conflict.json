@@ -1,0 +1,15 @@
+{
+  "scope": "Actual formal MCP and registered Panel protocol; test_operator_protocol_simulation, no human-author claim",
+  "GUI": "NOT_TESTED",
+  "model": "NOT_TESTED",
+  "source_sha256": "f3e53160e1e42a9ad6c229bb84facd8d678bc3f954e89fbb05068271fa17c9d9",
+  "checks": [
+    "Required stable ID/origin and 1002 UTF-16 note rejected before worker journal; no truncation or replay.",
+    "Actual Panel mark/originalMark replacement preserves the preceding observation intent, version, actor and scientific note. Protocol test uses unspecified, not researcher.",
+    "Actual saved current handoff, sparse layout, reprojection, explicit actor, omitted actor on note revision and stale presentation guard pass.",
+    "New-client original request recovery is exact; source/old arrays/manifests/journals unchanged; unknown request is queried only.",
+    "Normal owned Panel close/resume keeps exact annotation identity/origin and creates no new scientific records."
+  ],
+  "status": "FAIL",
+  "error": "Error: 错误: REQUEST_CONFLICT: Same request_id has different action/parameters\n    at StdioImageClient.tool (file:///Volumes/External%20SSD/mircograph/resumable-observations-fix-20261102/dist/tools/image_panel.mjs:80:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async call (file:///Volumes/External%20SSD/mircograph/resumable-observations-fix-20261102/dist/tools/smoke_resumable_observations.mjs:33:27)\n    at async file:///Volumes/External%20SSD/mircograph/resumable-observations-fix-20261102/dist/tools/smoke_resumable_observations.mjs:149:28"
+}

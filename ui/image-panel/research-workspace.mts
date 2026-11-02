@@ -5,6 +5,12 @@ import {renderGpaEvidence} from './gpa-evidence.mjs';
 import type {PanelRoiSnapshot,RoiDependencySnapshot,RoiObservationModel,PanelInteractionGate} from './roi-observations.mjs';
 import type {BrowserDocument} from './browser-ports.mjs';
 type Row=Record<string,unknown>;
+export function observationOriginLabel(mark:{purpose?:string;observation_contract_version?:number;selection_origin?:string;selection_origin_basis?:string}):string {
+ if(mark.purpose===undefined)return '选择来源未记录（历史记录不推断）';
+ if(mark.purpose!=='resumable_observation'||mark.observation_contract_version!==1||mark.selection_origin_basis!=='caller_reported_not_authenticated')return '选择来源合同未知；请核对原记录';
+ const label=({researcher:'研究者',agent:'Agent',unspecified:'未指定'} as Record<string,string>)[mark.selection_origin??''];
+ return label?`选择来源：${label}（调用者声明，非身份认证）`:'选择来源声明未知';
+}
 const row=(v:unknown):Row=>v&&typeof v==='object'&&!Array.isArray(v)?v as Row:{};
 const rows=(v:unknown,max=100):Row[]=>Array.isArray(v)?v.slice(0,max).map(row):[];
 const value=(v:unknown)=>typeof v==='string'?v:'未知';
@@ -26,7 +32,7 @@ export function agentContinuationText(model:RoiObservationModel,panelId:unknown,
  const retained=retainedObservationContext(evidence);
  if(model.packet.interaction_gate.status!=='ready')throw new Error(handoffNotice(model.packet.interaction_gate));
  if((!saved.length&&!retained)||model.packet.draft_state.requires_user_commit)throw new Error('先保存观察并结束草稿；未保存选区不是正式科学 ROI。');
- const context=saved.length?saved.map((r,i)=>`${i+1}. ${r.label}：${r.reason??'观察理由未知，请先核对'}；源像素处理边界 [${r.rect_xyxy?.join(', ')}]。`):['当前是 FFT 或另一保存视图；以下是原观察引用，不是当前图上的新 ROI。',...retained!.observations.map((r,i)=>`${i+1}. ${value(r.text)}：${value(r.reason)}；原处理边界 [${(r.rect_xyxy as number[]).join(', ')}]。`)];
+ const context=saved.length?saved.map((r,i)=>`${i+1}. ${r.label}：${r.reason??'观察理由未知，请先核对'}；annotation_id=${r.annotation_id}；${observationOriginLabel(r)}；源像素处理边界 [${r.rect_xyxy?.join(', ')}]。`):['当前是 FFT 或另一保存视图；以下是原观察引用，不是当前图上的新 ROI。',...retained!.observations.map((r,i)=>`${i+1}. ${value(r.text)}：${value(r.reason)}；原处理边界 [${(r.rect_xyxy as number[]).join(', ')}]。`)];
  return ['继续当前显微分析。先读取此面板的当前状态，只使用已保存且来源明确的观察：',...context,...model.warnings,...(retained?[`已保存比较 ${retained.comparison_id}；状态 ${crystalCurrentnessLabel(retained.currentness)}。请复核原观察视图 ${retained.view_id}，不要把旧比较当作更新后的结果。`,...retained.latest.map(r=>`当前修订测量 object_id=${r.object_id}，原 request_id=${value(r.request_id)}；先查询并核对科学坐标/源 FFT。`)]:[]),'根据问题选择已有科学工具，复用合法 FFT；比较结构前核对候选来源、取向、标定与必要条件。修改过的尺度或 ROI 不可冒充旧输入。返回证据到同一面板，保留未匹配与未判，不确认唯一物相或孪晶。','当前界面不会自动唤醒模型。请调用 image_panel_current'+(id(panelId)?`，panel_id="${panelId}"`:'（多个面板时先明确连接）')+'，重新检查草稿和当前引用后再处理。'].join('\n');
 }
 interface Options {document:BrowserDocument;onSave:(reason:string)=>unknown;onSelect:(annotationId:string)=>unknown;onNavigate:(objectId:string)=>unknown;onError:(message:string)=>void;onDraftChange:()=>void;}
@@ -35,7 +41,7 @@ export class ResearchWorkspace {
  private previous:RoiDependencySnapshot|null=null;private selected:string|null=null;private scienceSignature='';private rowSignature='';
  constructor(options:Options){this.options=options;this.doc=options.document;
   this.el('roi-reason').oninput=()=>{this.reasonDirty=true;options.onDraftChange();};
-  this.el('save-observation').onclick=()=>this.run(()=>options.onSave(this.el('roi-reason').value.trim()));
+  this.el('save-observation').onclick=()=>this.run(()=>options.onSave(this.el('roi-reason').value));
   this.el('copy-agent-prompt').onclick=()=>this.run(async()=>{const clipboard=(globalThis as {navigator?:{clipboard?:{writeText(text:string):PromiseLike<void>}}}).navigator?.clipboard;if(!clipboard)throw new Error('浏览器无法复制；请手动复制下面的提示。');await clipboard.writeText(this.el('agent-prompt').value);this.el('agent-copy-status').textContent='已复制；粘贴给已连接的 Agent 并说继续。尚未自动执行。';});
  }
  private el(name:string){return this.doc.getElementById(name)!;}
@@ -53,7 +59,7 @@ export class ResearchWorkspace {
   this.el('save-observation').disabled=busy||gesture||!current?.usable;this.el('save-observation').textContent=selected?'更新这条观察说明':'保存 ROI 观察';
   this.el('observation-draft-state').textContent=this.reasonDirty?'说明尚未保存；Agent 不会把它当作正式观察。':model.packet.interaction_gate.status!=='ready'?handoffNotice(model.packet.interaction_gate):'保存仅记录位置与理由，不确认物相。';
   this.el('agent-continue').disabled=busy||gesture||this.reasonDirty||model.packet.interaction_gate.status!=='ready'||(!usable.length&&!retained);this.el('save-observation-entry').disabled=busy||gesture||!current?.usable;
-  const signature=JSON.stringify([model.rows,retained?.view_id]);if(signature!==this.rowSignature){this.rowSignature=signature;const list=this.el('roi-observations');list.replaceChildren();for(const r of model.rows){const li=this.node('li');li.className=r.selected?'selected-observation':'';const b=this.node('button',r.label);b.disabled=!r.usable;b.title=r.eligibility_reason;b.onclick=()=>this.run(()=>r.annotation_id&&this.options.onSelect(r.annotation_id));li.append(b,this.node('small',({saved:'已保存',saved_with_draft:'保存版＋未提交草稿',retracted:'已撤回',unusable:'当前网格不可用'} as Row)[r.status]),this.node('p',r.reason??'观察理由未知'),this.node('small',r.rect_xyxy?`处理窗口 [${r.rect_xyxy.join(', ')}]`:'未选择可用处理窗口'));list.append(li);}if(!model.rows.length){if(retained){for(const r of retained.observations){const li=this.node('li'),b=this.node('button',value(r.text)+'（原保存视图）');b.onclick=()=>this.run(async()=>{await this.options.onNavigate(retained.view_id);await this.options.onSelect(String(r.annotation_id));});li.append(b,this.node('p',value(r.reason)),this.node('small','历史观察引用，不会投到当前 FFT 上'));list.append(li);}}else list.append(this.node('li','暂无保存观察；当前选区与保存记录相互独立。'));}}
+  const signature=JSON.stringify([model.rows,retained?.view_id]);if(signature!==this.rowSignature){this.rowSignature=signature;const list=this.el('roi-observations');list.replaceChildren();for(const r of model.rows){const li=this.node('li');li.className=r.selected?'selected-observation':'';const b=this.node('button',r.label);b.disabled=!r.usable;b.title=r.eligibility_reason;b.onclick=()=>this.run(()=>r.annotation_id&&this.options.onSelect(r.annotation_id));li.append(b,this.node('small',({saved:'已保存',saved_with_draft:'保存版＋未提交草稿',retracted:'已撤回',unusable:'当前网格不可用'} as Row)[r.status]),this.node('p',r.reason??'观察理由未知'),this.node('small',observationOriginLabel(r)),this.node('small',r.rect_xyxy?`处理窗口 [${r.rect_xyxy.join(', ')}]`:'未选择可用处理窗口'));list.append(li);}if(!model.rows.length){if(retained){for(const r of retained.observations){const li=this.node('li'),b=this.node('button',value(r.text)+'（原保存视图）');b.onclick=()=>this.run(async()=>{await this.options.onNavigate(retained.view_id);await this.options.onSelect(String(r.annotation_id));});li.append(b,this.node('p',value(r.reason)),this.node('small','历史观察引用，不会投到当前 FFT 上'));list.append(li);}}else list.append(this.node('li','暂无保存观察；当前选区与保存记录相互独立。'));}}
   this.el('roi-warnings').replaceChildren(...model.warnings.map(w=>this.node('p',w)));renderGpaEvidence(this.el('gpa-evidence'),state.object,this.doc);renderResultSemantics(this.el('result-semantics'),state.object,this.doc);this.renderEvidence(state.crystal_evidence,busy||gesture);
  }
  showHandoff(state:PanelRoiSnapshot){if(this.reasonDirty)throw new Error('请先保存观察说明。');this.el('agent-prompt').value=agentContinuationText(roiObservationModel(state),state.panel_id,state.crystal_evidence);this.el('agent-copy-status').textContent='只交接已保存观察；复制后粘贴给已连接的 Agent。没有内嵌对话，也不会自动运行。';this.el('agent-handoff-dialog').showModal();}

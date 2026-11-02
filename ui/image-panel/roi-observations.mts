@@ -11,6 +11,8 @@ type Anchor={source_object_id:string|null;coordinate_space:string|null;coordinat
 export interface PanelRoiRectangle {
  readonly origin:'saved_annotation'|'current_selection';
  readonly annotation_id:string|null;readonly text:string|null;readonly status:string|null;
+ readonly purpose?:string;readonly observation_contract_version?:number;
+ readonly selection_origin?:string;readonly selection_origin_basis?:string;
  readonly original_anchor:Anchor;readonly usable:boolean;readonly reason:string;
  readonly rect_xyxy?:Rectangle;
 }
@@ -100,7 +102,9 @@ function spatialPanels(value:unknown):WireSpatialPanel[] {
 function handoffRectangle(value:unknown,origin:PanelRoiRectangle['origin'],panels:readonly WireSpatialPanel[],frameId:string|null):PanelRoiRectangle {
  const row=slots(value),anchor=origin==='saved_annotation'?slots(row?.anchor):row;
  const coordinates=numbers(anchor?.coordinates);
- const base={origin,annotation_id:origin==='saved_annotation'?boundedText(row?.annotation_id,64):null,
+ const observation=origin==='saved_annotation'&&row?Object.fromEntries(['purpose','selection_origin','selection_origin_basis','observation_contract_version'].filter(key=>
+  key==='observation_contract_version'?Number.isSafeInteger(row[key]):typeof row[key]==='string'&&(row[key] as string).length<=96).map(key=>[key,row[key]])):{};
+ const base={origin,...observation,annotation_id:origin==='saved_annotation'?boundedText(row?.annotation_id,64):null,
   text:origin==='saved_annotation'?boundedText(row?.text,256):null,status:origin==='saved_annotation'?boundedText(row?.status,64):null,
   original_anchor:{source_object_id:objectId(anchor?.source_object_id)?anchor.source_object_id:null,
    coordinate_space:boundedText(anchor?.coordinate_space,64),coordinates}};
@@ -186,6 +190,7 @@ export function panelRoiHandoff(state:PanelRoiSnapshot):PanelRoiHandoff {
 
 export interface RoiObservationRow {
  readonly annotation_id:string|null;readonly label:string;readonly reason:string|null;
+ readonly purpose?:string;readonly observation_contract_version?:number;readonly selection_origin?:string;readonly selection_origin_basis?:string;
  readonly status:'saved'|'saved_with_draft'|'retracted'|'unusable';
  readonly dirty:boolean;readonly geometry_draft:boolean;readonly usable:boolean;readonly selected:boolean;
  readonly eligibility_reason:string;readonly original_anchor:Anchor;readonly rect_xyxy:Rectangle|null;
@@ -236,10 +241,11 @@ export function roiObservationModel(state:PanelRoiSnapshot,previous?:RoiDependen
   selection.coordinate_space===row.original_anchor.coordinate_space&&same(selection.coordinates,row.original_anchor.coordinates));
  const rows:RoiObservationRow[]=packet.saved_rectangles.map((row,index)=>{
   const original=row.annotation_id?originals.get(row.annotation_id):null;
-  const label=row.text?.trim()||`ROI ${index+1}`,reason=boundedText(original?.note,1000)?.trim()||row.text?.trim()||null;
+  const label=row.text?.trim()||`ROI ${index+1}`,reason=boundedText(original?.note,4096)?.trim()||row.text?.trim()||null;
   const editing=row.annotation_id!==null&&edit?.annotation_id===row.annotation_id;
   const geometryDraft=editing&&edit?.coordinates!==undefined&&!same(edit.coordinates,row.original_anchor.coordinates);
   return {annotation_id:row.annotation_id,label,reason,
+   ...Object.fromEntries(['purpose','observation_contract_version','selection_origin','selection_origin_basis'].filter(key=>row[key as keyof PanelRoiRectangle]!==undefined).map(key=>[key,row[key as keyof PanelRoiRectangle]])),
    status:row.status==='retracted'?'retracted':!row.usable?'unusable':editing?'saved_with_draft':'saved',dirty:editing,
    geometry_draft:geometryDraft,usable:row.usable,selected:selectionMatches.length===1&&selectionMatches[0]===row,
    eligibility_reason:row.reason,original_anchor:row.original_anchor,rect_xyxy:row.rect_xyxy??null};

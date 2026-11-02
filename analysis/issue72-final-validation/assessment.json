@@ -1,0 +1,63 @@
+{
+  "scope": "Fresh first outcomes after client cache, followed by one new targeted Skill holdout; no corrective prompt or same-run replay",
+  "datasets": [
+    {
+      "frozen_sha": "f4d91bf03d5ad952e46e5bb9d530cdf64cd66467",
+      "root": "/Volumes/External SSD/mircograph/resumable-blind-final-20261102",
+      "model_requested": "gpt-6.1-sol",
+      "model_identity": "CLI request explicit; backend identity not independently exposed in events",
+      "tasks": [
+        {
+          "task": "u38",
+          "actual_mcp_calls": 14,
+          "actual_image_blocks": 11,
+          "failed_mcp_events": 0,
+          "sources_unchanged": true,
+          "prior_provider_files_unchanged": true,
+          "violations": [],
+          "assessment": "PASS bounded pixel-only conditional evidence, two explicit Agent supports, actual readback; no physical certification"
+        },
+        {
+          "task": "u81",
+          "actual_mcp_calls": 8,
+          "actual_image_blocks": 7,
+          "failed_mcp_events": 0,
+          "sources_unchanged": true,
+          "prior_provider_files_unchanged": true,
+          "violations": [],
+          "assessment": "PARTIAL: conditional weak interpretation and actual usable handoff; original note paraphrased under unspecified origin, and final count9 differs from trace8. Subsequent public Skill revision addresses provenance rule."
+        },
+        {
+          "task": "u24",
+          "actual_mcp_calls": 3,
+          "actual_image_blocks": 1,
+          "failed_mcp_events": 1,
+          "sources_unchanged": true,
+          "prior_provider_files_unchanged": true,
+          "violations": [],
+          "assessment": "PASS scoped readonly unknown stop; no new writes"
+        }
+      ]
+    },
+    {
+      "frozen_sha": "7c57ef78332e9420a38e9801b431116fa9b76947",
+      "root": "/Volumes/External SSD/mircograph/resumable-note-holdout-20261102",
+      "model_requested": "gpt-6.1-sol",
+      "model_identity": "CLI request explicit; backend identity not independently exposed in events",
+      "tasks": [
+        {
+          "task": "u81",
+          "actual_mcp_calls": 5,
+          "actual_image_blocks": 3,
+          "failed_mcp_events": 2,
+          "sources_unchanged": true,
+          "prior_provider_files_unchanged": true,
+          "violations": [],
+          "assessment": "PARTIAL: original note copied verbatim; new Agent text omitted purpose and failed the owning validator. Original outcome queried; no false save claim. No replacement run."
+        }
+      ]
+    }
+  ],
+  "GUI": "NOT_TESTED",
+  "unattended_reliability": "NOT_QUALIFIED"
+}
