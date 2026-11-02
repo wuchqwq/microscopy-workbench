@@ -1496,6 +1496,8 @@ class Workspace:
                             panels=render_base.get("panels", []), annotations=validated,
                             user_context=context,
                             display_calibration_id=render_base.get("display_calibration_id"),
+                            **({"scientific_grid_identity": render_base["scientific_grid_identity"]}
+                               if "scientific_grid_identity" in render_base else {}),
                             revision_semantics=("updates change only named existing annotations; omitted fields and marks persist"
                                                 if patch_mode else
                                                 "annotations replace the previous revision; empty list restores the original unannotated render"),

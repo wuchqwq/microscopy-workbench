@@ -77,6 +77,17 @@ class PeakDetection(unittest.TestCase):
         self.assertFalse(observed_again["peak_quality"]["display_selection_used"])
         self.assertEqual(hashlib.sha256(self.source.read_bytes()).hexdigest(), before)
 
+    def test_peak_edit_preserves_scientific_grid_identity_and_render_mapping(self):
+        _, fft = self.fft()
+        peaks = self.call("peaks", object_id=fft["object_id"], threshold_rel=.1, refinement="none")
+        edited = self.call("annotate", object_id=peaks["object_id"],
+                           updates=[{"annotation_id": peaks["annotations"][0]["annotation_id"],
+                                     "coordinates": [.13, 0]}])
+        self.assertEqual(edited["scientific_grid_identity"], peaks["scientific_grid_identity"])
+        self.assertEqual(edited["panels"], peaks["panels"])
+        self.assertEqual(edited["annotation_edit_mode"], "update")
+        self.assertFalse(edited["scientific_data_changed"])
+
     def test_signed_anisotropic_calibration_agrees_with_saved_measurement(self):
         _, fft = self.fft(calibrated=True)
         peaks = self.call("peaks", object_id=fft["object_id"], threshold_rel=.1, refinement="none")
