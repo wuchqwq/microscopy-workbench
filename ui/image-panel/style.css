@@ -45,3 +45,19 @@ button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min
 
 #crystal-evidence{scroll-margin-top:64px}
 .spatial-return-status{margin:0;padding:5px 12px;background:#141e29;border-bottom:1px solid var(--border);font-size:11px;line-height:1.5;color:var(--muted);flex:none;overflow-wrap:anywhere}
+
+/* Narrow controls stay outside the viewport-bounded existing drawers. */
+@media(max-width:850px){
+ .pending-notice{position:static;inset:auto;z-index:auto;flex:0 0 auto;margin:8px 10px;box-shadow:none}
+ .pending-notice>span{min-width:0;overflow-wrap:anywhere}
+ .pending-notice>div{min-width:0;max-width:100%;flex-wrap:wrap;flex-shrink:1}
+ .pending-notice button{max-width:100%;white-space:normal}
+ .view-navigation{flex-wrap:wrap;row-gap:6px}
+ .view-navigation button{flex:0 0 auto}
+ .view-navigation #view-current{flex:1 1 7em;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .canvas-context{min-width:0;align-items:flex-start}
+ .canvas-context #selection{max-width:100%}
+ .selection-actions{min-width:0;max-width:100%;flex:1 1 100%;flex-wrap:wrap;row-gap:6px}
+ .selection-actions button{flex:0 0 auto}
+ .selection-actions .quiet-button{margin-left:0}
+}

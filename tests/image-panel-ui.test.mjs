@@ -27,7 +27,7 @@ function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(pan
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
 async function harness(initial=fixture()){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map();let probeTimerId=0,coalesceDrafts=false,activeElement=null;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -61,6 +61,7 @@ async function harness(initial=fixture()){
   Option:class{constructor(text,value){this.text=text;this.value=value;}},
   Image:class{constructor(){this.width=128;this.height=96;}async decode(){if(waitDecode)await waitDecode;}},
   ImageData:class{constructor(data,width,height){this.data=data;this.width=width;this.height=height;}},
+  ResizeObserver:class{constructor(callback){this.callback=callback;this.observed=[];layoutObservers.push(this);}observe(element){this.observed.push(element.id);}},
   requestAnimationFrame:fn=>{frames.set(++frameId,fn);return frameId;},cancelAnimationFrame:id=>frames.delete(id),
   fetch:async(url,options)=>{
    if(!options.body){getCalls.push(url);if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/measurements?'))return {ok:true,json:async()=>({current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false})};if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
@@ -101,6 +102,7 @@ async function harness(initial=fixture()){
   measureResponse(value){measurementResponse=typeof value==='function'?value:copy(value);},delayMeasurement(promise){waitMeasurement=promise;},
   recoverResponse(value){recoveryResponse=copy(value);},
   key:(key,extra={})=>documentListeners.get('keydown')?.({key,code:key===' '?'Space':'',target:activeElement??$('canvas'),ctrlKey:false,metaKey:false,preventDefault(){},...extra}),active:()=>activeElement,
+  resizeLayout(){for(const observer of layoutObservers)observer.callback();flush();},layoutObserved:()=>layoutObservers.flatMap(o=>o.observed),
   coalesceDrafts(){coalesceDrafts=true;},setServer(value){server=copy(value);},server:()=>copy(server)};
 }
 
@@ -658,6 +660,27 @@ test('spatial return qualification polling updates same-object navigation withou
  const unavailable=copy(h.server());unavailable.state_revision=7;unavailable.spatial_return={version:1,status:'unavailable',reason_code:'invalid_saved_preview'};h.setServer(unavailable);await h.poll();
  assert.equal(h.inspect().state.object.object_id,initial.object.object_id);assert.equal(h.inspect().state.spatial_return.status,'unavailable');assert.equal(h.inspect().state.state_revision,7);
  assert.equal(h.$('roi-reason').value,'Keep this newer reason');assert.equal(h.inspect().dirty,true);assert.match(h.$('spatial-return-status').textContent,/预览校验未通过/);assert.equal(h.calls.length,0);
+});
+test('spatial return labels its read-only wait separately from a scientific save',async()=>{
+ const h=await harness(returnableFft());let release;h.delayAction(new Promise(resolve=>release=resolve));h.actionResult(fixture());const returning=h.click('return-spatial');await h.settle();
+ assert.equal(h.$('autosave-status').textContent,'正在读取空间观察');assert.equal(h.$('draft-status').textContent,'正在读取空间观察');release();await returning;
+ assert.match(h.$('message').textContent,/已返回对应/);assert.equal(h.calls.length,1);
+});
+test('narrow drawer bounds follow the actual viewport without moving camera, ROI or reason drafts',async()=>{
+ const h=await harness();h.draw('rectangle');h.$('roi-reason').value='Keep the unsaved reason';h.$('roi-reason').oninput();h.$('gamma').value='1.8';h.$('gamma').oninput();await h.settle();
+ const before=h.inspect(),counts=[h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length];assert.deepEqual(h.layoutObserved(),['workbench','viewport']);
+ h.$('workbench').getBoundingClientRect=()=>({left:0,top:62,width:760,height:738});h.$('viewport').getBoundingClientRect=()=>({left:56,top:220,width:704,height:310});h.resizeLayout();
+ for(const id of ['research-panel','properties-panel']){assert.equal(h.$(id).style.top,'158px');assert.equal(h.$(id).style.bottom,'270px');}
+ h.$('viewport').getBoundingClientRect=()=>({left:56,top:260,width:704,height:250});h.resizeLayout();assert.equal(h.$('research-panel').style.top,'198px');assert.equal(h.$('research-panel').style.bottom,'290px');
+ h.$('workbench').getBoundingClientRect=()=>({left:0,top:62,width:1200,height:738});h.resizeLayout();assert.equal(h.$('research-panel').style.top,'');assert.equal(h.$('properties-panel').style.bottom,'');
+ assert.deepEqual(h.inspect(),before);assert.equal(h.$('roi-reason').value,'Keep the unsaved reason');assert.deepEqual([h.calls.length,h.draftCalls.length,h.getCalls.length,h.probeCalls.length],counts);
+});
+test('existing drawers stay mutually exclusive and expose their expanded state without discarding drafts',async()=>{
+ const h=await harness();h.draw('rectangle');h.$('roi-reason').value='Keep reason across drawers';h.$('roi-reason').oninput();await h.settle();const selected=h.inspect().draft;
+ await h.click('toggle-research');assert.equal(h.$('toggle-research').attributes['aria-expanded'],'true');assert.equal(h.$('toggle-properties').attributes['aria-expanded'],'false');
+ await h.click('toggle-settings');assert.equal(h.$('research-panel').hidden,true);assert.equal(h.$('toggle-research').attributes['aria-expanded'],'false');assert.equal(h.$('toggle-properties').attributes['aria-expanded'],'true');assert.equal(h.$('toggle-settings').attributes['aria-expanded'],'true');
+ await h.click('close-properties');assert.equal(h.$('toggle-properties').attributes['aria-expanded'],'false');await h.click('toggle-research');assert.equal(h.$('toggle-research').attributes['aria-expanded'],'true');
+ assert.deepEqual(h.inspect().draft,selected);assert.equal(h.$('roi-reason').value,'Keep reason across drawers');assert.equal(h.inspect().dirty,true);assert.equal(h.calls.length,0);
 });
 
 test('human workflow: result tabs expose one result type without changing the scientific object',async()=>{

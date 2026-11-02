@@ -7,7 +7,7 @@
   <div class="frame-row" aria-label="图像帧"><button id="previous-frame" class="icon-button" aria-label="上一帧" title="上一帧">‹</button><label class="frame-label">帧<input id="frame" type="number" min="1" value="1"></label><button id="set-frame" class="icon-button" aria-label="查看所填帧" title="查看所填帧">↵</button><button id="next-frame" class="icon-button" aria-label="下一帧" title="下一帧">›</button></div>
   <span id="autosave-status" class="save-indicator" role="status">原图只读</span><button id="export" class="primary-button export-button" title="导出 PNG、科学 NPY 与参数"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 12v5h14v-5"/></svg><span>科学数据</span></button><button id="open-usage-help" aria-haspopup="dialog" aria-controls="usage-dialog">使用说明</button>
 </header>
-<main class="workbench">
+<main id="workbench" class="workbench">
   <nav class="canvas-tools" aria-label="画布工具">
     <div class="tool-group">
       <button class="tool-button" data-mode="select" aria-label="选择与拖动标注" aria-pressed="true" title="选择与拖动标注 (V)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 3 14 9-7 1-3 7-4-17Z"/></svg><span>选择</span></button>
@@ -113,6 +113,7 @@
     <details><summary>8. 如何阅读科学结果</summary>
       <p>分别看数值是否已计算、测量可靠性有哪些依据或未知项、候选解释在什么条件下相容。像素周期差异不自动等于材料应变，有限候选相容不等于唯一物相或孪晶确认。原始数据与来源记录继续保留，研究者决定下一步。</p>
     </details>
+    <details><summary>8. 窄窗口与面板</summary><p>“观察与证据”和“对象属性”使用现有侧栏，窄窗口中以抽屉覆盖图像区域；导航与底部选区操作保留在外侧。面板内容可滚动，保存按钮在“保存观察”内；顶部“×”可收起面板，草稿仍保留。窗口改变大小时不会自动移动相机，视野不合适可点“适应画布”。</p></details>
   </div>
 </dialog>
 <script type="module" src="/app.mjs"></script>
