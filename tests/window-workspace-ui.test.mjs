@@ -48,6 +48,20 @@ async function harness(initial=collection()){
 }
 async function settle(){for(let i=0;i<12;i++)await Promise.resolve();}
 
+test('clicking image content or the window border raises only its display layer',async()=>{
+ const h=await harness(),readonly=id(1),active=id(2),before=copy(h.state),positions=h.state.window_collection.windows.map(win=>({...win.layout,z:0}));
+ h.frame(readonly).onpointerdown?.(h.event(h.body(readonly),200,200));await h.workspace.settled();
+ let windows=h.state.window_collection.windows;assert.ok(windows.find(win=>win.window_id===readonly).layout.z>windows.find(win=>win.window_id===active).layout.z,'Clicking readonly content must bring its window to the front');
+ assert.equal(h.state.window_collection.active_window_id,active);assert.deepEqual(h.state.selection,before.selection);assert.deepEqual(h.state.edit_state,before.edit_state);assert.deepEqual(h.state.last_operation,before.last_operation);assert.equal(h.state.reason,before.reason);
+ h.setScientificGesture(true);h.frame(active).onpointerdown?.(h.event(h.frame(active),300,220));assert.ok(Number(h.frame(active).style.zIndex)>Number(h.frame(readonly).style.zIndex),'Stacking must update immediately without moving a live scientific gesture');await h.workspace.settled();
+ windows=h.state.window_collection.windows;assert.deepEqual(windows.map(win=>({...win.layout,z:0})),positions);assert.equal(h.state.window_collection.active_window_id,active);assert.ok(h.requests.filter(request=>request.body).every(request=>request.body.action==='window-layout'));assert.equal(h.fits(),0);assert.deepEqual(h.errors,[]);
+});
+
+test('title dragging and its bubbled click publish only one display update',async()=>{
+ const h=await harness(),window=id(1),header=h.header(window),down=h.event(header,100,100);header.onpointerdown(down);h.frame(window).onpointerdown(down);header.onpointermove(h.event(header,130,120));header.onpointerup(h.event(header,130,120));await h.workspace.settled();
+ const writes=h.requests.filter(request=>request.body);assert.equal(writes.length,1);assert.equal(writes[0].body.action,'window-layout');assert.equal(h.state.window_collection.active_window_id,id(2));assert.equal(h.state.edit_state.draft_revision,18);assert.deepEqual(h.errors,[]);
+});
+
 test('bounded collection rejects ambiguous membership and malformed geometry',()=>{
  assert.ok(readWindowCollection(collection()));const duplicate=collection();duplicate.windows.push(copy(duplicate.windows[0]));assert.equal(readWindowCollection(duplicate),null);
  const wrong=collection();wrong.active_window_id=id(99);assert.equal(readWindowCollection(wrong),null);
@@ -78,7 +92,7 @@ test('metadata synchronization never detaches or replaces the mounted editor tre
 test('scientific gesture defers active geometry while passive layouts update, then flushes the qualified layout',async()=>{
  const h=await harness(),active=h.frame(id(2)),before=copy(active.style),science=copy({object:h.state.object,selection:h.state.selection,edit_state:h.state.edit_state,last_operation:h.state.last_operation});h.setScientificGesture(true);
  const next=copy(h.state.window_collection);next.revision++;next.windows[0].layout={x:0,y:0,width:.4,height:.8,z:3};next.windows[1].layout={x:.4,y:.1,width:.6,height:.8,z:4};h.state.window_collection=next;h.workspace.sync(h.state);
- assert.deepEqual(active.style,before);assert.equal(h.frame(id(1)).style.width,'calc(40% - 8px)');h.workspace.flushDeferredLayout();assert.deepEqual(active.style,before);
+ const geometry=style=>({left:style.left,top:style.top,width:style.width,height:style.height});assert.deepEqual(geometry(active.style),geometry(before));assert.equal(active.style.zIndex,'4');assert.equal(h.frame(id(1)).style.width,'calc(40% - 8px)');h.workspace.flushDeferredLayout();assert.deepEqual(geometry(active.style),geometry(before));
  h.setScientificGesture(false);h.workspace.flushDeferredLayout();assert.equal(active.style.left,'calc(40% + 4px)');assert.equal(active.style.top,'calc(10% + 4px)');assert.equal(active.style.width,'calc(60% - 8px)');assert.equal(h.viewport.parentNode,h.body(id(2)));
  assert.deepEqual({object:h.state.object,selection:h.state.selection,edit_state:h.state.edit_state,last_operation:h.state.last_operation},science);assert.equal(h.requests.filter(request=>request.body).length,0);
 });
@@ -87,11 +101,11 @@ test('gesture end does not apply an unacknowledged local tile candidate',async()
  h.setScientificGesture(false);h.workspace.flushDeferredLayout();assert.deepEqual(active.style,before);release();await h.workspace.settled();assert.equal(active.style.left,'calc(50% + 4px)');assert.equal(active.style.width,'calc(50% - 8px)');assert.equal(h.state.window_collection.active_window_id,id(2));
 });
 test('a deferred geometry cannot be applied after the current scientific object changes',async()=>{
- const h=await harness(),active=h.frame(id(2)),before=copy(active.style);h.setScientificGesture(true);const next=copy(h.state.window_collection);next.revision++;next.windows[1].layout={x:0,y:0,width:1,height:1,z:3};h.state.window_collection=next;h.workspace.sync(h.state);h.state.object.object_id=id(99);h.setScientificGesture(false);h.workspace.flushDeferredLayout();assert.deepEqual(active.style,before);assert.equal(h.state.object.object_id,id(99));assert.equal(h.requests.filter(request=>request.body).length,0);
+ const h=await harness(),active=h.frame(id(2)),before=copy(active.style);h.setScientificGesture(true);const next=copy(h.state.window_collection);next.revision++;next.windows[1].layout={x:0,y:0,width:1,height:1,z:3};h.state.window_collection=next;h.workspace.sync(h.state);h.state.object.object_id=id(99);h.setScientificGesture(false);h.workspace.flushDeferredLayout();const geometry=style=>({left:style.left,top:style.top,width:style.width,height:style.height});assert.deepEqual(geometry(active.style),geometry(before));assert.equal(active.style.zIndex,'3');assert.equal(h.state.object.object_id,id(99));assert.equal(h.requests.filter(request=>request.body).length,0);
 });
-test('passive pan and zoom issue no selection, measurement or write action',async()=>{
+test('passive pan and zoom change only display layers without scientific selection or measurement',async()=>{
  const h=await harness(),body=h.body(id(1)),img=body.children[0],before=copy(h.state.selection),count=h.requests.length;
- body.onpointerdown(h.event(body,10,20));body.onpointermove(h.event(body,45,55));body.onpointerup(h.event(body,45,55));const pan=img.style.transform;body.onwheel(h.event(body,40,40,{deltaY:-100}));assert.notEqual(img.style.transform,pan);assert.equal(h.requests.length,count);assert.deepEqual(h.state.selection,before);assert.equal(h.state.window_collection.active_window_id,id(2));
+ body.onpointerdown(h.event(body,10,20));h.frame(id(1)).onpointerdown(h.event(body,10,20));body.onpointermove(h.event(body,45,55));body.onpointerup(h.event(body,45,55));const pan=img.style.transform;body.onwheel(h.event(body,40,40,{deltaY:-100}));await h.workspace.settled();assert.notEqual(img.style.transform,pan);assert.ok(h.requests.slice(count).every(request=>request.body?.action==='window-layout'));assert.deepEqual(h.state.selection,before);assert.equal(h.state.window_collection.active_window_id,id(2));
 });
 test('narrow mode preserves every window and allows closing a passive view through the list',async()=>{
  const h=await harness();h.resize(704);assert.equal(h.frame(id(1)).hidden,true);assert.equal(h.frame(id(2)).hidden,false);assert.match(h.get('window-count').textContent,/其余窗口保留/);assert.equal(h.get('tile-windows').disabled,true);
