@@ -154,9 +154,10 @@ class ScopeTests(unittest.TestCase):
         self.write("tools/image_gpa_core.py")
         self.commit()
         result = self.scope()
-        for scope in ("engineering", "gpa", "topology"):
+        for scope in ("gpa", "topology"):
             self.assertEqual(result["run_" + scope], "true")
         self.assertEqual(result["run_crystal"], "false")
+        self.assertEqual(result["run_engineering"], "false")
 
     def test_crystal_and_mixed_ui_changes_union_scopes(self):
         self.write("crystallography/model.py")

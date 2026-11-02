@@ -19,15 +19,17 @@ build scripts, dependency manifests and CI changes run the complete catalog.
 | Ordinary docs/README/AGENTS Markdown | Scope/gate tests and changed-file whitespace |
 | Skill Markdown | Above plus strict build and existing packaged Skill/tool-reference check |
 | Image Panel UI, Panel/Inspector entry, associated UI tests | Node/TypeScript/platform/packaging checks and one actual image-science/Panel smoke; no routine GPA/topology/scattering matrices |
-| Known GPA leaf modules/tests | Engineering boundary plus GPA, its F4 integration and consuming topology |
-| Known topology leaf modules/tests | Engineering boundary plus topology |
-| Known spatial-feature leaf modules | Engineering, spatial/active, GPA integration and topology consumers |
-| Crystal modules and mapped tests | Engineering boundary, geometry and actual ASE/diffsims/MCP |
+| Known GPA leaf modules/tests | GPA, its F4 integration and consuming topology, including their build/MCP checks |
+| Known topology leaf modules/tests | Topology with its build/MCP checks |
+| Known spatial-feature leaf modules | Spatial/active, GPA integration and topology consumers with their build/MCP checks |
+| Crystal modules and mapped tests | Geometry and actual ASE/diffsims/MCP; the TS structure viewer also selects engineering |
 | Mixed changes | Union of affected areas; any unknown/shared path expands to full |
 
 The mapping is deliberately conservative, not a complete automatic dependency
 analyzer. Extensions alone do not establish isolation. Add a new narrow rule
 only with consumer review and tests. New unmapped files fall back to full.
+Known numerical-only changes do not also select the unrelated full Node matrix;
+the selected scientific jobs already build and exercise their actual MCP boundary.
 `run_full_ci` is retained as a compatibility diagnostic; jobs use domain flags.
 Skill link/catalog success is not new-model behavioral qualification. DOM and
 HTTP/science smoke success is not real-browser or real-specimen qualification.

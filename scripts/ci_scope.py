@@ -44,14 +44,16 @@ def classify(paths):
             selected.add('engineering')
         elif path in GPA or (path.startswith('tests/test_image_gpa_') and path.endswith('.py')):
             # Topology and the F4 integration consume GPA outputs.
-            selected.update(('engineering', 'gpa', 'topology'))
+            selected.update(('gpa', 'topology'))
         elif path in TOPOLOGY or (path.startswith('tests/test_') and 'topology' in p.name and path.endswith('.py')):
-            selected.update(('engineering', 'topology'))
+            selected.add('topology')
         elif path in SPATIAL:
-            selected.update(('engineering', 'spatial', 'gpa', 'topology'))
+            selected.update(('spatial', 'gpa', 'topology'))
         elif path in CRYSTAL or path.startswith('crystallography/') or (
                 path.startswith('tests/test_') and p.name.startswith(('test_twin', 'test_general_', 'test_site_occupancy', 'test_crystal_qualification'))):
-            selected.update(('engineering', 'crystal'))
+            selected.add('crystal')
+            if path == 'tools/structure_viewer.mts':
+                selected.add('engineering')
         else:
             # Includes shared workers, peaks/calibration, schema, runtime, build,
             # dependencies, CI itself, binary fixtures and new unmapped files.
