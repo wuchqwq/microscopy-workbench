@@ -111,3 +111,15 @@ stdio MCP recovery suite 7 PASS, including failed-ACK retry, cached repeated
 receipts, new-client independence and all controlled unknown-write cases. Earlier
 failures and profile remain separately retained. The stacked #72 final holdout
 will use another frozen tip/new inputs; first Agent outcomes stay preserved.
+
+## Spatial CI deadline diagnosis
+
+The cache fix did not by itself make the five-minute hosted spatial job finish;
+that canceled outcome remains recorded (run 41430102032). A justified one-off
+full `test:spatial-domains` was run locally with per-call trace because this exact
+consumer was timing out: PASS, 52 timed MCP calls totaling 89.1 seconds, the
+unchanged independent DFT, controls, exports and recovery checks intact. The
+local result does not prove the hosted run's duration. CI now allows ten bounded
+minutes and logs every call; no window/seed, scientific assertion, numerical
+tolerance or test was removed. This is a CI execution budget, not a scientific
+admission threshold. The subsequent hosted result must be checked separately.

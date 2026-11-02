@@ -47,8 +47,9 @@ const report:Row={scope:'F1a public synthetic, actual compiled MCP/Python/Panel 
 const started=performance.now();
 const call=async(name:string,args:Row={},client=first):Promise<Row>=>{
  const readOnly=['image_info','image_panel_current','analysis_read'].includes(name),requestId=readOnly?null:args.request_id??`f1a-${tag}-${++serial}`,t=performance.now();
+ if(process.env.MICROSCOPY_SMOKE_TRACE==='1')console.error(JSON.stringify({phase:'before',tool:name,request_id:requestId}));
  try{const reply=await client.tool(name,readOnly?args:{...args,request_id:requestId});if(reply.png!==undefined){const png=text(reply.png);assert.equal(Buffer.from(png,'base64').subarray(0,8).toString('hex'),'89504e470d0a1a0a');}return row(reply.data);}
- finally{timings.push({tool:name,request_id:requestId,elapsed_ms:performance.now()-t});}
+ finally{const timing={tool:name,request_id:requestId,elapsed_ms:performance.now()-t};timings.push(timing);if(process.env.MICROSCOPY_SMOKE_TRACE==='1')console.error(JSON.stringify({phase:'after',...timing}));}
 };
 const read=async(id:string,client=first)=>call('image_info',{object_id:id},client);
 const theta=number(row(oracle.rotation).degrees);
