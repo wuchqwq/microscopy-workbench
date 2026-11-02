@@ -1,95 +1,92 @@
-# Dependency-scoped CI (2026-11-02)
+# Change-scoped CI: first-stage contract
 
-This changes test selection, not scientific algorithms, thresholds or acceptance
-claims. #77 and #79 were reviewed and merged before this CI increment; the
-integration parent is `dd917e59c7d492361faf2e471af0827f701af526`. Always obtain the
-live main SHA and its own checks before using it as an engineering checkpoint.
-Old Mac/R3 baseline refs and historical reports are not moved or rewritten.
+This increment changes CI selection and removes duplicate checks within a job.
+It does not change scientific algorithms, thresholds, runtime timeouts, saved
+objects, Node support, Actions major versions, Python dependency constraints,
+or the historical `macos-r3-light.yml` qualification.
 
-## PR selection
+## Selection
 
-`scripts/ci_scope.py` is the shared, standard-library-only classifier, invoked by
-`ci_scope.sh`. It measures both ends of renames/deletions against the PR merge
-base; paths are NUL-delimited. Events other than pull_request, missing/unreadable
-refs, empty diffs, unknown paths, shared workers/protocol/schema/calibration,
-build scripts, dependency manifests and CI changes run the complete catalog.
+Both regular workflows run on PR, main push, manual dispatch and merge-group
+check events; neither has a workflow-level path filter. `scripts/ci_scope.py`
+reads a NUL-separated `git diff --no-renames` from the PR merge base to its head.
+Both sides of a rename, deletions and mixed changes contribute. Unknown paths,
+empty/unreadable diffs and every non-PR event select all groups. Failed script
+execution fails classification; it does not produce an empty successful scope.
 
-| Changed area | Checks selected |
+| PR changes | Default selection |
 | --- | --- |
-| Ordinary docs/README/AGENTS Markdown | Scope/gate tests and changed-file whitespace |
-| Skill Markdown | Above plus strict build and existing packaged Skill/tool-reference check |
-| Image Panel UI, Panel/Inspector entry, associated UI tests | Node/TypeScript/platform/packaging checks and one actual image-science/Panel smoke; no routine GPA/topology/scattering matrices |
-| Known GPA leaf modules/tests | GPA, its F4 integration and consuming topology, including their build/MCP checks |
-| Known topology leaf modules/tests | Topology with its build/MCP checks |
-| Known spatial-feature leaf modules | Spatial/active, GPA integration and topology consumers with their build/MCP checks |
-| Crystal modules and mapped tests | Geometry and actual ASE/diffsims/MCP; the TS structure viewer also selects engineering |
-| Mixed changes | Union of affected areas; any unknown/shared path expands to full |
+| Root README/AGENTS and `docs/**/*.md` only | CI contract/whitespace/gates; no application suites |
+| Skill Markdown | Existing Node package/tool contracts and client-launch tests; no numerical suites |
+| UI HTML/CSS | Existing Node engineering suites |
+| Audited presentation modules (app/research workspace/annotation presentation/viewer render) | Node plus one small real science/provider boundary smoke |
+| Panel/Inspector entry code | Above plus compiled compatibility |
+| GPA core | GPA, topology consumers, method integration, Node and provider boundary |
+| Topology core | Topology, method integration, Node and provider boundary |
+| Spatial features and comparisons | Spatial/active consumers, topology/integration and crystal consumers, Node and boundary |
+| Known crystal implementation | Actual simulation, crystal geometry, Node, compatibility and boundary |
+| Shared worker, calibration, request/object identity, shared UI evidence contracts, build/root entrypoints/dependencies/CI or unknown | All groups |
 
-The mapping is deliberately conservative, not a complete automatic dependency
-analyzer. Extensions alone do not establish isolation. Add a new narrow rule
-only with consumer review and tests. New unmapped files fall back to full.
-Known numerical-only changes do not also select the unrelated full Node matrix;
-the selected scientific jobs already build and exercise their actual MCP boundary.
-`run_full_ci` is retained as a compatibility diagnostic; jobs use domain flags.
-Skill link/catalog success is not new-model behavioral qualification. DOM and
-HTTP/science smoke success is not real-browser or real-specimen qualification.
+The spatial-to-crystal link is intentional: `crystallography/twin_observations.py`
+reads spatial-domain output. `crystallography/reflection_compare.py` also serves
+image comparisons, and `capture.py` serves image import; both remain full-scope.
+`ui/` is not a trust boundary: ROI/evidence/coordinate contracts are also imported
+by providers and remain broad. New unclassified modules do not inherit a light
+profile merely from a filename prefix. A `.test.mjs` file is Node-only only if
+registered in the actual npm test catalog; opt-in tests have explicit owners.
 
-## Main and CI gates
+This first stage keeps the existing Node matrix (18/22 on Linux/Windows) rather
+than dropping a declared support floor. It does not add browser or model tests.
+The small `science-boundary` job runs the existing `test:science`; that invocation
+moves out of the GPA integration job instead of being duplicated. All numerical
+regressions and actual scattering commands remain available under their groups.
 
-Main pushes and manual runs remain **full** during this transition. Existing
-scientific counterexamples and test assertions are retained. Both workflows now
-start on every PR/main push instead of using an independent broad/incomplete
-F3b path filter. Build/root server changes can no longer silently omit F3b.
+## Gates and rollout
 
-`Scoped CI gate` and `Simulation CI gate` use `always()` and list every relevant
-job in `needs`. `ci_gate.py` rejects failed classification, missing/invalid flags,
-missing dependencies, cancellation/failure and a selected job unexpectedly
-skipped. Only an explicitly unaffected skipped job is acceptable. A green gate
-states the selected scope, not that all scientific tests ran on a GUI-only PR.
+`CI scope gate` and `F3b scope gate` use `always()` and explicit `needs`. They require:
+classification success, a complete boolean output contract, every expected job
+entry, and success for every selected job. Missing, failed, cancelled or unexpectedly
+skipped selected work fails. Only explicitly unselected work may be skipped.
+The quick workflow runs the stdlib CI classifier/gate/wiring test suite once;
+the F3b workflow reuses the classifier without rerunning that suite.
 
-Repository reads at implementation time reported main unprotected and no
-rulesets. No repository security settings were changed. An owner may separately
-require both new gate names; adding workflow jobs alone does not make them
-mandatory branch-protection checks. Existing job names remain available.
+Existing job names are retained; the new F3b classification and gate names are
+unique. **Before deployment an authenticated maintainer must inspect the actual
+branch protections/rulesets and ensure both scope gates are required.** An old
+required matrix-job name may interact with skipped matrix expansion. Do not
+remove a safety requirement just to get a merge, do not label a skipped test as
+PASS, and do not claim gates are enforced merely because YAML contains them.
+The review connection could not read protection settings (403) and made no
+administrative changes. Hosted checks and required-check compatibility remain
+rollout prerequisites.
 
-Only older runs of the same workflow and PR are cancelable. Main/manual runs use
-unique run IDs and are not canceled by a newer PR. Canceled evidence is not PASS.
+Same-PR superseded runs may be cancelled. Non-PR concurrency groups include the
+unique run ID; main/manual/merge-queue validations never cancel each other through
+this rule. Main still runs the full suite during this first-stage transition.
+No expectation of a particular runner's timing is used to weaken test assertions.
 
-## Removal of duplicate work
+## Deduplication and evidence
 
-- Strict `build` already performs the three TypeScript checks. Removed redundant
-  standalone typecheck immediately before build/pretest inside the same jobs.
-- `npm test` and its existing pretest build are unchanged for developers.
-- The existing representative `test:science` invocation moves from the GPA
-  integration job to the common engineering boundary job; it is not duplicated.
-- Different platforms/Node versions are still distinct evidence, not deduplicated.
+`npm test` already has `pretest = npm run build`, and build checks all three TS
+projects. Redundant standalone typechecks are removed from that same Node job,
+compiled-compatibility and F3b; each still does one strict build. The developer
+`typecheck` command remains unchanged. Separate platforms are not interchangeable.
 
-No Node support-floor, Actions major, Python requirements, production timeout,
-scientific threshold or old test budget changes are included. Node/Actions
-lifecycle, a frozen Python validation environment, current-main Mac coverage and
-an actual browser smoke are separate follow-ups, not claimed implemented here.
-The current Node 18 support promise is not silently removed.
+Local checks:
 
-## Validation and continuation
+```sh
+python3 -B -m unittest discover -s tests -p 'ci_*_test.py' -v
+printf '["ui/image-panel/style.css"]' | python3 scripts/ci_scope.py --paths-json
+```
 
-`tests/ci_scope_test.py` uses real temporary Git histories: docs, Skills, UI,
-science domains, mixed paths, rename/deletion, base-only changes, unknown files,
-missing refs and full main/dispatch behavior. `tests/ci_gate_test.py` covers
-selected/unselected/failed/canceled/skipped/missing jobs and checks workflow
-conditions, outputs, dependency lists and absence of workflow path filtering.
-No third-party package is needed for these tests.
+The wiring tests use the maintained YAML structure, not a hosted runner emulator.
+Keep local, hosted CI, browser gestures, real-model tasks and physical-material
+validation separately labelled. CI green does not grant new scientific confidence.
 
-For this CI change itself the classifier selects full CI. The real CI run must
-pass before merge; the merged main push must be inspected separately. No local
-repeat of all scientific matrices is necessary. Preserve original failures and
-use the exact source SHA, command, environment and scope for every result.
+Later independent work: current Node/Actions versions, Python CI constraints,
+current-main Mac checks, and a small public-fixture browser smoke. Do not bundle
+those environment changes into this routing increment.
 
-Next user-facing work is in [GUI/help handoff](CODEX_GUI_HELP_HANDOFF.md).
-Issue #78 and #71 remain partial; #45 remains independent. A clean engineering
-checkpoint is not a declaration that navigation, layout, model autonomy or
-real-material accuracy have passed.
-
-## Official semantics used
-
-- [Required checks, skipped workflows/jobs and always/needs](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks)
-- [Workflow conditions and concurrency](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+Official semantics consulted:
+- https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+- https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks

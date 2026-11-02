@@ -2,8 +2,13 @@
 import os
 from pathlib import Path
 import subprocess
+import sys
+from unittest.mock import patch
 import tempfile
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from ci_scope import GROUPS, classify_paths, groups_for_path, scope
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ci_scope.sh"
 
@@ -44,6 +49,66 @@ class ScopeTests(unittest.TestCase):
                                 capture_output=True, text=True, check=True)
         return dict(line.split("=", 1) for line in result.stdout.splitlines())
 
+    @staticmethod
+    def selected(result):
+        return {group for group in GROUPS if result.get("run_" + group) == "true"}
+
+    def test_ui_style_and_engineering_entry_are_scoped(self):
+        for index, (path, expected) in enumerate((
+                ("ui/image-panel/style.css", {"node"}),
+                ("ui/image-panel/app.mts", {"node", "boundary"}),
+                ("tools/researcher_inspector.mts", {"node", "boundary", "compat"}))):
+            with self.subTest(path=path):
+                self.git("checkout", "-q", "-b", "ui-%d" % index, self.base)
+                self.write(path); self.commit()
+                self.assertEqual(self.selected(self.scope()), expected)
+
+    def test_known_groups_include_downstream_consumers(self):
+        examples = {
+            "tools/image_gpa_core.py": {"node", "gpa", "topology", "integration", "boundary"},
+            "tools/image_topology_core.py": {"node", "topology", "integration", "boundary"},
+            "tools/image_feature_field.py": {"node", "spatial", "active", "topology", "integration", "crystal", "boundary"},
+            "crystallography/occupancy.py": {"node", "crystal", "compat", "boundary"},
+            "tests/preview-recovery.test.mjs": {"node", "images", "boundary"},
+            "tests/image-panel-ui.test.mjs": {"node"},
+        }
+        for path, expected in examples.items():
+            with self.subTest(path=path):
+                self.assertEqual(groups_for_path(path), expected)
+
+    def test_shared_unknown_and_unregistered_tests_expand(self):
+        for path in ("scripts/build.mjs", "server.mts", "science-server.mts",
+                     "lib/runtime/schema.mts", "lib/image_workspace.mts",
+                     "tools/image_workspace.py", "tools/image_calibration.py",
+                     "tools/image_peaks.py", "requirements-images.txt", "package-lock.json",
+                     "tests/not-in-npm-catalog.test.mjs", "new/module.py",
+                     "crystallography/capture.py", "crystallography/reflection_compare.py",
+                     "ui/image-panel/roi-observations.mts", "ui/image-panel/result-semantics.mts",
+                     "ui/image-panel/new-untested-module.mts", "crystallography/new_method.py",
+                     "skills/example/helper.py", "skills/example/fixture.png",
+                     "analysis/evidence.zip", "ui/new.bin", "../README.md", "/README.md"):
+            with self.subTest(path=path):
+                self.assertEqual(groups_for_path(path), set(GROUPS))
+
+    def test_mixed_selection_is_union_not_last_path(self):
+        self.assertEqual(classify_paths(["ui/image-panel/style.css", "crystallography/occupancy.py"]),
+                         {"node", "crystal", "compat", "boundary"})
+        self.assertEqual(classify_paths(["README.md", "lib/runtime/schema.mts"]), set(GROUPS))
+
+    def test_known_code_rename_preserves_both_scopes(self):
+        self.write("ui/old.css"); old = self.commit()
+        self.git("mv", "ui/old.css", "docs/old.md"); self.commit()
+        self.assertEqual(self.selected(self.scope(base=old)), {"node"})
+
+    def test_broken_git_or_diff_cannot_suppress_checks(self):
+        with patch("ci_scope.git", side_effect=OSError("git unavailable")):
+            result = scope({"EVENT_NAME": "pull_request", "BASE_SHA": "x", "HEAD_SHA": "y"})
+        self.assertEqual(self.selected(result), set(GROUPS))
+        self.assertEqual(result["comparison_base"], "")
+
+    def test_ref_option_injection_falls_back_to_full(self):
+        self.assertEqual(self.selected(self.scope(base="--help")), set(GROUPS))
+
     def test_bilingual_readmes_are_light(self):
         self.write("README.md")
         self.write("README.zh-CN.md")
@@ -66,18 +131,16 @@ class ScopeTests(unittest.TestCase):
         self.commit()
         self.assertEqual(self.scope()["run_full_ci"], "true")
 
-    def test_agent_rules_are_light_skills_check_contract_and_unknown_docs_are_full(self):
-        cases = (("AGENTS.md", "false", "false"),
-                 ("skills/example/SKILL.md", "false", "true"),
-                 ("lib/README.md", "true", "true"))
-        for index, (name, full, skill) in enumerate(cases):
+    def test_agent_policy_is_light_skill_contracts_are_scoped(self):
+        for index, (name, expected) in enumerate((
+                ("AGENTS.md", set()),
+                ("skills/example/SKILL.md", {"node", "client"}),
+                ("lib/README.md", set(GROUPS)))):
             with self.subTest(path=name):
                 self.git("checkout", "-q", "-b", "special-%d" % index, self.base)
                 self.write(name)
                 self.commit()
-                result = self.scope()
-                self.assertEqual(result["run_full_ci"], full)
-                self.assertEqual(result["run_skills"], skill)
+                self.assertEqual(self.selected(self.scope()), expected)
 
     def test_fixture_assets_are_not_exempt(self):
         for index, name in enumerate(("docs/examples/truth.json", "docs/examples/field.npy", "docs/examples/preview.png")):
@@ -116,7 +179,7 @@ class ScopeTests(unittest.TestCase):
         self.assertEqual(self.scope()["run_full_ci"], "true")
 
     def test_dispatch_or_unknown_event_is_full(self):
-        for event in ("workflow_dispatch", "push", ""):
+        for event in ("workflow_dispatch", "push", "merge_group", ""):
             with self.subTest(event=event):
                 self.assertEqual(self.scope(event=event, base="", head="")["run_full_ci"], "true")
 
@@ -139,57 +202,6 @@ class ScopeTests(unittest.TestCase):
         result = self.scope(base=advanced_base, head=head)
         self.assertEqual(result["run_full_ci"], "false")
         self.assertEqual(result["comparison_base"], self.base)
-
-
-    def test_ui_and_inspector_do_not_select_unrelated_science(self):
-        self.write("ui/image-panel/app.mts")
-        self.write("tools/researcher_inspector.mts")
-        self.commit()
-        result = self.scope()
-        self.assertEqual(result["run_engineering"], "true")
-        for scope in ("images", "spatial", "gpa", "topology", "crystal", "skills"):
-            self.assertEqual(result["run_" + scope], "false")
-
-    def test_gpa_selects_consuming_topology_and_integration_not_scattering(self):
-        self.write("tools/image_gpa_core.py")
-        self.commit()
-        result = self.scope()
-        for scope in ("gpa", "topology"):
-            self.assertEqual(result["run_" + scope], "true")
-        self.assertEqual(result["run_crystal"], "false")
-        self.assertEqual(result["run_engineering"], "false")
-
-    def test_crystal_and_mixed_ui_changes_union_scopes(self):
-        self.write("crystallography/model.py")
-        self.write("ui/image-panel/style.css")
-        self.write("skills/example/references/manual.md")
-        self.commit()
-        result = self.scope()
-        for scope in ("engineering", "crystal", "skills"):
-            self.assertEqual(result["run_" + scope], "true")
-        self.assertEqual(result["run_gpa"], "false")
-
-    def test_shared_code_build_dependencies_and_unmapped_paths_run_all(self):
-        for index, name in enumerate(("tools/image_workspace.py", "tools/image_peaks.py",
-                "lib/runtime/schema.mts", "scripts/build.mjs", "science-server.mts",
-                "server.mts", "package-lock.json", "requirements-images.txt",
-                "scripts/ci_scope.py", "ui/image-panel/unmapped.bin")):
-            with self.subTest(path=name):
-                self.git("checkout", "-q", "-b", "shared-%d" % index, self.base)
-                self.write(name)
-                self.commit()
-                result = self.scope()
-                self.assertTrue(all(v == "true" for k, v in result.items() if k.startswith("run_")))
-
-    def test_ui_rename_into_markdown_cannot_hide_old_side(self):
-        self.write("ui/image-panel/app.mts")
-        base = self.commit()
-        self.git("mv", "ui/image-panel/app.mts", "docs/was-ui.md")
-        self.commit()
-        self.assertEqual(self.scope(base=base)["run_engineering"], "true")
-
-    def test_invalid_revision_options_are_not_executed(self):
-        self.assertEqual(self.scope(base="--help")["run_full_ci"], "true")
 
 
 if __name__ == "__main__":

@@ -1,51 +1,54 @@
 #!/usr/bin/env python3
-"""An always-running workflow gate: a required skipped job is not a pass."""
+"""Check actual job results against declared impact. Missing is never PASS."""
+from __future__ import annotations
+
 import json
 import os
 import sys
-
-FLAGS = ('engineering', 'images', 'spatial', 'gpa', 'topology', 'crystal', 'skills')
-JOBS = {
-    'quick': {
-        'client-setup': 'engineering', 'node-smoke': 'engineering',
-        'compiled-compatibility': 'engineering', 'ui-science-smoke': 'engineering',
-        'dm4-reader': 'images', 'spatial-evidence': 'spatial', 'active-analysis': 'spatial',
-        'classical-gpa': 'gpa', 'f4-gpa-integration': 'gpa',
-        'projected-topology': 'topology', 'projected-twin': 'crystal', 'skill-contract': 'skills',
-    },
-    'f3b': {'actual-diffsims-mcp': 'crystal'},
-}
+from ci_scope import F3B_JOBS, GROUPS, QUICK_JOBS
 
 
-def validate(workflow, needs):
-    if workflow not in JOBS or not isinstance(needs, dict):
-        raise ValueError('Unknown gate or invalid needs')
-    expected = {'changes', *JOBS[workflow]}
-    if set(needs) != expected:
-        raise ValueError('Gate dependency list differs from the tested job catalog')
-    if needs['changes'].get('result') != 'success':
-        raise ValueError('Scope classification did not succeed')
-    outputs = needs['changes'].get('outputs', {})
-    for flag in (*FLAGS, 'full_ci'):
-        if outputs.get('run_' + flag) not in ('true', 'false'):
-            raise ValueError('Missing/invalid scope output: ' + flag)
-    full = all(outputs['run_' + flag] == 'true' for flag in FLAGS)
-    if full != (outputs['run_full_ci'] == 'true'):
-        raise ValueError('Contradictory full/scoped outputs')
-    report = []
-    for job, flag in JOBS[workflow].items():
-        result = needs[job].get('result')
-        required = outputs['run_' + flag] == 'true'
-        if result != 'success' and (required or result != 'skipped'):
-            raise ValueError('%s: required=%s, result=%r' % (job, required, result))
-        report.append('%s: %s%s' % (job, result, '' if required else ' (outside impact scope)'))
-    return report
+def validate(needs: object, workflow: str) -> list[str]:
+    mapping = {"quick": QUICK_JOBS, "f3b": F3B_JOBS}.get(workflow)
+    if mapping is None:
+        return ["Unknown workflow"]
+    if not isinstance(needs, dict):
+        return ["Missing needs object"]
+    errors = []
+    if set(needs) != {"changes", *mapping}:
+        errors.append("Missing or unexpected job entries")
+    changes = needs.get("changes")
+    if not isinstance(changes, dict) or changes.get("result") != "success":
+        return errors + ["Scope classification did not succeed"]
+    outputs = changes.get("outputs")
+    if not isinstance(outputs, dict):
+        return errors + ["Missing scope outputs"]
+    for group in GROUPS:
+        if outputs.get("run_" + group) not in ("true", "false"):
+            errors.append("Missing/invalid scope output: " + group)
+    all_selected = all(outputs.get("run_" + group) == "true" for group in GROUPS)
+    if outputs.get("run_full_ci") != str(all_selected).lower():
+        errors.append("Full-scope flag disagrees with group outputs")
+    for job, group in mapping.items():
+        item = needs.get(job)
+        result = item.get("result") if isinstance(item, dict) else None
+        required = outputs.get("run_" + group) == "true"
+        if result not in ("success", "skipped") or required and result != "success":
+            errors.append(f"{job}: required={required}, result={result!r}")
+    return errors
 
 
-if __name__ == '__main__':
+def main() -> None:
+    workflow = sys.argv[1] if len(sys.argv) == 2 else ""
     try:
-        for line in validate(sys.argv[1], json.loads(os.environ['CI_NEEDS_JSON'])):
-            print(line)
-    except (KeyError, IndexError, TypeError, ValueError) as exc:
-        print('CI gate FAILED: ' + str(exc), file=sys.stderr)
-        sys.exit(1)
+        errors = validate(json.loads(os.environ.get("CI_NEEDS", "null")), workflow)
+    except (ValueError, TypeError):
+        errors = ["Invalid CI_NEEDS JSON"]
+    if errors:
+        print("CI scope gate FAILED:\n" + "\n".join(errors), file=sys.stderr)
+        raise SystemExit(1)
+    print("CI scope gate passed: affected jobs succeeded; only out-of-scope skips accepted.")
+
+
+if __name__ == "__main__":
+    main()

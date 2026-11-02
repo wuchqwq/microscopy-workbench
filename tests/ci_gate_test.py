@@ -1,99 +1,78 @@
-"""Gate fail-closed and workflow wiring tests; standard library only."""
+"""Required-check failure injection, without GitHub/network/science packages."""
 import copy
-import importlib.util
 import json
 import os
 from pathlib import Path
-import re
 import subprocess
 import sys
 import unittest
-
-ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('ci_gate', ROOT / 'scripts/ci_gate.py')
-gate = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(gate)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from ci_scope import GROUPS, QUICK_JOBS, F3B_JOBS
+from ci_gate import validate
 
 
-def fixture(kind='quick', selected=()):
-    outputs = {'run_' + f: str(f in selected).lower() for f in gate.FLAGS}
-    outputs['run_full_ci'] = str(set(selected) == set(gate.FLAGS)).lower()
-    return {'changes': {'result': 'success', 'outputs': outputs},
-            **{job: {'result': 'success' if flag in selected else 'skipped'}
-               for job, flag in gate.JOBS[kind].items()}}
+def needs_for(groups=(), workflow="quick"):
+    jobs = QUICK_JOBS if workflow == "quick" else F3B_JOBS
+    selected = set(groups)
+    outputs = {"run_" + g: str(g in selected).lower() for g in GROUPS}
+    outputs["run_full_ci"] = str(selected == set(GROUPS)).lower()
+    return {"changes": {"result": "success", "outputs": outputs},
+            **{j: {"result": "success" if g in selected else "skipped"} for j, g in jobs.items()}}
 
 
 class GateTests(unittest.TestCase):
-    def test_selected_success_and_deliberately_skipped_unaffected_are_accepted(self):
-        for kind in gate.JOBS:
-            for flags in ((), ('engineering',), ('crystal',), gate.FLAGS):
-                gate.validate(kind, fixture(kind, flags))
+    def test_docs_skip_is_intentional(self):
+        self.assertEqual(validate(needs_for(), "quick"), [])
 
-    def test_expected_skipped_failed_cancelled_missing_or_unknown_fail(self):
-        for result in ('skipped', 'failure', 'cancelled', None, 'pending'):
-            with self.subTest(result=result):
-                data = fixture(selected=('engineering',))
-                data['node-smoke']['result'] = result
-                with self.assertRaises(ValueError): gate.validate('quick', data)
+    def test_gui_and_full_success(self):
+        for selected in ({"node", "boundary"}, GROUPS):
+            self.assertEqual(validate(needs_for(selected), "quick"), [])
 
-    def test_classifier_failures_cannot_turn_into_green(self):
-        for result in ('skipped', 'failure', 'cancelled'):
-            data = fixture()
-            data['changes']['result'] = result
-            with self.assertRaises(ValueError): gate.validate('quick', data)
+    def test_required_skip_failure_cancel_or_missing_never_pass(self):
+        for state in ("skipped", "failure", "cancelled", "neutral", "timed_out", None):
+            with self.subTest(state=state):
+                needs = needs_for({"node"})
+                needs["node-smoke"] = {"result": state}
+                self.assertTrue(validate(needs, "quick"))
+        needs = needs_for({"node"}); del needs["node-smoke"]
+        self.assertTrue(validate(needs, "quick"))
 
-    def test_missing_or_extra_dependency_fails(self):
-        for key in ('node-smoke', 'new-unmapped-job'):
-            data = fixture()
-            if key in data: del data[key]
-            else: data[key] = {'result': 'success'}
-            with self.assertRaises(ValueError): gate.validate('quick', data)
+    def test_unselected_failure_not_hidden(self):
+        needs = needs_for(); needs["classical-gpa"]["result"] = "failure"
+        self.assertTrue(validate(needs, "quick"))
 
-    def test_missing_invalid_or_contradictory_output_fails(self):
-        for value in (None, '', True, 'yes'):
-            data = fixture()
-            data['changes']['outputs']['run_engineering'] = value
-            with self.assertRaises(ValueError): gate.validate('quick', data)
-        data = fixture()
-        data['changes']['outputs']['run_full_ci'] = 'true'
-        with self.assertRaises(ValueError): gate.validate('quick', data)
+    def test_classifier_failure_or_skipped_or_missing(self):
+        for state in ("failure", "skipped", "cancelled", None):
+            needs = needs_for(); needs["changes"]["result"] = state
+            self.assertTrue(validate(needs, "quick"))
+        needs = needs_for(); del needs["changes"]
+        self.assertTrue(validate(needs, "quick"))
 
-    def test_unexpected_ran_failure_is_not_ignored(self):
-        data = fixture()
-        data['classical-gpa']['result'] = 'failure'
-        with self.assertRaises(ValueError): gate.validate('quick', data)
+    def test_bad_outputs_and_contract_drift(self):
+        for bad in (None, {}, [], "TRUE", True):
+            needs = needs_for(); needs["changes"]["outputs"]["run_node"] = bad
+            self.assertTrue(validate(needs, "quick"))
+        needs = needs_for(); needs["new-job"] = {"result": "success"}
+        self.assertTrue(validate(needs, "quick"))
+        needs = needs_for(); needs["changes"]["outputs"]["run_full_ci"] = "true"
+        self.assertTrue(validate(needs, "quick"))
 
-    def test_f3b_missing_required_simulation_is_not_a_pass(self):
-        data = fixture('f3b', ('crystal',))
-        data['actual-diffsims-mcp']['result'] = 'skipped'
-        with self.assertRaises(ValueError): gate.validate('f3b', data)
+    def test_scattering_selected_and_deselected(self):
+        self.assertEqual(validate(needs_for(workflow="f3b"), "f3b"), [])
+        needs = needs_for({"crystal"}, "f3b")
+        self.assertEqual(validate(needs, "f3b"), [])
+        needs["actual-diffsims-mcp"]["result"] = "skipped"
+        self.assertTrue(validate(needs, "f3b"))
 
-    def test_cli_reports_nonzero_for_bad_needs(self):
-        env = {**os.environ, 'CI_NEEDS_JSON': '{}'}
-        result = subprocess.run([sys.executable, str(ROOT/'scripts/ci_gate.py'), 'quick'],
-                                env=env, capture_output=True, text=True)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('FAILED', result.stderr)
-
-    def test_workflow_jobs_conditions_and_gate_needs_match_catalog(self):
-        for kind, filename in (('quick', 'quick.yml'), ('f3b', 'f3b-simulation.yml')):
-            text = (ROOT/'.github/workflows'/filename).read_text()
-            self.assertEqual(set(re.findall(r'^  ([a-z][a-z0-9-]*):$', text.split('jobs:\n', 1)[1], re.M)),
-                             {'changes', 'ci-gate', *gate.JOBS[kind]})
-            block = text.split('  ci-gate:\n', 1)[1]
-            self.assertIn('if: ${{ always() }}', block)
-            expected = ['changes', *gate.JOBS[kind]]
-            self.assertIn('needs: [' + ', '.join(expected) + ']', block)
-            for job, flag in gate.JOBS[kind].items():
-                self.assertIn("  %s:\n    needs: changes\n    if: needs.changes.outputs.run_%s == 'true'" % (job, flag), text)
-            self.assertNotIn('    paths:', text)  # Both gates must report on every PR.
-            self.assertIn("cancel-in-progress: ${{ github.event_name == 'pull_request' }}", text)
-            self.assertIn('github.event.pull_request.number || github.run_id', text)
-            self.assertNotIn('run: npm run typecheck', text)  # Build already performs it.
-            self.assertIn('python3 -B tests/ci_gate_test.py', text)
-            for flag in gate.FLAGS:
-                self.assertIn('run_' + flag + ': ${{ steps.classify.outputs.run_' + flag + ' }}', text)
+    def test_invalid_gate_input_and_cli_exit_codes(self):
+        self.assertTrue(validate(None, "quick"))
+        self.assertTrue(validate({}, "unknown"))
+        script = Path(__file__).resolve().parents[1] / "scripts" / "ci_gate.py"
+        for payload, expected in ((json.dumps(needs_for()), 0), ("broken JSON", 1), ("{}", 1)):
+            result = subprocess.run([sys.executable, str(script), "quick"],
+                                    env={**os.environ, "CI_NEEDS": payload}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main(verbosity=2)

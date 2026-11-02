@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-# Compatibility entry point. The classifier uses only Python's standard library.
+# Keep the existing CI entrypoint; classification is stdlib Python + local Git.
 set -euo pipefail
-exec python3 "$(dirname "${BASH_SOURCE[0]}")/ci_scope.py"
+exec python3 -B "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/ci_scope.py"

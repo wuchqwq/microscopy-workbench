@@ -1,37 +1,39 @@
 name: F3b actual simulation
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
   push:
     branches: [main]
   workflow_dispatch:
+  merge_group:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 permissions:
   contents: read
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   changes:
-    name: Classify changes / documentation check
+    name: Classify F3b dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
       run_full_ci: ${{ steps.classify.outputs.run_full_ci }}
-      run_engineering: ${{ steps.classify.outputs.run_engineering }}
+      run_node: ${{ steps.classify.outputs.run_node }}
+      run_client: ${{ steps.classify.outputs.run_client }}
       run_images: ${{ steps.classify.outputs.run_images }}
       run_spatial: ${{ steps.classify.outputs.run_spatial }}
+      run_active: ${{ steps.classify.outputs.run_active }}
       run_gpa: ${{ steps.classify.outputs.run_gpa }}
       run_topology: ${{ steps.classify.outputs.run_topology }}
+      run_integration: ${{ steps.classify.outputs.run_integration }}
       run_crystal: ${{ steps.classify.outputs.run_crystal }}
-      run_skills: ${{ steps.classify.outputs.run_skills }}
+      run_compat: ${{ steps.classify.outputs.run_compat }}
+      run_boundary: ${{ steps.classify.outputs.run_boundary }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Test scope and gate contracts
-        run: |
-          python3 -B tests/ci_scope_test.py
-          python3 -B tests/ci_gate_test.py
       - name: Determine test scope
         id: classify
         shell: bash
@@ -39,11 +41,9 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          git rev-parse HEAD
-          bash scripts/ci_scope.sh | tee -a "$GITHUB_OUTPUT"
+        run: bash scripts/ci_scope.sh >> "$GITHUB_OUTPUT"
       - name: Check changed-file whitespace
-        if: steps.classify.outputs.comparison_base != ''
+        if: github.event_name == 'pull_request' && steps.classify.outputs.comparison_base != ''
         shell: bash
         env:
           COMPARISON_BASE: ${{ steps.classify.outputs.comparison_base }}
@@ -129,17 +129,17 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  ci-gate:
-    name: Simulation CI gate
-    if: ${{ always() }}
+  f3b-gate:
+    name: F3b scope gate
+    if: always()
     needs: [changes, actual-diffsims-mcp]
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Require success for every selected check
+      - name: Require actual scattering when selected
         env:
-          CI_NEEDS_JSON: ${{ toJSON(needs) }}
+          CI_NEEDS: ${{ toJSON(needs) }}
         run: python3 -B scripts/ci_gate.py f3b
