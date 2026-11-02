@@ -8,10 +8,10 @@ import re
 
 _ID = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 _EDITABLE = frozenset(("coordinates", "text", "note", "status", "color",
-                       "line_width", "arrowhead_size", "arrow_length", "presentation"))
+                       "line_width", "arrowhead_size", "arrow_length", "presentation", "purpose", "selection_origin"))
 _INPUT_FIELDS = frozenset(("kind", "coordinates", "text", "note", "status",
                            "color", "line_width", "arrowhead_size", "arrow_length",
-                           "annotation_id", "coordinate_space", "source_object_id", "presentation"))
+                           "annotation_id", "coordinate_space", "source_object_id", "presentation", "purpose", "selection_origin"))
 
 
 class AnnotationUpdateError(ValueError):

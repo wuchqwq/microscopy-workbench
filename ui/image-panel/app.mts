@@ -23,6 +23,7 @@ import {makeImageSlot,makeProfileSlot,defaultCompositionTitle,validateCompositio
 import {renderSequenceEvidence} from './sequence-evidence.mjs';
 import {renderDomainEvidence} from './domain-evidence.mjs';
 import {ResearchWorkspace} from './research-workspace.mjs';
+import {checkObservationNote,observationReadback,observationPurpose} from './observation-contract.mjs';
 import type {PanelRoiSnapshot} from './roi-observations.mjs';
 const $=(id:string)=>document.getElementById(id)!,canvas=$('canvas'),ctx=canvas.getContext('2d')!,baseCanvas=$('base-canvas'),baseContext=baseCanvas.getContext('2d',{willReadFrequently:true})!,marksCanvas=$('marks-canvas'),marksContext=marksCanvas.getContext('2d')!,stage=$('image-stage'),viewport=$('viewport');
 const key='mcp-dm-panel-token',hash=location.hash.slice(1);if(hash){sessionStorage.setItem(key,hash);history.replaceState(null,'',location.pathname);}const token=sessionStorage.getItem(key);
@@ -50,11 +51,24 @@ function openResearch(){if(imageFocused)toggleImageFocus();document.body.classLi
 function closeResearch(){document.body.classList.remove('research-open');$('research-panel').hidden=true;}
 function selectRoiObservation(annotationId:string){if(researchWorkspace.reasonDirty)throw new Error('先保存或撤销当前观察说明，再切换观察。');if(!chooseMark(annotationId))return;const mark=state.object.annotations?.find(m=>m.annotation_id===annotationId);if(!mark?.anchor)throw new Error('当前没有这条已保存观察');const panel=markPanel(mark);draft={...mark.anchor,kind:mark.kind,panel,rendered:transformCoordinates(mark.anchor.coordinates,panel,{edges:true,inverse:true})} as AppSelection;document.body.classList.remove('properties-open');openResearch();showDraft();record();schedulePaint();publishDraft({includeSelection:true,urgent:true});}
 async function saveRoiObservation(reason:string){
- if(!reason)throw new Error('请填写观察理由；不需要先确认物相或缺陷。');if(reason.length>1000)throw new Error('观察理由最多 1000 字符');if(busy||drag||autoFailed)throw new Error('先完成手势或恢复原保存请求。');
+ if(!reason.trim())throw new Error('请填写观察理由；不需要先确认物相或缺陷。');checkObservationNote(reason,'note');if(busy||drag||autoFailed)throw new Error('先完成手势或恢复原保存请求。');
+ const submittedDraft=$('roi-reason').value,calibration=state.object.xy_calibration??null;
  const picked=selection();if(picked.kind!=='rectangle'||picked.coordinate_space!=='source_pixels')throw new Error('保存观察需要原图上的矩形 ROI');selectionRectangle(picked);
  const saved=state.object.annotations?.find(m=>m.annotation_id===selectedId&&m.kind==='rectangle'&&m.anchor?.source_object_id===picked.source_object_id&&m.anchor.coordinate_space===picked.coordinate_space&&equalRecords(m.anchor.coordinates,picked.coordinates));
- const result=saved?await act('edit',{updates:[{annotation_id:saved.annotation_id,note:reason}]}):await act('mark',{selection:picked,annotation_id:internalMarkId(()=>crypto.randomUUID()),text:`ROI ${((state.object.annotations??[]).filter(m=>m.kind==='rectangle').length)+1}`,note:reason,color:'cyan',status:'hypothesized',presentation:{layer:'experimental'}});
- if(!result||pending||state.pending_result)return;researchWorkspace.clearReason();const markId=saved?.annotation_id??result.last_operation?.annotation_ids?.[0];if(markId)selectRoiObservation(markId);diagnostics();await publishDraft({includeSelection:true,urgent:true});message('ROI 观察已保存；只记录位置和理由，不确认物相。');
+ const intent={purpose:observationPurpose,selection_origin:'researcher'},markId=saved?.annotation_id??internalMarkId(()=>crypto.randomUUID());
+ const result=saved?await act('edit',{updates:[{annotation_id:markId,note:reason,...intent}]}):await act('mark',{selection:picked,annotation_id:markId,...intent,text:`ROI ${((state.object.annotations??[]).filter(m=>m.kind==='rectangle').length)+1}`,note:reason,color:'cyan',status:'hypothesized',presentation:{layer:'experimental'}});
+ if(!result)return;if(pending||state.pending_result){message('观察对象已保存；较新的草稿或待查看结果阻止当前交接，草稿保留。');return;}
+ const expected={object_id:result.object.object_id,annotation_id:markId,source_object_id:picked.source_object_id,coordinates:picked.coordinates,note:reason,selection_origin:'researcher',xy_calibration:calibration};
+ const epoch=interactionEpoch;let verified:AppState;
+ try{verified=await api('/api/state');}catch{message('观察对象已保存，但当前交接读回失败；草稿保留，请重新读取，勿重放原保存请求。',true);return;}
+ if(interactionEpoch!==epoch||$('roi-reason').value!==submittedDraft||state.object.object_id!==expected.object_id){message('观察对象已保存；读回期间出现新编辑，保留新草稿并重新核对后交接。');return;}
+ const checked=observationReadback(verified as unknown as PanelRoiSnapshot,expected);
+ if(!checked.saved){message(`观察对象已保存；${checked.reason}。草稿保留。`,true);return;}
+ researchWorkspace.clearReason();selectRoiObservation(markId);diagnostics();await publishDraft({includeSelection:true,urgent:true});
+ const finalEpoch=interactionEpoch;let fresh:AppState;
+ try{fresh=await api('/api/state');}catch{message('保存对象已核对，但当前交接状态未知；请重新读取，勿重放原保存请求。',true);return;}
+ if(interactionEpoch!==finalEpoch){message('保存已核对；新的操作改变了当前交接条件，请重新读取。');return;}
+ const handoff=observationReadback(fresh as unknown as PanelRoiSnapshot,expected);message(handoff.ready?'ROI 观察已保存并读回可接续；来源为调用者声明，不确认物相。':`观察对象已保存；${handoff.reason}。`,!handoff.ready);
 }
 function dataProbeState(){const current=measurementWorkspace.current;return state&&current?.object_id===state.object.object_id?{...state,object:{...state.object,scientific_grid_identity:current.scientific_grid_identity,dtype:current.dtype,xy_calibration:current.xy_calibration}}:state;}
 async function refreshMeasurements(){const ok=await measurementWorkspace.refresh();if(ok){if(initialResultLayout){initialResultLayout=false;$('measurement-workspace').open=measurementWorkspace.visible().length>0||Object.values(state.numeric_results??{}).some(Boolean);}renderMeasurement();dataProbes.refreshCurrent();dataProbes.restoreSavedResults(state.numeric_results??{});if(['statistics','profile'].includes(state.last_operation?.kind as string))dataProbes.renderResult(state.last_operation);}return ok;}
@@ -166,7 +180,7 @@ function flushEdits(){
  if(busy||drag||autoFailed||!queuedEdits.size)return Promise.resolve();
  autoSaving=saveFirstEdit().finally(()=>{autoSaving=null;if(!autoFailed&&queuedEdits.size&&!drag)Promise.resolve().then(flushEdits);});return autoSaving;
 }
-function editWire(id:string|undefined,sent:QueuedEdit){const saved=(state.object.annotations??[]).find(m=>m.annotation_id===id),wire:AnnotationEdit={annotation_id:id};for(const [field,value]of Object.entries(sent.update)){if(field==='annotation_id')continue;const old=field==='coordinates'?saved!.anchor!.coordinates:field==='presentation'?saved!.presentation??{}:saved![field]??(field==='text'?'':undefined);if(!equalRecords(value,old))wire[field]=value;}if(wire.presentation_replace)wire.presentation=sent.update.presentation;return wire;}
+function editWire(id:string|undefined,sent:QueuedEdit){const saved=(state.object.annotations??[]).find(m=>m.annotation_id===id),wire:AnnotationEdit={annotation_id:id};for(const [field,value]of Object.entries(sent.update)){if(field==='annotation_id')continue;const old=field==='coordinates'?saved!.anchor!.coordinates:field==='presentation'?saved!.presentation??{}:saved![field]??(field==='text'?'':undefined);if(!equalRecords(value,old))wire[field]=value;}if(wire.presentation_replace)wire.presentation=sent.update.presentation;if(saved?.purpose===observationPurpose&&(wire.coordinates!==undefined||wire.note!==undefined))wire.selection_origin='researcher';return wire;}
 async function saveFirstEdit(){
  const [id,sent]=queuedEdits.entries().next().value!,submittedObject=state.object.object_id;let measurementTarget:MeasurementTarget|null=null;busy=true;diagnostics();
  try{

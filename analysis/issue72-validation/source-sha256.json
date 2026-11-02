@@ -1,0 +1,23 @@
+{
+  ".github/workflows/quick.yml": "7cb15658c428a598f8fa851578de6ffb26c482b4cc238f2af325eee87fec2928",
+  "docs/RESUMABLE_OBSERVATION_CONTRACT.md": "e5fb6304e175bd803fcee6a9b9fd3009f22e896a5fa142da4e4083ba3309c973",
+  "lib/image_workspace.mts": "8946996819ec180594f3fd446d50d1c9034c7525a95e9df965baa0e4279d2313",
+  "lib/runtime/schema.mts": "6066c3ca335117233a322a62e24ad0cde396ebb043c6f4ac966f9b6d23fb7772",
+  "package-lock.json": "5811d9254e255127de15d3158b6c16d36a8be01b71fbd3d9cb8e98130e6980db",
+  "package.json": "64a1feb9ab82577fb3472f2156816e26272765395808d914124318ee4fcc3366",
+  "requirements-images.txt": "0e2e7391b3fd9ce5a6ee9ab6aaf20811a781c101af90097f6e8f42418e84e3dd",
+  "tests/image-panel-ui.test.mjs": "e83b10cffa1b78fcd420594c4a2e81a852c4e2cf9bf242846ff4e4846b2768e8",
+  "tests/research-workspace-ui.test.mjs": "f558d41bc294290d4d822bf6e63cecbd82caeab3f5e39c9d14fc110322ca8e19",
+  "tests/resumable-observations.test.mjs": "1d70f477d421e43ffc774b35e3fd9e8ecb65b1fa9a4e55cc8cab9b47b0bfc837",
+  "tests/test_resumable_observations.py": "58795e17d13ef9267a25af69db94784f68a99c2183f23df97ec15a5ccc1fe3d6",
+  "tools/image_annotation_updates.py": "63ccbb7a319536954b6864e7ceaff51e856f8ea377ff28bcaf1c032c4c22cd6d",
+  "tools/image_observation_contract.py": "f070caae33fd9ab63241cec8c7c24f8ba84d6a8d9a4219ed5a11e891758fcb7b",
+  "tools/image_panel.mts": "32be483eb5c84305315a7b05356b377f5b0743e0e6b3bcafe24de1f4e783839b",
+  "tools/image_workspace.py": "73792b8729ed95e6f455ee148126b42e62c3314a5218a16b03767625bfe53473",
+  "tools/smoke_resumable_observations.mts": "93fa836b187db838f812f40a9a8e4ff9610d6457f3a54591c7c4c4234fb01460",
+  "ui/image-panel/app.mts": "4c4ebfb05f21442a5a993c9ba32b07dee00470ef7c5afac694ea9e01bdb22c82",
+  "ui/image-panel/index.html": "2ac943ad658f0ed27c3598301c0ddec3185800f3a0f8d803cadae11b7df04ec0",
+  "ui/image-panel/observation-contract.mts": "0619775b528c7cc57be59a007e1160a58c9e3b840f23e7bc4eb656aa8086d756",
+  "ui/image-panel/research-workspace.mts": "eaa21d88fc02f6e59bcd63c004fc38e7ac37aab65f20daf1c04be0a8e07cfcdc",
+  "ui/image-panel/roi-observations.mts": "3a519d11d6e997165fe8ab0354cd162ae9e973216cdf126a8724d1af35ff7d60"
+}

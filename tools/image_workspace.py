@@ -25,6 +25,7 @@ import tifffile
 
 if __package__:
     from . import preview_admission
+    from . import image_observation_contract as observation_contract
     from . import result_semantics
     from .image_annotation_updates import plan_annotation_updates
     from . import image_calibration as calibration
@@ -47,6 +48,7 @@ if __package__:
     from . import image_discovery as discovery
 else:
     import preview_admission
+    import image_observation_contract as observation_contract
     import result_semantics
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
@@ -971,7 +973,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("preview_admission.py", "result_semantics.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
+                                                                       ("preview_admission.py", "result_semantics.py", "image_observation_contract.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
         intent_path = self.root / "preview-admission-v1" / "intents" / (metadata["request_id"] + ".json")
         if intent_path.exists():
             admitted = preview_admission._intent(self.root / "preview-admission-v1", metadata["request_id"], sys.modules[__name__])
@@ -1487,7 +1489,8 @@ class Workspace:
             need(type(annotations) is list and len(annotations) <= 128, "annotations must be an explicit list of at most128 items")
             base_file = "unannotated.png" if "unannotated.png" in render_base["files_sha256"] else "preview.png"
             with Image.open(base_directory / base_file) as unannotated:
-                image, validated = overlay(unannotated, annotations, render_base.get("panels", []), updates=updates)
+                image, validated = overlay(unannotated, annotations, render_base.get("panels", []), updates=updates,
+                                           previous_annotations=parent.get("annotations", []))
             save_png(directory / "preview.png", image)
             metadata.update(parent_object_id=request["object_id"], render_base_object_id=base_id,
                             panels=render_base.get("panels", []), annotations=validated,
@@ -1755,11 +1758,15 @@ def annotation_presentation(value):
     return value
 
 
-def annotation(item, image_size, panels, reproject=False):
+def annotation(item, image_size, panels, reproject=False, previous=None, incoming=None):
+    if incoming is None and not reproject:
+        incoming = item
+    if previous is None and reproject:
+        previous = item
     if reproject:
         anchor = item.get("anchor")
         need(anchor is not None, "Annotation has no unique source anchor; replace or remove it before re-rendering")
-        supplied = {key: item[key] for key in ("kind", "text", "status", "note", "annotation_id", "line_width", "arrowhead_size", "arrow_length", "color", "presentation") if key in item}
+        supplied = {key: item[key] for key in ("kind", "text", "status", "note", "annotation_id", "line_width", "arrowhead_size", "arrow_length", "color", "presentation", *observation_contract.INPUT_FIELDS) if key in item}
         # Old immutable records predate the display-length cap. Re-render their
         # original shaft rather than retroactively applying the new default.
         if item.get("kind") == "arrow" and "arrow_length" not in item:
@@ -1767,7 +1774,7 @@ def annotation(item, image_size, panels, reproject=False):
         supplied.update(anchor)
         item = supplied
     allowed = {"kind", "coordinates", "text", "status", "note", "annotation_id", "coordinate_space", "source_object_id",
-               "line_width", "arrowhead_size", "arrow_length", "color", "presentation"}
+               "line_width", "arrowhead_size", "arrow_length", "color", "presentation", *observation_contract.INPUT_FIELDS}
     need(type(item) is dict and set(item) <= allowed, "Unknown annotation field")
     presentation = annotation_presentation(item["presentation"]) if "presentation" in item else None
     kind, coords = item.get("kind"), item.get("coordinates")
@@ -1861,7 +1868,8 @@ def annotation(item, image_size, panels, reproject=False):
         # retain their exact coordinates; a short original arrow is not extended.
         arrow_display = {"arrow_length": arrow_length,
                          "arrow_render_coordinates": [x1+(x0-x1)*ratio, y1+(y0-y1)*ratio, x1, y1]}
-    return {"kind": kind, "coordinates": rendered, "coordinate_space": "rendered_image_pixels",
+    observation = observation_contract.fields(item, anchor, note, previous, incoming, need)
+    return {"kind": kind, "coordinates": rendered, "coordinate_space": "rendered_image_pixels", **observation,
             "coordinate_convention": "pixel edges" if edges else "pixel/bin centres; x right, y down",
             "status": status, "text": text, "note": note, "source_mappings": mappings, "anchor": anchor,
             "line_width": line_width, "arrowhead_size": arrowhead_size,
@@ -1873,13 +1881,16 @@ def annotation(item, image_size, panels, reproject=False):
             "mapping_status": "one_source" if len(matches) == 1 else "not_a_single_source_region"}
 
 
-def overlay(image, annotations, panels, reproject=False, updates=None):
+def overlay(image, annotations, panels, reproject=False, updates=None, previous_annotations=None):
     image = image.convert("RGB")
     draw, result, seen = ImageDraw.Draw(image), [], set()
     entries = (plan_annotation_updates(annotations, updates) if updates is not None else
                ((item, reproject) for item in annotations))
+    previous = {mark.get("annotation_id"): mark for mark in previous_annotations or [] if mark.get("annotation_id")}
+    edits = {edit.get("annotation_id"): edit for edit in updates or []}
     for item, project in entries:
-        mark = annotation(item, image.size, panels, reproject=project)
+        incoming = (edits.get(item.get("annotation_id"), {}) if updates is not None else item) if previous_annotations is not None else None
+        mark = annotation(item, image.size, panels, reproject=project, previous=previous.get(item.get("annotation_id")), incoming=incoming)
         ident = mark.get("annotation_id")
         need(ident is None or ident not in seen, "Duplicate annotation_id in replacement revision")
         seen.add(ident)

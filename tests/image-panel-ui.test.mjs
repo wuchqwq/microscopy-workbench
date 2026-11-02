@@ -10,6 +10,7 @@ import * as viewerState from '../ui/image-panel/viewer-state.mjs';
 import * as viewerRender from '../ui/image-panel/viewer-render.mjs';
 import * as annotationPresentation from '../ui/image-panel/annotation-presentation.mjs';
 import * as figureExport from '../ui/image-panel/figure-export.mjs';
+import * as observationContract from '../ui/image-panel/observation-contract.mjs';
 import {renderSequenceEvidence} from '../ui/image-panel/sequence-evidence.mjs';
 import {renderDomainEvidence} from '../ui/image-panel/domain-evidence.mjs';
 import {ResearchWorkspace} from '../ui/image-panel/research-workspace.mjs';
@@ -50,7 +51,7 @@ async function harness(initial=fixture()){
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
   document:{body,getElementById:$,createElement:tag=>new Element(tag),querySelectorAll:()=>[],addEventListener(){}},
@@ -72,7 +73,7 @@ async function harness(initial=fixture()){
      if(result.object.object_id===server.object.object_id)result.object.object_id=(++actionSequence).toString(16).padStart(32,'0');
      result.state_revision=(server.state_revision??0)+1;result.edit_state=copy(server.edit_state);result.auto_edit_committed=true;server=result;
     }else if(nextActionResult){server=copy(nextActionResult);nextActionResult=null;}
-    if(body.action==='mark'){const {panel:selectionPanel,...anchor}=body.params.selection;server.object.annotations.push({annotation_id:body.params.annotation_id,kind:anchor.kind,anchor:copy(anchor),text:body.params.text,color:body.params.color,status:body.params.status});server.object.object_id=(++actionSequence).toString(16).padStart(32,'0');server.state_revision=(server.state_revision??0)+1;server.selection=copy(body.params.selection);}
+    if(body.action==='mark'){const {panel:selectionPanel,...anchor}=body.params.selection;server.object.annotations.push({annotation_id:body.params.annotation_id,kind:anchor.kind,anchor:copy(anchor),text:body.params.text,color:body.params.color,status:body.params.status,note:body.params.note,...(body.params.purpose?{purpose:body.params.purpose,observation_contract_version:1,selection_origin:body.params.selection_origin,selection_origin_basis:'caller_reported_not_authenticated'}:{})});server.object.object_id=(++actionSequence).toString(16).padStart(32,'0');server.state_revision=(server.state_revision??0)+1;server.selection=copy(body.params.selection);}
     if(body.action==='measure'||body.action==='select')server.selection=copy(body.params.selection);
     const measured=body.action==='measure'&&measurementResponse?(typeof measurementResponse==='function'?measurementResponse(body):copy(measurementResponse)):{};
     server.last_operation=body.action==='recover'&&recoveryResponse?copy(recoveryResponse):{...(body.action==='measure'?{kind:'measure',coordinate_space:body.params.selection.coordinate_space,points:[body.params.selection.coordinates.slice(0,2),body.params.selection.coordinates.slice(2)]}:{}),...measured,action:body.action,...(body.action==='mark'?{annotation_ids:[body.params.annotation_id]}:{})};
@@ -737,4 +738,38 @@ test('cancelled mark selection invalidates an in-flight handoff and publishes it
   assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/版本已改变/);
   assert.deepEqual(h.inspect().draft.coordinates,[70,60]);assert.deepEqual(h.server().selection.coordinates,[70,60]);assert.deepEqual(h.calls,[]);
  }
+});
+
+test('resumable save declares stable researcher intent and reads actual handoff before readiness',async()=>{
+ const s=handoffFixture();s.object.annotations=[];const h=await harness(s);h.draw('rectangle');
+ h.$('roi-reason').value='  Inspect supplied texture, physical cause unknown  ';h.$('roi-reason').oninput();const reads=h.getCalls.length;
+ await h.click('save-observation');await h.settle();
+ assert.equal(h.calls.length,1);const p=h.calls[0].params;
+ assert.match(p.annotation_id,/^[A-Za-z0-9_-]{1,64}$/);assert.equal(p.purpose,'resumable_observation');assert.equal(p.selection_origin,'researcher');assert.equal(p.note,'  Inspect supplied texture, physical cause unknown  ');
+ assert.ok(h.getCalls.slice(reads).filter(p=>p==='/api/state').length>=2,'Saved annotation and clean current handoff both need real readback');
+ assert.match(h.$('message').textContent,/已保存并读回可接续.*调用者声明.*不确认物相/);assert.equal(h.inspect().dirty,false);
+});
+
+test('resumable oversized Unicode draft is retained verbatim with no provider dispatch',async()=>{
+ const h=await harness(handoffFixture());h.draw('rectangle');const note='😀'.repeat(501);
+ h.$('roi-reason').value=note;h.$('roi-reason').oninput();await h.click('save-observation');
+ assert.equal(h.calls.length,0);assert.equal(h.$('roi-reason').value,note);assert.equal(h.inspect().dirty,true);
+ assert.match(h.$('message').textContent,/note: actual_length=1002; limit=1000 UTF-16.*no truncation/);
+});
+
+test('a later reason edit during observation readback cannot be cleared by the old save',async()=>{
+ const s=handoffFixture();s.object.annotations=[];const h=await harness(s);h.draw('rectangle');
+ h.$('roi-reason').value='Submitted reason';h.$('roi-reason').oninput();let release;h.delayState(new Promise(resolve=>release=resolve));
+ const saving=h.click('save-observation');await h.settle();assert.equal(h.calls.length,1);
+ h.$('roi-reason').value='Newer reason during readback';h.$('roi-reason').oninput();release();await saving;await h.settle();
+ assert.equal(h.$('roi-reason').value,'Newer reason during readback');assert.equal(h.inspect().dirty,true);assert.equal(h.calls.length,1);
+ assert.match(h.$('message').textContent,/新编辑.*保留新草稿/);
+});
+
+test('changed calibration at save acknowledgement preserves the reason and refuses old readiness',async()=>{
+ const s=handoffFixture();s.object.annotations=[];const h=await harness(s);h.draw('rectangle');
+ const changed=copy(s);changed.object.xy_calibration={calibration_id:'e'.repeat(32),revision:1,status:'active',coordinate_domain:'real_space',xy_scale:{x:.1,y:.1,unit:'nm'}};h.actionResult(changed);
+ h.$('roi-reason').value='Retain on changed calibration';h.$('roi-reason').oninput();await h.click('save-observation');await h.settle();
+ assert.equal(h.$('roi-reason').value,'Retain on changed calibration');assert.equal(h.inspect().dirty,true);assert.match(h.$('message').textContent,/标定依赖已改变.*草稿保留/);
+ assert.equal(h.calls.length,1);
 });
