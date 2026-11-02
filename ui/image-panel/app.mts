@@ -423,7 +423,19 @@ async function readSavedView(){
  if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');
 }
 $('discard-local').onclick=guarded(async()=>{if(busy)throw new Error('原请求仍在保存，先查询其结果；本地编辑保留。');interactionEpoch++;researchWorkspace.clearReason();drag=null;queuedEdits.clear();autoFailed=false;failedMeasurement=null;remeasuringMarks.clear();orphanedDraft=false;const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();message('本地草稿已撤回；保存过的科学版本仍保留。');});
-$('discard-draft').onclick=guarded(async()=>{if(busy||drag||observationSavePhase)throw new Error('先完成当前保存、校验或手势；草稿仍保留。');if(autoFailed||state.last_operation?.state==='submitted')throw new Error('原请求尚未确认；先查询原请求，草稿仍保留。');interactionEpoch++;researchWorkspace.clearReason();orphanedDraft=false;if(pending){const next=pending;if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');if(pending===next)pending=null;showPending();}else{editCoordinates=null;fieldDirty=false;await readSavedView();if(!await act('accept-result'))return;}if(pending||state.pending_result||dirty()||drag){message('保存版本尚未完全接续；较新草稿保留，请核对后继续。');return;}message('已查看保存版本；旧科学版本仍保留。');});
+$('discard-draft').onclick=guarded(async()=>{
+ if(busy||drag||observationSavePhase)throw new Error('先完成当前保存、校验或手势；草稿仍保留。');
+ if(autoFailed||state.last_operation?.state==='submitted')throw new Error('原请求尚未确认；先查询原请求，草稿仍保留。');
+ interactionEpoch++;researchWorkspace.clearReason();orphanedDraft=false;
+ if(pending){const next=pending;if(!await load(next))throw new Error('读取期间有新操作；编辑已保留，请重新查看保存版本。');if(pending===next)pending=null;showPending();}
+ else{
+  editCoordinates=null;fieldDirty=false;await readSavedView();
+  if(autoFailed||state.last_operation?.state==='submitted')throw new Error('读回发现原请求尚未确认；先查询原请求，未接纳待查看结果。');
+  if(!await act('accept-result'))return;
+ }
+ if(pending||state.pending_result||dirty()||drag){message('保存版本尚未完全接续；较新草稿保留，请核对后继续。');return;}
+ message('已查看保存版本；旧科学版本仍保留。');
+});
 $('accept-agent-result').onclick=guarded(async()=>{if(dirty()||drag)throw new Error('先保存、撤销或明确放弃草稿，再查看保存结果');if(pending){const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();}return act('accept-result');});
 const calibrate=(withdraw:boolean)=>act('calibrate',{coordinate_domain:state.object.xy_calibration?.coordinate_domain??'real_space',scope:$('scope').value,xy_scale:withdraw?null:{x:Number($('scale-x').value),y:Number($('scale-y').value),unit:$('unit').value},source_text:$('source').value});$('calibrate').onclick=guarded(()=>calibrate(false));$('withdraw').onclick=guarded(()=>calibrate(true));
 $('submit-observation').onclick=guarded(()=>act('research-observation',{source_text:$('observation-text').value,authority:$('observation-authority').value}));

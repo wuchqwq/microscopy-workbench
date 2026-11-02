@@ -710,6 +710,11 @@ test('pending discard preserves an unknown original request and its reason draft
  const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};initial.last_operation={state:'submitted',request_id:'unknown-original'};const h=await harness(initial);h.$('roi-reason').value='Keep until original request resolves';h.$('roi-reason').oninput();await h.settle();await h.click('discard-draft');
  assert.equal(h.$('roi-reason').value,'Keep until original request resolves');assert.equal(h.calls.length,0);assert.equal(h.inspect().state.last_operation.request_id,'unknown-original');assert.match(h.$('message').textContent,/先查询原请求/);
 });
+test('a newly discovered unknown request stops pending acceptance after the saved-state read',async()=>{
+ const initial=fixture();initial.pending_result={object_id:'c'.repeat(32),request_id:'saved-pending'};const h=await harness(initial);h.$('roi-reason').value='Explicitly discarded old draft';h.$('roi-reason').oninput();await h.settle();
+ const latest=copy(h.server());latest.last_operation={state:'submitted',request_id:'newly-discovered-original'};h.setServer(latest);await h.click('discard-draft');
+ assert.equal(h.calls.length,0);assert.equal(h.inspect().state.last_operation.request_id,'newly-discovered-original');assert.equal(h.inspect().state.object.object_id,viewId);assert.match(h.$('message').textContent,/读回发现原请求尚未确认/);assert.doesNotMatch(h.$('message').textContent,/已查看保存版本/);
+});
 
 test('human workflow: result tabs expose one result type without changing the scientific object',async()=>{
  const h=await harness();await h.click('results-tab-profile');assert.equal(h.$('results-profile').hidden,false);assert.equal(h.$('results-measurements').hidden,true);assert.equal(h.$('numeric-data').open,true);await h.click('results-tab-measurements');assert.equal(h.$('numeric-data').open,false);assert.equal(h.calls.length,0);
