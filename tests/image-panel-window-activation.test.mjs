@@ -1,7 +1,7 @@
 // Real Panel transport/owned checkpoints with a controlled provider; no numerics.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,renameSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,renameSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
@@ -47,7 +47,7 @@ async function fixture(run){
  const activate=window=>act('activate-window',{window_id:window.window_id,collection_revision:state().window_collection.revision});
  const hold=(object_id=undefined)=>{let release,entered;const wait=new Promise(r=>release=r),started=new Promise(r=>entered=r),hold={object_id,wait,entered};if(object_id===undefined)holdFFT=hold;else holdInfo=hold;return {release,started};};
  const restoreJournal=()=>{if(movedJournal){rmSync(movedJournal.original);renameSync(movedJournal.backup,movedJournal.original);movedJournal=null;}};
- const breakJournal=()=>{const original=panelInstance.journal;assert.ok(path.resolve(original).startsWith(path.resolve(workspace)+path.sep));const backup=original+'-blocked-test';renameSync(original,backup);writeFileSync(original,'blocked test journal');movedJournal={original,backup};};
+ const breakJournal=()=>{const original=panelInstance.journal,relative=path.relative(realpathSync(workspace),realpathSync(original));assert.ok(relative&&relative!=='..'&&!relative.startsWith('..'+path.sep)&&!path.isAbsolute(relative),'The canonical journal must remain inside the controlled temporary workspace');const backup=original+'-blocked-test';renameSync(original,backup);writeFileSync(original,'blocked test journal');movedJournal={original,backup};};
  const cold=async mutate=>{await owned.close(panelInstance);if(mutate){const conn=readOwnedPanelConnection(workspace,P),checkpoint=readOwnedPanelCheckpoint(workspace,conn);mutate(checkpoint);writeFileSync(conn.checkpoint_file,JSON.stringify(checkpoint));}await start();};
  try{await start();await run({workspace,records,calls,state,save,post,act,get,context,windowFor,activate,hold,cold,breakJournal,restoreJournal,unknownFFT:()=>{failFFT=true;},blockObject:value=>{blockedObject=value;}});}finally{restoreJournal();for(const item of live.reverse()){try{await item.owned.close(item.panel);}catch{}}rmSync(workspace,{recursive:true,force:true});}
 }
