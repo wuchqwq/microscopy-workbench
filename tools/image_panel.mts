@@ -49,6 +49,7 @@ function publicObject(value:Metadata):Metadata{
 }
 export class StdioImageClient implements PanelClient {
  declare child:ChildProcessWithoutNullStreams;declare next:number;declare pending:Map<unknown,PendingRPC>;declare stderr:string;
+ private receivedRenderReferences?:Set<string>;private acknowledgedPreviewReferences?:Set<string>;
  constructor({workspace,python,serverPath=path.join(root,'server.mjs')}:StdioClientOptions){
   this.child=spawn(process.execPath,[serverPath],{env:{...process.env,DM_MCP_BACKEND:'images',DM_IMAGE_WORKSPACE:workspace,DM_IMAGE_PYTHON:python,MICROSCOPY_IMAGE_WORKSPACE:workspace,MICROSCOPY_PYTHON:python,MICROSCOPY_STRUCTURE_WORKSPACE:'',MICROSCOPY_CONTEXT_WORKSPACE:'',MICROSCOPY_EXECUTION_OBSERVABILITY:'0'},stdio:['pipe','pipe','pipe'],windowsHide:true});
   this.next=1;this.pending=new Map();let buffer='';this.stderr='';
@@ -61,19 +62,27 @@ export class StdioImageClient implements PanelClient {
  private async acknowledgeDeliveredPreviews(name:string,data:Metadata):Promise<void>{
   const renderingWrites=new Set(['image_preview','image_compare','image_annotate','image_fft_batch','image_spatial_atlas','image_joint_observations','image_roi_propose','image_discovery','image_spatial_field','image_field_extend','image_feature_field','image_domain_map']);
   if(!renderingWrites.has(name))return;
+  // Performance cache of THIS receiving client's successful immutable-reference
+  // traversal. Never admission authority, never populated by read-only calls.
+  const inspected=this.receivedRenderReferences??=new Set<string>(),acknowledged=this.acknowledgedPreviewReferences??=new Set<string>();
+  if(inspected.size>4096)inspected.clear();if(acknowledged.size>4096)acknowledged.clear();
   // This is the receiving MCP client, after a complete reply was decoded. The
   // server never assumes its own completion/serialization proves delivery.
   const refs=new Set<string>(),records:Metadata[]=[data];
   const collect=(v:unknown):void=>{if(!v||typeof v!=='object')return;if(Array.isArray(v)){for(const x of v)collect(x);return;}for(const [key,x] of Object.entries(v)){if((key==='view_object_id'||key==='overview_object_id'||key.endsWith('_view_object_id')||key==='render_base_object_id'||key==='roi_object_id')&&typeof x==='string'&&objectId.test(x))refs.add(x);else if(x&&typeof x==='object')collect(x);}};
   collect(data);
   if(refs.size>100)throw new Error('Delivered preview reference budget exceeded; acknowledge explicitly');
-  const seen=new Set<string>();
-  while([...refs].some(ref=>!seen.has(ref))){if(seen.size>=100)throw new Error('Delivered render-reference budget exceeded; acknowledge explicitly');const object_id=[...refs].find(ref=>!seen.has(ref))!;seen.add(object_id);const response=(await this.rpc('tools/call',{name:'image_info',arguments:{object_id}})) as Metadata;if(response.error||(response.result as Metadata|undefined)?.isError)continue;const block=((response.result as Metadata).content as Metadata[]).find(c=>c.type==='text');if(block&&typeof block.text==='string'){const record=JSON.parse(block.text) as Metadata;records.push(record);collect(record);}}
+  const seen=new Set<string>();let complete=true;
+  while([...refs].some(ref=>!seen.has(ref)&&!inspected.has(ref))){if(seen.size>=100)throw new Error('Delivered render-reference budget exceeded; acknowledge explicitly');const object_id=[...refs].find(ref=>!seen.has(ref)&&!inspected.has(ref))!;seen.add(object_id);const response=(await this.rpc('tools/call',{name:'image_info',arguments:{object_id}})) as Metadata;if(response.error||(response.result as Metadata|undefined)?.isError){complete=false;continue;}const block=((response.result as Metadata).content as Metadata[]).find(c=>c.type==='text');if(block&&typeof block.text==='string'){const record=JSON.parse(block.text) as Metadata;if(record.object_id!==object_id)throw new Error('Delivered reference returned a different object');records.push(record);collect(record);}else complete=false;}
   const done=new Set<string>();
-  for(const record of records){const ref=record.preview_execution as Metadata|undefined;if(ref?.version!==1||!safeId.test(String(ref.request_id))||ref.object_id!==record.object_id||done.has(String(ref.request_id)))continue;done.add(String(ref.request_id));
-   const response=(await this.rpc('tools/call',{name:'image_preview_acknowledge',arguments:{preview_request_id:ref.request_id,object_id:ref.object_id,request_id:'received-'+createHash('sha256').update(String(ref.request_id)+':'+String(ref.object_id)).digest('hex').slice(0,48)}})) as Metadata;
+  for(const record of records){const ref=record.preview_execution as Metadata|undefined;if(ref?.version!==1||!safeId.test(String(ref.request_id))||ref.object_id!==record.object_id||done.has(String(ref.request_id)))continue;done.add(String(ref.request_id));const key=String(ref.request_id)+':'+String(ref.object_id);if(acknowledged.has(key))continue;
+   const request_id='received-'+createHash('sha256').update(key).digest('hex').slice(0,48),response=(await this.rpc('tools/call',{name:'image_preview_acknowledge',arguments:{preview_request_id:ref.request_id,object_id:ref.object_id,request_id}})) as Metadata;
    if(response.error||(response.result as Metadata|undefined)?.isError)throw new Error('Preview acknowledgement remains unconfirmed; preserve original result and query its request');
+   const block=((response.result as Metadata|undefined)?.content as Metadata[]|undefined)?.find(c=>c.type==='text'),receipt=block&&typeof block.text==='string'?JSON.parse(block.text) as Metadata:null;
+   if(receipt?.state!=='completed'||receipt.kind!=='preview_acknowledgement'||receipt.request_id!==request_id||receipt.preview_request_id!==ref.request_id||receipt.original_object_id!==ref.object_id||receipt.operational_receipt!==true||receipt.scientific_object_created!==false)throw new Error('Invalid preview acknowledgement receipt; preserve the original request');
+   acknowledged.add(key);
   }
+  if(complete)for(const ident of seen)inspected.add(ident);
  }
  async tool(name:string,args:Readonly<Record<string,unknown>>):Promise<ImageToolReply>{const msg=(await this.rpc('tools/call',{name,arguments:args})) as Metadata;if(msg.error||(msg.result as Metadata|undefined)?.isError)throw new Error(((msg.error as Metadata|undefined)?.message??((msg.result as Metadata|undefined)?.content as Metadata[]|undefined)?.find(c=>c.type==='text')?.text??'MCP operation failed') as string);const data:unknown=JSON.parse((((msg as Metadata).result as Metadata).content as Metadata[]).find(c=>c.type==='text')!.text as string);const png=(((msg as Metadata).result as Metadata).content as Metadata[]).find(c=>c.type==='image'&&c.mimeType==='image/png');
   try{await this.acknowledgeDeliveredPreviews(name,data as Metadata);}catch(error){console.error('Saved scientific result is preserved; '+(error as Error).message);}

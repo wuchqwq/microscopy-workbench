@@ -1,0 +1,89 @@
+{
+  "commit": "a906b24502526fa64aba503db5e59e8adfeaed26",
+  "failures": [
+    {
+      "job_id": 125220100380,
+      "first_failure": [
+        "2026-11-02T10:25:56.6601549Z             throw new Error((msg.error?.message ?? msg.result?.content?.find(c => c.type === 'text')?.text ?? 'MCP operation failed'));",
+        "2026-11-02T10:25:56.6602100Z                   ^",
+        "2026-11-02T10:25:56.6602243Z ",
+        "2026-11-02T10:25:56.6606451Z Error: 错误: PREVIEW_OUTCOME_UNRESOLVED: PREVIEW_OUTCOME_UNRESOLVED: original request_id=complex-smoke-3; original_provider_state=failed; read the original outcome. A new ID, Panel or display size is not recovery. Continue only by explicitly referencing the resolved original result.. Query image_result with original request_id=complex-smoke-4; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":\"reserve\",\"preview_dispatch_by_this_attempt\":\"not_dispatched\",\"provider_reported_state\":\"failed\",\"submission_state\":\"provider_reported_failure\",\"request_id\":\"complex-smoke-4\",\"provider\":\"external-image-workspace\",\"workspace\":\"/tmp/complex-stdio-Nxg37U/workspace\",\"exit_code\":1,\"stdout_bytes\":411,\"stdout_sha256\":\"719ae6f2ddf93d9ba61b64192cb6fb8f4f6f7f197577a84a2dc4aeef18b98349\",\"stderr_tail\":\"\"}",
+        "2026-11-02T10:25:56.6609948Z     at StdioImageClient.tool (file:///home/runner/work/microscopy-workbench/microscopy-workbench/dist/tools/image_panel.mjs:129:19)",
+        "2026-11-02T10:25:56.6610777Z     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)",
+        "2026-11-02T10:25:56.6611634Z     at async call (file:///home/runner/work/microscopy-workbench/microscopy-workbench/dist/tests/dm-complex-science-smoke.mjs:17:32)",
+        "2026-11-02T10:25:56.6612566Z     at async file:///home/runner/work/microscopy-workbench/microscopy-workbench/dist/tests/dm-complex-science-smoke.mjs:22:14",
+        "2026-11-02T10:25:56.6613036Z ",
+        "2026-11-02T10:25:56.6613142Z Node.js v22.23.4",
+        "2026-11-02T10:25:56.6755609Z ##[error]Process completed with exit code 1.",
+        "2026-11-02T10:25:56.6876129Z Post job cleanup.",
+        "2026-11-02T10:25:56.7804686Z [command]/usr/bin/git version",
+        "2026-11-02T10:25:56.7853291Z git version 2.56.0",
+        "2026-11-02T10:25:56.7891032Z Temporarily overriding HOME='/home/runner/work/_temp/5709138c-3da9-42c8-821c-c2f151f3e3dd' before making global git config changes",
+        "2026-11-02T10:25:56.7892497Z Adding repository directory to the temporary git global config as a safe directory",
+        "2026-11-02T10:25:56.7896044Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/microscopy-workbench/microscopy-workbench",
+        "2026-11-02T10:25:56.7938967Z [command]/usr/bin/git config --local --name-only --get-regexp core\\.sshCommand",
+        "2026-11-02T10:25:56.7978507Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'core\\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\"",
+        "2026-11-02T10:25:56.8312326Z [command]/usr/bin/git config --local --name-only --get-regexp http\\.https\\:\\/\\/github\\.com\\/\\.extraheader",
+        "2026-11-02T10:25:56.8355480Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'http\\.https\\:\\/\\/github\\.com\\/\\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\"",
+        "2026-11-02T10:25:56.8690479Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\\.gitdir:",
+        "2026-11-02T10:25:56.8729683Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url"
+      ]
+    },
+    {
+      "job_id": 125220010511,
+      "first_failure": [
+        "2026-11-02T10:25:43.6586960Z     triggerUncaughtException(",
+        "2026-11-02T10:25:43.6587430Z     ^",
+        "2026-11-02T10:25:43.6587615Z ",
+        "2026-11-02T10:25:43.6588142Z AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+        "2026-11-02T10:25:43.6588989Z + actual - expected",
+        "2026-11-02T10:25:43.6589317Z ",
+        "2026-11-02T10:25:43.6596916Z + '错误: DISCOVERY_SCOPE_MISMATCH: Evidence has a different frame, ROI or calibration revision. Query image_result with original request_id=manual-crystal-20; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":null,\"preview_dispatch_by_this_attempt\":\"not_inferred\",\"provider_reported_state\":\"failed\",\"submission_state\":\"provider_reported_failure\",\"request_id\":\"manual-crystal-20\",\"provider\":\"external-image-workspace\",\"workspace\":\"/home/runner/work/_temp/f3b-evidence/manual-crystal-mcp/workspace/images\",\"exit_code\":1,\"stdout_bytes\":228,\"stdout_sha256\":\"37fea8a86f30c6121c105d18b26351767e4b30a2e90fed2d0c20c927f513ac09\",\"stderr_tail\":\"\"}'",
+        "2026-11-02T10:25:43.6606994Z - '错误: DISCOVERY_SCOPE_MISMATCH: Evidence has a different frame, ROI or calibration revision. Query image_result with original request_id=manual-crystal-20; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":null,\"preview_dispatch_by_this_attempt\":\"not_inferred\",\"provider_reported_state\":\"failed\",\"submission_state\":\"provider_reported_failure\",\"request_id\":\"manual-crystal-20\",\"provider\":\"external-image-workspace\",\"workspace\":\"/home/runner/work/_temp/f3b-evidence/manual-crystal-mcp/workspace/images\",\"exit_code\":1,\"stdout_bytes\":228,\"stdout_sha256\":\"8854eb62530865eea31584e97fd634ca80719b6af623b859bf6f11a764af9c71\",\"stderr_tail\":\"\"}'",
+        "2026-11-02T10:25:43.6611279Z ",
+        "2026-11-02T10:25:43.6612080Z     at file:///home/runner/work/microscopy-workbench/microscopy-workbench/dist/tools/smoke_manual_crystal.mjs:268:12",
+        "2026-11-02T10:25:43.6613661Z     at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {",
+        "2026-11-02T10:25:43.6614482Z   generatedMessage: true,",
+        "2026-11-02T10:25:43.6614923Z   code: 'ERR_ASSERTION',",
+        "2026-11-02T10:25:43.6620710Z   actual: '错误: DISCOVERY_SCOPE_MISMATCH: Evidence has a different frame, ROI or calibration revision. Query image_result with original request_id=manual-crystal-20; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":null,\"preview_dispatch_by_this_attempt\":\"not_inferred\",\"provider_reported_state\":\"failed\",\"submission_state\":\"provider_reported_failure\",\"request_id\":\"manual-crystal-20\",\"provider\":\"external-image-workspace\",\"workspace\":\"/home/runner/work/_temp/f3b-evidence/manual-crystal-mcp/workspace/images\",\"exit_code\":1,\"stdout_bytes\":228,\"stdout_sha256\":\"37fea8a86f30c6121c105d18b26351767e4b30a2e90fed2d0c20c927f513ac09\",\"stderr_tail\":\"\"}',",
+        "2026-11-02T10:25:43.6630337Z   expected: '错误: DISCOVERY_SCOPE_MISMATCH: Evidence has a different frame, ROI or calibration revision. Query image_result with original request_id=manual-crystal-20; do not automatically resubmit. {\"phase\":\"response_validation\",\"preview_phase\":null,\"preview_dispatch_by_this_attempt\":\"not_inferred\",\"provider_reported_state\":\"failed\",\"submission_state\":\"provider_reported_failure\",\"request_id\":\"manual-crystal-20\",\"provider\":\"external-image-workspace\",\"workspace\":\"/home/runner/work/_temp/f3b-evidence/manual-crystal-mcp/workspace/images\",\"exit_code\":1,\"stdout_bytes\":228,\"stdout_sha256\":\"8854eb62530865eea31584e97fd634ca80719b6af623b859bf6f11a764af9c71\",\"stderr_tail\":\"\"}',",
+        "2026-11-02T10:25:43.6634668Z   operator: 'strictEqual',",
+        "2026-11-02T10:25:43.6635067Z   diff: 'simple'",
+        "2026-11-02T10:25:43.6635409Z }",
+        "2026-11-02T10:25:43.6635584Z ",
+        "2026-11-02T10:25:43.6635736Z Node.js v22.23.4",
+        "2026-11-02T10:25:43.6746052Z ##[error]Process completed with exit code 1.",
+        "2026-11-02T10:25:43.6798905Z ##[group]Run python -m pip freeze > \"$RUNNER_TEMP/f3b-evidence/requirements-resolved.txt\"",
+        "2026-11-02T10:25:43.6799746Z \u001b[36;1mpython -m pip freeze > \"$RUNNER_TEMP/f3b-evidence/requirements-resolved.txt\"\u001b[0m"
+      ]
+    },
+    {
+      "job_id": 125220100199,
+      "first_failure": [
+        "2026-11-02T10:23:45.0904769Z > microscopy-core@0.1.0 test:spatial-domains",
+        "2026-11-02T10:23:45.0905564Z > node dist/tools/smoke_spatial_domains.mjs",
+        "2026-11-02T10:23:45.0906402Z ",
+        "2026-11-02T10:27:37.6002760Z ##[error]The operation was canceled.",
+        "2026-11-02T10:27:37.6126218Z Post job cleanup.",
+        "2026-11-02T10:27:37.7179108Z [command]/usr/bin/git version",
+        "2026-11-02T10:27:37.7233888Z git version 2.56.0",
+        "2026-11-02T10:27:37.7281492Z Temporarily overriding HOME='/home/runner/work/_temp/517b772e-8e12-4063-9ba8-52eded64cb7c' before making global git config changes",
+        "2026-11-02T10:27:37.7285242Z Adding repository directory to the temporary git global config as a safe directory",
+        "2026-11-02T10:27:37.7288891Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/microscopy-workbench/microscopy-workbench",
+        "2026-11-02T10:27:37.7343470Z [command]/usr/bin/git config --local --name-only --get-regexp core\\.sshCommand",
+        "2026-11-02T10:27:37.7396230Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'core\\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\"",
+        "2026-11-02T10:27:37.7798860Z [command]/usr/bin/git config --local --name-only --get-regexp http\\.https\\:\\/\\/github\\.com\\/\\.extraheader",
+        "2026-11-02T10:27:37.7874108Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'http\\.https\\:\\/\\/github\\.com\\/\\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\"",
+        "2026-11-02T10:27:37.8622544Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\\.gitdir:",
+        "2026-11-02T10:27:37.8718939Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url",
+        "2026-11-02T10:27:37.9379856Z Cleaning up orphan processes",
+        "2026-11-02T10:27:37.9822715Z Terminate orphan process: pid (2948) (npm run test:spatial-domains)",
+        "2026-11-02T10:27:37.9872610Z Terminate orphan process: pid (2960) (sh)",
+        "2026-11-02T10:27:37.9917748Z Terminate orphan process: pid (2961) (node)",
+        "2026-11-02T10:27:37.9966350Z Terminate orphan process: pid (2975) (node)",
+        "2026-11-02T10:27:38.0065528Z Terminate orphan process: pid (5088) (python)",
+        "2026-11-02T10:27:38.0121492Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+      ]
+    }
+  ]
+}

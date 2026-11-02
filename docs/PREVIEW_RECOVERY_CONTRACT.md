@@ -28,7 +28,9 @@ successful rendering-write response only after decoding that response. It never
 acknowledges merely because server computation completed; read-only evidence,
 probe, info and result queries do not acknowledge. This proves receipt at that
 client boundary, not human viewing or Panel presentation. External clients can
-use explicit result references/ACK. Composed children may consume only preview
+use explicit result references/ACK. The receiving client caches only successful
+ACKs and fully traversed immutable references, with bounded process-local memory.
+This saves repeated reads; cache clearing never releases durable admission. Composed children may consume only preview
 results returned within their current parent invocation, never arbitrary disk
 completion or cross-parent memory.
 

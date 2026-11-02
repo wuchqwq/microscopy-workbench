@@ -84,3 +84,30 @@ compiled MCP test: 2 PASS, unchanged old scientific files and one saved FFT.
 Both earlier failing and final passing logs are retained. CI also independently
 ran DM-complex with its optional dependency: all four cases PASS; local absence
 of that dependency is still reported separately above.
+
+## Bounded client performance fix and later CI fixtures
+
+The next CI exposed a known failed complex-preview fixture without an explicit
+original reference, and a manual-crystal smoke that compared separate transport
+stdout fingerprints as if they were the original journal identity. Only those
+smoke expectations changed: the next component preview explicitly names the
+confirmed failed original; failed-science recovery keeps the exact code/message
+and other diagnostics while allowing the transport stdout hash to differ. CI
+with optional dependencies supplies actual full smoke evidence; the local
+optional DM/diffsims scope remains separate.
+
+Spatial smoke hit its five-minute CI job limit. Sol independently measured a
+confirmed client overhead: identical two-window map replies repeated eight info
+queries and three ACKs each. A bounded per-client cache stores only successfully
+ACKed exact request/object pairs and completely traversed immutable render refs;
+failed ACKs/reads are not taken as success, readonly calls never fill it. Its 4096
+entry cap clears performance memory only, never durable admission. Before/after
+traces: map1 1669 to 441 ms, map2 1582 to 442 ms, each 11 extra RPCs to zero. Cold
+first delivery still costs about 1596 ms. This small profile does not prove the
+sole cause of CI timeout, nor qualify arbitrary large fields.
+
+After this production client change: typecheck/build PASS and bounded actual
+stdio MCP recovery suite 7 PASS, including failed-ACK retry, cached repeated
+receipts, new-client independence and all controlled unknown-write cases. Earlier
+failures and profile remain separately retained. The stacked #72 final holdout
+will use another frozen tip/new inputs; first Agent outcomes stay preserved.

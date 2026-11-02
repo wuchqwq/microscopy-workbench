@@ -18,8 +18,9 @@ try{
  const opened=(await call('image_open',{source_path:source})).data;
  const frame=(await call('image_frame',{object_id:opened.object_id,frame_index:0})).data;
  assert.equal(frame.dtype,'complex64');assert.equal(frame.kind,'frame');assert.equal(frame.complex_semantics.not_assumed_to_be_fft,true);
+ const missingComponentRequest='complex-smoke-'+(n+1);
  await assert.rejects(call('image_preview',{object_id:frame.object_id}),/explicit.*component/);
- const view=(await call('image_preview',{object_id:frame.object_id,component:'amplitude',max_size:128,upscale:true})).data;
+ const view=(await call('image_preview',{object_id:frame.object_id,component:'amplitude',max_size:128,upscale:true,resolved_preview:{request_id:missingComponentRequest}})).data;
  assert.equal(view.display.component,'amplitude');assert.equal(view.dtype,'complex64');assert.equal(view.panels[0].domain,'spatial_pixels');
  const probe=(await client.tool('image_probe',{object_id:view.object_id,points:[[1,0],[0,1]],component:'imag'})).data;
  assert.deepEqual(probe.samples.map(v=>v.value),[12,-15]);assert.equal(probe.value_dtype,'float32');assert.match(probe.intensity_semantics,/complex array imag/);

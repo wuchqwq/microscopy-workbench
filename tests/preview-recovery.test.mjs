@@ -30,6 +30,19 @@ test('first-party receiving client never acknowledges readonly evidence/probe/re
  assert.deepEqual(calls,[]);
 });
 
+test('receiving-client cache skips repeated immutable closure only after confirmed ACK',async()=>{
+ const client=Object.create(StdioImageClient.prototype),calls=[],object_id='a'.repeat(32),data={overview_object_id:object_id};let fail=true;
+ client.rpc=async(_method,{name,arguments:args})=>{calls.push(name);if(name==='image_info')return{result:{content:[{type:'text',text:JSON.stringify({object_id,preview_execution:{version:1,request_id:'original',object_id}})}]}};
+  if(fail)return{result:{isError:true,content:[]}};
+  return{result:{content:[{type:'text',text:JSON.stringify({state:'completed',kind:'preview_acknowledgement',request_id:args.request_id,preview_request_id:'original',original_object_id:object_id,operational_receipt:true,scientific_object_created:false})}]}};};
+ await assert.rejects(client.acknowledgeDeliveredPreviews('image_domain_map',data),/unconfirmed/);fail=false;
+ await client.acknowledgeDeliveredPreviews('image_domain_map',data);
+ assert.deepEqual(calls,['image_info','image_preview_acknowledge','image_info','image_preview_acknowledge']);
+ await client.acknowledgeDeliveredPreviews('image_domain_map',data);assert.equal(calls.length,4);
+ // A new client has no delivery proof; caches never replace durable admission.
+ const fresh=Object.create(StdioImageClient.prototype);fresh.rpc=client.rpc;await fresh.acknowledgeDeliveredPreviews('image_domain_map',data);assert.equal(calls.length,6);
+});
+
 const python=process.env.MICROSCOPY_PYTHON;
 test('actual MCP: completed response lost, cross-client variants blocked, exact original recovers', {skip:!python},async()=>{
  const root=process.env.PREVIEW_RECOVERY_OUTPUT??mkdtempSync(path.join(tmpdir(),'preview-recovery-mcp-'));
