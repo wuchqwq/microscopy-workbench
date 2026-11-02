@@ -146,6 +146,19 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   const panelOpen=retainedSchema.find(tool=>tool.name==='image_panel_open');
   assert.match(panelOpen.description,/explicitly saved preview\/view/);assert.match(panelOpen.description,/PREVIEW_REQUIRED means no rendering was dispatched/);
   panelOpen.description=schema.find(tool=>tool.name==='image_panel_open').description;
+  // #72 adds optional intent on NEW annotations; anonymous historical inputs
+  // and every pre-existing scientific field/required argument stay unchanged.
+  const annotate=retainedSchema.find(tool=>tool.name==='image_annotate');
+  for(const field of ['annotations','updates']){
+    const item=annotate.inputSchema.properties[field].items;
+    assert.deepEqual(item.properties.purpose.enum,['resumable_observation']);
+    assert.deepEqual(item.properties.selection_origin.enum,['researcher','agent','unspecified']);
+    for(const key of ['purpose','selection_origin']){
+      assert.ok(!(item.required??[]).includes(key));delete item.properties[key];
+    }
+  }
+  const intentGuidance='For a new resumable ROI set purpose=resumable_observation with stable annotation_id and selection_origin; read back image_panel_current and verify the exact handoff after saving. ';
+  assert.ok(annotate.description.includes(intentGuidance));annotate.description=annotate.description.replace(intentGuidance,'');
   // Presentation controls are explicitly additive and must never become a
   // required scientific parameter or alter old full-return behavior.
   for(const name of ['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_info','image_result']){
