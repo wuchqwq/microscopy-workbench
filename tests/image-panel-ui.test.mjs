@@ -31,7 +31,7 @@ const sourceId='a'.repeat(32),viewId='b'.repeat(32);
 const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:[20,12,148,108],image_rect_xyxy:[0,0,128,96]};
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
-async function harness(initial=fixture(),{windowStates=[]}={}){
+async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={}){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
  const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null;
@@ -51,7 +51,7 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
   setAttribute(name,value){this.attributes[name]=value;}
   querySelector(){return null;}
   getContext(){return this.context??=new Context(this);}
-  getBoundingClientRect(){return {left:0,top:0,width:this.width,height:this.height};}
+  getBoundingClientRect(){if(panelGeometry&&this.id==='viewport')return {left:0,top:0,width:1000-(bodyClasses.has('properties-open')?304:bodyClasses.has('research-open')?360:0),height:500-($('measurement-workspace').open?180:0)};return {left:0,top:0,width:this.width,height:this.height};}
   setPointerCapture(){}
   showModal(){this.open=true;}
   close(){if(!this.open)return;this.open=false;this.listeners.close?.({target:this});}
@@ -91,7 +91,7 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
     if(windowStates.length&&['window-context','window-camera'].includes(body.action)){
      windowMetadataCalls.push(copy(body));if(body.expected_object_id!==server.object.object_id||body.params.collection_revision!==server.window_collection.revision)return {ok:false,json:async()=>({error:'Changed window revision'})};const collection=server.window_collection,entry=collection.windows.find(value=>value.window_id===(body.params.window_id??collection.active_window_id)),saved=savedWindowStates.get(entry?.object_id);
      if(!entry||!saved||body.action==='window-context'&&(server.edit_state?.dirty||server.pending_result||body.draft_revision!==server.edit_state?.draft_revision))return {ok:false,json:async()=>({error:'Window context preflight refused'})};
-     const previous=entry.view_context;entry.view_context={version:1,object_id:entry.object_id,panel_mapping_fingerprint:saved.panel_mapping_fingerprint,camera:copy(body.params.camera),selection_candidate:body.action==='window-context'?copy(server.selection??null):copy(previous?.selection_candidate??null),selected_annotation_id:body.action==='window-context'?body.params.selected_annotation_id:previous?.selected_annotation_id??null};collection.revision++;server.state_revision++;const reply=copy(server);return {ok:true,json:async()=>reply};
+     const previous=entry.view_context;entry.view_context={version:1,object_id:entry.object_id,panel_mapping_fingerprint:saved.panel_mapping_fingerprint,camera:copy(body.params.camera),...(body.params.ui_panels?{ui_panels:copy(body.params.ui_panels)}:previous?.ui_panels?{ui_panels:copy(previous.ui_panels)}:{}),selection_candidate:body.action==='window-context'?copy(server.selection??null):copy(previous?.selection_candidate??null),selected_annotation_id:body.action==='window-context'?body.params.selected_annotation_id:previous?.selected_annotation_id??null};collection.revision++;server.state_revision++;const reply=copy(server);return {ok:true,json:async()=>reply};
     }
     if(windowStates.length&&body.action==='activate-window'){
      calls.push(copy(body));activationStarted++;for(const resolve of activationListeners.splice(0))resolve();const source=server.object.object_id,revision=server.edit_state?.draft_revision??0,collectionRevision=server.window_collection.revision;
@@ -1358,4 +1358,18 @@ test('pending recovery copy permits camera observation and Save A, then explicit
  assert.equal((await h.nativeAction('pan')).ok,true);h.event('pointerdown',10,10);h.event('pointerup',25,31);await h.settle();assert.notDeepEqual(h.inspect().view,before);h.$('zoom').value='2';h.$('zoom').oninput();await h.settle();assert.equal(h.inspect().view.scale,2);assert.deepEqual(h.inspect().draft,original);assert.equal(h.inspect().dirty,false);assert.equal(h.calls.length,0);
  const saved=await h.nativeAction('save');assert.equal(saved.ok,true,saved.error);assert.equal(h.inspect().state.workspace_analysis.recovery_available,true);assert.equal(h.$('fft').disabled,true);assert.equal(h.calls.length,0);assert.equal(h.actionTrace.filter(action=>action==='save').length,1);
  await h.click('workspace-discard-recovery');await h.settle();assert.equal(h.inspect().state.workspace_analysis.recovery_available,false);assert.equal(h.inspect().dirty,false);assert.equal(h.calls.length,0);assert.equal(h.actionTrace.filter(action=>action==='discard').length,1);h.draw('rectangle');assert.notDeepEqual(h.inspect().draft,original);
+});
+
+
+test('qualified UI panels restore before viewport camera calculation and retain the same visible image location',async()=>{
+ const f=windowActivationFixture(),panels={side:'properties',settings:true,results:true},camera={scale:4.126139322916667,center_image_xy:[27.1616898741667,48]};Object.assign(f.source.window_collection.windows[0].view_context,{camera,ui_panels:panels});const h=await harness(f.source,{windowStates:[f.target],panelGeometry:true});await h.finishWindows();
+ assert.equal(h.bodyClasses.has('properties-open'),true);assert.equal(h.$('settings-panel').open,true);assert.equal(h.$('measurement-workspace').open,true);assert.ok(Math.abs(h.inspect().view.x-(696/2-camera.center_image_xy[0]*camera.scale))<1e-9);assert.ok(Math.abs(h.inspect().view.y-(320/2-camera.center_image_xy[1]*camera.scale))<1e-9);assert.equal(h.inspect().view.scale,camera.scale);assert.equal(h.calls.length,0);
+});
+test('panel-only changes persist through the existing metadata queue and Save A without dirtying or executing science',async()=>{
+ const f=recoveryPendingFixture(),h=await harness(f.source,{windowStates:[f.target],panelGeometry:true});await h.finishWindows();await h.click('toggle-properties');h.$('settings-panel').open=true;h.$('settings-panel').listeners.toggle();h.$('measurement-workspace').open=true;h.$('measurement-workspace').listeners.toggle();await h.finishWindows();
+ const expected={side:'properties',settings:true,results:true};assert.deepEqual(h.server().window_collection.windows[0].view_context.ui_panels,expected);assert.equal(h.inspect().dirty,false);assert.equal(h.calls.length,0);const saved=await h.nativeAction('save');assert.equal(saved.ok,true,saved.error);assert.equal(h.inspect().state.workspace_analysis.recovery_available,true);assert.equal(h.calls.length,0);
+ const after=await harness(h.server(),{windowStates:[f.target],panelGeometry:true});await after.finishWindows();assert.equal(after.bodyClasses.has('properties-open'),true);assert.equal(after.$('measurement-workspace').open,true);assert.equal(after.$('settings-panel').open,true);assert.deepEqual(after.inspect().view,h.inspect().view);assert.equal(after.calls.length,0);
+});
+test('legacy view without recorded UI panels uses an explicit default instead of inventing historical preferences',async()=>{
+ const f=windowActivationFixture(),h=await harness(f.source,{windowStates:[f.target],panelGeometry:true});await h.finishWindows();assert.equal(h.bodyClasses.has('properties-open'),false);assert.equal(Boolean(h.$('measurement-workspace').open),false);assert.match(h.$('toggle-properties').title,/未记录.*默认/);assert.equal(h.server().window_collection.windows[0].view_context.ui_panels,undefined,'initial paint must not manufacture a historical panel preference');
 });

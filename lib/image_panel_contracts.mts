@@ -21,8 +21,9 @@ export interface PanelDraftAcknowledgment {schema_version:1;panel_id:string|null
 export interface PanelPendingResult {object_id:unknown;request_id:unknown;reason:'unsaved_draft'|'window_capacity';scientific_operation_complete:true;}
 export interface PanelWindowLayout {x:number;y:number;width:number;height:number;z:number;}
 export interface PanelWindowCamera {scale:number;center_image_xy:readonly [number,number];}
+export interface PanelWindowUiPanels {side:'none'|'properties'|'research';settings:boolean;results:boolean;}
 export interface PanelWindowViewContext {
- version:1;object_id:string;panel_mapping_fingerprint:string;camera:PanelWindowCamera;
+ version:1;object_id:string;panel_mapping_fingerprint:string;camera:PanelWindowCamera;ui_panels?:PanelWindowUiPanels;
  selection_candidate:PanelSelection|null;selected_annotation_id:string|null;
  camera_origin?:'new_fit_preference';
 }

@@ -30,7 +30,7 @@ import {WorkspaceControls} from './workspace-controls.mjs';
 import {RoiComparisonPanel} from './roi-comparison.mjs';
 import {settleWorkspaceWindows} from './settle-workspace.mjs';
 import {ExecutionHistoryPanel} from './execution-history.mjs';
-import type {WindowCamera,WindowViewContext} from './window-workspace.mjs';
+import type {WindowCamera,WindowViewContext,WindowUiPanels} from './window-workspace.mjs';
 import {checkObservationNote,observationReadback,observationPurpose} from './observation-contract.mjs';
 import type {PanelRoiSnapshot} from './roi-observations.mjs';
 const $=(id:string)=>document.getElementById(id)!,canvas=$('canvas'),ctx=canvas.getContext('2d')!,baseCanvas=$('base-canvas'),baseContext=baseCanvas.getContext('2d',{willReadFrequently:true})!,marksCanvas=$('marks-canvas'),marksContext=marksCanvas.getContext('2d')!,stage=$('image-stage'),viewport=$('viewport');
@@ -58,7 +58,7 @@ const queuedEdits=new Map<string|undefined,QueuedEdit>(),userHistory=new UserAct
 const windowActionHistory=new Map<string,{scope:string|undefined;undo:AppHistoryEntry[];redo:AppHistoryEntry[]}>();
 let lastUserDisplay:DisplayDraft|null=null;
 let imageFocused=false,focusCamera:{object_id?:string;view:ViewTransform}|null=null;
-let initialResultLayout=true;
+let initialResultLayout=true,applyingUiPanels=false,panelLayoutUnrecorded=true,lastUiPanels:string|undefined;
 const geometryRevisions=new Map<string|undefined,number>(),remeasuringMarks=new Map<string|undefined,MeasurementTarget>();let failedMeasurement:MeasurementTarget|null=null;
 const historyDraft=new DraftHistory({}),perf={frames:0,tone_count:0,overlay_count:0,tone_last_ms:0,overlay_last_ms:0,draw_last_ms:0,action_last_ms:0};
 const now=()=>performance.now(),message=(text:unknown,error=false)=>{$('message').textContent=text;$('message').classList.toggle('error',error);};
@@ -102,7 +102,7 @@ function workspaceDraft(){return {version:1,object_id:state.object.object_id,pan
 async function parkActiveWindow(){
  if(state.workspace_analysis&&state.window_collection&&!state.window_collection.active_window_id)return;
  if(!state.workspace_analysis||!state.window_collection?.active_window_id||!state.panel_mapping_fingerprint){await publishDraft({includeSelection:true,urgent:true,confirmPersistence:true});if(draftError)throw draftError;return;}
- await windowWorkspace.awaitStableMetadata();
+ panelLayoutUnrecorded=false;windowWorkspace.queueActiveCamera(activeWindowCamera(),activeUiPanels());await windowWorkspace.awaitStableMetadata();
  const activeId=state.window_collection?.active_window_id;if(activeId)windowActionHistory.set(activeId,{scope:workflowScope(state),undo:cloneWorking(userHistory.undoItems),redo:cloneWorking(userHistory.redoItems)});
  const revision=historyDraft.revision,epoch=interactionEpoch;
  await publishDraft({includeSelection:true,urgent:true,confirmPersistence:true,allowSwitch:true});if(draftError)throw draftError;
@@ -166,7 +166,7 @@ async function persistWindowContext(){
  await publishDraft({includeSelection:true,urgent:true,confirmPersistence:true});if(draftError)throw new Error('窗口选择保存尚未确认；当前编辑保留。');
  if(state.object.object_id!==objectId||historyDraft.revision!==revision||interactionEpoch!==epoch||drag||dirty())throw new Error('核对窗口时出现新编辑，原图与草稿保留。');
  const selected=state.object.annotations?.some(mark=>mark.annotation_id===selectedId&&mark.status!=='retracted')?selectedId:null;
- await windowWorkspace.saveActiveContext(camera,selected,revision);
+ await windowWorkspace.saveActiveContext(camera,selected,revision,activeUiPanels());
  if(state.object.object_id!==objectId||historyDraft.revision!==revision||interactionEpoch!==epoch||drag||dirty())throw new Error('保存窗口状态时出现新编辑，原图与草稿保留。');
 }
 async function activateWindow(windowId:string,targetObject:string){
@@ -182,7 +182,7 @@ async function activateWindow(windowId:string,targetObject:string){
  let sent=false;
  try{
   if((!canPark&&dirty())||drag||pending||state.pending_result||state.last_operation?.state==='submitted')throw new Error('当前工作状态尚未就绪，编辑保留。');
-  if(canPark){if(state.window_collection?.active_window_id){await parkActiveWindow();const selected=state.object.annotations?.some(mark=>mark.annotation_id===selectedId&&mark.status!=='retracted')?selectedId:null;await windowWorkspace.saveActiveContext(activeWindowCamera(),selected,historyDraft.revision);}}else await persistWindowContext();
+  if(canPark){if(state.window_collection?.active_window_id){await parkActiveWindow();const selected=state.object.annotations?.some(mark=>mark.annotation_id===selectedId&&mark.status!=='retracted')?selectedId:null;await windowWorkspace.saveActiveContext(activeWindowCamera(),selected,historyDraft.revision,activeUiPanels());}}else await persistWindowContext();
   await windowWorkspace.awaitStableMetadata();
   const target=[...state.window_collection?.windows??[],...state.window_collection?.closed_windows??[]].find(entry=>entry.window_id===windowId);if(!target||target.object_id!==targetObject)throw new Error('所选窗口已关闭或其结果版本已改变；请重新核对窗口列表。');
   transition.source_object_id=state.object.object_id;transition.source_draft_revision=historyDraft.revision;transition.phase='activating';switchState(transition);const revision=historyDraft.revision;
@@ -245,7 +245,16 @@ function syncDrawerBounds(){
 }
 function syncDrawerPresentation(){
  const research=!imageFocused&&document.body.classList.contains('research-open'),properties=!imageFocused&&document.body.classList.contains('properties-open');
- $('toggle-research').setAttribute('aria-expanded',String(research));$('toggle-properties').setAttribute('aria-expanded',String(properties));$('toggle-settings').setAttribute('aria-expanded',String(properties&&$('settings-panel').open));syncDrawerBounds();
+ $('toggle-research').setAttribute('aria-expanded',String(research));$('toggle-properties').setAttribute('aria-expanded',String(properties));$('toggle-settings').setAttribute('aria-expanded',String(properties&&$('settings-panel').open));syncDrawerBounds();const panels=activeUiPanels(),signature=JSON.stringify(panels);if(!applyingUiPanels&&lastUiPanels!==undefined&&signature!==lastUiPanels)panelLayoutUnrecorded=false;lastUiPanels=signature;if(!applyingUiPanels&&image&&state?.panel_mapping_fingerprint)windowWorkspace.queueActiveCamera(activeWindowCamera(),panelLayoutUnrecorded?undefined:panels);
+}
+function activeUiPanels():WindowUiPanels {
+ return {side:imageFocused?'none':document.body.classList.contains('properties-open')?'properties':document.body.classList.contains('research-open')?'research':'none',settings:Boolean($('settings-panel').open),results:!imageFocused&&Boolean($('measurement-workspace').open)};
+}
+function restoreUiPanels(panels:WindowUiPanels|undefined){
+ const known=panels??{side:'none',settings:false,results:false};panelLayoutUnrecorded=panels===undefined;applyingUiPanels=true;
+ try{document.body.classList.toggle('properties-open',known.side==='properties');document.body.classList.toggle('research-open',known.side==='research');$('research-panel').hidden=known.side!=='research';$('settings-panel').open=known.settings;$('measurement-workspace').open=known.results;initialResultLayout=false;syncDrawerPresentation();void viewport.getBoundingClientRect().width;}
+ finally{applyingUiPanels=false;}
+ $('toggle-properties').title=panelLayoutUnrecorded?'此前未记录面板开合；当前使用默认显示。':'打开或关闭此图的属性面板';
 }
 function openResearch(){if(imageFocused)toggleImageFocus();document.body.classList.remove('properties-open');document.body.classList.add('research-open');$('research-panel').hidden=false;syncDrawerPresentation();diagnostics();}
 function closeResearch(){document.body.classList.remove('research-open');$('research-panel').hidden=true;syncDrawerPresentation();}
@@ -574,7 +583,7 @@ function renderMeasurement(){const last=state.last_operation,entry=selectedId?me
  finite(m?.frequency_distance_cycles_per_pixel)?`频率差 ${m.frequency_distance_cycles_per_pixel} cycles/pixel`:
  '选线段或已知中心的倒空间峰后可测量；候选标记不等于物相确认';if(entry&&entry.status!=='current')$('measurement-summary').textContent='旧版数值（待重测或历史）：'+$('measurement-summary').textContent;}
 async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forceWindowContext=false,publishSelection=true,discardAuthorizedDraft=false,historyNavigation=false}:{keepDisplay?:DisplayDraft|null;keepMark?:LocalSnapshot|null;role?:string|null;forceWindowContext?:boolean;publishSelection?:boolean;discardAuthorizedDraft?:boolean;historyNavigation?:boolean}={}){
- const priorScope=state?workflowScope(state):null,intendedAnnotationEdit=!discardAuthorizedDraft&&state?annotationEditDraft():null;
+ const initialLoad=!state,priorScope=state?workflowScope(state):null,intendedAnnotationEdit=!discardAuthorizedDraft&&state?annotationEditDraft():null;
  const ticket=++loading,revision=historyDraft.revision,epoch=interactionEpoch,sameObject=state?.object.object_id===next.object.object_id,rect=viewport.getBoundingClientRect(),continued=relatedViewport(view,state,next,[rect.width,rect.height]),context=resumableWindowContext(next),restoreContext=Boolean(context&&(forceWindowContext||!state||!sameObject&&!continued)),savedSelection=forceWindowContext?(Object.hasOwn(next,'selection')?next.selection:context?.selection_candidate as AppSelection|null):!sameObject&&next.selection?next.selection:(sameObject||continued)&&draft?draft:next.selection;let decoded:BrowserElement|null=null;
  if(next.clean_png_base64||next.png_base64){decoded=new Image();decoded.src='data:image/png;base64,'+(next.clean_png_base64??next.png_base64);await decoded.decode();if(ticket!==loading)return false;if(state&&(historyDraft.revision!==revision||interactionEpoch!==epoch||drag)){pending=next;showPending();return false;}}
  // Discard applies only after this exact saved view has been read and decoded.
@@ -595,7 +604,7 @@ async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forc
   $('unit').value=({'angstrom':'Å','1/angstrom':'1/Å'} as Partial<Record<string,string>>)[xy.unit as string]??xy.unit;$('scope').value=calibrationRecord.scope;}
  $('calibration').hidden=!state.tools.some(t=>t.name==='image_calibrate');$('metadata').textContent=JSON.stringify({object_id:o.object_id,frame_identity:state.frame_identity,calibration:o.xy_calibration??o.calibration_record??o.calibration,effective_display:d,render_base_id:state.render_base_id,display_source_object_id:state.display_source_object_id},null,2);
  renderDomainEvidence($('domain-evidence'),state.domain_evidence,{png:state.domain_png_base64,show:object_id=>act('show',{object_id}),onError:error=>message((error as {message:string}).message,true)});renderMeasurement();renderObservation();renderSequenceEvidence($('sequence-evidence'),state.sequence_evidence,{show:object_id=>act('show',{object_id}),onError:error=>message((error as {message:string}).message,true)});
- image=decoded;decodedViewSnapshot=decoded&&typeof next.clean_png_base64==='string'&&next.clean_png_base64.length>0&&typeof next.panel_mapping_fingerprint==='string'&&/^[a-f0-9]{64}$/.test(next.panel_mapping_fingerprint)?{object_id:next.object.object_id,image:decoded,panel_mapping_fingerprint:next.panel_mapping_fingerprint,object:next.object}:null;cleanBase=Boolean(next.clean_png_base64);for(const c of [canvas,baseCanvas,marksCanvas]){c.width=image?.width??640;c.height=image?.height??160;}stage.style.width=canvas.width+'px';stage.style.height=canvas.height+'px';windowWorkspace.sync(state);
+ image=decoded;decodedViewSnapshot=decoded&&typeof next.clean_png_base64==='string'&&next.clean_png_base64.length>0&&typeof next.panel_mapping_fingerprint==='string'&&/^[a-f0-9]{64}$/.test(next.panel_mapping_fingerprint)?{object_id:next.object.object_id,image:decoded,panel_mapping_fingerprint:next.panel_mapping_fingerprint,object:next.object}:null;cleanBase=Boolean(next.clean_png_base64);for(const c of [canvas,baseCanvas,marksCanvas]){c.width=image?.width??640;c.height=image?.height??160;}stage.style.width=canvas.width+'px';stage.style.height=canvas.height+'px';if(restoreContext||initialLoad)restoreUiPanels(context?.ui_panels);windowWorkspace.sync(state);
  if(image){baseContext.drawImage(image,0,0);basePixels=baseContext.getImageData(0,0,canvas.width,canvas.height);if(restoreContext&&context?.camera_origin==='new_fit_preference'){fitView();message('已恢复经核对的原输入选区；此前没有保存相机，当前为新的适应画布视野。');}else if(restoreContext&&context){const box=viewport.getBoundingClientRect();view={scale:context.camera.scale,x:box.width/2-context.camera.center_image_xy[0]*context.camera.scale,y:box.height/2-context.camera.center_image_xy[1]*context.camera.scale};resize();}else if(!sameObject&&!continued)fitView();else{if(!sameObject)view=continued!;resize();}}else{basePixels=null;baseContext.clearRect(0,0,640,160);baseContext.fillStyle='#d4e4ef';baseContext.fillText('序列已打开。请选择一个帧。',20,40);}
  syncMarkFields(false);void refreshMeasurements();
  if(keepDisplay){$('gamma').value=keepDisplay.gamma;$('low').value=keepDisplay.low;$('high').value=keepDisplay.high;$('axes').checked=keepDisplay.axes;$('scale').checked=keepDisplay.scale;$('gamma-label').textContent=$('gamma').value;}
@@ -605,7 +614,7 @@ async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forc
  historyDraft.revision=Math.max(historyDraft.revision,state.edit_state?.draft_revision??0);
  historyDraft.reset(snapshot());lastUserDisplay=displayDraft();if(priorScope!==workflowScope(state))userHistory.reset();savedViews.remember(state,{replace:Boolean(continued)&&!forceWindowContext&&!historyNavigation,role});showDraft();paint();showPending();const adoptedEpoch=interactionEpoch;if(publishSelection)await publishDraft({includeSelection:true,allowSwitch:Boolean(windowSwitch)});return interactionEpoch===adoptedEpoch&&!drag;
 }
-function resize(){stage.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.scale})`;$('zoom').value=view.scale;$('zoom-label').textContent=Math.round(view.scale*100)+'%';windowWorkspace.updateActiveSourceOverlay();if(!windowSwitch&&state?.panel_mapping_fingerprint)windowWorkspace.queueActiveCamera(activeWindowCamera());schedulePaint();}
+function resize(){stage.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.scale})`;$('zoom').value=view.scale;$('zoom-label').textContent=Math.round(view.scale*100)+'%';windowWorkspace.updateActiveSourceOverlay();if(!windowSwitch&&state?.panel_mapping_fingerprint)windowWorkspace.queueActiveCamera(activeWindowCamera(),panelLayoutUnrecorded?undefined:activeUiPanels());schedulePaint();}
 function fitView(){if(!image)return;const r=viewport.getBoundingClientRect();view=fitViewport([canvas.width,canvas.height],[r.width,r.height]);resize();}
 function toggleImageFocus(){
  imageFocused=!imageFocused;
@@ -811,7 +820,7 @@ $('crystal-short-status').onclick=()=>{openResearch();$('crystal-evidence').scro
 $('close-crystal-image').onclick=()=>$('crystal-image-dialog').close();
 $('toggle-properties').onclick=()=>{closeResearch();document.body.classList.toggle('properties-open');syncDrawerPresentation();};$('close-properties').onclick=()=>{document.body.classList.remove('properties-open');syncDrawerPresentation();};
 $('toggle-settings').onclick=()=>{closeResearch();document.body.classList.add('properties-open');$('settings-panel').open=true;syncDrawerPresentation();};
-$('settings-panel').addEventListener('toggle',syncDrawerPresentation);
+$('settings-panel').addEventListener('toggle',syncDrawerPresentation);$('measurement-workspace').addEventListener('toggle',syncDrawerPresentation);
 for(const id of ['label-text','label-size','marker-shape','label-visible','geometry-visible','label-leader','label-pinned'])$(id).oninput=editPresentation;
 $('annotation-preset').onchange=()=>{figurePrefs.preset=$('annotation-preset').value;syncFigureControls();schedulePaint();message('仅切换标注显示预设；科学坐标与确认状态保持原样。');};
 $('figure-mode').onclick=()=>{figurePrefs.mode=figurePrefs.mode==='figure'?'analysis':'figure';syncFigureControls();schedulePaint();message(figurePrefs.mode==='figure'?'出图模式：可继续拖动文字；科学锚点已锁定。':'分析模式：圆圈移动改变科学点位，文字移动只改变排版。');};
@@ -901,4 +910,4 @@ const drawerResizeObserver=typeof ResizeObserver==='undefined'?null:new ResizeOb
 for(const id of ['workbench','viewport','research-strip','figure-toolbar','view-navigation','pending-result','spatial-return-status','canvas-context','canvas-footer','measurement-workspace','measurement-content'])drawerResizeObserver?.observe($(id));
 (globalThis as typeof globalThis & BrowserEnvironment).addEventListener?.('resize',syncDrawerBounds);
 syncDrawerPresentation();
-refresh().then(()=>{syncDrawerPresentation();hydrateWorkingDraft(state);workspaceControls.sync();message(state.workspace_analysis?.recovery_available?'当前打开明确保存版本；可选择恢复未保存编辑。':orphanedDraft?'检测到先前未保存的草稿记录；请明确撤回草稿后继续。':'滚轮缩放 · 空格拖动 · Ctrl+S 保存分析工作区');if(typeof setTimeout==='function')setTimeout(pollRevision,1500);}).catch(e=>message((e as {message:string}).message,true));
+refresh().then(()=>{syncDrawerPresentation();hydrateWorkingDraft(state);workspaceControls.sync();message(state.workspace_analysis?.recovery_available?'当前打开明确保存版本；可选择恢复未保存编辑。':orphanedDraft?'检测到先前未保存的草稿记录；请明确撤回草稿后继续。':'滚轮缩放 · 空格拖动 · Ctrl+S 保存分析工作区'+(panelLayoutUnrecorded?'；此前未记录面板开合，当前使用默认显示。':''));if(typeof setTimeout==='function')setTimeout(pollRevision,1500);}).catch(e=>message((e as {message:string}).message,true));
