@@ -20,6 +20,7 @@ export function analysisStatusText(state:AnalysisSaveState|undefined,localDirty=
  if(state.status==='saving')return '正在保存分析工作区';
  if(state.status==='save_unknown')return '保存结果待核对 · 请查询原保存';
  if(state.status==='legacy')return '旧版恢复记录 · 尚无明确保存点';
+ if(state.recovery_available&&!localDirty&&!state.dirty)return '有未保存恢复副本 · 恢复或明确放弃后再编辑';
  if(localDirty||state.dirty||state.status==='dirty')return '工作区有未保存修改'+(state.recovery_available?' · 恢复记录另行保留':'');
  if(state.status==='new')return '新工作区 · 尚未明确保存';
  if(state.recovery_available)return '已打开保存版本 · 有未保存恢复记录';
@@ -34,6 +35,7 @@ export class WorkspaceControls<S extends WorkspaceControlState> {
   const bind=(id:string,action:()=>Promise<void>)=>{const element=options.document.getElementById(id);if(element)element.onclick=()=>{void action().catch(error=>options.onError((error as Error).message));};};
   bind('workspace-save',()=>this.save());bind('workspace-query-save',()=>this.querySave());
   bind('workspace-recover',()=>this.recover());bind('workspace-discard',()=>this.discard());
+  bind('workspace-discard-recovery',()=>this.discardRecovery());
  }
  sync():void {
   const state=this.options.getState()?.workspace_analysis,d=this.options.document;
@@ -41,6 +43,7 @@ export class WorkspaceControls<S extends WorkspaceControlState> {
   const save=d.getElementById('workspace-save');if(save)save.disabled=this.busy||!state||this.options.blocked()||['saving','save_unknown'].includes(state.status)||Boolean(state.unresolved_request_id);
   const query=d.getElementById('workspace-query-save');if(query){query.hidden=!this.pendingSaveId&&!['saving','save_unknown'].includes(state?.status??'');query.disabled=this.busy;}
   const recover=d.getElementById('workspace-recover');if(recover){recover.hidden=!state?.recovery_available;recover.disabled=this.busy||this.options.blocked()||['saving','save_unknown'].includes(state?.status??'')||Boolean(state?.unresolved_request_id);}
+  const discard=d.getElementById('workspace-discard-recovery');if(discard){discard.hidden=!state?.recovery_available;discard.disabled=this.busy||this.options.blocked()||this.options.localDirty()||Boolean(state?.dirty)||['saving','save_unknown'].includes(state?.status??'')||Boolean(state?.unresolved_request_id);}
  }
  private async run(action:()=>Promise<void>):Promise<void>{if(this.busy)throw new Error('工作区操作尚未完成，请先核对原结果。');this.busy=true;this.sync();try{await action();}finally{this.busy=false;this.sync();}}
  async prepareClose():Promise<void>{
@@ -68,9 +71,11 @@ export class WorkspaceControls<S extends WorkspaceControlState> {
   this.pendingSaveId=null;await this.options.install(result,'query-save');this.options.onMessage('已查询原保存；请查看工作区状态。');
  });}
  async discard():Promise<void>{await this.restore('discard');}
+ async discardRecovery():Promise<void>{await this.restore('discard',true);}
  async recover():Promise<void>{await this.restore('recover');}
- private async restore(action:'discard'|'recover'):Promise<void>{await this.run(async()=>{
+ private async restore(action:'discard'|'recover',recoveryOnly=false):Promise<void>{await this.run(async()=>{
   if(this.pendingSaveId||this.options.blocked())throw new Error('原请求尚未核对，保留编辑和工作区。');
+  if(recoveryOnly&&(!this.options.getState()?.workspace_analysis?.recovery_available||this.options.localDirty()||this.options.getState()?.workspace_analysis?.dirty))throw new Error('恢复副本或当前编辑已改变；保留全部内容，请先核对。');
   if(action==='recover'&&(this.options.localDirty()||this.options.getState()?.workspace_analysis?.dirty))throw new Error('当前有新编辑或未决请求；先处理当前工作区，再选择恢复。');
   const version=this.options.interactionVersion?.(),initialDirty=this.options.localDirty();
   const changed=()=>this.options.interactionVersion?.()!==version||!initialDirty&&this.options.localDirty();
@@ -79,6 +84,7 @@ export class WorkspaceControls<S extends WorkspaceControlState> {
    await this.options.prepareRestore?.();const state=await this.options.read(),analysis=state.workspace_analysis;
    if(changed())throw new Error('核对期间出现新编辑；工作内容保留，未提交恢复或丢弃。');
    if(!analysis)throw new Error('工作区保存状态不可用。');
+   if(recoveryOnly&&(!analysis.recovery_available||analysis.dirty))throw new Error('恢复副本或当前编辑已改变；未放弃任何内容。');
    if(action==='recover'&&!analysis.recovery_available)throw new Error('没有可核对的未保存恢复记录。');
    const result=await this.options.command({action,expected_working_revision:analysis.working_revision});
    if(changed()){this.options.onRestoreConflict?.(result);throw new Error('响应期间出现新编辑；新草稿保留，返回的版本等待核对。');}

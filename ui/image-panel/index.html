@@ -4,7 +4,7 @@
 <header class="workbench-header">
   <div class="brand"><span class="brand-mark" aria-hidden="true">⌘</span><strong>Microscopy Workbench</strong><span class="brand-caption">Image Panel</span></div>
   <div class="source-heading"><div class="source-line"><span id="source-badge" class="source-badge">来源待核实</span><span id="source-name">正在读取图像来源…</span></div><span id="identity" class="image-identity"></span></div>
-  <div class="workspace-save-group"><button id="workspace-save" class="primary-button" title="保存整个分析工作区（Ctrl+S），不覆盖原始文件" disabled>保存工作区</button><span id="workspace-save-status" role="status">保存状态尚未核对</span><button id="workspace-query-save" hidden>查询原保存</button><button id="workspace-recover" hidden>恢复未保存编辑</button></div>
+  <div class="workspace-save-group"><button id="workspace-save" class="primary-button" title="保存整个分析工作区（Ctrl+S），不覆盖原始文件" disabled>保存工作区</button><span id="workspace-save-status" role="status">保存状态尚未核对</span><button id="workspace-query-save" hidden>查询原保存</button><button id="workspace-recover" hidden>恢复未保存编辑</button><button id="workspace-discard-recovery" hidden>放弃未保存恢复副本</button></div>
   <div class="frame-row" aria-label="图像帧"><button id="previous-frame" class="icon-button" aria-label="上一帧" title="上一帧">‹</button><label class="frame-label">帧<input id="frame" type="number" min="1" value="1"></label><button id="set-frame" class="icon-button" aria-label="查看所填帧" title="查看所填帧">↵</button><button id="next-frame" class="icon-button" aria-label="下一帧" title="下一帧">›</button></div>
   <span id="autosave-status" class="save-indicator" role="status">原图只读</span><button id="export" class="primary-button export-button" title="导出 PNG、科学 NPY 与参数"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 12v5h14v-5"/></svg><span>科学数据</span></button><button id="open-usage-help" aria-haspopup="dialog" aria-controls="usage-dialog">使用说明</button>
 </header>
@@ -107,7 +107,7 @@
     </details>
     <details><summary>7. 退出、保存失败与错误恢复</summary>
       <p>独立桌面关闭工作区或退出时，有修改才询问“保存／不保存／取消”。取消保留工作；保存失败或出现新编辑则保持打开。“不保存”回到上个明确保存点，但已经执行的 FFT、其真实输入和旧测量仍在历史，不自动纳入保存分析。“结果与历史 → 探索执行历史”（桌面“窗口”菜单也有同名入口）可查看已保存的原输入或 FFT；旧记录缺少原浮点输入时保持未知。</p>
-      <p>正常重开读取明确保存版本；崩溃留下的草稿需点击“恢复未保存编辑”单独恢复，不冒充已保存。故意丢弃的工作不会下次无提示复活。浏览器页签关闭仅有浏览器通用提醒，不能替代桌面三选项。</p>
+      <p>正常重开读取明确保存版本；崩溃留下的草稿需点击“恢复未保存编辑”单独恢复，不冒充已保存。有恢复副本时，先恢复它，或明确点击“放弃未保存恢复副本”，再编辑和执行分析，避免再次中断覆盖旧草稿；仍可缩放、平移、调整窗口及保存当前保存版。放弃副本不删除已执行的科学记录。故意丢弃的工作不会下次无提示复活。浏览器页签关闭仅有浏览器通用提醒，不能替代桌面三选项。</p>
       <p>保存响应未知用“查询原保存”；科学请求未知在“显示与高级设置 → 诊断与原请求恢复”点击“查询上次原请求”。始终保留原请求身份；不换 ID 自动重放。409 接纳拒绝不能单独证明后端没有生成对象。</p>
       <p>只读保存图像加载失败会保留上一已核对画面并说明状态，可“重试只读图像”，不创建新预览或 FFT。观察理由最多 1000 个 UTF-16 单位，超限保留原稿而不截断。未决任务、工作区冲突或旧格式资格不足时按原因处理，不放宽网格、来源或所有权保护。</p>
     </details>

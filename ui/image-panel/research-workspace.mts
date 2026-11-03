@@ -37,7 +37,7 @@ export function agentContinuationText(model:RoiObservationModel,panelId:unknown,
  const context=multi?multiRoiContinuationLines(multi):saved.length?saved.map((r,i)=>`${i+1}. ${r.label}：${r.reason??'观察理由未知，请先核对'}；annotation_id=${r.annotation_id}；${observationOriginLabel(r)}；源像素处理边界 [${r.rect_xyxy?.join(', ')}]。`):['当前是 FFT 或另一保存视图；以下是原观察引用，不是当前图上的新 ROI。',...retained!.observations.map((r,i)=>`${i+1}. ${value(r.text)}：${value(r.reason)}；原处理边界 [${(r.rect_xyxy as number[]).join(', ')}]。`)];
  return ['继续当前显微分析。先读取此面板的当前状态，只使用已保存且来源明确的观察：',...context,...model.warnings,...(retained?[`已保存比较 ${retained.comparison_id}；状态 ${crystalCurrentnessLabel(retained.currentness)}。请复核原观察视图 ${retained.view_id}，不要把旧比较当作更新后的结果。`,...retained.latest.map(r=>`当前修订测量 object_id=${r.object_id}，原 request_id=${value(r.request_id)}；先查询并核对科学坐标/源 FFT。`)]:[]),'根据问题选择已有科学工具，复用合法 FFT；比较结构前核对候选来源、取向、标定与必要条件。修改过的尺度或 ROI 不可冒充旧输入。返回证据到同一面板，保留未匹配与未判，不确认唯一物相或孪晶。','当前界面不会自动唤醒模型。请调用 image_panel_current'+(id(panelId)?`，panel_id="${panelId}"`:'（多个面板时先明确连接）')+'，重新检查草稿和当前引用后再处理。'].join('\n');
 }
-interface Options {document:BrowserDocument;onSave:(reason:string)=>unknown;onSelect:(annotationId:string)=>unknown;onNavigate:(objectId:string)=>unknown;onError:(message:string)=>void;onDraftChange:()=>void;}
+interface Options {document:BrowserDocument;onSave:(reason:string)=>unknown;onSelect:(annotationId:string)=>unknown;onNavigate:(objectId:string)=>unknown;onError:(message:string)=>void;onDraftChange:()=>void;allowEdit?:()=>boolean;}
 function hasRetainedSources(state:PanelRoiSnapshot):boolean {
  if(state.multi_roi_handoff_schema_version!==1)return false;
  const collection=row(state.window_collection);return rows(collection.windows,5).some(window=>
@@ -47,7 +47,7 @@ export class ResearchWorkspace {
  readonly doc:BrowserDocument;readonly options:Options;reasonDirty=false;model:RoiObservationModel|null=null;
  private previous:RoiDependencySnapshot|null=null;private selected:string|null=null;private scienceSignature='';private rowSignature='';
  constructor(options:Options){this.options=options;this.doc=options.document;
-  this.el('roi-reason').oninput=()=>{this.reasonDirty=true;options.onDraftChange();};
+  this.el('roi-reason').oninput=()=>{if(options.allowEdit?.()===false){this.el('roi-reason').value=this.model?.rows.find(r=>r.selected)?.reason??'';options.onError('先恢复或明确放弃未保存恢复副本，再编辑观察说明。');return;}this.reasonDirty=true;options.onDraftChange();};
   this.el('save-observation').onclick=()=>this.run(()=>options.onSave(this.el('roi-reason').value));
   this.el('copy-agent-prompt').onclick=()=>this.run(async()=>{const clipboard=(globalThis as {navigator?:{clipboard?:{writeText(text:string):PromiseLike<void>}}}).navigator?.clipboard;if(!clipboard)throw new Error('浏览器无法复制；请手动复制下面的提示。');await clipboard.writeText(this.el('agent-prompt').value);this.el('agent-copy-status').textContent='已复制；粘贴给已连接的 Agent 并说继续。尚未自动执行。';});
  }
