@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createImagePanel} from '../tools/image_panel.mjs';
-import {PanelWindowStore,readPanelWindowLayout} from '../lib/panel_window_collection.mjs';
+import {PanelWindowStore,readPanelWindowLayout,readPanelWindowUiPanels} from '../lib/panel_window_collection.mjs';
 import {prepareOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
 
 const id=n=>n.toString(16).padStart(32,'0'),T=id(1),F=id(2),V=id(3),P=id(4);
@@ -193,4 +193,8 @@ test('asset read rejects tampering and a layout revision racing the read without
 test('restore drops a forged source relation but keeps the independently qualified active asset',async()=>{
  const store=new PanelWindowStore(),input=spatial(),raw=spectrum(id(10)),ref={version:1,view_object_id:V,frame_object_id:F,fft_object_id:raw.object_id,source_rect_xyxy:raw.source_rect_xyxy};store.admit(input,frame);store.admit(raw,frame,ref,null);const checkpoint=store.checkpoint();checkpoint.records[1].entry.source_reference.processing_rect_xyxy=[1,1,4,4];
  const restored=new PanelWindowStore();restored.admit(raw,frame);await restored.restore(checkpoint,raw,frame,async ident=>({object:ident===V?input:raw,frame,png}));assert.equal(restored.snapshot().windows.length,2);assert.equal(restored.snapshot().windows[1].object_id,raw.object_id);assert.equal(restored.snapshot().windows[1].source_reference,undefined);
+});
+
+test('bounded backend panel preferences reject coerced nonstring sides before metadata mutation',()=>{
+ const good={side:'research',settings:false,results:true};assert.deepEqual(readPanelWindowUiPanels(good),good);for(const side of [['research'],null,{value:'research'}])assert.throws(()=>readPanelWindowUiPanels({...good,side}),/bounded UI panel/);
 });

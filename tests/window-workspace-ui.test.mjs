@@ -190,6 +190,6 @@ test('window camera failure is not silently replayed by another request to flush
 });
 
 test('bounded panel preference reader accepts only actual panels and leaves legacy absence unknown',()=>{
- const valid={side:'properties',settings:true,results:false};assert.deepEqual(readWindowUiPanels(valid),valid);for(const bad of [null,{...valid,side:'other'},{...valid,settings:'true'},{...valid,unknown:true}])assert.equal(readWindowUiPanels(bad),null);
+ const valid={side:'properties',settings:true,results:false};assert.deepEqual(readWindowUiPanels(valid),valid);for(const bad of [null,{...valid,side:['properties']},{...valid,side:null},{...valid,side:{value:'properties'}},{...valid,side:'other'},{...valid,settings:'true'},{...valid,unknown:true}])assert.equal(readWindowUiPanels(bad),null);
  const context={version:1,object_id:id(12),panel_mapping_fingerprint:'f'.repeat(64),camera:{scale:1,center_image_xy:[64,48]},selection_candidate:null,selected_annotation_id:null};assert.equal(readWindowViewContext(context).ui_panels,undefined);assert.deepEqual(readWindowViewContext({...context,ui_panels:valid}).ui_panels,valid);assert.equal(readWindowViewContext({...context,ui_panels:{...valid,extra:true}}),null);
 });
