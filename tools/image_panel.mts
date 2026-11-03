@@ -3,6 +3,7 @@
 import http from 'node:http';
 import {PanelRestoreReads} from '../lib/panel_restore_reads.mjs';
 import {AsyncLocalStorage} from 'node:async_hooks';
+import {readImageFrameAncestry} from '../lib/image_frame_ancestry.mjs';
 import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import type {ChildProcessWithoutNullStreams} from 'node:child_process';
 import type {AddressInfo} from 'node:net';
@@ -238,7 +239,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if((value.source_identity as Metadata|undefined)?.path)return {kind:'tiff',label:'用户指定 TIFF',filename:path.win32.basename(path.basename(((value.source_identity as Metadata).path as string))),basis:'fixed source TIFF provenance'};
   return {kind:'unknown',label:'来源未声明',basis:'no supported explicit source declaration'};
  };
- const findFrameIdentity=async(value:Metadata):Promise<PanelFrameIdentity|null>=>{const original=value.object_id,declared=(value.user_context as Metadata|undefined)?.data_meaning,visited=new Set();for(let n=0;n<64;n++){if(value.kind==='frame'){sources.set(original,describeSource(value,declared));return Number.isInteger(value.frame_index)?{frame_object_id:value.object_id,frame_index:value.frame_index as number,source_object_id:value.source_object_id,...(Number.isInteger(value.dm_dataset_index)?{dataset_index:value.dm_dataset_index as number}:{}),...(value.dm_plane_selection?{plane_selection:value.dm_plane_selection}:{})}:null;}if((['tiff_source','dm_source'] as readonly unknown[]).includes(value.kind)){sources.set(original,describeSource(value,declared));return null;}if(value.kind==='compare'||visited.has(value.object_id))return null;visited.add(value.object_id);const id=value.parent_object_id??value.base_object_id??value.source_object_id;if(!objectId.test(((id??'' as string) as string)))return null;value=(await journalCall('image_info',{object_id:id})).data;}return null;};
+ const findFrameIdentity=async(value:Metadata,ancestry:Metadata[]|null=null):Promise<PanelFrameIdentity|null>=>{const original=value.object_id,declared=(value.user_context as Metadata|undefined)?.data_meaning,visited=new Set();let ancestryIndex=0;for(let n=0;n<64;n++){if(value.kind==='frame'){sources.set(original,describeSource(value,declared));return Number.isInteger(value.frame_index)?{frame_object_id:value.object_id,frame_index:value.frame_index as number,source_object_id:value.source_object_id,...(Number.isInteger(value.dm_dataset_index)?{dataset_index:value.dm_dataset_index as number}:{}),...(value.dm_plane_selection?{plane_selection:value.dm_plane_selection}:{})}:null;}if((['tiff_source','dm_source'] as readonly unknown[]).includes(value.kind)){sources.set(original,describeSource(value,declared));return null;}if(value.kind==='compare'||visited.has(value.object_id))return null;visited.add(value.object_id);const id=value.parent_object_id??value.base_object_id??value.source_object_id;if(!objectId.test(((id??'' as string) as string)))return null;value=ancestry?ancestry[++ancestryIndex]!:(await journalCall('image_info',{object_id:id})).data;}return null;};
  const qualifySpatialReturn=async(raw:unknown)=>{
   const reference=readSpatialReturnReference(raw),view=await journalCall('image_info',{object_id:reference.view_object_id}),fft=await journalCall('image_info',{object_id:reference.fft_object_id});
   validateSpatialReturn(reference,view.data,view.png,await findFrameIdentity(view.data),fft.data,await findFrameIdentity(fft.data));
@@ -246,8 +247,10 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   return {reference,view};
  };
  const syncWindows=(inputViewContext?:PanelWindowViewContext|null)=>windowStore.admit(current,frameIdentity,!spatialReturnReason?spatialReturnReference:null,spatialReturnReference?windowInputCalibrations.get(spatialReturnReference.view_object_id):undefined,inputViewContext);
- const readWindowSaved=async(id:string)=>{
-  const reply=await journalCall('image_info',{object_id:id});
+ const readWindowSaved=async(id:string,{includeFrameAncestry=false}={})=>{
+  const schema=tools.find(tool=>tool.name==='image_info')?.inputSchema as Metadata|undefined,properties=schema?.properties as Metadata|undefined,ancestrySchema=properties?.include_frame_ancestry as Metadata|undefined;
+  const bundled=includeFrameAncestry&&ancestrySchema?.type==='boolean',reply=await journalCall('image_info',{object_id:id,...(bundled?{include_frame_ancestry:true}:{})});
+  const ancestry=bundled?readImageFrameAncestry(reply.data.frame_ancestry,reply.data):null;
   if(reply.data.object_id!==id||typeof reply.png!=='string'||!reply.png||reply.png.length>Math.ceil(2*1024*1024*4/3)+4)fail('Window has no bounded exact saved PNG asset',409);
   if(reply.data.kind==='annotate'&&reply.data.array_domain===undefined&&(reply.data.panels as Metadata[]|undefined)?.some(p=>p.domain==='frequency')){
    if(!objectId.test(String(reply.data.render_base_object_id)))fail('Annotated frequency window has no exact saved render base',409);
@@ -260,7 +263,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(relative.startsWith('..')||path.isAbsolute(relative)||statSync(target).size>2*1024*1024)fail('Window PNG lies outside the bounded workspace',409);
   const bytes=readFileSync(target),delivered=Buffer.from(reply.png,'base64');
   if(bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||createHash('sha256').update(bytes).digest('hex')!==expected||!bytes.equals(delivered))fail('Window saved PNG hash or delivered asset mismatch',409);
-  return {object:reply.data,frame:await findFrameIdentity(reply.data),png:reply.png};
+  return {object:reply.data,frame:await findFrameIdentity(reply.data,ancestry),png:reply.png};
  };
  const returnFailure=(error:unknown)=>error instanceof SpatialReturnError?error.code:'target_unavailable';
  try{
@@ -907,7 +910,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    }
    if(req.method==='GET'&&url.pathname==='/api/window-asset'){
     if([...url.searchParams.keys()].some(key=>!['window_id','revision'].includes(key))||url.searchParams.getAll('window_id').length!==1||url.searchParams.getAll('revision').length!==1||!/^\d{1,16}$/.test(url.searchParams.get('revision')??''))fail('Explicit saved window identity and collection revision required');
-    const revision=Number(url.searchParams.get('revision')),entry=windowStore.lookup(url.searchParams.get('window_id'),revision),saved=await readWindowSaved(entry.object_id);
+    const revision=Number(url.searchParams.get('revision')),entry=windowStore.lookup(url.searchParams.get('window_id'),revision),saved=await readWindowSaved(entry.object_id,{includeFrameAncestry:true});
     // Immutable reads can overlap a new adoption or layout publication. Never
     // bind the completed bitmap to a newer object/window collection by recency.
     const latest=windowStore.lookup(entry.window_id,revision);

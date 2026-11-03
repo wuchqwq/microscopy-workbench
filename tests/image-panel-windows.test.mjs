@@ -5,7 +5,12 @@ import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {EventEmitter} from 'node:events';
+import {PassThrough} from 'node:stream';
 import {createImagePanel} from '../tools/image_panel.mjs';
+import {ImageWorkspace} from '../lib/image_workspace.mjs';
+import {ToolRegistry} from '../lib/runtime/tool_registry.mjs';
+import {createImageModule} from '../lib/tools/image_module.mjs';
 import {PanelWindowStore,readPanelWindowLayout,readPanelWindowUiPanels} from '../lib/panel_window_collection.mjs';
 import {prepareOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
 
@@ -85,11 +90,13 @@ test('unsupported active views retain same-frame saved windows without pretendin
  store.admit(raw,frame);assert.equal(store.snapshot().active_window_id,before.active_window_id);assert.deepEqual(store.snapshot().windows,before.windows);
 });
 
-async function fixture(run,{initialAnnotations=[]}={}){
+async function fixture(run,{initialAnnotations=[],deepSource=false,ancestry=false,ancestryTransform=value=>value}={}){
  const workspace=mkdtempSync(path.join(tmpdir(),'image-panel-windows-')),records=new Map([[T,{object_id:T,kind:'tiff_source'}],[F,{object_id:F,kind:'frame',source_object_id:T,frame_index:0}]]),calls=[],live=[];
  let sequence=100,panel,owned,holdInfo=null,failFFT=false,changeAnnotationGrid=false;
  const save=value=>{records.set(value.object_id,structuredClone(value));if(value.files_sha256){const dir=path.join(workspace,'objects',value.object_id);mkdirSync(dir,{recursive:true});writeFileSync(path.join(dir,'preview.png'),pngBytes);}return value;};save({...spatial(),annotations:structuredClone(initialAnnotations)});
- const client=()=>({async rpc(method){return {result:method==='tools/list'?{tools:['image_info','image_fft','image_preview','image_annotate'].map(name=>({name,inputSchema:{}}))}:{}};},async tool(name,args){
+ if(deepSource){let parent=save(spatial(id(49)));for(let n=50;n<60;n++)parent=save({...spatial(id(n)),kind:'annotate',parent_object_id:parent.object_id,render_base_object_id:id(49)});save({...spatial(),kind:'annotate',parent_object_id:parent.object_id,render_base_object_id:id(49),annotations:structuredClone(initialAnnotations)});}
+ const ancestryFields=['object_id','kind','parent_object_id','base_object_id','source_object_id','frame_index','dm_dataset_index','dm_plane_selection','source_identity','source_file_format','source_reader','upstream_backend','backend','state','image_path','evidence_format'];
+ const client=()=>({async rpc(method){return {result:method==='tools/list'?{tools:['image_info','image_fft','image_preview','image_annotate'].map(name=>({name,inputSchema:name==='image_info'&&ancestry?{properties:{include_frame_ancestry:{type:'boolean'}}}:{}}))}:{}};},async tool(name,args){
   calls.push({name,args:structuredClone(args)});
   if(name==='image_info'&&holdInfo?.object_id===args.object_id){const hold=holdInfo;holdInfo=null;hold.entered();await hold.wait;}
   let value;
@@ -103,7 +110,12 @@ async function fixture(run,{initialAnnotations=[]}={}){
    if(changeAnnotationGrid){changeAnnotationGrid=false;value.scientific_grid_identity={version:1,source_grid_object_id:id(999),domain:'spatial_pixels'};}
    save(value);
   }
-  assert.ok(value,'Controlled provider missing object '+args.object_id);return {data:structuredClone(value),png:value.files_sha256?png:null};
+  assert.ok(value,'Controlled provider missing object '+args.object_id);let data=structuredClone(value);
+  if(name==='image_info'&&args.include_frame_ancestry===true&&ancestry!=='missing'){
+   data={state:'completed',backend:'external-image-workspace',...data};const chain=[];let entry=value;const visited=new Set();for(let step=0;step<=64;step++){const reply={state:'completed',backend:'external-image-workspace',...entry};chain.push(Object.fromEntries(ancestryFields.filter(key=>reply[key]!==undefined).map(key=>[key,structuredClone(reply[key])])));if(step===64||['frame','tiff_source','dm_source','compare'].includes(entry.kind)||visited.has(entry.object_id))break;visited.add(entry.object_id);const next=entry.parent_object_id??entry.base_object_id??entry.source_object_id;if(typeof next!=='string'||!records.has(next))break;entry=records.get(next);}
+   data.frame_ancestry=ancestryTransform({schema_version:1,root_object_id:value.object_id,records:chain});
+  }
+  return {data,png:value.files_sha256?png:null};
  },async close(){}});
  const start=async()=>{owned=prepareOwnedPanelRegistration({workspace,panel_id:P});panel=await createImagePanel({workspace,python:path.resolve('unused-python'),object_id:owned.checkpoint?.object_id??V,client:client(),panel_id:P,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,journalDirectory:owned.journalDirectory,...(owned.checkpoint?{resume_checkpoint:owned.checkpoint}:{})});owned.publish(panel);live.push({owned,panel});};
  const post=async(route,body)=>{const origin=panel.url.split('/#')[0],r=await fetch(origin+route,{method:'POST',headers:{'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
@@ -124,6 +136,81 @@ test('two GUI FFTs retain source and immutable A/B windows; saved assets are bou
  assert.equal((await h.get(`/api/window-asset?window_id=${sourceWindow.window_id}&revision=${collection.revision-1}`)).status,409);
  await h.cold();assert.deepEqual(h.state().window_collection.windows.map(w=>[w.window_id,w.object_id,w.source_reference]),collection.windows.map(w=>[w.window_id,w.object_id,w.source_reference]));assert.equal(h.state().object.object_id,b);assert.equal(h.calls.filter(c=>c.name==='image_fft').length,2);
 }));
+
+test('saved asset ancestry: a thirteen-node source uses one explicit qualified read without changing the workspace',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(response.data.object.object_id,V);assert.deepEqual(response.data.object.panels,h.records.get(V).panels);assert.deepEqual(response.data.object.annotations,h.records.get(V).annotations);assert.equal('frame_ancestry' in response.data.object,false);assert.equal(response.data.png_base64,png);assert.deepEqual(h.state(),before);
+ const reads=h.calls.slice(start);assert.equal(reads.length,1,'the complete original ancestry must not require a fresh Python/RPC startup for each parent');assert.deepEqual(reads[0],{name:'image_info',args:{object_id:V,include_frame_ancestry:true}});
+},{deepSource:true,ancestry:true}));
+
+test('saved asset ancestry: an advertised provider omitting the optional projection keeps the legacy fresh-parent path',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(h.calls.slice(start).length,13);assert.deepEqual(h.state(),before);
+},{deepSource:true,ancestry:'missing'}));
+
+test('saved asset ancestry: a legacy catalog is never sent a new optional argument',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(h.calls.slice(start).length,13);assert.ok(h.calls.slice(start).every(call=>!('include_frame_ancestry' in call.args)));assert.deepEqual(h.state(),before);
+},{deepSource:true}));
+
+for(const [name,mutate]of [
+ ['wrong root',value=>({...value,root_object_id:id(999)})],
+ ['broken next identity',value=>({...value,records:value.records.map((record,index)=>index===1?{...record,object_id:id(999)}:record)})],
+ ['truncated chain',value=>({...value,records:value.records.slice(0,-1)})],
+ ['unknown projection field',value=>({...value,records:value.records.map((record,index)=>index===0?{...record,png_base64:png}:record)})],
+])test('saved asset ancestry: rejects '+name+' without changing state or submitting a scientific write',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,409,response.data.error);assert.match(response.data.error,/ancestry|Ancestry/);assert.deepEqual(h.state(),before);assert.ok(h.calls.slice(start).every(call=>call.name==='image_info'));
+},{deepSource:true,ancestry:true,ancestryTransform:mutate}));
+
+test('saved asset ancestry: a qualified but different frame still fails the saved window mapping guard',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V);
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,409);assert.match(response.data.error,/asset changed/);assert.deepEqual(h.state(),before);
+},{deepSource:true,ancestry:true,ancestryTransform:value=>({...value,records:value.records.map((entry,index)=>index===value.records.length-2?{...entry,parent_object_id:id(999)}:index===value.records.length-1?{...entry,object_id:id(999)}:entry)})}));
+
+test('saved asset ancestry: the qualified fast path still checks the actual current PNG bytes',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V);writeFileSync(path.join(h.workspace,'objects',V,'preview.png'),'corrupt');
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,409);assert.match(response.data.error,/PNG hash/);assert.deepEqual(h.state(),before);
+},{deepSource:true,ancestry:true}));
+
+test('saved asset ancestry: a collection revision changed during qualification refuses the old response',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),hold=h.hold(V),reading=h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);
+ await hold.started;try{const changed=await h.act('window-layout',{collection_revision:before.window_collection.revision,windows:[{window_id:source.window_id,layout:{...source.layout,width:.8}}]});assert.equal(changed.status,200,changed.data.error);}finally{hold.release();}
+ const latest=h.state(),response=await reading;assert.equal(response.status,409);assert.deepEqual(h.state(),latest);assert.equal(latest.object.object_id,before.object.object_id);
+},{deepSource:true,ancestry:true}));
+
+test('saved asset ancestry: the optional boolean is advertised and invalid flags are refused before dispatch',async()=>{
+ const calls=[],registry=new ToolRegistry().register(createImageModule({imageWorkspace:{workspace:'controlled-ancestry',call(name,args){calls.push({name,args});return {content:[]};}}}));
+ assert.equal(registry.listTools().find(tool=>tool.name==='image_info').inputSchema.properties.include_frame_ancestry.type,'boolean');
+ for(const value of [null,0,1,'true',[],{}])await assert.rejects(registry.call('image_info',{object_id:V,include_frame_ancestry:value}));assert.equal(calls.length,0);
+ for(const value of [false,true])await registry.call('image_info',{object_id:V,include_frame_ancestry:value});assert.equal(calls.length,2);
+});
+
+async function ancestryAdapter(run,{alter=value=>value,depth=2}={}){
+ const directory=mkdtempSync(path.join(tmpdir(),'asset-ancestry-adapter-')),workspace=path.join(directory,'workspace');mkdirSync(workspace);const primary=path.join(workspace,'primary.png'),ancestor=path.join(workspace,'ancestor.png');writeFileSync(primary,pngBytes);writeFileSync(ancestor,pngBytes);
+ const chain=Array.from({length:depth},(_,index)=>({object_id:id(500+index),kind:index===depth-1?'frame':'annotate',...(index<depth-1?{parent_object_id:id(501+index)}:{frame_index:0,source_object_id:T}),backend:'external-image-workspace',state:'completed',image_path:index===0?primary:ancestor}));
+ const result={...chain[0],frame_ancestry:{schema_version:1,root_object_id:chain[0].object_id,records:chain}};alter({result,chain,directory,workspace,primary,ancestor});
+ const spawnProcess=()=>{const child=new EventEmitter();child.pid=123;child.stdout=new PassThrough();child.stderr=new PassThrough();child.stdin=new PassThrough();child.stdin.on('finish',()=>{child.stdout.write(JSON.stringify({ok:true,result}));child.emit('close',0);});return child;};
+ const adapter=new ImageWorkspace({workspace,python:'never-executed',spawnProcess});try{await run({adapter,result,chain});}finally{adapter.close();rmSync(directory,{recursive:true,force:true});}
+}
+
+test('saved asset ancestry: the real adapter keeps one inline image while validating all ancestor PNGs',()=>ancestryAdapter(async({adapter,result})=>{
+ const reply=await adapter.call('image_info',{object_id:result.object_id,include_frame_ancestry:true});assert.equal(reply.content.filter(block=>block.type==='image').length,1);assert.equal(reply.content.find(block=>block.type==='image').data,png);
+}));
+
+for(const [name,alter,pattern]of [
+ ['outside workspace',({chain,directory})=>{const outside=path.join(directory,'outside.png');writeFileSync(outside,pngBytes);chain[1].image_path=outside;},/escapes workspace/],
+ ['non-PNG payload',({ancestor})=>writeFileSync(ancestor,'not-a-PNG'),/not PNG/],
+ ['oversized PNG',({ancestor})=>{const bytes=Buffer.alloc(2*1024*1024+1);pngBytes.copy(bytes);writeFileSync(ancestor,bytes);},/2 MiB/],
+ ['uncompleted ancestor',({chain})=>{chain[1].state='unknown';},/ancestry/],
+ ['truthy malformed image path',({chain})=>{chain[1].image_path=[];},/path|argument/i],
+])test('saved asset ancestry: the real adapter rejects '+name,()=>ancestryAdapter(async({adapter,result})=>{
+ await assert.rejects(adapter.call('image_info',{object_id:result.object_id,include_frame_ancestry:true}),pattern);
+},{alter}));
+
+test('saved asset ancestry: even the unused 65th record keeps its original PNG refusal',()=>ancestryAdapter(async({adapter,result})=>{
+ await assert.rejects(adapter.call('image_info',{object_id:result.object_id,include_frame_ancestry:true}),/escapes workspace/);
+},{depth:65,alter:({chain,directory})=>{const outside=path.join(directory,'outside.png');writeFileSync(outside,pngBytes);chain[64].image_path=outside;}}));
 
 test('layout and closing passive view preserve dirty selection and original unknown request',()=>fixture(async h=>{
  const source=h.state().object;await h.act('fft',{selection:select([1,1,10,10],source.panels[0])});await h.act('return-spatial');h.unknownFFT();const failure=await h.act('fft',{selection:select([2,2,12,12],source.panels[0])});assert.equal(failure.status,400);assert.equal(h.state().last_operation.state,'submitted');
