@@ -39,6 +39,39 @@ test('Panel rejects mismatched mapping park and dirty close, keeping state and s
  const before=h.panel.state(),bad={version:1,object_id:A,panel_mapping_fingerprint:'0'.repeat(64),selection:null,annotation_edit:null,display:{},reason:'edit',content_dirty:true,selected_id:null,fields:{}};const result=await h.work('park-window',{working_draft:bad});assert.equal(result.status,409);assert.deepEqual(h.panel.state().selection,before.selection);assert.equal(h.panel.state().workspace_analysis.working_revision,before.workspace_analysis.working_revision);
  let changed=await h.act('edit',{updates:[{annotation_id:'roi-1',coordinates:roiB}]});assert.equal(changed.status,200,changed.data.error);const close=await h.work('close');assert.equal(close.status,409);assert.equal(h.panel.state().object.object_id,changed.data.object.object_id);assert.equal(h.panel.state().workspace_analysis.dirty,true);
 }));
+
+test('restore qualifies each immutable object once and freshly verifies it once before commit',()=>fixture(async h=>{
+ let result=await h.work('save',{save_id:'bounded-restore-reads-A'});assert.equal(result.status,200,result.data.error);
+ result=await h.act('edit',{updates:[{annotation_id:'roi-1',coordinates:roiB}]});assert.equal(result.status,200,result.data.error);
+ const start=h.calls.length;result=await h.work('discard');assert.equal(result.status,200,result.data.error);
+ const reads=h.calls.slice(start);assert.ok(reads.every(call=>call.name==='image_info'),'restore must remain read-only');
+ const counts=new Map();for(const call of reads)counts.set(call.args.object_id,(counts.get(call.args.object_id)??0)+1);
+ assert.ok(counts.size>=2,'the view and frame must both be qualified');
+ for(const [objectId,count]of counts)assert.equal(count,2,`${objectId}: one qualified read and one fresh provider verification, no repeated worker startup`);
+}));
+
+test('fresh restore verification rejects a reference changed after initial qualification and retains B',()=>fixture(async h=>{
+ let result=await h.work('save',{save_id:'fresh-restore-A'});assert.equal(result.status,200,result.data.error);
+ result=await h.act('edit',{updates:[{annotation_id:'roi-1',coordinates:roiB}]});assert.equal(result.status,200,result.data.error);
+ const before=h.panel.state(),working=readFileSync(path.join(h.workspace,'analysis-workspace','working.json'),'utf8'),hold=h.hold(F),discarding=h.work('discard');
+ await hold.entered;h.records.get(A).annotations[0].anchor.coordinates=[1,1,8,8];hold.release();
+ const failed=await discarding;assert.equal(failed.status,409,failed.data.error);assert.match(failed.data.error,/changed during restore qualification/);
+ assert.equal(h.panel.state().object.object_id,before.object.object_id);assert.equal(h.panel.state().workspace_analysis.working_revision,before.workspace_analysis.working_revision);
+ assert.equal(readFileSync(path.join(h.workspace,'analysis-workspace','working.json'),'utf8'),working);assert.equal(readAnalysisWorkspace(h.workspace).save_id,'fresh-restore-A');
+ h.records.get(A).annotations[0].anchor.coordinates=structuredClone(roiA);const retried=await h.work('discard');assert.equal(retried.status,200,retried.data.error);assert.equal(retried.data.object.object_id,A,'a later explicit attempt starts with a new read set after the known failure');
+}));
+
+test('concurrent window asset reads do not share or populate the restore attempt read set',()=>fixture(async h=>{
+ let result=await h.work('save',{save_id:'independent-http-restore-A'});assert.equal(result.status,200,result.data.error);
+ result=await h.act('edit',{updates:[{annotation_id:'roi-1',coordinates:roiB}]});assert.equal(result.status,200,result.data.error);
+ const B=result.data.object.object_id,before=h.panel.state(),active=before.window_collection.windows.find(w=>w.window_id===before.window_collection.active_window_id),start=h.calls.length,frameHold=h.hold(F),discarding=h.work('discard');
+ await frameHold.entered;const assetHold=h.hold(B),origin=h.panel.url.split('/#')[0],assetReading=fetch(origin+`/api/window-asset?window_id=${active.window_id}&revision=${before.window_collection.revision}`,{headers:{'X-Panel-Token':h.panel.token,Connection:'close'}});
+ await assetHold.entered;assetHold.release();frameHold.release();
+ const discarded=await discarding,asset=await assetReading;assert.equal(discarded.status,200,discarded.data.error);assert.ok([200,409].includes(asset.status),'late asset either matches its original collection or is refused');await asset.arrayBuffer();
+ const counts=new Map();for(const call of h.calls.slice(start))counts.set(call.args.object_id,(counts.get(call.args.object_id)??0)+1);
+ assert.equal(counts.get(F),3,'restore initial/fresh qualification plus the independent HTTP ancestry read');
+ assert.equal(counts.get(B),1,'the concurrent asset is not added to or freshly verified by the restore set');
+}));
 test('CAS rejection before save admission can query original ID as not submitted, then save with a new explicit ID',()=>fixture(async h=>{
  const first=await h.work('save',{save_id:'rejected-save',expected_working_revision:999});assert.equal(first.status,409);const queried=await h.work('query-save',{save_id:'rejected-save'});assert.equal(queried.status,200,queried.data.error);assert.equal(queried.data.save_query.state,'not_submitted');assert.equal(queried.data.save_query.automatic_retry,false);assert.equal(queried.data.workspace_analysis.save_id,null);const saved=await h.work('save',{save_id:'explicit-new-save'});assert.equal(saved.status,200,saved.data.error);assert.equal(saved.data.workspace_analysis.save_id,'explicit-new-save');
 }));
