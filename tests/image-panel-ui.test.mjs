@@ -1476,3 +1476,7 @@ test('sidebar provenance: stale entry flags or mismatched endpoints remain histo
 test('new selection identity: saving temporary B creates a new mark instead of editing the previously selected ROI A',async()=>{
  const h=await harness(savedRectangleFixture());selectSavedRoi(h);const original=copy(h.server().object.annotations[0]);h.draw('line');const geometry=h.inspect().draft.coordinates;await h.click('save-mark');await h.settle();assert.deepEqual(h.calls.map(call=>call.action),['mark']);assert.notEqual(h.calls[0].params.annotation_id,original.annotation_id);assert.deepEqual(h.server().object.annotations[0],original);assert.equal(h.server().object.annotations.length,2);assert.deepEqual(h.server().object.annotations[1].anchor.coordinates,geometry);
 });
+
+test('sidebar provenance: malformed historical line endpoints abstain without breaking the property panel',async()=>{
+ for(const points of [null,{},'legacy',[[0,0]],[[0,0],null],[[0,0],['unknown',0]]]){const initial=sidebarMeasuredPeakFixture();initial.object.annotations[0].kind='line';initial.object.annotations[0].anchor.coordinates=[0,0,.125,0];initial.last_operation.points=points;const h=await harness(initial);h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.equal(h.$('measurement-properties').hidden,false);assert.doesNotMatch(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);assert.match(h.$('measurement-summary').textContent,/未测量|未关联/);assert.equal(h.calls.length,0);}
+});

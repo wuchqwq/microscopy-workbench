@@ -609,7 +609,7 @@ function syncPropertiesContext(){
 }
 function renderMeasurement(){
  const last=state.last_operation,{mark,anchor,kind,coordinates}=propertySelectionContext(),entry=mark?measurementWorkspace.latestForAnnotation(mark.annotation_id!):null,record=entry?.measurement??entry;
- const pointsMatch=(value:{coordinate_space?:string;points?:readonly (readonly number[])[]}|null|undefined)=>Boolean(value&&anchor&&value.coordinate_space===anchor.coordinate_space&&equalRecords(kind==='point'?value.points?.[1]:value.points?.flat(),coordinates));
+ const pointsMatch=(value:{coordinate_space?:string;points?:readonly (readonly number[])[]}|null|undefined)=>Boolean(value&&anchor&&value.coordinate_space===anchor.coordinate_space&&Array.isArray(value.points)&&value.points.length===2&&value.points.every(point=>Array.isArray(point)&&point.length===2&&point.every(n=>typeof n==='number'&&Number.isFinite(n)))&&equalRecords(kind==='point'?value.points[1]:value.points.flat(),coordinates));
  const pendingGeometry=Boolean(mark&&(editCoordinates&&!equalRecords(editCoordinates,mark.anchor?.coordinates)||queuedEdits.get(mark.annotation_id)?.geometryChanged||remeasuringMarks.has(mark.annotation_id)||failedMeasurement?.id===mark.annotation_id));
  const qualifiedEntry=Boolean(entry&&measurementWorkspace.current?.object_id===state.object.object_id&&entry.same_grid===true&&entry.visible_in_current_view===true&&entry.annotation_matches_current===true&&pointsMatch(record));
  const qualifiedLast=Boolean(mark&&last?.kind==='measure'&&last.annotation_id===mark.annotation_id&&last.parent_object_id===state.object.object_id&&(last.state===undefined||last.state==='completed')&&pointsMatch(last));
