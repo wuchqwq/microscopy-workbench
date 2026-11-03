@@ -12,6 +12,7 @@ import * as annotationPresentation from '../ui/image-panel/annotation-presentati
 import * as figureExport from '../ui/image-panel/figure-export.mjs';
 import * as observationContract from '../ui/image-panel/observation-contract.mjs';
 import * as roiEditing from '../ui/image-panel/roi-editing.mjs';
+import * as knownLength from '../ui/image-panel/known-length-calibration.mjs';
 import {renderSequenceEvidence} from '../ui/image-panel/sequence-evidence.mjs';
 import {renderDomainEvidence} from '../ui/image-panel/domain-evidence.mjs';
 import {ResearchWorkspace} from '../ui/image-panel/research-workspace.mjs';
@@ -61,7 +62,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   workbenchDesktop:{onAction(handler){desktopAction=handler;}},
   WindowWorkspace:class extends WindowWorkspace{noteCameraIntent(){cameraIntentCount++;super.noteCameraIntent();}},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
@@ -564,6 +565,29 @@ test('reciprocal calibration form uses the current domain and signed scale, not 
  const h=await harness(f);assert.equal(Number(h.$('scale-x').value),.2);assert.equal(Number(h.$('scale-y').value),-.4);assert.equal(h.$('unit').value,'1/nm');assert.equal(h.$('scope').value,'image');
  h.$('source').value='Explicit synthetic calibration correction';await h.click('calibrate');
  assert.equal(h.calls.at(-1).params.coordinate_domain,'reciprocal_space');assert.deepEqual(h.calls.at(-1).params.xy_scale,{x:.2,y:-.4,unit:'1/nm'});
+});
+
+function knownLengthFixture(){const f=fixture();f.tools=[{name:'image_calibrate'}];f.frame_identity={frame_object_id:sourceId,frame_index:0};return f;}
+test('known length dialog open and cancel retain line, camera, history and science; shortcuts do not leak',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();const before=h.inspect(),calls=h.calls.length;
+ assert.equal(h.$('known-length-entry').hidden,false);assert.equal(h.$('known-length-entry').disabled,false);await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,true);assert.equal(h.calls.length,calls);h.key('r');h.key('Delete');h.key('s',{ctrlKey:true});assert.deepEqual(h.inspect().draft,before.draft);assert.equal((await h.nativeAction('fft')).ok,false);await h.click('known-length-close');assert.equal(h.$('known-length-dialog').open,false);assert.deepEqual(h.inspect().draft,before.draft);assert.deepEqual(h.inspect().view,before.view);assert.equal(h.inspect().undoCount,before.undoCount);assert.equal(h.calls.length,calls);
+});
+test('known length applies exact source endpoint scale through existing calibration action only',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();const before=h.inspect(),pixels=Math.hypot(before.draft.coordinates[2]-before.draft.coordinates[0],before.draft.coordinates[3]-before.draft.coordinates[1]);await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-unit').value='nm';h.$('known-length-isotropic').checked=true;h.$('known-length-note').value='Public synthetic test ruler';await h.click('known-length-apply');const call=h.calls.find(c=>c.action==='calibrate');assert.ok(call);assert.equal(call.params.scope,'image');assert.equal(call.params.xy_scale.x,5/pixels);assert.equal(call.params.xy_scale.y,5/pixels);assert.deepEqual(JSON.parse(call.params.source_text).endpoints_source_pixels,before.draft.coordinates);assert.equal(h.calls.filter(c=>['measure','fft','mark'].includes(c.action)).length,0);assert.equal(h.$('known-length-dialog').open,false);
+});
+test('known length invalid form and dirty edits never submit or clear the selected line',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();const before=h.inspect();await h.click('known-length-entry');for(const value of ['',0,-1,'NaN']){h.$('known-length-value').value=value;h.$('known-length-isotropic').checked=true;await h.click('known-length-apply');}h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=false;await h.click('known-length-apply');h.$('known-length-isotropic').checked=true;h.$('gamma').value='1.2';h.$('gamma').oninput();await h.click('known-length-apply');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,0);assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.inspect().dirty,true);assert.equal(h.$('known-length-dialog').open,true);
+});
+test('known length revalidates after draft delivery and refuses later local editing without scientific writes',async()=>{
+ const h=await harness(knownLengthFixture());let release;h.delayDraft(new Promise(resolve=>release=resolve));h.draw('line');await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=true;const revision=h.inspect().draftRevision,applying=h.click('known-length-apply');h.$('roi-reason').value='A later edit must remain';h.$('roi-reason').oninput();assert.equal(h.inspect().dirty,true);release();await applying;assert.equal(h.calls.filter(c=>c.action==='calibrate').length,0);assert.match(h.$('message').textContent,/改变|未提交/);assert.equal(h.$('roi-reason').value,'A later edit must remain');
+});
+test('known length unknown dispatch survives closing and reopening; it is never automatically replayed',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=true;h.failAction('Lost response. Original request_id=scale-original; query it');await h.click('known-length-apply');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);await h.click('known-length-apply');await h.click('known-length-close');await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,false);assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);assert.match(h.$('message').textContent,/原请求/);
+ unsubmittedRecoveryReply(h,'scale-original');await h.click('recover');assert.equal(h.calls.at(-1).action,'recover');assert.equal(h.calls.at(-1).params.request_id,'scale-original');await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,true);assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);
+});
+test('known length lost response with no ID binds only its own readback and blocks advanced replacement',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=true;const revision=h.inspect().draftRevision;h.failAction('Controlled network response lost, no request identity');await h.click('known-length-apply');const submitted=h.calls.at(-1),input={source_view_object_id:viewId,draft_revision:revision,parameters:submitted.params};await h.click('known-length-close');await h.click('calibrate');await h.click('withdraw');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);
+ const before=h.calls.length;await h.click('recover');assert.equal(h.calls.length,before,'unrelated legacy last operation is not queried');const saved=h.server();saved.last_operation={tool:'image_calibrate',state:'completed',request_id:'own-unknown-scale',calibration_input:copy(input)};h.setServer(saved);unsubmittedRecoveryReply(h,'own-unknown-scale');await h.click('recover');assert.equal(h.calls.at(-1).action,'recover');assert.equal(h.calls.at(-1).params.request_id,'own-unknown-scale');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,true);
 });
 
 test('dragging an independently positioned label saves presentation only and preserves the confirmed scientific anchor',async()=>{
