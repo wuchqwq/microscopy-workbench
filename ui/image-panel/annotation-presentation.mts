@@ -59,7 +59,7 @@ function candidates(anchor: readonly number[],extent: Pick<Box,'width'|'height'>
 function place(anchor: readonly number[],extent: Pick<Box,'width'|'height'>,gap: number,width: number,height: number,placed: readonly Box[],points: readonly (readonly number[])[]){
  let best: (Box & {score:number;overlap:number}) | null=null;
  for(const [cx,cy]of candidates(anchor,extent,gap)){
-  const box={x:Math.max(0,Math.min(Math.max(0,width-extent.width),cx)),y:Math.max(0,Math.min(Math.max(0,height-extent.height),cy)),...extent};
+  const box={...extent,x:Math.max(0,Math.min(Math.max(0,width-extent.width),cx)),y:Math.max(0,Math.min(Math.max(0,height-extent.height),cy))};
   const overlap=placed.reduce((sum,other)=>sum+boxOverlap(box,other),0);
   const pointPenalty=points.reduce((sum,[x,y])=>sum+(x>box.x-gap*.4&&x<box.x+box.width+gap*.4&&y>box.y-gap*.4&&y<box.y+box.height+gap*.4?extent.height*extent.height:0),0);
   const score=overlap*4+pointPenalty+Math.abs(box.x-cx)+Math.abs(box.y-cy);

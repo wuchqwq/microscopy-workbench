@@ -19,6 +19,8 @@ import {tonePixels,drawMark} from './viewer-render.mjs';
 import {layoutAnnotations,renderAnnotationsSVG} from './annotation-presentation.mjs';
 import {buildFigureBundle,downloadBlob,makeFigureRecipe,readFigureRecipe,figureScaleBar} from './figure-export.mjs';
 import {MeasurementWorkspace,requiresMeasurementJump} from './measurement-workspace.mjs';
+import {knownLengthReference,knownLengthParameters,knownLengthAttemptRequest} from './known-length-calibration.mjs';
+import type {KnownLengthReference} from './known-length-calibration.mjs';
 import {DataProbes} from './data-probes.mjs';
 import {UserActionHistory,SavedViewHistory,workflowScope,selectionActionReason,measurementLabel} from './user-workflow.mjs';
 import {makeImageSlot,makeProfileSlot,defaultCompositionTitle,validateComposition,renderCompositionSVG,buildCompositionBundle} from './figure-composer.mjs';
@@ -38,9 +40,11 @@ const $=(id:string)=>document.getElementById(id)!,canvas=$('canvas'),ctx=canvas.
 const transientMenus=[$('research-more'),$('window-index-menu')];
 function withinElement(target:BrowserElement|null,root:BrowserElement){for(let node=target;node;node=node.parentNode)if(node===root)return true;return false;}
 function dismissMenus(restoreFocus=false){let closed=false;for(const menu of transientMenus)if(menu.open){menu.open=false;closed=true;if(restoreFocus)menu.querySelector('summary')?.focus();}return closed;}
-function openResultDialog(){dismissMenus();return $('research-more').querySelector('summary');}
+function openResultDialog(){dismissMenus();dismissRoiPicker();return $('research-more').querySelector('summary');}
 for(const menu of transientMenus)menu.addEventListener('click',event=>{for(let node:BrowserElement|null=event.target;node&&node!==menu;node=node.parentNode)if(node.tagName==='BUTTON'){menu.open=false;break;}});
-document.addEventListener('pointerdown',event=>{for(const menu of transientMenus)if(menu.open&&!withinElement(event.target,menu))menu.open=false;});
+document.addEventListener('pointerdown',event=>{for(const menu of transientMenus)if(menu.open&&!withinElement(event.target,menu))menu.open=false;if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
+document.addEventListener('focusin',event=>{if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
+$('roi-pick-menu').hidden=true;
 const cloneWorking=<T,>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
 const key='mcp-dm-panel-token',hash=location.hash.slice(1);if(hash){sessionStorage.setItem(key,hash);history.replaceState(null,'',location.pathname);}const token=sessionStorage.getItem(key);
 let loadedWorkingRevision:number|undefined;
@@ -72,7 +76,7 @@ const historyDraft=new DraftHistory({}),perf={frames:0,tone_count:0,overlay_coun
 const now=()=>performance.now(),message=(text:unknown,error=false)=>{$('message').textContent=text;$('message').classList.toggle('error',error);};
 const recoveryPending=()=>state?.workspace_analysis?.recovery_available===true;
 function allowContentEditing(){if(!recoveryPending())return true;message('先恢复或明确放弃未保存恢复副本，再编辑或执行分析；当前仍可缩放、平移和调整窗口。',true);return false;}
-const measurementWorkspace=new MeasurementWorkspace({getState:()=>state,api,onSelect:selectMeasurement,onJump:jumpMeasurement,onUpdate:updateMeasurement,onError:e=>message('结果读取未完成：'+(e as {message:string}).message,true)});
+const measurementWorkspace=new MeasurementWorkspace({getState:()=>state,pendingAnnotations:pendingMeasurementAnnotations,api,onSelect:selectMeasurement,onJump:jumpMeasurement,onUpdate:updateMeasurement,onError:e=>message('结果读取未完成：'+(e as {message:string}).message,true)});
 const dataProbes=new DataProbes({getState:dataProbeState,api,onError:e=>message('原数组读取未完成：'+(e as {message:string}).message,true)});
 const researchWorkspace=new ResearchWorkspace({document,allowEdit:allowContentEditing,onSave:saveRoiObservation,onSelect:selectRoiObservation,onNavigate:async object_id=>{if(dirty()||busy||drag)throw new Error('先保存或撤销草稿，再查看保存证据；不会重算 FFT。');await act('show',{object_id});},onError:text=>message(text,true),onDraftChange:()=>{interactionEpoch++;diagnostics();publishDraft({urgent:true});}});
 const windowWorkspace=new WindowWorkspace({document,viewport,activeStage:stage,getActiveImageSize:()=>[canvas.width,canvas.height],getActiveScale:()=>view.scale,getActiveSavedImage:()=>decodedViewSnapshot,getState:()=>state,api,isScientificGesture:()=>Boolean(drag),onActivate:activateWindow,onClose:closeImageWindow,onActiveFit:()=>{if(!windowSwitch)fitView();},onBoundsChange:syncDrawerBounds,onError:text=>message(text,true),onCollection:(collection,revision)=>{if(!state)return;state={...state,window_collection:collection,state_revision:Math.max(state.state_revision??0,revision)};showPending();},schedule:(callback,ms)=>typeof setTimeout==='function'?setTimeout(callback,ms):Promise.resolve().then(callback),cancelSchedule:id=>{if(typeof clearTimeout==='function')clearTimeout(id);},observe:typeof ResizeObserver==='undefined'?undefined:(target,callback)=>{new ResizeObserver(callback).observe(target);}});
@@ -149,7 +153,7 @@ function hydrateWorkingDraft(next:AppState){
 function lockScientificControls(){
  const noDisplay=Boolean(state?.workspace_analysis&&state.window_collection&&!state.window_collection.windows.length);
  if(!windowSwitch&&!observationSavePhase&&!roiCreationRecovery&&!noDisplay&&!workspaceSettling&&!workspaceRestoring&&!orphanedDraft&&!recoveryPending())return;
- const names=['add-roi','select-roi','delete-roi','fft','measure','share','apply-roi','full','roi-statistics','line-profile','save-mark','apply-display','apply-complex-component','calibrate','withdraw','submit-observation','save-observation','save-observation-entry','agent-continue','undo','redo','frame','set-frame','previous-frame','next-frame','export','recover','fit','fit-canvas','zoom','mode'];
+ const names=['add-roi','select-roi','delete-roi','fft','measure','share','apply-roi','full','roi-statistics','line-profile','save-mark','apply-display','apply-complex-component','calibrate','withdraw','known-length-entry','known-length-apply','submit-observation','save-observation','save-observation-entry','agent-continue','undo','redo','frame','set-frame','previous-frame','next-frame','export','recover','fit','fit-canvas','zoom','mode'];
  const controls=[...names.map(id=>$(id)),...['roi-reason','mark-text','color','status','gamma','low','high','axes','scale'].map(id=>$(id)),...document.querySelectorAll('.properties-panel input, .properties-panel select, .properties-panel textarea, .properties-panel button, [data-mode]')];
  for(const control of controls){if(!control||['discard-local','reload','close-properties','toggle-settings','toggle-properties'].includes(control.id)||recoveryPending()&&!workspaceRestoring&&!windowSwitch&&(['fit','fit-canvas','zoom','mode'].includes(control.id)||control.dataset?.mode==='pan'))continue;if(control.id==='recover'&&(roiCreationRecovery&&!observationSavePhase||recoveryPending()&&!busy&&!workspaceRestoring&&!windowSwitch)){control.disabled=false;continue;}if(!switchDisabledControls.has(control))switchDisabledControls.set(control,Boolean(control.disabled));control.disabled=true;}
 }
@@ -286,7 +290,7 @@ async function verifyRoiObservation(result:AppState,expected:{object_id:string;a
  const handoff=observationReadback(fresh as unknown as PanelRoiSnapshot,expected);
  if(handoff.saved)state=fresh;trace.outcome=handoff.ready?'ready':'saved_handoff_blocked';
  const waitingOnSavedResult=handoff.saved&&Boolean(fresh.pending_result);
- message(handoff.ready?(geometryOnly?'ROI 位置已保存并读回核对；可继续添加 ROI，观察理由尚未填写。':'ROI 观察已保存并读回可接续；来源为调用者声明，不确认物相。'):waitingOnSavedResult?'ROI 观察已保存并读回核对；仍有待查看结果，处理后才能交给 Agent。':`观察对象已保存；${handoff.reason}。`,!handoff.ready&&!waitingOnSavedResult);
+ message(handoff.ready?(geometryOnly?'ROI 位置已记录并读回核对；可继续添加 ROI，观察理由尚未填写。Ctrl+S 保存工作区。':'ROI 观察已记录并读回可接续；来源为调用者声明，不确认物相；Ctrl+S 保存工作区。'):waitingOnSavedResult?'ROI 观察已保存并读回核对；仍有待查看结果，处理后才能交给 Agent。':`观察对象已保存；${handoff.reason}。`,!handoff.ready&&!waitingOnSavedResult);
  return handoff.saved;
 }
 async function saveRoiObservation(reason:string,{geometryOnly=false,allowEmptyReason=false}={}){
@@ -343,7 +347,7 @@ function diagnostics(){
  workspaceControls.sync();
  if(!windowSwitch&&!observationSavePhase&&!roiCreationRecovery)restoreScientificControls();
  windowWorkspace.flushDeferredLayout();
- const status=windowSwitch?'窗口切换接续中 · 科学输入暂停':autoFailed?'保存失败 · 草稿保留':observationSavePhase==='submitting'?'正在提交观察':observationSavePhase?'观察已保存 · 正在核对交接':busy?(activeAction==='return-spatial'?'正在读取空间观察':activeAction==='show'?'正在打开保存视图':activeAction==='fft'?'正在计算 FFT':activeAction==='measure'?'正在测量':'正在保存'):state?.last_operation?.state==='not_submitted'?'原请求未提交 · 编辑保留，明确保存才发新请求':queuedEdits.size?'等待保存':dirty()?'本地草稿':draft?'选择已就绪':state?.workspace_analysis?'工作编辑已记录 · 原图只读':'已保存 · 原图只读';
+ const status=windowSwitch?'窗口切换接续中 · 科学输入暂停':autoFailed?'保存失败 · 草稿保留':observationSavePhase==='submitting'?'正在提交观察':observationSavePhase?'观察已保存 · 正在核对交接':busy?(activeAction==='return-spatial'?'正在读取空间观察':activeAction==='show'?'正在打开保存视图':activeAction==='fft'?'正在计算 FFT':activeAction==='measure'?'正在测量':'正在应用工作编辑'):state?.last_operation?.state==='not_submitted'?'原请求未提交 · 编辑保留，明确保存才发新请求':queuedEdits.size?'等待应用修改':dirty()?'本地草稿':draft?'选择已就绪':state?.workspace_analysis?'工作编辑已记录 · 原图只读':'已保存 · 原图只读';
  $('performance-data').textContent=JSON.stringify({...perf,observation_save:observationSaveTrace,dirty:dirty(),gesture_active:Boolean(drag),draft_revision:historyDraft.revision,object_id:state?.object.object_id,scale:view.scale,busy,queued_edits:queuedEdits.size});$('draft-status').textContent=status;$('autosave-status').textContent=state?.workspace_analysis?'工作编辑即时记录':status;
  showPending();
  const undo=userHistory.peek('undo'),redo=userHistory.peek('redo');
@@ -353,7 +357,7 @@ function diagnostics(){
  $('undo').disabled=!undo&&!labelDraft&&!fieldDirty;$('redo').disabled=!redo;
  $('undo').title=undo?'撤销：'+undo.label:'没有可撤销操作';$('redo').title=redo?'恢复：'+redo.label:'没有可恢复操作';
  for(const [id,action]of [['apply-roi','roi'],['fft','fft'],['measure','measure'],['share','select'],['full','full'],['roi-statistics','statistics'],['line-profile','profile']]){
-  const button=$(id);if(!button)continue;if(id==='roi-statistics')button.hidden=draft?.kind!=='rectangle';if(id==='line-profile')button.hidden=!['line','arrow'].includes(draft?.kind as string);const reason=action==='fft'&&importedComplex()?'复数原图暂不支持 FFT；不会丢弃虚部或把显示幅值当作原数组':selectionActionReason(action,draft,state?.object??{}),waiting=Boolean(pending||state?.pending_result)&&['roi','fft','full'].includes(action);button.disabled=Boolean(reason)||busy||Boolean(drag)||waiting;button.title=(waiting?'先处理已经保存的待查看结果；窗口已满时先关闭一个只读显示。':reason||({roi:'查看选定区域',fft:'计算当前实空间 ROI 的 FFT',measure:'保存测量结果',select:'可选：把当前选择交给 Agent',full:'仅恢复完整频谱，不返回原图',statistics:'读取保存科学数组的 ROI 统计',profile:'读取当前线的原数组剖面'} as Partial<Record<string,string>>)[action])!;
+  const button=$(id);if(!button)continue;if(id==='roi-statistics')button.hidden=draft?.kind!=='rectangle';if(id==='line-profile')button.hidden=!['line','arrow'].includes(draft?.kind as string);const reason=action==='fft'&&importedComplex()?'复数原图暂不支持 FFT；不会丢弃虚部或把显示幅值当作原数组':selectionActionReason(action,draft,state?.object??{}),waiting=Boolean(pending||state?.pending_result)&&['roi','fft','full'].includes(action);button.disabled=Boolean(reason)||busy||Boolean(drag)||waiting;button.title=(waiting?'先处理已经保存的待查看结果；窗口已满时先关闭一个显示窗口。':reason||({roi:'查看选定区域',fft:'计算当前实空间 ROI 的 FFT',measure:'保存测量结果',select:'可选：把当前选择交给 Agent',full:'仅恢复完整频谱，不返回原图',statistics:'读取保存科学数组的 ROI 统计',profile:'读取当前线的原数组剖面'} as Partial<Record<string,string>>)[action])!;
  }
  for(const [id,target]of [['view-back',savedViews.target(-1)],['view-forward',savedViews.target(1)],['view-original',savedViews.original(state)]] as const)if($(id))$(id).disabled=!target||busy||Boolean(drag)||Boolean(pending||state?.pending_result)||target.id===state?.object?.object_id;
  const sourceTarget=savedViews.original(state);$('view-original').textContent=sourceTarget?.freshSourceView?'全帧（新显示）':'原图';$('view-original').title=sourceTarget?.freshSourceView?'没有已保存的原图显示配方；使用当前标定新建全帧预览，不重算 FFT':'打开本帧已保存的原图视图';
@@ -402,7 +406,7 @@ function applyUserHistory(direction:string){
   if(selectionId&&!(state.object.annotations??[]).some(m=>m.annotation_id===selectionId&&m.status!=='retracted')){message('该选区标记已撤回；未把旧选择当作当前 ROI。请先撤销撤回操作。',true);return;}
   selectedId=selectionId??'';syncMarkFields(false);draft=restored;record();showDraft();schedulePaint();publishDraft({includeSelection:true,urgent:true});
  }
- userHistory.finish(direction,item);diagnostics();message((undo?'已撤销：':'已恢复：')+item.label+(item.kind==='annotation'?'；保存补偿版本，历史记录保留。':item.kind==='display'?'；当前为显示草稿，保存显示后可导出。':''));
+ userHistory.finish(direction,item);diagnostics();message((undo?'已撤销：':'已恢复：')+item.label+(item.kind==='annotation'?'；保存补偿版本，历史记录保留。':item.kind==='display'?'；当前为显示草稿，应用显示后可导出。':''));
 }
 function spatialReturnReason(){
  const code=state?.spatial_return?.reason_code;
@@ -463,7 +467,7 @@ function queueEdit(update:AnnotationEdit,before:AnnotationEdit|null=null,{undo=t
  if(update.presentation&&!equalRecords(prior.presentation,after.presentation))after.presentation_replace=true;
  if(changedGeometry&&numericLabel)after.presentation={...after.presentation,label:{...after.presentation.label,visible:false}};
  if(JSON.stringify(prior)===JSON.stringify(after)){if(queuedEdits.has(update.annotation_id))Promise.resolve().then(flushEdits);return;}
- if(undo){const keys=Object.keys(update).filter(k=>!['annotation_id','presentation_replace','note'].includes(k)&&!equalRecords(prior[k],update[k]));if(keys.length){const project=(value:AnnotationEdit)=>({annotation_id:update.annotation_id,...Object.fromEntries(keys.map(k=>[k,value[k]]))});userHistory.push({kind:'annotation',label:changedGeometry?'移动科学标记':'调整标注',scope:workflowScope(state),before:project(prior),after:project(after)});}}
+ if(undo){const keys=Object.keys(update).filter(k=>!['annotation_id','presentation_replace','note'].includes(k)&&!equalRecords(prior[k],update[k]));if(keys.length){const project=(value:AnnotationEdit)=>({annotation_id:update.annotation_id,...Object.fromEntries(keys.map(k=>[k,value[k]]))});userHistory.push({kind:'annotation',label:update.status==='retracted'?'删除 '+(state.object.annotations?.find(mark=>mark.annotation_id===update.annotation_id)?.text||'ROI'):changedGeometry?'移动科学标记':'应用标注修改',scope:workflowScope(state),before:project(prior),after:project(after)});}}
  if(changedGeometry)geometryRevisions.set(update.annotation_id,(geometryRevisions.get(update.annotation_id)??0)+1);
  queuedEdits.set(update.annotation_id,{update:after,sequence:++autoSequence,geometryRevision:geometryRevisions.get(update.annotation_id)??0,geometryChanged:queuedEdits.get(update.annotation_id)?.geometryChanged||changedGeometry,numericLabel});marksDirty=true;record();schedulePaint();publishDraft({urgent:true});Promise.resolve().then(flushEdits);
 }
@@ -486,9 +490,9 @@ async function saveFirstEdit(){
   for(const [key,value]of batch)if(queuedEdits.get(key)===value){queuedEdits.delete(key);if(selectedId===key&&!drag&&!fieldDirty&&JSON.stringify(editCoordinates)===JSON.stringify(value.update.coordinates))editCoordinates=null;}
   // Annotation-only adoption uses identical provider panel mappings. Keep the
   // current gesture/camera/local edits; no decode or full bitmap work here.
- state=r;clearRetractedSelection();windowWorkspace.sync(state);savedViews.remember(state,{replace:true});for(const [key]of batch){const saved=state.object.annotations!.find(m=>m.annotation_id===key)!,option=[...($('existing').options??$('existing').children)].find(o=>o.value===key);if(option){option.textContent=`${saved.text??''} · ${({hypothesized:'候选',user_confirmed:'用户确认',retracted:'撤回'} as Partial<Record<string,string>>)[saved.status as string]??''}`;option.disabled=saved.status==='retracted';}}if(batch.some(([key])=>key===selectedId)&&!drag&&!fieldDirty&&!labelDraft){const mark=state.object.annotations!.find(m=>m.annotation_id===selectedId)!;$('mark-text').value=mark.text??'';const option=$('existing').selectedOptions?.[0];if(option)option.textContent=`${mark.text??''} · ${({hypothesized:'候选',user_confirmed:'用户确认',retracted:'撤回'} as Partial<Record<string,string>>)[mark.status as string]??''}`;syncPresentationFields();}marksDirty=true;showDraft();showPending();schedulePaint();message(sent.geometryChanged?'科学锚点已修订；旧版本保留。':'标签／样式已保存；科学锚点未改变。');
+ state=r;clearRetractedSelection();windowWorkspace.sync(state);savedViews.remember(state,{replace:true});for(const [key]of batch){const saved=state.object.annotations!.find(m=>m.annotation_id===key)!,option=[...($('existing').options??$('existing').children)].find(o=>o.value===key);if(option){option.textContent=`${saved.text??''} · ${({hypothesized:'候选',user_confirmed:'用户确认',retracted:'撤回'} as Partial<Record<string,string>>)[saved.status as string]??''}`;option.disabled=saved.status==='retracted';}}if(batch.some(([key])=>key===selectedId)&&!drag&&!fieldDirty&&!labelDraft){const mark=state.object.annotations!.find(m=>m.annotation_id===selectedId)!;$('mark-text').value=mark.text??'';const option=$('existing').selectedOptions?.[0];if(option)option.textContent=`${mark.text??''} · ${({hypothesized:'候选',user_confirmed:'用户确认',retracted:'撤回'} as Partial<Record<string,string>>)[mark.status as string]??''}`;syncPresentationFields();}marksDirty=true;showDraft();showPending();schedulePaint();message(sent.geometryChanged?'科学锚点已修订；旧版本保留。':'标注修改已应用到工作编辑；科学锚点未改变。Ctrl+S 保存工作区。');
   if(wire.coordinates!==undefined&&(measurementWorkspace.hasAnnotation(id!)||measuredMarkId===id||sent.numericLabel)){const mark=r.object.annotations!.find(m=>m.annotation_id===id)!,panels=r.object.panels.filter(p=>p.source_object_id===mark.anchor!.source_object_id&&coordinateSpace(p)===mark.anchor!.coordinate_space);if(panels.length===1)measurementTarget={previousMeasurement:measurementWorkspace.latestForAnnotation(id!)?.object_id,id,submittedObject,savedObject:r.object.object_id,sequence:sent.sequence,geometryRevision:sent.geometryRevision,anchor:JSON.parse(JSON.stringify(mark.anchor)),kind:mark.kind,status:mark.status,panel:JSON.parse(JSON.stringify(panels[0])),calibration:r.object.xy_calibration??null,numericLabel:sent.numericLabel};}
- }catch(e){autoFailed=true;message('自动保存失败，编辑仍保留。请查询原请求，勿重复提交：'+(e as {message:string}).message,true);}
+ }catch(e){autoFailed=true;message('标注应用未确认，编辑保留。执行记录可能已生成；请查询原请求，勿重复提交：'+(e as {message:string}).message,true);}
  finally{busy=false;diagnostics();await publishDraft({includeSelection:true,urgent:true});if(!autoFailed&&measurementTarget)await remeasureSavedEdit(measurementTarget);}
 }
 function currentMeasurementTarget(target:MeasurementTarget){const latest=effectiveEdit(target.id),mark=state.object.annotations!.find(m=>m.annotation_id===target.id);return Boolean(latest&&mark?.status===target.status&&(geometryRevisions.get(target.id)??0)===target.geometryRevision&&equalRecords(latest.coordinates,target.anchor.coordinates)&&equalRecords(state.object.xy_calibration??null,target.calibration)&&state.object.panels.some(p=>equalRecords(p,target.panel))&&!(selectedId===target.id&&editCoordinates&&!equalRecords(editCoordinates,target.anchor.coordinates))&&(!target.numericLabel||latest.presentation.label?.measurement_object_id===target.numericLabel.measurement_object_id));}
@@ -516,7 +520,7 @@ function restoredSelection(value:AppSelection|null|undefined,panels:readonly Wir
 function markPanel(mark:AppMark){const matches=(state.object.panels??[]).filter(p=>p.source_object_id===mark.anchor?.source_object_id&&coordinateSpace(p)===mark.anchor!.coordinate_space);if(matches.length!==1)throw new Error('标注面板映射不唯一；请在明确的单一视图中编辑');return matches[0];}
 function showPending(){
  const hasDraft=dirty(),gesturing=Boolean(drag);$('pending-result').hidden=!pending&&!state?.pending_result;
- $('pending-message').textContent=(state?.pending_result?.reason==='window_capacity'?((state.window_collection?.windows.length??5)>=5?'新结果已保存，显示窗口已满。请从“窗口列表”关闭一个只读窗口后查看；关闭显示不会删除科学结果。':'新结果已保存，显示窗口已有空位，可明确查看保存结果。'):'有新结果等待查看。查看会切换到该结果的保存版本，当前已保存版本仍保留。')+(hasDraft?'请先保存、撤销或明确放弃未保存草稿。':gesturing?'请先结束当前手势。':'');
+ $('pending-message').textContent=(state?.pending_result?.reason==='window_capacity'?((state.window_collection?.windows.length??5)>=5?'新结果已保存，显示窗口已满。请从“窗口列表”关闭一个显示窗口后查看；关闭显示不会删除科学结果。':'新结果已保存，显示窗口已有空位，可明确查看保存结果。'):'有新结果等待查看。查看会切换到该结果的保存版本，当前已保存版本仍保留。')+(hasDraft?'请先保存、撤销或明确放弃未保存草稿。':gesturing?'请先结束当前手势。':'');
  $('discard-draft').hidden=!hasDraft;$('discard-draft').disabled=busy||gesturing||Boolean(observationSavePhase)||Boolean(windowSwitch&&windowSwitch.phase!=='recovery');
  $('accept-agent-result').textContent='查看保存结果';$('accept-agent-result').disabled=hasDraft||busy||gesturing||Boolean(observationSavePhase)||Boolean(windowSwitch);
 }
@@ -526,27 +530,29 @@ function positiveUnsubmittedRecovery(reply:AppState,expected?:string):string|nul
  if(Object.keys(receipt).some(key=>!['state','request_id','automatic_retry'].includes(key))||receipt.state!=='not_submitted'||receipt.automatic_retry!==false||typeof receipt.request_id!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(receipt.request_id)||expected!==undefined&&receipt.request_id!==expected||reply.last_operation?.state!=='not_submitted'||reply.last_operation.request_id!==receipt.request_id)return null;
  return receipt.request_id;
 }
-async function act(action:string,params:ActionParams={}){
+async function act(action:string,params:ActionParams={},validateInput?:()=>void,onDispatchError?:(error:unknown)=>void){
  if(recoveryPending()&&!['recover','export'].includes(action)&&!allowContentEditing())return;
  if(windowSwitch){message('窗口切换接续中，当前画面不接收科学写入；先核对当前图像。',true);return;}
+ if(action==='calibrate'&&knownLengthUnresolved){message('上次标定结果尚未核对；先查询原请求，不能通过高级标定或撤回重新提交。',true);return;}
  if(roiCreationRecovery&&!observationSavePhase&&action!=='recover'){message('当前 ROI 保存尚未核对；请查询原请求或明确处理草稿，不重复创建。',true);return;}
  if(['frame','roi','fft','export','preview','select'].includes(action)&&selectedId&&(editCoordinates||fieldDirty))captureSelected();
  if(busy){message('上一项保存仍在等待；可继续观察、缩放和平移。');return;}if(pending&&!['research-observation','accept-result','recover'].includes(action)){message('请先处理待查看结果；当前草稿仍保留。',true);return;}
- if(state?.pending_result&&['frame','roi','fft','preview','show','return-spatial','measurement-jump'].includes(action)){message(state.pending_result.reason==='window_capacity'?'新结果已保存但显示窗口已满；先从窗口列表关闭一个只读显示，再查看该结果，不要重复计算。':'先处理已经保存的待查看结果，再切换或生成新图；当前结果与草稿保留。',true);return;}
+ if(state?.pending_result&&['frame','roi','fft','preview','show','return-spatial','measurement-jump'].includes(action)){message(state.pending_result.reason==='window_capacity'?'新结果已保存但显示窗口已满；先从窗口列表关闭一个显示窗口，再查看该结果，不要重复计算。':'先处理已经保存的待查看结果，再切换或生成新图；当前结果与草稿保留。',true);return;}
  if(dirty()&&['frame','roi','fft','calibrate','accept-result','show','return-spatial','measurement-jump'].includes(action)){message('先保存或撤销当前草稿，再切换科学视图；缩放、平移和选择仍可继续。',true);return;}
   const recoveryOriginal=typeof params.request_id==='string'?params.request_id:failedMeasurement?.request_id??roiCreationRecovery?.request_id??(['submitted','not_submitted'].includes(state.last_operation?.state??'')?state.last_operation?.request_id:undefined);
   const sentRevision=historyDraft.revision,start=now(),local=snapshot(),keepDisplay=dirty()&&['edit','mark'].includes(action)&&JSON.stringify(displayDraft())!==displayBaseline,keepMark=action==='preview'&&(editCoordinates||fieldDirty);activeAction=action;busy=true;diagnostics();
- try{await draftPublisher;if(state.panel_mapping_fingerprint&&!dirty()&&['fft','roi','show','return-spatial','frame','measurement-jump','preview'].includes(action)){await persistWindowContext();if(historyDraft.revision!==sentRevision||drag||dirty()||params.selection&&!equalRecords(params.selection,draft?selection():null))throw new Error('保存来源状态时选区或草稿已改变；未提交新的科学视图。');}const r=await api('/api/action',{expected_object_id:state.object.object_id,draft_revision:sentRevision,action,params});
+ try{await draftPublisher;if(state.panel_mapping_fingerprint&&!dirty()&&['fft','roi','show','return-spatial','frame','measurement-jump','preview'].includes(action)){await persistWindowContext();if(historyDraft.revision!==sentRevision||drag||dirty()||params.selection&&!equalRecords(params.selection,draft?selection():null))throw new Error('保存来源状态时选区或草稿已改变；未提交新的科学视图。');}validateInput?.();const r=await api('/api/action',{expected_object_id:state.object.object_id,draft_revision:sentRevision,action,params});
    if(action==='recover'&&(r.execution_recovery!==undefined||r.last_operation?.state==='not_submitted')){
     const original=positiveUnsubmittedRecovery(r,typeof recoveryOriginal==='string'?recoveryOriginal:undefined);
     if(!original||r.object.object_id!==state.object.object_id)throw new Error('原请求的未提交证据尚未匹配；保留编辑并查询原请求，不重放。');
+    if(knownLengthUnresolved?.request_id===original)knownLengthUnresolved=null;
     if(failedMeasurement?.request_id&&failedMeasurement.request_id!==original||roiCreationRecovery?.request_id&&roiCreationRecovery.request_id!==original)throw new Error('较新的原请求仍未核对；保留当前草稿。');
     if(failedMeasurement){remeasuringMarks.delete(failedMeasurement.id);failedMeasurement=null;}
     roiCreationRecovery=null;autoFailed=false;explicitEditRetry=queuedEdits.size>0;
     state={...state,last_operation:r.last_operation,state_revision:Math.max(state.state_revision??0,r.state_revision??0)};
     message('原请求已确认未提交，编辑和临时 ROI 保留；请明确保存标记或测量，才会发起新请求。');return r;
    }
-   if(r.pending_result&&r.object.object_id===state.object.object_id&&['frame','roi','fft','preview','show','return-spatial','measurement-jump'].includes(action)){state={...state,pending_result:r.pending_result,last_operation:r.last_operation,state_revision:Math.max(state.state_revision??0,r.state_revision??0)};mirrorWindowCollection(r);showPending();message(r.pending_result.reason==='window_capacity'?'结果已保存，显示窗口已满；关闭一个只读显示后明确查看，当前图与选区保留。':'结果已保存，尚未接纳显示；当前图、选区与较新的编辑保留。');return r;}
+   if(r.pending_result&&r.object.object_id===state.object.object_id&&['frame','roi','fft','preview','show','return-spatial','measurement-jump'].includes(action)){state={...state,pending_result:r.pending_result,last_operation:r.last_operation,state_revision:Math.max(state.state_revision??0,r.state_revision??0)};mirrorWindowCollection(r);showPending();message(r.pending_result.reason==='window_capacity'?'结果已保存，显示窗口已满；关闭一个显示窗口后明确查看，当前图与选区保留。':'结果已保存，尚未接纳显示；当前图、选区与较新的编辑保留。');return r;}
   if(observationSavePhase==='submitting'&&observationSaveTrace)observationSaveTrace.elapsed_ms.action_response=now()-observationSaveStarted;
   if(action==='recover'&&failedMeasurement){const target=failedMeasurement,m=r.last_operation;if(m?.kind!=='measure'||target.request_id&&m.request_id!==target.request_id)throw new Error('原测量请求仍未确认；保留隐藏标签与本地草稿');applyBoundMeasurement(target,m);failedMeasurement=null;remeasuringMarks.delete(target.id);autoFailed=false;message('原测量请求已核对；仅接续仍有效的标注版本。');return r;}
   if(action==='research-observation'||action==='recover'&&r.last_operation?.action==='research-observation'){
@@ -557,9 +563,10 @@ async function act(action:string,params:ActionParams={}){
   if(historyDraft.revision!==sentRevision||drag){pending=r;showPending();message('保存完成；较新的草稿保持原样，结果等待接续。');return r;}
   if(r.object.object_id===state.object.object_id&&['select','measure','export','statistics','profile'].includes(action)){state={...state,last_operation:r.last_operation,selection:r.selection,state_revision:r.state_revision,crystal_evidence:r.crystal_evidence};renderMeasurement();if(['statistics','profile'].includes(action))dataProbes.renderResult(r.last_operation);}
   else {const adopted=await load(r,{keepDisplay:keepDisplay?local.display:null,keepMark:keepMark?local:null,historyNavigation:action==='show',role:action==='return-spatial'?'空间观察':action==='roi'?'ROI':action==='fft'?'FFT':action==='frame'?'原图':action==='show'&&params.source_view?'全帧（新显示）':null});if(action==='return-spatial'&&!adopted){message(pending?'空间目标已读回；较新的编辑已保留，目标等待明确接纳。':'空间目标已读回；显示接续期间有新编辑，请核对当前视图与草稿。');return r;}}
+  if(action==='recover'&&knownLengthUnresolved?.request_id&&params.request_id===knownLengthUnresolved.request_id&&r.last_operation?.state!=='submitted')knownLengthUnresolved=null;
   if(['measure','statistics','profile'].includes(action))setResultsTab(action==='measure'?'measurements':action);
-  message(action==='show'&&params.source_view?'已按当前标定新建全帧显示；未恢复未知的旧显示配方，未重算 FFT。':action==='export'?`科学数据已保存到 ${r.last_operation?.output_dir??'工作区 exports 目录'}（不是浏览器图片下载）`:({select:'选择已交接；可继续使用当前选区。',measure:'测量完成；当前选区已保留。',show:'已打开保存视图；未重算 FFT。','return-spatial':'已返回对应的保存空间观察；原 ROI、说明、标定与历史版本保留，未重算 FFT。'} as Partial<Record<string,string>>)[action]??'已保存新版本；原像素与旧版本保留。');return r;
- }catch(e){if(action==='mark'&&roiCreationRecovery)roiCreationRecovery.request_id=(e as Error).message.match(/Original request_id=([A-Za-z0-9_-]{1,64})/)?.[1]??null;if(action==='return-spatial'){const expected=state.object.object_id;try{const latest=await api('/api/state');if(state.object.object_id===expected){if(latest.object.object_id===expected&&Number.isSafeInteger(latest.state_revision)&&latest.state_revision>=state.state_revision)state={...state,spatial_return:latest.spatial_return,state_revision:latest.state_revision,pending_result:latest.pending_result};else if(latest.object.object_id!==expected){pending=latest;showPending();}}}catch{/* Preserve the original error and all local edits if qualification readback also fails. */}}message((e as {message:string}).message,true);}finally{busy=false;activeAction='';perf.action_last_ms=now()-start;diagnostics();await refreshMeasurements();if(queuedEdits.size&&!explicitEditRetry)Promise.resolve().then(flushEdits);}
+  message(action==='show'&&params.source_view?'已按当前标定新建全帧显示；未恢复未知的旧显示配方，未重算 FFT。':action==='export'?`科学数据已导出到 ${r.last_operation?.output_dir??'工作区 exports 目录'}（不等于保存工作区）`:({select:'选择已交接；可继续使用当前选区。',measure:'测量完成；当前选区已保留。',show:'已打开保存视图；未重算 FFT。','return-spatial':'已返回对应的保存空间观察；原 ROI、说明、标定与历史版本保留，未重算 FFT。'} as Partial<Record<string,string>>)[action]??'新执行版本已记录并应用；原像素与旧记录保留，工作区需明确保存。');return r;
+ }catch(e){onDispatchError?.(e);if(action==='mark'&&roiCreationRecovery)roiCreationRecovery.request_id=(e as Error).message.match(/Original request_id=([A-Za-z0-9_-]{1,64})/)?.[1]??null;if(action==='return-spatial'){const expected=state.object.object_id;try{const latest=await api('/api/state');if(state.object.object_id===expected){if(latest.object.object_id===expected&&Number.isSafeInteger(latest.state_revision)&&latest.state_revision>=state.state_revision)state={...state,spatial_return:latest.spatial_return,state_revision:latest.state_revision,pending_result:latest.pending_result};else if(latest.object.object_id!==expected){pending=latest;showPending();}}}catch{/* Preserve the original error and all local edits if qualification readback also fails. */}}message((e as {message:string}).message,true);}finally{busy=false;activeAction='';perf.action_last_ms=now()-start;diagnostics();await refreshMeasurements();if(queuedEdits.size&&!explicitEditRetry)Promise.resolve().then(flushEdits);}
 }
 function mirrorWindowCollection(next:AppState){
  if(!state||next.object.object_id!==state.object.object_id)return;
@@ -608,20 +615,25 @@ function syncPropertiesContext(){
   $('properties-roi-note').textContent=note?`${unsaved?'说明草稿（未保存）':'已记录说明'}：${note.length>120?note.slice(0,120)+'…':note}`:'说明未填写；可在“观察与证据”中补充。';$('properties-roi-note').title=note;
  }
 }
+let measurementPendingSignature='';
+function pendingMeasurementAnnotations():string[]{const coordinates=selectedId?state?.object.annotations?.find(mark=>mark.annotation_id===selectedId)?.anchor?.coordinates:null;return [...new Set([...(editCoordinates&&selectedId&&!equalRecords(editCoordinates,coordinates)?[selectedId]:[]),...[...queuedEdits].filter(([,edit])=>edit.geometryChanged).map(([id])=>id),...remeasuringMarks.keys(),...(failedMeasurement?[failedMeasurement.id]:[])])].filter((id):id is string=>typeof id==='string');}
 function renderMeasurement(){
+ syncKnownLengthEntry();
+ const signature=JSON.stringify([state.object.object_id,pendingMeasurementAnnotations()]);if(signature!==measurementPendingSignature){measurementPendingSignature=signature;measurementWorkspace.render();}
  const last=state.last_operation,{mark,anchor,kind,coordinates}=propertySelectionContext(),entry=mark?measurementWorkspace.latestForAnnotation(mark.annotation_id!):null,record=entry?.measurement??entry;
  const pointsMatch=(value:{coordinate_space?:string;points?:readonly (readonly number[])[]}|null|undefined)=>Boolean(value&&anchor&&value.coordinate_space===anchor.coordinate_space&&Array.isArray(value.points)&&value.points.length===2&&value.points.every(point=>Array.isArray(point)&&point.length===2&&point.every(n=>typeof n==='number'&&Number.isFinite(n)))&&equalRecords(kind==='point'?value.points[1]:value.points.flat(),coordinates));
  const pendingGeometry=Boolean(mark&&(editCoordinates&&!equalRecords(editCoordinates,mark.anchor?.coordinates)||queuedEdits.get(mark.annotation_id)?.geometryChanged||remeasuringMarks.has(mark.annotation_id)||failedMeasurement?.id===mark.annotation_id));
  const qualifiedEntry=Boolean(entry&&measurementWorkspace.current?.object_id===state.object.object_id&&entry.same_grid===true&&entry.visible_in_current_view===true&&entry.annotation_matches_current===true&&pointsMatch(record));
  const qualifiedLast=Boolean(mark&&last?.kind==='measure'&&last.annotation_id===mark.annotation_id&&last.parent_object_id===state.object.object_id&&(last.state===undefined||last.state==='completed')&&pointsMatch(last));
- const m=pendingGeometry?null:qualifiedLast?last:qualifiedEntry?record:null,finite=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value);
+ const m=pendingGeometry?null:qualifiedLast?last:qualifiedEntry?record:null,finite=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value),formatted=(value:number)=>String(Number(value.toPrecision(7)));
  $('operation').textContent=last?JSON.stringify(last,null,2):'';
- $('measurement-summary').textContent=finite(m?.physical_distance)?`距离 ${m.physical_distance} ${m.physical_unit??''}`:
- finite(m?.distance_physical)?`距离 ${m.distance_physical} ${m.physical_unit??''}`:
- finite(m?.d_spacing)?`晶面间距（几何） ${m.d_spacing} ${m.d_spacing_unit??''}`:
- finite(m?.period)?`倒空间差向量周期 ${m.period} ${m.period_unit??''}`:
- finite(m?.distance_pixels)?`图像坐标距离 ${m.distance_pixels} px`:
- finite(m?.frequency_distance_cycles_per_pixel)?`频率差 ${m.frequency_distance_cycles_per_pixel} cycles/pixel`:
+ $('measurement-summary').textContent=finite(m?.physical_distance)?`距离 ${formatted(m.physical_distance)} ${m.physical_unit??''}`:
+ finite(m?.distance_physical)?`距离 ${formatted(m.distance_physical)} ${m.physical_unit??''}`:
+ finite(m?.d_spacing)?`晶面间距（几何） ${formatted(m.d_spacing)} ${m.d_spacing_unit??''}`:
+ finite(m?.period)?`倒空间差向量周期 ${formatted(m.period)} ${m.period_unit??''}`:
+ finite(m?.distance_pixels)?`图像坐标距离 ${formatted(m.distance_pixels)} px`:
+ finite(m?.pixel_period)?`像素周期 ${formatted(m.pixel_period)} px · 频率 ${finite(m.frequency_distance_cycles_per_pixel)?formatted(m.frequency_distance_cycles_per_pixel):'未知'} cycles/pixel`:
+ finite(m?.frequency_distance_cycles_per_pixel)?`频率差 ${formatted(m.frequency_distance_cycles_per_pixel)} cycles/pixel`:
  pendingGeometry?'位置已修改，待重测；先前结果仅保留为历史。':entry?'已有测量未关联当前选择；请在“数据结果”核对原位置。':'当前选择尚未测量。';if(m&&m===record&&entry&&!['current','active'].includes(entry.status as string))$('measurement-summary').textContent='旧版数值（待重测或历史）：'+$('measurement-summary').textContent;syncPropertiesContext();}
 async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forceWindowContext=false,publishSelection=true,discardAuthorizedDraft=false,historyNavigation=false}:{keepDisplay?:DisplayDraft|null;keepMark?:LocalSnapshot|null;role?:string|null;forceWindowContext?:boolean;publishSelection?:boolean;discardAuthorizedDraft?:boolean;historyNavigation?:boolean}={}){
  const initialLoad=!state,priorScope=state?workflowScope(state):null,intendedAnnotationEdit=!discardAuthorizedDraft&&state?annotationEditDraft():null;
@@ -693,8 +705,26 @@ function chooseMark(next:string){
  selectedId=next;syncMarkFields();const saved=effectiveEdit(next);if(saved){$('mark-text').value=saved.text;$('color').value=saved.color;$('status').value=saved.status;editCoordinates=queuedEdits.get(next)?.update.coordinates??null;}
  closeResearch();document.body?.classList.add('properties-open');syncDrawerPresentation();measurementWorkspace.selectAnnotation(next);renderMeasurement();return true;
 }
+// A context pick is a selection-only action on the exact displayed object.
+// Ordinary clicks keep reverse paint order; this menu exposes covered ROIs.
+function dismissRoiPicker(){const menu=$('roi-pick-menu');if(!menu.hidden){menu.hidden=true;hoverId='';schedulePaint();}}
+function openRoiPicker(event:BrowserEvent){
+ event.preventDefault();dismissRoiPicker();
+ if(!image||figurePrefs.mode!=='analysis'||busy||drag||windowSwitch||workspaceRestoring||workspaceSettling||orphanedDraft||observationSavePhase||roiCreationRecovery||state.window_collection&&!state.window_collection.active_window_id)return;
+ if(fieldDirty||editCoordinates||labelDraft||researchWorkspace.reasonDirty||autoSaving||queuedEdits.size||autoFailed){message('先应用或撤销当前修改，再选择重叠 ROI；编辑内容保留。',true);return;}
+ paint();const point=xy(event),items=[...(annotationLayout?.items??[])].reverse().filter(item=>item.id&&state.object.annotations?.some(mark=>mark.annotation_id===item.id)&&item.geometryVisible&&item.mark.kind==='rectangle'&&item.mark.status!=='retracted'&&rectangleHitTest(item.mark.coordinates,point,{scale:view.scale,radius:3}));
+ if(!items.length)return;const menu=$('roi-pick-menu'),object=state.object.object_id;menu.replaceChildren();
+ const title=document.createElement('p');title.textContent=items.length>1?`重叠 ${items.length} 处 ROI · 选择一处`:'选择 ROI';menu.append(title);
+ for(const item of items){const id=item.id!,mark=state.object.annotations!.find(value=>value.annotation_id===id)!,button=document.createElement('button');button.setAttribute('type','button');button.setAttribute('role','menuitem');button.textContent=mark.text||`ROI ${state.object.annotations!.indexOf(mark)+1}`;
+  button.addEventListener('pointerenter',()=>{hoverId=id;schedulePaint();});button.addEventListener('focus',()=>{hoverId=id;schedulePaint();});
+  button.onclick=()=>{if(state.object.object_id!==object||windowSwitch||busy||drag||fieldDirty||editCoordinates||labelDraft||researchWorkspace.reasonDirty)return dismissRoiPicker();if(!chooseMark(id))return;const current=state.object.annotations!.find(value=>value.annotation_id===id);if(!current?.anchor)return dismissRoiPicker();const panel=markPanel(current);draft={kind:current.kind,...current.anchor,panel,rendered:transformCoordinates(current.anchor.coordinates,panel,{edges:true,inverse:true})} as AppSelection;dismissRoiPicker();record();showDraft();schedulePaint();publishDraft({includeSelection:true,urgent:true});canvas.focus();};menu.append(button);
+ }
+ const bounds=viewport.getBoundingClientRect(),width=Math.min(240,Math.max(120,bounds.width-8));menu.style.width=width+'px';menu.style.left=Math.max(bounds.left+4,Math.min(event.clientX,bounds.left+bounds.width-width-4))+'px';menu.style.top=Math.max(bounds.top+4,Math.min(event.clientY,bounds.top+bounds.height-Math.min(240,items.length*34+36)))+'px';menu.hidden=false;menu.querySelector('button')?.focus();
+}
+canvas.addEventListener('contextmenu',openRoiPicker);
+$('roi-pick-menu').addEventListener('pointerleave',()=>{hoverId='';schedulePaint();});
 canvas.addEventListener('pointerdown',event=>{
- if(workspaceRestoring||workspaceSettling||orphanedDraft||state?.workspace_analysis&&state.window_collection&&!state.window_collection.active_window_id||windowSwitch||observationSavePhase||roiCreationRecovery||!image||drag||![0,1].includes(event.button))return;canvas.focus();const start=xy(event);if(event.button===1||spaceDown||$('mode').value==='pan'){drag={kind:'pan',pointerId:event.pointerId,startClient:[event.clientX,event.clientY],originalView:{...view}};canvas.setPointerCapture(event.pointerId);return;}
+ if(workspaceRestoring||workspaceSettling||orphanedDraft||state?.workspace_analysis&&state.window_collection&&!state.window_collection.active_window_id||windowSwitch||observationSavePhase||roiCreationRecovery||!image||drag||![0,1].includes(event.button))return;canvas.focus();const start=xy(event);if(event.button===1||spaceDown||$('mode').value==='pan'){windowWorkspace.noteCameraIntent();drag={kind:'pan',pointerId:event.pointerId,startClient:[event.clientX,event.clientY],originalView:{...view}};canvas.setPointerCapture(event.pointerId);return;}
  if(!allowContentEditing())return;
  interactionEpoch++;const tool=$('mode').value,createRoi=tool==='roi';let kind=(tool==='edit'?'select':createRoi?'rectangle':tool) as SelectionKind|'select'|'edit';const selectionBefore={draft:draft?JSON.parse(JSON.stringify(draft)):null,selectedId};let blankSelect=false;try{
    if(['rectangle','point','line','arrow'].includes(kind)&&(researchWorkspace.reasonDirty||fieldDirty||editCoordinates||labelDraft||autoFailed||['submitted','unknown'].includes(state.last_operation?.state??'')))throw new Error(kind==='rectangle'?'先保存或撤销当前说明／标注草稿，并核对原请求，再添加另一处 ROI。':'先保存或撤销当前说明／标注草稿，并核对原请求，再绘制另一处选区。');
@@ -739,7 +769,7 @@ canvas.addEventListener('pointerup',event=>{if(!drag||event.pointerId!==drag!.po
  if(kind==='rectangle'&&(drag!.start![0]===drag!.end![0]||drag!.start![1]===drag!.end![1])){draft=drag!.selectionBefore?.draft??null;selectedId=drag!.selectionBefore?.selectedId??'';syncMarkFields(false);showDraft();return;}
  const selected=selectionFromDrag(state.object.panels??[],drag!.start!,drag!.end!,{kind:kind as SelectionKind});if(kind==='rectangle')selectionRectangle(selected);draft={...selected,rendered:transformCoordinates(selected.coordinates,selected.panel,{edges:kind==='rectangle',inverse:true})};saveGeometry=Boolean(drag!.create_roi);if(kind==='rectangle')setMode('select');rememberSelection(drag!.selectionBefore??{draft:null,selectedId:''},{draft:JSON.parse(JSON.stringify(draft)),selectedId});showDraft();message('选择已定位；可直接测量或交给 Agent。');
  }catch(e){message((e as {message:string}).message,true);}finally{drag=null;if(kind!=='pan')record();paint();publishDraft({includeSelection:true,urgent:true});if(saveGeometry)createRoiGeometry();else Promise.resolve().then(flushEdits);}});
-viewport.addEventListener('wheel',event=>{if(windowSwitch||!image)return;event.preventDefault();const r=viewport.getBoundingClientRect();view=zoomAt(view,[event.clientX-r.left,event.clientY-r.top],Math.exp(-event.deltaY*.0015));resize();},{passive:false});
+viewport.addEventListener('wheel',event=>{if(windowSwitch||!image)return;windowWorkspace.noteCameraIntent();event.preventDefault();const r=viewport.getBoundingClientRect();view=zoomAt(view,[event.clientX-r.left,event.clientY-r.top],Math.exp(-event.deltaY*.0015));resize();},{passive:false});
 function textEntry(target:(BrowserElement&{readonly isContentEditable?:boolean;readonly contentEditable?:string})|undefined){return /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName??'')||target?.isContentEditable===true||['true','plaintext-only'].includes(target?.contentEditable??'');}
 function deleteSelectedRoi(){
  if(!allowContentEditing())return false;
@@ -759,6 +789,8 @@ function deleteSelectedRoi(){
  return true;
 }
 document.addEventListener('keydown',event=>{
+ if($('known-length-dialog').open){if(event.key==='Escape'){event.preventDefault();$('known-length-dialog').close();}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s')event.preventDefault();return;}
+ if(!document.querySelector('dialog[open]')&&!$('roi-pick-menu').hidden){if(event.key==='Escape'){event.preventDefault();dismissRoiPicker();canvas.focus();}else if(['Delete','Backspace'].includes(event.key))event.preventDefault();return;}
  if(event.key==='Escape'&&!document.querySelector('dialog[open]')&&dismissMenus(true)){event.preventDefault();return;}
  if((event.ctrlKey||event.metaKey)&&!event.altKey&&event.key.toLowerCase()==='s'&&!$('usage-dialog').open){event.preventDefault();void workspaceControls.save().catch(error=>message((error as Error).message,true));return;}
  if(workspaceRestoring||windowSwitch||observationSavePhase||roiCreationRecovery||$('usage-dialog').open||textEntry(event.target))return;
@@ -768,7 +800,7 @@ document.addEventListener('keydown',event=>{
   return;
  }
  if(event.code==='Space'){spaceDown=true;event.preventDefault();}
- if(!event.ctrlKey&&!event.metaKey){const mode={v:'select',r:'roi',p:'point',l:'line',a:'arrow',h:'pan'}[event.key.toLowerCase()];if(mode)setMode(mode);if(event.key.toLowerCase()==='f')fitView();}
+ if(!event.ctrlKey&&!event.metaKey){const mode={v:'select',r:'roi',p:'point',l:'line',a:'arrow',h:'pan'}[event.key.toLowerCase()];if(mode)setMode(mode);if(event.key.toLowerCase()==='f'){windowWorkspace.noteCameraIntent();fitView();}}
  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();if(event.shiftKey)($('redo').onclick as ()=>unknown)();else ($('undo').onclick as ()=>unknown)();}
  if(event.key==='Escape'&&drag)cancelDrag({pointerId:drag.pointerId!});
 });document.addEventListener('keyup',event=>{if(event.code==='Space')spaceDown=false;});
@@ -788,11 +820,11 @@ $('measure').onclick=guarded(async()=>{
 $('fft').onclick=guarded(()=>{if(importedComplex())throw new Error('复数原图暂不支持 FFT；不会丢弃虚部或把显示幅值当作原数组');const picked=selection(),reason=selectionActionReason('fft',picked,state.object);if(reason)throw new Error(reason);return act('fft',{selection:picked,window:$('fft-window').value,subtract_mean:$('fft-mean').checked});});
 $('roi-statistics').onclick=guarded(()=>{const picked=selection(),reason=selectionActionReason('statistics',picked,state.object);if(reason)throw new Error(reason);return act('statistics',{selection:picked,component:$('probe-component').value});});
 $('line-profile').onclick=guarded(()=>{const picked=selection(),reason=selectionActionReason('profile',picked,state.object);if(reason)throw new Error(reason);return act('profile',{selection:picked,component:$('probe-component').value,sample_count:Number($('profile-count').value)});});
-$('reload').onclick=()=>windowSwitch?recoverWindowDisplay():guarded(refresh,{allowRecoveryRead:true})();$('window-switch-check').onclick=()=>recoverWindowDisplay();$('zoom').oninput=()=>{if(windowSwitch)return;const r=viewport.getBoundingClientRect();view=zoomAt(view,[r.width/2,r.height/2],Number($('zoom').value)/view.scale);resize();};$('fit').onclick=()=>{if(!windowSwitch)fitView();};$('fit-canvas').onclick=()=>{if(!windowSwitch)fitView();};$('focus-image').onclick=()=>{if(!windowSwitch)toggleImageFocus();};
-for(const id of ['gamma','low','high','axes','scale']){$(id).oninput=()=>{if(!recordDisplayInput(id))return;$('gamma-label').textContent=$('gamma').value;record();schedulePaint();publishDraft();message('显示草稿即时反馈；保存后从原科学数组重绘，不重算 FFT。');};$(id).onchange=()=>userHistory.endGroup();}
+$('reload').onclick=()=>windowSwitch?recoverWindowDisplay():guarded(refresh,{allowRecoveryRead:true})();$('window-switch-check').onclick=()=>recoverWindowDisplay();$('zoom').oninput=()=>{if(windowSwitch)return;windowWorkspace.noteCameraIntent();const r=viewport.getBoundingClientRect();view=zoomAt(view,[r.width/2,r.height/2],Number($('zoom').value)/view.scale);resize();};$('fit').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();fitView();}};$('fit-canvas').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();fitView();}};$('focus-image').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();toggleImageFocus();}};
+for(const id of ['gamma','low','high','axes','scale']){$(id).oninput=()=>{if(!recordDisplayInput(id))return;$('gamma-label').textContent=$('gamma').value;record();schedulePaint();publishDraft();message('显示草稿即时反馈；应用显示后从原科学数组重绘，不重算 FFT；Ctrl+S 保存工作区。');};$(id).onchange=()=>userHistory.endGroup();}
 $('apply-display').onclick=guarded(()=>{const frequency=state.object.panels?.some(p=>p.domain==='frequency');return act('preview',{gamma:Number($('gamma').value),display_range:$('low').value===''||$('high').value===''?null:[Number($('low').value),Number($('high').value)],...(frequency?{spectrum_axes:$('axes').checked}:{scale_bar:$('scale').checked})});});
 $('apply-complex-component').onclick=guarded(()=>{if(!importedComplex())throw new Error('当前不是可切换分量的原复数图像');if(dirty()||drag||pending||state.pending_result)throw new Error('先保存或撤销当前显示/标注草稿，再切换复数分量；草稿已保留');const component=$('complex-component').value;if(!Object.hasOwn(complexComponentNames,component))throw new Error('请选择实部、虚部、幅值或功率');if(component===(state.effective_display??state.object.display??{}).component){message('已经显示这个分量，没有创建新的结果。');return;}return act('preview',{component,display_range:null});});
-$('set-frame').onclick=guarded(()=>act('frame',{frame_index:Number($('frame').value)-1}));$('previous-frame').onclick=guarded(()=>act('frame',{frame_index:Math.max(0,Number($('frame').value)-2)}));$('next-frame').onclick=guarded(()=>act('frame',{frame_index:Number($('frame').value)}));$('full').onclick=guarded(()=>act('preview',{frequency_rect:null}));$('export').onclick=guarded(()=>{if(dirty())throw new Error('请先保存或撤销草稿，再导出已保存视图。');return act('export');});$('recover').onclick=()=>roiCreationRecovery?recoverRoiCreation():guarded(()=>act('recover',failedMeasurement?.request_id?{request_id:failedMeasurement.request_id}:{}),{allowRecoveryRead:true})();
+$('set-frame').onclick=guarded(()=>act('frame',{frame_index:Number($('frame').value)-1}));$('previous-frame').onclick=guarded(()=>act('frame',{frame_index:Math.max(0,Number($('frame').value)-2)}));$('next-frame').onclick=guarded(()=>act('frame',{frame_index:Number($('frame').value)}));$('full').onclick=guarded(()=>act('preview',{frequency_rect:null}));$('export').onclick=guarded(()=>{if(dirty())throw new Error('请先保存或撤销草稿，再导出已保存视图。');return act('export');});$('recover').onclick=()=>roiCreationRecovery?recoverRoiCreation():guarded(async()=>{const attempt=knownLengthUnresolved;if(attempt&&!attempt.request_id){const fresh=await api('/api/state'),original=knownLengthAttemptRequest(fresh.last_operation,attempt.input,attempt.prior_request_id);if(!original)throw new Error('尚未读回与这次标尺输入完全一致的原请求；继续等待或核对原状态，不重新提交。');attempt.request_id=original;if(fresh.object.object_id!==state.object.object_id){await refresh();if(state.object.object_id!==fresh.object.object_id)throw new Error('原结果已保存；当前草稿保持原样，请先处理待查看结果，再查询该原请求。');}}return act('recover',attempt?.request_id?{request_id:attempt.request_id}:failedMeasurement?.request_id?{request_id:failedMeasurement.request_id}:{});},{allowRecoveryRead:true})();
 $('existing').onchange=()=>{if(!chooseMark($('existing').value))return;const mark=state.object.annotations?.find(value=>value.annotation_id===selectedId),rectangle=mark?.kind==='rectangle'&&mark.anchor;if(rectangle){const p=markPanel(mark!);draft={kind:'rectangle',...rectangle,panel:p,rendered:transformCoordinates(rectangle.coordinates,p,{edges:true,inverse:true})} as AppSelection;showDraft();}record();paint();publishDraft({includeSelection:Boolean(rectangle)});};
 for(const id of ['mark-text','color','status'])$(id).oninput=()=>{if(!allowContentEditing()){const mark=effectiveEdit(selectedId);$('mark-text').value=mark?.text??'';$('color').value=mark?.color??'cyan';$('status').value=mark?.status??'hypothesized';return;}if(!fieldBefore&&selectedId)fieldBefore=effectiveEdit(selectedId);fieldDirty=true;marksDirty=true;record();schedulePaint();publishDraft();autoFields();};
 $('save-mark').onclick=guarded(async()=>{explicitEditRetry=false;if(selectedId){commitLabelDraft();captureSelected();return flushEdits();}if(state.last_operation?.state==='not_submitted'&&draft?.kind==='rectangle'&&draft.coordinate_space==='source_pixels')return saveRoiObservation('',{geometryOnly:true});const fields={text:$('mark-text').value,color:$('color').value,status:$('status').value};return act('mark',{selection:selection(),annotation_id:$('mark-id').value,...fields});});
@@ -823,6 +855,34 @@ const discardPendingDraft=guarded(async()=>{
 $('discard-draft').onclick=()=>windowSwitch?recoverWindowDisplay(true):discardPendingDraft();
 $('accept-agent-result').onclick=guarded(async()=>{if(dirty()||drag)throw new Error('先保存、撤销或明确放弃草稿，再查看保存结果');if(pending){const previous=pending;await readSavedView();if(pending===previous)pending=null;showPending();}return act('accept-result');});
 const calibrate=(withdraw:boolean)=>act('calibrate',{coordinate_domain:state.object.xy_calibration?.coordinate_domain??'real_space',scope:$('scope').value,xy_scale:withdraw?null:{x:Number($('scale-x').value),y:Number($('scale-y').value),unit:$('unit').value},source_text:$('source').value});$('calibrate').onclick=guarded(()=>calibrate(false));$('withdraw').onclick=guarded(()=>calibrate(true));
+let knownLengthDialogState:{reference:KnownLengthReference;mapping:unknown;frame:unknown;revision:number;attemptId:string;attempted:boolean;returnFocus:BrowserElement|null}|null=null;
+let knownLengthUnresolved:{request_id:string|null;input:unknown;prior_request_id:unknown}|null=null;
+function syncKnownLengthEntry(){
+ const entry=$('known-length-entry');entry.hidden=draft?.kind!=='line';let reason='';try{knownLengthReference(state.object,draft,state.frame_identity);}catch(error){reason=(error as Error).message;}
+ entry.disabled=Boolean(reason||knownLengthUnresolved||busy||dirty()||drag||windowSwitch||workspaceRestoring||workspaceSettling||pending||state.pending_result||autoSaving||autoFailed||queuedEdits.size||observationSavePhase||roiCreationRecovery||recoveryPending()||state.last_operation?.state==='submitted'||!state.tools.some(tool=>tool.name==='image_calibrate'));
+ entry.title=knownLengthUnresolved?'先查询上次原请求；关闭定标对话框不会重置未知结果。':reason||'用这条线的已知实空间长度，按明确的等比例假设应用新标定；Ctrl+S 保存工作区';
+}
+function knownLengthEditable(){if(knownLengthUnresolved||busy||dirty()||drag||windowSwitch||workspaceRestoring||workspaceSettling||pending||state.pending_result||autoSaving||autoFailed||queuedEdits.size||observationSavePhase||roiCreationRecovery||state.last_operation?.state==='submitted')throw new Error('先完成或核对当前编辑及原请求，再用已知长度定标；本地内容保留。');}
+$('known-length-entry').onclick=guarded(()=>{
+ knownLengthEditable();const reference=knownLengthReference(state.object,draft,state.frame_identity);dismissMenus();dismissRoiPicker();
+ knownLengthDialogState={reference,mapping:state.panel_mapping_fingerprint,frame:cloneWorking(state.frame_identity??null),revision:historyDraft.revision,attemptId:crypto.randomUUID(),attempted:false,returnFocus:document.activeElement??canvas};
+ $('known-length-pixels').textContent=`标尺线 ${Number(reference.pixel_length.toPrecision(9))} px；端点：${JSON.stringify(reference.coordinates)}`;
+ $('known-length-value').value='';$('known-length-unit').value='nm';$('known-length-isotropic').checked=false;$('known-length-note').value='';$('known-length-status').textContent=reference.calibration?'当前已有标定；确认将追加新的手工标定版本，旧记录保留。':'原物理尺寸未知；以下长度由研究者提供，未验证图像是否拉伸。';$('known-length-apply').disabled=false;
+ $('known-length-dialog').showModal();$('known-length-value').focus();
+});
+$('known-length-close').onclick=()=>$('known-length-dialog').close();
+$('known-length-dialog').addEventListener('cancel',event=>{event.preventDefault();$('known-length-dialog').close();});
+$('known-length-dialog').addEventListener('close',()=>{const focus=knownLengthDialogState?.returnFocus;knownLengthDialogState=null;focus?.focus();});
+$('known-length-apply').onclick=guarded(async()=>{
+ const captured=knownLengthDialogState;if(!captured||captured.attempted)return;
+ try{
+  knownLengthEditable();const parameters=knownLengthParameters(captured.reference,Number($('known-length-value').value),$('known-length-unit').value,$('known-length-isotropic').checked,$('known-length-note').value,captured.attemptId);
+  const validate=()=>{if(dirty()||drag||windowSwitch||workspaceRestoring||workspaceSettling||pending||state.pending_result||autoFailed||queuedEdits.size||observationSavePhase||roiCreationRecovery||historyDraft.revision!==captured.revision||!equalRecords(state.panel_mapping_fingerprint,captured.mapping)||!equalRecords(state.frame_identity??null,captured.frame)||!equalRecords(knownLengthReference(state.object,draft,state.frame_identity),captured.reference))throw new Error('标尺线、图像版本或标定已改变；未提交新标定，请关闭后重新选择。');};
+  validate();$('known-length-apply').disabled=true;
+  const result=await act('calibrate',parameters,()=>{validate();captured.attempted=true;knownLengthUnresolved={request_id:null,input:{source_view_object_id:captured.reference.object_id,draft_revision:captured.revision,parameters},prior_request_id:state.last_operation?.request_id};},error=>{if(captured.attempted&&knownLengthUnresolved)knownLengthUnresolved.request_id=(error as Error).message.match(/Original request_id=([A-Za-z0-9_-]{1,64})/)?.[1]??null;});
+  if(result){knownLengthUnresolved=null;$('known-length-dialog').close();}else{if(!captured.attempted)$('known-length-apply').disabled=false;$('known-length-status').textContent=captured.attempted?'应用结果尚未确认；关闭对话框后查看状态并查询上次原请求，不重复提交。':'输入状态已改变；未提交，请关闭后重新选择。';}
+ }catch(error){$('known-length-status').textContent=(error as Error).message;}
+});
 $('submit-observation').onclick=guarded(()=>act('research-observation',{source_text:$('observation-text').value,authority:$('observation-authority').value}));
 const revisionKey=(value:{state_revision?:number;object_id?:string;object?:{object_id:string};pending_result?:AppState['pending_result']})=>JSON.stringify([value.state_revision,value.object_id??value.object?.object_id,value.pending_result?.object_id,value.pending_result?.request_id]);
 function setMode(mode:string){if(workspaceRestoring||windowSwitch)return;mode=mode==='edit'?'select':mode;if(recoveryPending()&&!['select','pan'].includes(mode)&&!allowContentEditing())return;$('mode').value=mode;canvas.style.cursor=mode==='pan'?'grab':mode==='select'?'default':'crosshair';for(const button of document.querySelectorAll('[data-mode]'))button.setAttribute('aria-pressed',String(button.dataset.mode===mode));}
@@ -854,7 +914,7 @@ $('agent-continue').onclick=guarded(async()=>{
 });
 $('close-agent-handoff').onclick=()=>$('agent-handoff-dialog').close();
 let usageReturnFocus:BrowserElement|null=null;
-$('open-usage-help').onclick=()=>{const dialog=$('usage-dialog');if(dialog.open)return;const previous=document.activeElement,menu=transientMenus.find(value=>value.open&&previous&&withinElement(previous,value));dismissMenus();usageReturnFocus=menu?.querySelector('summary')??previous??$('open-usage-help');dialog.showModal();$('close-usage-help').focus();};
+$('open-usage-help').onclick=()=>{const dialog=$('usage-dialog');if(dialog.open)return;const previous=document.activeElement,roiMenuFocus=!$('roi-pick-menu').hidden&&previous&&withinElement(previous,$('roi-pick-menu')),menu=transientMenus.find(value=>value.open&&previous&&withinElement(previous,value));dismissMenus();dismissRoiPicker();usageReturnFocus=roiMenuFocus?canvas:menu?.querySelector('summary')??previous??$('open-usage-help');dialog.showModal();$('close-usage-help').focus();};
 $('close-usage-help').onclick=()=>$('usage-dialog').close();
 $('usage-dialog').addEventListener('cancel',event=>{event.preventDefault();$('usage-dialog').close();});
 $('usage-dialog').addEventListener('close',()=>{const target=usageReturnFocus;usageReturnFocus=null;target?.focus();});
@@ -940,6 +1000,7 @@ desktopBridge?.onAction(async action=>{
   return {ok:true,working_revision:loadedWorkingRevision};
  }
  try{
+  if($('known-length-dialog').open&&action!=='prepare-close')throw new Error('先关闭已知长度定标，再操作图像或保存。');
   if($('usage-dialog').open&&!['help','prepare-close'].includes(action))throw new Error('请先关闭使用说明，再操作图像或保存。');
   if(action==='prepare-close')await workspaceControls.prepareClose();
   else if(action==='save')await workspaceControls.save();

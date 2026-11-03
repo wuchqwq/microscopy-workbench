@@ -43,7 +43,7 @@ export interface MeasurementRecord {
  readonly physical_distance?: unknown;readonly distance_physical?: unknown;readonly physical_unit?: unknown;
  readonly physical_frequency_magnitude?: unknown;readonly physical_frequency_unit?: unknown;
  readonly d_spacing?: unknown;readonly d_spacing_unit?: unknown;readonly period?: unknown;readonly period_unit?: unknown;
- readonly distance_pixels?: unknown;readonly frequency_distance_cycles_per_pixel?: unknown;readonly frame_index?: unknown;
+ readonly pixel_period?:unknown;readonly distance_pixels?: unknown;readonly frequency_distance_cycles_per_pixel?: unknown;readonly frame_index?: unknown;
  readonly source_rect_xyxy?: readonly number[];readonly xy_calibration?: CalibrationView;readonly calibration_record?: CalibrationView;
  readonly scientific_grid_identity?: ScientificGridView;readonly uncertainty_status?: unknown;
 }

@@ -12,6 +12,7 @@ import * as annotationPresentation from '../ui/image-panel/annotation-presentati
 import * as figureExport from '../ui/image-panel/figure-export.mjs';
 import * as observationContract from '../ui/image-panel/observation-contract.mjs';
 import * as roiEditing from '../ui/image-panel/roi-editing.mjs';
+import * as knownLength from '../ui/image-panel/known-length-calibration.mjs';
 import {renderSequenceEvidence} from '../ui/image-panel/sequence-evidence.mjs';
 import {renderDomainEvidence} from '../ui/image-panel/domain-evidence.mjs';
 import {ResearchWorkspace} from '../ui/image-panel/research-workspace.mjs';
@@ -34,7 +35,7 @@ function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4
 async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={}){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -61,8 +62,9 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   workbenchDesktop:{onAction(handler){desktopAction=handler;}},
+  WindowWorkspace:class extends WindowWorkspace{noteCameraIntent(){cameraIntentCount++;super.noteCameraIntent();}},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
   document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),createElementNS:(_namespace,tag)=>new Element(tag),querySelector:selector=>selector==='dialog[open]'?[...elements].find(([id,element])=>id.endsWith('-dialog')&&element.open)?.[1]??null:null,querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
@@ -128,7 +130,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={
  return {$,bodyClasses,calls,draftCalls,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},finishRoi:async()=>{await sandbox.finishRoiSave();flush();},
   delayAction(promise){waitAction=promise;},delayWindowCamera(promise){waitWindowCamera=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
-  nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),
+  nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),cameraIntents:()=>cameraIntentCount,
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
   failDraft(message='Controlled draft delivery failure'){draftFailure=message;},
   actionResult(value){nextActionResult=typeof value==='function'?value:copy(value);},
@@ -254,7 +256,7 @@ test('usage help is a labelled native dialog with a header entry and current nav
  assert.match(header,/<button id="open-usage-help" aria-haspopup="dialog" aria-controls="usage-dialog">使用说明<\/button>/);
  const start=html.indexOf('<dialog id="usage-dialog"'),help=html.slice(start,html.indexOf('</dialog>',start));
  assert.match(help,/aria-labelledby="usage-title"/);assert.match(help,/aria-label="关闭使用说明"/);
- for(const name of ['保存当前 ROI 观察','保存 ROI 观察','完整频谱','全帧（新显示）','前进 →','查询上次原请求','检查 Agent 结果','复制继续提示'])assert.ok(help.includes(name),name);
+ for(const name of ['应用当前 ROI 观察','应用 ROI 观察','完整频谱','全帧（新显示）','前进 →','查询上次原请求','检查 Agent 结果','复制继续提示'])assert.ok(help.includes(name),name);
  assert.match(help,/刷新或重开后不保证保留这条浏览序列/);assert.match(help,/不会自动唤醒模型/);
  assert.doesNotMatch(help,/<script|\sstyle=|on(?:click|keydown)=/i);
 });
@@ -563,6 +565,29 @@ test('reciprocal calibration form uses the current domain and signed scale, not 
  const h=await harness(f);assert.equal(Number(h.$('scale-x').value),.2);assert.equal(Number(h.$('scale-y').value),-.4);assert.equal(h.$('unit').value,'1/nm');assert.equal(h.$('scope').value,'image');
  h.$('source').value='Explicit synthetic calibration correction';await h.click('calibrate');
  assert.equal(h.calls.at(-1).params.coordinate_domain,'reciprocal_space');assert.deepEqual(h.calls.at(-1).params.xy_scale,{x:.2,y:-.4,unit:'1/nm'});
+});
+
+function knownLengthFixture(){const f=fixture();f.tools=[{name:'image_calibrate'}];f.frame_identity={frame_object_id:sourceId,frame_index:0};return f;}
+test('known length dialog open and cancel retain line, camera, history and science; shortcuts do not leak',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();const before=h.inspect(),calls=h.calls.length;
+ assert.equal(h.$('known-length-entry').hidden,false);assert.equal(h.$('known-length-entry').disabled,false);await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,true);assert.equal(h.calls.length,calls);h.key('r');h.key('Delete');h.key('s',{ctrlKey:true});assert.deepEqual(h.inspect().draft,before.draft);assert.equal((await h.nativeAction('fft')).ok,false);await h.click('known-length-close');assert.equal(h.$('known-length-dialog').open,false);assert.deepEqual(h.inspect().draft,before.draft);assert.deepEqual(h.inspect().view,before.view);assert.equal(h.inspect().undoCount,before.undoCount);assert.equal(h.calls.length,calls);
+});
+test('known length applies exact source endpoint scale through existing calibration action only',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();const before=h.inspect(),pixels=Math.hypot(before.draft.coordinates[2]-before.draft.coordinates[0],before.draft.coordinates[3]-before.draft.coordinates[1]);await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-unit').value='nm';h.$('known-length-isotropic').checked=true;h.$('known-length-note').value='Public synthetic test ruler';await h.click('known-length-apply');const call=h.calls.find(c=>c.action==='calibrate');assert.ok(call);assert.equal(call.params.scope,'image');assert.equal(call.params.xy_scale.x,5/pixels);assert.equal(call.params.xy_scale.y,5/pixels);assert.deepEqual(JSON.parse(call.params.source_text).endpoints_source_pixels,before.draft.coordinates);assert.equal(h.calls.filter(c=>['measure','fft','mark'].includes(c.action)).length,0);assert.equal(h.$('known-length-dialog').open,false);
+});
+test('known length invalid form and dirty edits never submit or clear the selected line',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();const before=h.inspect();await h.click('known-length-entry');for(const value of ['',0,-1,'NaN']){h.$('known-length-value').value=value;h.$('known-length-isotropic').checked=true;await h.click('known-length-apply');}h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=false;await h.click('known-length-apply');h.$('known-length-isotropic').checked=true;h.$('gamma').value='1.2';h.$('gamma').oninput();await h.click('known-length-apply');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,0);assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.inspect().dirty,true);assert.equal(h.$('known-length-dialog').open,true);
+});
+test('known length revalidates after draft delivery and refuses later local editing without scientific writes',async()=>{
+ const h=await harness(knownLengthFixture());let release;h.delayDraft(new Promise(resolve=>release=resolve));h.draw('line');await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=true;const revision=h.inspect().draftRevision,applying=h.click('known-length-apply');h.$('roi-reason').value='A later edit must remain';h.$('roi-reason').oninput();assert.equal(h.inspect().dirty,true);release();await applying;assert.equal(h.calls.filter(c=>c.action==='calibrate').length,0);assert.match(h.$('message').textContent,/改变|未提交/);assert.equal(h.$('roi-reason').value,'A later edit must remain');
+});
+test('known length unknown dispatch survives closing and reopening; it is never automatically replayed',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=true;h.failAction('Lost response. Original request_id=scale-original; query it');await h.click('known-length-apply');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);await h.click('known-length-apply');await h.click('known-length-close');await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,false);assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);assert.match(h.$('message').textContent,/原请求/);
+ unsubmittedRecoveryReply(h,'scale-original');await h.click('recover');assert.equal(h.calls.at(-1).action,'recover');assert.equal(h.calls.at(-1).params.request_id,'scale-original');await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,true);assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);
+});
+test('known length lost response with no ID binds only its own readback and blocks advanced replacement',async()=>{
+ const h=await harness(knownLengthFixture());h.draw('line');await h.settle();await h.click('known-length-entry');h.$('known-length-value').value=5;h.$('known-length-isotropic').checked=true;const revision=h.inspect().draftRevision;h.failAction('Controlled network response lost, no request identity');await h.click('known-length-apply');const submitted=h.calls.at(-1),input={source_view_object_id:viewId,draft_revision:revision,parameters:submitted.params};await h.click('known-length-close');await h.click('calibrate');await h.click('withdraw');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);
+ const before=h.calls.length;await h.click('recover');assert.equal(h.calls.length,before,'unrelated legacy last operation is not queried');const saved=h.server();saved.last_operation={tool:'image_calibrate',state:'completed',request_id:'own-unknown-scale',calibration_input:copy(input)};h.setServer(saved);unsubmittedRecoveryReply(h,'own-unknown-scale');await h.click('recover');assert.equal(h.calls.at(-1).action,'recover');assert.equal(h.calls.at(-1).params.request_id,'own-unknown-scale');assert.equal(h.calls.filter(c=>c.action==='calibrate').length,1);await h.click('known-length-entry');assert.equal(h.$('known-length-dialog').open,true);
 });
 
 test('dragging an independently positioned label saves presentation only and preserves the confirmed scientific anchor',async()=>{
@@ -1264,7 +1289,7 @@ test('resumable save declares stable researcher intent and reads actual handoff 
  assert.equal(h.calls.length,1);const p=h.calls[0].params;
  assert.match(p.annotation_id,/^[A-Za-z0-9_-]{1,64}$/);assert.equal(p.purpose,'resumable_observation');assert.equal(p.selection_origin,'researcher');assert.equal(p.note,'  Inspect supplied texture, physical cause unknown  ');
  assert.ok(h.getCalls.slice(reads).filter(p=>p==='/api/state').length>=2,'Saved annotation and clean current handoff both need real readback');
- assert.match(h.$('message').textContent,/已保存并读回可接续.*调用者声明.*不确认物相/);assert.equal(h.inspect().dirty,false);
+ assert.match(h.$('message').textContent,/已记录并读回可接续.*调用者声明.*不确认物相.*Ctrl\+S 保存工作区/);assert.equal(h.inspect().dirty,false);
 });
 test('a new ROI observation is verified under an existing pending result without accepting that result',async()=>{
  const s=handoffFixture();s.object.annotations=[];s.pending_result={object_id:'d'.repeat(32),request_id:'older-saved-result'};const h=await harness(s);h.draw('rectangle');h.$('roi-reason').value='Save this observation before dealing with the pending result';h.$('roi-reason').oninput();const reads=h.getCalls.length;
@@ -1290,8 +1315,8 @@ test('observation save confirms coalesced handoff persistence and renders the fi
  await h.click('save-observation');await h.settle();
  assert.equal(h.calls.length,1);assert.equal(h.draftCalls.at(-1).params.confirm_persistence,true);
  assert.equal(h.server().draft_persistence.pending,false);assert.equal(h.inspect().state.draft_persistence.pending,false);
- assert.equal(h.$('agent-continue').disabled,false);assert.match(h.$('message').textContent,/已保存并读回可接续/);
- assert.match(h.$('research-count').textContent,/1 处已保存/);
+ assert.equal(h.$('agent-continue').disabled,false);assert.match(h.$('message').textContent,/已记录并读回可接续.*Ctrl\+S 保存工作区/);
+ assert.match(h.$('research-count').textContent,/1 处已记录/);
  const trace=JSON.parse(h.$('performance-data').textContent).observation_save;
  assert.equal(trace.outcome,'ready');assert.ok(trace.elapsed_ms.readback_2_end>=trace.elapsed_ms.readback_2_start);
  assert.ok(trace.elapsed_ms.final_ui>=trace.elapsed_ms.readback_2_end);
@@ -1495,4 +1520,34 @@ test('new selection identity: saving temporary B creates a new mark instead of e
 
 test('sidebar provenance: malformed historical line endpoints abstain without breaking the property panel',async()=>{
  for(const points of [null,{},'legacy',[[0,0]],[[0,0],null],[[0,0],['unknown',0]]]){const initial=sidebarMeasuredPeakFixture();initial.object.annotations[0].kind='line';initial.object.annotations[0].anchor.coordinates=[0,0,.125,0];initial.last_operation.points=points;const h=await harness(initial);h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.equal(h.$('measurement-properties').hidden,false);assert.doesNotMatch(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);assert.match(h.$('measurement-summary').textContent,/未测量|未关联/);assert.equal(h.calls.length,0);}
+});
+
+
+test('ROI context pick: reverse paint order, hover and covered selection do not create science writes',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();const before=h.inspect(),writes=h.calls.length;
+ let prevented=false;h.event('contextmenu',50,50,{preventDefault(){prevented=true;}});h.flush();assert.equal(prevented,true);assert.equal(h.$('roi-pick-menu').hidden,false);
+ const choices=h.$('roi-pick-menu').children.slice(1);assert.deepEqual(choices.map(button=>button.textContent),['Other ROI','ROI saved']);
+ choices[1].listeners.pointerenter();h.flush();assert.equal(h.layout().items.find(item=>item.id==='roi-stable').hovered,true);
+ choices[1].onclick();h.flush();await h.settle();assert.equal(h.inspect().selectedId,'roi-stable');assert.deepEqual(h.inspect().draft.coordinates,[40,32,120,92]);assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.calls.length,writes);assert.equal(h.inspect().state.object.object_id,before.state.object.object_id);assert.equal(h.inspect().undoCount,before.undoCount);assert.ok(h.inspect().draftRevision>before.draftRevision,'selection metadata keeps its monotonic CAS revision without a scientific undo item');
+});
+test('ROI context pick: Escape cancels and pending field edits never flush through selection',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();const before=h.inspect();h.event('contextmenu',50,50,{preventDefault(){}});h.key('Escape');h.flush();assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.inspect().selectedId,before.selectedId);assert.equal(h.calls.length,0);
+ selectSavedRoi(h);h.$('mark-text').value='Unapplied label';h.$('mark-text').oninput();const writes=h.calls.length;h.event('contextmenu',50,50,{preventDefault(){}});assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.$('mark-text').value,'Unapplied label');assert.equal(h.calls.length,writes);
+});
+test('result disclosure: explicit expansion survives fresh measurement reads',async()=>{
+ const h=await harness();h.$('measurement-workspace').open=true;h.$('measurement-workspace').listeners.toggle();await h.poll();await h.settle();assert.equal(h.$('measurement-workspace').open,true);
+});
+
+
+test('ROI context pick: focus outside dismisses without changing a selection or writing',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();const before=h.inspect();h.event('contextmenu',50,50,{preventDefault(){}});assert.equal(h.$('roi-pick-menu').hidden,false);h.documentEvent('focusin',h.$('workspace-save'));h.flush();assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.inspect().selectedId,before.selectedId);assert.equal(h.calls.length,0);
+});
+
+
+test('ROI context pick: native help dismisses the picker and modal Escape keeps priority',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();h.event('contextmenu',50,50,{preventDefault(){}});h.$('roi-pick-menu').children[1].focus();const before=h.inspect();assert.equal((await h.nativeAction('help')).ok,true);assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.$('usage-dialog').open,true);let prevented=false;h.key('Escape',{preventDefault(){prevented=true;}});assert.equal(prevented,false);h.$('usage-dialog').listeners.cancel({preventDefault(){}});assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),h.$('canvas'));assert.equal(h.calls.length,0);assert.deepEqual(h.inspect().state.object,before.state.object);
+});
+
+test('active camera controls notify user intent while ordinary load, polling and layout do not',async()=>{
+ const h=await harness();assert.equal(h.cameraIntents(),0);h.$('viewport').listeners.wheel({clientX:30,clientY:20,deltaY:-30,preventDefault(){}});assert.equal(h.cameraIntents(),1);h.$('zoom').value='1.8';h.$('zoom').oninput();assert.equal(h.cameraIntents(),2);await h.click('fit');assert.equal(h.cameraIntents(),3);await h.click('fit-canvas');assert.equal(h.cameraIntents(),4);h.$('canvas').focus();h.key('f');assert.equal(h.cameraIntents(),5);h.$('mode').value='pan';h.event('pointerdown',30,20);assert.equal(h.cameraIntents(),6);h.event('pointermove',40,25);h.event('pointerup',40,25);await h.click('focus-image');assert.equal(h.cameraIntents(),7);const count=h.cameraIntents();h.resizeLayout();await h.poll();await h.settle();assert.equal(h.cameraIntents(),count);assert.equal(h.calls.length,0,'camera intentions never submit a scientific operation');
 });

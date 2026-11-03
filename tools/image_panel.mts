@@ -150,7 +150,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  let workspaceTransition=false;const restoreReadScope=new AsyncLocalStorage<PanelRestoreReads<NativeImageReply>>();
  try{const init=(await client.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-local-image-panel',version:'1'}})) as Metadata;if(init.error)throw new Error((init.error as Metadata).message as string);
  tools=(((await client.rpc('tools/list')) as Metadata).result as Metadata).tools as Metadata[];}catch(caught){const error=caught as Error&{status?:number};await client.close();throw error;}const names=new Set(tools.map(t=>t.name));
- const journalCall=async(name:string,args:Metadata,frozenFft?:{source_view_object_id:string;frame_object_id:string;selection:PanelSelection;annotation_id:string|null;calibration:unknown}):Promise<NativeImageReply>=>{if(!names.has(name))fail('Tool unavailable: '+name);const restoreReads=restoreReadScope.getStore();if(restoreReads&&name==='image_info'&&Object.keys(args).length===1&&objectId.test(String(args.object_id)))return restoreReads.read(String(args.object_id));const write=name!=='image_info'&&name!=='image_result';if(write){analysis?.assertSemanticEditingAllowed();const next=++sequence;let requestId=`panel-${session}-${next}`;if(name==='image_fft'){if(!frozenFft)fail('GUI FFT needs an exact frozen input before dispatch',409);requestId=writePanelExecutionInput({workspace:workspace!,journal,session_nonce:fftInputNonce,sequence:next,parameters:args,...frozenFft}).request_id;}args={...args,request_id:requestId};writeJournal(path.join(journal,`${args.request_id}.request.json`),{name,arguments:args});lastOperation={state:'submitted',tool:name,request_id:args.request_id,object_id:args.object_id};saveSelection();}try{const r=(await client.tool(name,args)) as NativeImageReply;if(write){writeJournal(path.join(journal,`${args.request_id}.response.json`),{object_id:r.data.object_id,request_id:args.request_id,state:r.data.state});if(r.data.state==='completed'&&lastOperation?.request_id===args.request_id){lastOperation={...lastOperation,state:'completed',object_id:r.data.object_id};saveSelection();}}return r;}catch(caught){const error=caught as Error&{status?:number};if(write){const admission=imageAdmissionFailureFromError(error,name,args.request_id);if(admission){Object.assign(error,admission,{status:admission.code.startsWith('WORKSPACE_')?409:502});lastOperation={state:'not_submitted',tool:name,request_id:args.request_id,object_id:args.object_id,admission_failure:admission};stateRevision++;try{writeJournal(path.join(journal,`${args.request_id}.response.json`),{state:'not_submitted',request_id:args.request_id,admission_failure:admission});saveSelection();}catch(persistenceError){selectionPersistenceError=(persistenceError as Error).message;}error.message+=` Original request_id=${args.request_id} was not submitted; edits remain. A new attempt requires an explicit user action.`;}else error.message+=` Original request_id=${args.request_id}; query image_result with this ID. Do not automatically repeat the operation.`;}throw error;}};
+ const journalCall=async(name:string,args:Metadata,frozenFft?:{source_view_object_id:string;frame_object_id:string;selection:PanelSelection;annotation_id:string|null;calibration:unknown},operationContext?:Metadata):Promise<NativeImageReply>=>{if(!names.has(name))fail('Tool unavailable: '+name);const restoreReads=restoreReadScope.getStore();if(restoreReads&&name==='image_info'&&Object.keys(args).length===1&&objectId.test(String(args.object_id)))return restoreReads.read(String(args.object_id));const write=name!=='image_info'&&name!=='image_result';if(write){analysis?.assertSemanticEditingAllowed();const next=++sequence;let requestId=`panel-${session}-${next}`;if(name==='image_fft'){if(!frozenFft)fail('GUI FFT needs an exact frozen input before dispatch',409);requestId=writePanelExecutionInput({workspace:workspace!,journal,session_nonce:fftInputNonce,sequence:next,parameters:args,...frozenFft}).request_id;}args={...args,request_id:requestId};writeJournal(path.join(journal,`${args.request_id}.request.json`),{name,arguments:args});lastOperation={state:'submitted',tool:name,request_id:args.request_id,object_id:args.object_id,...operationContext};saveSelection();}try{const r=(await client.tool(name,args)) as NativeImageReply;if(write){writeJournal(path.join(journal,`${args.request_id}.response.json`),{object_id:r.data.object_id,request_id:args.request_id,state:r.data.state});if(r.data.state==='completed'&&lastOperation?.request_id===args.request_id){lastOperation={...lastOperation,state:'completed',object_id:r.data.object_id};saveSelection();}}return r;}catch(caught){const error=caught as Error&{status?:number};if(write){const admission=imageAdmissionFailureFromError(error,name,args.request_id);if(admission){Object.assign(error,admission,{status:admission.code.startsWith('WORKSPACE_')?409:502});lastOperation={state:'not_submitted',tool:name,request_id:args.request_id,object_id:args.object_id,...operationContext,admission_failure:admission};stateRevision++;try{writeJournal(path.join(journal,`${args.request_id}.response.json`),{state:'not_submitted',request_id:args.request_id,admission_failure:admission});saveSelection();}catch(persistenceError){selectionPersistenceError=(persistenceError as Error).message;}error.message+=` Original request_id=${args.request_id} was not submitted; edits remain. A new attempt requires an explicit user action.`;}else error.message+=` Original request_id=${args.request_id}; query image_result with this ID. Do not automatically repeat the operation.`;}throw error;}};
  const displayObject=async(r:NativeImageReply):Promise<NativeImageReply>=>{
   if((['spatial_atlas','local_signature_compare','feature_field','spatial_field','field_extend','analysis_candidates','domain_map'] as readonly unknown[]).includes(r.data.kind)){
    const {result_semantics:omittedSemantics,...evidenceBase}=r.data;
@@ -190,17 +190,9 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  };
  // Prepare immutable render assets before committing the visible identity. A
  // draft can arrive while ancestry lookup/worker I/O is waiting.
- const prepareCurrent=async(r:NativeImageReply):Promise<PreparedView>=>{
-  let value=r.data,display=null,displayId=null;const seen=new Set();
-  for(let n=0;n<64;n++){
-   if(seen.has(value.object_id))fail('Display ancestry contains a cycle');seen.add(value.object_id);
-   if(value.display){display=structuredClone(value.display);displayId=value.object_id;break;}
-   if((['tiff_source','dm_source'] as readonly unknown[]).includes(value.kind))break;
-   const next=value.render_base_object_id??value.base_object_id??value.parent_object_id;
-   if(!objectId.test(((next??'' as string) as string)))break;
-   value=(await journalCall('image_info',{object_id:next})).data;
-   if(n===63)fail('Display ancestry exceeds 64 records');
-  }
+ // This reads an existing immutable PNG only. It never creates a preview to
+ // obtain a clean layer, including for legacy objects without a saved base.
+ const readCleanRender=async(r:NativeImageReply)=>{
   let base=r.data;
   if(objectId.test(((base.render_base_object_id??'' as string) as string)))base=(await journalCall('image_info',{object_id:base.render_base_object_id})).data;
   let clean=null,digest=null;
@@ -213,6 +205,20 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    if(digest!==((base as Metadata).files_sha256 as Metadata)[file]||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')fail('Clean PNG hash or format mismatch');
    clean=bytes.toString('base64');
   }else if(!(r.data.annotations as unknown[]|undefined)?.length){clean=r.png??null;digest=clean?createHash('sha256').update(Buffer.from(clean as string,'base64')).digest('hex'):null;}
+  return {clean,digest,base};
+ };
+ const prepareCurrent=async(r:NativeImageReply):Promise<PreparedView>=>{
+  let value=r.data,display=null,displayId=null;const seen=new Set();
+  for(let n=0;n<64;n++){
+   if(seen.has(value.object_id))fail('Display ancestry contains a cycle');seen.add(value.object_id);
+   if(value.display){display=structuredClone(value.display);displayId=value.object_id;break;}
+   if((['tiff_source','dm_source'] as readonly unknown[]).includes(value.kind))break;
+   const next=value.render_base_object_id??value.base_object_id??value.parent_object_id;
+   if(!objectId.test(((next??'' as string) as string)))break;
+   value=(await journalCall('image_info',{object_id:next})).data;
+   if(n===63)fail('Display ancestry exceeds 64 records');
+  }
+  const {clean,digest,base}=await readCleanRender(r);
   return {object:r.data,png:r.png??null,clean,digest,baseId:base.object_id,display,displayId,sequenceEvidence:r.sequenceEvidence,domainEvidence:r.domainEvidence,domainPng:r.domainPng};
  };
  const commitCurrent=(prepared:PreparedView,{annotationIds=[]}:{annotationIds?:unknown[]}={})=>{
@@ -247,7 +253,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   return {reference,view};
  };
  const syncWindows=(inputViewContext?:PanelWindowViewContext|null)=>windowStore.admit(current,frameIdentity,!spatialReturnReason?spatialReturnReference:null,spatialReturnReference?windowInputCalibrations.get(spatialReturnReference.view_object_id):undefined,inputViewContext);
- const readWindowSaved=async(id:string,{includeFrameAncestry=false}={})=>{
+ const readWindowSaved=async(id:string,{includeFrameAncestry=false,includeCleanRender=false}={})=>{
   const schema=tools.find(tool=>tool.name==='image_info')?.inputSchema as Metadata|undefined,properties=schema?.properties as Metadata|undefined,ancestrySchema=properties?.include_frame_ancestry as Metadata|undefined;
   const bundled=includeFrameAncestry&&ancestrySchema?.type==='boolean',reply=await journalCall('image_info',{object_id:id,...(bundled?{include_frame_ancestry:true}:{})});
   const ancestry=bundled?readImageFrameAncestry(reply.data.frame_ancestry,reply.data):null;
@@ -263,7 +269,14 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(relative.startsWith('..')||path.isAbsolute(relative)||statSync(target).size>2*1024*1024)fail('Window PNG lies outside the bounded workspace',409);
   const bytes=readFileSync(target),delivered=Buffer.from(reply.png,'base64');
   if(bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||createHash('sha256').update(bytes).digest('hex')!==expected||!bytes.equals(delivered))fail('Window saved PNG hash or delivered asset mismatch',409);
-  return {object:reply.data,frame:await findFrameIdentity(reply.data,ancestry),png:reply.png};
+  let cleanRender:Metadata|null=null;
+  if(includeCleanRender){const {clean,digest,base}=await readCleanRender(reply);
+   // An old object may lack enough evidence for a separate vector layer. Keep
+   // its exact baked PNG in that case; do not replace it with a guessed base.
+   const gridMatches=reply.data.scientific_grid_identity===undefined||sameRecord(reply.data.scientific_grid_identity,base.scientific_grid_identity??null),displayMatches=reply.data.display===undefined||sameRecord(reply.data.display,base.display??null);
+   if(typeof clean==='string'&&clean&&digest&&gridMatches&&displayMatches){const cleanBytes=Buffer.from(clean,'base64');if(bytes.length>=24&&cleanBytes.length>=24&&bytes.subarray(16,24).equals(cleanBytes.subarray(16,24)))cleanRender={object_id:id,render_base_object_id:base.object_id,panel_mapping_fingerprint:panelWindowMappingFingerprint(reply.data),png_sha256:digest,png_base64:clean};}
+  }
+  return {object:reply.data,frame:await findFrameIdentity(reply.data,ancestry),png:reply.png,cleanRender};
  };
  const returnFailure=(error:unknown)=>error instanceof SpatialReturnError?error.code:'target_unavailable';
  try{
@@ -417,7 +430,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const checkSelection=(input:unknown,targetObject:Metadata=current):PanelSelection=>{const value=input as Metadata;fields(value,['kind','coordinate_space','source_object_id','coordinates','panel']);const lengths={point:2,line:4,arrow:4,rectangle:4,polygon:null},c=value.coordinates;if(!(((value as Metadata).kind as string) in lengths)||!Array.isArray(c)||!c.every(Number.isFinite)||!objectId.test(((value.source_object_id??'' as string) as string))||(value.kind==='polygon'?(c.length<6||c.length>64||c.length%2):c.length!==lengths[value.kind as keyof typeof lengths]))fail('Invalid scientific selection');const p=(targetObject.panels as Metadata[]|undefined)?.find(p=>p.source_object_id===value.source_object_id&&sameRecord(p,value.panel));if(!p)fail('Selection must use an exact current panel');const space=({frequency:'frequency_cycles_per_pixel',spatial_pixels:'source_pixels',source_array_indices:'source_array_indices'} as Metadata)[p.domain as string];if(value.coordinate_space!==space)fail('Selection coordinate domain mismatch');const edges=(['rectangle','polygon'] as readonly unknown[]).includes(value.kind);let bounds;if(p.domain==='frequency'){const [h,w]=p.fft_shape_yx as number[],[x0,y0,x1,y1]=(p.fft_rect_xyxy??[0,0,w,h]) as number[],margin=edges?.5:0;bounds=[(x0-Math.floor(w/2)-margin)/w,(y0-Math.floor(h/2)-margin)/h,(x1-1-Math.floor(w/2)+margin)/w,(y1-1-Math.floor(h/2)+margin)/h];}else{const [x0,y0,x1,y1]=p.source_rect_xyxy as number[];bounds=[x0,y0,edges?x1:x1-1,edges?y1:y1-1];}for(let i=0;i<c.length;i++)if(c[i]<bounds[i%2]-1e-12||c[i]>bounds[i%2+2]+1e-12)fail('Selection lies outside current source window');if(value.kind==='rectangle'&&(c[0]>=c[2]||c[1]>=c[3]))fail('Rectangle needs increasing nonempty edges');if((['line','arrow'] as readonly unknown[]).includes(value.kind)&&c[0]===c[2]&&c[1]===c[3])fail('Line needs distinct endpoints');return structuredClone(value) as PanelSelection;};
  const act=async(input:unknown)=>{const body=input as Metadata;
   if(workspaceTransition||analysisCloseConfirmed)fail('Workspace restore or close is in progress; existing edits are retained',409);
-  fields(body,['expected_object_id','draft_revision','action','params','lightweight']);if(body.lightweight!==undefined&&(body.action!=='draft'||typeof body.lightweight!=='boolean'))fail('lightweight is an explicit boolean for draft acknowledgments only');if(body.expected_object_id!==current.object_id)fail('Stale object revision; reload before editing',409);const p=body.params??{},startedRevision=body.draft_revision??editState.draft_revision;let r:NativeImageReply,figureRestore:Metadata|null=null;
+  fields(body,['expected_object_id','draft_revision','action','params','lightweight']);if(body.lightweight!==undefined&&(body.action!=='draft'||typeof body.lightweight!=='boolean'))fail('lightweight is an explicit boolean for draft acknowledgments only');if(body.expected_object_id!==current.object_id)fail('Stale object revision; reload before editing',409);const p=body.params??{},startedRevision=body.draft_revision??editState.draft_revision;let r:NativeImageReply,figureRestore:Metadata|null=null,calibrationInput:Metadata|null=null;
   if(!Number.isSafeInteger(startedRevision)||(startedRevision as number)<0)fail('Invalid draft_revision');
   if(!['draft','select','window-camera','window-context','window-layout','activate-window','close-window','recover'].includes(String(body.action)))analysis?.assertSemanticEditingAllowed();
   let returnedInputContext:PanelWindowViewContext|null=null;
@@ -649,7 +662,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'measure',scientificBefore,r.data,{annotation_id:mark?.annotation_id,source_object_id:selected.source_object_id});
    selection=selected;saveSelection();return state();
   }
-  else if(body.action==='calibrate'){fields(p,['scope','xy_scale','source_text','coordinate_domain']);const calibrated=await journalCall('image_calibrate',{object_id:current.object_id,...p});r=await journalCall('image_preview',{object_id:calibrated.data.object_id});}
+  else if(body.action==='calibrate'){fields(p,['scope','xy_scale','source_text','coordinate_domain']);calibrationInput={source_view_object_id:current.object_id,draft_revision:startedRevision,parameters:structuredClone(p)};const context={calibration_input:calibrationInput};const calibrated=await journalCall('image_calibrate',{object_id:current.object_id,...p},undefined,context);r=await journalCall('image_preview',{object_id:calibrated.data.object_id},undefined,context);}
   else if(body.action==='figure-base'){
    fields(p,[]);
    const spectral=((current.panels??[]) as Metadata[]).some(panel=>panel.domain==='frequency');
@@ -700,7 +713,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   }
   if(figureRestore)verifyFigureDisplay(prepared,nextFrame,figureRestore as Metadata);
   const annotationIds=body.action==='mark'?[p.annotation_id]:(['edit','edit-layout'] as readonly unknown[]).includes(body.action)?((p as Metadata).updates as Metadata[]).map(value=>value.annotation_id):[];
-  const affected={...(annotationIds.length?{annotation_ids:annotationIds}:{}),...(figureRestore?{figure_restore:figureRestore}:{})};
+  const affected={...(calibrationInput?{calibration_input:calibrationInput}:{}),...(annotationIds.length?{annotation_ids:annotationIds}:{}),...(figureRestore?{figure_restore:figureRestore}:{})};
   const layoutEdit=body.action==='edit-layout',autoEdit=body.action==='edit'&&p.auto_commit===true||layoutEdit&&p.auto_commit!==false||pendingAnnotationSave;
   if(layoutEdit||autoEdit){
    if(!sameRecord(prepared.object.panels??[],current.panels??[])||!sameRecord(prepared.object.scientific_grid_identity??null,current.scientific_grid_identity??null))fail('Automatic annotation adoption requires the exact same scientific grid and render mapping',409);
@@ -882,6 +895,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  staticFiles.set('/window-source-overlay.mjs',['window-source-overlay.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/roi-editing.mjs',['roi-editing.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/multi-roi-handoff.mjs',['multi-roi-handoff.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/known-length-calibration.mjs',['known-length-calibration.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{
@@ -910,12 +924,12 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    }
    if(req.method==='GET'&&url.pathname==='/api/window-asset'){
     if([...url.searchParams.keys()].some(key=>!['window_id','revision'].includes(key))||url.searchParams.getAll('window_id').length!==1||url.searchParams.getAll('revision').length!==1||!/^\d{1,16}$/.test(url.searchParams.get('revision')??''))fail('Explicit saved window identity and collection revision required');
-    const revision=Number(url.searchParams.get('revision')),entry=windowStore.lookup(url.searchParams.get('window_id'),revision),saved=await readWindowSaved(entry.object_id,{includeFrameAncestry:true});
+    const revision=Number(url.searchParams.get('revision')),entry=windowStore.lookup(url.searchParams.get('window_id'),revision),saved=await readWindowSaved(entry.object_id,{includeFrameAncestry:true,includeCleanRender:true});
     // Immutable reads can overlap a new adoption or layout publication. Never
     // bind the completed bitmap to a newer object/window collection by recency.
     const latest=windowStore.lookup(entry.window_id,revision);
     if(latest.object_id!==entry.object_id||saved.frame?.frame_object_id!==windowStore.snapshot().frame_object_id||!windowStore.assetMatches(entry.window_id,saved.object,saved.frame))fail('Saved window asset changed while reading; inspect the current collection',409);
-    res.end(JSON.stringify({schema_version:1,collection_revision:revision,window_id:entry.window_id,object_id:entry.object_id,object:publicImageObject(saved.object),panel_mapping_fingerprint:panelWindowMappingFingerprint(saved.object),png_base64:saved.png}));return;
+    res.end(JSON.stringify({schema_version:1,collection_revision:revision,window_id:entry.window_id,object_id:entry.object_id,object:publicImageObject(saved.object),panel_mapping_fingerprint:panelWindowMappingFingerprint(saved.object),png_base64:saved.png,...(saved.cleanRender?{clean_render:saved.cleanRender}:{})}));return;
    }
    if(req.method==='GET'&&url.pathname==='/api/measurements'){
     if([...url.searchParams.keys()].some(key=>key!=='object_id')||url.searchParams.get('object_id')!==current.object_id)fail('Measurement inspection requires the exact current object',409);

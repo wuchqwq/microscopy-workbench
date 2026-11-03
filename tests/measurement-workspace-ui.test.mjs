@@ -1,7 +1,7 @@
 // Focused read-only presentation/export contracts; not browser acceptance.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MeasurementWorkspace,measurementValues,measurementType,measurementNumber,measurementDetails,inspectorDetails,tabularCell,exportMeasurementTable} from '../ui/image-panel/measurement-workspace.mjs';
+import {MeasurementWorkspace,measurementValues,measurementType,measurementNumber,measurementDetails,measurementSummary,inspectorDetails,tabularCell,exportMeasurementTable} from '../ui/image-panel/measurement-workspace.mjs';
 const A='a'.repeat(32),B='b'.repeat(32),C='c'.repeat(32);
 function result(overrides={}){return {object_id:A,kind:'measure',parent_object_id:B,request_id:'test-measure',points:[[0,0],[.125,-.25]],coordinate_space:'frequency_cycles_per_pixel',dc_reference_point_index:0,physical_frequency_magnitude:5,physical_frequency_unit:'1/nm',period:.2,period_unit:'nm',d_spacing:.2,d_spacing_unit:'nm',frequency_distance_cycles_per_pixel:Math.hypot(.125,.25),status:'current',annotation_id:'g1',source:{frame_index:9,source_rect_xyxy:[20,30,84,94]},...overrides};}
 test('DC-reflection period and an arbitrary two-peak difference stay distinct',()=>{
@@ -67,4 +67,33 @@ test('selected historical measurement retains its state beside optional result s
  const details=Object.fromEntries(measurementDetails(old));assert.match(details['状态'],/待重测/);assert.match(details['三层结果说明'],/未记录/);assert.equal(details['原始结果'],A);
  const future={...old,result_semantics:{version:99,note:'future'}};
  const shown=Object.fromEntries(measurementDetails(future));assert.match(shown['状态'],/待重测/);assert.match(shown['三层结果说明'],/暂不可解释/);assert.match(shown['保存的资格记录'],/future/);
+});
+
+
+test('readable result: saved pixel period and frequency are summaries, raw IDs/qualification stay in evidence',()=>{
+ const m=result({physical_frequency_magnitude:null,d_spacing:null,period:null,pixel_period:7.25264723197026,frequency_distance_cycles_per_pixel:.1378806893560076,name:'g1',scientific_grid_identity:{source_grid_object_id:C}});
+ const summary=Object.fromEntries(measurementSummary(m,'FFT 1'));assert.match(summary['测得量'],/像素周期 7.252647 px.*频率差 0.1378807 cycles\/pixel/);assert.equal(summary['来源 FFT'],'FFT 1');assert.ok(!Object.keys(summary).some(key=>/原始请求|网格|资格/.test(key)));assert.match(Object.fromEntries(measurementDetails(m))['原精度数值'],/7.25264723197026/);assert.match(exportMeasurementTable([m]),/7.25264723197026/);
+});
+test('pending geometry: current summary hides old values while evidence/export keep original precision',()=>{
+ const record=result({name:'g1',pixel_period:7.25264723197026}),copy=JSON.stringify(record),workspace=new MeasurementWorkspace({document:null,getState:()=>({object:{object_id:B}}),pendingAnnotations:()=>['g1']});workspace.current={object_id:B};const pending=workspace.displayEntry(record);
+ assert.equal(pending.status,'needs_remeasurement');assert.deepEqual(measurementValues(pending),[]);assert.match(Object.fromEntries(measurementSummary(pending))['测得量'],/待重测/);assert.match(Object.fromEntries(measurementDetails(pending))['原精度数值'],/7.25264723197026/);assert.match(exportMeasurementTable([pending]),/7.25264723197026/);assert.equal(JSON.stringify(record),copy);
+ const history=workspace.displayEntry({...record,status:'historical'});assert.ok(measurementValues(history).length);assert.equal(history.status,'historical');
+});
+test('empty results distinguish no measurements from a filter hiding history without changing disclosure',()=>{
+ const elements=new Map(),element=id=>{if(!elements.has(id))elements.set(id,{hidden:false,open:true,textContent:'',children:[],dataset:{},classList:{toggle(){}},replaceChildren(){this.children=[];},append(...v){this.children.push(...v);},setAttribute(){}});return elements.get(id);};const workspace=new MeasurementWorkspace({document:{getElementById:element,createElement:()=>({children:[],dataset:{},classList:{toggle(){}},append(...v){this.children.push(...v);},setAttribute(){}})},getState:()=>({object:{object_id:B}})});
+ workspace.render();assert.match(element('measurement-empty').textContent,/尚无保存测量/);workspace.entries=[result({status:'historical'})];workspace.render();assert.match(element('measurement-empty').textContent,/筛选隐藏.*历史/);assert.equal(element('measurement-workspace').open,true);element('measurement-history').checked=true;workspace.render();assert.equal(element('measurement-empty').hidden,true);assert.equal(element('measurement-workspace').open,true);
+});
+
+
+test('old current table values become historical until a newly revised view is qualified by readback',()=>{
+ let state={object:{object_id:B}};const history={checked:false},record=result(),workspace=new MeasurementWorkspace({document:{getElementById:id=>id==='measurement-history'?history:null,createElement(){}},getState:()=>state});workspace.current={object_id:B};workspace.entries=[record];assert.equal(workspace.visible().length,1);state={object:{object_id:C}};assert.equal(workspace.displayEntry(record).status,'historical');assert.equal(workspace.visible().length,0);history.checked=true;assert.equal(workspace.visible()[0].status,'historical');assert.equal(record.status,'current','a read-only status projection never rewrites the immutable entry');workspace.current={object_id:C};assert.equal(workspace.displayEntry(record).status,'current','fresh provider qualification wins even when the original result parent is an earlier display wrapper');assert.equal(record.parent_object_id,B);
+});
+
+test('export selection keeps pending and checked historical records with original precision and provenance',()=>{
+ const original=result({pixel_period:7.25264723197026,frequency_distance_cycles_per_pixel:.1378806893560076,d_spacing:.20000000000000004,xy_calibration:{calibration_id:C,revision:3,source_text:'public synthetic scale'}}),pending={object_id:A,annotation_id:'g1',name:'Peak A',status:'current',measurement_manifest_sha256:'f'.repeat(64),source:original.source,measurement:original},historical={...pending,object_id:C,status:'historical',measurement:{...original,object_id:C,d_spacing:.30000000000000004}};
+ const workspace=new MeasurementWorkspace({document:null,getState:()=>({object:{object_id:B}}),pendingAnnotations:()=>['g1']});workspace.current={object_id:B};workspace.entries=[pending,historical];workspace.checked.add(A);workspace.checked.add(C);const before=JSON.stringify(workspace.entries),selected=workspace.exportSelection();assert.deepEqual(selected.map(entry=>entry.status),['needs_remeasurement','historical']);assert.deepEqual(measurementValues(selected[0]),[]);
+ const [header,...lines]=exportMeasurementTable(selected,{delimiter:'\t'}).trimEnd().split('\r\n').map(line=>line.split('\t')),rows=lines.map(line=>Object.fromEntries(header.map((key,index)=>[key,line[index]])));
+ for(const row of rows){assert.equal(row.pixel_period,'7.25264723197026');assert.equal(row.frequency_cycles_per_pixel,'0.1378806893560076');assert.equal(row.point_1_x,'0.125');assert.equal(row.point_1_y,'-0.25');assert.equal(row.source_frame,'10');assert.equal(row.source_roi,'[20,30,84,94]');assert.equal(row.input_object_id,B);assert.equal(row.request_id,'test-measure');assert.equal(row.manifest_sha256,'f'.repeat(64));assert.equal(row.calibration_source,'public synthetic scale');}
+ assert.equal(rows[0].d_spacing,'0.20000000000000004');assert.equal(rows[1].d_spacing,'0.30000000000000004');assert.equal(rows[0].status,'待重测');assert.equal(rows[1].status,'历史');assert.equal(JSON.stringify(workspace.entries),before,'export leaves original records intact');
+ const legacy={...original,physical_distance:null,distance_physical:.30000000000000004};assert.match(Object.fromEntries(measurementDetails(legacy))['原精度数值'],/"distance_physical":0\.30000000000000004/);assert.match(exportMeasurementTable([legacy]),/,0\.30000000000000004,/);
 });

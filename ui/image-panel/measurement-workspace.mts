@@ -14,6 +14,7 @@ export interface MeasurementWorkspaceOptions {
  onJump?: (entry: MeasurementEntry | null)=>unknown;
  onUpdate?: (entry: MeasurementEntry | null)=>unknown;
  onError?: (error: unknown)=>unknown;
+ pendingAnnotations?:()=>readonly string[];
  document?: PresentationDocument | null;
 }
 // Read-only table projection of the provider's saved measurements. Scientific
@@ -26,6 +27,7 @@ const unitText=(value: unknown)=>typeof value==='string'&&value.trim()?value:'�
 export const measurementNumber=(value: unknown)=>finite(value)?Number(value.toPrecision(7)).toString():'未知';
 export function measurementValues(entry: MeasurementEntry){
  const m=asRecord(entry),result: MeasurementDisplayValue[]=[];
+ if(['stale','needs_remeasure','needs_remeasurement'].includes(entry.status??''))return result;
  if(finite(m.physical_distance))result.push({kind:'distance',label:'距离',value:m.physical_distance,unit:unitText(m.physical_unit)});
  else if(finite(m.distance_physical))result.push({kind:'distance',label:'距离',value:m.distance_physical,unit:unitText(m.physical_unit)});
  if(finite(m.physical_frequency_magnitude))result.push({kind:'frequency',label:'|g|',value:m.physical_frequency_magnitude,unit:unitText(m.physical_frequency_unit)});
@@ -34,12 +36,18 @@ export function measurementValues(entry: MeasurementEntry){
  if(finite(m.d_spacing))result.push({kind:'d_spacing',label:'DC→峰周期',value:m.d_spacing,unit:unitText(m.d_spacing_unit)});
  else if(finite(m.period))result.push({kind:'period',label:'差矢量周期',value:m.period,unit:unitText(m.period_unit)});
  if(!result.length&&finite(m.distance_pixels))result.push({kind:'pixel_distance',label:'图像坐标距离',value:m.distance_pixels,unit:'px'});
- if(!result.length&&finite(m.frequency_distance_cycles_per_pixel))result.push({kind:'pixel_frequency',label:'频率差',value:m.frequency_distance_cycles_per_pixel,unit:'cycles/pixel'});
+ if(!result.length&&finite(m.pixel_period))result.push({kind:'pixel_period',label:'像素周期',value:m.pixel_period,unit:'px'});
+ if((!result.length||result.some(value=>value.kind==='pixel_period'))&&finite(m.frequency_distance_cycles_per_pixel))result.push({kind:'pixel_frequency',label:'频率差',value:m.frequency_distance_cycles_per_pixel,unit:'cycles/pixel'});
  return result;
 }
 export function measurementType(entry: MeasurementEntry){const m=asRecord(entry);if(m.coordinate_space==='frequency_cycles_per_pixel'||m.measurement_domain==='reciprocal_space')return m.dc_reference_point_index===0||m.dc_reference_point_index===1?'DC→峰':'两点差矢量';return '两点距离';}
 export function measurementName(entry: MeasurementEntry){return entry.name??entry.annotation_name??entry.annotation_id??`测量 ${asRecord(entry).object_id?.slice(0,8)??'未知'}`;}
 export function measurementStatus(entry: MeasurementEntry){return statusNames[entry.status as string]??'未知';}
+export function measurementSummary(entry:MeasurementEntry,sourceName?:string):DetailRows {
+ const m=asRecord(entry),scope=entry.source??entry.scope??{},values=measurementValues(entry);
+ const fft=(scope as {fft_object_id?:unknown}).fft_object_id??(m.coordinate_space==='frequency_cycles_per_pixel'?m.scientific_grid_identity?.source_grid_object_id:null);
+ return [['名称',measurementName(entry)],['测得量',values.map(value=>`${value.label} ${measurementNumber(value.value)} ${value.unit}`).join(' / ')||(['stale','needs_remeasure','needs_remeasurement'].includes(entry.status??'')?'待重测；先前数值在详细证据中':'未知')],['状态',measurementStatus(entry)],['来源 FFT',sourceName??(typeof fft==='string'?'已保存 FFT（详证）':'未记录 / 非 FFT 测量')],['限制',![m.physical_frequency_magnitude,m.physical_distance,m.distance_physical,m.d_spacing,m.period].some(finite)?'未有有效物理标定；保留像素 / 频率单位。':'几何测量不直接确认物相或晶面指数。']];
+}
 export function measurementDetails(entry: MeasurementEntry): DetailRows{
  const m=asRecord(entry),scope=entry.source??entry.scope??{},cal=m.xy_calibration??m.calibration_record,grid=m.scientific_grid_identity??scope.scientific_grid_identity??{};
  const semantics=resultSemanticsModel(m as unknown as Record<string,unknown>);
@@ -47,11 +55,12 @@ export function measurementDetails(entry: MeasurementEntry): DetailRows{
   ...(semantics?[["三层结果说明",semantics.headline],["保存的资格记录",semantics.assessment?JSON.stringify(semantics.assessment):'未记录；不补写评估']] as DetailRows:[]),
   ['类型',measurementType(entry)],['状态',measurementStatus(entry)+(entry.status_reason?' · '+entry.status_reason:'')],
   ['科学端点',Array.isArray(m.points)?JSON.stringify(m.points):'未知'],['坐标域',m.coordinate_space??'未知'],
+  ['原精度数值',JSON.stringify({physical_distance:m.physical_distance,distance_physical:m.distance_physical,physical_frequency_magnitude:m.physical_frequency_magnitude,period:m.period,d_spacing:m.d_spacing,distance_pixels:m.distance_pixels,frequency_distance_cycles_per_pixel:m.frequency_distance_cycles_per_pixel,pixel_period:m.pixel_period})],
   ['源帧',Number.isInteger(scope.frame_index)?String((scope.frame_index as number)+1):Number.isInteger(m.frame_index)?String((m.frame_index as number)+1):'未知'],
   ['源 ROI',Array.isArray(scope.source_rect_xyxy??grid.source_rect_xyxy??m.source_rect_xyxy)?JSON.stringify(scope.source_rect_xyxy??grid.source_rect_xyxy??m.source_rect_xyxy):'未知'],
   ['标定版本',cal?.calibration_id?`${cal.calibration_id} · v${cal.revision??'未知'}`:'无有效物理标定'],
   ['标定来源',cal?.source_text??cal?.source??'未知'],['不确定性',m.uncertainty_status??'未知'],
-  ['原始结果',m.object_id??'未知'],['原始请求',m.request_id??'未知'],['输入对象',m.parent_object_id??'未知'],
+  ['来源 FFT 对象',(scope as {fft_object_id?:unknown}).fft_object_id??(m.coordinate_space==='frequency_cycles_per_pixel'?grid.source_grid_object_id??'未知':'非 FFT')],['科学网格身份',JSON.stringify(grid)],['原始结果',m.object_id??'未知'],['原始请求',m.request_id??'未知'],['输入对象',m.parent_object_id??'未知'],
   ['结果校验',entry.measurement_manifest_sha256??entry.manifest_sha256??'未知']
  ];
 }
@@ -82,17 +91,18 @@ export function tabularCell(value: unknown,delimiter=','){
 }
 export function exportMeasurementTable(entries: readonly MeasurementEntry[],{delimiter=','}: {delimiter?:string}={}){
  if(![',','\t'].includes(delimiter))throw new Error('Only CSV and TSV are supported');
- const columns=['name','type','status','distance','distance_unit','frequency','frequency_unit','period','period_unit','d_spacing','d_spacing_unit','pixel_distance','frequency_cycles_per_pixel','point_0_x','point_0_y','point_1_x','point_1_y','coordinate_space','source_frame','source_roi','calibration_id','calibration_revision','calibration_source','result_object_id','input_object_id','request_id','manifest_sha256'];
- const rows=entries.map(entry=>{const m=asRecord(entry),scope=entry.source??entry.scope??{},cal=m.xy_calibration??m.calibration_record,points=m.points??[];return [measurementName(entry),measurementType(entry),measurementStatus(entry),m.physical_distance??m.distance_physical,m.physical_unit,m.physical_frequency_magnitude,m.physical_frequency_unit,m.period,m.period_unit,m.d_spacing,m.d_spacing_unit,m.distance_pixels,m.frequency_distance_cycles_per_pixel,points[0]?.[0],points[0]?.[1],points[1]?.[0],points[1]?.[1],m.coordinate_space,Number.isInteger(scope.frame_index)?(scope.frame_index as number)+1:null,(Array.isArray(scope.source_rect_xyxy??m.scientific_grid_identity?.source_rect_xyxy??m.source_rect_xyxy)?JSON.stringify(scope.source_rect_xyxy??m.scientific_grid_identity?.source_rect_xyxy??m.source_rect_xyxy):null),cal?.calibration_id,cal?.revision,cal?.source_text??cal?.source,m.object_id,m.parent_object_id,m.request_id,entry.measurement_manifest_sha256??entry.manifest_sha256];});
+ const columns=['name','type','status','distance','distance_unit','frequency','frequency_unit','period','period_unit','d_spacing','d_spacing_unit','pixel_distance','frequency_cycles_per_pixel','point_0_x','point_0_y','point_1_x','point_1_y','coordinate_space','source_frame','source_roi','calibration_id','calibration_revision','calibration_source','result_object_id','input_object_id','request_id','manifest_sha256','pixel_period'];
+ const rows=entries.map(entry=>{const m=asRecord(entry),scope=entry.source??entry.scope??{},cal=m.xy_calibration??m.calibration_record,points=m.points??[];return [measurementName(entry),measurementType(entry),measurementStatus(entry),m.physical_distance??m.distance_physical,m.physical_unit,m.physical_frequency_magnitude,m.physical_frequency_unit,m.period,m.period_unit,m.d_spacing,m.d_spacing_unit,m.distance_pixels,m.frequency_distance_cycles_per_pixel,points[0]?.[0],points[0]?.[1],points[1]?.[0],points[1]?.[1],m.coordinate_space,Number.isInteger(scope.frame_index)?(scope.frame_index as number)+1:null,(Array.isArray(scope.source_rect_xyxy??m.scientific_grid_identity?.source_rect_xyxy??m.source_rect_xyxy)?JSON.stringify(scope.source_rect_xyxy??m.scientific_grid_identity?.source_rect_xyxy??m.source_rect_xyxy):null),cal?.calibration_id,cal?.revision,cal?.source_text??cal?.source,m.object_id,m.parent_object_id,m.request_id,entry.measurement_manifest_sha256??entry.manifest_sha256,m.pixel_period];});
  return [columns,...rows].map(row=>row.map(cell=>tabularCell(cell,delimiter)).join(delimiter)).join('\r\n')+'\r\n';
 }
 export class MeasurementWorkspace {
+ declare pendingAnnotations:NonNullable<MeasurementWorkspaceOptions['pendingAnnotations']>;
  declare getState: MeasurementWorkspaceOptions['getState'];declare api: MeasurementWorkspaceOptions['api'];
  declare onSelect: NonNullable<MeasurementWorkspaceOptions['onSelect']>;declare onJump: NonNullable<MeasurementWorkspaceOptions['onJump']>;declare onUpdate: NonNullable<MeasurementWorkspaceOptions['onUpdate']>;declare onError: NonNullable<MeasurementWorkspaceOptions['onError']>;
  declare document: PresentationDocument | null | undefined;declare entries: MeasurementEntry[];declare selectedId: string | null | undefined;declare checked: Set<string | undefined>;declare ticket: number;declare current: MeasurementCurrent | null | undefined;declare truncated?: boolean;
  declare el: (id: string)=>PresentationElement | null | undefined;
- constructor({getState,api,onSelect=()=>{},onJump=()=>{},onUpdate=()=>{},onError=()=>{},document:doc=(globalThis as PresentationEnvironment).document}: MeasurementWorkspaceOptions={}){
-  Object.assign(this,{getState,api,onSelect,onJump,onUpdate,onError,document:doc});this.entries=[];this.selectedId=null;this.checked=new Set();this.ticket=0;this.current=null;
+ constructor({getState,api,onSelect=()=>{},onJump=()=>{},onUpdate=()=>{},onError=()=>{},pendingAnnotations=()=>[],document:doc=(globalThis as PresentationEnvironment).document}: MeasurementWorkspaceOptions={}){
+  Object.assign(this,{getState,api,onSelect,onJump,onUpdate,onError,pendingAnnotations,document:doc});this.entries=[];this.selectedId=null;this.checked=new Set();this.ticket=0;this.current=null;
   const el=(id: string)=>doc?.getElementById(id);this.el=el;
   if(el('measurement-sort'))el('measurement-sort')!.onchange=()=>this.render();
   if(el('measurement-history'))el('measurement-history')!.onchange=()=>this.render();
@@ -104,6 +114,8 @@ export class MeasurementWorkspace {
  async run(callback: ()=>unknown){try{return await callback();}catch(error){this.onError(error);}}
  selected(){return this.entries.find(entry=>asRecord(entry).object_id===this.selectedId)??null;}
  displayEntry(entry: MeasurementEntry){
+  if(this.current?.object_id!==this.getState?.()?.object?.object_id&&['current','active','stale','needs_remeasure','needs_remeasurement'].includes(entry.status??''))return {...entry,status:'historical',status_reason:'来源视图已改变；等待读回当前结果',same_grid:false,visible_in_current_view:false,annotation_matches_current:false,can_remeasure:false};
+  if(entry.annotation_id&&this.pendingAnnotations().includes(entry.annotation_id)&&['current','active','stale','needs_remeasure','needs_remeasurement'].includes(entry.status??''))return {...entry,status:'needs_remeasurement',status_reason:'位置已修改，先前结果仅保留为证据',annotation_matches_current:false,can_remeasure:false};
   const state=this.getState!();if(this.current?.object_id!==state?.object?.object_id||!['current','active'].includes(entry.status as string)||entry.same_grid!==true||entry.annotation_matches_current!==true)return entry;
   const mark=state!.object!.annotations?.find(value=>value.annotation_id===entry.annotation_id);
   // A current automatic label can be saved after the immutable measurement.
@@ -112,7 +124,7 @@ export class MeasurementWorkspace {
   return typeof mark?.text==='string'&&mark.text.trim()?{...entry,name:mark.text}:entry;
  }
  exportSelection({selectedOnly=false}: {selectedOnly?:boolean}={}){const checked=this.entries.filter(entry=>this.checked.has(asRecord(entry).object_id));return (checked.length?checked:selectedOnly&&this.selected()?[this.selected()!]:this.visible()).map(entry=>this.displayEntry(entry));}
- visible(){const history=this.el('measurement-history')?.checked??false;let rows=this.entries.filter(e=>history||!['historical','history'].includes(e.status as string)).map(entry=>this.displayEntry(entry));const sort=this.el('measurement-sort')?.value??'record';if(sort==='name')rows=(rows as MeasurementEntry[] & {toSorted?: (compare: (a: MeasurementEntry,b: MeasurementEntry)=>number)=>MeasurementEntry[]}).toSorted?(rows as MeasurementEntry[] & {toSorted: (compare: (a: MeasurementEntry,b: MeasurementEntry)=>number)=>MeasurementEntry[]}).toSorted((a,b)=>measurementName(a).localeCompare(measurementName(b))):[...rows].sort((a,b)=>measurementName(a).localeCompare(measurementName(b)));if(sort==='value')rows=[...rows].sort((a,b)=>(measurementValues(a)[0]?.value??Infinity)-(measurementValues(b)[0]?.value??Infinity));return rows;}
+ visible(){const history=this.el('measurement-history')?.checked??false;let rows=this.entries.map(entry=>this.displayEntry(entry)).filter(e=>history||!['historical','history'].includes(e.status as string));const sort=this.el('measurement-sort')?.value??'record';if(sort==='name')rows=(rows as MeasurementEntry[] & {toSorted?: (compare: (a: MeasurementEntry,b: MeasurementEntry)=>number)=>MeasurementEntry[]}).toSorted?(rows as MeasurementEntry[] & {toSorted: (compare: (a: MeasurementEntry,b: MeasurementEntry)=>number)=>MeasurementEntry[]}).toSorted((a,b)=>measurementName(a).localeCompare(measurementName(b))):[...rows].sort((a,b)=>measurementName(a).localeCompare(measurementName(b)));if(sort==='value')rows=[...rows].sort((a,b)=>(measurementValues(a)[0]?.value??Infinity)-(measurementValues(b)[0]?.value??Infinity));return rows;}
  hasAnnotation(id: string){return Boolean(this.latestForAnnotation(id));}
  latestForAnnotation(id: string){const entries=this.entries.filter(e=>e.annotation_id===id);return entries.find(e=>['current','active','stale','needs_remeasure','needs_remeasurement'].includes(e.status as string))??entries.at(-1)??null;}
  selectAnnotation(id: string){const entry=this.latestForAnnotation(id);if(!entry)return false;this.select(asRecord(entry).object_id,{notify:false});this.el('measurement-rows')?.querySelector(`[data-measurement-id="${asRecord(entry).object_id}"]`)?.scrollIntoView?.({block:'nearest'});return true;}
@@ -125,17 +137,20 @@ export class MeasurementWorkspace {
  }
  renderDetails(target: PresentationElement | null | undefined,details: DetailRows){if(!target||!this.document)return;target.replaceChildren();const dl=this.document!.createElement('dl');for(const [name,value]of details){const dt=this.document!.createElement('dt'),dd=this.document!.createElement('dd');dt.textContent=name;dd.textContent=typeof value==='object'?JSON.stringify(value):String(value);dl.append(dt,dd);}target.append(dl);}
  render(){
-  this.el('measurement-workspace')?.classList?.toggle('empty-results',this.entries.length===0);
-  this.renderDetails(this.el('data-inspector'),inspectorDetails(this.current??{}));const body=this.el('measurement-rows');if(!body||!this.document)return;body.replaceChildren();const visible=this.visible();
-  if(this.el('measurement-count'))this.el('measurement-count')!.textContent=`${visible.length} / ${this.entries.length} 条${this.truncated?' · 达到读取上限':''}`;
+  const visible=this.visible();this.el('measurement-workspace')?.classList?.toggle('empty-results',visible.length===0);
+  this.el('measurement-workspace')?.classList?.toggle('history-hidden-results',this.entries.length>0&&visible.length===0);
+  const empty=this.el('measurement-empty');if(empty){empty.hidden=visible.length>0;empty.textContent=this.entries.length?'当前筛选隐藏了历史结果；勾选“包含历史版本”查看。':'尚无保存测量；点选峰或绘制线段后点击“测量”。';}
+  this.renderDetails(this.el('data-inspector'),inspectorDetails(this.current??{}));const body=this.el('measurement-rows');if(!body||!this.document)return;body.replaceChildren();
+  if(this.el('measurement-count'))this.el('measurement-count')!.textContent=visible.length?`${visible.length} / ${this.entries.length} 条${this.truncated?' · 达到读取上限':''}`:this.entries.length?`历史 ${this.entries.length} 条 · 已筛选隐藏`:'尚无测量';
   for(const entry of visible){const m=asRecord(entry),row=this.document!.createElement('tr');row.dataset.measurementId=m.object_id;row.setAttribute('aria-selected',String(this.selectedId===m.object_id));row.classList.toggle('selected',this.selectedId===m.object_id);row.classList.toggle('stale',['stale','needs_remeasure','needs_remeasurement'].includes(entry.status as string));row.tabIndex=0;
    const checkbox=this.document!.createElement('input');checkbox.type='checkbox';checkbox.checked=this.checked.has(m.object_id);checkbox.setAttribute('aria-label','选择导出 '+measurementName(entry));checkbox.onchange=()=>{if(checkbox.checked)this.checked.add(m.object_id);else this.checked.delete(m.object_id);};checkbox.onclick=event=>event.stopPropagation();const checkCell=this.document!.createElement('td');checkCell.append(checkbox);row.append(checkCell);
-   const values=measurementValues(entry);for(const text of [measurementName(entry)+' · '+measurementType(entry),values.map(v=>`${v.label} ${measurementNumber(v.value)}`).join(' / ')||'未知',values.map(v=>v.unit).join(' / ')||'未知',measurementStatus(entry)]){const cell=this.document!.createElement('td');cell.textContent=text;row.append(cell);}
+   const values=measurementValues(entry);for(const text of [measurementName(entry)+' · '+measurementType(entry),values.map(v=>`${v.label} ${measurementNumber(v.value)}`).join(' / ')||(['stale','needs_remeasure','needs_remeasurement'].includes(entry.status??'')?'待重测':'未知'),values.map(v=>v.unit).join(' / ')||'—',this.sourceFftName(entry),measurementStatus(entry)]){const cell=this.document!.createElement('td');cell.textContent=text;row.append(cell);}
    row.onclick=()=>this.select(m.object_id);row.onkeydown=event=>{if(['Enter',' '].includes(event.key)){event.preventDefault();this.select(m.object_id);}};body.append(row);
   }
-  const selected=this.selected();this.renderDetails(this.el('measurement-detail'),selected?measurementDetails(selected):[['结果','选择一行查看科学坐标、来源与版本；查看不会重算']]);
+  const rawSelected=this.selected(),selected=rawSelected?this.displayEntry(rawSelected):null;this.renderDetails(this.el('measurement-detail'),selected?measurementSummary(selected,this.sourceFftName(selected)):[['结果','选择一行查看摘要；查看不会重算']]);this.renderDetails(this.el('measurement-evidence'),selected?measurementDetails(selected):[['证据','选中结果后可查看原精度、坐标、标定和请求身份']]);
   if(this.el('measurement-jump')){this.el('measurement-jump')!.hidden=!requiresMeasurementJump(selected);this.el('measurement-jump')!.disabled=!selected;}
   if(this.el('measurement-update'))this.el('measurement-update')!.disabled=!selected||selected.can_remeasure===false||['historical','history'].includes(selected.status as string);
  }
+ sourceFftName(entry:MeasurementEntry){const m=asRecord(entry),scope=entry.source??entry.scope??{},id=(scope as {fft_object_id?:unknown}).fft_object_id??m.scientific_grid_identity?.source_grid_object_id;if(typeof id!=='string'||m.coordinate_space!=='frequency_cycles_per_pixel')return '非 FFT / 来源未记录';const state=this.getState?.() as {window_collection?:{windows?:{title:string;object_id:string;source_reference?:{raw_fft_object_id?:string}}[]}}|undefined;return state?.window_collection?.windows?.find(window=>window.object_id===id||window.source_reference?.raw_fft_object_id===id)?.title??'已保存 FFT（详证）';}
  download(delimiter: string,extension: string){try{const entries=this.exportSelection();if(!entries.length)throw new Error('当前没有可导出的保存测量');const blob=new Blob(['\uFEFF',exportMeasurementTable(entries,{delimiter})],{type:extension==='csv'?'text/csv;charset=utf-8':'text/tab-separated-values;charset=utf-8'}),url=URL.createObjectURL(blob),a=this.document!.createElement('a');a.href=url;a.download=`mcp-dm-measurements.${extension}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){this.onError(error);}}
 }
