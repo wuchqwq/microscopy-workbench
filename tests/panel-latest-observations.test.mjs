@@ -31,13 +31,13 @@ test('owned restoration revalidates a working source reference while preserving 
 });
 test('a forged or unavailable optional latest reference is omitted without losing a qualified active FFT',async()=>{
  for(const mode of ['different-frame','different-grid','self-consistent-crop','changed-fingerprint','unavailable']){
-  const store=completed();store.admit(fft(),frame,reference);store.close(store.snapshot().revision,store.snapshot().windows.find(w=>w.role==='source').window_id);const checkpoint=store.checkpoint();if(mode==='different-grid')checkpoint.records[0].latest_observation_grid_key='spatial:forged';
-  const crop={...latest(),panels:[{...panel,source_rect_xyxy:[0,0,32,32]}]};if(mode==='self-consistent-crop'){checkpoint.records[0].latest_observation_grid_key='spatial:'+F+':'+JSON.stringify([0,0,32,32]);checkpoint.records[0].latest_observation_asset_fingerprint=panelWindowFingerprint(crop);}
+  const store=completed();store.admit(fft(),frame,reference);store.close(store.snapshot().revision,store.snapshot().windows.find(w=>w.role==='source').window_id);const checkpoint=store.checkpoint(),activeFFT=checkpoint.records.find(record=>record.entry.object_id===R);assert.ok(activeFFT);if(mode==='different-grid')activeFFT.latest_observation_grid_key='spatial:forged';
+  const crop={...latest(),panels:[{...panel,source_rect_xyxy:[0,0,32,32]}]};if(mode==='self-consistent-crop'){activeFFT.latest_observation_grid_key='spatial:'+F+':'+JSON.stringify([0,0,32,32]);activeFFT.latest_observation_asset_fingerprint=panelWindowFingerprint(crop);}
   const restored=new PanelWindowStore();restored.admit(fft(),frame);await restored.restore(checkpoint,fft(),frame,async object_id=>{
    if(object_id===V3&&mode==='unavailable')throw Error('Controlled unavailable saved view');const object=object_id===V3?latest():object_id===V1?first():fft();if(object_id===V3&&mode==='changed-fingerprint')object.files_sha256={'preview.png':'b'.repeat(64)};
    return {object:object_id===V3&&mode==='self-consistent-crop'?crop:object,frame:object_id===V3&&mode==='different-frame'?{...frame,frame_object_id:id(8)}:frame,png};
   });
-  assert.equal(restored.snapshot().windows[0].object_id,R);assert.equal(restored.snapshot().windows[0].latest_observation_view_object_id,undefined);assert.equal(restored.snapshot().windows[0].source_reference.input_view_object_id,V1);
+  assert.equal(restored.snapshot().windows[0].object_id,R);assert.equal(restored.snapshot().windows[0].latest_observation_view_object_id,undefined);assert.equal(restored.snapshot().windows[0].source_reference.input_view_object_id,V1);if(mode==='different-grid')assert.equal(restored.snapshot().closed_windows.find(window=>window.role==='source').latest_observation_view_object_id,V3,'a separately qualified hidden source reference is retained');
  }
 });
 test('an explicitly verified display or calibration successor keeps all ROIs editable and propagates later edits',()=>{
