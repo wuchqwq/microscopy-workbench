@@ -2,7 +2,7 @@
 // These checks qualify presentation state, not native browser gestures.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {WindowWorkspace,readWindowCollection,tiledWindowLayouts,readWindowCamera,readWindowViewContext} from '../ui/image-panel/window-workspace.mjs';
+import {WindowWorkspace,readWindowCollection,tiledWindowLayouts,readWindowCamera,readWindowViewContext,readWindowUiPanels} from '../ui/image-panel/window-workspace.mjs';
 
 const copy=value=>JSON.parse(JSON.stringify(value));
 const id=n=>n.toString(16).padStart(32,'0');
@@ -187,4 +187,9 @@ test('window context metadata includes the exact active draft lease and preserve
 });
 test('window camera failure is not silently replayed by another request to flush metadata',async()=>{
  const h=await harness(collection(),{camera:true});h.failCamera();h.body(id(1)).onwheel(h.event(h.body(id(1)),80,60,{deltaY:-30}));await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.length;await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);assert.equal(h.requests.length,count);assert.equal(h.state.last_operation.request_id,'original-request');assert.equal(h.state.edit_state.dirty,true);
+});
+
+test('bounded panel preference reader accepts only actual panels and leaves legacy absence unknown',()=>{
+ const valid={side:'properties',settings:true,results:false};assert.deepEqual(readWindowUiPanels(valid),valid);for(const bad of [null,{...valid,side:'other'},{...valid,settings:'true'},{...valid,unknown:true}])assert.equal(readWindowUiPanels(bad),null);
+ const context={version:1,object_id:id(12),panel_mapping_fingerprint:'f'.repeat(64),camera:{scale:1,center_image_xy:[64,48]},selection_candidate:null,selected_annotation_id:null};assert.equal(readWindowViewContext(context).ui_panels,undefined);assert.deepEqual(readWindowViewContext({...context,ui_panels:valid}).ui_panels,valid);assert.equal(readWindowViewContext({...context,ui_panels:{...valid,extra:true}}),null);
 });

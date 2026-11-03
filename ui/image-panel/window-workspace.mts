@@ -4,7 +4,8 @@ import {createSourceOverlay} from './window-source-overlay.mjs';
 export interface WindowLayout {x:number;y:number;width:number;height:number;z:number;}
 export interface WindowSourceReference {input_view_object_id:string;frame_object_id:string;raw_fft_object_id:string;processing_rect_xyxy:readonly number[];calibration_relation:'same'|'different'|'unknown';input_view_context?:WindowViewContext;}
 export interface WindowCamera {scale:number;center_image_xy:readonly [number,number];}
-export interface WindowViewContext {version:1;object_id:string;panel_mapping_fingerprint:string;camera:WindowCamera;selection_candidate:unknown;selected_annotation_id:string|null;camera_origin?:'new_fit_preference';}
+export interface WindowUiPanels {side:'none'|'properties'|'research';settings:boolean;results:boolean;}
+export interface WindowViewContext {version:1;object_id:string;panel_mapping_fingerprint:string;camera:WindowCamera;ui_panels?:WindowUiPanels;selection_candidate:unknown;selected_annotation_id:string|null;camera_origin?:'new_fit_preference';}
 // A decoded, qualified clean base supplied by the single editor. It contains
 // no saved annotation layer and never qualifies a passive saved-object asset.
 export interface ActiveSavedImage {object_id:string;image:BrowserElement;panel_mapping_fingerprint:string;object:unknown;}
@@ -25,7 +26,7 @@ interface WindowOptions {
  assetTimeoutMs?:number;assetTimer?:{set:(callback:()=>void,milliseconds:number)=>unknown;clear:(id:unknown)=>void};
 }
 interface Frame {root:BrowserElement;header:BrowserElement;body:BrowserElement;title:BrowserElement;status:BrowserElement;source:BrowserElement;close:BrowserElement;fit:BrowserElement;edit:BrowserElement;retry:BrowserElement;image:BrowserElement|null;savedBase:(ActiveSavedImage&{frame_object_id:string|null})|null;assetObject:string|null;loadingObject:string|null;assetTicket:number;assetFailedObject:string|null;cancelAsset:(()=>void)|null;camera:{x:number;y:number;scale:number};imageSize:readonly number[];mappingFingerprint:string|null;appliedCamera:string|null;objectMetadata:unknown;overlay:BrowserElement|null;}
-interface PendingCamera {window_id:string;object_id:string;camera:WindowCamera;epoch:number;}
+interface PendingCamera {window_id:string;object_id:string;camera:WindowCamera;ui_panels?:WindowUiPanels;epoch:number;}
 type LayoutGesture={kind:'move'|'resize';window_id:string;pointer_id:number;start:readonly number[];before:WindowLayout;capture:BrowserElement};
 const record=(value:unknown):value is Record<string,unknown>=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
 const finite=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value);
@@ -38,10 +39,14 @@ export function readWindowCamera(raw:unknown):WindowCamera|null {
  if(!record(raw)||!finite(raw.scale)||raw.scale<1e-6||raw.scale>1e4||!Array.isArray(raw.center_image_xy)||raw.center_image_xy.length!==2||!raw.center_image_xy.every(v=>finite(v)&&Math.abs(v)<=1e7))return null;
  return {scale:raw.scale,center_image_xy:[raw.center_image_xy[0] as number,raw.center_image_xy[1] as number]};
 }
+export function readWindowUiPanels(raw:unknown):WindowUiPanels|null {
+ if(!record(raw)||Object.keys(raw).some(k=>!['side','settings','results'].includes(k))||!['none','properties','research'].includes(String(raw.side))||typeof raw.settings!=='boolean'||typeof raw.results!=='boolean')return null;
+ return {side:raw.side as WindowUiPanels['side'],settings:raw.settings,results:raw.results};
+}
 export function readWindowViewContext(raw:unknown,object?:{object_id:string},fingerprint?:string):WindowViewContext|null {
  if(!record(raw)||raw.version!==1||!objectId(raw.object_id)||typeof raw.panel_mapping_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(raw.panel_mapping_fingerprint)||object&&raw.object_id!==object.object_id||fingerprint!==undefined&&raw.panel_mapping_fingerprint!==fingerprint||raw.selected_annotation_id!==null&&(typeof raw.selected_annotation_id!=='string'||raw.selected_annotation_id.length<1||raw.selected_annotation_id.length>64)||raw.selection_candidate!==null&&!record(raw.selection_candidate))return null;
  if(raw.camera_origin!==undefined&&raw.camera_origin!=='new_fit_preference')return null;
- const camera=readWindowCamera(raw.camera);return camera?{version:1,object_id:raw.object_id,panel_mapping_fingerprint:raw.panel_mapping_fingerprint,camera,selection_candidate:raw.selection_candidate,selected_annotation_id:raw.selected_annotation_id as string|null,...(raw.camera_origin==='new_fit_preference'?{camera_origin:'new_fit_preference' as const}:{})}:null;
+ const camera=readWindowCamera(raw.camera),panels=raw.ui_panels===undefined?undefined:readWindowUiPanels(raw.ui_panels);if(panels===null)return null;return camera?{version:1,object_id:raw.object_id,panel_mapping_fingerprint:raw.panel_mapping_fingerprint,camera,...(panels?{ui_panels:panels}:{}),selection_candidate:raw.selection_candidate,selected_annotation_id:raw.selected_annotation_id as string|null,...(raw.camera_origin==='new_fit_preference'?{camera_origin:'new_fit_preference' as const}:{})}:null;
 }
 export function readWindowCollection(raw:unknown):WindowCollection|null {
  if(!record(raw)||raw.schema_version!==1||!Number.isSafeInteger(raw.revision)||(raw.revision as number)<0||!Array.isArray(raw.windows)||raw.windows.length>5||raw.frame_object_id!==null&&!objectId(raw.frame_object_id)||raw.active_window_id!==null&&!boundedId(raw.active_window_id))return null;
@@ -189,26 +194,26 @@ export class WindowWorkspace {
  setSwitchLocked(locked:boolean):void {if(this.switchLocked===locked)return;this.switchLocked=locked;for(const entry of this.collection?.windows??[]){const frame=this.frames.get(entry.window_id);if(frame)this.updateFrame(frame,entry,entry.window_id===this.collection?.active_window_id);}this.resize();}
  async requestActivation(id:string):Promise<void>{if(this.switchLocked)return;const entry=[...this.collection?.windows??[],...this.collection?.closed_windows??[]].find(value=>value.window_id===id);if(!entry||id===this.collection?.active_window_id||!this.options.onActivate)return;try{await this.options.onActivate(id,entry.object_id);}catch(error){this.options.onError((error as Error).message);}}
  async awaitStableMetadata():Promise<void>{if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');for(;;){if(this.metadataError)throw this.metadataError;this.flushCameras();const pending=this.writes;await pending;if(this.metadataError)throw this.metadataError;if(this.writes===pending&&!this.pendingCameras.size)break;}if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');}
- async saveActiveContext(camera:WindowCamera,annotationId:string|null,draftRevision:number):Promise<void>{
-  await this.awaitStableMetadata();await this.enqueue(async()=>{const collection=this.collection;if(!collection)throw new Error('当前窗口集合不可用');await this.metadata('window-context',{collection_revision:collection.revision,camera,selected_annotation_id:annotationId},undefined,{draft_revision:draftRevision});});
+ async saveActiveContext(camera:WindowCamera,annotationId:string|null,draftRevision:number,uiPanels?:WindowUiPanels):Promise<void>{
+  await this.awaitStableMetadata();await this.enqueue(async()=>{const collection=this.collection;if(!collection)throw new Error('当前窗口集合不可用');await this.metadata('window-context',{collection_revision:collection.revision,camera,selected_annotation_id:annotationId,...(uiPanels?{ui_panels:uiPanels}:{})},undefined,{draft_revision:draftRevision});});
  }
  reconcileMetadata(state:HostState):void {
-  this.sync(state);for(const [key,pending]of this.pendingCameras){const entry=this.collection?.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(!entry){this.pendingCameras.delete(key);this.failedCameras.delete(key);continue;}const context=readWindowViewContext(entry.view_context,{object_id:entry.object_id});if(context&&JSON.stringify(context.camera)===JSON.stringify(pending.camera)){this.pendingCameras.delete(key);this.failedCameras.delete(key);}}
+  this.sync(state);for(const [key,pending]of this.pendingCameras){const entry=this.collection?.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(!entry){this.pendingCameras.delete(key);this.failedCameras.delete(key);continue;}const context=readWindowViewContext(entry.view_context,{object_id:entry.object_id});if(context&&JSON.stringify(context.camera)===JSON.stringify(pending.camera)&&(!pending.ui_panels||JSON.stringify(context.ui_panels)===JSON.stringify(pending.ui_panels))){this.pendingCameras.delete(key);this.failedCameras.delete(key);}}
   this.metadataError=this.failedCameras.size?new Error('相机保存尚未确认；请在该窗口重新调整或适应图像后再切换，不重放旧保存。'):null;
  }
- queueActiveCamera(camera:WindowCamera):void {const state=this.options.getState(),id=this.collection?.active_window_id;if(this.switchLocked||!state?.panel_mapping_fingerprint||!id)return;this.queueCamera(id,state.object.object_id,camera);}
+ queueActiveCamera(camera:WindowCamera,uiPanels?:WindowUiPanels):void {const state=this.options.getState(),id=this.collection?.active_window_id;if(this.switchLocked||!state?.panel_mapping_fingerprint||!id)return;this.queueCamera(id,state.object.object_id,camera,uiPanels);}
  private savePassiveCamera(id:string,frame:Frame){const entry=this.collection?.windows.find(value=>value.window_id===id);if(!entry||this.collection?.active_window_id===id||!frame.image||frame.assetObject!==entry.object_id||!frame.mappingFingerprint)return;const box=frame.body.getBoundingClientRect(),camera=readWindowCamera({scale:frame.camera.scale,center_image_xy:[(box.width/2-frame.camera.x)/frame.camera.scale,(box.height/2-frame.camera.y)/frame.camera.scale]});if(!camera)return;frame.appliedCamera=JSON.stringify([camera,box.width,box.height]);this.queueCamera(id,entry.object_id,camera);}
- private queueCamera(windowId:string,object:string,raw:WindowCamera){
+ private queueCamera(windowId:string,object:string,raw:WindowCamera,uiPanels?:WindowUiPanels){
   const camera=readWindowCamera(raw),entry=this.collection?.windows.find(value=>value.window_id===windowId&&value.object_id===object);if(!camera||!entry)return;const key=windowId+':'+object,context=readWindowViewContext(entry.view_context,{object_id:object});
   this.failedCameras.delete(key);if(!this.failedCameras.size)this.metadataError=null;
-  if(context&&JSON.stringify(context.camera)===JSON.stringify(camera)){this.pendingCameras.delete(key);return;}
-  this.pendingCameras.set(key,{window_id:windowId,object_id:object,camera,epoch:++this.cameraEpoch});const timer=this.cameraTimers.get(key);if(timer!==undefined)this.options.cancelSchedule?.(timer);
+  if(context&&JSON.stringify(context.camera)===JSON.stringify(camera)&&(!uiPanels||JSON.stringify(context.ui_panels)===JSON.stringify(uiPanels))){this.pendingCameras.delete(key);return;}
+  this.pendingCameras.set(key,{window_id:windowId,object_id:object,camera,...(uiPanels?{ui_panels:uiPanels}:{}),epoch:++this.cameraEpoch});const timer=this.cameraTimers.get(key);if(timer!==undefined)this.options.cancelSchedule?.(timer);
   if(this.options.schedule)this.cameraTimers.set(key,this.options.schedule(()=>{this.cameraTimers.delete(key);this.flushCameras();},180));else void Promise.resolve().then(()=>this.flushCameras());
  }
  private flushCameras(){
   for(const timer of this.cameraTimers.values())this.options.cancelSchedule?.(timer);this.cameraTimers.clear();
   for(const [key]of this.pendingCameras){if(this.failedCameras.has(key))continue;void this.enqueue(async()=>{if(this.failedCameras.has(key))return;const pending=this.pendingCameras.get(key),collection=this.collection;if(!pending||!collection)return;const entry=collection.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(!entry){this.pendingCameras.delete(key);return;}
-    try{await this.metadata('window-camera',{collection_revision:collection.revision,window_id:pending.window_id,object_id:pending.object_id,camera:pending.camera});if(this.pendingCameras.get(key)?.epoch===pending.epoch){this.pendingCameras.delete(key);const frame=this.frames.get(pending.window_id),latest=this.collection?.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(frame&&latest)this.applyPassiveContext(frame,latest);}}
+    try{await this.metadata('window-camera',{collection_revision:collection.revision,window_id:pending.window_id,object_id:pending.object_id,camera:pending.camera,...(pending.ui_panels?{ui_panels:pending.ui_panels}:{})});if(this.pendingCameras.get(key)?.epoch===pending.epoch){this.pendingCameras.delete(key);const frame=this.frames.get(pending.window_id),latest=this.collection?.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(frame&&latest)this.applyPassiveContext(frame,latest);}}
     catch(error){this.failedCameras.add(key);throw error;}
    });}
  }
