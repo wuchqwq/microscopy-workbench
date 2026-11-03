@@ -95,6 +95,8 @@ body.image-focused .figure-tools{display:none}
 .window-switch-notice span{flex:1;min-width:160px}.window-switch-notice button{font-size:11px;min-height:28px;padding:4px 8px}
 body.window-switching #canvas{pointer-events:none;cursor:wait}
 .window-source-overlay{position:absolute;left:0;top:0;pointer-events:none;transform-origin:0 0;overflow:visible;z-index:2}
+.window-annotation-overlay{position:absolute;left:0;top:0;pointer-events:none;transform-origin:0 0;overflow:visible;z-index:1}
+.window-annotation-overlay svg{display:block;overflow:hidden;pointer-events:none}
 .window-source-svg{display:block;overflow:visible;pointer-events:none}.window-source-outline-0{color:#e7c976}.window-source-outline-1{color:#aac8fa}.window-source-outline-2{color:#a9dfb8}.window-source-outline-3{color:#e9b4d9}.window-source-label{paint-order:stroke;stroke:#0a121b;stroke-width:.3px;stroke-linejoin:round}
 .image-window-resize{position:absolute;right:0;bottom:0;min-width:20px;min-height:20px;padding:0;border:0;border-radius:0;font-size:13px;line-height:20px;background:#263d4b;color:#b1d2dc;cursor:nwse-resize;touch-action:none}
 .single-image-window .active-image-window{left:0!important;top:0!important;width:100%!important;height:100%!important}

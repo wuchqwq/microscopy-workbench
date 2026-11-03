@@ -190,17 +190,9 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  };
  // Prepare immutable render assets before committing the visible identity. A
  // draft can arrive while ancestry lookup/worker I/O is waiting.
- const prepareCurrent=async(r:NativeImageReply):Promise<PreparedView>=>{
-  let value=r.data,display=null,displayId=null;const seen=new Set();
-  for(let n=0;n<64;n++){
-   if(seen.has(value.object_id))fail('Display ancestry contains a cycle');seen.add(value.object_id);
-   if(value.display){display=structuredClone(value.display);displayId=value.object_id;break;}
-   if((['tiff_source','dm_source'] as readonly unknown[]).includes(value.kind))break;
-   const next=value.render_base_object_id??value.base_object_id??value.parent_object_id;
-   if(!objectId.test(((next??'' as string) as string)))break;
-   value=(await journalCall('image_info',{object_id:next})).data;
-   if(n===63)fail('Display ancestry exceeds 64 records');
-  }
+ // This reads an existing immutable PNG only. It never creates a preview to
+ // obtain a clean layer, including for legacy objects without a saved base.
+ const readCleanRender=async(r:NativeImageReply)=>{
   let base=r.data;
   if(objectId.test(((base.render_base_object_id??'' as string) as string)))base=(await journalCall('image_info',{object_id:base.render_base_object_id})).data;
   let clean=null,digest=null;
@@ -213,6 +205,20 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    if(digest!==((base as Metadata).files_sha256 as Metadata)[file]||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')fail('Clean PNG hash or format mismatch');
    clean=bytes.toString('base64');
   }else if(!(r.data.annotations as unknown[]|undefined)?.length){clean=r.png??null;digest=clean?createHash('sha256').update(Buffer.from(clean as string,'base64')).digest('hex'):null;}
+  return {clean,digest,base};
+ };
+ const prepareCurrent=async(r:NativeImageReply):Promise<PreparedView>=>{
+  let value=r.data,display=null,displayId=null;const seen=new Set();
+  for(let n=0;n<64;n++){
+   if(seen.has(value.object_id))fail('Display ancestry contains a cycle');seen.add(value.object_id);
+   if(value.display){display=structuredClone(value.display);displayId=value.object_id;break;}
+   if((['tiff_source','dm_source'] as readonly unknown[]).includes(value.kind))break;
+   const next=value.render_base_object_id??value.base_object_id??value.parent_object_id;
+   if(!objectId.test(((next??'' as string) as string)))break;
+   value=(await journalCall('image_info',{object_id:next})).data;
+   if(n===63)fail('Display ancestry exceeds 64 records');
+  }
+  const {clean,digest,base}=await readCleanRender(r);
   return {object:r.data,png:r.png??null,clean,digest,baseId:base.object_id,display,displayId,sequenceEvidence:r.sequenceEvidence,domainEvidence:r.domainEvidence,domainPng:r.domainPng};
  };
  const commitCurrent=(prepared:PreparedView,{annotationIds=[]}:{annotationIds?:unknown[]}={})=>{
@@ -247,7 +253,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   return {reference,view};
  };
  const syncWindows=(inputViewContext?:PanelWindowViewContext|null)=>windowStore.admit(current,frameIdentity,!spatialReturnReason?spatialReturnReference:null,spatialReturnReference?windowInputCalibrations.get(spatialReturnReference.view_object_id):undefined,inputViewContext);
- const readWindowSaved=async(id:string,{includeFrameAncestry=false}={})=>{
+ const readWindowSaved=async(id:string,{includeFrameAncestry=false,includeCleanRender=false}={})=>{
   const schema=tools.find(tool=>tool.name==='image_info')?.inputSchema as Metadata|undefined,properties=schema?.properties as Metadata|undefined,ancestrySchema=properties?.include_frame_ancestry as Metadata|undefined;
   const bundled=includeFrameAncestry&&ancestrySchema?.type==='boolean',reply=await journalCall('image_info',{object_id:id,...(bundled?{include_frame_ancestry:true}:{})});
   const ancestry=bundled?readImageFrameAncestry(reply.data.frame_ancestry,reply.data):null;
@@ -263,7 +269,14 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(relative.startsWith('..')||path.isAbsolute(relative)||statSync(target).size>2*1024*1024)fail('Window PNG lies outside the bounded workspace',409);
   const bytes=readFileSync(target),delivered=Buffer.from(reply.png,'base64');
   if(bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||createHash('sha256').update(bytes).digest('hex')!==expected||!bytes.equals(delivered))fail('Window saved PNG hash or delivered asset mismatch',409);
-  return {object:reply.data,frame:await findFrameIdentity(reply.data,ancestry),png:reply.png};
+  let cleanRender:Metadata|null=null;
+  if(includeCleanRender){const {clean,digest,base}=await readCleanRender(reply);
+   // An old object may lack enough evidence for a separate vector layer. Keep
+   // its exact baked PNG in that case; do not replace it with a guessed base.
+   const gridMatches=reply.data.scientific_grid_identity===undefined||sameRecord(reply.data.scientific_grid_identity,base.scientific_grid_identity??null),displayMatches=reply.data.display===undefined||sameRecord(reply.data.display,base.display??null);
+   if(typeof clean==='string'&&clean&&digest&&gridMatches&&displayMatches){const cleanBytes=Buffer.from(clean,'base64');if(bytes.length>=24&&cleanBytes.length>=24&&bytes.subarray(16,24).equals(cleanBytes.subarray(16,24)))cleanRender={object_id:id,render_base_object_id:base.object_id,panel_mapping_fingerprint:panelWindowMappingFingerprint(reply.data),png_sha256:digest,png_base64:clean};}
+  }
+  return {object:reply.data,frame:await findFrameIdentity(reply.data,ancestry),png:reply.png,cleanRender};
  };
  const returnFailure=(error:unknown)=>error instanceof SpatialReturnError?error.code:'target_unavailable';
  try{
@@ -910,12 +923,12 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    }
    if(req.method==='GET'&&url.pathname==='/api/window-asset'){
     if([...url.searchParams.keys()].some(key=>!['window_id','revision'].includes(key))||url.searchParams.getAll('window_id').length!==1||url.searchParams.getAll('revision').length!==1||!/^\d{1,16}$/.test(url.searchParams.get('revision')??''))fail('Explicit saved window identity and collection revision required');
-    const revision=Number(url.searchParams.get('revision')),entry=windowStore.lookup(url.searchParams.get('window_id'),revision),saved=await readWindowSaved(entry.object_id,{includeFrameAncestry:true});
+    const revision=Number(url.searchParams.get('revision')),entry=windowStore.lookup(url.searchParams.get('window_id'),revision),saved=await readWindowSaved(entry.object_id,{includeFrameAncestry:true,includeCleanRender:true});
     // Immutable reads can overlap a new adoption or layout publication. Never
     // bind the completed bitmap to a newer object/window collection by recency.
     const latest=windowStore.lookup(entry.window_id,revision);
     if(latest.object_id!==entry.object_id||saved.frame?.frame_object_id!==windowStore.snapshot().frame_object_id||!windowStore.assetMatches(entry.window_id,saved.object,saved.frame))fail('Saved window asset changed while reading; inspect the current collection',409);
-    res.end(JSON.stringify({schema_version:1,collection_revision:revision,window_id:entry.window_id,object_id:entry.object_id,object:publicImageObject(saved.object),panel_mapping_fingerprint:panelWindowMappingFingerprint(saved.object),png_base64:saved.png}));return;
+    res.end(JSON.stringify({schema_version:1,collection_revision:revision,window_id:entry.window_id,object_id:entry.object_id,object:publicImageObject(saved.object),panel_mapping_fingerprint:panelWindowMappingFingerprint(saved.object),png_base64:saved.png,...(saved.cleanRender?{clean_render:saved.cleanRender}:{})}));return;
    }
    if(req.method==='GET'&&url.pathname==='/api/measurements'){
     if([...url.searchParams.keys()].some(key=>key!=='object_id')||url.searchParams.get('object_id')!==current.object_id)fail('Measurement inspection requires the exact current object',409);

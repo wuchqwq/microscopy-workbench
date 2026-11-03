@@ -140,18 +140,23 @@ test('two GUI FFTs retain source and immutable A/B windows; saved assets are bou
 test('saved asset ancestry: a thirteen-node source uses one explicit qualified read without changing the workspace',()=>fixture(async h=>{
  await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
  const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(response.data.object.object_id,V);assert.deepEqual(response.data.object.panels,h.records.get(V).panels);assert.deepEqual(response.data.object.annotations,h.records.get(V).annotations);assert.equal('frame_ancestry' in response.data.object,false);assert.equal(response.data.png_base64,png);assert.deepEqual(h.state(),before);
- const reads=h.calls.slice(start);assert.equal(reads.length,1,'the complete original ancestry must not require a fresh Python/RPC startup for each parent');assert.deepEqual(reads[0],{name:'image_info',args:{object_id:V,include_frame_ancestry:true}});
+ const reads=h.calls.slice(start);assert.equal(reads.length,2,'one ancestry call plus one exact clean-render base read; never one RPC per parent');assert.deepEqual(reads[0],{name:'image_info',args:{object_id:V,include_frame_ancestry:true}});assert.deepEqual(reads[1],{name:'image_info',args:{object_id:id(49)}});
 },{deepSource:true,ancestry:true}));
 
 test('saved asset ancestry: an advertised provider omitting the optional projection keeps the legacy fresh-parent path',()=>fixture(async h=>{
  await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
- const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(h.calls.slice(start).length,13);assert.deepEqual(h.state(),before);
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(h.calls.slice(start).length,14);assert.deepEqual(h.state(),before);
 },{deepSource:true,ancestry:'missing'}));
 
 test('saved asset ancestry: a legacy catalog is never sent a new optional argument',()=>fixture(async h=>{
  await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
- const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(h.calls.slice(start).length,13);assert.ok(h.calls.slice(start).every(call=>!('include_frame_ancestry' in call.args)));assert.deepEqual(h.state(),before);
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(h.calls.slice(start).length,14);assert.ok(h.calls.slice(start).every(call=>!('include_frame_ancestry' in call.args)));assert.deepEqual(h.state(),before);
 },{deepSource:true}));
+
+test('saved clean render: a corrupted existing base is refused without creating a replacement preview',()=>fixture(async h=>{
+ const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),base=h.records.get(V).render_base_object_id,target=path.join(h.workspace,'objects',base,'preview.png');writeFileSync(target,Buffer.from('changed saved base'));const calls=h.calls.length;
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,400);assert.match(response.data.error,/Clean PNG hash or format mismatch/);assert.deepEqual(h.state(),before);assert.ok(h.calls.slice(calls).every(call=>call.name==='image_info'));
+},{deepSource:true,ancestry:true}));
 
 for(const [name,mutate]of [
  ['wrong root',value=>({...value,root_object_id:id(999)})],
