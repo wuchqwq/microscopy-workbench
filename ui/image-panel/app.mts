@@ -34,6 +34,13 @@ import type {WindowCamera,WindowViewContext,WindowUiPanels} from './window-works
 import {checkObservationNote,observationReadback,observationPurpose} from './observation-contract.mjs';
 import type {PanelRoiSnapshot} from './roi-observations.mjs';
 const $=(id:string)=>document.getElementById(id)!,canvas=$('canvas'),ctx=canvas.getContext('2d')!,baseCanvas=$('base-canvas'),baseContext=baseCanvas.getContext('2d',{willReadFrequently:true})!,marksCanvas=$('marks-canvas'),marksContext=marksCanvas.getContext('2d')!,stage=$('image-stage'),viewport=$('viewport');
+// These two existing details are transient menus, not saved side-panel state.
+const transientMenus=[$('research-more'),$('window-index-menu')];
+function withinElement(target:BrowserElement|null,root:BrowserElement){for(let node=target;node;node=node.parentNode)if(node===root)return true;return false;}
+function dismissMenus(restoreFocus=false){let closed=false;for(const menu of transientMenus)if(menu.open){menu.open=false;closed=true;if(restoreFocus)menu.querySelector('summary')?.focus();}return closed;}
+function openResultDialog(){dismissMenus();return $('research-more').querySelector('summary');}
+for(const menu of transientMenus)menu.addEventListener('click',event=>{for(let node:BrowserElement|null=event.target;node&&node!==menu;node=node.parentNode)if(node.tagName==='BUTTON'){menu.open=false;break;}});
+document.addEventListener('pointerdown',event=>{for(const menu of transientMenus)if(menu.open&&!withinElement(event.target,menu))menu.open=false;});
 const cloneWorking=<T,>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
 const key='mcp-dm-panel-token',hash=location.hash.slice(1);if(hash){sessionStorage.setItem(key,hash);history.replaceState(null,'',location.pathname);}const token=sessionStorage.getItem(key);
 let loadedWorkingRevision:number|undefined;
@@ -74,8 +81,8 @@ const workspaceControls=new WorkspaceControls<AppState>({document,getState:()=>s
  settle:settleWorkspaceEdits,prepare:prepareWorkspaceClose,install:installWorkspaceState,
  localDirty:()=>dirty(),blocked:()=>Boolean(busy||drag||windowSwitch||workspaceRestoring||orphanedDraft||autoFailed||roiCreationRecovery||autoSaving||queuedEdits.size&&!explicitEditRetry||remeasuringMarks.size||failedMeasurement||state?.last_operation?.state==='submitted'),
  interactionVersion:()=>interactionEpoch+':'+historyDraft.revision+':'+state.object.object_id,prepareRestore:async()=>{await windowWorkspace.awaitStableMetadata();await draftPublisher;if(draftError)throw draftError;},onRestoreLock:locked=>{workspaceRestoring=locked;windowWorkspace.setSwitchLocked(locked);if(locked&&labelTimer!==null){clearTimeout(labelTimer);labelTimer=null;}diagnostics();},onRestoreConflict:result=>{pending=result;orphanedDraft=true;showPending();},requestId:()=> 'save-'+crypto.randomUUID(),onError:text=>message(text,true),onMessage:text=>message(text)});
-const roiComparisonPanel=new RoiComparisonPanel<AppState>({document,api,getState:()=>state,show:showVerifiedHistoryObject,install:next=>{state={...state,workspace_analysis:next.workspace_analysis};diagnostics();},error:text=>message(text,true)});
-const executionHistoryPanel=new ExecutionHistoryPanel({document,read:()=>api('/api/execution-history'),show:showVerifiedHistoryObject,error:text=>message(text,true)});
+const roiComparisonPanel=new RoiComparisonPanel<AppState>({document,api,getState:()=>state,show:showVerifiedHistoryObject,install:next=>{state={...state,workspace_analysis:next.workspace_analysis};diagnostics();},error:text=>message(text,true),onOpen:openResultDialog});
+const executionHistoryPanel=new ExecutionHistoryPanel({document,read:()=>api('/api/execution-history'),show:showVerifiedHistoryObject,error:text=>message(text,true),onOpen:openResultDialog});
 async function showVerifiedHistoryObject(object_id:string,input_reference?:Readonly<Record<string,unknown>>){if(dirty()||busy||drag||windowSwitch||workspaceRestoring)throw new Error('先完成当前编辑，再查看历史输入；探索记录保持原样。');await act('show',{object_id,...(input_reference?{input_reference}:{})});if(state.object.object_id!==object_id||pending||state.pending_result)throw new Error('结果尚未接纳并显示；请处理待查看状态，历史对话框保持打开。');}
 async function settleWorkspaceEdits(){
  if(workspaceSettling)throw new Error('正在核对各窗口工作编辑，请等待。');
@@ -719,6 +726,7 @@ function deleteSelectedRoi(){
  return true;
 }
 document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&dismissMenus(true)){event.preventDefault();return;}
  if((event.ctrlKey||event.metaKey)&&!event.altKey&&event.key.toLowerCase()==='s'&&!$('usage-dialog').open){event.preventDefault();void workspaceControls.save().catch(error=>message((error as Error).message,true));return;}
  if(workspaceRestoring||windowSwitch||observationSavePhase||roiCreationRecovery||$('usage-dialog').open||textEntry(event.target))return;
  if(event.key==='Delete'&&!event.ctrlKey&&!event.metaKey&&!event.altKey){

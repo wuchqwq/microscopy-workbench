@@ -117,3 +117,12 @@ body{height:100vh;display:flex;flex-direction:column}.workbench-header{flex-shri
 #roi-comparison-dialog .comparison-details{margin-top:6px}#roi-comparison-dialog .comparison-details>summary{padding:3px 17px 3px 0;font-size:11px;white-space:normal}#roi-comparison-dialog .comparison-details>summary::after{right:0;top:0;font-size:17px}#roi-comparison-dialog .comparison-details>pre{margin:6px 0 0;max-width:290px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px}
 
 .research-more{position:relative;flex:none}.research-more>summary{cursor:pointer;font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:5px}.research-more-content{position:absolute;top:100%;right:0;z-index:30;width:270px;padding:10px;background:#182630;border:1px solid var(--border);box-shadow:0 6px 18px #0008;display:flex;flex-direction:column;gap:7px}.research-more-content button{width:100%;text-align:left}#execution-history-dialog pre{font-size:10px;max-width:470px;max-height:210px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* Keep the existing sidebars beside, rather than over, the narrow desktop image.
+   Camera/selection state is untouched; Fit uses the actual unobscured viewport. */
+@media(min-width:600px) and (max-width:850px){
+ .properties-panel{width:min(292px,40vw);box-shadow:none}
+ .properties-open .canvas-area{margin-right:min(292px,40vw)}
+ .research-panel{width:min(320px,42vw);box-shadow:none}
+ .research-open .canvas-area{margin-right:min(320px,42vw)}
+}

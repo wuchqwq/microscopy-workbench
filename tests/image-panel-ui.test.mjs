@@ -128,7 +128,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={
  return {$,bodyClasses,calls,draftCalls,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},finishRoi:async()=>{await sandbox.finishRoiSave();flush();},
   delayAction(promise){waitAction=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
-  nativeAction:action=>desktopAction(action),
+  nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
   failDraft(message='Controlled draft delivery failure'){draftFailure=message;},
   actionResult(value){nextActionResult=typeof value==='function'?value:copy(value);},
@@ -1376,4 +1376,21 @@ test('legacy view without recorded UI panels uses an explicit default instead of
 
 test('readonly native close inspection reports loaded revision and refuses a new local selection without fetching or parking',async()=>{
  const f=recoveryPendingFixture();f.source.workspace_analysis={...f.source.workspace_analysis,status:'clean',recovery_available:false};const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();await h.settle();const before={gets:h.getCalls.length,actions:h.actionTrace.length,draft:h.inspect().draft};const inspected=await h.nativeAction('inspect-close-state');assert.equal(inspected.ok,true,inspected.error);assert.equal(inspected.working_revision,3);assert.equal(h.getCalls.length,before.gets);assert.equal(h.actionTrace.length,before.actions);h.draw('rectangle');await h.settle();const local=h.inspect().draft,afterGets=h.getCalls.length,afterActions=h.actionTrace.length;const held=await h.nativeAction('inspect-close-state');assert.equal(held.ok,false);assert.deepEqual(h.inspect().draft,local);assert.equal(h.getCalls.length,afterGets);assert.equal(h.actionTrace.length,afterActions);
+});
+
+test('result menu is dismissed before opening a readonly report and focus returns to its visible summary',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const menu=h.$('research-more'),summary=h.$('results-menu-summary');menu.querySelector=selector=>selector==='summary'?summary:null;menu.open=true;h.$('open-roi-comparisons').focus();const before=h.inspect(),writes=h.calls.length;
+ await h.click('open-roi-comparisons');assert.equal(menu.open,false,'a dismissed report must not leave its launch menu over Return');assert.equal(h.$('roi-comparison-dialog').open,true);assert.equal(h.calls.length,writes);assert.deepEqual(h.inspect(),before);
+ await h.click('close-roi-comparisons');assert.equal(h.$('roi-comparison-dialog').open,false);assert.equal(h.active(),summary);assert.deepEqual(h.inspect(),before);
+});
+
+test('Escape dismisses transient menus before clearing a retained ROI draft',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const menu=h.$('research-more'),summary=h.$('results-menu-summary');menu.querySelector=()=>summary;menu.open=true;summary.focus();const before=h.inspect(),writes=h.calls.length,drafts=h.draftCalls.length;h.key('Escape');
+ assert.equal(menu.open,false);assert.equal(h.active(),summary);assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,writes);assert.equal(h.draftCalls.length,drafts);
+});
+
+test('outside pointer and nested menu-action clicks dismiss menus without synthesizing scientific actions',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const result=h.$('research-more'),windows=h.$('window-index-menu'),inside=h.$('nested-label'),button=h.$('menu-action');button.tagName='BUTTON';inside.parentNode=button;button.parentNode=windows;const before=h.inspect(),writes=h.calls.length;
+ result.open=true;windows.open=true;h.documentEvent('pointerdown',inside);assert.equal(result.open,false);assert.equal(windows.open,true);windows.listeners.click({target:inside});assert.equal(windows.open,false);
+ result.open=true;h.documentEvent('pointerdown',h.$('fit-canvas'));assert.equal(result.open,false);assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,writes);
 });

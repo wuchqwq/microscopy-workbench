@@ -10,3 +10,10 @@ test('opening exploratory history is read-only and retains exact float input ind
  const sourceButton=tr.children[3].children[0];await sourceButton.onclick();assert.deepEqual(shown,['a'.repeat(32)]);assert.deepEqual(record.input_snapshot,original);
 });
 test('unknown/unqualified executions are not presented as successfully validated history',()=>{assert.equal(executionHistoryLabel({status:'completed',qualification:'unavailable'}),'来源尚无法核对');assert.equal(executionHistoryLabel({status:'unknown',qualification:'validated'}),'原请求结果未知');});
+
+test('history dismisses its menu before a delayed read and restores a visible focus target',async()=>{
+ let focused=null,resolveRead,menuOpen=true,reads=0;const elements=new Map();class Element{constructor(){this.children=[];this.listeners={};}append(...items){this.children.push(...items);}replaceChildren(...items){this.children=items;}addEventListener(name,fn){this.listeners[name]=fn;}showModal(){this.open=true;}close(){this.open=false;this.listeners.close?.();}focus(){focused=this;}}
+ const document={getElementById:id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element(),activeElement:null},summary=new Element();
+ const panel=new ExecutionHistoryPanel({document,onOpen:()=>{menuOpen=false;return summary;},read:()=>{reads++;return new Promise(resolve=>{resolveRead=resolve;});},show:async()=>assert.fail('opening history must not display or compute an FFT'),error:()=>{}});
+ const pending=panel.open();assert.equal(menuOpen,false,'the launch popover must not survive while the report is loading');assert.equal(reads,1);resolveRead({schema_version:1,read_only:true,records:[]});await pending;assert.equal(elements.get('execution-history-dialog').open,true);elements.get('close-execution-history').onclick();assert.equal(focused,summary);assert.equal(reads,1);
+});

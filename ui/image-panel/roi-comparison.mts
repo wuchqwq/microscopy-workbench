@@ -1,6 +1,6 @@
-import type {BrowserDocument} from './browser-ports.mjs';
+import type {BrowserDocument,BrowserElement} from './browser-ports.mjs';
 interface State {workspace_analysis?:{working_revision:number;save_id:string|null;dirty?:boolean};}
-interface Options<S extends State> {document:BrowserDocument;api:(url:string,body?:Readonly<Record<string,unknown>>)=>Promise<unknown>;getState:()=>S;install:(state:S)=>void;show:(id:string,inputReference?:Readonly<Record<string,unknown>>)=>Promise<unknown>;error:(text:string)=>void;}
+interface Options<S extends State> {document:BrowserDocument;api:(url:string,body?:Readonly<Record<string,unknown>>)=>Promise<unknown>;getState:()=>S;install:(state:S)=>void;show:(id:string,inputReference?:Readonly<Record<string,unknown>>)=>Promise<unknown>;error:(text:string)=>void;onOpen?:()=>BrowserElement|null;}
 type Row=Record<string,unknown>;
 const row=(v:unknown):Row=>v&&typeof v==='object'&&!Array.isArray(v)?v as Row:{};
 const list=(v:unknown):unknown[]=>Array.isArray(v)?v:[];
@@ -28,7 +28,7 @@ export class RoiComparisonPanel<S extends State>{
  private element(tag:string,value:string){const e=this.options.document.createElement(tag);e.textContent=value;return e;}
  private details(label:string,value:string){const details=this.element('details','');details.className='comparison-details';details.append(this.element('summary',label),this.element('pre',value));return details;}
  async open(){
-  const d=this.options.document;this.returnFocus=d.activeElement??d.getElementById('open-roi-comparisons');
+  const d=this.options.document;this.returnFocus=this.options.onOpen?.()??d.activeElement??d.getElementById('open-roi-comparisons');
   const response=row(await this.options.api('/api/comparisons')),reports=list(response.reports),select=d.getElementById('roi-comparison-list')!;select.replaceChildren();
   for(const [index,item]of reports.entries()){const report=row(item),option=this.element('option',`比较 ${index+1} · 保存版本 ${text(report.source_revision)}`);option.value=text(report.comparison_id);option.title=option.value;select.append(option);}
   d.getElementById('roi-comparison-dialog')!.showModal();d.getElementById('close-roi-comparisons')!.focus();
