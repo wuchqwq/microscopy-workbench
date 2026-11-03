@@ -1,6 +1,8 @@
 # Manual image-ruler calibration — 2026-11-03
 
 Functional commit: `47635c5421d8cbccce37882c430dc95169a5f55f`.
+An admission-correlation follow-up below is required before final native freeze;
+the final source SHA is recorded in the combined acceptance report.
 Base: `6ce0fcbcf88412bdde3894d70c94744dec0cee2b`, containing the complete
 desktop/save, comparison-source and dual-ROI UI candidate stack. This is an
 additional explicit GUI entry to existing versioned `image_calibrate`.
@@ -59,12 +61,22 @@ Logs are retained outside Git at `F:/mircograph-workbench/manual-scale-*20261103
 | Final affected UI/helper/legacy reciprocal-calibration subset | 12 PASS / 0 FAIL; cancellation, invalid values, original endpoints, signed/anisotropic rejection, late edit, modal shortcut protection, unknown result, exact-ID query and no-ID readback discrimination |
 | Initial real MCP/HTTP probe | FAIL at test cleanup: all preceding calibration, transport-abort, original-result, measurement and hash assertions reached completion, but the harness requested normal close while the analysis was dirty, then attempted cleanup close twice; the second owner conflict hid the first close refusal. Original log and public fixture retained |
 | Corrected real MCP/HTTP probe | PASS: actual aborted response; exact original recovered; one calibration request, zero FFT requests; 20 px maps to 10 nm; all 7 pre-existing object files and source bytes unchanged; old pixel-only measurement unchanged; unrelated measurement has no correlation field; module HTTP 200 with JavaScript MIME; explicit save/close HTTP 200 |
+| Independent tail-review admission negative on 47635c5 | FAIL retained: a formal ownership rejection rebuilt `not_submitted` without `calibration_input`; discarding the error reply left no exact state-only request binding |
+| Admission-correlation follow-up | Formal build and 2 admission/stdio checks PASS: preserves the internal operation context on rejection, derives only the exact original ID from fresh state, rejects another attempt, recovers without a provider query or worker spawn; no provider request/object is created by the rejected calibration |
 | Native mouse gestures, window sizing and real image-ruler localization accuracy | NOT_TESTED by this implementation subtask; parent performs the frozen combined Windows workflow separately |
 
 The pure helper test is registered in the existing explicit Node test list.
 No unrelated FFT/GPA/topology/scattering/noise suite was run. Provider and HTTP
 tests are not native gestures, human usability acceptance or experimental
 calibration validation.
+
+The admission follow-up logs are
+`manual-scale-admission-first-failure-20261103.log` and
+`manual-scale-admission-fixed-tests-20261103.log` in the parent local evidence
+directory. This negative uses formal stdio admission and real Panel HTTP state;
+its discarded error body is a controlled substitute for a lost response, not a
+second native or actual-network-abort claim. The existing successful actual
+abort probe was not repeated after this one-branch correction.
 
 The manual boundary command, after the locked install and formal build in the
 source checkout, is:
