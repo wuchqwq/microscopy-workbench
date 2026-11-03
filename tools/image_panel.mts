@@ -507,7 +507,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    }
    stateRevision++;saveSelection();return state();
   }
-  if(unresolvedRequest()&&!['draft','select','recover'].includes(String(body.action)))fail('Original scientific request remains unresolved; query its original request_id before another write',409);
+  if(unresolvedRequest()&&!['draft','select','recover'].includes(String(body.action)))fail('Original scientific request remains unresolved; query original request_id='+unresolvedRequest()+' before another write',409);
   const inactive=windowStore.snapshot();
   if(!inactive.active_window_id&&(inactive.windows.length||(inactive.closed_windows?.length??0))&&!['show','activate-window','latest-observations','recover'].includes(String(body.action)))fail('No image editor is active; reopen an existing image window before editing or computing',409);
   // A pending result must not prevent saving the current observation. Such a
@@ -948,6 +948,9 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   editState={draft_revision:(saved.draft_revision as number)+1,dirty:saved.dirty,gesture_active:false,selection:saved.selection==null?null:checkSelection(saved.selection),annotation_edit:structuredClone(saved.annotation_edit) as Metadata|null,base_object_id:saved.base_object_id};
   if(!Number.isSafeInteger(editState.draft_revision))fail('Owned draft revision exhausted');
   stateRevision=(checkpoint.state_revision as number)+1;lastOperation=checkpoint.last_operation&&typeof checkpoint.last_operation==='object'?structuredClone(checkpoint.last_operation) as Metadata:null;
+  for(const key of ['window_drafts','working_selections'])if(checkpoint[key]!==undefined&&(!checkpoint[key]||typeof checkpoint[key]!=='object'||Array.isArray(checkpoint[key])))fail('Invalid owned working metadata map');
+  if(checkpoint.adopted_results!==undefined&&!Array.isArray(checkpoint.adopted_results))fail('Invalid owned adopted-result references');
+  workspaceDrafts=structuredClone(checkpoint.window_drafts??{}) as Metadata;workingSelections=structuredClone(checkpoint.working_selections??{}) as Metadata;adoptedResults=structuredClone(checkpoint.adopted_results??[]) as unknown[];
   if(checkpoint.research_observation){
    const saved=checkpoint.research_observation as Metadata;fields(saved,['object_id','request_id','kind','source_text','authority','scope','base_object_id','base_state_revision','base_frame_identity','current_view_relation']);
    if(!objectId.test(String(saved.object_id))||!safeId.test(String(saved.request_id))||!objectId.test(String(saved.base_object_id)))fail('Saved research observation has no exact provider reference');
@@ -969,8 +972,14 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(explicitRestore)await restoreAnalysisSnapshot(explicitRestore);if(inheritedOperation)lastOperation=structuredClone(inheritedOperation);
   analysisOwner=acquireAnalysisWorkspaceOwner(workspace!,{role:'gui',owner_id:helper_session_id??session});
   analysis=new AnalysisWorkspace(workspace!,checkpointSnapshot(),analysisOwner,{legacy:analysis_legacy});
+  if(checkpoint&&!explicitRestore)analysis.resumeQualifiedWorkingCheckpoint(checkpoint);
   await new Promise<void>((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});saveSelection();
- }catch(caught){analysisOwner?.release();await client.close();throw caught;}
+ }catch(caught){
+  if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}const cleanupErrors:unknown[]=[];
+  try{if(server.listening)await new Promise<void>(resolve=>{server.close(()=>resolve());server.closeIdleConnections?.();});}catch(error){cleanupErrors.push(error);}
+  try{await client.close();}catch(error){cleanupErrors.push(error);}try{analysisOwner?.release();}catch(error){cleanupErrors.push(error);}
+  if(cleanupErrors.length)throw new AggregateError([caught,...cleanupErrors],'Panel initialization failed; resource cleanup also failed');throw caught;
+ }
  return {server,client,url:`http://127.0.0.1:${(server.address() as AddressInfo).port}/#${token}`,token,evidenceToken,journal,state,async close({abnormal=true}:{abnormal?:boolean}={}){try{await new Promise<void>(resolve=>{server.close(resolve as (error?:Error)=>void);server.closeIdleConnections?.();});if(!analysisCloseConfirmed)saveSelection();if(!abnormal&&!analysisCloseConfirmed){analysis?.close(unresolvedRequest());analysisCloseConfirmed=true;}}finally{if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}await client.close();analysisOwner?.release();}}};
 }
 if(isDirectInvocation(import.meta.url)){

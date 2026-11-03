@@ -88,6 +88,15 @@ export class AnalysisWorkspace {
  }
  initialSnapshot():AnalysisSnapshot{return analysisDisplaySnapshot(this.root,this.saved?.snapshot??this.origin,this.current);}
  recoverySnapshot():AnalysisSnapshot {if(!this.recovery)conflict('No separate unsaved recovery draft is available');return clone(this.recovery);}
+ // The low-level owned resume API explicitly chooses its qualified working
+ // checkpoint. Inspector/desktop savepoint restore must not invoke this path.
+ resumeQualifiedWorkingCheckpoint(value:unknown){
+  // Old checkpoints may omit the optional window collection. Its retained C
+  // manifest is used only to match the choice, never to create navigation IDs.
+  this.owner.assertOwned();if(!this.recovery)return;const raw=row(value),choice=snapshot({...raw,window_collection:Object.hasOwn(raw,'window_collection')?raw.window_collection:this.recovery.window_collection});
+  if(this.current.object_id!==this.recovery.object_id||canonical(this.current.frame_identity)!==canonical(this.recovery.frame_identity)||digest(analysisContent(choice))!==digest(analysisContent(this.recovery)))conflict('Qualified owned checkpoint does not identify the single unresolved recovery copy');
+  const resolved=digest(this.recovery),revision=advanceRevision(this.revision,'Analysis working');this.writeWorking(this.current,revision,this.contentHash,{recovered_from:resolved,resume_kind:'qualified_owned_checkpoint'},resolved);this.recovery=null;this.resolvedRecoveryHash=resolved;this.revision=revision;this.resolveRecoveryCopy({recovered_from:resolved,resume_kind:'qualified_owned_checkpoint'});
+ }
  // One unchosen crash copy must be resolved before a second editable analysis
  // can exist. Read/display preferences and an explicit Save of A stay available.
  assertSemanticEditingAllowed(){if(this.recovery)conflict('Choose recover or discard for the unresolved recovery copy before creating new analysis edits or scientific results');}

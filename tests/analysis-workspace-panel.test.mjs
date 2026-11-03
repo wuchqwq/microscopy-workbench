@@ -2,8 +2,9 @@
 // tests transport/state/provenance; it is not an FFT accuracy or mouse test.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,renameSync,rmdirSync,existsSync} from 'node:fs';
 import path from 'node:path';
+import {Server as HttpServer} from 'node:http';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import {createImagePanel} from '../tools/image_panel.mjs';
@@ -19,7 +20,7 @@ async function fixture(run){const workspace=mkdtempSync(path.join(tmpdir(),'anal
  const post=async(route,body)=>{const origin=panel.url.split('/#')[0],response=await fetch(origin+route,{method:'POST',headers:{'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json',Connection:'close'},body:JSON.stringify(body)});return {status:response.status,data:await response.json()};};
  const act=(action,params={},extra={})=>post('/api/action',{expected_object_id:panel.state().object.object_id,draft_revision:panel.state().edit_state.draft_revision,action,params,...extra});
  const work=(action,extra={})=>post('/api/workspace',{action,expected_working_revision:panel.state().workspace_analysis.working_revision,...extra});
- try{await run({workspace,get panel(){return panel;},records,calls,act,work,async reopen(){await panel.close();panel=null;await start();},async close(){await panel.close();panel=null;},hold(object_id){let release,started;const wait=new Promise(resolve=>release=resolve),entered=new Promise(resolve=>started=resolve);held={object_id,wait,started};return {release,entered};}});}finally{held?.release?.();if(panel)await panel.close();assert.equal(path.dirname(workspace),path.resolve(tmpdir()));rmSync(workspace,{recursive:true,force:true});}}
+ try{await run({workspace,get panel(){return panel;},records,calls,act,work,startRaw:()=>createImagePanel({workspace,python:path.resolve('unused-python'),object_id:A,client:client()}),async reopen(){await panel.close();panel=null;await start();},async close(){await panel.close();panel=null;},hold(object_id){let release,started;const wait=new Promise(resolve=>release=resolve),entered=new Promise(resolve=>started=resolve);held={object_id,wait,started};return {release,entered};}});}finally{held?.release?.();if(panel)await panel.close();assert.equal(path.dirname(workspace),path.resolve(tmpdir()));rmSync(workspace,{recursive:true,force:true});}}
 test('Panel Save A/edit B/FFT(B)/discard/close/reopen restores A and retains truthful B input/history',()=>fixture(async h=>{
  const saved=await h.work('save',{save_id:'panel-save-A'});assert.equal(saved.status,200,saved.data.error);assert.equal(saved.data.workspace_analysis.status,'clean');
  let result=await h.act('edit',{updates:[{annotation_id:'roi-1',coordinates:roiB}]});assert.equal(result.status,200,result.data.error);const B=result.data.object.object_id;assert.equal(result.data.workspace_analysis.dirty,true);
@@ -69,4 +70,10 @@ test('pending recovery permits activating and closing already saved windows with
  let result=await h.act('fft',{selection:pick(roiA),window:'hann',subtract_mean:true});assert.equal(result.status,200,result.data.error);const source=result.data.window_collection.windows.find(w=>w.role==='source'),fft=result.data.window_collection.windows.find(w=>w.role==='fft');result=await h.act('activate-window',{collection_revision:result.data.window_collection.revision,window_id:source.window_id});assert.equal(result.status,200,result.data.error);result=await h.work('save',{save_id:'saved-two-windows-before-C'});assert.equal(result.status,200,result.data.error);
  result=await h.work('park-window',{working_draft:{version:1,object_id:A,panel_mapping_fingerprint:result.data.panel_mapping_fingerprint,selection:null,annotation_edit:null,display:{gamma:1},reason:'crash C',reason_dirty:true,content_dirty:true,selected_id:null,fields:{}}});assert.equal(result.status,200,result.data.error);await h.reopen();assert.equal(h.panel.state().workspace_analysis.recovery_available,true);const calls=h.calls.length;
  result=await h.act('activate-window',{collection_revision:h.panel.state().window_collection.revision,window_id:fft.window_id});assert.equal(result.status,200,result.data.error);assert.equal(result.data.workspace_analysis.dirty,false);result=await h.act('close-window',{collection_revision:result.data.window_collection.revision,window_id:fft.window_id});assert.equal(result.status,200,result.data.error);assert.equal(result.data.object.object_id,A);assert.equal(result.data.workspace_analysis.dirty,false);assert.equal(result.data.workspace_analysis.recovery_available,true);assert.ok(h.calls.slice(calls).every(call=>call.name==='image_info'));
+}));
+
+test('failure publishing initial selection after listen closes its server and client and releases only its own analysis owner',()=>fixture(async h=>{
+ await h.close();const working=path.join(h.workspace,'analysis-workspace','working.json'),backup=working+'.before-injected-failure',originalListen=HttpServer.prototype.listen;let server,port,started;
+ try{HttpServer.prototype.listen=function(...args){server=this;this.once('listening',()=>{port=this.address().port;renameSync(working,backup);mkdirSync(working);});return originalListen.apply(this,args);};await assert.rejects(async()=>{started=await h.startRaw();},/ordinary file/);HttpServer.prototype.listen=originalListen;assert.equal(server.listening,false);assert.equal(existsSync(path.join(h.workspace,'analysis-workspace','owner.json')),false);await new Promise((resolve,reject)=>{const probe=new HttpServer();probe.once('error',reject);probe.listen(port,'127.0.0.1',()=>probe.close(resolve));});
+ }finally{HttpServer.prototype.listen=originalListen;await started?.close();if(server?.listening)await new Promise(resolve=>{server.close(resolve);server.closeIdleConnections?.();});if(existsSync(backup)){rmdirSync(working);renameSync(backup,working);}}
 }));

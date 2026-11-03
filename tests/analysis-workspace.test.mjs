@@ -97,3 +97,8 @@ test('only a qualified camera crosses from same-object working state; working se
 test('an old automatic archive keeps its legacy label across normal reopen before the first explicit save',()=>fixture(async h=>{
  const file=path.join(h.workspace,'analysis-workspace','origin.json'),origin=JSON.parse(readFileSync(file,'utf8'));origin.legacy=true;writeFileSync(file,JSON.stringify(origin));h.reopen();assert.equal(h.store.status().status,'legacy');assert.equal(readAnalysisWorkspace(h.workspace).savepoint,null);
 }));
+
+test('only explicit qualified owned checkpoint selection resumes the single crash C while ordinary savepoint reopen keeps it separate',()=>fixture(async h=>{
+ await h.store.save('saved-A-before-owned-C',0,async()=>{});const C=state(B);h.store.update(C);h.reopen(C);assert.equal(h.store.status().recovery_available,true);const file=path.join(h.workspace,'analysis-workspace','working.json'),before=readFileSync(file),D=clone(C);D.window_drafts[W]={content_dirty:true,reason:'different D on the same image'};
+ assert.throws(()=>h.store.resumeQualifiedWorkingCheckpoint(D),/single unresolved recovery copy/);assert.deepEqual(readFileSync(file),before);assert.equal(h.store.status().recovery_available,true);h.store.resumeQualifiedWorkingCheckpoint(C);assert.equal(h.store.status().recovery_available,false);assert.equal(h.store.status().dirty,true);assert.equal(readAnalysisWorkspace(h.workspace).savepoint.snapshot.object_id,A);h.store.update(C);h.reopen();assert.equal(h.store.status().recovery_available,true);assert.equal(h.store.initialSnapshot().object_id,A);
+}));

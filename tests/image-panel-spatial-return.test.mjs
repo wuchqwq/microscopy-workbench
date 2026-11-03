@@ -158,3 +158,7 @@ test('a late FFT keeps its reference with pending result until explicit acceptan
  await h.act('draft',{draft_revision:h.state().edit_state.draft_revision+1,dirty:false,gesture_active:false});await h.act('accept-result');
  assert.equal(h.state().object.object_id,K);assert.equal(h.state().spatial_return.status,'ready');
 }));
+
+test('explicit owned checkpoint resume preserves parked working notes as unsaved C rather than an unchosen copy or a new savepoint',()=>fixture(async h=>{
+ const before=h.state(),draft={version:1,object_id:V,panel_mapping_fingerprint:before.panel_mapping_fingerprint,selection:null,annotation_edit:null,display:before.effective_display??{},reason:'Parked unsaved C reason',reason_dirty:true,content_dirty:true,selected_id:null,fields:{}};const parked=await h.post('/api/workspace',{action:'park-window',expected_working_revision:before.workspace_analysis.working_revision,working_draft:draft});assert.equal(parked.status,200,parked.data.error);const calls=h.calls.length;await h.cold();const after=h.state();assert.equal(after.workspace_analysis.recovery_available,false);assert.equal(after.workspace_analysis.dirty,true);assert.equal(after.workspace_analysis.active_window_draft.reason,'Parked unsaved C reason');assert.equal(after.workspace_analysis.active_window_draft.content_dirty,true);assert.equal(after.workspace_analysis.save_id,null);assert.ok(h.calls.slice(calls).every(call=>call.name==='image_info'));
+}));
