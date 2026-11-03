@@ -129,3 +129,7 @@ body{height:100vh;display:flex;flex-direction:column}.workbench-header{flex-shri
  .research-panel{width:min(320px,42vw);box-shadow:none}
  .research-open .canvas-area{margin-right:min(320px,42vw)}
 }
+
+/* Selection-only ROI disambiguation and compact result presentation. */
+.roi-pick-menu{position:fixed;z-index:1000;max-height:40vh;overflow:auto;padding:7px;background:#1c2c39;border:1px solid #68808f;border-radius:6px;box-shadow:0 6px 20px #0008}.roi-pick-menu[hidden]{display:none}.roi-pick-menu p{margin:2px 4px 6px;font-size:12px}.roi-pick-menu button{display:block;width:100%;text-align:left;min-height:32px;margin:2px 0}.roi-pick-menu button:hover,.roi-pick-menu button:focus-visible{background:#365569;outline:1px solid #91d7d5}
+.measurement-empty{margin:6px 0;font-size:12px;color:var(--muted)}.measurement-workspace.empty-results #measurement-evidence-details{display:none}.measurement-workspace.history-hidden-results .results-toolbar{display:flex}.measurement-workspace.history-hidden-results .results-toolbar>*{display:none}.measurement-workspace.history-hidden-results .results-toolbar .measurement-history-control{display:flex}.measurement-workspace.empty-results .measurement-content{height:auto;min-height:0}.measurement-detail dl{margin:4px 0}.measurement-detail dd{overflow-wrap:anywhere}#measurement-evidence-details{font-size:11px;margin-top:7px}#measurement-evidence{max-height:240px;overflow:auto}

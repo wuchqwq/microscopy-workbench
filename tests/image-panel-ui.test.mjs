@@ -254,7 +254,7 @@ test('usage help is a labelled native dialog with a header entry and current nav
  assert.match(header,/<button id="open-usage-help" aria-haspopup="dialog" aria-controls="usage-dialog">使用说明<\/button>/);
  const start=html.indexOf('<dialog id="usage-dialog"'),help=html.slice(start,html.indexOf('</dialog>',start));
  assert.match(help,/aria-labelledby="usage-title"/);assert.match(help,/aria-label="关闭使用说明"/);
- for(const name of ['保存当前 ROI 观察','保存 ROI 观察','完整频谱','全帧（新显示）','前进 →','查询上次原请求','检查 Agent 结果','复制继续提示'])assert.ok(help.includes(name),name);
+ for(const name of ['应用当前 ROI 观察','应用 ROI 观察','完整频谱','全帧（新显示）','前进 →','查询上次原请求','检查 Agent 结果','复制继续提示'])assert.ok(help.includes(name),name);
  assert.match(help,/刷新或重开后不保证保留这条浏览序列/);assert.match(help,/不会自动唤醒模型/);
  assert.doesNotMatch(help,/<script|\sstyle=|on(?:click|keydown)=/i);
 });
@@ -1264,7 +1264,7 @@ test('resumable save declares stable researcher intent and reads actual handoff 
  assert.equal(h.calls.length,1);const p=h.calls[0].params;
  assert.match(p.annotation_id,/^[A-Za-z0-9_-]{1,64}$/);assert.equal(p.purpose,'resumable_observation');assert.equal(p.selection_origin,'researcher');assert.equal(p.note,'  Inspect supplied texture, physical cause unknown  ');
  assert.ok(h.getCalls.slice(reads).filter(p=>p==='/api/state').length>=2,'Saved annotation and clean current handoff both need real readback');
- assert.match(h.$('message').textContent,/已保存并读回可接续.*调用者声明.*不确认物相/);assert.equal(h.inspect().dirty,false);
+ assert.match(h.$('message').textContent,/已记录并读回可接续.*调用者声明.*不确认物相.*Ctrl\+S 保存工作区/);assert.equal(h.inspect().dirty,false);
 });
 test('a new ROI observation is verified under an existing pending result without accepting that result',async()=>{
  const s=handoffFixture();s.object.annotations=[];s.pending_result={object_id:'d'.repeat(32),request_id:'older-saved-result'};const h=await harness(s);h.draw('rectangle');h.$('roi-reason').value='Save this observation before dealing with the pending result';h.$('roi-reason').oninput();const reads=h.getCalls.length;
@@ -1290,8 +1290,8 @@ test('observation save confirms coalesced handoff persistence and renders the fi
  await h.click('save-observation');await h.settle();
  assert.equal(h.calls.length,1);assert.equal(h.draftCalls.at(-1).params.confirm_persistence,true);
  assert.equal(h.server().draft_persistence.pending,false);assert.equal(h.inspect().state.draft_persistence.pending,false);
- assert.equal(h.$('agent-continue').disabled,false);assert.match(h.$('message').textContent,/已保存并读回可接续/);
- assert.match(h.$('research-count').textContent,/1 处已保存/);
+ assert.equal(h.$('agent-continue').disabled,false);assert.match(h.$('message').textContent,/已记录并读回可接续.*Ctrl\+S 保存工作区/);
+ assert.match(h.$('research-count').textContent,/1 处已记录/);
  const trace=JSON.parse(h.$('performance-data').textContent).observation_save;
  assert.equal(trace.outcome,'ready');assert.ok(trace.elapsed_ms.readback_2_end>=trace.elapsed_ms.readback_2_start);
  assert.ok(trace.elapsed_ms.final_ui>=trace.elapsed_ms.readback_2_end);
@@ -1495,4 +1495,30 @@ test('new selection identity: saving temporary B creates a new mark instead of e
 
 test('sidebar provenance: malformed historical line endpoints abstain without breaking the property panel',async()=>{
  for(const points of [null,{},'legacy',[[0,0]],[[0,0],null],[[0,0],['unknown',0]]]){const initial=sidebarMeasuredPeakFixture();initial.object.annotations[0].kind='line';initial.object.annotations[0].anchor.coordinates=[0,0,.125,0];initial.last_operation.points=points;const h=await harness(initial);h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.equal(h.$('measurement-properties').hidden,false);assert.doesNotMatch(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);assert.match(h.$('measurement-summary').textContent,/未测量|未关联/);assert.equal(h.calls.length,0);}
+});
+
+
+test('ROI context pick: reverse paint order, hover and covered selection do not create science writes',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();const before=h.inspect(),writes=h.calls.length;
+ let prevented=false;h.event('contextmenu',50,50,{preventDefault(){prevented=true;}});h.flush();assert.equal(prevented,true);assert.equal(h.$('roi-pick-menu').hidden,false);
+ const choices=h.$('roi-pick-menu').children.slice(1);assert.deepEqual(choices.map(button=>button.textContent),['Other ROI','ROI saved']);
+ choices[1].listeners.pointerenter();h.flush();assert.equal(h.layout().items.find(item=>item.id==='roi-stable').hovered,true);
+ choices[1].onclick();h.flush();await h.settle();assert.equal(h.inspect().selectedId,'roi-stable');assert.deepEqual(h.inspect().draft.coordinates,[40,32,120,92]);assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.calls.length,writes);assert.equal(h.inspect().state.object.object_id,before.state.object.object_id);assert.equal(h.inspect().undoCount,before.undoCount);assert.ok(h.inspect().draftRevision>before.draftRevision,'selection metadata keeps its monotonic CAS revision without a scientific undo item');
+});
+test('ROI context pick: Escape cancels and pending field edits never flush through selection',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();const before=h.inspect();h.event('contextmenu',50,50,{preventDefault(){}});h.key('Escape');h.flush();assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.inspect().selectedId,before.selectedId);assert.equal(h.calls.length,0);
+ selectSavedRoi(h);h.$('mark-text').value='Unapplied label';h.$('mark-text').oninput();const writes=h.calls.length;h.event('contextmenu',50,50,{preventDefault(){}});assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.$('mark-text').value,'Unapplied label');assert.equal(h.calls.length,writes);
+});
+test('result disclosure: explicit expansion survives fresh measurement reads',async()=>{
+ const h=await harness();h.$('measurement-workspace').open=true;h.$('measurement-workspace').listeners.toggle();await h.poll();await h.settle();assert.equal(h.$('measurement-workspace').open,true);
+});
+
+
+test('ROI context pick: focus outside dismisses without changing a selection or writing',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();const before=h.inspect();h.event('contextmenu',50,50,{preventDefault(){}});assert.equal(h.$('roi-pick-menu').hidden,false);h.documentEvent('focusin',h.$('workspace-save'));h.flush();assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.inspect().selectedId,before.selectedId);assert.equal(h.calls.length,0);
+});
+
+
+test('ROI context pick: native help dismisses the picker and modal Escape keeps priority',async()=>{
+ const h=await harness(overlappingRoiFixture());h.flush();h.event('contextmenu',50,50,{preventDefault(){}});h.$('roi-pick-menu').children[1].focus();const before=h.inspect();assert.equal((await h.nativeAction('help')).ok,true);assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.$('usage-dialog').open,true);let prevented=false;h.key('Escape',{preventDefault(){prevented=true;}});assert.equal(prevented,false);h.$('usage-dialog').listeners.cancel({preventDefault(){}});assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),h.$('canvas'));assert.equal(h.calls.length,0);assert.deepEqual(h.inspect().state.object,before.state.object);
 });
