@@ -388,6 +388,10 @@ jobs:
       - run: npm run test:science
         env:
           MICROSCOPY_PYTHON: python
+      - run: python -B tests/image_frame_ancestry_test.py
+      - run: node dist/tests/image-info-ancestry-mcp-smoke.mjs
+        env:
+          MICROSCOPY_PYTHON: python
 
   ci-gate:
     name: CI scope gate

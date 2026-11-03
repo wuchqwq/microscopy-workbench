@@ -74,3 +74,9 @@ The MCP smoke uses `MICROSCOPY_PYTHON` to select the explicit scientific Python.
 Its deliberate payload corruption and byte restoration are confined to its own
 temporary public test fixture. Independent review was read-only and did not
 repeat tests. No unrelated FFT/GPA/topology/scattering/noise matrix was run.
+
+Both the 17 Python contract checks and the bounded real MCP smoke are appended
+to the existing `science-boundary` hosted job, using its installed environment.
+Scope classification, job admission, required gates and query capacity are
+unchanged. This CI/documentation follow-up does not alter production or test
+sources; its earlier exact-source local evidence remains applicable.
