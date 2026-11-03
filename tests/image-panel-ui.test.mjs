@@ -34,7 +34,7 @@ function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4
 async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={}){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -63,6 +63,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
  const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   workbenchDesktop:{onAction(handler){desktopAction=handler;}},
+  WindowWorkspace:class extends WindowWorkspace{noteCameraIntent(){cameraIntentCount++;super.noteCameraIntent();}},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
   document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),createElementNS:(_namespace,tag)=>new Element(tag),querySelector:selector=>selector==='dialog[open]'?[...elements].find(([id,element])=>id.endsWith('-dialog')&&element.open)?.[1]??null:null,querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
@@ -128,7 +129,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={
  return {$,bodyClasses,calls,draftCalls,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},finishRoi:async()=>{await sandbox.finishRoiSave();flush();},
   delayAction(promise){waitAction=promise;},delayWindowCamera(promise){waitWindowCamera=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
-  nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),
+  nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),cameraIntents:()=>cameraIntentCount,
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
   failDraft(message='Controlled draft delivery failure'){draftFailure=message;},
   actionResult(value){nextActionResult=typeof value==='function'?value:copy(value);},
@@ -1521,4 +1522,8 @@ test('ROI context pick: focus outside dismisses without changing a selection or 
 
 test('ROI context pick: native help dismisses the picker and modal Escape keeps priority',async()=>{
  const h=await harness(overlappingRoiFixture());h.flush();h.event('contextmenu',50,50,{preventDefault(){}});h.$('roi-pick-menu').children[1].focus();const before=h.inspect();assert.equal((await h.nativeAction('help')).ok,true);assert.equal(h.$('roi-pick-menu').hidden,true);assert.equal(h.$('usage-dialog').open,true);let prevented=false;h.key('Escape',{preventDefault(){prevented=true;}});assert.equal(prevented,false);h.$('usage-dialog').listeners.cancel({preventDefault(){}});assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),h.$('canvas'));assert.equal(h.calls.length,0);assert.deepEqual(h.inspect().state.object,before.state.object);
+});
+
+test('active camera controls notify user intent while ordinary load, polling and layout do not',async()=>{
+ const h=await harness();assert.equal(h.cameraIntents(),0);h.$('viewport').listeners.wheel({clientX:30,clientY:20,deltaY:-30,preventDefault(){}});assert.equal(h.cameraIntents(),1);h.$('zoom').value='1.8';h.$('zoom').oninput();assert.equal(h.cameraIntents(),2);await h.click('fit');assert.equal(h.cameraIntents(),3);await h.click('fit-canvas');assert.equal(h.cameraIntents(),4);h.$('canvas').focus();h.key('f');assert.equal(h.cameraIntents(),5);h.$('mode').value='pan';h.event('pointerdown',30,20);assert.equal(h.cameraIntents(),6);h.event('pointermove',40,25);h.event('pointerup',40,25);await h.click('focus-image');assert.equal(h.cameraIntents(),7);const count=h.cameraIntents();h.resizeLayout();await h.poll();await h.settle();assert.equal(h.cameraIntents(),count);assert.equal(h.calls.length,0,'camera intentions never submit a scientific operation');
 });

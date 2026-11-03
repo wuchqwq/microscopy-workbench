@@ -55,7 +55,7 @@ export function measurementDetails(entry: MeasurementEntry): DetailRows{
   ...(semantics?[["三层结果说明",semantics.headline],["保存的资格记录",semantics.assessment?JSON.stringify(semantics.assessment):'未记录；不补写评估']] as DetailRows:[]),
   ['类型',measurementType(entry)],['状态',measurementStatus(entry)+(entry.status_reason?' · '+entry.status_reason:'')],
   ['科学端点',Array.isArray(m.points)?JSON.stringify(m.points):'未知'],['坐标域',m.coordinate_space??'未知'],
-  ['原精度数值',JSON.stringify({physical_distance:m.physical_distance,physical_frequency_magnitude:m.physical_frequency_magnitude,period:m.period,d_spacing:m.d_spacing,distance_pixels:m.distance_pixels,frequency_distance_cycles_per_pixel:m.frequency_distance_cycles_per_pixel,pixel_period:m.pixel_period})],
+  ['原精度数值',JSON.stringify({physical_distance:m.physical_distance,distance_physical:m.distance_physical,physical_frequency_magnitude:m.physical_frequency_magnitude,period:m.period,d_spacing:m.d_spacing,distance_pixels:m.distance_pixels,frequency_distance_cycles_per_pixel:m.frequency_distance_cycles_per_pixel,pixel_period:m.pixel_period})],
   ['源帧',Number.isInteger(scope.frame_index)?String((scope.frame_index as number)+1):Number.isInteger(m.frame_index)?String((m.frame_index as number)+1):'未知'],
   ['源 ROI',Array.isArray(scope.source_rect_xyxy??grid.source_rect_xyxy??m.source_rect_xyxy)?JSON.stringify(scope.source_rect_xyxy??grid.source_rect_xyxy??m.source_rect_xyxy):'未知'],
   ['标定版本',cal?.calibration_id?`${cal.calibration_id} · v${cal.revision??'未知'}`:'无有效物理标定'],

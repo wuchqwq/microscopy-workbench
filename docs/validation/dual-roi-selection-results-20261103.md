@@ -21,7 +21,10 @@ is replaced.
   endpoints, exact precision, IDs, calibration, scientific grid and qualification
   JSON. Saved `pixel_period` and frequency can be shown together without filling
   unknown physical scales. CSV retains all previous column positions and adds
-  the saved pixel-period field at the end.
+  the saved pixel-period field at the end. Export reads immutable record fields
+  directly, independently of the UI's hidden pending values. Checked historical
+  records retain their precision, endpoints, source ROI/frame, input/request/hash
+  and calibration source. Legacy `distance_physical` is preserved in details.
 - Local geometry edits hide current old values while awaiting remeasurement.
   A table still bound to a previous input view is projected as historical until
   fresh provider readback. This does not compare the immutable measurement's
@@ -40,8 +43,13 @@ is replaced.
 - The left ROI/selection tools remain accessible; duplicate bottom entries are
   hidden without removing their existing handlers. Plain tiling is in the
   existing window list. The single “平铺并适应全部” button is intended to bind
-  the separately reviewed `WindowWorkspace` implementation at integration;
-  this isolated tree does not claim that new method is already present.
+  the separately reviewed `WindowWorkspace` implementation. Source change
+  `0e95801` was included locally for the final typed interface/build check;
+  its implementation and source-annotation evidence are reported separately.
+- Actual active-canvas wheel, zoom slider, both Fit buttons, F shortcut, pan
+  start and image-focus action notify the window manager of newer camera intent.
+  Generic load, resize and polling do not. This connects the source-presentation
+  change's delayed tile/Fit guard without modifying scientific state.
 
 ## Evidence and limits
 
@@ -59,6 +67,8 @@ Original failures are retained rather than overwritten:
 | Measurement projections/export/precision and stale binding | 12 PASS / 0 FAIL; fresh-wrapper qualification positive case additionally checked |
 | Context picker → native-help modal priority | First controlled 1 FAIL retained; final focused picker/help subset 5 PASS / 0 FAIL |
 | Late observation success-message consumers | Original two old-wording assertions FAIL retained; updated consumers 2 PASS / 0 FAIL |
+| Active camera intent wiring and pending-notice consumer | Camera hook first 1 FAIL retained; final focused checks 2 PASS / 0 FAIL with source change `0e95801` |
+| Export projection / legacy alias follow-up | Measurement workspace 13 PASS / 0 FAIL, including pending and checked-history TSV precision/provenance |
 | Native Windows gestures, narrow actual-page layout, combined tile/Fit and save/reopen | NOT_TESTED by this isolated task; required after integration |
 
 No FFT/GPA/topology/scattering/noise matrix was run. DOM/canvas/API substitutes
