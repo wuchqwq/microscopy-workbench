@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import type {EventEmitter} from 'node:events';
 import {DesktopBackendClient} from '../lib/desktop_backend_client.mjs';
 import {DesktopCloseCoordinator} from '../lib/desktop_lifecycle.mjs';
-import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow,panelAddress,readDesktopOptions} from '../lib/desktop_contracts.mjs';
+import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow,panelAddress,readDesktopOptions,desktopStartupError} from '../lib/desktop_contracts.mjs';
 import type {DesktopOptions,DesktopAction,DesktopActionReply} from '../lib/desktop_contracts.mjs';
 
 // A small structural port keeps the scientific Node 18 runtime independent of
@@ -20,7 +20,7 @@ interface DesktopWindow extends EventEmitter {
 }
 interface MenuItem {label?:string;role?:string;accelerator?:string;type?:'separator';click?:()=>void;submenu?:MenuItem[];}
 interface DesktopElectron {
- app:EventEmitter&{whenReady():Promise<void>;quit():void;setName(name:string):void;setPath(name:'userData',path:string):void;};
+ app:EventEmitter&{whenReady():Promise<void>;quit():void;exit(code:number):void;setName(name:string):void;setPath(name:'userData',path:string):void;};
  BrowserWindow:new(options:unknown)=>DesktopWindow;
  Menu:{buildFromTemplate(items:MenuItem[]):unknown;setApplicationMenu(menu:unknown):void;};
  dialog:{showOpenDialog(options:unknown):Promise<{canceled:boolean;filePaths:string[]}>;showMessageBox(window:DesktopWindow|undefined,options:unknown):Promise<{response:number}>;showErrorBox(title:string,message:string):void;};
@@ -111,7 +111,7 @@ async function replaceWorkspace(existing:boolean):Promise<void>{
 app.on('before-quit',(event:NativeEvent)=>{if(!allowQuit){event.preventDefault();void quitSafely();}});
 app.on('window-all-closed',()=>{if(allowQuit)app.quit();});
 process.on('SIGINT',()=>{void quitSafely();});process.on('SIGTERM',()=>{void quitSafely();});
-const startupFailed=(error:unknown)=>{backend?.abnormalDetach();dialog.showErrorBox('Microscopy Workbench 启动失败',error instanceof Error?error.message:String(error));allowQuit=true;app.quit();};
+const startupFailed=(error:unknown)=>{backend?.abnormalDetach();const failure=desktopStartupError(error);dialog.showErrorBox('Microscopy Workbench 启动失败',failure.code+'\n'+failure.message);allowQuit=true;app.exit(1);};
 try{
  options=readDesktopOptions(process.argv.slice(2));
  // Electron waits for the ESM entry to finish before emitting ready. Awaiting

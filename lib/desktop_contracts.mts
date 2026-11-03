@@ -49,3 +49,26 @@ export function readWorkspaceStatus(value:unknown):DesktopWorkspaceStatus {
 }
 export function closeBlocked(state:DesktopWorkspaceStatus):boolean{return state.unresolved_request_id!==null||['saving','save_unknown'].includes(state.status);}
 export const desktopSecurityPreferences={sandbox:true,contextIsolation:true,nodeIntegration:false,webSecurity:true,allowRunningInsecureContent:false,webviewTag:false} as const;
+
+// Startup IPC carries only fixed diagnostics. Never send arbitrary provider
+// error text, capability URLs, image bytes or source paths through this port.
+const desktopStartupMessages={
+ PANEL_CLAIM_RETAINED:'未发布或不匹配的工作区启动占用记录已保留。请核对原启动记录；本应用不会自动解锁或重放计算。',
+ PREVIOUS_HELPER_RUNNING:'先前工作区后台仍在运行，已拒绝重复启动。请返回原窗口或核对原后台状态。',
+ RECOVERY_CONFLICT:'检测到不同的未保存工作状态和恢复副本，原件均已保留。请核对恢复记录后再打开工作区。',
+ STARTUP_FAILED:'工作台启动未完成。原工作区和执行记录保留；请核对启动参数与原记录，不会自动重试。'
+} as const;
+export type DesktopStartupErrorCode=keyof typeof desktopStartupMessages;
+export interface DesktopStartupError {type:'startup_error';schema_version:1;code:DesktopStartupErrorCode;message:string;}
+export function desktopStartupError(error:unknown):DesktopStartupError {
+ const value=error&&typeof error==='object'?error as {code?:unknown;message?:unknown}:{},message=typeof value.message==='string'?value.message:'';let code:DesktopStartupErrorCode='STARTUP_FAILED';
+ if(typeof value.code==='string'&&Object.hasOwn(desktopStartupMessages,value.code))code=value.code as DesktopStartupErrorCode;
+ else if(value.code==='EEXIST'&&['EEXIST: an unlaunched helper claim is retained; no published stopped helper can qualify it','EEXIST: unpublished or foreign helper claim retained without replacement'].includes(message)||message==='Published helper claim does not match its original exact registration; retained')code='PANEL_CLAIM_RETAINED';
+ else if(message==='Previous owned helper PID is still present; no replacement or duplicate launch is permitted')code='PREVIOUS_HELPER_RUNNING';
+ else if(message==='Distinct unsaved working state and unresolved recovery copy exist; preserve working.json and recovery.json for review before reopening')code='RECOVERY_CONFLICT';
+ return {type:'startup_error',schema_version:1,code,message:desktopStartupMessages[code]};
+}
+export function readDesktopStartupError(value:unknown):DesktopStartupError {
+ if(!isRow(value)||Object.keys(value).some(key=>!['type','schema_version','code','message'].includes(key))||value.type!=='startup_error'||value.schema_version!==1||typeof value.code!=='string'||!Object.hasOwn(desktopStartupMessages,value.code)||value.message!==desktopStartupMessages[value.code as DesktopStartupErrorCode])throw new Error('Invalid bounded desktop startup error');
+ return {type:'startup_error',schema_version:1,code:value.code as DesktopStartupErrorCode,message:value.message as string};
+}

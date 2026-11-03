@@ -3,7 +3,7 @@
 import {createInterface} from 'node:readline';
 import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import {parseResearcherArgs,startResearcherInspector} from './researcher_inspector.mjs';
-import {isRow,panelAddress,readWorkspaceStatus} from '../lib/desktop_contracts.mjs';
+import {isRow,panelAddress,readWorkspaceStatus,desktopStartupError} from '../lib/desktop_contracts.mjs';
 
 export async function runDesktopBackend(argv:readonly string[]):Promise<void>{
  if(process.versions.electron)throw new Error('Desktop backend requires ordinary Node.');
@@ -35,4 +35,4 @@ export async function runDesktopBackend(argv:readonly string[]):Promise<void>{
   if(!finished){finished=true;await (instance.close as (options?:{abnormal?:boolean})=>Promise<void>)({abnormal:true});}
  }).catch(error=>{process.stderr.write('Desktop backend shutdown: '+(error instanceof Error?error.message:String(error))+'\n');process.exitCode=1;});});
 }
-if(isDirectInvocation(import.meta.url))runDesktopBackend(process.argv.slice(2)).catch(error=>{process.stderr.write((error instanceof Error?error.message:String(error))+'\n');process.exitCode=1;});
+if(isDirectInvocation(import.meta.url))runDesktopBackend(process.argv.slice(2)).catch(error=>{const failure=desktopStartupError(error);process.stdout.write(JSON.stringify(failure)+'\n');process.stderr.write(failure.code+': '+failure.message+'\n');process.exitCode=1;});

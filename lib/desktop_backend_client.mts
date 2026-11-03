@@ -1,7 +1,7 @@
 import {spawn} from 'node:child_process';
 import type {ChildProcessWithoutNullStreams} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {isRow,panelAddress,readWorkspaceStatus,researcherArguments} from './desktop_contracts.mjs';
+import {isRow,panelAddress,readWorkspaceStatus,researcherArguments,readDesktopStartupError} from './desktop_contracts.mjs';
 import type {DesktopOptions,DesktopWorkspaceStatus} from './desktop_contracts.mjs';
 
 export class DesktopBackendClient {
@@ -18,6 +18,7 @@ export class DesktopBackendClient {
    let newline;while((newline=this.buffer.indexOf('\n'))>=0){const line=this.buffer.slice(0,newline);this.buffer=this.buffer.slice(newline+1);try{
     const message:unknown=JSON.parse(line);if(!isRow(message))throw new Error('Invalid backend reply');
     if(message.type==='ready'){if(message.schema_version!==1||typeof message.node!=='string')throw new Error('Invalid backend readiness');const address=panelAddress(message.url);clearTimeout(readyTimer);readyResolve({url:address.url,node:message.node});}
+    else if(message.type==='startup_error'){const error=readDesktopStartupError(message);failure(Object.assign(new Error(error.message),{code:error.code}));}
     else{const pending=this.pending.get(Number(message.id));if(!pending)continue;this.pending.delete(Number(message.id));clearTimeout(pending.timer);if(message.ok===true)pending.resolve(message.state);else pending.reject(new Error(typeof message.error==='string'?message.error:'Desktop backend operation failed'));}
    }catch(error){failure(error instanceof Error?error:new Error(String(error)));}}
   });
