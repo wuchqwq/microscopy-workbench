@@ -1,7 +1,7 @@
 // Hand-solvable spatial edge mapping. No scientific tools or browser gestures.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {sourceWindowOutlines,createSourceOverlay,savedWindowAnnotationLayout,createSavedAnnotationOverlay,sourceWindowLabelLayout} from '../ui/image-panel/window-source-overlay.mjs';
+import {sourceWindowOutlines,activeFftInputOutline,createSourceOverlay,savedWindowAnnotationLayout,createSavedAnnotationOverlay,sourceWindowLabelLayout} from '../ui/image-panel/window-source-overlay.mjs';
 
 const copy=value=>JSON.parse(JSON.stringify(value)),id=n=>n.toString(16).padStart(32,'0');
 const object={object_id:id(1),array_domain:'spatial',panels:[{domain:'spatial_pixels',source_object_id:id(10),source_rect_xyxy:[20,10,120,60],image_rect_xyxy:[10,20,210,120]}],annotations:[{annotation_id:'retained-original'}]};
@@ -73,4 +73,16 @@ test('rendering refuses panel/image mismatch, invalid camera or absent qualified
 });
 test('window text is rendered literally and never injected as SVG markup',()=>{
  const c=copy(collection);c.windows[1].title='<script>not markup</script>';const layer=createSourceOverlay(document(),object,c,[220,140],1),text=layer.children[0].children[0].children[1];assert.equal(text.textContent,'<script>not markup</script> 计算区域');assert.equal(text.children.length,0);
+});
+
+function frozenCollection(){const c=copy(collection);c.active_window_id='fft-a';c.windows[1].source_reference.input_view_context={version:1,object_id:id(1),panel_mapping_fingerprint:'f'.repeat(64),camera:{scale:1,center_image_xy:[64,48]},selection_candidate:{kind:'rectangle',coordinate_space:'source_pixels',source_object_id:id(10),coordinates:[30.25,20.5,69.75,39.5],panel:copy(object.panels[0])},selected_annotation_id:null};return c;}
+test('active FFT frozen float input is highlighted only on its exact saved source asset and verified mapping',()=>{
+ const c=frozenCollection(),before=copy({object,c}),outline=activeFftInputOutline(object,c,'f'.repeat(64));assert.deepEqual(outline,{window_id:'fft-a',label:'FFT A 原输入选区',coordinates:[30.5,41,109.5,79],line_style:'solid'});
+ const layer=createSourceOverlay(document(),object,c,[220,140],.2,'f'.repeat(64)),svg=layer.children[0],frozen=svg.children.at(-1);assert.equal(svg.children.length,3,'both integer support outlines remain auxiliary');assert.match(frozen.attributes.class,/window-source-frozen-input/);assert.equal(frozen.attributes['data-frozen-input-object-id'],id(1));assert.equal(frozen.children[0].attributes['stroke-width'],'3');assert.equal(frozen.children[0].attributes.x,'30.5');assert.equal(frozen.children[1].textContent,'FFT A 原输入选区');assert.equal(layer.attributes.style,'pointer-events:none');assert.equal(svg.attributes['pointer-events'],'none');assert.deepEqual({object,c},before);
+});
+test('same-frame latest images, missing mapping and unqualified frozen context never claim the original float input',()=>{
+ for(const mutate of [c=>{c.windows[1].source_reference.input_view_object_id=id(99);},c=>{c.windows[1].source_reference.input_view_context.object_id=id(99);},c=>{c.windows[1].source_reference.input_view_context.panel_mapping_fingerprint='a'.repeat(64);},c=>{c.windows[1].source_reference.input_view_context.selection_candidate.coordinates=[30.25,20.5,70.25,39.5];},c=>{c.windows[1].source_reference.input_view_context.selection_candidate.panel.source_rect_xyxy=[0,0,120,60];},c=>{c.windows[1].source_reference.input_view_context.selection_candidate.source_object_id=id(99);},c=>{c.windows[1].source_reference.input_view_context.selection_candidate.coordinate_space='source_array_indices';},c=>{delete c.windows[1].source_reference.input_view_context;},c=>{c.active_window_id='source';}]){
+  const c=frozenCollection();mutate(c);assert.equal(activeFftInputOutline(object,c,'f'.repeat(64)),null);assert.equal(createSourceOverlay(document(),object,c,[220,140],1,'f'.repeat(64)).children[0].children.length,2);
+ }
+ assert.equal(activeFftInputOutline(object,frozenCollection()),null);assert.equal(activeFftInputOutline({...copy(object),object_id:id(99)},frozenCollection(),'f'.repeat(64)),null);
 });
