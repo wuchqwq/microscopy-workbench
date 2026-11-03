@@ -1,7 +1,7 @@
 // Focused read-only presentation/export contracts; not browser acceptance.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MeasurementWorkspace,measurementValues,measurementType,measurementNumber,measurementDetails,measurementSummary,inspectorDetails,tabularCell,exportMeasurementTable} from '../ui/image-panel/measurement-workspace.mjs';
+import {MeasurementWorkspace,measurementReadContext,measurementValues,measurementType,measurementNumber,measurementDetails,measurementSummary,inspectorDetails,tabularCell,exportMeasurementTable} from '../ui/image-panel/measurement-workspace.mjs';
 const A='a'.repeat(32),B='b'.repeat(32),C='c'.repeat(32);
 function result(overrides={}){return {object_id:A,kind:'measure',parent_object_id:B,request_id:'test-measure',points:[[0,0],[.125,-.25]],coordinate_space:'frequency_cycles_per_pixel',dc_reference_point_index:0,physical_frequency_magnitude:5,physical_frequency_unit:'1/nm',period:.2,period_unit:'nm',d_spacing:.2,d_spacing_unit:'nm',frequency_distance_cycles_per_pixel:Math.hypot(.125,.25),status:'current',annotation_id:'g1',source:{frame_index:9,source_rect_xyxy:[20,30,84,94]},...overrides};}
 test('DC-reflection period and an arbitrary two-peak difference stay distinct',()=>{
@@ -45,6 +45,25 @@ test('newer overlapping read wins, and canvas/table selection does not recompute
  const workspace=new MeasurementWorkspace({document:null,getState:()=>({object:{object_id:A},state_revision:5}),onSelect:e=>selected.push(e.object_id),api:()=>new Promise(resolve=>{if(++number===1)releaseFirst=resolve;else releaseSecond=resolve;})});
  const one=workspace.refresh(),two=workspace.refresh();releaseSecond({current:{object_id:A},entries:[result({object_id:B})]});assert.equal(await two,true);releaseFirst({current:{object_id:A},entries:[result({object_id:C})]});assert.equal(await one,false);assert.equal(workspace.entries[0].object_id,B);
  workspace.select(B);assert.deepEqual(selected,[B]);assert.equal(number,2);
+});
+
+test('scientific read context accepts continuous camera and selection metadata without retries or writes',async()=>{
+ let state={object:{object_id:B,annotations:[]},frame_identity:{frame_object_id:C},last_operation:{kind:'measure',request_id:'original-result'},state_revision:1},release;const calls=[];
+ const workspace=new MeasurementWorkspace({document:null,getState:()=>state,readContext:()=>measurementReadContext(state),api:url=>{calls.push(url);return new Promise(resolve=>{release=resolve;});}});
+ const waiting=workspace.refresh();for(let i=0;i<8;i++)state={...state,state_revision:state.state_revision+1,selection:{coordinates:[i,i]},camera:{scale:i+1},ui_panels:{results:i%2===0}};
+ release({current:{object_id:B},entries:[result()]});assert.equal(await waiting,true);assert.equal(workspace.entries.length,1);assert.equal(calls.length,1);assert.ok(calls.every(url=>url.startsWith('/api/measurements?')));
+});
+test('scientific read context rejects a same-object newer measurement and changed scientific inputs',async()=>{
+ for(const change of [s=>({...s,last_operation:{kind:'measure',request_id:'new-result'}}),s=>({...s,object:{...s.object,xy_calibration:{calibration_id:C}}}),s=>({...s,object:{...s.object,annotations:[{annotation_id:'g1',coordinates:[.2,.3]}]}})]){
+  let state={object:{object_id:B,annotations:[]},last_operation:{kind:'measure',request_id:'old-result'},state_revision:1},release;const workspace=new MeasurementWorkspace({document:null,getState:()=>state,readContext:()=>measurementReadContext(state),api:()=>new Promise(resolve=>{release=resolve;})});
+  const waiting=workspace.refresh();state=change(state);release({current:{object_id:B},entries:[result()]});assert.equal(await waiting,false);assert.deepEqual(workspace.entries,[]);
+ }
+});
+test('scientific read context still rejects another object, mismatched response and superseded read',async()=>{
+ let state={object:{object_id:B},last_operation:null,state_revision:1};const releases=[];const workspace=new MeasurementWorkspace({document:null,getState:()=>state,readContext:()=>measurementReadContext(state),api:()=>new Promise(resolve=>releases.push(resolve))});
+ const other=workspace.refresh();state={...state,object:{object_id:C}};releases.shift()({current:{object_id:B},entries:[result()]});assert.equal(await other,false);
+ const mismatch=workspace.refresh();releases.shift()({current:{object_id:B},entries:[result()]});assert.equal(await mismatch,false);
+ const first=workspace.refresh(),second=workspace.refresh(),a=releases.shift(),b=releases.shift();b({current:{object_id:C},entries:[result({object_id:B})]});assert.equal(await second,true);a({current:{object_id:C},entries:[result({object_id:A})]});assert.equal(await first,false);assert.equal(workspace.entries[0].object_id,B);
 });
 test('current bound mark names follow saved automatic labels in table/export without changing historical names or scientific records',async()=>{
  class E{constructor(){this.children=[];this.dataset={};this.attrs={};this.classList={toggle(){}};}replaceChildren(){this.children=[];}append(...values){this.children.push(...values);}setAttribute(key,value){this.attrs[key]=String(value);}}

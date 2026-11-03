@@ -15,7 +15,14 @@ export interface MeasurementWorkspaceOptions {
  onUpdate?: (entry: MeasurementEntry | null)=>unknown;
  onError?: (error: unknown)=>unknown;
  pendingAnnotations?:()=>readonly string[];
+ readContext?:()=>unknown;
  document?: PresentationDocument | null;
+}
+// The Panel's global revision includes camera, selection and disclosure writes.
+// Saved scientific inputs and the last operation distinguish a new measurement
+// on the same object without invalidating a read for those viewing preferences.
+export function measurementReadContext(state:WorkflowState&{readonly last_operation?:unknown}){
+ return {object:state.object??null,frame_identity:state.frame_identity??null,last_operation:state.last_operation??null};
 }
 // Read-only table projection of the provider's saved measurements. Scientific
 // values are never reconstructed from annotation text or preview pixels.
@@ -97,12 +104,14 @@ export function exportMeasurementTable(entries: readonly MeasurementEntry[],{del
 }
 export class MeasurementWorkspace {
  declare pendingAnnotations:NonNullable<MeasurementWorkspaceOptions['pendingAnnotations']>;
+ declare readContext:NonNullable<MeasurementWorkspaceOptions['readContext']>;
  declare getState: MeasurementWorkspaceOptions['getState'];declare api: MeasurementWorkspaceOptions['api'];
  declare onSelect: NonNullable<MeasurementWorkspaceOptions['onSelect']>;declare onJump: NonNullable<MeasurementWorkspaceOptions['onJump']>;declare onUpdate: NonNullable<MeasurementWorkspaceOptions['onUpdate']>;declare onError: NonNullable<MeasurementWorkspaceOptions['onError']>;
  declare document: PresentationDocument | null | undefined;declare entries: MeasurementEntry[];declare selectedId: string | null | undefined;declare checked: Set<string | undefined>;declare ticket: number;declare current: MeasurementCurrent | null | undefined;declare truncated?: boolean;
  declare el: (id: string)=>PresentationElement | null | undefined;
- constructor({getState,api,onSelect=()=>{},onJump=()=>{},onUpdate=()=>{},onError=()=>{},pendingAnnotations=()=>[],document:doc=(globalThis as PresentationEnvironment).document}: MeasurementWorkspaceOptions={}){
+ constructor({getState,api,onSelect=()=>{},onJump=()=>{},onUpdate=()=>{},onError=()=>{},pendingAnnotations=()=>[],readContext,document:doc=(globalThis as PresentationEnvironment).document}: MeasurementWorkspaceOptions={}){
   Object.assign(this,{getState,api,onSelect,onJump,onUpdate,onError,pendingAnnotations,document:doc});this.entries=[];this.selectedId=null;this.checked=new Set();this.ticket=0;this.current=null;
+  this.readContext=readContext??(()=>this.getState?.()?.state_revision);
   const el=(id: string)=>doc?.getElementById(id);this.el=el;
   if(el('measurement-sort'))el('measurement-sort')!.onchange=()=>this.render();
   if(el('measurement-history'))el('measurement-history')!.onchange=()=>this.render();
@@ -130,8 +139,8 @@ export class MeasurementWorkspace {
  selectAnnotation(id: string){const entry=this.latestForAnnotation(id);if(!entry)return false;this.select(asRecord(entry).object_id,{notify:false});this.el('measurement-rows')?.querySelector(`[data-measurement-id="${asRecord(entry).object_id}"]`)?.scrollIntoView?.({block:'nearest'});return true;}
  select(id: string | undefined,{notify=true}: {notify?:boolean}={}){const entry=this.entries.find(e=>asRecord(e).object_id===id);if(!entry)return false;this.selectedId=id;if(['historical','history'].includes(entry.status as string)&&this.el('measurement-history'))this.el('measurement-history')!.checked=true;this.render();if(notify)this.run(()=>this.onSelect(entry));return true;}
  async refresh(){
-  const state=this.getState!(),objectId=state?.object?.object_id,revision=state?.state_revision;if(!objectId)return false;const ticket=++this.ticket;
-  try{const next=await this.api!(('/api/measurements?object_id='+encodeURIComponent(objectId)) as `/api/measurements${string}`);const latest=this.getState!();if(ticket!==this.ticket||latest?.object?.object_id!==objectId||latest?.state_revision!==revision||next.current?.object_id!==objectId)return false;
+  const state=this.getState!(),objectId=state?.object?.object_id;if(!objectId)return false;const context=JSON.stringify(this.readContext()),ticket=++this.ticket;
+  try{const next=await this.api!(('/api/measurements?object_id='+encodeURIComponent(objectId)) as `/api/measurements${string}`);const latest=this.getState!();if(ticket!==this.ticket||latest?.object?.object_id!==objectId||JSON.stringify(this.readContext())!==context||next.current?.object_id!==objectId)return false;
    this.current=next.current;this.entries=next.entries??next.measurements??[];this.truncated=Boolean(next.truncated);if(this.selectedId&&!this.entries.some(e=>asRecord(e).object_id===this.selectedId))this.selectedId=null;this.checked=new Set([...this.checked].filter(id=>this.entries.some(e=>asRecord(e).object_id===id)));this.render();return true;
   }catch(error){if(ticket===this.ticket&&this.getState!()?.object?.object_id===objectId)this.onError(error);return false;}
  }

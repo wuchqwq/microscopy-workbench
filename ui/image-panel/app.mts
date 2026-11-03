@@ -18,7 +18,7 @@ import {rectangleHitTest,rectangleResizeHandleHitTest,rectangleHandles,editRecta
 import {tonePixels,drawMark} from './viewer-render.mjs';
 import {layoutAnnotations,renderAnnotationsSVG} from './annotation-presentation.mjs';
 import {buildFigureBundle,downloadBlob,makeFigureRecipe,readFigureRecipe,figureScaleBar} from './figure-export.mjs';
-import {MeasurementWorkspace,requiresMeasurementJump} from './measurement-workspace.mjs';
+import {MeasurementWorkspace,requiresMeasurementJump,measurementReadContext} from './measurement-workspace.mjs';
 import {knownLengthReference,knownLengthParameters,knownLengthAttemptRequest} from './known-length-calibration.mjs';
 import type {KnownLengthReference} from './known-length-calibration.mjs';
 import {DataProbes} from './data-probes.mjs';
@@ -76,7 +76,7 @@ const historyDraft=new DraftHistory({}),perf={frames:0,tone_count:0,overlay_coun
 const now=()=>performance.now(),message=(text:unknown,error=false)=>{$('message').textContent=text;$('message').classList.toggle('error',error);};
 const recoveryPending=()=>state?.workspace_analysis?.recovery_available===true;
 function allowContentEditing(){if(!recoveryPending())return true;message('先恢复或明确放弃未保存恢复副本，再编辑或执行分析；当前仍可缩放、平移和调整窗口。',true);return false;}
-const measurementWorkspace=new MeasurementWorkspace({getState:()=>state,pendingAnnotations:pendingMeasurementAnnotations,api,onSelect:selectMeasurement,onJump:jumpMeasurement,onUpdate:updateMeasurement,onError:e=>message('结果读取未完成：'+(e as {message:string}).message,true)});
+const measurementWorkspace=new MeasurementWorkspace({getState:()=>state,readContext:()=>measurementReadContext(state),pendingAnnotations:pendingMeasurementAnnotations,api,onSelect:selectMeasurement,onJump:jumpMeasurement,onUpdate:updateMeasurement,onError:e=>message('结果读取未完成：'+(e as {message:string}).message,true)});
 const dataProbes=new DataProbes({getState:dataProbeState,api,onError:e=>message('原数组读取未完成：'+(e as {message:string}).message,true)});
 const researchWorkspace=new ResearchWorkspace({document,allowEdit:allowContentEditing,onSave:saveRoiObservation,onSelect:selectRoiObservation,onNavigate:async object_id=>{if(dirty()||busy||drag)throw new Error('先保存或撤销草稿，再查看保存证据；不会重算 FFT。');await act('show',{object_id});},onError:text=>message(text,true),onDraftChange:()=>{interactionEpoch++;diagnostics();publishDraft({urgent:true});}});
 const windowWorkspace=new WindowWorkspace({document,viewport,activeStage:stage,getActiveImageSize:()=>[canvas.width,canvas.height],getActiveScale:()=>view.scale,getActiveSavedImage:()=>decodedViewSnapshot,getState:()=>state,api,isScientificGesture:()=>Boolean(drag),onActivate:activateWindow,onClose:closeImageWindow,onActiveFit:()=>{if(!windowSwitch)fitView();},onBoundsChange:syncDrawerBounds,onError:text=>message(text,true),onCollection:(collection,revision)=>{if(!state)return;state={...state,window_collection:collection,state_revision:Math.max(state.state_revision??0,revision)};showPending();},schedule:(callback,ms)=>typeof setTimeout==='function'?setTimeout(callback,ms):Promise.resolve().then(callback),cancelSchedule:id=>{if(typeof clearTimeout==='function')clearTimeout(id);},observe:typeof ResizeObserver==='undefined'?undefined:(target,callback)=>{new ResizeObserver(callback).observe(target);}});
