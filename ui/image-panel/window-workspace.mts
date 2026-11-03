@@ -40,7 +40,7 @@ export function readWindowCamera(raw:unknown):WindowCamera|null {
  return {scale:raw.scale,center_image_xy:[raw.center_image_xy[0] as number,raw.center_image_xy[1] as number]};
 }
 export function readWindowUiPanels(raw:unknown):WindowUiPanels|null {
- if(!record(raw)||Object.keys(raw).some(k=>!['side','settings','results'].includes(k))||!['none','properties','research'].includes(String(raw.side))||typeof raw.settings!=='boolean'||typeof raw.results!=='boolean')return null;
+ if(!record(raw)||Object.keys(raw).some(k=>!['side','settings','results'].includes(k))||typeof raw.side!=='string'||!['none','properties','research'].includes(raw.side)||typeof raw.settings!=='boolean'||typeof raw.results!=='boolean')return null;
  return {side:raw.side as WindowUiPanels['side'],settings:raw.settings,results:raw.results};
 }
 export function readWindowViewContext(raw:unknown,object?:{object_id:string},fingerprint?:string):WindowViewContext|null {
