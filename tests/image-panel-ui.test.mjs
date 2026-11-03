@@ -550,11 +550,11 @@ test('saving a mark advances the visible identity even when a separate Agent res
 });
 
 test('measurement summary prefers valid physical lengths and never prints null as a distance',async()=>{
- const f=fixture();f.last_operation={physical_distance:2.5,physical_unit:'nm',distance_pixels:10};
- const h=await harness(f);assert.match(h.$('measurement-summary').textContent,/2.5 nm/);
- f.last_operation={physical_distance:null,period:null,d_spacing:null,distance_pixels:10};h.setServer(f);await h.click('reload');
+ const f=annotated(),anchor=f.object.annotations[0].anchor,bound={kind:'measure',object_id:'e'.repeat(32),parent_object_id:viewId,annotation_id:'line-a',coordinate_space:anchor.coordinate_space,points:[anchor.coordinates.slice(0,2),anchor.coordinates.slice(2)]};f.last_operation={...bound,physical_distance:2.5,physical_unit:'nm',distance_pixels:10};
+ const h=await harness(f);selectLine(h,'line-a');h.flush();assert.match(h.$('measurement-summary').textContent,/2.5 nm/);
+ f.last_operation={...bound,physical_distance:null,period:null,d_spacing:null,distance_pixels:10};h.setServer(f);await h.click('reload');selectLine(h,'line-a');h.flush();
  assert.match(h.$('measurement-summary').textContent,/10 px/);assert.doesNotMatch(h.$('measurement-summary').textContent,/null/);
- f.last_operation={physical_distance:null,period:2.5,period_unit:'nm',d_spacing:2.5,d_spacing_unit:'nm',distance_pixels:10};h.setServer(f);await h.click('reload');
+ f.last_operation={...bound,physical_distance:null,period:2.5,period_unit:'nm',d_spacing:2.5,d_spacing_unit:'nm',distance_pixels:10};h.setServer(f);await h.click('reload');selectLine(h,'line-a');h.flush();
  assert.match(h.$('measurement-summary').textContent,/晶面间距.*2.5 nm/);
 });
 
@@ -1406,7 +1406,7 @@ test('sidebar context: ROI shows its own geometry and note without a previous me
 });
 
 test('sidebar context: a selected reciprocal-space point retains its actual measurement and unknown scale',async()=>{
- const initial=fixture();initial.object.panels=[{domain:'frequency',source_object_id:sourceId,fft_shape_yx:[96,128],fft_rect_xyxy:[0,0,128,96],image_rect_xyxy:[0,0,128,96]}];initial.object.annotations=[{annotation_id:'peak-one',kind:'point',color:'cyan',status:'hypothesized',anchor:{source_object_id:sourceId,coordinate_space:'frequency_cycles_per_pixel',coordinates:[.125,0]}}];initial.last_operation={action:'measure',annotation_id:'peak-one',frequency_distance_cycles_per_pixel:.125};const h=await harness(initial);h.$('existing').value='peak-one';h.$('existing').onchange();h.flush();
+ const initial=sidebarMeasuredPeakFixture();initial.object.annotations[0].annotation_id='peak-one';initial.last_operation.annotation_id='peak-one';const h=await harness(initial);h.$('existing').value='peak-one';h.$('existing').onchange();h.flush();
  assert.equal(h.$('properties-title').textContent,'峰位属性');assert.equal(h.$('measurement-properties').hidden,false);assert.equal(h.$('marker-shape-field').hidden,false);assert.equal(h.$('properties-roi-note').hidden,true);assert.match(h.$('properties-geometry').textContent,/cycles\/px/);assert.match(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);assert.match(h.$('calibration-summary').textContent,/物理标尺未知/);assert.equal(h.calls.length,0);
 });
 
@@ -1430,4 +1430,49 @@ test('sidebar context: live ROI drag shows working coordinates and cancellation 
 test('native help dismisses its keyboard-opened menu and Escape belongs to the modal without losing a ROI draft',async()=>{
  const h=await harness();h.draw('rectangle');await h.settle();const menu=h.$('research-more'),summary=h.$('results-menu-summary');menu.querySelector=()=>summary;menu.open=true;summary.focus();const before=h.inspect(),writes=h.calls.length;
  assert.equal((await h.nativeAction('help')).ok,true);assert.equal(menu.open,false);assert.equal(h.$('usage-dialog').open,true);let prevented=false;h.key('Escape',{preventDefault(){prevented=true;}});assert.equal(prevented,false,'background menus must not consume the native modal Escape');h.$('usage-dialog').listeners.cancel({preventDefault(){}});assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),summary);assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,writes);
+});
+
+function sidebarMeasuredPeakFixture(){
+ const initial=fixture();initial.object.panels=[{domain:'frequency',source_object_id:sourceId,fft_shape_yx:[96,128],fft_rect_xyxy:[0,0,128,96],image_rect_xyxy:[0,0,128,96]}];initial.object.annotations=[{annotation_id:'peak-A',kind:'point',color:'cyan',status:'hypothesized',presentation:{label:{visible:false}},anchor:{source_object_id:sourceId,coordinate_space:'frequency_cycles_per_pixel',coordinates:[.125,0]}}];initial.last_operation={kind:'measure',object_id:'e'.repeat(32),parent_object_id:viewId,annotation_id:'peak-A',coordinate_space:'frequency_cycles_per_pixel',points:[[0,0],[.125,0]],frequency_distance_cycles_per_pixel:.125};return initial;
+}
+
+for(const kind of ['point','line'])test(`sidebar provenance: measured A is never presented as a new temporary ${kind} B`,async()=>{
+ const h=await harness(sidebarMeasuredPeakFixture());h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.match(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);const before=h.inspect().state.object;h.draw(kind);await h.settle();
+ assert.equal(h.inspect().draft.kind,kind);assert.notDeepEqual(h.inspect().draft.coordinates,[.125,0]);assert.equal(h.$('measurement-properties').hidden,false);assert.doesNotMatch(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/,'A result cannot label B coordinates');assert.match(h.$('measurement-summary').textContent,/未测量|未关联/);assert.ok(h.$('properties-geometry').title.includes(JSON.stringify(h.inspect().draft.coordinates)));assert.deepEqual(h.inspect().state.object,before);assert.equal(h.calls.length,0);
+});
+
+test('sidebar provenance: moving a measured saved peak marks old values pending rather than attaching them to working coordinates',async()=>{
+ const h=await harness(sidebarMeasuredPeakFixture());h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.match(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);const original=h.inspect().state.last_operation;
+ h.event('pointerdown',80,48);h.event('pointermove',84,48);h.flush();assert.notDeepEqual(h.inspect().editCoordinates,[.125,0]);assert.match(h.$('measurement-summary').textContent,/待重测|尚未测量/);assert.doesNotMatch(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);assert.deepEqual(h.inspect().state.last_operation,original);assert.equal(h.calls.length,0);
+ h.event('pointercancel');h.flush();assert.match(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);assert.equal(h.calls.length,0);
+});
+
+test('new selection identity: point, line and arrow detach from saved ROI A, Delete preserves A and one undo restores A',async()=>{
+ for(const kind of ['point','line','arrow']){const h=await harness(savedRectangleFixture());selectSavedRoi(h);const before=h.inspect();h.draw(kind);await h.settle();assert.equal(h.inspect().selectedId,'',kind);assert.equal(h.inspect().draft.kind,kind);assert.equal(h.$('mode').value,kind);assert.equal(h.inspect().undoCount,before.undoCount+1,kind);
+  h.$('canvas').focus();h.key('Delete',{target:h.$('canvas')});await h.settle();assert.deepEqual(h.server().object.annotations,before.state.object.annotations,kind);assert.equal(h.calls.length,0,kind);h.key('z',{ctrlKey:true});h.flush();assert.equal(h.inspect().selectedId,'roi-stable',kind);assert.deepEqual(h.inspect().draft,before.draft,kind);assert.equal(h.inspect().undoCount,before.undoCount,kind);assert.equal(h.calls.length,0,kind);
+ }
+});
+
+test('new selection identity: Escape cancels a point, line or arrow gesture and restores the saved ROI selection',async()=>{
+ for(const kind of ['point','line','arrow']){const h=await harness(savedRectangleFixture());selectSavedRoi(h);const before=h.inspect();h.$('mode').value=kind;h.event('pointerdown',10,10);h.event('pointermove',18,16);h.flush();assert.equal(h.inspect().selectedId,'',kind);h.key('Escape');h.flush();assert.equal(h.inspect().selectedId,'roi-stable',kind);assert.deepEqual(h.inspect().draft,before.draft,kind);assert.equal(h.inspect().undoCount,before.undoCount,kind);assert.equal(h.calls.length,0,kind);}
+});
+
+test('new selection identity: unsaved reason, unsaved fields and unknown request reject new gestures without committing A',async()=>{
+ for(const kind of ['point','line','arrow'])for(const protection of ['reason','field','unknown']){const initial=savedRectangleFixture();if(protection==='unknown')initial.last_operation={state:'submitted',request_id:'original-unknown',action:'edit'};const h=await harness(initial);selectSavedRoi(h);if(protection==='reason'){h.$('roi-reason').value='Keep this reason draft';h.$('roi-reason').oninput();}if(protection==='field'){h.$('mark-text').value='Keep this label draft';h.$('mark-text').oninput();}h.flush();const before=h.inspect(),reason=h.$('roi-reason').value,text=h.$('mark-text').value;h.$('mode').value=kind;h.event('pointerdown',10,10);h.event('pointermove',18,16);h.event('pointerup',18,16);h.flush();await h.settle();assert.equal(h.inspect().drag,null,kind+'/'+protection);assert.deepEqual(h.inspect().draft,before.draft,kind+'/'+protection);assert.equal(h.inspect().selectedId,before.selectedId);assert.equal(h.$('roi-reason').value,reason);assert.equal(h.$('mark-text').value,text);assert.deepEqual(h.inspect().state.object,before.state.object);assert.equal(h.calls.length,0);assert.match(h.$('message').textContent,/先保存或撤销/);}
+});
+
+test('sidebar provenance: only the selected annotation and exact last-result input can supply a current value',async()=>{
+ for(const mismatch of ['annotation','view','space','points']){const initial=sidebarMeasuredPeakFixture();if(mismatch==='annotation')initial.last_operation.annotation_id='other-peak';if(mismatch==='view')initial.last_operation.parent_object_id='c'.repeat(32);if(mismatch==='space')initial.last_operation.coordinate_space='source_pixels';if(mismatch==='points')initial.last_operation.points[1]=[.25,0];const h=await harness(initial);h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.doesNotMatch(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/,mismatch);assert.match(h.$('measurement-summary').textContent,/未测量|未关联/,mismatch);assert.equal(h.calls.length,0,mismatch);}
+});
+
+test('sidebar provenance: qualified current and historical entries keep their saved values and history labels',async()=>{
+ for(const status of ['current','historical']){const initial=sidebarMeasuredPeakFixture(),record=copy(initial.last_operation);initial.last_operation=null;initial.measurement_entries=[{annotation_id:'peak-A',status,same_grid:true,visible_in_current_view:true,annotation_matches_current:true,measurement:record}];const h=await harness(initial);await h.settle();h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.match(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);if(status==='historical')assert.match(h.$('measurement-summary').textContent,/旧版数值.*历史/);else assert.doesNotMatch(h.$('measurement-summary').textContent,/旧版数值/);assert.match(h.$('calibration-summary').textContent,/物理标尺未知/);assert.deepEqual(h.server().measurement_entries,initial.measurement_entries);assert.equal(h.calls.length,0);}
+});
+
+test('sidebar provenance: stale entry flags or mismatched endpoints remain historical instead of becoming current values',async()=>{
+ for(const mismatch of ['grid','visible','annotation','points']){const initial=sidebarMeasuredPeakFixture(),record=copy(initial.last_operation);initial.last_operation=null;const entry={annotation_id:'peak-A',status:'current',same_grid:true,visible_in_current_view:true,annotation_matches_current:true,measurement:record};if(mismatch==='grid')entry.same_grid=false;if(mismatch==='visible')entry.visible_in_current_view=false;if(mismatch==='annotation')entry.annotation_matches_current=false;if(mismatch==='points')entry.measurement.points[1]=[.25,0];initial.measurement_entries=[entry];const h=await harness(initial);await h.settle();h.$('existing').value='peak-A';h.$('existing').onchange();h.flush();assert.doesNotMatch(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/,mismatch);assert.match(h.$('measurement-summary').textContent,/未关联当前选择/,mismatch);assert.deepEqual(h.server().measurement_entries,initial.measurement_entries);assert.equal(h.calls.length,0);}
+});
+
+test('new selection identity: saving temporary B creates a new mark instead of editing the previously selected ROI A',async()=>{
+ const h=await harness(savedRectangleFixture());selectSavedRoi(h);const original=copy(h.server().object.annotations[0]);h.draw('line');const geometry=h.inspect().draft.coordinates;await h.click('save-mark');await h.settle();assert.deepEqual(h.calls.map(call=>call.action),['mark']);assert.notEqual(h.calls[0].params.annotation_id,original.annotation_id);assert.deepEqual(h.server().object.annotations[0],original);assert.equal(h.server().object.annotations.length,2);assert.deepEqual(h.server().object.annotations[1].anchor.coordinates,geometry);
 });
