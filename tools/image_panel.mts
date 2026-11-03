@@ -14,7 +14,7 @@ interface PendingRPC {resolve:(value:unknown)=>void;reject:(error:unknown)=>void
 
 import {spawn} from 'node:child_process';
 import {randomBytes,timingSafeEqual,createHash} from 'node:crypto';
-import {mkdirSync,writeFileSync,readFileSync,existsSync,openSync,fsyncSync,closeSync,renameSync,realpathSync,statSync,linkSync,unlinkSync} from 'node:fs';
+import {mkdirSync,writeFileSync,readFileSync,existsSync,openSync,fsyncSync,closeSync,renameSync,realpathSync,statSync,lstatSync,linkSync,unlinkSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import type {Selection} from '../ui/image-panel/coordinates.mjs';
@@ -38,7 +38,7 @@ import {PanelWindowStore,panelWindowMappingFingerprint,readPanelWindowCamera,qua
 import {panelRoiHandoff,roiObservationModel} from '../ui/image-panel/roi-observations.mjs';
 import {AnalysisWorkspace,acquireAnalysisWorkspaceOwner,readAnalysisWorkspace,readAnalysisWorkspaceInitial,readAnalysisWorkspaceResumeSnapshot,verifyAnalysisReferences} from '../lib/analysis_workspace.mjs';
 import type {AnalysisSnapshot,AnalysisWorkspaceOwner} from '../lib/analysis_workspace.mjs';
-import {writePanelExecutionInput,listPanelExecutionInputs,readPanelExecutionInput} from '../lib/panel_execution_inputs.mjs';
+import {writePanelExecutionInput,listPanelExecutionInputs,readPanelExecutionInput,panelJournalRelativePath} from '../lib/panel_execution_inputs.mjs';
 import {imageAdmissionFailureFromError,readImageAdmissionFailure} from '../lib/runtime/image_admission_failure.mjs';
 import type {PanelRoiSnapshot} from '../ui/image-panel/roi-observations.mjs';
 
@@ -118,10 +118,10 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(!helper_session_id||!panel_id||!panel_generation)throw new Error('Execution recovery requires the exact owned helper successor');
   const connection=readOwnedPanelConnection(workspace!,panel_id),trusted=readOwnedPanelCheckpoint(workspace!,connection),operation=trusted.last_operation as Metadata|undefined;
   if(connection.schema_version!==2||connection.generation!==panel_generation-1||!sameRecord(trusted,execution_recovery_checkpoint)||operation?.state!=='submitted'||!safeId.test(String(operation.request_id)))throw new Error('Execution recovery is not the exact prior owned checkpoint request');
-  const relative=operation.original_journal_relative_path??path.relative(workspace!,path.dirname(connection.checkpoint_file!)).replaceAll('\\','/');
+  const relative=operation.original_journal_relative_path??panelJournalRelativePath(workspace!,path.dirname(connection.checkpoint_file!));
   if(typeof relative!=='string'||!/^panel-journals\/[a-f0-9]{16,32}$/.test(relative))throw new Error('Original execution journal is not an owned Panel journal');
-  inheritedJournal=path.join(workspace!,...relative.split('/'));const file=realpathSync(path.join(inheritedJournal,operation.request_id+'.request.json')),root=realpathSync(workspace!),rel=path.relative(root,file);
-  if(rel.startsWith('..')||path.isAbsolute(rel)||!statSync(file).isFile()||statSync(file).size>64*1024)throw new Error('Original execution request escapes its bounded workspace');
+  const root=realpathSync.native(workspace!),qualifiedRelative=panelJournalRelativePath(workspace!,path.join(root,...relative.split('/')));inheritedJournal=path.join(root,...qualifiedRelative.split('/'));const requestFile=path.join(inheritedJournal,operation.request_id+'.request.json'),entry=lstatSync(requestFile),file=realpathSync.native(requestFile),rel=path.relative(root,file);
+  if(rel.startsWith('..')||path.isAbsolute(rel)||entry.isSymbolicLink()||!entry.isFile()||entry.size>64*1024)throw new Error('Original execution request escapes its bounded workspace');
   const original=JSON.parse(readFileSync(file,'utf8')) as Metadata,args=original.arguments as Metadata|undefined;
   if(original.name!==operation.tool||typeof original.name!=='string'||!original.name.startsWith('image_')||['image_info','image_result'].includes(original.name)||args?.request_id!==operation.request_id||operation.object_id!==undefined&&args?.object_id!==operation.object_id)throw new Error('Original execution request differs from the trusted checkpoint');
   inheritedOperation={...structuredClone(operation),original_journal_relative_path:relative,recovered_from_previous_helper:true};
