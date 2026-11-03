@@ -744,7 +744,7 @@ function deleteSelectedRoi(){
  return true;
 }
 document.addEventListener('keydown',event=>{
- if(event.key==='Escape'&&dismissMenus(true)){event.preventDefault();return;}
+ if(event.key==='Escape'&&!document.querySelector('dialog[open]')&&dismissMenus(true)){event.preventDefault();return;}
  if((event.ctrlKey||event.metaKey)&&!event.altKey&&event.key.toLowerCase()==='s'&&!$('usage-dialog').open){event.preventDefault();void workspaceControls.save().catch(error=>message((error as Error).message,true));return;}
  if(workspaceRestoring||windowSwitch||observationSavePhase||roiCreationRecovery||$('usage-dialog').open||textEntry(event.target))return;
  if(event.key==='Delete'&&!event.ctrlKey&&!event.metaKey&&!event.altKey){
@@ -839,7 +839,7 @@ $('agent-continue').onclick=guarded(async()=>{
 });
 $('close-agent-handoff').onclick=()=>$('agent-handoff-dialog').close();
 let usageReturnFocus:BrowserElement|null=null;
-$('open-usage-help').onclick=()=>{const dialog=$('usage-dialog');if(dialog.open)return;usageReturnFocus=document.activeElement??$('open-usage-help');dialog.showModal();$('close-usage-help').focus();};
+$('open-usage-help').onclick=()=>{const dialog=$('usage-dialog');if(dialog.open)return;const previous=document.activeElement,menu=transientMenus.find(value=>value.open&&previous&&withinElement(previous,value));dismissMenus();usageReturnFocus=menu?.querySelector('summary')??previous??$('open-usage-help');dialog.showModal();$('close-usage-help').focus();};
 $('close-usage-help').onclick=()=>$('usage-dialog').close();
 $('usage-dialog').addEventListener('cancel',event=>{event.preventDefault();$('usage-dialog').close();});
 $('usage-dialog').addEventListener('close',()=>{const target=usageReturnFocus;usageReturnFocus=null;target?.focus();});

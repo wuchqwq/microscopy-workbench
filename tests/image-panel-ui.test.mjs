@@ -65,7 +65,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={
   workbenchDesktop:{onAction(handler){desktopAction=handler;}},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
-  document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),createElementNS:(_namespace,tag)=>new Element(tag),querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
+  document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),createElementNS:(_namespace,tag)=>new Element(tag),querySelector:selector=>selector==='dialog[open]'?[...elements].find(([id,element])=>id.endsWith('-dialog')&&element.open)?.[1]??null:null,querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
   sessionStorage:{getItem:()=> 'synthetic-token',setItem(){}},location:{hash:'',pathname:'/'},history:{replaceState(){}},
   Option:class{constructor(text,value){this.text=text;this.value=value;}},
   Image:class{constructor(){this.width=128;this.height=96;}async decode(){if(waitDecode)await waitDecode;if(decodeFailure){decodeFailure=false;throw new Error('Controlled image decode failure');}}},
@@ -1425,4 +1425,9 @@ test('sidebar context: live ROI drag shows working coordinates and cancellation 
  const h=await harness(savedRectangleFixture());selectSavedRoi(h);const before=h.inspect();h.event('pointerdown',60,50);h.event('pointermove',65,54);h.flush();const changed=h.inspect().editCoordinates;
  assert.ok(changed);assert.notDeepEqual(changed,before.state.object.annotations[0].anchor.coordinates);assert.ok(h.$('properties-geometry').title.includes(JSON.stringify(changed)));assert.deepEqual(h.inspect().state.object,before.state.object);
  h.event('pointercancel');h.flush();assert.ok(h.$('properties-geometry').title.includes(JSON.stringify(before.state.object.annotations[0].anchor.coordinates)));assert.equal(h.calls.length,0);
+});
+
+test('native help dismisses its keyboard-opened menu and Escape belongs to the modal without losing a ROI draft',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const menu=h.$('research-more'),summary=h.$('results-menu-summary');menu.querySelector=()=>summary;menu.open=true;summary.focus();const before=h.inspect(),writes=h.calls.length;
+ assert.equal((await h.nativeAction('help')).ok,true);assert.equal(menu.open,false);assert.equal(h.$('usage-dialog').open,true);let prevented=false;h.key('Escape',{preventDefault(){prevented=true;}});assert.equal(prevented,false,'background menus must not consume the native modal Escape');h.$('usage-dialog').listeners.cancel({preventDefault(){}});assert.equal(h.$('usage-dialog').open,false);assert.equal(h.active(),summary);assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,writes);
 });
