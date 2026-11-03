@@ -1062,6 +1062,13 @@ test('direct ROI: Delete and Undo retire an old camera refusal before FFT and ex
  const saved=await h.nativeAction('save');assert.equal(saved.ok,true,saved.error);assert.equal(h.actionTrace.filter(action=>action==='save').length,1);assert.deepEqual(h.calls.map(value=>value.action),['edit','edit','fft']);
 });
 
+test('save status: accepted annotation B stays pending until its final draft publication finishes',async()=>{
+ const f=windowActivationFixture();f.source.object.annotations=copy(savedRectangleFixture().object.annotations);f.source.workspace_analysis={schema_version:1,status:'clean',working_revision:1,save_id:'saved-a',saved_revision:1,recovery_available:false,unresolved_request_id:null};const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();selectSavedRoi(h);await h.settle();
+ h.$('mark-text').value='ROI B';h.$('mark-text').oninput();await h.settle();assert.match(h.$('workspace-save-status').textContent,/未保存修改/);let actionDone,draftDone;h.delayAction(new Promise(resolve=>{actionDone=resolve;}));const saving=h.click('save-mark');await h.settle();assert.equal(h.calls.at(-1).action,'edit');h.delayDraft(new Promise(resolve=>{draftDone=resolve;}));actionDone();await h.settle();
+ assert.equal(h.inspect().dirty,false);assert.equal(h.inspect().busy,false);assert.equal(h.inspect().state.object.annotations[0].text,'ROI B');assert.equal(h.inspect().state.workspace_analysis.status,'clean');const during=h.$('workspace-save-status').textContent;
+ draftDone();await saving;await h.finish();h.delayDraft(null);const next=h.server();next.workspace_analysis={...next.workspace_analysis,status:'dirty',dirty:true,working_revision:2};next.state_revision++;h.setServer(next);await h.poll();await h.settle();assert.match(during,/处理中.*待核对/);assert.match(h.$('workspace-save-status').textContent,/未保存修改/);assert.doesNotMatch(h.$('workspace-save-status').textContent,/处理中/);assert.equal(h.actionTrace.filter(action=>action==='save').length,0);
+});
+
 test('direct ROI: property retraction clears its still-bound selection but preserves a later independent temporary ROI',async()=>{
  const h=await harness(savedRectangleFixture());selectSavedRoi(h);h.$('status').value='retracted';h.$('status').oninput();await h.click('save-mark');await h.finish();
  assert.equal(h.server().object.annotations[0].status,'retracted');assert.equal(h.inspect().selectedId,'');assert.equal(h.inspect().draft,null);const count=h.calls.length;await h.click('fft');assert.equal(h.calls.length,count,'the retracted saved rectangle cannot remain an implicit FFT selection');assert.equal(h.calls[0].action,'edit');assert.equal(h.calls[0].params.updates[0].annotation_id,'roi-stable');

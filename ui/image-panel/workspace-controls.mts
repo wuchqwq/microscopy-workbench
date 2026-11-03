@@ -10,15 +10,18 @@ interface Options<S extends WorkspaceControlState> {
  document:BrowserDocument;getState:()=>S|undefined;read:()=>Promise<S>;
  command:(body:Readonly<Record<string,unknown>>)=>Promise<S>;
  settle:()=>Promise<void>;prepare?:()=>Promise<void>;install:(state:S,action:'save'|'query-save'|'discard'|'recover')=>Promise<void>;
- localDirty:()=>boolean;blocked:()=>boolean;requestId:()=>string;
+ // Activity qualifies status text only; save/restore admission keeps its own guards.
+ localDirty:()=>boolean;localActivity?:()=>'processing'|'unconfirmed'|undefined;blocked:()=>boolean;requestId:()=>string;
  onError:(message:string)=>void;onMessage:(message:string)=>void;
  interactionVersion?:()=>string|number;onRestoreLock?:(locked:boolean)=>void;prepareRestore?:()=>Promise<void>;onRestoreConflict?:(state:S)=>void;
 }
-export function analysisStatusText(state:AnalysisSaveState|undefined,localDirty=false):string {
+export function analysisStatusText(state:AnalysisSaveState|undefined,localDirty=false,localActivity?:'processing'|'unconfirmed'):string {
  if(!state)return '保存状态尚未核对';
  if(state.unresolved_request_id)return '原请求结果待核对 · 编辑保留';
  if(state.status==='saving')return '正在保存分析工作区';
  if(state.status==='save_unknown')return '保存结果待核对 · 请查询原保存';
+ if(localActivity==='unconfirmed')return '工作编辑待核对 · 编辑保留';
+ if(localActivity==='processing')return localDirty||state.dirty||state.status==='dirty'?'工作区有未保存修改 · 正在处理':'操作处理中 · 保存状态待核对';
  if(state.status==='legacy')return '旧版恢复记录 · 尚无明确保存点';
  if(state.recovery_available&&!localDirty&&!state.dirty)return '有未保存恢复副本 · 恢复或明确放弃后再编辑';
  if(localDirty||state.dirty||state.status==='dirty')return '工作区有未保存修改'+(state.recovery_available?' · 恢复记录另行保留':'');
@@ -39,7 +42,7 @@ export class WorkspaceControls<S extends WorkspaceControlState> {
  }
  sync():void {
   const state=this.options.getState()?.workspace_analysis,d=this.options.document;
-  const status=d.getElementById('workspace-save-status');if(status)status.textContent=this.busy?'正在核对工作区保存':analysisStatusText(state,this.options.localDirty());
+  const status=d.getElementById('workspace-save-status');if(status)status.textContent=this.busy?'正在核对工作区保存':this.pendingSaveId?'原保存结果待核对 · 请查询原保存':analysisStatusText(state,this.options.localDirty(),this.options.localActivity?.());
   const save=d.getElementById('workspace-save');if(save)save.disabled=this.busy||!state||this.options.blocked()||['saving','save_unknown'].includes(state.status)||Boolean(state.unresolved_request_id);
   const query=d.getElementById('workspace-query-save');if(query){query.hidden=!this.pendingSaveId&&!['saving','save_unknown'].includes(state?.status??'');query.disabled=this.busy;}
   const recover=d.getElementById('workspace-recover');if(recover){recover.hidden=!state?.recovery_available;recover.disabled=this.busy||this.options.blocked()||['saving','save_unknown'].includes(state?.status??'')||Boolean(state?.unresolved_request_id);}
