@@ -249,6 +249,11 @@ remain the actual scoped evidence. With properties open, this existing layout
 still reserves sidebar width; closing it restores image width. That tradeoff
 remains subject to the researcher's experience review, not a whole-layout PASS.
 
+Subsequent user review correctly rejects the reserved-column narrow layout:
+the upper/lower empty column and wrapped tools waste image space. The separate
+`narrow-layout-20261104.md` follow-up restores the existing bounded overlay
+drawers. The earlier reachability evidence is not approval of that layout.
+
 After115, the next requested Ctrl+S was rejected by the official tool because
 user input was detected. Root made only an AX-only read: still the public TIFF,
 workspace showing unsaved changes. No save retry, further mouse/keyboard input,
@@ -324,4 +329,3 @@ ruler accuracy, real specimens and clean-machine installation/upgrade remain
 outside acceptance. DM feature gaps are not automatically made future tasks.
 Raw first failures, capture sequences and all public workspaces remain local;
 no private specimen data, screenshots or metadata were uploaded.
-
