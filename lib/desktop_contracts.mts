@@ -2,11 +2,11 @@
 import path from 'node:path';
 import {existsSync,realpathSync,statSync} from 'node:fs';
 
-export const DESKTOP_ACTIONS=['prepare-close','save','undo','redo','delete','roi','select','pan','fft','measure','return-spatial','tile','history','help'] as const;
+export const DESKTOP_ACTIONS=['prepare-close','inspect-close-state','save','undo','redo','delete','roi','select','pan','fft','measure','return-spatial','tile','history','help'] as const;
 export type DesktopAction=typeof DESKTOP_ACTIONS[number];
-export interface DesktopActionReply {ok:boolean;error?:string;}
+export interface DesktopActionReply {ok:boolean;error?:string;working_revision?:number;}
 export interface DesktopOptions {node:string;workspace?:string;python?:string;source?:string;frame?:number;dataset?:number;component?:string;plane_axes?:number[];plane_indices?:(number|null)[];}
-export interface DesktopWorkspaceStatus {status:string;dirty:boolean;working_revision:number;can_close:boolean;unresolved_request_id:string|null;recovery_available:boolean;}
+export interface DesktopWorkspaceStatus {schema_version:1;status:string;dirty:boolean;working_revision:number;can_close:boolean;unresolved_request_id:string|null;recovery_available:boolean;}
 export const DESKTOP_HELP='Microscopy Workbench — Windows desktop prototype\nUsage: npm run desktop -- [--workspace ABS_DIRECTORY] [--source ABS_TIFF_OR_DM3_OR_DM4] [--python ABS_PYTHON] [--frame 1] [--dataset 1]\nWithout a workspace, native file dialogs select a workspace, source and Python. The launcher uses its own ordinary Node executable for scientific helpers. Install the separately locked desktop runtime with npm run desktop:install after npm ci and npm run build. This is a development-machine prototype, not a clean-Windows installer.';
 export const isRow=(v:unknown):v is Record<string,unknown>=>Boolean(v)&&typeof v==='object'&&!Array.isArray(v);
 export function desktopAction(v:unknown):DesktopAction|null{return typeof v==='string'&&(DESKTOP_ACTIONS as readonly string[]).includes(v)?v as DesktopAction:null;}
@@ -44,8 +44,8 @@ export function isOwnedDesktopDocument(value:string,address:{url:string;origin:s
 }
 export function readWorkspaceStatus(value:unknown):DesktopWorkspaceStatus {
  if(!isRow(value)||!isRow(value.workspace_analysis))throw new Error('Workspace save contract unavailable; desktop refuses an unsafe close');const state=value.workspace_analysis;
- if(state.schema_version!==1||!['new','legacy','clean','dirty','saving','save_unknown','recovery_available'].includes(String(state.status))||typeof state.dirty!=='boolean'||!Number.isSafeInteger(state.working_revision)||(state.working_revision as number)<0||typeof state.can_close!=='boolean'||typeof state.recovery_available!=='boolean'||state.unresolved_request_id!==null&&typeof state.unresolved_request_id!=='string')throw new Error('Invalid authoritative workspace status');
- return state as unknown as DesktopWorkspaceStatus;
+ if(state.schema_version!==1||typeof state.status!=='string'||!['new','legacy','clean','dirty','saving','save_unknown','recovery_available'].includes(state.status)||typeof state.dirty!=='boolean'||!Number.isSafeInteger(state.working_revision)||(state.working_revision as number)<0||typeof state.can_close!=='boolean'||typeof state.recovery_available!=='boolean'||state.unresolved_request_id!==null&&typeof state.unresolved_request_id!=='string')throw new Error('Invalid authoritative workspace status');
+ return {schema_version:1,status:state.status as string,dirty:state.dirty,working_revision:state.working_revision as number,can_close:state.can_close,recovery_available:state.recovery_available,unresolved_request_id:state.unresolved_request_id as string|null};
 }
 export function closeBlocked(state:DesktopWorkspaceStatus):boolean{return state.unresolved_request_id!==null||['saving','save_unknown'].includes(state.status);}
 export const desktopSecurityPreferences={sandbox:true,contextIsolation:true,nodeIntegration:false,webSecurity:true,allowRunningInsecureContent:false,webviewTag:false} as const;
@@ -71,4 +71,14 @@ export function desktopStartupError(error:unknown):DesktopStartupError {
 export function readDesktopStartupError(value:unknown):DesktopStartupError {
  if(!isRow(value)||Object.keys(value).some(key=>!['type','schema_version','code','message'].includes(key))||value.type!=='startup_error'||value.schema_version!==1||typeof value.code!=='string'||!Object.hasOwn(desktopStartupMessages,value.code)||value.message!==desktopStartupMessages[value.code as DesktopStartupErrorCode])throw new Error('Invalid bounded desktop startup error');
  return {type:'startup_error',schema_version:1,code:value.code as DesktopStartupErrorCode,message:value.message as string};
+}
+
+// A restore can requalify many immutable references. The wait budget is not
+// evidence of non-execution: the original command remains queryable afterward.
+export const DESKTOP_RESTORE_WAIT_MS=150000;
+export interface DesktopDiscardOperation {command_id:number;expected_working_revision:number;state:'running'|'unknown'|'completed'|'failed';}
+export interface DesktopDiscardQuery {operation:DesktopDiscardOperation;status:DesktopWorkspaceStatus;}
+export function readDesktopDiscardOperation(value:unknown,commandId:number,revision:number):DesktopDiscardOperation {
+ if(!isRow(value)||Object.keys(value).some(k=>!['command_id','expected_working_revision','state'].includes(k))||value.command_id!==commandId||value.expected_working_revision!==revision||typeof value.state!=='string'||!['running','unknown','completed','failed'].includes(value.state))throw new Error('Original desktop discard receipt is unavailable or mismatched; preserve the original command');
+ return {command_id:commandId,expected_working_revision:revision,state:value.state as DesktopDiscardOperation['state']};
 }

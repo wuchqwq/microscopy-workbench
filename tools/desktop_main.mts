@@ -16,7 +16,7 @@ interface DesktopContents extends EventEmitter {
  session:{setPermissionRequestHandler:(handler:(contents:unknown,permission:unknown,callback:(allow:boolean)=>void)=>void)=>void;setPermissionCheckHandler:(handler:()=>boolean)=>void;};
 }
 interface DesktopWindow extends EventEmitter {
- webContents:DesktopContents;loadURL(url:string):Promise<void>;show():void;focus():void;destroy():void;isDestroyed():boolean;
+ webContents:DesktopContents;loadURL(url:string):Promise<void>;show():void;focus():void;setEnabled(enabled:boolean):void;destroy():void;isDestroyed():boolean;
 }
 interface MenuItem {label?:string;role?:string;accelerator?:string;type?:'separator';click?:()=>void;submenu?:MenuItem[];}
 interface DesktopElectron {
@@ -32,7 +32,7 @@ app.setName('Microscopy Workbench Prototype');
 // Optional task-local profile for isolated validation; no system/global setting
 // is changed and ordinary launches retain the application's own default profile.
 if(process.env.MWB_DESKTOP_PROFILE){if(!path.isAbsolute(process.env.MWB_DESKTOP_PROFILE))throw new Error('MWB_DESKTOP_PROFILE must be absolute');mkdirSync(process.env.MWB_DESKTOP_PROFILE,{recursive:true});app.setPath('userData',process.env.MWB_DESKTOP_PROFILE);}
-let options:DesktopOptions,window:DesktopWindow|undefined,backend:DesktopBackendClient|undefined,closing:DesktopCloseCoordinator|undefined,allowQuit=false,starting=false;
+let options:DesktopOptions,window:DesktopWindow|undefined,backend:DesktopBackendClient|undefined,closing:DesktopCloseCoordinator|undefined,allowQuit=false,starting=false,nativeClosing=false;
 let address:ReturnType<typeof panelAddress>|undefined,nextAction=0;
 const pendingActions=new Map<number,{resolve:(reply:DesktopActionReply)=>void;timer:ReturnType<typeof setTimeout>}>();
 const report=async(message:string)=>{await dialog.showMessageBox(window,{type:'error',title:'Microscopy Workbench',message:'操作尚未完成',detail:message,buttons:['保持打开'],defaultId:0,cancelId:0});};
@@ -41,14 +41,15 @@ const trustedSender=(event:unknown):boolean=>{
  try{return isOwnedDesktopDocument(window.webContents.getURL(),address);}catch{return false;}
 };
 ipcMain.on('mwb:action-result',(event:unknown,value:unknown)=>{
- if(!trustedSender(event)||!isRow(value)||Object.keys(value).some(k=>!['id','ok','error'].includes(k))||!Number.isSafeInteger(value.id)||typeof value.ok!=='boolean'||value.error!==undefined&&(typeof value.error!=='string'||value.error.length>1024))return;
- const pending=pendingActions.get(value.id as number);if(!pending)return;pendingActions.delete(value.id as number);clearTimeout(pending.timer);pending.resolve({ok:value.ok,...(typeof value.error==='string'?{error:value.error}:{})});
+ if(!trustedSender(event)||!isRow(value)||Object.keys(value).some(k=>!['id','ok','error','working_revision'].includes(k))||!Number.isSafeInteger(value.id)||typeof value.ok!=='boolean'||value.error!==undefined&&(typeof value.error!=='string'||value.error.length>1024)||value.working_revision!==undefined&&(!Number.isSafeInteger(value.working_revision)||(value.working_revision as number)<0))return;
+ const pending=pendingActions.get(value.id as number);if(!pending)return;pendingActions.delete(value.id as number);clearTimeout(pending.timer);pending.resolve({ok:value.ok,...(typeof value.error==='string'?{error:value.error}:{}),...(value.working_revision!==undefined?{working_revision:value.working_revision as number}:{})});
 });
-function action(action:DesktopAction):Promise<DesktopActionReply>{
+function action(action:DesktopAction,closeFlow=false):Promise<DesktopActionReply>{
+ if(nativeClosing&&!closeFlow)return Promise.resolve({ok:false,error:'正在核对退出操作；当前不接收新编辑或窗口操作。'});
  if(!window||window.isDestroyed()||!address||!isOwnedDesktopDocument(window.webContents.getURL(),address))return Promise.resolve({ok:false,error:'界面未就绪；窗口与工作编辑保持。'});
  return new Promise(resolve=>{const id=++nextAction,timer=setTimeout(()=>{pendingActions.delete(id);resolve({ok:false,error:'界面响应尚未确认；窗口保持打开，不自动重复操作。'});},15000);pendingActions.set(id,{resolve,timer});window!.webContents.send('mwb:action',{id,action});});
 }
-function menuAction(name:DesktopAction):()=>void{return ()=>{void action(name).then(reply=>{if(!reply.ok)return report(reply.error??'操作未确认');}).catch(error=>report(String(error)));};}
+function menuAction(name:DesktopAction):()=>void{return ()=>{if(nativeClosing)return;void action(name).then(reply=>{if(!reply.ok)return report(reply.error??'操作未确认');}).catch(error=>report(String(error)));};}
 const menus:MenuItem[]=[
  {label:'文件',submenu:[{label:'打开图像…',accelerator:'CmdOrCtrl+O',click:()=>{void replaceWorkspace(false);}},{label:'打开分析工作区…',accelerator:'CmdOrCtrl+Shift+O',click:()=>{void replaceWorkspace(true);}},{type:'separator'},{label:'保存分析工作区',accelerator:'CmdOrCtrl+S',click:menuAction('save')},{type:'separator'},{label:'退出',accelerator:'Alt+F4',click:()=>{void quitSafely();}}]},
  {label:'编辑',submenu:[{label:'撤销',accelerator:'CmdOrCtrl+Z',click:menuAction('undo')},{label:'重做',accelerator:'CmdOrCtrl+Shift+Z',click:menuAction('redo')},{type:'separator'},{label:'删除所选 ROI',click:menuAction('delete')},{role:'cut',label:'剪切文本'},{role:'copy',label:'复制文本'},{role:'paste',label:'粘贴文本'},{role:'selectAll',label:'全选文本'}]},
@@ -80,8 +81,8 @@ async function startWorkspace(config:DesktopOptions&{workspace:string;python:str
   for(const event of ['will-navigate','will-frame-navigate','will-redirect'])window.webContents.on(event,(e:NativeEvent,target?:string)=>{if(!address||!isOwnedDesktopDocument(e.url??target??'',address))e.preventDefault();});
   window.webContents.on('will-attach-webview',(e:NativeEvent)=>e.preventDefault());
   window.webContents.on('render-process-gone',()=>{void dialog.showMessageBox(ownedWindow,{type:'error',title:'界面进程中断',message:'科学工作区仍由本应用后台保留',detail:'尚未保存的工作状态保留。重新载入界面后核对原请求；不会自动重做计算或保存。',buttons:['重新载入界面','保持工作区打开'],defaultId:0,cancelId:1}).then(reply=>{if(reply.response===0&&!ownedWindow.isDestroyed())ownedWindow.webContents.reloadIgnoringCache();});});
-  closing=new DesktopCloseCoordinator({action,status:()=>ownedBackend.status(),choose:async()=>{
-   const reply=await dialog.showMessageBox(ownedWindow,{type:'question',title:'保存分析工作区',message:'分析工作区有未保存修改',detail:'保存整个分析工作区？不保存将恢复上次明确保存的版本；已经执行的科学记录仍保留。',buttons:['保存','不保存','取消'],defaultId:0,cancelId:2,noLink:true});return reply.response===0?'save':reply.response===1?'discard':'cancel';
+  closing=new DesktopCloseCoordinator({action:name=>action(name,true),freezeInput:frozen=>{nativeClosing=frozen;if(!ownedWindow.isDestroyed())ownedWindow.setEnabled(!frozen);},status:()=>ownedBackend.status(),queryDiscard:()=>ownedBackend.queryDiscard(),acknowledgeDiscard:operation=>ownedBackend.acknowledgeDiscard(operation.command_id,operation.expected_working_revision),choose:async()=>{
+   const reply=await dialog.showMessageBox(ownedWindow,{type:'question',title:'保存分析工作区',message:'分析工作区有未保存修改',detail:'保存整个分析工作区？不保存将恢复上次明确保存的版本；已经执行的科学记录仍保留。',buttons:['保存','不保存','取消'],defaultId:0,cancelId:2,noLink:true});if(nativeClosing&&!ownedWindow.isDestroyed())ownedWindow.setEnabled(false);return reply.response===0?'save':reply.response===1?'discard':'cancel';
   },discard:revision=>ownedBackend.discard(revision),close:revision=>ownedBackend.close(revision),error:report});
   window.on('close',(event:NativeEvent)=>{if(allowQuit)return;event.preventDefault();void quitSafely();});
   window.once('ready-to-show',()=>ownedWindow.show());
@@ -102,6 +103,7 @@ async function closeWorkspace():Promise<boolean>{
 }
 async function quitSafely():Promise<void>{if(await closeWorkspace()){allowQuit=true;app.quit();}}
 async function replaceWorkspace(existing:boolean):Promise<void>{
+ if(nativeClosing)return;
  try{
   // Keep the current document alive while selecting paths. Cancel has no effect.
   const selected=await selectOptions({node:options.node,python:options.python},!existing);if(!selected)return;

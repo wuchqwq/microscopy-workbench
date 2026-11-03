@@ -36,6 +36,7 @@ import type {PanelRoiSnapshot} from './roi-observations.mjs';
 const $=(id:string)=>document.getElementById(id)!,canvas=$('canvas'),ctx=canvas.getContext('2d')!,baseCanvas=$('base-canvas'),baseContext=baseCanvas.getContext('2d',{willReadFrequently:true})!,marksCanvas=$('marks-canvas'),marksContext=marksCanvas.getContext('2d')!,stage=$('image-stage'),viewport=$('viewport');
 const cloneWorking=<T,>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
 const key='mcp-dm-panel-token',hash=location.hash.slice(1);if(hash){sessionStorage.setItem(key,hash);history.replaceState(null,'',location.pathname);}const token=sessionStorage.getItem(key);
+let loadedWorkingRevision:number|undefined;
 let state:AppState,image:BrowserElement|null,basePixels:ImagePixels|null,draft:AppSelection|null=null,drag:DragState|null=null,editCoordinates:readonly number[]|null=null,busy=false,activeAction='',cleanBase=false,selectedId='',spaceDown=false,pending:AppState|null=null,orphanedDraft=false;
 let decodedViewSnapshot:{object_id:string;image:BrowserElement;panel_mapping_fingerprint:string;object:unknown}|null=null;
 let view={scale:1,x:0,y:0},toneCacheKey:string|null=null,paintFrame:number|null=null,marksDirty=true,loading=0,fieldDirty=false,displayBaseline='',draftPublisher:Promise<void>=Promise.resolve();
@@ -590,7 +591,7 @@ async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forc
  // A failed read/decode or newer interaction must retain the authorized draft.
  if(discardAuthorizedDraft){clearExplicitLocalDraft();autoFailed=false;}
  if(!state&&next.edit_state?.dirty)orphanedDraft=true;
- interactionEpoch++;state=next;draft=restoredSelection(savedSelection,next.object.panels??[]);drag=null;editCoordinates=null;labelDraft=null;fieldDirty=false;toneCacheKey=null;marksDirty=true;const o=state.object,previous=selectedId;
+ interactionEpoch++;state=next;loadedWorkingRevision=next.workspace_analysis?.working_revision;draft=restoredSelection(savedSelection,next.object.panels??[]);drag=null;editCoordinates=null;labelDraft=null;fieldDirty=false;toneCacheKey=null;marksDirty=true;const o=state.object,previous=selectedId;
  if(!sameObject&&!continued){figurePrefs.preset=o.annotations?.some(m=>['A','B','shared','unexplained'].includes(m.presentation?.category as string))?'multi-domain':o.panels?.some(p=>p.domain==='frequency')?'diffraction':'real-space';figurePrefs.legend=figurePrefs.preset!=='real-space';figurePrefs.layers={experimental:true,simulation_A:figurePrefs.preset!=='real-space',simulation_B:figurePrefs.preset!=='real-space'};}syncFigureControls();
  $('identity').textContent=`${state.frame_identity?`第 ${state.frame_identity.frame_index!+1} 帧 · `:''}${o.panels?.some(p=>p.domain==='frequency')?'FFT / 倒空间':importedComplex()?'复数图像':'科学图像'} · 原图只读`;$('calibration-summary').textContent=humanCalibration(o);$('source-badge').textContent=state.source_identity?.label??'来源待核对';$('source-name').textContent=state.source_identity?.filename??'';
  $('existing').replaceChildren(new Option('新增标记',''));for(const mark of o.annotations??[])if(mark.annotation_id){const option=new Option(`${mark.text||mark.annotation_id} · ${({hypothesized:'候选',user_confirmed:'用户确认',retracted:'撤回'} as Partial<Record<string,string>>)[mark.status as string]??mark.status}`,mark.annotation_id);option.disabled=mark.status==='retracted';$('existing').append(option);}selectedId=(o.annotations??[]).some(m=>m.annotation_id===previous&&m.status!=='retracted')?previous:'';$('existing').value=selectedId;
@@ -890,9 +891,13 @@ async function pollRevision(){
  finally{if(typeof setTimeout==='function')setTimeout(pollRevision,1500);}
 }
 (globalThis as typeof globalThis & BrowserEnvironment).addEventListener?.('beforeunload',event=>{if(dirty()||drag||windowSwitch||workspaceRestoring||windowWorkspace.hasPendingMetadata()||state?.workspace_analysis&&state.workspace_analysis.status!=='clean'){event.preventDefault();event.returnValue='';}});
-interface DesktopActionBridge {onAction(handler:(action:string)=>Promise<{ok:boolean;error?:string}>):void;}
+interface DesktopActionBridge {onAction(handler:(action:string)=>Promise<{ok:boolean;error?:string;working_revision?:number}>):void;}
 const desktopBridge=(globalThis as typeof globalThis & {workbenchDesktop?:DesktopActionBridge}).workbenchDesktop;
 desktopBridge?.onAction(async action=>{
+ if(action==='inspect-close-state'){
+  if(!state||dirty()||drag||busy||windowSwitch||workspaceRestoring||workspaceSettling||orphanedDraft||pending||state.pending_result||state.last_operation?.state==='submitted'||autoSaving||queuedEdits.size||remeasuringMarks.size||draftPending||draftSending||draftError||autoFailed||roiCreationRecovery||observationSavePhase||failedMeasurement||windowWorkspace.hasPendingMetadata()||!Number.isSafeInteger(loadedWorkingRevision)||!equalRecords(draft?selection():null,state.selection??null))return {ok:false,error:'当前图像或本地编辑尚未与已读取的工作状态一致；保留所有本地内容。'};
+  return {ok:true,working_revision:loadedWorkingRevision};
+ }
  try{
   if($('usage-dialog').open&&!['help','prepare-close'].includes(action))throw new Error('请先关闭使用说明，再操作图像或保存。');
   if(action==='prepare-close')await workspaceControls.prepareClose();
