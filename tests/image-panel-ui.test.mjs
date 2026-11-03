@@ -1394,3 +1394,35 @@ test('outside pointer and nested menu-action clicks dismiss menus without synthe
  result.open=true;windows.open=true;h.documentEvent('pointerdown',inside);assert.equal(result.open,false);assert.equal(windows.open,true);windows.listeners.click({target:inside});assert.equal(windows.open,false);
  result.open=true;h.documentEvent('pointerdown',h.$('fit-canvas'));assert.equal(result.open,false);assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,writes);
 });
+
+test('sidebar context: no selection keeps the ROI list but hides unrelated editing and measurement sections',async()=>{
+ const h=await harness(),before=h.inspect();assert.equal(h.$('properties-empty').hidden,false);assert.equal(h.$('selection-properties').hidden,true);assert.equal(h.$('measurement-properties').hidden,true);assert.equal(h.$('discard-local').hidden,true);assert.equal(h.$('properties-title').textContent,'属性');
+ await h.click('toggle-properties');await h.click('toggle-properties');assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.calls.length,0);
+});
+
+test('sidebar context: ROI shows its own geometry and note without a previous measurement or peak symbol',async()=>{
+ const initial=savedRectangleFixture();initial.object.annotations[0].note='Use this area; not a phase assignment.';initial.last_operation={action:'measure',annotation_id:'previous-peak',frequency_distance_cycles_per_pixel:.125};const h=await harness(initial);selectSavedRoi(h);await h.settle();
+ assert.equal(h.$('properties-empty').hidden,true);assert.equal(h.$('selection-properties').hidden,false);assert.equal(h.$('measurement-properties').hidden,true);assert.equal(h.$('marker-shape-field').hidden,true);assert.equal(h.$('properties-title').textContent,'ROI 属性');assert.match(h.$('properties-geometry').textContent,/位置 40, 32.*大小 80 × 60 px/);assert.ok(h.$('properties-geometry').title.includes(JSON.stringify(initial.object.annotations[0].anchor.coordinates)));assert.match(h.$('properties-roi-note').textContent,/已记录说明：Use this area/);assert.equal(h.$('existing').value,'roi-stable');assert.equal(h.calls.length,0);
+});
+
+test('sidebar context: a selected reciprocal-space point retains its actual measurement and unknown scale',async()=>{
+ const initial=fixture();initial.object.panels=[{domain:'frequency',source_object_id:sourceId,fft_shape_yx:[96,128],fft_rect_xyxy:[0,0,128,96],image_rect_xyxy:[0,0,128,96]}];initial.object.annotations=[{annotation_id:'peak-one',kind:'point',color:'cyan',status:'hypothesized',anchor:{source_object_id:sourceId,coordinate_space:'frequency_cycles_per_pixel',coordinates:[.125,0]}}];initial.last_operation={action:'measure',annotation_id:'peak-one',frequency_distance_cycles_per_pixel:.125};const h=await harness(initial);h.$('existing').value='peak-one';h.$('existing').onchange();h.flush();
+ assert.equal(h.$('properties-title').textContent,'峰位属性');assert.equal(h.$('measurement-properties').hidden,false);assert.equal(h.$('marker-shape-field').hidden,false);assert.equal(h.$('properties-roi-note').hidden,true);assert.match(h.$('properties-geometry').textContent,/cycles\/px/);assert.match(h.$('measurement-summary').textContent,/0.125 cycles\/pixel/);assert.match(h.$('calibration-summary').textContent,/物理标尺未知/);assert.equal(h.calls.length,0);
+});
+
+test('sidebar context: opening advanced settings preserves unsaved ROI reason, fields and selection',async()=>{
+ const h=await harness(savedRectangleFixture());selectSavedRoi(h);h.$('roi-reason').value='Still an unsaved observation';h.$('roi-reason').oninput();h.$('mark-text').value='Draft ROI label';h.$('mark-text').oninput();h.flush();await h.settle();const before=h.inspect(),calls=h.calls.length;
+ assert.match(h.$('properties-roi-note').textContent,/说明草稿（未保存）：Still an unsaved observation/);assert.equal(h.$('discard-local').hidden,false);await h.click('toggle-settings');await h.click('close-properties');await h.click('toggle-properties');
+ assert.equal(h.$('roi-reason').value,'Still an unsaved observation');assert.equal(h.$('mark-text').value,'Draft ROI label');assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.inspect().selectedId,before.selectedId);assert.deepEqual(h.inspect().state.object,before.state.object);assert.equal(h.inspect().dirty,true);assert.equal(h.calls.length,calls);
+});
+
+test('sidebar context: reformatting a selected ROI never resolves or replays an original unknown request',async()=>{
+ const initial=savedRectangleFixture();initial.last_operation={action:'edit',state:'submitted',request_id:'original-outcome-unknown'};const h=await harness(initial);selectSavedRoi(h);const before=h.inspect();await h.click('toggle-settings');await h.click('close-properties');
+ assert.equal(h.inspect().state.last_operation.request_id,'original-outcome-unknown');assert.equal(h.inspect().state.last_operation.state,'submitted');assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.calls.length,0);
+});
+
+test('sidebar context: live ROI drag shows working coordinates and cancellation restores the old projection without a write',async()=>{
+ const h=await harness(savedRectangleFixture());selectSavedRoi(h);const before=h.inspect();h.event('pointerdown',60,50);h.event('pointermove',65,54);h.flush();const changed=h.inspect().editCoordinates;
+ assert.ok(changed);assert.notDeepEqual(changed,before.state.object.annotations[0].anchor.coordinates);assert.ok(h.$('properties-geometry').title.includes(JSON.stringify(changed)));assert.deepEqual(h.inspect().state.object,before.state.object);
+ h.event('pointercancel');h.flush();assert.ok(h.$('properties-geometry').title.includes(JSON.stringify(before.state.object.annotations[0].anchor.coordinates)));assert.equal(h.calls.length,0);
+});
