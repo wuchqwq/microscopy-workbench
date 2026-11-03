@@ -1,7 +1,7 @@
 // A bounded display collection over immutable provider objects. It owns no
 // scientific arrays, draft lease, operation queue, or independent history.
 import {randomBytes,createHash} from 'node:crypto';
-import type {PanelMetadata as Row,PanelFrameIdentity,PanelWindowCollection,PanelWindowEntry,PanelWindowLayout,PanelWindowSourceReference,PanelWindowCamera,PanelWindowViewContext,PanelSelection} from './image_panel_contracts.mjs';
+import type {PanelMetadata as Row,PanelFrameIdentity,PanelWindowCollection,PanelWindowEntry,PanelWindowLayout,PanelWindowSourceReference,PanelWindowCamera,PanelWindowUiPanels,PanelWindowViewContext,PanelSelection} from './image_panel_contracts.mjs';
 import type {SpatialReturnReference} from './panel_spatial_return.mjs';
 import {validateSpatialReturn} from './panel_spatial_return.mjs';
 import {selectionRectangle} from '../ui/image-panel/coordinates.mjs';
@@ -28,12 +28,16 @@ export function readPanelWindowCamera(value:unknown):PanelWindowCamera {
  if(!isRow(value)||Object.keys(value).some(k=>!['scale','center_image_xy'].includes(k))||typeof value.scale!=='number'||!Number.isFinite(value.scale)||value.scale<1e-6||value.scale>1e4||!Array.isArray(value.center_image_xy)||value.center_image_xy.length!==2||!value.center_image_xy.every(v=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1e7))error('Invalid bounded image-window camera');
  return {scale:value.scale,center_image_xy:[value.center_image_xy[0] as number,value.center_image_xy[1] as number]};
 }
+export function readPanelWindowUiPanels(value:unknown):PanelWindowUiPanels {
+ if(!isRow(value)||Object.keys(value).some(k=>!['side','settings','results'].includes(k))||!['none','properties','research'].includes(String(value.side))||typeof value.settings!=='boolean'||typeof value.results!=='boolean')error('Invalid bounded UI panel preferences');
+ return {side:value.side as PanelWindowUiPanels['side'],settings:value.settings,results:value.results};
+}
 export function qualifyPanelWindowContext(raw:unknown,value:Row,checkSelection:(selection:unknown,target:Row)=>PanelSelection):PanelWindowViewContext|null {
  try{
-  if(!isRow(raw)||Object.keys(raw).some(k=>!['version','object_id','panel_mapping_fingerprint','camera','selection_candidate','selected_annotation_id','camera_origin'].includes(k))||raw.version!==1||raw.camera_origin!==undefined&&raw.camera_origin!=='new_fit_preference'||raw.object_id!==value.object_id||raw.panel_mapping_fingerprint!==panelWindowMappingFingerprint(value)||raw.selected_annotation_id!==null&&(typeof raw.selected_annotation_id!=='string'||!raw.selected_annotation_id.length||raw.selected_annotation_id.length>64))return null;
-  const camera=readPanelWindowCamera(raw.camera),candidate=raw.selection_candidate===null?null:checkSelection(raw.selection_candidate,value);
+  if(!isRow(raw)||Object.keys(raw).some(k=>!['version','object_id','panel_mapping_fingerprint','camera','selection_candidate','selected_annotation_id','camera_origin','ui_panels'].includes(k))||raw.version!==1||raw.camera_origin!==undefined&&raw.camera_origin!=='new_fit_preference'||raw.object_id!==value.object_id||raw.panel_mapping_fingerprint!==panelWindowMappingFingerprint(value)||raw.selected_annotation_id!==null&&(typeof raw.selected_annotation_id!=='string'||!raw.selected_annotation_id.length||raw.selected_annotation_id.length>64))return null;
+  const camera=readPanelWindowCamera(raw.camera),ui=raw.ui_panels===undefined?undefined:readPanelWindowUiPanels(raw.ui_panels),candidate=raw.selection_candidate===null?null:checkSelection(raw.selection_candidate,value);
   const selected=(value.annotations as Row[]|undefined)?.filter(mark=>mark.annotation_id===raw.selected_annotation_id&&mark.status!=='retracted')??[];
-  return {version:1,object_id:value.object_id as string,panel_mapping_fingerprint:raw.panel_mapping_fingerprint as string,camera,selection_candidate:candidate,selected_annotation_id:selected.length===1?raw.selected_annotation_id as string:null,...(raw.camera_origin==='new_fit_preference'?{camera_origin:'new_fit_preference' as const}:{})};
+  return {version:1,object_id:value.object_id as string,panel_mapping_fingerprint:raw.panel_mapping_fingerprint as string,camera,...(ui?{ui_panels:ui}:{}),selection_candidate:candidate,selected_annotation_id:selected.length===1?raw.selected_annotation_id as string:null,...(raw.camera_origin==='new_fit_preference'?{camera_origin:'new_fit_preference' as const}:{})};
  }catch{return null;}
 }
 function describe(value:Row,frame:PanelFrameIdentity|null):Descriptor|null {
@@ -187,11 +191,11 @@ export class PanelWindowStore {
   const target=this.records.find(r=>r.entry.window_id===entry.window_id)!.entry;
   if(context)target.view_context=clone(context);else delete target.view_context;this.revision++;
  }
- updateCamera(revision:unknown,windowId:unknown,objectId:unknown,camera:unknown):void {
-  const entry=this.lookup(windowId,revision),mapping=this.mappingFingerprints.get(entry.window_id),checked=readPanelWindowCamera(camera);
+ updateCamera(revision:unknown,windowId:unknown,objectId:unknown,camera:unknown,uiPanels?:unknown):void {
+  const entry=this.lookup(windowId,revision),mapping=this.mappingFingerprints.get(entry.window_id),checked=readPanelWindowCamera(camera),panels=uiPanels===undefined?undefined:readPanelWindowUiPanels(uiPanels);
   if(entry.object_id!==objectId||!mapping)error('Camera belongs to a changed saved window');
   const prior=entry.view_context,context:PanelWindowViewContext=prior&&prior.object_id===entry.object_id&&prior.panel_mapping_fingerprint===mapping?(()=>{const {camera_origin,...recorded}=prior;void camera_origin;return {...recorded,camera:checked};})():{version:1,object_id:entry.object_id,panel_mapping_fingerprint:mapping,camera:checked,selection_candidate:null,selected_annotation_id:null};
-  this.records.find(r=>r.entry.window_id===entry.window_id)!.entry.view_context=clone(context);this.revision++;
+  if(panels)context.ui_panels=panels;this.records.find(r=>r.entry.window_id===entry.window_id)!.entry.view_context=clone(context);this.revision++;
  }
  async restore(raw:unknown,current:Row,currentFrame:PanelFrameIdentity|null,read:(id:string)=>Promise<{object:Row;frame:PanelFrameIdentity|null;png:unknown}>,checkSelection?:(selection:unknown,target:Row)=>PanelSelection):Promise<void> {
   // The active object was already admitted by the owned recovery protocol.

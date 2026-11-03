@@ -4,7 +4,7 @@ import path from 'node:path';
 import {randomBytes,createHash} from 'node:crypto';
 import {closeSync,existsSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,readdirSync,realpathSync,renameSync,statSync,unlinkSync,writeFileSync} from 'node:fs';
 import {withWorkspaceMetadataGate} from './workspace_metadata_gate.mjs';
-import {panelWindowFingerprint,panelWindowMappingFingerprint,readPanelWindowCamera,readPanelWindowLayout} from './panel_window_collection.mjs';
+import {panelWindowFingerprint,panelWindowMappingFingerprint,readPanelWindowCamera,readPanelWindowLayout,readPanelWindowUiPanels} from './panel_window_collection.mjs';
 
 type Row=Record<string,unknown>;
 export interface AnalysisSnapshot extends Row {object_id:string;frame_identity:unknown;window_collection:unknown;selection:unknown;edit_state:unknown;}
@@ -52,8 +52,8 @@ export function analysisDisplaySnapshot(workspace:string,saved:AnalysisSnapshot,
  if(records.length>32||updates.length>32)return result;
  for(const record of records){const entry=row(record.entry),update=updates.find(raw=>row(raw.entry).window_id===entry.window_id&&row(raw.entry).object_id===entry.object_id&&raw.grid_key===record.grid_key&&raw.asset_fingerprint===record.asset_fingerprint);if(!update||!objectId(entry.object_id))continue;
   try{const metadata=read(path.join(root,'objects',entry.object_id,'object.json'),root),mapping=panelWindowMappingFingerprint(metadata);if(metadata.object_id!==entry.object_id||record.asset_fingerprint!==panelWindowFingerprint(metadata))continue;const incoming=row(update.entry);entry.layout=readPanelWindowLayout(incoming.layout);if(update.hidden===true)record.hidden=true;else if(update.hidden===false||update.hidden===undefined)delete record.hidden;
-   const camera=incoming.view_context?row(incoming.view_context):null;if(camera?.object_id!==entry.object_id||camera.panel_mapping_fingerprint!==mapping)continue;const checked=readPanelWindowCamera(camera.camera),prior=entry.view_context?row(entry.view_context):null;
-   entry.view_context=prior&&prior.object_id===entry.object_id&&prior.panel_mapping_fingerprint===mapping?{...prior,camera:checked}: {version:1,object_id:entry.object_id,panel_mapping_fingerprint:mapping,camera:checked,selection_candidate:null,selected_annotation_id:null};delete (entry.view_context as Row).camera_origin;
+   const camera=incoming.view_context?row(incoming.view_context):null;if(camera?.object_id!==entry.object_id||camera.panel_mapping_fingerprint!==mapping)continue;const checked=readPanelWindowCamera(camera.camera),panels=camera.ui_panels===undefined?undefined:readPanelWindowUiPanels(camera.ui_panels),prior=entry.view_context?row(entry.view_context):null;
+   entry.view_context=prior&&prior.object_id===entry.object_id&&prior.panel_mapping_fingerprint===mapping?{...prior,camera:checked}: {version:1,object_id:entry.object_id,panel_mapping_fingerprint:mapping,camera:checked,selection_candidate:null,selected_annotation_id:null};if(panels)(entry.view_context as Row).ui_panels=panels;delete (entry.view_context as Row).camera_origin;
   }catch{/* An unqualified preference is omitted; the exact saved analysis survives. */}
  }
  const visible=records.filter(record=>record.hidden!==true),old=visible.find(record=>row(record.entry).object_id===saved.object_id),current=old??visible[0];collection.windows=visible.map(record=>clone(record.entry));const hidden=records.filter(record=>record.hidden===true);if(hidden.length)collection.closed_windows=hidden.map(record=>clone(record.entry));else delete collection.closed_windows;collection.active_window_id=current?row(current.entry).window_id:null;
