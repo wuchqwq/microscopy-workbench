@@ -156,6 +156,13 @@ test('window camera uses one bounded canonical camera and rejects mismatched res
  assert.deepEqual(readWindowCamera({scale:2,center_image_xy:[24.5,-4]}),{scale:2,center_image_xy:[24.5,-4]});for(const raw of [{scale:0,center_image_xy:[0,0]},{scale:2,center_image_xy:[Infinity,0]},{scale:2,center_image_xy:[1e8,0]}])assert.equal(readWindowCamera(raw),null);
  const context={version:1,object_id:id(11),panel_mapping_fingerprint:'f'.repeat(64),camera:{scale:2,center_image_xy:[20,30]},selection_candidate:null,selected_annotation_id:null};assert.ok(readWindowViewContext(context,{object_id:id(11)},'f'.repeat(64)));assert.equal(readWindowViewContext(context,{object_id:id(12)},'f'.repeat(64)),null);assert.equal(readWindowViewContext(context,{object_id:id(11)},'e'.repeat(64)),null);
 });
+
+test('verified historical inputs without a saved camera receive an explicitly new fit preference',async()=>{
+ const initial=collection(),entry=initial.windows[0];entry.view_context={version:1,object_id:entry.object_id,panel_mapping_fingerprint:'f'.repeat(64),camera:{scale:1,center_image_xy:[0,0]},camera_origin:'new_fit_preference',selection_candidate:null,selected_annotation_id:null};
+ assert.equal(readWindowViewContext(entry.view_context).camera_origin,'new_fit_preference');assert.equal(readWindowViewContext({...entry.view_context,camera_origin:'invented_historical_camera'}),null);
+ const h=await harness(initial,{camera:true}),transform=h.body(id(1)).children[0].style.transform;
+ assert.notEqual(transform,'translate(300px,140px) scale(1)');assert.match(h.header(id(1)).children[1].textContent,/新适应视野/);assert.equal(h.requests.filter(request=>request.body).length,0,'readonly fitting must not execute science or invent an acknowledgement');
+});
 test('window camera wheel bursts merge the last view without changing scientific drafts or request identity',async()=>{
  const h=await harness(collection(),{camera:true}),body=h.body(id(1)),before=copy({selection:h.state.selection,edit_state:h.state.edit_state,last_operation:h.state.last_operation,reason:h.state.reason});for(let i=0;i<6;i++)body.onwheel(h.event(body,120,90,{deltaY:-20}));const transform=body.children[0].style.transform;await h.workspace.awaitStableMetadata();const writes=h.requests.filter(request=>request.body);assert.equal(writes.length,1);assert.equal(writes[0].body.action,'window-camera');assert.equal(writes[0].body.params.object_id,id(11));assert.equal(body.children[0].style.transform,transform);assert.deepEqual({selection:h.state.selection,edit_state:h.state.edit_state,last_operation:h.state.last_operation,reason:h.state.reason},before);assert.equal(h.workspace.hasPendingMetadata(),false);
 });

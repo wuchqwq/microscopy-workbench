@@ -30,6 +30,7 @@ export interface BrowserElement extends Omit<PresentationElement,'querySelector'
  getContext(kind:'2d',options?:{willReadFrequently?:boolean}):CanvasContext|null;toBlob(callback:(blob:BlobPort|null)=>void,type:string):void;
 }
 export interface BrowserDocument extends Omit<PresentationDocument,'getElementById'|'createElement'> {
+ execCommand?(command:'undo'|'redo'):boolean;
  getElementById(id:string):BrowserElement|null;createElement(tag:string):BrowserElement;createElementNS(namespace:string,tag:string):BrowserElement;
  readonly body:BrowserElement;readonly hidden:boolean;readonly activeElement?:BrowserElement|null;querySelector(selector:string):BrowserElement|null;querySelectorAll(selector:string):Iterable<BrowserElement>;
  addEventListener(name:string,listener:(event:BrowserEvent)=>unknown):void;

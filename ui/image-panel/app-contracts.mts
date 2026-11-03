@@ -12,6 +12,7 @@ export interface AppCalibration extends CalibrationView {readonly scope?:string;
 export interface AppObject extends FigureObject {readonly annotations:readonly AppMark[];readonly panels:readonly DisplayPanel[];readonly display?:AppDisplay;readonly scale_bar?:import('./figure-contracts.mjs').ScaleBarRecord;readonly xy_calibration?:AppCalibration;readonly calibration_record?:AppCalibration;readonly calibration?:AppCalibration;}
 export interface AppOperation extends NumericReply,Omit<MeasurementRecord,'scientific_grid_identity'> {readonly annotation_id?:string;readonly annotation_ids?:readonly string[];readonly action?:string;readonly output_dir?:string;readonly state?:string;}
 export interface AppState extends Omit<FigureState,'object'|'effective_display'> {
+ workspace_analysis?:import('./workspace-controls.mjs').AnalysisSaveState & {active_window_draft?:Readonly<Record<string,unknown>>|null;window_drafts?:Readonly<Record<string,Readonly<Record<string,unknown>>>>};
  [key:string]:unknown;
  object:AppObject;state_revision:number;effective_display?:AppDisplay|null;selection?:AppSelection|null;last_operation?:AppOperation|null;
  source_identity?:{readonly label?:string;readonly filename?:string};tools:readonly {readonly name:string}[];

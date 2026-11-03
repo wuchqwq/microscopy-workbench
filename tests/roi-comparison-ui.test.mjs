@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {RoiComparisonPanel,comparisonMeasurementText} from '../ui/image-panel/roi-comparison.mjs';
+const fft='a'.repeat(32);
+function harness(){
+ class Element{constructor(){this.children=[];this.value='';this.listeners={};}append(...items){this.children.push(...items);}replaceChildren(...items){this.children=items;}addEventListener(name,fn){this.listeners[name]=fn;}showModal(){this.open=true;}close(){this.open=false;this.listeners.close?.();}focus(){document.activeElement=this;}}
+ const elements=new Map(),document={activeElement:null,getElementById:id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()};
+ let state={object:{object_id:'b'.repeat(32)},selection:{coordinates:[1,2,30,40]},workspace_analysis:{working_revision:2,save_id:'saved-A'}};
+ const report={schema_version:1,kind:'roi_lattice_comparison',comparison_id:'compare-one',source_save_id:'saved-A',source_revision:1,rows:[{annotation_id:'roi-1',float_roi_xyxy:[1.2,2.3,30.4,40.5],fft:{object_id:fft,reused:true,input_snapshot_verified:true},status:'needs_point_selection',measurements:[],uncertainties:['缺少已确认的测量点']}]};
+ const calls=[],shown=[];
+ const panel=new RoiComparisonPanel({document,getState:()=>state,install:next=>{state=next;},error:()=>{},show:async id=>shown.push(id),api:async(url,body)=>{calls.push({url,body});if(body)return {...state,workspace_analysis:{...state.workspace_analysis,status:'dirty'}};if(url==='/api/comparisons')return {reports:[report]};return report;}});
+ return {panel,document,elements,calls,shown,report,get state(){return state;}};
+}
+test('viewing a report uses only reads, preserves image/selection, and shows uncertainty',async()=>{const h=harness(),before=structuredClone(h.state);await h.panel.open();assert.deepEqual(h.state,before);assert.equal(h.calls.length,2);assert.ok(h.calls.every(c=>!c.body));const cells=h.elements.get('roi-comparison-rows').children[0].children;assert.match(cells[1].textContent,/待明确选峰/);assert.match(cells[3].textContent,/缺少/);assert.match(h.elements.get('roi-comparison-status').textContent,/不等于晶体学取向/);assert.equal(h.shown.length,0);});
+test('adopting a comparison is explicit and version checked, separate from workspace save',async()=>{const h=harness();await h.panel.open();await h.panel.adopt();assert.deepEqual(h.calls.at(-1).body,{action:'adopt-comparison',comparison_id:'compare-one',expected_working_revision:2});assert.equal(h.state.workspace_analysis.status,'dirty');assert.ok(h.calls.every(c=>c.body?.action!=='save'));});
+test('historical reports remain viewable but cannot pretend to be current analysis',async()=>{const h=harness();h.report.source_save_id='saved-old';await h.panel.open();assert.equal(h.elements.get('adopt-roi-comparison').disabled,true);await assert.rejects(h.panel.adopt(),/重新核对/);assert.ok(h.calls.every(c=>!c.body));});
+test('unknown calibration does not acquire physical units or crystallographic orientation',()=>{assert.deepEqual(comparisonMeasurementText({pixel_period:8}),{period:'8.000000 px',direction:'方向未测量'});const text=comparisonMeasurementText({pixel_period:8,image_coordinate_angle_degrees:22.5});assert.match(text.direction,/图像坐标中的倒易矢量/);assert.doesNotMatch(text.period,/nm/);});
+test('an old report without an independently verified input association stays read-only',async()=>{const h=harness();h.report.rows[0].fft.input_snapshot_verified=false;h.report.rows[0].status='input_association_unknown';await h.panel.open();assert.equal(h.elements.get('adopt-roi-comparison').disabled,true);await assert.rejects(h.panel.adopt(),/原始浮点输入关联/);assert.ok(h.calls.every(c=>!c.body));});

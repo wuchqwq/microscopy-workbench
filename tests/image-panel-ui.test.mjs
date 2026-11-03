@@ -16,6 +16,10 @@ import {renderSequenceEvidence} from '../ui/image-panel/sequence-evidence.mjs';
 import {renderDomainEvidence} from '../ui/image-panel/domain-evidence.mjs';
 import {ResearchWorkspace} from '../ui/image-panel/research-workspace.mjs';
 import {WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext} from '../ui/image-panel/window-workspace.mjs';
+import {WorkspaceControls} from '../ui/image-panel/workspace-controls.mjs';
+import {RoiComparisonPanel} from '../ui/image-panel/roi-comparison.mjs';
+import {settleWorkspaceWindows} from '../ui/image-panel/settle-workspace.mjs';
+import {ExecutionHistoryPanel} from '../ui/image-panel/execution-history.mjs';
 import {DataProbes as ProviderDataProbes} from '../ui/image-panel/data-probes.mjs';
 import {MeasurementWorkspace as ProviderMeasurementWorkspace,requiresMeasurementJump} from '../ui/image-panel/measurement-workspace.mjs';
 import {performance} from 'node:perf_hooks';
@@ -30,7 +34,7 @@ function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4
 async function harness(initial=fixture(),{windowStates=[]}={}){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -57,7 +61,8 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+  workbenchDesktop:{onAction(handler){desktopAction=handler;}},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
   document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),createElementNS:(_namespace,tag)=>new Element(tag),querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
@@ -70,6 +75,17 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
   fetch:async(url,options)=>{
    if(!options.body){getCalls.push(url);if(url==='/api/state'&&stateFailure){stateFailure=false;throw new Error('Controlled current-state read failure');}if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/window-asset?')&&windowStates.length){const query=new URL(url,'http://panel.test').searchParams,entry=server.window_collection.windows.find(value=>value.window_id===query.get('window_id')),saved=entry&&savedWindowStates.get(entry.object_id);return {ok:Boolean(saved),json:async()=>saved?{schema_version:1,window_id:entry.window_id,object_id:entry.object_id,collection_revision:Number(query.get('revision')),object:copy(saved.object),panel_mapping_fingerprint:saved.panel_mapping_fingerprint,png_base64:saved.png_base64}:{error:'Window closed or saved asset missing'}};}if(url.startsWith('/api/measurements?'))return {ok:true,json:async()=>({current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false})};if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
    if(options.body){const body=JSON.parse(options.body);actionTrace.push(body.action);
+    if(url==='/api/workspace'&&body.action==='park-window'){
+     assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);assert.equal(body.working_draft.object_id,server.object.object_id);assert.equal(body.working_draft.panel_mapping_fingerprint,server.panel_mapping_fingerprint);
+     const active=server.window_collection.active_window_id;server.workspace_analysis.window_drafts??={};server.workspace_analysis.window_drafts[active]=copy(body.working_draft);server.workspace_analysis.active_window_draft=copy(body.working_draft);if(body.working_draft.content_dirty){server.workspace_analysis.status='dirty';server.workspace_analysis.working_revision++;}
+     server.edit_state={...server.edit_state,dirty:false,gesture_active:false,annotation_edit:null,draft_revision:server.edit_state.draft_revision+1};server.state_revision++;return {ok:true,json:async()=>copy(server)};
+    }
+    if(url==='/api/workspace'&&body.action==='save'){
+     assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);server.workspace_analysis={...server.workspace_analysis,status:'clean',save_id:body.save_id,saved_revision:(server.workspace_analysis.saved_revision??0)+1,dirty:false};return {ok:true,json:async()=>copy(server)};
+    }
+    if(url==='/api/workspace'&&body.action==='discard'){
+     assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);const restored=copy(initial);restored.workspace_analysis={...restored.workspace_analysis,working_revision:server.workspace_analysis.working_revision+1,status:'clean'};restored.edit_state={draft_revision:(server.edit_state?.draft_revision??0)+1,dirty:false,gesture_active:false};restored.state_revision=(server.state_revision??0)+1;server=restored;return {ok:true,json:async()=>copy(server)};
+    }
     if(url==='/api/probe'){probeCalls.push(body);return {ok:true,json:async()=>({object_id:body.expected_object_id,kind:'probe',component:body.component,coordinate_space:body.coordinate_space,samples:[{point:body.coordinates,array_index_xy:body.coordinates,value:17}]})};}
     if(body.action==='draft'){draftCalls.push(body);if(waitDraft)await waitDraft;if(draftFailure){const error=draftFailure;draftFailure=null;return {ok:false,json:async()=>({error})};}if(windowStates.length&&(body.expected_object_id!==server.object.object_id||body.params.draft_revision<(server.edit_state?.draft_revision??0)))return {ok:false,json:async()=>({error:'Stale draft lease'})};if(Object.hasOwn(body.params,'selection'))server.selection=copy(body.params.selection);if(coalesceDrafts)server.draft_persistence={pending:body.params.confirm_persistence!==true&&server.edit_state?.dirty===body.params.dirty&&server.edit_state?.gesture_active===body.params.gesture_active,error:null};server.edit_state={...copy(body.params),base_object_id:server.object.object_id};return {ok:true,json:async()=>body.lightweight?{object_id:server.object.object_id,edit_state:copy(server.edit_state)}:copy(server)};}
     if(windowStates.length&&['window-context','window-camera'].includes(body.action)){
@@ -79,7 +95,7 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
     }
     if(windowStates.length&&body.action==='activate-window'){
      calls.push(copy(body));activationStarted++;for(const resolve of activationListeners.splice(0))resolve();const source=server.object.object_id,revision=server.edit_state?.draft_revision??0,collectionRevision=server.window_collection.revision;
-     const execute=async()=>{if(waitActivation)await waitActivation;const entry=server.window_collection.windows.find(value=>value.window_id===body.params.window_id);if(!entry||source!==server.object.object_id||revision!==server.edit_state?.draft_revision||collectionRevision!==server.window_collection.revision||body.params.collection_revision!==collectionRevision||server.edit_state?.dirty||server.edit_state?.gesture_active||server.pending_result||server.last_operation?.state==='submitted')return {ok:false,json:async()=>({error:'Activation preflight or postcheck refused'})};const saved=savedWindowStates.get(entry.object_id);if(!saved)return {ok:false,json:async()=>({error:'Saved target missing'})};savedWindowStates.set(source,copy(server));const context=readWindowViewContext(entry.view_context,saved.object,saved.panel_mapping_fingerprint),selected=context?copy(context.selection_candidate):null;server={...server,object:copy(saved.object),png_base64:saved.png_base64,clean_png_base64:saved.clean_png_base64,panel_mapping_fingerprint:saved.panel_mapping_fingerprint,render_base_id:entry.object_id,selection:selected,state_revision:server.state_revision+1,edit_state:{draft_revision:revision+1,dirty:false,gesture_active:false,selection:selected,annotation_edit:null,base_object_id:entry.object_id},last_operation:{action:'activate-window',object_id:entry.object_id,state:'completed'}};server.window_collection.active_window_id=entry.window_id;server.window_collection.revision++;const reply=copy(server);return {ok:true,json:async()=>reply};};
+     const execute=async()=>{if(waitActivation)await waitActivation;const entry=server.window_collection.windows.find(value=>value.window_id===body.params.window_id);if(!entry||source!==server.object.object_id||revision!==server.edit_state?.draft_revision||collectionRevision!==server.window_collection.revision||body.params.collection_revision!==collectionRevision||server.edit_state?.dirty||server.edit_state?.gesture_active||server.pending_result||server.last_operation?.state==='submitted')return {ok:false,json:async()=>({error:'Activation preflight or postcheck refused'})};const saved=savedWindowStates.get(entry.object_id);if(!saved)return {ok:false,json:async()=>({error:'Saved target missing'})};savedWindowStates.set(source,copy(server));const context=readWindowViewContext(entry.view_context,saved.object,saved.panel_mapping_fingerprint),selected=context?copy(context.selection_candidate):null;server={...server,object:copy(saved.object),png_base64:saved.png_base64,clean_png_base64:saved.clean_png_base64,panel_mapping_fingerprint:saved.panel_mapping_fingerprint,render_base_id:entry.object_id,selection:selected,state_revision:server.state_revision+1,edit_state:{draft_revision:revision+1,dirty:false,gesture_active:false,selection:selected,annotation_edit:null,base_object_id:entry.object_id},last_operation:{action:'activate-window',object_id:entry.object_id,state:'completed'}};server.window_collection.active_window_id=entry.window_id;if(server.workspace_analysis)server.workspace_analysis.active_window_draft=copy(server.workspace_analysis.window_drafts?.[entry.window_id]??null);server.window_collection.revision++;const reply=copy(server);return {ok:true,json:async()=>reply};};
      activationWork=execute();if(lostActivation){lostActivation=false;throw new Error('Controlled activation response lost');}return activationWork;
     }
     calls.push(body);assert.equal(body.expected_object_id,server.object.object_id);if(waitAction)await waitAction;if(body.action==='measure'&&waitMeasurement)await waitMeasurement;
@@ -112,6 +128,7 @@ async function harness(initial=fixture(),{windowStates=[]}={}){
  return {$,bodyClasses,calls,draftCalls,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},finishRoi:async()=>{await sandbox.finishRoiSave();flush();},
   delayAction(promise){waitAction=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
+  nativeAction:action=>desktopAction(action),
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
   failDraft(message='Controlled draft delivery failure'){draftFailure=message;},
   actionResult(value){nextActionResult=typeof value==='function'?value:copy(value);},
@@ -490,6 +507,39 @@ test('failed autosave retains its latest local edit and does not silently replay
  await h.settle();assert.equal(h.calls.length,1);assert.match(h.$('message').textContent,/失败|保留/);
 });
 
+function unsubmittedRecoveryReply(h,requestId,change=()=>{}){
+ const reply=h.server();reply.execution_recovery={state:'not_submitted',request_id:requestId,automatic_retry:false};reply.last_operation={state:'not_submitted',request_id:requestId};change(reply);h.actionResult(reply);h.recoverResponse(reply.last_operation);
+}
+test('not-submitted recovery releases the unknown guard but queued edits require a new explicit save',async()=>{
+ const h=await editHarness();h.failAction('Original request_id=controlled-lost-request was rejected; query original');h.event('pointerdown',10,10);h.event('pointerup',18,19);await h.settle();assert.equal(h.inspect().autoFailed,true);const pending=copy(h.inspect().queuedEdits),before=h.calls.length;unsubmittedRecoveryReply(h,'controlled-lost-request');await h.click('recover');await h.settle();
+ assert.equal(h.inspect().autoFailed,false);assert.deepEqual(h.inspect().queuedEdits,pending);assert.equal(h.calls.length,before+1);assert.match(h.$('draft-status').textContent,/未提交.*编辑保留.*明确保存/);await h.finish();await h.settle();assert.equal(h.calls.filter(c=>c.action==='edit').length,1,'query/finally cannot replay a positively rejected write');
+ await h.click('save-mark');await h.finish();await h.settle();assert.equal(h.calls.filter(c=>c.action==='edit').length,2);assert.equal(h.inspect().queuedEdits.length,0);assert.deepEqual(h.server().object.annotations[0].anchor.coordinates,[38,31,60,52]);
+});
+test('not-submitted recovery permits metadata-only desktop close preparation and only explicit Save releases editing',async()=>{
+ const f=windowActivationFixture();f.source.object.annotations=annotated().object.annotations;f.source.selection=null;f.source.window_collection.windows[0].view_context.selection_candidate=null;f.source.workspace_analysis={schema_version:1,status:'clean',working_revision:1,save_id:'saved-a',saved_revision:1,recovery_available:false,unresolved_request_id:null};
+ const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();h.$('existing').value='line-a';h.$('existing').onchange();h.failAction('Original request_id=controlled-lost-request; query original');h.event('pointerdown',10,10);h.event('pointerup',18,19);await h.settle();
+ assert.equal((await h.nativeAction('prepare-close')).ok,false,'an unknown write still blocks close');unsubmittedRecoveryReply(h,'controlled-lost-request');await h.click('recover');await h.settle();const queue=copy(h.inspect().queuedEdits),writes=h.calls.length;
+ assert.equal((await h.nativeAction('prepare-close')).ok,true);await h.settle();assert.deepEqual(h.inspect().queuedEdits,queue);assert.equal(h.calls.length,writes);assert.equal(h.server().workspace_analysis.active_window_draft.content_dirty,true);
+ // Returning from the native Save/NoSave/Cancel question via Cancel performs
+ // no renderer command. Reopening it still cannot flush the held write.
+ assert.equal((await h.nativeAction('prepare-close')).ok,true);await h.finish();await h.settle();assert.deepEqual(h.inspect().queuedEdits,queue);assert.equal(h.calls.length,writes);assert.equal(h.$('workspace-save').disabled,false);
+ const saved=await h.nativeAction('save');assert.equal(saved.ok,true,saved.error);await h.finish();await h.settle();assert.equal(h.calls.filter(c=>c.action==='edit').length,2);assert.equal(h.inspect().queuedEdits.length,0);assert.equal(h.inspect().state.workspace_analysis.status,'clean');assert.equal(h.actionTrace.filter(action=>action==='save').length,1);
+});
+test('not-submitted recovery permits explicit workspace discard without resubmitting retained edits',async()=>{
+ const f=windowActivationFixture();f.source.object.annotations=annotated().object.annotations;f.source.selection=null;f.source.window_collection.windows[0].view_context.selection_candidate=null;f.source.workspace_analysis={schema_version:1,status:'clean',working_revision:1,save_id:'saved-a',saved_revision:1,recovery_available:false,unresolved_request_id:null};
+ const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();h.$('existing').value='line-a';h.$('existing').onchange();h.failAction('Original request_id=controlled-lost-request; query original');h.event('pointerdown',10,10);h.event('pointerup',18,19);await h.settle();unsubmittedRecoveryReply(h,'controlled-lost-request');await h.click('recover');await h.settle();assert.equal((await h.nativeAction('prepare-close')).ok,true);
+ await h.click('workspace-discard');await h.settle();await h.finish();assert.equal(h.calls.filter(c=>c.action==='edit').length,1);assert.equal(h.actionTrace.filter(action=>action==='discard').length,1);assert.equal(h.inspect().queuedEdits.length,0);assert.equal(h.inspect().dirty,false);assert.deepEqual(h.inspect().state.object.annotations[0].anchor.coordinates,[30,22,60,52]);assert.equal(h.inspect().state.object.object_id,f.source.object.object_id);
+});
+for(const [name,change] of [
+ ['wrong request identity',r=>{r.execution_recovery.request_id='different-original';}],
+ ['automatic retry permitted',r=>{r.execution_recovery.automatic_retry=true;}],
+ ['unknown outcome',r=>{r.execution_recovery.state='unknown';}],
+ ['unknown receipt field',r=>{r.execution_recovery.extra='not authoritative';}],
+ ['missing formal receipt',r=>{delete r.execution_recovery;}],
+])test('not-submitted recovery rejects '+name+' and keeps original queued editing',async()=>{
+ const h=await editHarness();h.failAction('Text says not_submitted. Original request_id=controlled-lost-request; text is not proof');h.event('pointerdown',10,10);h.event('pointerup',18,19);await h.settle();const before=copy(h.inspect().queuedEdits);unsubmittedRecoveryReply(h,'controlled-lost-request',change);await h.click('recover');await h.settle();assert.equal(h.inspect().autoFailed,true);assert.deepEqual(h.inspect().queuedEdits,before);assert.equal(h.calls.filter(c=>c.action==='edit').length,1);assert.equal(h.inspect().state.object.object_id,viewId);
+});
+
 test('saving a mark advances the visible identity even when a separate Agent result remains queued',async()=>{
  const initial=annotated();initial.pending_result={object_id:'d'.repeat(32),request_id:'agent-result'};
  const h=await harness(initial);h.$('existing').value='line-a';h.$('existing').onchange();h.event('pointerdown',10,10);h.event('pointerup',18,19);h.flush();
@@ -589,6 +639,10 @@ test('P0: unknown measurement response retains drafts and only queries its origi
  h.recoverResponse({kind:'measure',request_id:'measure-original-42',object_id:'e'.repeat(32),coordinate_space:'source_pixels',points:[[25,30],[85,30]],physical_distance:1.2,physical_unit:'nm'});
  await h.click('recover');await h.finish();assert.equal(h.calls.find(c=>c.action==='recover').params.request_id,'measure-original-42');assert.equal(h.inspect().autoFailed,false);
  assert.equal(h.server().object.annotations[0].presentation.label.text,'d = 1.2 nm');assert.equal(h.server().object.annotations[1].presentation.label.text,'d = 2.3 nm');assert.equal(h.calls.filter(c=>c.action==='measure'&&c.params.selection.coordinates[1]===30).length,1);
+});
+test('not-submitted recovery does not invent a measurement or drain another mark edit',async()=>{
+ const h=await harness(twoMeasuredLines());let release;h.delayMeasurement(new Promise(resolve=>{release=resolve;}));h.measureResponse(measuredFromSelection);selectLine(h,'A');h.event('pointerdown',55,18);h.event('pointerup',65,18);h.flush();await h.settle();selectLine(h,'B');h.event('pointerdown',1,58);h.event('pointerup',11,58);h.failAction('Original request_id=measure-original-42; query original');release();await h.settle();assert.equal(h.inspect().autoFailed,true);const queued=copy(h.inspect().queuedEdits),count=h.calls.filter(c=>c.action==='measure').length,draft=copy(h.inspect().draft);unsubmittedRecoveryReply(h,'measure-original-42');await h.click('recover');await h.settle();
+ assert.equal(h.inspect().autoFailed,false);assert.deepEqual(h.inspect().queuedEdits,queued);assert.deepEqual(h.inspect().draft,draft);assert.equal(h.calls.filter(c=>c.action==='measure').length,count);assert.equal(h.inspect().state.last_operation.state,'not_submitted');assert.notEqual(h.inspect().state.last_operation.kind,'measure');assert.equal(h.server().object.annotations[0].presentation.label.visible,false);assert.match(h.$('message').textContent,/未提交.*保留/);
 });
 
 function figureImportFixture(){
@@ -1079,6 +1133,11 @@ test('an unknown ROI save preserves stable intent and queries only its original 
  const saved=h.server(),{panel:unusedPanel,...anchor}=submitted.params.selection;saved.object.object_id='d'.repeat(32);saved.object.request_id='roi-original-request';saved.object.annotations=[{annotation_id:submitted.params.annotation_id,kind:'rectangle',anchor:copy(anchor),text:submitted.params.text,color:submitted.params.color,status:'hypothesized',note:'',purpose:'resumable_observation',observation_contract_version:1,selection_origin:'researcher',selection_origin_basis:'caller_reported_not_authenticated'}];saved.selection=copy(submitted.params.selection);saved.edit_state={...saved.edit_state,dirty:false,gesture_active:false,annotation_edit:null};h.actionResult(saved);h.recoverResponse({action:'recover',state:'completed',object_id:saved.object.object_id,request_id:'roi-original-request',annotation_ids:[submitted.params.annotation_id]});
  const reads=h.getCalls.length;await h.click('recover');await h.finishRoi();await h.settle();assert.equal(h.calls.find(call=>call.action==='recover').params.request_id,'roi-original-request');assert.equal(h.calls.filter(call=>call.action==='mark').length,1);assert.equal(h.calls.filter(call=>call.action==='recover').length,1);assert.equal(h.calls.some(call=>call.action==='fft'),false);assert.equal(h.getCalls.slice(reads).filter(url=>url==='/api/state').length,2);assert.equal(h.server().object.annotations[0].annotation_id,submitted.params.annotation_id);assert.deepEqual(h.inspect().draft.coordinates,expected);assert.equal(h.inspect().roiCreationRecovery,null);
 });
+test('not-submitted recovery leaves ROI temporary and a later explicit save creates the observation',async()=>{
+ const h=await harness(emptyRoiFixture());h.failAction('Original request_id=roi-not-submitted; query it');roiStroke(h,'roi',[10.25,11.75],[44.625,45.125]);await h.finishRoi();await h.settle();const geometry=copy(h.inspect().draft.coordinates);assert.ok(h.inspect().roiCreationRecovery);unsubmittedRecoveryReply(h,'roi-not-submitted');const reads=h.getCalls.length;await h.click('recover');await h.finishRoi();await h.settle();
+ assert.equal(h.inspect().autoFailed,false);assert.equal(h.inspect().roiCreationRecovery,null);assert.deepEqual(h.inspect().draft.coordinates,geometry);assert.equal(h.server().object.annotations.length,0);assert.equal(h.calls.filter(c=>c.action==='mark').length,1);assert.equal(h.getCalls.slice(reads).filter(url=>url==='/api/state').length,0,'not-submitted is not a saved ROI needing a fabricated readback');assert.match(h.$('current-roi').textContent,/临时/);
+ await h.click('save-mark');await h.finishRoi();await h.settle();assert.equal(h.calls.filter(c=>c.action==='mark').length,2);assert.equal(h.server().object.annotations.length,1);assert.deepEqual(h.server().object.annotations[0].anchor.coordinates,geometry);assert.equal(h.server().object.annotations[0].purpose,'resumable_observation');assert.equal(h.calls.some(c=>c.action==='fft'),false);
+});
 
 test('Agent handoff confirms its draft delivery and rereads current state without science',async()=>{
  const h=await harness(handoffFixture()),reads=h.getCalls.length,posts=h.draftCalls.length;
@@ -1275,4 +1334,13 @@ test('changed calibration at save acknowledgement preserves the reason and refus
  h.$('roi-reason').value='Retain on changed calibration';h.$('roi-reason').oninput();await h.click('save-observation');await h.settle();
  assert.equal(h.$('roi-reason').value,'Retain on changed calibration');assert.equal(h.inspect().dirty,true);assert.match(h.$('message').textContent,/标定依赖已改变.*草稿保留/);
  assert.equal(h.calls.length,1);
+});
+
+test('new workspace parks reason and display edits across window activation without user Save or recomputation',async()=>{
+ const f=windowActivationFixture();f.source.workspace_analysis={schema_version:1,status:'clean',working_revision:1,save_id:'saved-a',saved_revision:1,recovery_available:false,unresolved_request_id:null};
+ const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();
+ h.$('roi-reason').value='Uncommitted source observation';h.$('roi-reason').oninput();h.$('gamma').value='1.4';h.$('gamma').oninput();
+ const sourceObject=h.inspect().state.object.object_id;await h.activateWindow(f.targetWindow);assert.equal(h.inspect().state.object.object_id,f.target.object.object_id);assert.equal(h.$('roi-reason').value,'');
+ await h.activateWindow(f.sourceWindow);assert.equal(h.inspect().state.object.object_id,sourceObject);assert.equal(h.$('roi-reason').value,'Uncommitted source observation');assert.equal(Number(h.$('gamma').value),1.4);assert.equal(h.inspect().dirty,true);
+ assert.ok(h.actionTrace.includes('park-window'));assert.deepEqual(h.calls.map(c=>c.action),['activate-window','activate-window']);assert.equal(h.inspect().state.workspace_analysis.status,'dirty');
 });
