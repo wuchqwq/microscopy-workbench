@@ -1,5 +1,6 @@
 // Explicit external image tools. No DM connection or native fallback lives here.
 import {spawn} from 'node:child_process';
+import {acquireImageWorkspaceWrite,releaseCompletedImageWorkspaceWrite} from './image_workspace_lock.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync, realpathSync, statSync} from 'node:fs';
 import path from 'node:path';
@@ -115,7 +116,8 @@ const actions: Readonly<Record<string,string>>={...discoveryActions,...methodAct
 
 export class ImageWorkerDiagnosticError extends Error {
  readonly diagnostic:Readonly<Record<string,unknown>>;
- constructor(message:string,diagnostic:Record<string,unknown>){super(message+' '+JSON.stringify(diagnostic));this.name='ImageWorkerDiagnosticError';this.diagnostic=diagnostic;}
+ readonly code?:string;readonly submission_state?:string;readonly request_id?:unknown;
+ constructor(message:string,diagnostic:Record<string,unknown>){super(message+' '+JSON.stringify(diagnostic));this.name='ImageWorkerDiagnosticError';this.diagnostic=diagnostic;if(diagnostic.submission_state==='not_submitted'){this.code='IMAGE_WORKER_NOT_SUBMITTED';this.submission_state='not_submitted';this.request_id=diagnostic.request_id;}}
 }
 
 export class ImageWorkspace {
@@ -194,11 +196,11 @@ export class ImageWorkspace {
   }
   private runWorker(payload: Readonly<ImageRequest>,detail: 'full'|'compact'='full'): ImageWorkerPromise {
     const raw=JSON.stringify(detail==='compact'?{...payload,response_detail:detail}:payload);if(Buffer.byteLength(raw)>256*1024)throw new Error('Image request exceeds 256 KiB');
-    let finishWorker!: () => void,child: ImageProcess | undefined;
-    const workerDone=new Promise<void>(resolve=>{finishWorker=resolve;});
+    let finishWorker!: () => void,child: ImageProcess | undefined,providerLease:ReturnType<typeof acquireImageWorkspaceWrite>|undefined;
+    const workerDone=new Promise<void>(resolve=>{finishWorker=()=>{try{providerLease?.release();}catch{/* Keep a blocked claim fail-closed; query the original completed request. */}resolve();};});
     const waiting=new Promise<ToolResult>((resolve,reject)=>{
-      try {child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
-      catch(error){finishWorker();reject(new ImageWorkerDiagnosticError('Image worker spawn failed; original request was not dispatched.',{phase:'spawn',submission_state:'not_submitted',request_id:payload.request_id??null,provider:'external-image-workspace',workspace:this.workspace,reason:String(error)}));return;}
+      try {if(!['get','result','evidence'].includes(payload.action))providerLease=acquireImageWorkspaceWrite(this.workspace,payload.request_id);child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
+      catch(error){finishWorker();const code=(error as {code?:string}).code;if(code==='WORKSPACE_WRITE_CONFLICT'||code==='WORKSPACE_METADATA_BUSY'){reject(error);return;}reject(new ImageWorkerDiagnosticError('Image worker spawn failed; original request was not dispatched.',{phase:'spawn',submission_state:'not_submitted',request_id:payload.request_id??null,provider:'external-image-workspace',workspace:this.workspace,reason:String(error)}));return;}
       let chunks: Buffer[]=[],bytes=0,stderr='',settled=false,exitCode:number|null=null,phase='worker_output';let reportedState:unknown;const stdoutHash=createHash('sha256');
       const hint='Query image_result with original request_id='+String(payload.request_id??payload.query_request_id??'unknown')+'; do not automatically resubmit.';
       const diagnostic=(error:unknown,state='outcome_unknown')=>new ImageWorkerDiagnosticError((error instanceof Error?error.message:String(error))+'. '+hint,{phase,preview_phase:payload._preview_phase??null,preview_dispatch_by_this_attempt:payload._preview_phase==='reserve'?'not_dispatched':'not_inferred',provider_reported_state:reportedState??null,submission_state:state,request_id:payload.request_id??payload.query_request_id??null,provider:'external-image-workspace',workspace:this.workspace,exit_code:exitCode,stdout_bytes:bytes,stdout_sha256:stdoutHash.copy().digest('hex'),stderr_tail:stderr.replace(/((?:token|secret|api[_-]?key|authorization)\s*[:=]\s*)\S+/gi,'$1[REDACTED]').slice(-1024)});
@@ -251,6 +253,7 @@ export class ImageWorkspace {
         }else if(result.request_id!==(payload.action==='result'?payload.query_request_id:payload.request_id)){
           throw new Error('Image worker returned a different original request identity; '+hint);
         }
+        if(payload.action==='result'){try{releaseCompletedImageWorkspaceWrite(this.workspace,payload.query_request_id);}catch{/* Read-only completion remains valid; a blocked claim still refuses new writes. */}}
         const content: ToolContent[]=[{type:'text',text:JSON.stringify(result,null,2)}];
         if(result.image_path&&result.evidence_format!=='image-evidence-summary-v1'){
           // Python resolves Windows 8.3 aliases to long paths. Canonicalize

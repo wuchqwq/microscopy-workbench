@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,readFileSync,writeFileSync,rmSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
+import {spawnSync} from 'node:child_process';
 import {createImagePanel} from '../tools/image_panel.mjs';
 import {ImagePanelManager,imagePanelTools,imagePanelResumeTool} from '../lib/image_panel_mcp.mjs';
 import {prepareOwnedPanelRegistration,loadOwnedPanelRegistration,readOwnedPanelConnection,readOwnedPanelCheckpoint} from '../lib/panel_ownership.mjs';
@@ -27,6 +28,12 @@ test('official fresh registration exposes exact live helper and binds checkpoint
  const current=data(await manager().call('image_panel_current',{}));assert.equal(current.panel_id,P);assert.equal(current.view.helper_session_id,owned.helper_session_id);assert.equal(current.view.object.object_id,A);assert.equal(panel.state().panel_generation,1);
  assert.deepEqual(imagePanelTools.map(t=>t.name),['image_panel_open','image_panel_current','image_panel_show']);assert.deepEqual(imagePanelResumeTool.inputSchema.required,['panel_id','request_id']);
  assert.throws(()=>prepareOwnedPanelRegistration({workspace,panel_id:P}),/still present/);
+}));
+test('a stopped published helper claim is archived before one qualified replacement claim, without replaying science',()=>fixture(async({workspace,start,calls})=>{
+ const first=prepareOwnedPanelRegistration({workspace,panel_id:P}),panel=await start(first);await first.close(panel);const connection=readOwnedPanelConnection(workspace,P),original=JSON.parse(readFileSync(first.registration_file,'utf8')),lock=path.join(workspace,'panel-registry','panels',P+'.lock'),bytes=JSON.stringify({schema_version:1,panel_id:P,helper_session_id:first.helper_session_id,nonce:original.nonce});const child=spawnSync(process.execPath,['-e',''],{windowsHide:true});assert.equal(child.status,0);assert.ok(child.pid);assert.throws(()=>process.kill(child.pid,0));writeFileSync(path.join(workspace,'panel-registry','panels',P+'.json'),JSON.stringify({...connection,status:'running',pid:child.pid}));writeFileSync(lock,bytes);const before=calls.length,next=prepareOwnedPanelRegistration({workspace,panel_id:P});assert.equal(next.generation,first.generation+1);assert.equal(next.previousCheckpoint.object_id,A);const archive=readdirSync(path.join(workspace,'panel-registry','registrations')).find(file=>file.startsWith('stopped-published-lock-'+first.helper_session_id+'-'));assert.ok(archive);assert.equal(readFileSync(path.join(workspace,'panel-registry','registrations',archive),'utf8'),bytes);const resumed=await start(next);assert.equal(resumed.state().object.object_id,A);assert.ok(calls.slice(before).every(call=>call.name==='image_info'));
+}));
+test('a lock for an unpublished or mismatched helper is retained even when the published predecessor is closed',()=>fixture(async({workspace,start})=>{
+ const first=prepareOwnedPanelRegistration({workspace,panel_id:P}),panel=await start(first);await first.close(panel);const registration=JSON.parse(readFileSync(first.registration_file,'utf8')),lock=path.join(workspace,'panel-registry','panels',P+'.lock'),foreign=JSON.stringify({schema_version:1,panel_id:P,helper_session_id:'c'.repeat(32),nonce:registration.nonce});writeFileSync(lock,foreign);assert.throws(()=>prepareOwnedPanelRegistration({workspace,panel_id:P}),/unpublished|foreign/);assert.equal(readFileSync(lock,'utf8'),foreign);assert.equal(readOwnedPanelConnection(workspace,P).generation,first.generation);
 }));
 test('saved scoped observation reopens only from its exact provider object/request/scope without new context',()=>fixture(async({workspace,start,manager,records,calls})=>{
  const owned=prepareOwnedPanelRegistration({workspace,panel_id:P}),panel=await start(owned);await owned.close(panel);const conn=readOwnedPanelConnection(workspace,P),checkpoint=readOwnedPanelCheckpoint(workspace,conn),R='d'.repeat(32);

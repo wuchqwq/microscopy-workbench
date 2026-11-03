@@ -1,6 +1,7 @@
 // Producer DTOs describe the owned panel state, not scientific qualification.
 // Provider JSON that has only been inspected for identity remains unknown.
 import type {PanelRoiHandoff,PanelInteractionGate,RoiObservationRow} from '../ui/image-panel/roi-observations.mjs';
+import type {AnalysisWorkspaceStatus} from './analysis_workspace.mjs';
 export type PanelMetadata = Record<string,unknown>;
 export interface ImageToolReply {data:unknown;png?:unknown;}
 export interface PanelClient {
@@ -23,6 +24,7 @@ export interface PanelWindowCamera {scale:number;center_image_xy:readonly [numbe
 export interface PanelWindowViewContext {
  version:1;object_id:string;panel_mapping_fingerprint:string;camera:PanelWindowCamera;
  selection_candidate:PanelSelection|null;selected_annotation_id:string|null;
+ camera_origin?:'new_fit_preference';
 }
 export interface PanelWindowSourceReference {
  input_view_object_id:string;frame_object_id:string;raw_fft_object_id:string;processing_rect_xyxy:readonly number[];
@@ -38,6 +40,7 @@ export interface PanelWindowEntry {
 export interface PanelWindowCollection {
  schema_version:1;revision:number;frame_object_id:string|null;active_window_id:string|null;windows:PanelWindowEntry[];
  unavailable_reason?:string;
+ closed_windows?:PanelWindowEntry[];
 }
 export interface PanelWindowAsset {
  schema_version:1;collection_revision:number;window_id:string;object_id:string;object:PanelMetadata;png_base64:string;
@@ -82,4 +85,5 @@ export interface PanelState {
  window_collection?:PanelWindowCollection;
  panel_mapping_fingerprint?:string;
  multi_roi_handoff_schema_version?:1;
+ workspace_analysis?:AnalysisWorkspaceStatus;
 }

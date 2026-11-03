@@ -47,11 +47,29 @@ test('FFT annotation and calibration revisions update one display window while r
  assert.deepEqual(raw.xy_calibration,a);assert.deepEqual(input.xy_calibration,a);
 });
 
-test('layout updates are atomic and cannot smuggle draft data or close the active editor',()=>{
+test('layout updates are atomic; closing displays retains their exact working references',()=>{
  const store=new PanelWindowStore();store.admit(spatial(),frame);store.admit(spectrum(id(10)),frame);const value=store.snapshot(),source=value.windows[0];
  assert.throws(()=>readPanelWindowLayout({x:0,y:0,width:1,height:1,z:0,dirty:false}),/fields/);assert.throws(()=>readPanelWindowLayout({x:.8,y:0,width:.5,height:1,z:0}),/outside/);
  assert.throws(()=>store.updateLayouts(value.revision,[{window_id:source.window_id,layout:{x:0,y:0,width:.5,height:1,z:1}},{window_id:id(888),layout:{x:0,y:0,width:.5,height:1,z:2}}]),/no longer/);assert.deepEqual(store.snapshot(),value);
- assert.throws(()=>store.close(value.revision,value.active_window_id),/cannot be closed/);store.close(value.revision,source.window_id);assert.equal(store.snapshot().active_window_id,value.active_window_id);assert.equal(store.snapshot().windows.length,1);
+ store.close(value.revision,source.window_id);assert.equal(store.snapshot().active_window_id,value.active_window_id);assert.equal(store.snapshot().windows.length,1);assert.equal(store.snapshot().closed_windows[0].object_id,source.object_id);
+ store.close(store.snapshot().revision,value.active_window_id);assert.equal(store.snapshot().active_window_id,null);assert.equal(store.snapshot().windows.length,0);assert.equal(store.snapshot().closed_windows.length,2);
+ store.admit(spatial(),frame);assert.equal(store.snapshot().active_window_id,source.window_id);assert.equal(store.snapshot().windows[0].object_id,source.object_id);
+});
+
+test('closed display history does not consume the five visible slots and cold restore retains hidden IDs',async()=>{
+ const store=new PanelWindowStore(),objects=new Map([[V,spatial()]]);store.admit(objects.get(V),frame);
+ for(let n=10;n<14;n++){const object=spectrum(id(n));objects.set(object.object_id,object);store.admit(object,frame);}
+ const before=store.snapshot(),first=before.windows[1];store.close(before.revision,first.window_id);
+ const fresh=spectrum(id(20));objects.set(fresh.object_id,fresh);assert.equal(store.canAdmit(fresh,frame),true);store.admit(fresh,frame);
+ assert.equal(store.snapshot().windows.length,5);assert.equal(store.snapshot().closed_windows[0].window_id,first.window_id);
+ const cold=new PanelWindowStore();cold.admit(fresh,frame);await cold.restore(store.checkpoint(),fresh,frame,async key=>({object:objects.get(key),frame,png}));
+ assert.deepEqual(cold.snapshot().closed_windows,store.snapshot().closed_windows);assert.equal(cold.snapshot().windows.length,5);
+});
+test('retained display capacity is rejected before installing another active identity',()=>{
+ const store=new PanelWindowStore();store.admit(spatial(),frame);
+ for(let n=10;n<41;n++){store.admit(spectrum(id(n)),frame);store.close(store.snapshot().revision,store.snapshot().active_window_id);}
+ const before=store.checkpoint(),next=spectrum(id(99));assert.equal(store.canAdmit(next,frame),false);assert.throws(()=>store.admit(next,frame),/Retained display limit/);assert.deepEqual(store.checkpoint(),before);
+ const source=store.snapshot().windows[0];assert.equal(store.canAdmit(spatial(),frame),true);store.admit(spatial(),frame);assert.equal(store.snapshot().active_window_id,source.window_id);
 });
 
 test('different frame and unsupported frequency mapping cannot inherit the previous window set',()=>{

@@ -15,7 +15,7 @@ const same=(a:unknown,b:unknown)=>JSON.stringify(canonical(a))===JSON.stringify(
 const rect=(v:unknown):v is number[]=>Array.isArray(v)&&v.length===4&&v.every(n=>Number.isSafeInteger(n)&&n>=0)&&v[0]<v[2]&&v[1]<v[3];
 function error(message:string):never{throw Object.assign(new Error(message),{status:409});}
 export const PANEL_WINDOW_LIMIT=5;
-interface WindowRecord {entry:PanelWindowEntry;grid_key:string;asset_fingerprint:string;input_calibration:unknown;latest_observation_asset_fingerprint?:string;latest_observation_grid_key?:string;}
+interface WindowRecord {entry:PanelWindowEntry;grid_key:string;asset_fingerprint:string;input_calibration:unknown;hidden?:boolean;latest_observation_asset_fingerprint?:string;latest_observation_grid_key?:string;}
 interface Descriptor {object_id:string;frame_id:string;grid_key:string;frequency:boolean;fingerprint:string;}
 
 export function panelWindowFingerprint(value:Row):string {
@@ -30,10 +30,10 @@ export function readPanelWindowCamera(value:unknown):PanelWindowCamera {
 }
 export function qualifyPanelWindowContext(raw:unknown,value:Row,checkSelection:(selection:unknown,target:Row)=>PanelSelection):PanelWindowViewContext|null {
  try{
-  if(!isRow(raw)||Object.keys(raw).some(k=>!['version','object_id','panel_mapping_fingerprint','camera','selection_candidate','selected_annotation_id'].includes(k))||raw.version!==1||raw.object_id!==value.object_id||raw.panel_mapping_fingerprint!==panelWindowMappingFingerprint(value)||raw.selected_annotation_id!==null&&(typeof raw.selected_annotation_id!=='string'||!raw.selected_annotation_id.length||raw.selected_annotation_id.length>64))return null;
+  if(!isRow(raw)||Object.keys(raw).some(k=>!['version','object_id','panel_mapping_fingerprint','camera','selection_candidate','selected_annotation_id','camera_origin'].includes(k))||raw.version!==1||raw.camera_origin!==undefined&&raw.camera_origin!=='new_fit_preference'||raw.object_id!==value.object_id||raw.panel_mapping_fingerprint!==panelWindowMappingFingerprint(value)||raw.selected_annotation_id!==null&&(typeof raw.selected_annotation_id!=='string'||!raw.selected_annotation_id.length||raw.selected_annotation_id.length>64))return null;
   const camera=readPanelWindowCamera(raw.camera),candidate=raw.selection_candidate===null?null:checkSelection(raw.selection_candidate,value);
   const selected=(value.annotations as Row[]|undefined)?.filter(mark=>mark.annotation_id===raw.selected_annotation_id&&mark.status!=='retracted')??[];
-  return {version:1,object_id:value.object_id as string,panel_mapping_fingerprint:raw.panel_mapping_fingerprint as string,camera,selection_candidate:candidate,selected_annotation_id:selected.length===1?raw.selected_annotation_id as string:null};
+  return {version:1,object_id:value.object_id as string,panel_mapping_fingerprint:raw.panel_mapping_fingerprint as string,camera,selection_candidate:candidate,selected_annotation_id:selected.length===1?raw.selected_annotation_id as string:null,...(raw.camera_origin==='new_fit_preference'?{camera_origin:'new_fit_preference' as const}:{})};
  }catch{return null;}
 }
 function describe(value:Row,frame:PanelFrameIdentity|null):Descriptor|null {
@@ -63,7 +63,7 @@ export class PanelWindowStore {
  private activeId:string|null=null;
  private unavailableReason:string|undefined;
  private mappingFingerprints=new Map<string,string>();
- snapshot():PanelWindowCollection{return {schema_version:1,revision:this.revision,frame_object_id:this.frameId,active_window_id:this.activeId,windows:this.records.map(r=>clone(r.entry)),...(this.unavailableReason?{unavailable_reason:this.unavailableReason}:{})};}
+ snapshot():PanelWindowCollection{return {schema_version:1,revision:this.revision,frame_object_id:this.frameId,active_window_id:this.activeId,windows:this.records.filter(r=>!r.hidden).map(r=>clone(r.entry)),...(this.records.some(r=>r.hidden)?{closed_windows:this.records.filter(r=>r.hidden).map(r=>clone(r.entry))}:{}),...(this.unavailableReason?{unavailable_reason:this.unavailableReason}:{})};}
  checkpoint():Row{return {...this.snapshot(),records:this.records.map(r=>clone(r))};}
  lookup(windowId:unknown,revision:unknown):PanelWindowEntry {
   this.requireRevision(revision);if(!objectId.test(String(windowId)))error('Explicit window identity required');
@@ -76,7 +76,7 @@ export class PanelWindowStore {
   return Boolean(record&&d&&!d.frequency&&d.frame_id===this.frameId&&record.entry.latest_observation_view_object_id===d.object_id&&record.latest_observation_grid_key===d.grid_key&&record.latest_observation_asset_fingerprint===d.fingerprint);
  }
  canAdmit(value:Row,frame:PanelFrameIdentity|null):boolean {
-  const d=describe(value,frame);return !d||d.frame_id!==this.frameId||this.records.some(r=>r.entry.object_id===d.object_id||r.grid_key===d.grid_key)||this.records.length<PANEL_WINDOW_LIMIT;
+  const d=describe(value,frame),existing=this.records.find(r=>r.entry.object_id===d?.object_id||r.grid_key===d?.grid_key);return !d||d.frame_id!==this.frameId||Boolean(existing&&!existing.hidden)||this.records.filter(r=>!r.hidden).length<PANEL_WINDOW_LIMIT&&(Boolean(existing)||this.records.length<32);
  }
  admit(value:Row,frame:PanelFrameIdentity|null,source?:SpatialReturnReference|null,inputCalibration?:unknown,inputViewContext?:PanelWindowViewContext|null):void {
   const d=describe(value,frame);
@@ -91,7 +91,8 @@ export class PanelWindowStore {
   this.unavailableReason=undefined;
   let record=this.records.find(r=>r.entry.object_id===d.object_id)??this.records.find(r=>r.grid_key===d.grid_key);
   if(!record){
-   if(this.records.length>=PANEL_WINDOW_LIMIT)error('Five image windows are already open; close a read-only window before accepting the saved result');
+   if(this.records.filter(r=>!r.hidden).length>=PANEL_WINDOW_LIMIT)error('Five image windows are already open; close a display before accepting the saved result');
+   if(this.records.length>=32)error('Retained display limit reached; saved scientific records remain available in history');
    const sourceWindow=!d.frequency&&!this.records.some(r=>r.entry.role==='source');
    const role=d.frequency?'fft':sourceWindow?'source':'roi',prefix=role==='fft'?'FFT':'局部图',n=this.records.length;
    let count=1;while(role!=='source'&&this.records.some(r=>r.entry.title===`${prefix} ${count}`))count++;
@@ -110,6 +111,8 @@ export class PanelWindowStore {
     record.entry.latest_observation_view_object_id=d.object_id;record.latest_observation_asset_fingerprint=d.fingerprint;record.latest_observation_grid_key=d.grid_key;
    }
   }
+  if(record.hidden&&this.records.filter(r=>!r.hidden).length>=PANEL_WINDOW_LIMIT)error('Five image windows are already open; close a display before reopening this result');
+  delete record.hidden;
   const mapping=panelWindowMappingFingerprint(value),context=record.entry.view_context;
   if(context){
    if(context.object_id!==record.entry.object_id||context.panel_mapping_fingerprint!==mapping)delete record.entry.view_context;
@@ -123,6 +126,10 @@ export class PanelWindowStore {
     // Only a newly created GUI FFT relation can capture this field. A later
     // display or peak revision must never fill it from a newer source context.
     if(inputViewContext?.object_id===source.view_object_id&&inputViewContext.selection_candidate&&same(selectionRectangle(inputViewContext.selection_candidate as unknown as Selection),source.source_rect_xyxy))record.entry.source_reference.input_view_context=clone(inputViewContext);
+   }else if(inputViewContext){
+    if(existing.input_view_object_id!==source.view_object_id||existing.frame_object_id!==source.frame_object_id||existing.raw_fft_object_id!==source.fft_object_id||!same(existing.processing_rect_xyxy,source.source_rect_xyxy)||inputViewContext.object_id!==source.view_object_id||!inputViewContext.selection_candidate||!same(selectionRectangle(inputViewContext.selection_candidate as unknown as Selection),source.source_rect_xyxy))error('Verified input context differs from the retained original source relation');
+    if(existing.input_view_context?.selection_candidate&&!same(existing.input_view_context.selection_candidate,inputViewContext.selection_candidate))error('Retained original float selection differs from verified input');
+    if(!existing.input_view_context)existing.input_view_context=clone(inputViewContext);
    }
   }
   if(record.entry.source_reference){const a=record.input_calibration,b=value.xy_calibration??null;record.entry.source_reference.calibration_relation=a==null||b==null?'unknown':same(a,b)?'same':'different';}
@@ -170,8 +177,8 @@ export class PanelWindowStore {
   this.revision++;
  }
  close(revision:unknown,windowId:unknown):void {
-  const entry=this.lookup(windowId,revision);if(entry.window_id===this.activeId)error('The current editing window cannot be closed; return to a saved source view first');
-  this.records=this.records.filter(r=>r.entry.window_id!==entry.window_id);this.mappingFingerprints.delete(entry.window_id);this.revision++;
+  const entry=this.lookup(windowId,revision),record=this.records.find(r=>r.entry.window_id===entry.window_id)!;
+  record.hidden=true;if(entry.window_id===this.activeId)this.activeId=null;this.revision++;
  }
  setContext(revision:unknown,windowId:unknown,value:Row,context:PanelWindowViewContext|null):void {
   const entry=this.lookup(windowId,revision);
@@ -183,16 +190,16 @@ export class PanelWindowStore {
  updateCamera(revision:unknown,windowId:unknown,objectId:unknown,camera:unknown):void {
   const entry=this.lookup(windowId,revision),mapping=this.mappingFingerprints.get(entry.window_id),checked=readPanelWindowCamera(camera);
   if(entry.object_id!==objectId||!mapping)error('Camera belongs to a changed saved window');
-  const prior=entry.view_context,context:PanelWindowViewContext=prior&&prior.object_id===entry.object_id&&prior.panel_mapping_fingerprint===mapping?{...prior,camera:checked}:{version:1,object_id:entry.object_id,panel_mapping_fingerprint:mapping,camera:checked,selection_candidate:null,selected_annotation_id:null};
+  const prior=entry.view_context,context:PanelWindowViewContext=prior&&prior.object_id===entry.object_id&&prior.panel_mapping_fingerprint===mapping?(()=>{const {camera_origin,...recorded}=prior;void camera_origin;return {...recorded,camera:checked};})():{version:1,object_id:entry.object_id,panel_mapping_fingerprint:mapping,camera:checked,selection_candidate:null,selected_annotation_id:null};
   this.records.find(r=>r.entry.window_id===entry.window_id)!.entry.view_context=clone(context);this.revision++;
  }
  async restore(raw:unknown,current:Row,currentFrame:PanelFrameIdentity|null,read:(id:string)=>Promise<{object:Row;frame:PanelFrameIdentity|null;png:unknown}>,checkSelection?:(selection:unknown,target:Row)=>PanelSelection):Promise<void> {
   // The active object was already admitted by the owned recovery protocol.
   // Bad passive records are omitted independently, never breaking that path.
-  if(!isRow(raw)||Object.keys(raw).some(k=>!['schema_version','revision','frame_object_id','active_window_id','windows','unavailable_reason','records'].includes(k))||raw.schema_version!==1||raw.frame_object_id!==currentFrame?.frame_object_id||!Array.isArray(raw.records)||raw.records.length>PANEL_WINDOW_LIMIT||!Number.isSafeInteger(raw.revision)||(raw.revision as number)<0||(raw.revision as number)>=Number.MAX_SAFE_INTEGER)return;
+  if(!isRow(raw)||Object.keys(raw).some(k=>!['schema_version','revision','frame_object_id','active_window_id','windows','closed_windows','unavailable_reason','records'].includes(k))||raw.schema_version!==1||raw.frame_object_id!==currentFrame?.frame_object_id||!Array.isArray(raw.records)||raw.records.length>32||!Number.isSafeInteger(raw.revision)||(raw.revision as number)<0||(raw.revision as number)>=Number.MAX_SAFE_INTEGER)return;
   const restored:WindowRecord[]=[];const used=new Set<string>(),grids=new Set<string>(),mappings=new Map<string,string>();
   for(const item of raw.records){try{
-   if(!isRow(item)||Object.keys(item).some(k=>!['entry','grid_key','asset_fingerprint','input_calibration','latest_observation_asset_fingerprint','latest_observation_grid_key'].includes(k))||!isRow(item.entry)||Object.keys(item.entry).some(k=>!['window_id','object_id','role','title','layout','source_reference','view_context','latest_observation_view_object_id'].includes(k))||!objectId.test(String(item.entry.window_id))||!objectId.test(String(item.entry.object_id))||used.has(item.entry.window_id as string))continue;
+   if(!isRow(item)||Object.keys(item).some(k=>!['entry','grid_key','asset_fingerprint','input_calibration','hidden','latest_observation_asset_fingerprint','latest_observation_grid_key'].includes(k))||item.hidden!==undefined&&typeof item.hidden!=='boolean'||!isRow(item.entry)||Object.keys(item.entry).some(k=>!['window_id','object_id','role','title','layout','source_reference','view_context','latest_observation_view_object_id'].includes(k))||!objectId.test(String(item.entry.window_id))||!objectId.test(String(item.entry.object_id))||used.has(item.entry.window_id as string))continue;
    const saved=await read(item.entry.object_id as string),d=describe(saved.object,saved.frame);if(!d||d.frame_id!==currentFrame?.frame_object_id||d.fingerprint!==item.asset_fingerprint||grids.has(d.grid_key))continue;
    if(!['source','roi','fft'].includes(String(item.entry.role))||(item.entry.role==='fft')!==d.frequency||typeof item.entry.title!=='string'||item.entry.title.length>64||item.grid_key!==d.grid_key)continue;
    const entry:PanelWindowEntry={window_id:item.entry.window_id as string,object_id:d.object_id,role:item.entry.role as PanelWindowEntry['role'],title:item.entry.title,layout:readPanelWindowLayout(item.entry.layout)};
@@ -214,10 +221,10 @@ export class PanelWindowStore {
      if(latestDescriptor&&!latestDescriptor.frequency&&latestDescriptor.frame_id===d.frame_id&&latestDescriptor.grid_key===item.latest_observation_grid_key&&latestDescriptor.grid_key===latestExpectedGrid&&latestDescriptor.fingerprint===item.latest_observation_asset_fingerprint){entry.latest_observation_view_object_id=latestDescriptor.object_id;latestFingerprint=latestDescriptor.fingerprint;}
     }catch{/* The qualified current image survives an unavailable optional working version. */}
    }
-   restored.push({entry,grid_key:d.grid_key,asset_fingerprint:d.fingerprint,input_calibration:inputCalibration,...(latestFingerprint?{latest_observation_asset_fingerprint:latestFingerprint,latest_observation_grid_key:item.latest_observation_grid_key as string}:{})});used.add(entry.window_id);grids.add(d.grid_key);mappings.set(entry.window_id,panelWindowMappingFingerprint(saved.object));
+   restored.push({entry,grid_key:d.grid_key,asset_fingerprint:d.fingerprint,input_calibration:inputCalibration,...(item.hidden?{hidden:true}:{}),...(latestFingerprint?{latest_observation_asset_fingerprint:latestFingerprint,latest_observation_grid_key:item.latest_observation_grid_key as string}:{})});used.add(entry.window_id);grids.add(d.grid_key);mappings.set(entry.window_id,panelWindowMappingFingerprint(saved.object));
   }catch{/* Omit an unavailable or malformed passive window. */}}
   const active=restored.find(r=>r.entry.object_id===current.object_id);
-  if(!active||raw.active_window_id!==active.entry.window_id)return;
-  this.records=restored;this.mappingFingerprints=mappings;this.frameId=currentFrame!.frame_object_id as string;this.activeId=active.entry.window_id;this.unavailableReason=undefined;this.revision=Math.max(this.revision,raw.revision as number)+1;
+  if(!active||raw.active_window_id!==active.entry.window_id&&!(raw.active_window_id===null&&active.hidden)||restored.filter(r=>!r.hidden).length>PANEL_WINDOW_LIMIT)return;
+  this.records=restored;this.mappingFingerprints=mappings;this.frameId=currentFrame!.frame_object_id as string;this.activeId=active.hidden?null:active.entry.window_id;this.unavailableReason=undefined;this.revision=Math.max(this.revision,raw.revision as number)+1;
  }
 }

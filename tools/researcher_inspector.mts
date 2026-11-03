@@ -8,6 +8,7 @@ import {StdioImageClient,createImagePanel} from './image_panel.mjs';
 import type {PanelClient} from '../lib/image_panel_contracts.mjs';
 import {prepareOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
 import type {OwnedRegistration} from '../lib/panel_ownership.mjs';
+import {readAnalysisWorkspace,readAnalysisWorkspaceInitial,readAnalysisWorkspaceResumeSnapshot,verifyAnalysisReferences,releaseStoppedAnalysisOwner} from '../lib/analysis_workspace.mjs';
 
 // CLI options are a caller contract; existing validation still runs at entry.
 export interface ResearcherOptions {workspace:string;python:string;source?:string;frame?:number;dataset?:number;plane_axes?:number[];plane_indices?:(number|null)[];component?:string;}
@@ -93,7 +94,9 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
  let owned:OwnedRegistration|undefined;
  if(ports.openPanel===undefined&&(existsSync(connectionFile)||!existsSync(pointer)))owned=prepareOwnedPanelRegistration({workspace,panel_id:session.session_id as string});
  if(!owned&&existsSync(pointer)&&fields(boundedJSON(pointer)).schema_version===2)throw new Error('Registered Inspector ownership is missing; do not invent a replacement registration');
- let selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown,crystalEvidenceSnapshot:unknown;
+ let selected:NativeRecord,previousDraft=false,resumed=false,numericResultRefs:unknown,crystalEvidenceSnapshot:unknown,analysisRestore:unknown;
+ let savedAnalysis:ReturnType<typeof readAnalysisWorkspace>,initialAnalysis:ReturnType<typeof readAnalysisWorkspaceInitial>;
+ try{savedAnalysis=readAnalysisWorkspace(workspace);initialAnalysis=readAnalysisWorkspaceInitial(workspace);if(owned?.previousConnection)releaseStoppedAnalysisOwner(workspace);}catch(error){owned?.releaseUnlaunched();throw error;}
  const runId=randomBytes(16).toString('hex'),runDirectory=path.join(directory,'panels',runId),journalDirectory=owned?.journalDirectory??path.join(runDirectory,'journal');
  let panel,panelClient:PanelClient|undefined,published=false;
  // Roll back only failures proved to precede openPanel. Once helper entry is
@@ -104,7 +107,12 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
   try{
    bootstrap=createClient({workspace,python});
    const initialized=fields(await bootstrap.rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'mcp-dm-researcher-inspector',version:'1'}}));if(initialized.error)throw new Error(fields(initialized.error).message as string);
-   if(owned?.previousCheckpoint){
+   if(savedAnalysis.savepoint||initialAnalysis){
+    if(savedAnalysis.savepoint)verifyAnalysisReferences(workspace,savedAnalysis.savepoint);
+    analysisRestore=readAnalysisWorkspaceResumeSnapshot(workspace)!;const selection=fields(analysisRestore);
+    resumed=true;selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);previousDraft=savedAnalysis.recovery_available;
+    numericResultRefs=selection.numeric_result_refs??null;crystalEvidenceSnapshot=selection.crystal_evidence??null;
+   }else if(owned?.previousCheckpoint){
     resumed=true;const selection=owned.previousCheckpoint;
     selected=fields((await bootstrap.tool('image_info',{object_id:selection.object_id})).data);
     previousDraft=Boolean(fields(selection.edit_state)?.dirty||fields(selection.edit_state)?.gesture_active);
@@ -134,7 +142,7 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
   throw error;
  }
  try{
-  panel=await openPanel({workspace,python,object_id:selected.object_id as string,journalDirectory,numeric_result_refs:numericResultRefs,crystal_evidence_snapshot:crystalEvidenceSnapshot,...(panelClient?{client:panelClient}:{}),...(owned?{panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,...(owned.previousCheckpoint?{resume_checkpoint:owned.previousCheckpoint}:{})}:{})});
+  panel=await openPanel({workspace,python,object_id:selected.object_id as string,journalDirectory,numeric_result_refs:numericResultRefs,crystal_evidence_snapshot:crystalEvidenceSnapshot,...(analysisRestore?{analysis_restore:analysisRestore,...(fields(owned?.previousCheckpoint??{}).last_operation&&fields(fields(owned?.previousCheckpoint??{}).last_operation).state==='submitted'?{execution_recovery_checkpoint:owned!.previousCheckpoint}:{})}:{}),analysis_legacy:Boolean(resumed&&!savedAnalysis.savepoint&&!initialAnalysis),...(panelClient?{client:panelClient}:{}),...(owned?{panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,...(owned.previousCheckpoint&&!analysisRestore?{resume_checkpoint:owned.previousCheckpoint}:{})}:{})});
   owned?.publish(panel);
   published=Boolean(owned);
   replaceJSON(pointer,{schema_version:owned?2:1,session_id:session.session_id,run_id:runId,...(owned?{panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation}:{})});
@@ -142,7 +150,7 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
  catch(error){if(panel){if(published)await owned!.close(panel);else await panel.close();}else await panelClient?.close();throw error;}
  let closing:Promise<void>|undefined;
  return {panel,workspace,source_path:session.source_path,resumed,previous_unsaved_draft:previousDraft,panel_registration:{status:owned?'registered':'legacy_unregistered_readonly',panel_id:owned?.panel_id??null,helper_session_id:owned?.helper_session_id??null,generation:owned?.generation??null},numeric_result_recovery:panel.state?.().numeric_result_recovery??{state:numericResultRefs===null?'legacy_missing_refs':'not_requested'},
-  async close(){await (closing??=(owned?owned.close(panel):panel.close()));}};
+  async close({abnormal=true}:{abnormal?:boolean}={}){await (closing??=(owned?owned.close({close:()=>panel.close({abnormal})}):panel.close({abnormal})));}};
 }
 
 if(isDirectInvocation(import.meta.url)&&process.argv.length===3&&process.argv[2]==='--help')process.stdout.write(HELP+'\n');

@@ -9,6 +9,7 @@ import {panelRoiHandoff} from './panel_roi_handoff.mjs';
 import {attachCrystalEvidence} from './panel_crystal_evidence.mjs';
 import type {CrystalEvidencePayload} from './panel_crystal_evidence.mjs';
 import {prepareOwnedPanelRegistration,readOwnedPanelCheckpoint,assertOwnedPanelStopped,validateOwnedConnection} from './panel_ownership.mjs';
+import {ordinaryWorkspaceMetadataDirectory,ordinaryWorkspaceMetadataTarget} from './workspace_metadata_paths.mjs';
 
 import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
 import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
@@ -50,10 +51,11 @@ function validateArguments(name:string,args:unknown):asserts args is ValidatedPa
     else validateId(value,key,key==='request_id');
   }
 }
-function durableWrite(file:string,value:unknown,{exclusive=false}:{exclusive?:boolean}={}){
+function durableWrite(workspace:string,file:string,value:unknown,{exclusive=false}:{exclusive?:boolean}={}){
+  file=ordinaryWorkspaceMetadataTarget(workspace,file);
   const target=exclusive?file:`${file}.${randomBytes(8).toString('hex')}.tmp`,fd=openSync(target,'wx');
   try{writeFileSync(fd,JSON.stringify(value));fsyncSync(fd);}finally{closeSync(fd);}
-  if(!exclusive)renameSync(target,file);
+  if(!exclusive)renameSync(target,ordinaryWorkspaceMetadataTarget(workspace,file));
 }
 function readJson(file:string,root:string,maxBytes=20*1024*1024):unknown{
   const real=realpathSync.native(file),relative=path.relative(root,real);
@@ -94,7 +96,8 @@ export class ImagePanelManager {
       await new Promise<void>((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();
     });
   }
-  initialize(){mkdirSync(this.requests,{recursive:true});mkdirSync(this.panels,{recursive:true});this.canonicalDirectory=realpathSync.native(this.directory);}
+  initialize(){mkdirSync(this.workspace,{recursive:true});this.canonicalDirectory=ordinaryWorkspaceMetadataDirectory(this.workspace,'panel-registry',{create:true});for(const relative of ['panel-registry/requests','panel-registry/panels'])ordinaryWorkspaceMetadataDirectory(this.workspace,relative,{create:true});}
+  private writeMetadata(file:string,value:unknown,options:{exclusive?:boolean}={}){durableWrite(this.workspace,file,value,options);}
   requestFile(id:unknown){return path.join(this.requests,(id as string)+'.json');}
   connectionFile(id:unknown){return path.join(this.panels,(id as string)+'.json');}
   getConnection(id:unknown){validateId(id,'panel_id');return connection(readJson(this.connectionFile(id),this.canonicalDirectory,4096),id);}
@@ -176,7 +179,7 @@ export class ImagePanelManager {
       // A submitted/crashed resume is never another launch. Only the exact
       // already-published generation can establish its original outcome.
       const conn=this.getConnection(record.panel_id);if(conn.schema_version!==2||conn.helper_session_id!==record.helper_session_id||conn.generation!==record.generation)throw new Error('Original resume remains unverified; no helper was relaunched');
-      const state=await this.request(conn,'GET','/api/state');record.status='completed';record.response=state;durableWrite(this.requestFile(record.request_id),record);
+      const state=await this.request(conn,'GET','/api/state');record.status='completed';record.response=state;this.writeMetadata(this.requestFile(record.request_id),record);
       return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true,resumed:true,panel_generation:record.generation,helper_session_id:record.helper_session_id});
     }
     if(record.name==='image_panel_open'){
@@ -188,14 +191,14 @@ export class ImagePanelManager {
     const evidence=record.name==='image_panel_evidence';
     const state=await this.request(this.getConnection(record.panel_id),'GET',(evidence?'/api/evidence':'/api/present')+'?request_id='+encodeURIComponent(record.request_id as string));
     if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==record.request_id||!(evidence?['attached']:['shown','queued']).includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Original panel presentation is not verified; no operation was repeated.');
-    record.status='completed';record.response=state;if(evidence)record.stage='completed';durableWrite(this.requestFile(record.request_id),record);
+    record.status='completed';record.response=state;if(evidence)record.stage='completed';this.writeMetadata(this.requestFile(record.request_id),record);
     return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true,snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'});
   }
   async mutateEvidence(args:PanelMutationArguments,file:string):Promise<ToolResult>{
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name:'image_panel_evidence',arguments:args,panel_id:args.panel_id as string,status:'submitted',stage:'preflight'};
     // NEW tool only: an accepted request identity is reserved before even a
     // read-only qualification/preflight. Failed IDs cannot later become writes.
-    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_evidence',args);throw error;}
+    try{this.writeMetadata(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_evidence',args);throw error;}
     let dispatched=false;
     try{
       if(!this.inspectEvidence)throw new Error('Explicit structure provider is unavailable; no fallback is permitted');
@@ -206,14 +209,14 @@ export class ImagePanelManager {
       const evidence=attachCrystalEvidence(payload,current,args.request_id,observation);
       const conn=this.getConnection(args.panel_id);
       if(!conn.evidence_token)throw new Error('This saved Panel helper predates qualified evidence attachment; reopen a new Panel without replaying science');
-      record.stage='dispatching';durableWrite(file,record);dispatched=true;
+      record.stage='dispatching';this.writeMetadata(file,record);dispatched=true;
       const state=await this.request(conn,'POST','/api/evidence',{request_id:args.request_id,expected_object_id:args.expected_object_id,draft_revision:args.draft_revision,evidence});
       if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==args.request_id||((state as RawSlots).presentation as RawSlots).status!=='attached')throw new Error('Evidence attachment response is unverified; query the original request_id.');
-      record.status='completed';record.stage='completed';record.response=state;durableWrite(file,record);
+      record.status='completed';record.stage='completed';record.response=state;this.writeMetadata(file,record);
       return this.response(args.panel_id as string,state,{request_id:args.request_id,recovered:false,snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'});
     }catch(error){
       const message=`${error instanceof Error?error.message:String(error)} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`;
-      if(!dispatched||(error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=message;durableWrite(file,record);}
+      if(!dispatched||(error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=message;this.writeMetadata(file,record);}
       throw new Error(message);
     }
   }
@@ -232,7 +235,7 @@ export class ImagePanelManager {
     const panelId=name==='image_panel_open'?randomBytes(16).toString('hex'):args.panel_id as string;
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name,arguments:args,panel_id:panelId,status:'submitted'};
     // Exclusive/fsynced intent is saved before a child or HTTP mutation exists.
-    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate(name,args);throw error;}
+    try{this.writeMetadata(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate(name,args);throw error;}
     try{
       let state:unknown;
       if(name==='image_panel_open'){
@@ -244,27 +247,27 @@ export class ImagePanelManager {
         if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==request_id||!['shown','queued'].includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Presentation response is unverified; query the original request_id.');
       }
       record.status='completed';if(name!=='image_panel_open')record.response=state;
-      durableWrite(file,record);
+      this.writeMetadata(file,record);
       return this.response(panelId,state,{request_id:args.request_id,recovered:false,...(name!=='image_panel_open'?{snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'}:{})});
     }catch(error){
-      if((error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=(error as ThrownSlots).message;durableWrite(file,record);}
+      if((error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=(error as ThrownSlots).message;this.writeMetadata(file,record);}
       throw new Error(`${(error as ThrownSlots).message} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`);
     }
   }
   async resume(args:PanelMutationArguments,file:string):Promise<ToolResult>{
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name:'image_panel_resume',arguments:args,panel_id:args.panel_id as string,status:'submitted',stage:'preflight'};
-    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_resume',args);throw error;}
+    try{this.writeMetadata(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_resume',args);throw error;}
     let dispatched=false;
     try{
       const old=this.getConnection(args.panel_id);assertOwnedPanelStopped(old);const checkpoint=readOwnedPanelCheckpoint(this.workspace,old);
       await this.inspect(checkpoint.object_id as string);
       const registration=prepareOwnedPanelRegistration({workspace:this.workspace,panel_id:args.panel_id as string});
-      record.helper_session_id=registration.helper_session_id;record.generation=registration.generation;record.stage='launching';durableWrite(file,record);dispatched=true;
+      record.helper_session_id=registration.helper_session_id;record.generation=registration.generation;record.stage='launching';this.writeMetadata(file,record);dispatched=true;
       await this.launch({panel_id:args.panel_id as string,connection_file:this.connectionFile(args.panel_id),object_id:checkpoint.object_id as string,registration_file:registration.registration_file,helper_session_id:registration.helper_session_id,generation:registration.generation});
       const state=await this.request(await this.waitForConnection(args.panel_id as string,registration.helper_session_id),'GET','/api/state');
-      record.status='completed';record.stage='completed';record.response=state;durableWrite(file,record);
+      record.status='completed';record.stage='completed';record.response=state;this.writeMetadata(file,record);
       return this.response(args.panel_id as string,state,{request_id:args.request_id,recovered:false,resumed:true,panel_generation:registration.generation,helper_session_id:registration.helper_session_id});
-    }catch(error){const message=`${error instanceof Error?error.message:String(error)} Original resume request_id: ${args.request_id}; query only this original ID; no automatic relaunch.`;if(!dispatched){record.status='failed';record.error=message;durableWrite(file,record);}throw new Error(message);}
+    }catch(error){const message=`${error instanceof Error?error.message:String(error)} Original resume request_id: ${args.request_id}; query only this original ID; no automatic relaunch.`;if(!dispatched){record.status='failed';record.error=message;this.writeMetadata(file,record);}throw new Error(message);}
   }
   call(name:string,args:unknown={},signal?:AbortSignal):Promise<ToolResult>{
     validateArguments(name,args);this.initialize();
