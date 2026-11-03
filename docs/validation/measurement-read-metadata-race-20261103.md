@@ -56,3 +56,21 @@ Local logs remain outside Git under `F:/mircograph-workbench/measurement-read-ra
 The Node tests use controlled DOM/canvas/transport substitutes. They are not
 native mouse evidence or a new scientific-accuracy claim. No live API write,
 FFT rerun, private data access or unrelated algorithm suite was used here.
+
+## Follow-up: expansion during the initial read
+
+The remaining `initialResultLayout` fallback superficially looks capable of
+closing a panel the researcher opened during the first GET. The actual initial
+`load()` calls `restoreUiPanels()` before starting that read, including when no
+saved panel preference exists. That synchronously clears the initial-layout
+flag. The toggle handler need not clear it again, and the fallback was not
+reproduced as a live path in this review.
+
+Two additional actual-app tests delay the very first measurement GET, then
+either expand the disclosure or choose a result tab. They verify one pending
+initial GET, delivery of a saved row, retained expansion, unchanged camera/draft/
+Undo, and no scientific write. Both pass on the unchanged production fix;
+together with the existing disclosure consumer, the focused result is 3 PASS.
+The formal build and logs `measurement-first-disclosure-{build,tests}-20261103.log`
+are retained. This follow-up changes only the test fixture and report; no
+production correction or new product failure is claimed.

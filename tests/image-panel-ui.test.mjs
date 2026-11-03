@@ -32,8 +32,8 @@ const sourceId='a'.repeat(32),viewId='b'.repeat(32);
 const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:[20,12,148,108],image_rect_xyxy:[0,0,128,96]};
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
-async function harness(initial=fixture(),{windowStates=[],panelGeometry=false}={}){
- const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,waitMeasurementRead=null,measurementResponse=null,recoveryResponse=null;
+async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,initialMeasurementRead=null}={}){
+ const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,waitMeasurementRead=initialMeasurementRead,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
  const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
  class Context{
@@ -1536,6 +1536,12 @@ test('ROI context pick: Escape cancels and pending field edits never flush throu
 });
 test('result disclosure: explicit expansion survives fresh measurement reads',async()=>{
  const h=await harness();h.$('measurement-workspace').open=true;h.$('measurement-workspace').listeners.toggle();await h.poll();await h.settle();assert.equal(h.$('measurement-workspace').open,true);
+});
+for(const action of ['disclosure','result-tab'])test(`result disclosure: ${action} expansion survives the delayed first table response`,async()=>{
+ const initial=fixture();initial.measurement_entries=[{object_id:'7'.repeat(32),request_id:'saved-startup-measurement',name:'saved line',status:'current',same_grid:true,visible_in_current_view:true,annotation_matches_current:true,distance_pixels:20,coordinate_space:'source_pixels'}];
+ let release;const h=await harness(initial,{initialMeasurementRead:new Promise(resolve=>{release=resolve;})});assert.equal(h.getCalls.filter(url=>url.startsWith('/api/measurements?')).length,1,'this is the initial read, not a later refresh');assert.equal(Boolean(h.$('measurement-workspace').open),false);assert.equal(h.$('measurement-rows').children.length,0);
+ const before=h.inspect();if(action==='disclosure'){h.$('measurement-workspace').open=true;h.$('measurement-workspace').listeners.toggle();}else await h.click('results-tab-statistics');assert.equal(h.$('measurement-workspace').open,true);release();await h.settle();
+ assert.equal(h.$('measurement-count').textContent,'1 / 1 条','the initial response actually completed');assert.equal(h.$('measurement-workspace').open,true);assert.deepEqual(h.inspect().draft,before.draft);assert.deepEqual(h.inspect().view,before.view);assert.equal(h.inspect().undoCount,before.undoCount);assert.equal(h.calls.length,0);
 });
 
 
