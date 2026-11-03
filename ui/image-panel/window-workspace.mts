@@ -203,6 +203,7 @@ export class WindowWorkspace {
  private cancelLayout(event:BrowserEvent){const g=this.gesture;if(!g||g.pointer_id!==event.pointerId)return;this.localLayouts.set(g.window_id,g.before);this.gesture=null;const entry=this.collection?.windows.find(value=>value.window_id===g.window_id);if(entry)this.geometry(this.frames.get(g.window_id)!,entry);}
  tile():void {if(this.switchLocked||!this.collection||this.narrow||this.single)return;this.notePresentationIntent();for(const item of tiledWindowLayouts(this.collection.windows)){this.localLayouts.set(item.window_id,item.layout);this.layoutEpochs.set(item.window_id,++this.layoutEpoch);}for(const entry of this.collection.windows)this.geometry(this.frames.get(entry.window_id)!,entry);this.persistLayouts();this.options.onBoundsChange();}
  notePresentationIntent():void {this.presentationIntentEpoch++;}
+ presentationVersion():number {return this.presentationIntentEpoch;}
  noteCameraIntent():void {this.cameraIntentEpoch++;this.notePresentationIntent();}
  beginAutomaticSourceFftPresentation(allowAutomatic:boolean):AutomaticSourceFftPresentationTicket|null {
   const collection=this.collection,source=collection?.windows[0];

@@ -896,6 +896,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  staticFiles.set('/roi-editing.mjs',['roi-editing.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/multi-roi-handoff.mjs',['multi-roi-handoff.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/known-length-calibration.mjs',['known-length-calibration.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/selection-fft-relations.mjs',['selection-fft-relations.mjs','text/javascript; charset=utf-8']);
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{

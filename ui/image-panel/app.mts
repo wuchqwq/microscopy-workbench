@@ -32,17 +32,19 @@ import {WorkspaceControls} from './workspace-controls.mjs';
 import {RoiComparisonPanel} from './roi-comparison.mjs';
 import {settleWorkspaceWindows} from './settle-workspace.mjs';
 import {ExecutionHistoryPanel} from './execution-history.mjs';
+import {SelectionFftRelations} from './selection-fft-relations.mjs';
+import type {RelationSelection,SelectionFftRelationsModel,SelectionFftRelationRow,RelationViewTarget} from './selection-fft-relations.mjs';
 import type {WindowCamera,WindowViewContext,WindowUiPanels} from './window-workspace.mjs';
 import {checkObservationNote,observationReadback,observationPurpose} from './observation-contract.mjs';
 import type {PanelRoiSnapshot} from './roi-observations.mjs';
 const $=(id:string)=>document.getElementById(id)!,canvas=$('canvas'),ctx=canvas.getContext('2d')!,baseCanvas=$('base-canvas'),baseContext=baseCanvas.getContext('2d',{willReadFrequently:true})!,marksCanvas=$('marks-canvas'),marksContext=marksCanvas.getContext('2d')!,stage=$('image-stage'),viewport=$('viewport');
-// These two existing details are transient menus, not saved side-panel state.
-const transientMenus=[$('research-more'),$('window-index-menu')];
+// Canvas menus are transient; their open state is not a saved side-panel preference.
+const transientMenus=[$('research-more'),$('window-index-menu'),$('viewport-menu'),$('agent-menu')];
 function withinElement(target:BrowserElement|null,root:BrowserElement){for(let node=target;node;node=node.parentNode)if(node===root)return true;return false;}
 function dismissMenus(restoreFocus=false){let closed=false;for(const menu of transientMenus)if(menu.open){menu.open=false;closed=true;if(restoreFocus)menu.querySelector('summary')?.focus();}return closed;}
 function openResultDialog(){dismissMenus();dismissRoiPicker();return $('research-more').querySelector('summary');}
 for(const menu of transientMenus)menu.addEventListener('click',event=>{for(let node:BrowserElement|null=event.target;node&&node!==menu;node=node.parentNode)if(node.tagName==='BUTTON'){menu.open=false;break;}});
-document.addEventListener('pointerdown',event=>{for(const menu of transientMenus)if(menu.open&&!withinElement(event.target,menu))menu.open=false;if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
+document.addEventListener('pointerdown',event=>{presentationInputEpoch++;windowWorkspace.notePresentationIntent();for(const menu of transientMenus)if(menu.open&&!withinElement(event.target,menu))menu.open=false;if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
 document.addEventListener('focusin',event=>{if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
 $('roi-pick-menu').hidden=true;
 const cloneWorking=<T,>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
@@ -62,6 +64,9 @@ let roiCreationSave:Promise<unknown>|null=null,roiCreationRecovery:RoiCreationRe
 type WindowSwitch={phase:'preparing'|'activating'|'decoding'|'recovery';window_id:string;object_id:string;source_object_id:string;source_draft_revision:number;auto_sequence:number;};
 let windowSwitch:WindowSwitch|null=null;
 let workspaceSettling=false,workspaceRestoring=false;
+let presentationInputEpoch=0;
+let relationSignature='',relationReadTimer:unknown=null,relationReading=false,relationReadNeeded=false;
+let relationModel:SelectionFftRelationsModel|null=null;
 // Invalidates an in-flight handoff even when an operation fails or the user
 // returns to the same selection. Readiness flags alone describe only now.
 let interactionEpoch=0;
@@ -71,6 +76,7 @@ const windowActionHistory=new Map<string,{scope:string|undefined;undo:AppHistory
 let lastUserDisplay:DisplayDraft|null=null;
 let imageFocused=false,focusCamera:{object_id?:string;view:ViewTransform}|null=null;
 let initialResultLayout=true,applyingUiPanels=false,panelLayoutUnrecorded=true,lastUiPanels:string|undefined;
+let firstFftFrame:string|null=null;
 const geometryRevisions=new Map<string|undefined,number>(),remeasuringMarks=new Map<string|undefined,MeasurementTarget>();let failedMeasurement:MeasurementTarget|null=null;
 const historyDraft=new DraftHistory({}),perf={frames:0,tone_count:0,overlay_count:0,tone_last_ms:0,overlay_last_ms:0,draw_last_ms:0,action_last_ms:0};
 const now=()=>performance.now(),message=(text:unknown,error=false)=>{$('message').textContent=text;$('message').classList.toggle('error',error);};
@@ -80,6 +86,7 @@ const measurementWorkspace=new MeasurementWorkspace({getState:()=>state,readCont
 const dataProbes=new DataProbes({getState:dataProbeState,api,onError:e=>message('原数组读取未完成：'+(e as {message:string}).message,true)});
 const researchWorkspace=new ResearchWorkspace({document,allowEdit:allowContentEditing,onSave:saveRoiObservation,onSelect:selectRoiObservation,onNavigate:async object_id=>{if(dirty()||busy||drag)throw new Error('先保存或撤销草稿，再查看保存证据；不会重算 FFT。');await act('show',{object_id});},onError:text=>message(text,true),onDraftChange:()=>{interactionEpoch++;diagnostics();publishDraft({urgent:true});}});
 const windowWorkspace=new WindowWorkspace({document,viewport,activeStage:stage,getActiveImageSize:()=>[canvas.width,canvas.height],getActiveScale:()=>view.scale,getActiveSavedImage:()=>decodedViewSnapshot,getState:()=>state,api,isScientificGesture:()=>Boolean(drag),onActivate:activateWindow,onClose:closeImageWindow,onActiveFit:()=>{if(!windowSwitch)fitView();},onBoundsChange:syncDrawerBounds,onError:text=>message(text,true),onCollection:(collection,revision)=>{if(!state)return;state={...state,window_collection:collection,state_revision:Math.max(state.state_revision??0,revision)};showPending();},schedule:(callback,ms)=>typeof setTimeout==='function'?setTimeout(callback,ms):Promise.resolve().then(callback),cancelSchedule:id=>{if(typeof clearTimeout==='function')clearTimeout(id);},observe:typeof ResizeObserver==='undefined'?undefined:(target,callback)=>{new ResizeObserver(callback).observe(target);}});
+const selectionFftRelations=new SelectionFftRelations({getState:()=>state,getSelection:relationSelection,api:url=>api(url),onChange:model=>{relationModel=model;renderSelectionRelations();}});
 const switchDisabledControls=new Map<BrowserElement,boolean>();
 const workspaceControls=new WorkspaceControls<AppState>({document,getState:()=>state,read:()=>api('/api/state'),command:async body=>await api('/api/workspace',body) as AppState,
  settle:settleWorkspaceEdits,prepare:prepareWorkspaceClose,install:installWorkspaceState,
@@ -88,7 +95,75 @@ const workspaceControls=new WorkspaceControls<AppState>({document,getState:()=>s
 const roiComparisonPanel=new RoiComparisonPanel<AppState>({document,api,getState:()=>state,show:showVerifiedHistoryObject,install:next=>{state={...state,workspace_analysis:next.workspace_analysis};diagnostics();},error:text=>message(text,true),onOpen:openResultDialog});
 const executionHistoryPanel=new ExecutionHistoryPanel({document,read:()=>api('/api/execution-history'),show:showVerifiedHistoryObject,error:text=>message(text,true),onOpen:openResultDialog});
 async function showVerifiedHistoryObject(object_id:string,input_reference?:Readonly<Record<string,unknown>>){if(dirty()||busy||drag||windowSwitch||workspaceRestoring)throw new Error('先完成当前编辑，再查看历史输入；探索记录保持原样。');await act('show',{object_id,...(input_reference?{input_reference}:{})});if(state.object.object_id!==object_id||pending||state.pending_result)throw new Error('结果尚未接纳并显示；请处理待查看状态，历史对话框保持打开。');}
+function activeFftWindow(){const collection=state?.window_collection;return collection?.windows.find(entry=>entry.window_id===collection.active_window_id&&entry.object_id===state.object.object_id&&entry.role==='fft')??null;}
+function relationSelection():RelationSelection|null {
+ if(state?.object.panels?.some(panel=>panel.domain==='frequency'))return null;
+ const mark=state?.object.annotations?.find(value=>value.annotation_id===selectedId&&value.kind==='rectangle'&&value.status!=='retracted');
+ if(draft?.kind!=='rectangle'&&!mark)return null;
+ return {annotation_id:mark?.annotation_id??null,selection:draft?.kind==='rectangle'?selection():null,pending_geometry:Boolean(editCoordinates||mark&&queuedEdits.get(mark.annotation_id)?.update.coordinates)};
+}
+function relationContextKey(){return state?JSON.stringify([state.panel_id,state.helper_session_id,state.panel_generation,state.object.object_id,state.frame_identity,state.object.xy_calibration,relationSelection(),state.window_collection?.active_window_id,[...state.window_collection?.windows??[],...state.window_collection?.closed_windows??[]].map(entry=>[entry.window_id,entry.object_id,entry.source_reference])]):'';}
+function relationRelevant(){return state?.multi_roi_handoff_schema_version===1&&Boolean(activeFftWindow()||relationSelection());}
+function relationNavigationBlocked(){return Boolean(busy||drag||windowSwitch||workspaceRestoring||workspaceSettling||autoFailed||orphanedDraft||observationSavePhase||pending||state?.pending_result||state?.last_operation?.state==='submitted'||recoveryPending());}
+function renderSelectionRelations(){
+ const section=$('selection-fft-relations'),content=$('selection-fft-relations-content');if(!section||!content)return;
+ section.hidden=!relationRelevant();content.replaceChildren();if(section.hidden)return;
+ const model=relationModel,signature=relationContextKey(),intro=document.createElement('p');intro.className='help-text';intro.textContent=relationReading?'正在核对已有 FFT 与原 ROI 来源…':model?.message??'选择后读取已有结果；不会计算 FFT。';content.append(intro);
+ const read=document.createElement('button');read.textContent='重新读取关联';read.disabled=relationReading||Boolean(drag||windowSwitch);read.onclick=()=>{void readSelectionRelations(true);};content.append(read);
+ if(!model)return;
+ for(const row of model.rows){
+  const item=document.createElement('div');item.className='fft-relation-row';const title=document.createElement('strong');
+  const names={original_roi:'原 ROI 输入',same_float:'同几何，原归属不同',changed_geometry:'此前位置的历史结果',same_support:'仅计算边界相同',unknown:'关联未知'};
+  title.textContent=row.label+' · '+names[row.relation];item.append(title);const note=document.createElement('p');note.className='help-text';note.textContent=row.reason+(row.calibration_relation==='different'?' 当前标定不同，保留原标定结果。':'');item.append(note);
+  const checked=()=>{if(relationModel!==model||relationContextKey()!==signature)throw new Error('图像或 ROI 已改变；先重新读取关联，不重复计算。');};
+  if(row.viewTarget&&model.mode==='roi'){const button=document.createElement('button');button.textContent='查看 '+row.label;button.disabled=relationNavigationBlocked()||(row.viewTarget.kind==='show'&&dirty());button.onclick=guarded(async()=>{checked();await viewRelationResult(row.viewTarget!);});item.append(button);}
+  if(row.inputTarget){const details=document.createElement('details'),summary=document.createElement('summary'),input=document.createElement('button');summary.textContent='计算时的输入';details.append(summary);const geometry=document.createElement('p');geometry.className='help-text';geometry.textContent=`原浮点框：${row.input_float_coordinates?.map(value=>Number(value.toPrecision(7))).join(', ')??'未记录'}；实际计算区域：${row.processing_rect_xyxy?.join(', ')??'未知'} px。`;details.append(geometry);input.textContent='查看当时空间输入';input.disabled=relationNavigationBlocked()||dirty();input.onclick=guarded(async()=>{checked();await viewRelationInput(row);});details.append(input);item.append(details);}
+  content.append(item);
+ }
+ if(model.mode==='fft'){const compare=document.createElement('button');compare.textContent='原图与 FFT 对照';compare.disabled=relationNavigationBlocked()||dirty()||!activeFftWindow()?.source_reference;compare.onclick=guarded(compareActiveFft);content.append(compare);}
+ if(model.warnings.length){const detail=document.createElement('details'),summary=document.createElement('summary'),warning=document.createElement('p');summary.textContent='未核对的关联';warning.className='help-text';warning.textContent=model.warnings.join(' ');detail.append(summary,warning);content.append(detail);}
+}
+function scheduleSelectionRelations(){
+ const signature=relationRelevant()?relationContextKey():'';
+ if(signature!==relationSignature){relationSignature=signature;relationReadNeeded=Boolean(signature);relationModel=null;selectionFftRelations.invalidate();}
+ renderSelectionRelations();
+ if(!signature||!relationReadNeeded||!document.body.classList.contains('properties-open')||relationReading||busy||drag||windowSwitch||workspaceRestoring||relationReadTimer!==null)return;
+ relationReadTimer=setTimeout(()=>{relationReadTimer=null;void readSelectionRelations();},180);
+}
+async function readSelectionRelations(force=false){
+ if(force){relationReadNeeded=true;selectionFftRelations.invalidate();}
+ if(!relationRelevant()||!relationReadNeeded||relationReading||busy||drag||windowSwitch||workspaceRestoring)return;
+ const signature=relationContextKey();relationSignature=signature;relationReadNeeded=false;relationReading=true;renderSelectionRelations();
+ try{await windowWorkspace.awaitStableMetadata();await draftPublisher;if(signature!==relationContextKey()||busy||drag||windowSwitch)return;
+  const result=await selectionFftRelations.refresh();if(!result&&signature===relationContextKey()&&!busy&&!drag&&!windowSwitch){await windowWorkspace.awaitStableMetadata();await draftPublisher;await selectionFftRelations.refresh();}
+ }catch(error){if(signature===relationContextKey())relationModel={status:'unavailable',mode:activeFftWindow()?'fft':'roi',message:'关联读取未完成；可重新读取已有记录，不重算 FFT。',rows:[],pending_geometry:false,warnings:[(error as Error).message]};}
+ finally{relationReading=false;if(signature!==relationContextKey())relationReadNeeded=true;scheduleSelectionRelations();}
+}
+async function viewRelationResult(target:RelationViewTarget){
+ if(relationNavigationBlocked())throw new Error('当前编辑或原请求尚未核对，先处理后查看已有结果。');
+ if(target.kind==='window'){if(state.window_collection?.active_window_id===target.window_id&&state.object.object_id===target.object_id)return;await activateWindow(target.window_id,target.object_id);}
+ else await showVerifiedHistoryObject(target.object_id,target.input_reference);
+}
+async function viewRelationInput(row:SelectionFftRelationRow){
+ if(!row.inputTarget)throw new Error('原输入关系未知；不会按最近 ROI 猜测来源。');
+ if(activeFftWindow()&&state.spatial_return?.view_object_id===row.inputTarget.object_id){await returnToSpatialObservation();return;}
+ await navigateSavedView({id:row.inputTarget.object_id,frame:state.frame_identity?.frame_object_id??null,role:'历史空间输入'});
+}
+async function compareActiveFft(){
+ const fft=activeFftWindow(),reference=fft?.source_reference;if(!fft||!reference)throw new Error('当前 FFT 没有已核对的历史来源。');
+ if(relationNavigationBlocked()||dirty())throw new Error('先应用当前草稿或核对原请求，再查看历史输入对照。');
+ const intent=presentationInputEpoch,windowIntent=windowWorkspace.presentationVersion(),sameIntent=()=>intent===presentationInputEpoch&&windowIntent===windowWorkspace.presentationVersion(),frame=state.frame_identity?.frame_object_id,source=()=>state.window_collection?.windows.find(entry=>entry.role==='source'&&entry.object_id===reference.input_view_object_id);
+ if(!source()){
+  if(state.spatial_return?.status!=='ready'||state.spatial_return.view_object_id!==reference.input_view_object_id)throw new Error(spatialReturnReason());
+  await returnToSpatialObservation();if(!sameIntent()||state.object.object_id!==reference.input_view_object_id||pending||dirty()||windowSwitch||drag)throw new Error('来源已读回；期间的新操作保留，未继续整理窗口。');
+  await activateWindow(fft.window_id,fft.object_id);
+ }
+ if(!sameIntent()||state.frame_identity?.frame_object_id!==frame||state.object.object_id!==fft.object_id||!source()||pending||dirty()||windowSwitch||drag)throw new Error('对照目标已变化；保留当前编辑，不覆盖新的窗口或视野。');
+ const result=await windowWorkspace.compareSourceFft(fft.window_id);if(result.status!=='presented')throw new Error(result.reason==='busy'?'当前窗口较窄或操作未结束；可先查看准确历史输入，或在宽窗口中对照。':'对照尚未接续；保存资产或窗口版本已变化，可明确重读后查看。');
+ message('已对照准确历史空间输入与 FFT；其他结果保留，未重算。');
+}
 async function settleWorkspaceEdits(){
+ windowWorkspace.notePresentationIntent();
  if(workspaceSettling)throw new Error('正在核对各窗口工作编辑，请等待。');
  // Only an explicit workspace Save authorizes new writes after a positively
  // rejected submission. Close preparation merely parks the retained draft.
@@ -148,7 +223,7 @@ function hydrateWorkingDraft(next:AppState){
  const edit=raw.annotation_edit as Record<string,unknown>|null;if(selectedId&&edit){if(Array.isArray(edit.coordinates))editCoordinates=edit.coordinates as number[];fieldDirty=['text','color','status'].some(key=>Object.hasOwn(edit,key));if(edit.presentation&&typeof edit.presentation==='object')labelDraft=cloneWorking(edit.presentation) as AnnotationPresentation;}
  const display=raw.display as DisplayDraft|undefined;if(display){$('gamma').value=display.gamma;$('gamma-label').textContent=String(display.gamma);$('low').value=display.low;$('high').value=display.high;$('axes').checked=display.axes;$('scale').checked=display.scale;}
  if(typeof raw.reason==='string'){$('roi-reason').value=raw.reason;researchWorkspace.reasonDirty=raw.reason_dirty===true;}
- syncPresentationFields();record();showDraft();paint();diagnostics();
+ syncPresentationFields();record({presentationIntent:false});showDraft();paint();diagnostics();
 }
 function lockScientificControls(){
  const noDisplay=Boolean(state?.workspace_analysis&&state.window_collection&&!state.window_collection.windows.length);
@@ -252,12 +327,12 @@ function syncDrawerBounds(){
  // current controls and the existing minimum image viewport. Content scrolls.
  const resultLimit=narrow&&results.open?Math.max(0,Math.floor(host.top+host.height-resultsBox.top-resultsBox.height+contentBox.height+area.height-160))+'px':'';
  if(content.style.maxHeight!==resultLimit)content.style.maxHeight=resultLimit;
- const top=narrow?Math.max(0,area.top-host.top)+'px':'',bottom=narrow?Math.max(0,host.top+host.height-area.top-area.height)+'px':'';
- for(const id of ['research-panel','properties-panel']){const style=$(id).style;if(style.top!==top)style.top=top;if(style.bottom!==bottom)style.bottom=bottom;}
+ for(const id of ['research-panel','properties-panel']){const withinImage=narrow||id==='properties-panel'&&document.body.classList.contains('compact-empty-properties'),top=withinImage?Math.max(0,area.top-host.top)+'px':'',bottom=withinImage?Math.max(0,host.top+host.height-area.top-area.height)+'px':'',style=$(id).style;if(style.top!==top)style.top=top;if(style.bottom!==bottom)style.bottom=bottom;}
 }
 function syncDrawerPresentation(){
+ syncPropertiesContext();
  const research=!imageFocused&&document.body.classList.contains('research-open'),properties=!imageFocused&&document.body.classList.contains('properties-open');
- $('toggle-research').setAttribute('aria-expanded',String(research));$('toggle-properties').setAttribute('aria-expanded',String(properties));$('toggle-settings').setAttribute('aria-expanded',String(properties&&$('settings-panel').open));syncDrawerBounds();const panels=activeUiPanels(),signature=JSON.stringify(panels);if(!applyingUiPanels&&lastUiPanels!==undefined&&signature!==lastUiPanels)panelLayoutUnrecorded=false;lastUiPanels=signature;if(!applyingUiPanels&&image&&state?.panel_mapping_fingerprint)windowWorkspace.queueActiveCamera(activeWindowCamera(),panelLayoutUnrecorded?undefined:panels);
+ $('toggle-research').setAttribute('aria-expanded',String(research));$('toggle-properties').setAttribute('aria-expanded',String(properties));$('toggle-settings').setAttribute('aria-expanded',String(properties&&$('settings-panel').open));syncDrawerBounds();scheduleSelectionRelations();const panels=activeUiPanels(),signature=JSON.stringify(panels);if(!applyingUiPanels&&lastUiPanels!==undefined&&signature!==lastUiPanels)panelLayoutUnrecorded=false;lastUiPanels=signature;if(!applyingUiPanels&&image&&state?.panel_mapping_fingerprint)windowWorkspace.queueActiveCamera(activeWindowCamera(),panelLayoutUnrecorded?undefined:panels);
 }
 function activeUiPanels():WindowUiPanels {
  return {side:imageFocused?'none':document.body.classList.contains('properties-open')?'properties':document.body.classList.contains('research-open')?'research':'none',settings:Boolean($('settings-panel').open),results:!imageFocused&&Boolean($('measurement-workspace').open)};
@@ -366,9 +441,10 @@ function diagnostics(){
  $('return-spatial').hidden=!frequencyView;$('return-spatial').disabled=!returnReady||returnBlocked;
  $('return-spatial').title=!returnReady?spatialReturnReason():unresolvedReturn?'原请求尚未确认；先查询原请求，不通过导航隐藏未知结果。':returnBlocked?'先保存或撤销草稿、结束手势并处理待查看结果，再返回空间观察。':'打开计算此 FFT 前的保存空间观察，恢复该版本的 ROI、说明与标定；不重算 FFT。';
  $('spatial-return-status').hidden=!frequencyView||Boolean(returnReady);$('spatial-return-status').textContent=returnReady?'':spatialReturnReason();
+ const compare=$('compare-fft-source');compare.hidden=!frequencyView;compare.disabled=!activeFftWindow()?.source_reference||relationNavigationBlocked()||dirty();compare.title='查看准确历史输入并整理现有窗口；不重算 FFT。';
  $('complex-component').disabled=busy||Boolean(drag);$('apply-complex-component').disabled=busy||Boolean(drag)||!importedComplex();
  if($('view-current'))$('view-current').textContent=savedViews.entries[savedViews.index]?.role??'当前视图';
- if(state)researchWorkspace.render(researchSnapshot(),{busy:busy||workspaceSettling||workspaceRestoring||Boolean(windowSwitch)||Boolean(roiCreationRecovery&&!observationSavePhase),gesture:Boolean(drag),observationSavePhase});showDraft();lockScientificControls();
+ if(state)researchWorkspace.render(researchSnapshot(),{busy:busy||workspaceSettling||workspaceRestoring||Boolean(windowSwitch)||Boolean(roiCreationRecovery&&!observationSavePhase),gesture:Boolean(drag),observationSavePhase});showDraft();scheduleSelectionRelations();lockScientificControls();
 }
 function setResultsTab(tab:string,{expand=true}={}){
  if(!['measurements','statistics','profile'].includes(tab))return;
@@ -450,7 +526,11 @@ function annotationEditDraft(){
 function publishDraft({gesture_active=Boolean(drag),includeSelection=false,urgent=false,confirmPersistence=false,allowSwitch=false}={}){
  if(!state||windowSwitch&&windowSwitch.phase!=='preparing'&&!allowSwitch)return Promise.resolve();const object_id=state.object.object_id,params={draft_revision:historyDraft.revision,dirty:dirty()||gesture_active,gesture_active,annotation_edit:annotationEditDraft(),...(confirmPersistence?{confirm_persistence:true}:{}),...(includeSelection?{selection:draft?selection():null}:{})};
  draftPending={expected_object_id:object_id,action:'draft',lightweight:true,params,urgent:urgent||gesture_active};
- if(!draftSending){draftSending=true;draftPublisher=(async()=>{try{while(draftPending){if(!draftPending.urgent&&typeof setTimeout==='function')await new Promise(r=>setTimeout(r,70));const body=draftPending;draftPending=null;delete body.urgent;try{await api('/api/action',body);draftError=null;}catch(e){draftError=e;message('草稿交接未确认：'+(e as {message:string}).message,true);}}}finally{draftSending=false;workspaceControls.sync();}})();}
+ if(!draftSending){draftSending=true;draftPublisher=(async()=>{try{while(draftPending){if(!draftPending.urgent&&typeof setTimeout==='function')await new Promise(r=>setTimeout(r,70));const body=draftPending;draftPending=null;delete body.urgent;try{const ack=await api('/api/action',body);
+   // Mirror only the confirmed current lease. This is an acknowledgment, not a
+   // workspace Save or permission to replace a newer local selection/draft.
+   if(state?.object.object_id===body.expected_object_id&&ack.object_id===body.expected_object_id&&ack.edit_state?.draft_revision===historyDraft.revision&&Number.isSafeInteger(ack.state_revision))state={...state,edit_state:ack.edit_state,state_revision:Math.max(state.state_revision??0,ack.state_revision!)};
+   draftError=null;}catch(e){draftError=e;message('草稿交接未确认：'+(e as {message:string}).message,true);}}}finally{draftSending=false;workspaceControls.sync();}})();}
  workspaceControls.sync();
  return draftPublisher;
 }
@@ -513,7 +593,7 @@ async function remeasureSavedEdit(target:MeasurementTarget){
 }
 function autoFields(){if(!selectedId)return;if(autoTimer!==null&&typeof clearTimeout==='function')clearTimeout(autoTimer);if(typeof setTimeout==='function')autoTimer=setTimeout(()=>{autoTimer=null;captureSelected();},350);}
 function snapshot(){return {draft,editCoordinates,labelDraft,selectedId,fieldDirty,display:displayDraft(),fields:{id:$('mark-id').value,text:$('mark-text').value,color:$('color').value,status:$('status').value}};}
-function record(){interactionEpoch++;historyDraft.replace(snapshot());diagnostics();}
+function record({presentationIntent=true}={}){if(presentationIntent)windowWorkspace.notePresentationIntent();interactionEpoch++;historyDraft.replace(snapshot());diagnostics();}
 function restoreSnapshot(value:LocalSnapshot){draft=(value as SelectionSnapshot).draft??null;editCoordinates=value.editCoordinates??null;labelDraft=value.labelDraft??null;selectedId=(value as SelectionSnapshot).selectedId??'';fieldDirty=value.fieldDirty??false;$('existing').value=selectedId;if(value.display){$('gamma').value=value.display.gamma;$('low').value=value.display.low;$('high').value=value.display.high;$('axes').checked=value.display.axes;$('scale').checked=value.display.scale;$('gamma-label').textContent=$('gamma').value;}if(value.fields)for(const [id,field]of [['mark-id','id'],['mark-text','text'],['color','color'],['status','status']])$(id).value=value.fields[field as keyof LocalSnapshot['fields']];syncPresentationFields();marksDirty=true;showDraft();schedulePaint();publishDraft({includeSelection:true});}
 function schedulePaint(){if(paintFrame===null)paintFrame=requestAnimationFrame(()=>{paintFrame=null;paint();});}
 function restoredSelection(value:AppSelection|null|undefined,panels:readonly WirePanel[]):AppSelection|null{if(!value)return null;const panel=panels.find(p=>p.source_object_id===value.source_object_id&&coordinateSpace(p)===value.coordinate_space&&equalRecords(p,value.panel));if(!panel)return null;try{return {...value,panel,rendered:transformCoordinates(value.coordinates,panel,{edges:['rectangle','polygon'].includes(value.kind),inverse:true})} as AppSelection;}catch{return null;}}
@@ -601,7 +681,8 @@ function syncPropertiesContext(){
  if(!state)return;
  const {mark,kind,anchor,coordinates,unboundSaved}=propertySelectionContext();
  const context=Boolean(kind||fieldDirty||editCoordinates||labelDraft),roi=kind==='rectangle',point=kind==='point';
- $('properties-title').textContent=roi?'ROI 属性':point&&anchor?.coordinate_space==='frequency_cycles_per_pixel'?'峰位属性':point?'点属性':['line','arrow'].includes(kind as string)?'测量线属性':context?'标注属性':'属性';
+ document.body.classList.toggle('compact-empty-properties',!context&&!activeFftWindow()&&!$('settings-panel').open);
+ $('properties-title').textContent=roi?'ROI 属性':point&&anchor?.coordinate_space==='frequency_cycles_per_pixel'?'峰位属性':point?'点属性':['line','arrow'].includes(kind as string)?'测量线属性':context?'标注属性':activeFftWindow()?'FFT 来源与结果':'属性';
  $('properties-empty').hidden=context&&!unboundSaved;$('properties-empty').textContent=unboundSaved?'当前为临时选择，可直接测量；选择已有标注后可编辑其属性。':'在图上选择 ROI、峰或测量线查看属性。';$('selection-properties').hidden=!context;$('mark-property-fields').hidden=unboundSaved;
  $('measurement-properties').hidden=!['point','line','arrow'].includes(kind as string);
  $('marker-shape-field').hidden=!point;
@@ -643,6 +724,7 @@ async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forc
  // A failed read/decode or newer interaction must retain the authorized draft.
  if(discardAuthorizedDraft){clearExplicitLocalDraft();autoFailed=false;}
  if(!state&&next.edit_state?.dirty)orphanedDraft=true;
+ if(!state&&next.workspace_analysis?.status==='new'&&next.workspace_analysis.saved_revision===0&&next.workspace_analysis.save_id===null)firstFftFrame=next.frame_identity?.frame_object_id??null;
  interactionEpoch++;state=next;loadedWorkingRevision=next.workspace_analysis?.working_revision;draft=restoredSelection(savedSelection,next.object.panels??[]);drag=null;editCoordinates=null;labelDraft=null;fieldDirty=false;toneCacheKey=null;marksDirty=true;const o=state.object,previous=selectedId;
  if(!sameObject&&!continued){figurePrefs.preset=o.annotations?.some(m=>['A','B','shared','unexplained'].includes(m.presentation?.category as string))?'multi-domain':o.panels?.some(p=>p.domain==='frequency')?'diffraction':'real-space';figurePrefs.legend=figurePrefs.preset!=='real-space';figurePrefs.layers={experimental:true,simulation_A:figurePrefs.preset!=='real-space',simulation_B:figurePrefs.preset!=='real-space'};}syncFigureControls();
  $('identity').textContent=`${state.frame_identity?`第 ${state.frame_identity.frame_index!+1} 帧 · `:''}${o.panels?.some(p=>p.domain==='frequency')?'FFT / 倒空间':importedComplex()?'复数图像':'科学图像'} · 原图只读`;$('calibration-summary').textContent=humanCalibration(o);$('source-badge').textContent=state.source_identity?.label??'来源待核对';$('source-name').textContent=state.source_identity?.filename??'';
@@ -769,7 +851,7 @@ canvas.addEventListener('pointerup',event=>{if(!drag||event.pointerId!==drag!.po
  if(kind==='rectangle'&&(drag!.start![0]===drag!.end![0]||drag!.start![1]===drag!.end![1])){draft=drag!.selectionBefore?.draft??null;selectedId=drag!.selectionBefore?.selectedId??'';syncMarkFields(false);showDraft();return;}
  const selected=selectionFromDrag(state.object.panels??[],drag!.start!,drag!.end!,{kind:kind as SelectionKind});if(kind==='rectangle')selectionRectangle(selected);draft={...selected,rendered:transformCoordinates(selected.coordinates,selected.panel,{edges:kind==='rectangle',inverse:true})};saveGeometry=Boolean(drag!.create_roi);if(kind==='rectangle')setMode('select');rememberSelection(drag!.selectionBefore??{draft:null,selectedId:''},{draft:JSON.parse(JSON.stringify(draft)),selectedId});showDraft();message('选择已定位；可直接测量或交给 Agent。');
  }catch(e){message((e as {message:string}).message,true);}finally{drag=null;if(kind!=='pan')record();paint();publishDraft({includeSelection:true,urgent:true});if(saveGeometry)createRoiGeometry();else Promise.resolve().then(flushEdits);}});
-viewport.addEventListener('wheel',event=>{if(windowSwitch||!image)return;windowWorkspace.noteCameraIntent();event.preventDefault();const r=viewport.getBoundingClientRect();view=zoomAt(view,[event.clientX-r.left,event.clientY-r.top],Math.exp(-event.deltaY*.0015));resize();},{passive:false});
+viewport.addEventListener('wheel',event=>{if(windowSwitch||!image)return;presentationInputEpoch++;windowWorkspace.noteCameraIntent();event.preventDefault();const r=viewport.getBoundingClientRect();view=zoomAt(view,[event.clientX-r.left,event.clientY-r.top],Math.exp(-event.deltaY*.0015));resize();},{passive:false});
 function textEntry(target:(BrowserElement&{readonly isContentEditable?:boolean;readonly contentEditable?:string})|undefined){return /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName??'')||target?.isContentEditable===true||['true','plaintext-only'].includes(target?.contentEditable??'');}
 function deleteSelectedRoi(){
  if(!allowContentEditing())return false;
@@ -789,6 +871,7 @@ function deleteSelectedRoi(){
  return true;
 }
 document.addEventListener('keydown',event=>{
+ presentationInputEpoch++;windowWorkspace.notePresentationIntent();
  if($('known-length-dialog').open){if(event.key==='Escape'){event.preventDefault();$('known-length-dialog').close();}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s')event.preventDefault();return;}
  if(!document.querySelector('dialog[open]')&&!$('roi-pick-menu').hidden){if(event.key==='Escape'){event.preventDefault();dismissRoiPicker();canvas.focus();}else if(['Delete','Backspace'].includes(event.key))event.preventDefault();return;}
  if(event.key==='Escape'&&!document.querySelector('dialog[open]')&&dismissMenus(true)){event.preventDefault();return;}
@@ -817,7 +900,12 @@ $('measure').onclick=guarded(async()=>{
  const panel=markPanel(mark),previous=measurementWorkspace.latestForAnnotation(mark.annotation_id!);
  return act('measure',{selection:{...mark.anchor,kind:mark.kind,panel},annotation_id:mark.annotation_id,...(previous?{measurement_object_id:previous.object_id}:{})});
 });
-$('fft').onclick=guarded(()=>{if(importedComplex())throw new Error('复数原图暂不支持 FFT；不会丢弃虚部或把显示幅值当作原数组');const picked=selection(),reason=selectionActionReason('fft',picked,state.object);if(reason)throw new Error(reason);return act('fft',{selection:picked,window:$('fft-window').value,subtract_mean:$('fft-mean').checked});});
+$('fft').onclick=guarded(async()=>{if(importedComplex())throw new Error('复数原图暂不支持 FFT；不会丢弃虚部或把显示幅值当作原数组');const picked=selection(),reason=selectionActionReason('fft',picked,state.object);if(reason)throw new Error(reason);
+ let presentation:ReturnType<WindowWorkspace['beginAutomaticSourceFftPresentation']>=null;
+ await act('fft',{selection:picked,window:$('fft-window').value,subtract_mean:$('fft-mean').checked},()=>{const analysis=state.workspace_analysis;presentation=windowWorkspace.beginAutomaticSourceFftPresentation(Boolean(firstFftFrame&&firstFftFrame===state.frame_identity?.frame_object_id&&analysis&&['new','dirty'].includes(analysis.status)&&analysis.saved_revision===0&&analysis.save_id===null&&!analysis.unresolved_save_id&&!analysis.recovery_available&&!analysis.unresolved_request_id));});
+ const fft=activeFftWindow();if(presentation&&fft&&!relationNavigationBlocked()&&!dirty())await windowWorkspace.tryAutomaticSourceFftPresentation(presentation,fft.window_id);
+});
+$('compare-fft-source').onclick=guarded(compareActiveFft);
 $('roi-statistics').onclick=guarded(()=>{const picked=selection(),reason=selectionActionReason('statistics',picked,state.object);if(reason)throw new Error(reason);return act('statistics',{selection:picked,component:$('probe-component').value});});
 $('line-profile').onclick=guarded(()=>{const picked=selection(),reason=selectionActionReason('profile',picked,state.object);if(reason)throw new Error(reason);return act('profile',{selection:picked,component:$('probe-component').value,sample_count:Number($('profile-count').value)});});
 $('reload').onclick=()=>windowSwitch?recoverWindowDisplay():guarded(refresh,{allowRecoveryRead:true})();$('window-switch-check').onclick=()=>recoverWindowDisplay();$('zoom').oninput=()=>{if(windowSwitch)return;windowWorkspace.noteCameraIntent();const r=viewport.getBoundingClientRect();view=zoomAt(view,[r.width/2,r.height/2],Number($('zoom').value)/view.scale);resize();};$('fit').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();fitView();}};$('fit-canvas').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();fitView();}};$('focus-image').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();toggleImageFocus();}};

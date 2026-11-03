@@ -21,6 +21,7 @@ import {WorkspaceControls} from '../ui/image-panel/workspace-controls.mjs';
 import {RoiComparisonPanel} from '../ui/image-panel/roi-comparison.mjs';
 import {settleWorkspaceWindows} from '../ui/image-panel/settle-workspace.mjs';
 import {ExecutionHistoryPanel} from '../ui/image-panel/execution-history.mjs';
+import {SelectionFftRelations} from '../ui/image-panel/selection-fft-relations.mjs';
 import {DataProbes as ProviderDataProbes} from '../ui/image-panel/data-probes.mjs';
 import {MeasurementWorkspace as ProviderMeasurementWorkspace,requiresMeasurementJump,measurementReadContext} from '../ui/image-panel/measurement-workspace.mjs';
 import {performance} from 'node:perf_hooks';
@@ -32,10 +33,10 @@ const sourceId='a'.repeat(32),viewId='b'.repeat(32);
 const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:[20,12,148,108],image_rect_xyxy:[0,0,128,96]};
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
-async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,initialMeasurementRead=null}={}){
+async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,initialMeasurementRead=null,relationRead=null,draftLeaseAcks=false}={}){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,waitMeasurementRead=initialMeasurementRead,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[];let probeTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[],relationTimers=new Map();let probeTimerId=0,relationTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -62,7 +63,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,measurementReadContext,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,SelectionFftRelations,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,measurementReadContext,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   workbenchDesktop:{onAction(handler){desktopAction=handler;}},
   WindowWorkspace:class extends WindowWorkspace{noteCameraIntent(){cameraIntentCount++;super.noteCameraIntent();}},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
@@ -75,7 +76,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
   ResizeObserver:class{constructor(callback){this.callback=callback;this.observed=[];layoutObservers.push(this);}observe(element){this.observed.push(element.id);}},
   requestAnimationFrame:fn=>{frames.set(++frameId,fn);return frameId;},cancelAnimationFrame:id=>frames.delete(id),
   fetch:async(url,options)=>{
-   if(!options.body){getCalls.push(url);if(url==='/api/state'&&stateFailure){stateFailure=false;throw new Error('Controlled current-state read failure');}if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/window-asset?')&&windowStates.length){const query=new URL(url,'http://panel.test').searchParams,entry=server.window_collection.windows.find(value=>value.window_id===query.get('window_id')),saved=entry&&savedWindowStates.get(entry.object_id);return {ok:Boolean(saved),json:async()=>saved?{schema_version:1,window_id:entry.window_id,object_id:entry.object_id,collection_revision:Number(query.get('revision')),object:copy(saved.object),panel_mapping_fingerprint:saved.panel_mapping_fingerprint,png_base64:saved.png_base64}:{error:'Window closed or saved asset missing'}};}if(url.startsWith('/api/measurements?')){const snapshot={current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false};if(waitMeasurementRead)await waitMeasurementRead;return {ok:true,json:async()=>snapshot};}if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
+   if(!options.body){getCalls.push(url);if(relationRead&&(url.startsWith('/api/roi-handoff?')||url==='/api/execution-history')){const result=await relationRead(url,copy(server));return {ok:true,json:async()=>result};}if(url==='/api/state'&&stateFailure){stateFailure=false;throw new Error('Controlled current-state read failure');}if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/window-asset?')&&windowStates.length){const query=new URL(url,'http://panel.test').searchParams,entry=server.window_collection.windows.find(value=>value.window_id===query.get('window_id')),saved=entry&&savedWindowStates.get(entry.object_id);return {ok:Boolean(saved),json:async()=>saved?{schema_version:1,window_id:entry.window_id,object_id:entry.object_id,collection_revision:Number(query.get('revision')),object:copy(saved.object),panel_mapping_fingerprint:saved.panel_mapping_fingerprint,png_base64:saved.png_base64}:{error:'Window closed or saved asset missing'}};}if(url.startsWith('/api/measurements?')){const snapshot={current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false};if(waitMeasurementRead)await waitMeasurementRead;return {ok:true,json:async()=>snapshot};}if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
    if(options.body){const body=JSON.parse(options.body);actionTrace.push(body.action);
     if(url==='/api/workspace'&&body.action==='park-window'){
      assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);assert.equal(body.working_draft.object_id,server.object.object_id);assert.equal(body.working_draft.panel_mapping_fingerprint,server.panel_mapping_fingerprint);
@@ -89,7 +90,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
      assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);const restored=copy(initial);restored.workspace_analysis={...restored.workspace_analysis,working_revision:server.workspace_analysis.working_revision+1,status:'clean',recovery_available:false};restored.edit_state={draft_revision:(server.edit_state?.draft_revision??0)+1,dirty:false,gesture_active:false};restored.state_revision=(server.state_revision??0)+1;server=restored;return {ok:true,json:async()=>copy(server)};
     }
     if(url==='/api/probe'){probeCalls.push(body);return {ok:true,json:async()=>({object_id:body.expected_object_id,kind:'probe',component:body.component,coordinate_space:body.coordinate_space,samples:[{point:body.coordinates,array_index_xy:body.coordinates,value:17}]})};}
-    if(body.action==='draft'){draftCalls.push(body);if(waitDraft)await waitDraft;if(draftFailure){const error=draftFailure;draftFailure=null;return {ok:false,json:async()=>({error})};}if(windowStates.length&&(body.expected_object_id!==server.object.object_id||body.params.draft_revision<(server.edit_state?.draft_revision??0)))return {ok:false,json:async()=>({error:'Stale draft lease'})};if(Object.hasOwn(body.params,'selection'))server.selection=copy(body.params.selection);if(coalesceDrafts)server.draft_persistence={pending:body.params.confirm_persistence!==true&&server.edit_state?.dirty===body.params.dirty&&server.edit_state?.gesture_active===body.params.gesture_active,error:null};server.edit_state={...copy(body.params),base_object_id:server.object.object_id};return {ok:true,json:async()=>body.lightweight?{object_id:server.object.object_id,edit_state:copy(server.edit_state)}:copy(server)};}
+    if(body.action==='draft'){draftCalls.push(body);if(waitDraft)await waitDraft;if(draftFailure){const error=draftFailure;draftFailure=null;return {ok:false,json:async()=>({error})};}if(windowStates.length&&(body.expected_object_id!==server.object.object_id||body.params.draft_revision<(server.edit_state?.draft_revision??0)))return {ok:false,json:async()=>({error:'Stale draft lease'})};if(Object.hasOwn(body.params,'selection'))server.selection=copy(body.params.selection);if(coalesceDrafts)server.draft_persistence={pending:body.params.confirm_persistence!==true&&server.edit_state?.dirty===body.params.dirty&&server.edit_state?.gesture_active===body.params.gesture_active,error:null};server.edit_state={...copy(body.params),base_object_id:server.object.object_id};return {ok:true,json:async()=>body.lightweight?{object_id:server.object.object_id,edit_state:copy(server.edit_state),...(relationRead||draftLeaseAcks?{state_revision:server.state_revision??0}:{})}:copy(server)};}
     if(windowStates.length&&['window-context','window-camera'].includes(body.action)){
      windowMetadataCalls.push(copy(body));if(body.action==='window-camera'&&waitWindowCamera)await waitWindowCamera;if(body.expected_object_id!==server.object.object_id||body.params.collection_revision!==server.window_collection.revision)return {ok:false,json:async()=>({error:'Changed window revision'})};const collection=server.window_collection,entry=collection.windows.find(value=>value.window_id===(body.params.window_id??collection.active_window_id)),saved=savedWindowStates.get(entry?.object_id);
      if(!entry||!saved||body.action==='window-context'&&(server.edit_state?.dirty||server.pending_result||body.draft_revision!==server.edit_state?.draft_revision))return {ok:false,json:async()=>({error:'Window context preflight refused'})};
@@ -118,6 +119,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
    return {ok:true,json:async()=>copy(server)};
   }
  };
+ if(relationRead){sandbox.setTimeout=(fn,delay)=>{const id=++relationTimerId;if(delay===180)relationTimers.set(id,fn);else if(delay<1000)Promise.resolve().then(fn);return id;};sandbox.clearTimeout=id=>relationTimers.delete(id);}
  const renderSource=readFileSync(new URL('../ui/image-panel/viewer-render.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
  const script=renderSource+'\n'+source.replace(/^import .*from '\.\/[^']+\.mjs';\r?\n/gm,'')
   .replace('refresh().then(','globalThis.ready=refresh().then(')
@@ -129,6 +131,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
  const draw=(kind='line')=>{$('mode').value=kind;event('pointerdown',10,10);event('pointermove',40,35);event('pointerup',40,35);flush();};
  return {$,bodyClasses,calls,draftCalls,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},finishRoi:async()=>{await sandbox.finishRoiSave();flush();},
+  flushRelations:async()=>{const pending=[...relationTimers.values()];relationTimers.clear();for(const callback of pending)callback();for(let i=0;i<100;i++)await Promise.resolve();flush();},
   delayAction(promise){waitAction=promise;},delayWindowCamera(promise){waitWindowCamera=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
   nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),cameraIntents:()=>cameraIntentCount,
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
@@ -1426,8 +1429,9 @@ test('result menu is dismissed before opening a readonly report and focus return
 });
 
 test('Escape dismisses transient menus before clearing a retained ROI draft',async()=>{
- const h=await harness();h.draw('rectangle');await h.settle();const menu=h.$('research-more'),summary=h.$('results-menu-summary');menu.querySelector=()=>summary;menu.open=true;summary.focus();const before=h.inspect(),writes=h.calls.length,drafts=h.draftCalls.length;h.key('Escape');
- assert.equal(menu.open,false);assert.equal(h.active(),summary);assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,writes);assert.equal(h.draftCalls.length,drafts);
+ for(const id of ['research-more','window-index-menu','viewport-menu','agent-menu']){const h=await harness();h.draw('rectangle');await h.settle();const menu=h.$(id),summary=h.$(id+'-summary');menu.querySelector=()=>summary;menu.open=true;summary.focus();const before=h.inspect(),writes=h.calls.length,drafts=h.draftCalls.length;h.key('Escape');
+  assert.equal(menu.open,false,id);assert.equal(h.active(),summary,id);assert.deepEqual(h.inspect(),before,id);assert.equal(h.calls.length,writes,id);assert.equal(h.draftCalls.length,drafts,id);
+ }
 });
 
 test('outside pointer and nested menu-action clicks dismiss menus without synthesizing scientific actions',async()=>{
@@ -1438,12 +1442,14 @@ test('outside pointer and nested menu-action clicks dismiss menus without synthe
 
 test('sidebar context: no selection keeps the ROI list but hides unrelated editing and measurement sections',async()=>{
  const h=await harness(),before=h.inspect();assert.equal(h.$('properties-empty').hidden,false);assert.equal(h.$('selection-properties').hidden,true);assert.equal(h.$('measurement-properties').hidden,true);assert.equal(h.$('discard-local').hidden,true);assert.equal(h.$('properties-title').textContent,'属性');
+ assert.equal(h.bodyClasses.has('compact-empty-properties'),true);assert.equal(h.bodyClasses.has('properties-open'),false);assert.equal(Boolean(h.$('measurement-workspace').open),false);
  await h.click('toggle-properties');await h.click('toggle-properties');assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.calls.length,0);
 });
 
 test('sidebar context: ROI shows its own geometry and note without a previous measurement or peak symbol',async()=>{
  const initial=savedRectangleFixture();initial.object.annotations[0].note='Use this area; not a phase assignment.';initial.last_operation={action:'measure',annotation_id:'previous-peak',frequency_distance_cycles_per_pixel:.125};const h=await harness(initial);selectSavedRoi(h);await h.settle();
  assert.equal(h.$('properties-empty').hidden,true);assert.equal(h.$('selection-properties').hidden,false);assert.equal(h.$('measurement-properties').hidden,true);assert.equal(h.$('marker-shape-field').hidden,true);assert.equal(h.$('properties-title').textContent,'ROI 属性');assert.match(h.$('properties-geometry').textContent,/位置 40, 32.*大小 80 × 60 px/);assert.ok(h.$('properties-geometry').title.includes(JSON.stringify(initial.object.annotations[0].anchor.coordinates)));assert.match(h.$('properties-roi-note').textContent,/已记录说明：Use this area/);assert.equal(h.$('existing').value,'roi-stable');assert.equal(h.calls.length,0);
+ assert.equal(h.bodyClasses.has('compact-empty-properties'),false);assert.equal(h.$('mark-text').value,'ROI saved');
 });
 
 test('sidebar context: a selected reciprocal-space point retains its actual measurement and unknown scale',async()=>{
@@ -1565,4 +1571,47 @@ test('measurement table read survives result-panel camera metadata without anoth
  h.actionResult(server=>({...server,measurement_entries:[saved]}));let release;h.delayMeasurementRead(new Promise(resolve=>{release=resolve;}));const reading=h.click('measure');await h.settle();
  const before=h.inspect();h.$('viewport').listeners.wheel({clientX:30,clientY:20,deltaY:-30,preventDefault(){}});await h.finishWindows();assert.ok(h.inspect().state.state_revision>before.state.state_revision,'the controlled response must cross a real window-camera metadata acknowledgement '+JSON.stringify({before:before.state.state_revision,after:h.inspect().state.state_revision,busy:h.inspect().busy,mode:h.inspect().draft?.kind,metadata:h.windowMetadataCalls.length,calls:h.calls.map(c=>c.action),message:h.$('message').textContent}));release();await reading;
  assert.equal(h.$('measurement-rows').children.length,1,'a completed saved measurement must enter the table despite a camera-only revision');assert.equal(h.$('measurement-count').textContent,'1 / 1 条');assert.deepEqual(h.calls.map(call=>call.action),['measure']);
+});
+
+test('canvas chrome: View and Agent nested actions close their menus without changing scientific state',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const before=h.inspect(),writes=h.calls.length,drafts=h.draftCalls.length;
+ for(const [id,action]of [['viewport-menu','fit-canvas'],['agent-menu','share']]){const menu=h.$(id),button=h.$(action),label=h.$(id+'-nested-label');button.tagName='BUTTON';label.parentNode=button;button.parentNode=menu;menu.open=true;menu.listeners.click({target:label});assert.equal(menu.open,false,id);}
+ assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,writes);assert.equal(h.draftCalls.length,drafts);
+});
+
+function relationUiFixture({fft=false}={}){
+ const f=windowActivationFixture();f.source.multi_roi_handoff_schema_version=1;f.source.object.annotations=[{annotation_id:'roi-a',kind:'rectangle',text:'ROI A',color:'cyan',status:'hypothesized',anchor:{source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:[30.2,20.7,61.8,48.4]}},{annotation_id:'roi-b',kind:'rectangle',text:'ROI B',color:'cyan',status:'hypothesized',anchor:{source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:[70.1,25.4,100.8,80.6]}}];
+ if(!fft)return {initial:f.source,windowStates:[f.target]};
+ const initial=copy(f.source);initial.object=copy(f.target.object);initial.object.annotations=[];initial.panel_mapping_fingerprint=f.target.panel_mapping_fingerprint;initial.render_base_id=initial.object.object_id;initial.selection=null;initial.window_collection.active_window_id=f.targetWindow;initial.window_collection.windows[1].view_context.selection_candidate=null;initial.window_collection.windows[1].view_context.selected_annotation_id=null;return {initial,windowStates:[f.source]};
+}
+function emptyRelationRead(url,state){
+ if(url==='/api/execution-history')return {schema_version:1,read_only:true,records:[]};
+ const query=new URL(url,'http://panel.test').searchParams;assert.equal(query.get('expected_object_id'),state.object.object_id,'relationship read must name the current object');assert.equal(Number(query.get('state_revision')),state.state_revision,'relationship read must use the current provider state');assert.equal(Number(query.get('draft_revision')),state.edit_state.draft_revision,'relationship read must use the acknowledged provider draft lease');assert.equal(Number(query.get('collection_revision')),state.window_collection.revision,'relationship read must use the current window collection');return {schema_version:1,read_only:true,validation_status:'validated',panel_id:state.panel_id,helper_session_id:state.helper_session_id??null,panel_generation:state.panel_generation??null,active_view_object_id:query.get('expected_object_id'),frame_object_id:state.frame_identity.frame_object_id,state_revision:Number(query.get('state_revision')),draft_revision:Number(query.get('draft_revision')),collection_revision:Number(query.get('collection_revision')),source_observations:[],fft_relations:[]};
+}
+const elementText=element=>[element.textContent,...element.children.map(elementText)].join(' ');
+
+test('canvas chrome: a relation GET failure stays read-only and the explicit retry never submits science',async()=>{
+ for(const failure of ['handoff','history']){const f=relationUiFixture(),h=await harness(f.initial,{windowStates:f.windowStates,relationRead:(url,state)=>{if(failure==='handoff'&&url.startsWith('/api/roi-handoff?')||failure==='history'&&url==='/api/execution-history')throw new Error('Controlled '+failure+' read failure');return emptyRelationRead(url,state);}});selectSavedRoi(h,'roi-a');await h.flushRelations();assert.equal(h.bodyClasses.has('properties-open'),true);
+  assert.equal(h.$('selection-fft-relations').hidden,false,failure);assert.match(elementText(h.$('selection-fft-relations-content')),/读取未完成/,failure);assert.equal(h.calls.length,0,failure);const before=h.inspect(),reads=h.getCalls.length,retry=h.$('selection-fft-relations-content').children.find(child=>child.textContent==='重新读取关联');assert.ok(retry);assert.equal(retry.disabled,false);retry.onclick();await h.settle();assert.ok(h.getCalls.length>reads);assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.calls.length,0,failure);assert.ok(h.getCalls.some(url=>url.startsWith('/api/roi-handoff?')));assert.ok(h.getCalls.includes('/api/execution-history'));
+ }
+});
+
+test('canvas chrome: changing ROI during a slow old GET eventually displays the new ROI relation read',async()=>{
+ const f=relationUiFixture(),handoffReads=[];let releaseOld;const oldRead=new Promise(resolve=>{releaseOld=resolve;});const h=await harness(f.initial,{windowStates:f.windowStates,relationRead:async(url,state)=>{const packet=emptyRelationRead(url,state);if(url.startsWith('/api/roi-handoff?')){handoffReads.push(url);if(handoffReads.length===1)await oldRead;}return packet;}});
+ selectSavedRoi(h,'roi-a');await h.flushRelations();assert.equal(handoffReads.length,1);selectSavedRoi(h,'roi-b');await h.settle();assert.equal(h.inspect().selectedId,'roi-b');releaseOld();await h.settle();await h.flushRelations();await h.settle();
+ assert.ok(handoffReads.length>=2,'a stale completion must schedule the current ROI read');const oldQuery=new URL(handoffReads[0],'http://panel.test').searchParams,newQuery=new URL(handoffReads.at(-1),'http://panel.test').searchParams;assert.ok(Number(newQuery.get('draft_revision'))>Number(oldQuery.get('draft_revision')));assert.equal(h.inspect().selectedId,'roi-b');assert.deepEqual(h.inspect().draft.coordinates,f.initial.object.annotations[1].anchor.coordinates);assert.match(elementText(h.$('selection-fft-relations-content')),/未找到经过核对的对应 FFT/);assert.doesNotMatch(elementText(h.$('selection-fft-relations-content')),/正在核对/);assert.equal(h.calls.length,0);
+});
+
+test('canvas chrome: an active FFT without a selected mark keeps its related-input properties reachable',async()=>{
+ const f=relationUiFixture({fft:true}),h=await harness(f.initial,{windowStates:f.windowStates,relationRead:emptyRelationRead});await h.finishWindows();await h.click('toggle-properties');await h.flushRelations();assert.equal(h.inspect().selectedId,'');assert.equal(h.inspect().draft,null);assert.equal(h.bodyClasses.has('compact-empty-properties'),false);assert.equal(h.$('selection-properties').hidden,true);assert.equal(h.$('selection-fft-relations').hidden,false);assert.match(elementText(h.$('selection-fft-relations-content')),/当前 FFT|原图与 FFT 对照/);assert.equal(typeof h.$('compare-fft-source').onclick,'function');assert.equal(h.$('compare-fft-source').disabled,false);assert.equal(h.calls.length,0);
+});
+
+test('canvas chrome: the actual compare button handler abstains when no qualified FFT source exists',async()=>{
+ const h=await harness(),before=h.inspect();assert.equal(typeof h.$('compare-fft-source').onclick,'function');assert.equal(h.$('compare-fft-source').disabled,true);await h.click('compare-fft-source');assert.match(h.$('message').textContent,/没有已核对的历史来源/);assert.deepEqual(h.inspect(),before);assert.equal(h.calls.length,0);
+});
+
+test('canvas chrome: a late old draft acknowledgement never replaces a newer selection or its lease',async()=>{
+ const h=await harness(fixture(),{draftLeaseAcks:true}),ackBefore=h.inspect().state.edit_state;let releaseOld,releaseNew;h.delayDraft(new Promise(resolve=>{releaseOld=resolve;}));h.draw('rectangle');await h.settle();const oldRevision=h.draftCalls.at(-1).params.draft_revision;h.draw('point');const selected=h.inspect().draft,currentRevision=h.inspect().draftRevision;assert.ok(currentRevision>oldRevision);
+ h.delayDraft(new Promise(resolve=>{releaseNew=resolve;}));releaseOld();await h.settle();assert.deepEqual(h.inspect().draft,selected);assert.deepEqual(h.inspect().state.edit_state,ackBefore,'an old ack cannot become the lease for a newer local selection');assert.equal(h.calls.length,0);
+ releaseNew();await h.settle();assert.deepEqual(h.inspect().draft,selected);assert.equal(h.inspect().state.edit_state.draft_revision,currentRevision);assert.equal(h.calls.length,0);
 });
