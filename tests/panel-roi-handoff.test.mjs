@@ -124,12 +124,16 @@ test('pair inspection is bounded and never claims a truncated or ambiguous ROI s
 test('Panel MCP response adds handoff while preserving old view and actual image content fields',()=>{
  const source=state(),png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
  source.png_base64=png;source.clean_png_base64=png;source.domain_png_base64=null;source.tools=[];
+ source.window_collection={schema_version:1,revision:2,frame_object_id:A,active_window_id:'active-window',windows:[{window_id:'active-window',object_id:source.object.object_id,role:'source'},{window_id:'retained-window',object_id:'e'.repeat(32),role:'fft'}]};
  const manager=new ImagePanelManager({workspace:path.resolve('unused-readonly-panel-handoff'),python:'unused',inspect(){throw Error('No scientific inspection should run');}});
  manager.getConnection=()=>({schema_version:1,panel_id:P,port:12345,token:'unit-token',pid:1});
  const before=structuredClone(source),result=manager.response(P,source),data=JSON.parse(result.content[0].text);
  const {png_base64,clean_png_base64,domain_png_base64,tools,...expectedView}=source;
  assert.deepEqual(data.view,expectedView);assert.deepEqual(data.roi_handoff,panelRoiHandoff(source));
  assert.equal(result.content[1].type,'image');assert.equal(result.content[1].data,png);
+ assert.equal(result.content.filter(item=>item.type==='image').length,1,'Retained windows do not silently become extra active image inputs');
+ assert.deepEqual(data.view.window_collection,source.window_collection);assert.deepEqual(data.view.selection,source.selection);
+ assert.match(data.image_semantics,/only the active scientific view/);assert.match(data.image_semantics,/read-only displays/);
  assert.deepEqual(source,before,'Adding readonly handoff does not rewrite the old view');
 });
 

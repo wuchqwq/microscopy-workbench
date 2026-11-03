@@ -1,5 +1,6 @@
 // Explicit external image tools. No DM connection or native fallback lives here.
 import {spawn} from 'node:child_process';
+import {acquireImageWorkspaceWrite,releaseCompletedImageWorkspaceWrite} from './image_workspace_lock.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync, realpathSync, statSync} from 'node:fs';
 import path from 'node:path';
@@ -7,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {ExecutionCoordinator} from './runtime/execution_coordinator.mjs';
 import {readImageMeasurements} from './image_measurement_records.mjs';
 import {ImageProbeClient} from './image_probe_client.mjs';
+import {readImageFrameAncestry} from './image_frame_ancestry.mjs';
 import {checkResumableInputs} from '../ui/image-panel/observation-contract.mjs';
 import {automationTools,automationActions} from './image_automation_contract.mjs';
 import {sequenceTools,sequenceActions} from './image_sequence_contract.mjs';
@@ -94,7 +96,7 @@ export const imageTools: ToolDefinition[]=[
   write('image_statistics','Save original-array ROI statistics: mean, population stddev(ddof0), minimum and maximum with binary64 reductions. Source rect and original FFT frequency_rect are distinct; complex component must be explicit. No display gamma/filter is applied.',{object_id:id,rect,frequency_rect:rect,component:numericComponent},['object_id']),
   write('image_profile','Save an evenly sampled straight width-one nearest-neighbor scientific profile, including original coordinates, sampled indices/values, calibrated path distance when sourced, NPY and CSV. No clipping, no inferred intensity unit; reciprocal path distance is not d-spacing.',{object_id:id,points:numericPoints,coordinate_space:numericSpace,component:numericComponent,sample_count:{type:'integer',minimum:2,maximum:4096},line_width:{type:'integer',enum:[1]},interpolation:{type:'string',enum:['nearest']}},['object_id','points']),
   write('image_open','Open an explicit grayscale uint16/finite float32 TIFF, DM3 or DM4 read-only outside DM; inspect a lazy scientific catalog before bounded decoding. Omitted source_kind detects .dm3/.dm4 by extension, otherwise retains the TIFF path. DM3/DM4 needs optional RosettaSciIO 0.15.0; its actual stored XY dimension tags may activate sourced file calibration. Missing/ambiguous metadata remains pixel-only. Or import an existing verified DM numerical capture. No phase, intensity unit or frame depth is inferred.',{source_path:{type:'string',minLength:1},source_kind:{type:'string',enum:['tiff','capture','dm4','dm3']}},['source_path']),
-  make('image_info','Inspect a saved image/view/context object without running analysis.',{object_id:id},['object_id']),
+  make('image_info','Inspect a saved image/view/context object without running analysis. Optional include_frame_ancestry qualifies the same bounded parent/base/source chain in one worker; absent projection requires ordinary parent reads.',{object_id:id,include_frame_ancestry:{type:'boolean',description:'Optional read-only bounded frame ancestry; no new object, array or inferred identity.'}},['object_id']),
   write('image_center','Create a sourced centre revision of an established reciprocal scalar image, preserving signed XY scale and immutable pixels. center_xy uses original source_array_indices. Tracked native Fourier scalars and external complex FFTs have fixed mathematical DC and cannot be recentered here. Remeasure saved points using the returned wrapper; previous measurements remain historical.',{object_id:id,center_xy:{type:'array',minItems:2,maxItems:2,items:{type:'number'}},coordinate_space:{type:'string',enum:['source_array_indices']},source_text:{type:'string',minLength:1,maxLength:4000}},['object_id','center_xy','coordinate_space','source_text']),
   write('image_remeasure','Reuse a committed measurement on the selected current calibration/centre wrapper. Requires the exact same scientific source/frame/ROI/FFT grid. Omit points to reuse anchors and move only an originally explicit DC endpoint to the corrected centre. Explicit points require source_text and are used as supplied. Returns a new measure object; no FFT recomputation or latest-object guessing.',{object_id:id,measurement_object_id:id,points:{type:'array',minItems:2,maxItems:2,items:{type:'array',minItems:2,maxItems:2,items:{type:'number'}}},source_text:{type:'string',minLength:1,maxLength:4000}},['object_id','measurement_object_id']),
   write('image_frame','Select an explicit zero-based TIFF frame, real scalar plane or ordinary stored 2D complex64/complex128 from DM3/DM4, preserving raw dtype and both complex parts. DM requires frame_index:0; rank>2 additionally requires explicit plane_axes/plane_indices; dataset_index is the zero-based scientific catalog index, required when more than one eligible dataset exists. RGB thumbnails are not scientific planes. External file I/O, never a DM native operation.',{object_id:id,frame_index:{type:'integer',minimum:0},dataset_index:{type:'integer',minimum:0,maximum:63},plane_axes:{type:'array',minItems:2,maxItems:2,items:{type:'integer',minimum:0,maximum:5},description:'Explicit original NumPy array axis indices [output Y, output X]; required for multidimensional DM. Axis roles are caller-selected, not guessed.'},plane_indices:{type:'array',minItems:2,maxItems:6,items:{type:['integer','null'],minimum:0},description:'One entry per original array axis. null on the two selected plane axes; an explicit zero-based fixed index on every other axis. No navigation flattening or inferred depth.'}},['object_id','frame_index']),
@@ -115,7 +117,8 @@ const actions: Readonly<Record<string,string>>={...discoveryActions,...methodAct
 
 export class ImageWorkerDiagnosticError extends Error {
  readonly diagnostic:Readonly<Record<string,unknown>>;
- constructor(message:string,diagnostic:Record<string,unknown>){super(message+' '+JSON.stringify(diagnostic));this.name='ImageWorkerDiagnosticError';this.diagnostic=diagnostic;}
+ readonly code?:string;readonly submission_state?:string;readonly request_id?:unknown;
+ constructor(message:string,diagnostic:Record<string,unknown>){super(message+' '+JSON.stringify(diagnostic));this.name='ImageWorkerDiagnosticError';this.diagnostic=diagnostic;if(diagnostic.submission_state==='not_submitted'){this.code='IMAGE_WORKER_NOT_SUBMITTED';this.submission_state='not_submitted';this.request_id=diagnostic.request_id;}}
 }
 
 export class ImageWorkspace {
@@ -194,11 +197,11 @@ export class ImageWorkspace {
   }
   private runWorker(payload: Readonly<ImageRequest>,detail: 'full'|'compact'='full'): ImageWorkerPromise {
     const raw=JSON.stringify(detail==='compact'?{...payload,response_detail:detail}:payload);if(Buffer.byteLength(raw)>256*1024)throw new Error('Image request exceeds 256 KiB');
-    let finishWorker!: () => void,child: ImageProcess | undefined;
-    const workerDone=new Promise<void>(resolve=>{finishWorker=resolve;});
+    let finishWorker!: () => void,child: ImageProcess | undefined,providerLease:ReturnType<typeof acquireImageWorkspaceWrite>|undefined;
+    const workerDone=new Promise<void>(resolve=>{finishWorker=()=>{try{providerLease?.release();}catch{/* Keep a blocked claim fail-closed; query the original completed request. */}resolve();};});
     const waiting=new Promise<ToolResult>((resolve,reject)=>{
-      try {child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
-      catch(error){finishWorker();reject(new ImageWorkerDiagnosticError('Image worker spawn failed; original request was not dispatched.',{phase:'spawn',submission_state:'not_submitted',request_id:payload.request_id??null,provider:'external-image-workspace',workspace:this.workspace,reason:String(error)}));return;}
+      try {if(!['get','result','evidence'].includes(payload.action))providerLease=acquireImageWorkspaceWrite(this.workspace,payload.request_id);child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
+      catch(error){finishWorker();const code=(error as {code?:string}).code;if(code==='WORKSPACE_WRITE_CONFLICT'||code==='WORKSPACE_METADATA_BUSY'){reject(error);return;}reject(new ImageWorkerDiagnosticError('Image worker spawn failed; original request was not dispatched.',{phase:'spawn',submission_state:'not_submitted',request_id:payload.request_id??null,provider:'external-image-workspace',workspace:this.workspace,reason:String(error)}));return;}
       let chunks: Buffer[]=[],bytes=0,stderr='',settled=false,exitCode:number|null=null,phase='worker_output';let reportedState:unknown;const stdoutHash=createHash('sha256');
       const hint='Query image_result with original request_id='+String(payload.request_id??payload.query_request_id??'unknown')+'; do not automatically resubmit.';
       const diagnostic=(error:unknown,state='outcome_unknown')=>new ImageWorkerDiagnosticError((error instanceof Error?error.message:String(error))+'. '+hint,{phase,preview_phase:payload._preview_phase??null,preview_dispatch_by_this_attempt:payload._preview_phase==='reserve'?'not_dispatched':'not_inferred',provider_reported_state:reportedState??null,submission_state:state,request_id:payload.request_id??payload.query_request_id??null,provider:'external-image-workspace',workspace:this.workspace,exit_code:exitCode,stdout_bytes:bytes,stdout_sha256:stdoutHash.copy().digest('hex'),stderr_tail:stderr.replace(/((?:token|secret|api[_-]?key|authorization)\s*[:=]\s*)\S+/gi,'$1[REDACTED]').slice(-1024)});
@@ -207,7 +210,10 @@ export class ImageWorkspace {
       child!.stderr.on('data',chunk=>{stderr=(stderr+chunk.toString()).slice(-4096);});
       child!.once('error',err=>{
         // An error can also mean kill failed while the child is still alive.
-        // Only close releases the write queue, including after spawn failure.
+        // With no PID, spawn positively failed: release this nonce's provider
+        // claim before returning not_submitted to another process. The local
+        // drain still waits for close; errors on a live child retain its claim.
+        if(!child!.pid)try{providerLease?.release();}catch{/* Failed cleanup stays closed until close retries it. */}
         phase='spawn';finish(reject,diagnostic(err,child!.pid?'outcome_unknown':'not_submitted'));
       });
       child!.stdin.on('error',err=>{phase='stdin';finish(reject,diagnostic(err));});
@@ -251,17 +257,21 @@ export class ImageWorkspace {
         }else if(result.request_id!==(payload.action==='result'?payload.query_request_id:payload.request_id)){
           throw new Error('Image worker returned a different original request identity; '+hint);
         }
-        const content: ToolContent[]=[{type:'text',text:JSON.stringify(result,null,2)}];
-        if(result.image_path&&result.evidence_format!=='image-evidence-summary-v1'){
+        if(payload.action==='result'){try{releaseCompletedImageWorkspaceWrite(this.workspace,payload.query_request_id);}catch{/* Read-only completion remains valid; a blocked claim still refuses new writes. */}}
+        const checkedPng=(record:Record<string,unknown>):Buffer|null=>{
+         if(!record.image_path||record.evidence_format==='image-evidence-summary-v1')return null;
           // Python resolves Windows 8.3 aliases to long paths. Canonicalize
           // both sides through the native filesystem before containment checks.
-          const root=realpathSync.native(this.workspace),file=realpathSync.native(result.image_path as string),relative=path.relative(root,file);
+          const root=realpathSync.native(this.workspace),file=realpathSync.native(record.image_path as string),relative=path.relative(root,file);
           if(relative.startsWith('..')||path.isAbsolute(relative))throw new Error('Image result escapes workspace');
           if(statSync(file).size>2*1024*1024)throw new Error('PNG exceeds 2 MiB inline budget');
           const png=readFileSync(file);
           if(!png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))throw new Error('Image result is not PNG');
-          content.push({type:'image',data:png.toString('base64'),mimeType:'image/png'});
-        }
+          return png;
+        };
+        if(payload.action==='get'&&payload.include_frame_ancestry===true){const ancestry=readImageFrameAncestry(result.frame_ancestry,result);for(const ancestor of ancestry?.slice(1)??[])checkedPng(ancestor);}
+        const content: ToolContent[]=[{type:'text',text:JSON.stringify(result,null,2)}],png=checkedPng(result);
+        if(png)content.push({type:'image',data:png.toString('base64'),mimeType:'image/png'});
         finish(resolve,{content});
       }catch(err){finish(reject,diagnostic(err,reportedState==='not_submitted'?'not_submitted':reportedState==='failed'?'provider_reported_failure':'outcome_unknown'));}});
       child!.stdin.end(raw);

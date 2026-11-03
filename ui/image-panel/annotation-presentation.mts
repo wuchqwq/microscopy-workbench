@@ -1,6 +1,7 @@
 export type AnnotationSVGItem=Pick<import('./presentation-contracts.mjs').AnnotationLayoutItem,'id'|'shape'|'color'|'radius'|'lineWidth'|'geometryVisible'|'coordinates'|'dash'>&{mark:Pick<import('./presentation-contracts.mjs').RenderedMark,'kind'|'text'|'status'|'arrow_render_coordinates'>;label:Partial<import('./presentation-contracts.mjs').LabelLayout>&{text:string;visible:boolean};anchor?:number[];selected?:boolean};
 export type AnnotationSVGLayout=Pick<import('./presentation-contracts.mjs').AnnotationLayout,'width'|'height'|'scale'|'legend'|'mode'>&{items:AnnotationSVGItem[]};
 import type {RenderedMark,AnnotationLayout,AnnotationLayoutItem,AnnotationLegend,AnnotationLayoutOptions,FigureLayoutOptions,Box,LabelLayout,AnnotationPresentation} from './presentation-contracts.mjs';
+import {rectangleHandles} from './roi-editing.mjs';
 export type {AnnotationLayout,AnnotationLayoutOptions,FigureLayoutOptions} from './presentation-contracts.mjs';
 // Shared, deterministic presentation only. Input anchors and scientific values stay read-only.
 const SHAPES = new Set(['circle', 'square', 'double_circle', 'diamond', 'cross']);
@@ -58,7 +59,7 @@ function candidates(anchor: readonly number[],extent: Pick<Box,'width'|'height'>
 function place(anchor: readonly number[],extent: Pick<Box,'width'|'height'>,gap: number,width: number,height: number,placed: readonly Box[],points: readonly (readonly number[])[]){
  let best: (Box & {score:number;overlap:number}) | null=null;
  for(const [cx,cy]of candidates(anchor,extent,gap)){
-  const box={x:Math.max(0,Math.min(Math.max(0,width-extent.width),cx)),y:Math.max(0,Math.min(Math.max(0,height-extent.height),cy)),...extent};
+  const box={...extent,x:Math.max(0,Math.min(Math.max(0,width-extent.width),cx)),y:Math.max(0,Math.min(Math.max(0,height-extent.height),cy))};
   const overlap=placed.reduce((sum,other)=>sum+boxOverlap(box,other),0);
   const pointPenalty=points.reduce((sum,[x,y])=>sum+(x>box.x-gap*.4&&x<box.x+box.width+gap*.4&&y>box.y-gap*.4&&y<box.y+box.height+gap*.4?extent.height*extent.height:0),0);
   const score=overlap*4+pointPenalty+Math.abs(box.x-cx)+Math.abs(box.y-cy);
@@ -153,7 +154,7 @@ export function renderAnnotationsSVG(layout: AnnotationSVGLayout,{width=layout.w
    if(label.leader&&Math.hypot(near[0]-anchor![0],near[1]-anchor![1])>item.radius+3/scale)content+=`<path d="M ${number(anchor![0])} ${number(anchor![1])} L ${number(near[0])} ${number(near[1])}" fill="none" stroke="${xml(item.color)}" stroke-width="${number(.65/scale)}" opacity="0.78" pointer-events="none"/>`;
    content+=`<g${part} data-part="label"${interactive?' class="annotation-label-draggable"':''}><title>${xml([mark.text??label.text,mark.status].filter(Boolean).join(' · '))}</title>${interactive?`<rect x="${number(label.x!-2/scale)}" y="${number(label.y!-2/scale)}" width="${number(label.width!+4/scale)}" height="${number(label.height!+4/scale)}" fill="transparent"/>`:''}<text x="${number(label.x!)}" y="${number(label.y!+label.fontSize!)}" fill="${xml(item.color)}" font-family="${fontFamily}" font-size="${number(label.fontSize!)}" font-weight="400" stroke="#11151b" stroke-width="${number(.6/scale)}" stroke-opacity="0.7" paint-order="stroke fill" stroke-linejoin="round">${crystallographicSVGText(label.text)}</text></g>`;
   }
-  if(layout.mode==='analysis'&&item.selected&&item.geometryVisible){const r=3/scale;content+=`<g data-part="handles" pointer-events="none" fill="#11151b" stroke="${xml(item.color)}" stroke-width="${number(1/scale)}">`;for(let i=0;i<item.coordinates.length;i+=2)content+=`<rect x="${number(item.coordinates[i]-r)}" y="${number(item.coordinates[i+1]-r)}" width="${number(r*2)}" height="${number(r*2)}"/>`;content+='</g>';}
+  if(layout.mode==='analysis'&&item.selected&&item.geometryVisible){const r=3/scale,points=mark.kind==='rectangle'?rectangleHandles(item.coordinates).map(value=>value.point):Array.from({length:item.coordinates.length/2},(_,i)=>item.coordinates.slice(i*2,i*2+2));content+=`<g data-part="handles" pointer-events="none" fill="#11151b" stroke="${xml(item.color)}" stroke-width="${number(1/scale)}">`;for(const point of points)content+=`<rect x="${number(point[0]-r)}" y="${number(point[1]-r)}" width="${number(r*2)}" height="${number(r*2)}"/>`;content+='</g>';}
  }
  const fs=bounded(figureLayout.fontSize,layout.items.find(item=>item.label.text)?.label.fontSize!??11/scale,1/scale,256/scale),padding=fs*.8;
  if(figureLayout.letter){content+=`<text data-part="panel-letter" x="${number(padding)}" y="${number(padding+fs*1.25)}" fill="#f1f4f5" font-family="${fontFamily}" font-size="${number(fs*1.25)}" font-weight="600" stroke="#11151b" stroke-width="${number(1/scale)}" paint-order="stroke fill">${xml(figureLayout.letter)}</text>`;}

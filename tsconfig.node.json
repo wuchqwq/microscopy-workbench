@@ -4,6 +4,7 @@
     "*.mts",
     "lib/**/*.mts",
     "tools/**/*.mts",
+    "tools/**/*.cts",
     "ui/**/*.mts"
   ],
   "exclude": [

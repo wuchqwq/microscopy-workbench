@@ -23,7 +23,7 @@ test('ROI labels/reasons remain text, unknown scale remains unknown, selection n
  await nodes.get('roi-observations').children[0].children[0].onclick();assert.deepEqual(actions,[['select','ROI 1']]);assert.deepEqual(s,before);
 });
 test('typed unsaved reason survives a new rendering and is not handed to Agent',()=>{
- const {ui,nodes,actions}=setup();ui.render(state());nodes.get('roi-reason').value='not committed yet';nodes.get('roi-reason').oninput();ui.render(state());assert.equal(nodes.get('roi-reason').value,'not committed yet');assert.equal(nodes.get('agent-continue').disabled,true);assert.throws(()=>ui.showHandoff(state()),/保存/);assert.deepEqual(actions,[['draft']]);
+ const {ui,nodes,actions}=setup();ui.render(state());nodes.get('roi-reason').value='not committed yet';nodes.get('roi-reason').oninput();ui.render(state());assert.equal(nodes.get('roi-reason').value,'not committed yet');assert.equal(nodes.get('agent-continue').disabled,true);assert.throws(()=>ui.showHandoff(state()),/应用/);assert.deepEqual(actions,[['draft']]);
 });
 test('comparison retains candidates/unmatched/unknown counts and navigation uses saved refs only',async()=>{
  const {ui,nodes,actions}=setup(),s=state();s.crystal_evidence={presentation_request_id:'attach-1',currentness:'needs_review',currentness_reasons:['different_calibration_revision'],payload:{object_id:E,status:'insufficient_evidence',source:{observation_view_object_id:B},domains:[{current_image_object_id:A}],candidates:[{label:'<candidate>',status:'insufficient_evidence',sides:[{matched_count:null,unmatched_experimental_count:3,unmatched_simulated_count:4,ambiguity_count:1}]}]}};

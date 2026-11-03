@@ -108,7 +108,7 @@ FIELDS = {
     "centre": {"object_id", "center_xy", "coordinate_space", "source_text"},
     "remeasure": {"object_id", "measurement_object_id", "points", "source_text"},
     "calibrate": {"object_id", "scope", "xy_scale", "source_text", "calibration_object_id", "coordinate_domain", "declare_reciprocal"},
-    "get": {"object_id"}, "result": {"query_request_id"},
+    "get": {"object_id", "include_frame_ancestry"}, "result": {"query_request_id"},
 }
 
 
@@ -1926,11 +1926,46 @@ def overlay(image, annotations, panels, reproject=False, updates=None, previous_
     return image, result
 
 
+FRAME_ANCESTRY_FIELDS = ("object_id", "kind", "parent_object_id", "base_object_id", "source_object_id",
+                         "frame_index", "dm_dataset_index", "dm_plane_selection", "source_identity",
+                         "source_file_format", "source_reader", "upstream_backend", "backend", "state",
+                         "image_path", "evidence_format")
+
+
+def frame_ancestry(workspace, initial, byte_budget=512 * 1024):
+    """Qualify the original Panel traversal without restarting Python per parent.
+
+    Every record still uses Workspace.object's own journal/manifest/payload and
+    semantic checks. The adapter separately keeps every ancestor's native PNG
+    containment/size/signature checks, omitting only ancestor base64 encoding.
+    """
+    records, visited, value = [], set(), initial
+    for step in range(65):
+        reply = {"ok": True, "state": "completed", "backend": BACKEND, **value}
+        need(reply.get("ok"), "Ancestor image_info did not return a successful result", "CORRUPT_OBJECT")
+        records.append({key: reply[key] for key in FRAME_ANCESTRY_FIELDS if key in reply})
+        projection = {"schema_version": 1, "root_object_id": initial["object_id"], "records": records}
+        if len(canonical(projection)) > byte_budget:
+            return None  # Optional optimization; caller retains original reads.
+        if step == 64 or value.get("kind") in ("frame", "tiff_source", "dm_source", "compare") or value.get("object_id") in visited:
+            return projection
+        visited.add(value.get("object_id"))
+        # Match JavaScript's nullish choice, not Python's truthiness/or choice.
+        next_id = next((value[key] for key in ("parent_object_id", "base_object_id", "source_object_id")
+                        if key in value and value[key] is not None), None)
+        if type(next_id) is not str or not OBJECT_ID.fullmatch(next_id):
+            return projection
+        value, _ = workspace.object(next_id)
+    return projection
+
+
 def _execute_core(request, preview_dispatch_authorized=False):
     need(type(request) is dict and type(request.get("action")) is str, "One JSON object with action is required")
     action = request["action"]
     need(action in FIELDS and set(request) <= FIELDS[action] | {"workspace", "action", "request_id"}, "Unknown action/argument")
     canonical(request)
+    if action == "get" and "include_frame_ancestry" in request:
+        need(type(request["include_frame_ancestry"]) is bool, "include_frame_ancestry must be boolean")
     readonly = action in ("get", "result", "evidence")
     ident = request.get("request_id")
     if not readonly:
@@ -1948,7 +1983,15 @@ def _execute_core(request, preview_dispatch_authorized=False):
         return {"ok": True, **evidence.detail(workspace, request, sys.modules[__name__])}
     if action == "get":
         metadata, _ = workspace.object(request.get("object_id"))
-        return {"ok": True, "state": "completed", "backend": BACKEND, **metadata}
+        response = {"ok": True, "state": "completed", "backend": BACKEND, **metadata}
+        if request.get("include_frame_ancestry") is True:
+            # Never let a persisted/legacy field masquerade as this read's proof,
+            # including when a large projection falls back to the old path.
+            response.pop("frame_ancestry", None)
+            ancestry = frame_ancestry(workspace, metadata)
+            if ancestry is not None:
+                response["frame_ancestry"] = ancestry
+        return response
     if action == "result":
         ident = request.get("query_request_id")
         need(type(ident) is str and REQUEST_ID.fullmatch(ident), "query_request_id requires the original saved identity")

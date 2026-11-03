@@ -9,7 +9,7 @@ are explicitly enabled. No native failure automatically selects this route.
 
 | Input | Selection and execution |
 | --- | --- |
-| Independent TIFF | `image_open` → `image_frame`, using external tifffile; currently ordinary grayscale uint16 pages only |
+| Independent TIFF | `image_open` → `image_frame`, using external tifffile; ordinary 2D grayscale uint16/float32 pages |
 | DM sequence | Existing native DATASETS → FRAME → bounded READ/NPY handoff, with original native session and frame identity |
 | Saved DM numerical capture | `image_open(source_kind:"capture")` independently validates the existing NPY/sidecar before copying a bounded plane; no diffraction declaration or indexing is required |
 
@@ -40,7 +40,7 @@ No installer or client configuration is silently changed.
 | Tool | Action |
 | --- | --- |
 | `image_open` | Inspect TIFF page metadata or validate a saved DM capture |
-| `image_frame` | Read one explicit zero-based page, retaining its uint16 values |
+| `image_frame` | Read one explicit zero-based page, retaining its uint16/float32 dtype and values |
 | `image_info` / `image_result` | Inspect an object / query a pre-saved request |
 | `image_preview` | Render a scalar plane/ROI, or re-render a saved external FFT without recomputing it |
 | `image_compare` | Compare 2..4 same-grid planes/ROIs with one shared gray range |
@@ -63,9 +63,9 @@ request ID is a new operation, not recovery of an unknown operation.
 TIFF opens stream a file hash and inspect at most 4096 page headers; they do not
 decode the volume. Each selected plane is at most 4,194,304 pixels / 64 MiB
 decoded storage. Source stat and full file hash are checked around frame reads.
-Only the requested pages are decoded. RGB, ambiguous volumetric pages, other
-TIFF dtypes and oversized sources reject explicitly. float32 sequences are a
-future engineering extension, not a requirement for this uint16 workflow.
+Only the requested pages are decoded. TIFF pages must be ordinary 2D grayscale
+uint16 or float32 with finite scientific values. RGB, palette images, ambiguous
+volumetric pages, other TIFF dtypes and oversized sources reject explicitly.
 
 ## Coordinates and missing calibration
 

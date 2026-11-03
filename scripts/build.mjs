@@ -37,7 +37,7 @@ try{
    const next=path.join(relative,entry.name),portable=next.split(path.sep).join('/');
    if(entry.isSymbolicLink())throw new Error('Linked package asset: '+portable);
    if(entry.isDirectory()) {if(entry.name!=='__pycache__')copy(next);}
-   else if(!/\.(?:mts|ts|pyc)$/.test(entry.name)&&!shims.has(portable)) {mkdirSync(path.dirname(path.join(staging,next)),{recursive:true});cpSync(path.join(root,next),path.join(staging,next));}
+   else if(!/\.(?:mts|cts|ts|pyc)$/.test(entry.name)&&!shims.has(portable)) {mkdirSync(path.dirname(path.join(staging,next)),{recursive:true});cpSync(path.join(root,next),path.join(staging,next));}
   }
  };
  for(const directory of ['lib','tools','ui','crystallography','examples','capture_schemas','skills','.codex-plugin','.agents','docs','tests'])copy(directory);
@@ -50,20 +50,20 @@ try{
  // The standalone runtime has no build/install dependency or nested dist path.
  const metadata=JSON.parse(readFileSync(path.join(root,'package.json'),'utf8'));
  delete metadata.devDependencies;
- metadata.scripts={start:'node server.mjs',inspect:'node tools/researcher_inspector.mjs'};
+ metadata.scripts={start:'node server.mjs',inspect:'node tools/researcher_inspector.mjs',mwb:'node tools/workbench_cli.mjs',desktop:'node tools/desktop_launcher.mjs'};
  writeFileSync(path.join(staging,'package.json'),JSON.stringify(metadata,null,2)+'\n');
  const migrated=[];
  const inventory=relative=>{
   for(const entry of readdirSync(path.join(root,relative),{withFileTypes:true})){
    const next=path.join(relative,entry.name);
    if(entry.isDirectory())inventory(next);
-   else if(entry.isFile()&&entry.name.endsWith('.mts'))migrated.push(next.split(path.sep).join('/'));
+   else if(entry.isFile()&&/\.[mc]ts$/.test(entry.name))migrated.push(next.split(path.sep).join('/'));
   }
  };
  for(const directory of ['lib','tools','ui'])inventory(directory);
  for(const entry of readdirSync(root,{withFileTypes:true}))if(entry.isFile()&&entry.name.endsWith('.mts'))migrated.push(entry.name);
  migrated.sort();
- for(const source of migrated)if(!existsSync(path.join(staging,source.replace(/\.mts$/,'.mjs'))))throw new Error('Migrated runtime module was not emitted: '+source);
+ for(const source of migrated)if(!existsSync(path.join(staging,source.replace(/\.mts$/,'.mjs').replace(/\.cts$/,'.cjs'))))throw new Error('Migrated runtime module was not emitted: '+source);
  writeFileSync(path.join(staging,'BUILD.json'),JSON.stringify({format:1,typescript:'5.9.3',migrated},null,2)+'\n');
  renameSync(staging,output);
  console.log('Built dist/: standalone ESM runtime, Python workers, Panel, manifests and Skills.');

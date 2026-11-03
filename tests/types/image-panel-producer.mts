@@ -4,6 +4,8 @@ import {resolveComposition} from '../../lib/figure_composer_assets.mjs';
 declare const state:PanelState;
 const revision:number=state.state_revision;
 const dirty:boolean=state.edit_state.dirty;
+const spatialReturnStatus:'ready'|'unavailable'=state.spatial_return.status;
+const spatialReturnTarget:string|undefined=state.spatial_return.view_object_id;
 // @ts-expect-error Provider identity/publication does not validate arbitrary scientific units.
 const unit:string=state.object.physical_unit;
 // @ts-expect-error Saved evidence metadata is not an accepted scientific conclusion.
@@ -26,4 +28,4 @@ if('profile' in assets[0]){
 declare const ack:PanelDraftAcknowledgment;
 const draftRevision:number=ack.edit_state.draft_revision;
 const selection:PanelSelection|null=ack.selection;
-void [revision,dirty,unit,phase,domain,completed,status,distance,draftRevision,selection];
+void [revision,dirty,spatialReturnStatus,spatialReturnTarget,unit,phase,domain,completed,status,distance,draftRevision,selection];

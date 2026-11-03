@@ -1,0 +1,15 @@
+{
+  "name": "microscopy-workbench-desktop-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "electron": "45.2.1"
+  },
+  "scripts": {
+    "postinstall": "node node_modules/electron/install.js"
+  }
+}

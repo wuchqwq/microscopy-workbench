@@ -1,0 +1,39 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync,existsSync,writeFileSync,readFileSync} from 'node:fs';
+import path from 'node:path';
+import {tmpdir} from 'node:os';
+import {spawnSync} from 'node:child_process';
+import {EventEmitter} from 'node:events';
+import {acquireImageWorkspaceWrite,releaseCompletedImageWorkspaceWrite} from '../lib/image_workspace_lock.mjs';
+import {ImageWorkspace} from '../lib/image_workspace.mjs';
+async function fixture(run){const workspace=mkdtempSync(path.join(tmpdir(),'provider-entry-lock-'));try{await run(workspace);}finally{assert.equal(path.dirname(workspace),path.resolve(tmpdir()));rmSync(workspace,{recursive:true,force:true});}}
+test('GUI and CLI processes cannot concurrently submit different provider writes',()=>fixture(workspace=>{
+ const lease=acquireImageWorkspaceWrite(workspace,'gui-original'),module=new URL('../lib/image_workspace_lock.mjs',import.meta.url).href,script=`import {acquireImageWorkspaceWrite} from ${JSON.stringify(module)};try{acquireImageWorkspaceWrite(process.argv[1],'cli-new');process.exit(10);}catch(error){process.stdout.write(JSON.stringify({code:error.code,original:error.original_request_id,submission:error.submission_state}));}`;
+ const child=spawnSync(process.execPath,['--input-type=module','-e',script,workspace],{encoding:'utf8',windowsHide:true});assert.equal(child.status,0,child.stderr);assert.deepEqual(JSON.parse(child.stdout),{code:'WORKSPACE_WRITE_CONFLICT',original:'gui-original',submission:'not_submitted'});lease.release();assert.equal(existsSync(path.join(workspace,'provider-execution.lock')),false);
+}));
+test('only the original completed request releases an orphan claim; PID exit is not submission evidence',()=>fixture(workspace=>{
+ const module=new URL('../lib/image_workspace_lock.mjs',import.meta.url).href,script=`import {acquireImageWorkspaceWrite} from ${JSON.stringify(module)};acquireImageWorkspaceWrite(process.argv[1],'orphan-original');`;const child=spawnSync(process.execPath,['--input-type=module','-e',script,workspace],{encoding:'utf8',windowsHide:true});assert.equal(child.status,0,child.stderr);assert.throws(()=>acquireImageWorkspaceWrite(workspace,'new-id'),/orphan-original/);releaseCompletedImageWorkspaceWrite(workspace,'different-id');assert.throws(()=>acquireImageWorkspaceWrite(workspace,'new-id'),/orphan-original/);releaseCompletedImageWorkspaceWrite(workspace,'orphan-original');const next=acquireImageWorkspaceWrite(workspace,'new-id');next.release();
+}));
+test('a late old release cannot remove a newer operation lease',()=>fixture(workspace=>{
+ const before=acquireImageWorkspaceWrite(workspace,'old-original');releaseCompletedImageWorkspaceWrite(workspace,'old-original');const after=acquireImageWorkspaceWrite(workspace,'new-original');before.release();assert.equal(JSON.parse(readFileSync(path.join(workspace,'provider-execution.lock'),'utf8')).request_id,'new-original');after.release();
+}));
+test('interrupted metadata admission stays fail-closed without deleting another operation',()=>fixture(workspace=>{
+ const lease=acquireImageWorkspaceWrite(workspace,'original');writeFileSync(path.join(workspace,'workspace-metadata.lock'),'controlled-interrupted-gate');assert.throws(()=>acquireImageWorkspaceWrite(workspace,'new'),error=>error.code==='WORKSPACE_METADATA_BUSY'&&error.submission_state==='not_submitted');assert.equal(JSON.parse(readFileSync(path.join(workspace,'provider-execution.lock'),'utf8')).request_id,'original');void lease;
+}));
+test('provider write conflict preserves typed ownership error before spawning any worker',()=>fixture(async workspace=>{
+ const lease=acquireImageWorkspaceWrite(workspace,'existing-original');let spawned=0;const provider=new ImageWorkspace({workspace,python:process.execPath,spawnProcess(){spawned++;throw new Error('Must not spawn');}});try{const call=provider.call('image_fft',{object_id:'a'.repeat(32),request_id:'new-original',rect:[0,0,8,8]});await assert.rejects(call,error=>error.code==='WORKSPACE_WRITE_CONFLICT'&&error.submission_state==='not_submitted'&&error.original_request_id==='existing-original');await call.workerDone;assert.equal(spawned,0);}finally{provider.close();lease.release();}
+}));
+test('blocked lock cleanup retains a qualified completed query and keeps the original write claim',()=>fixture(async workspace=>{
+ acquireImageWorkspaceWrite(workspace,'original-completed');writeFileSync(path.join(workspace,'workspace-metadata.lock'),'controlled interrupted metadata gate');const spawnProcess=()=>{const child=new EventEmitter();child.pid=123;child.stdout=new EventEmitter();child.stderr=new EventEmitter();child.stdin=new EventEmitter();child.stdin.end=()=>queueMicrotask(()=>{child.stdout.emit('data',Buffer.from(JSON.stringify({ok:true,result:{backend:'external-image-workspace',state:'completed',request_id:'original-completed',object_id:'a'.repeat(32)}})));child.emit('close',0);});child.kill=()=>false;return child;};const provider=new ImageWorkspace({workspace,python:process.execPath,spawnProcess});try{const result=await provider.call('image_result',{request_id:'original-completed'}),data=JSON.parse(result.content.find(c=>c.type==='text').text);assert.equal(data.state,'completed');assert.equal(data.request_id,'original-completed');assert.equal(JSON.parse(readFileSync(path.join(workspace,'provider-execution.lock'),'utf8')).request_id,'original-completed');}finally{provider.close();}
+}));
+
+test('an asynchronous spawn failure releases its own claim before not_submitted is returned, while local drain waits for close',()=>fixture(async workspace=>{
+ let child,closed=false;const spawnProcess=()=>{child=new EventEmitter();child.stdout=new EventEmitter();child.stderr=new EventEmitter();child.stdin=new EventEmitter();child.stdin.end=()=>queueMicrotask(()=>child.emit('error',Object.assign(new Error('Controlled missing executable'),{code:'ENOENT'})));child.kill=()=>false;return child;};const provider=new ImageWorkspace({workspace,python:'never-executed',spawnProcess});
+ try{const call=provider.call('image_preview',{object_id:'a'.repeat(32),request_id:'never-submitted'});void call.workerDone.then(()=>{closed=true;});await assert.rejects(call,error=>error.diagnostic.submission_state==='not_submitted'&&error.diagnostic.request_id==='never-submitted');assert.equal(closed,false,'local worker drain still waits for its close event');assert.equal(existsSync(path.join(workspace,'provider-execution.lock')),false);const next=acquireImageWorkspaceWrite(workspace,'explicit-next-request');child.emit('close',-2);await call.workerDone;assert.equal(JSON.parse(readFileSync(path.join(workspace,'provider-execution.lock'),'utf8')).request_id,'explicit-next-request','a delayed old close cannot delete a newer nonce');next.release();}finally{child?.emit('close',-2);provider.close();}
+}));
+
+test('an error with a live child remains unknown and retains its provider claim until close',()=>fixture(async workspace=>{
+ let child;const spawnProcess=()=>{child=new EventEmitter();child.pid=123;child.stdout=new EventEmitter();child.stderr=new EventEmitter();child.stdin=new EventEmitter();child.stdin.end=()=>queueMicrotask(()=>child.emit('error',new Error('Controlled kill failure with child alive')));child.kill=()=>false;return child;};const provider=new ImageWorkspace({workspace,python:'never-executed',spawnProcess});
+ try{const call=provider.call('image_preview',{object_id:'a'.repeat(32),request_id:'possibly-dispatched'});await assert.rejects(call,error=>error.diagnostic.submission_state==='outcome_unknown');assert.throws(()=>acquireImageWorkspaceWrite(workspace,'new-request'),error=>error.code==='WORKSPACE_WRITE_CONFLICT');child.emit('close',1);await call.workerDone;assert.equal(existsSync(path.join(workspace,'provider-execution.lock')),false);}finally{child?.emit('close',1);provider.close();}
+}));

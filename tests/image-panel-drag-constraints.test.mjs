@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {constrainSelectionDrag,selectionFromDrag,selectionRectangle,transformCoordinates} from '../ui/image-panel/coordinates.mjs';
+import {constrainSelectionDrag,selectionFromDrag,selectionRectangle,transformCoordinates,outwardSourceRectangle} from '../ui/image-panel/coordinates.mjs';
 
 const spatial={domain:'spatial_pixels',source_object_id:'a'.repeat(32),source_rect_xyxy:[20,12,220,112],image_rect_xyxy:[0,0,100,100]};
+test('shared outward conversion preserves existing near-integer snapping and source bounds checks',()=>{
+ const coordinates=[20-1e-13,12+1e-13,40+1e-13,32-1e-13],support=outwardSourceRectangle(coordinates);assert.deepEqual(support,[20,12,40,32]);assert.deepEqual(selectionRectangle({kind:'rectangle',coordinate_space:'source_pixels',source_object_id:spatial.source_object_id,coordinates,panel:spatial}),support);
+ assert.throws(()=>selectionRectangle({kind:'rectangle',coordinates:[19.5,12,40,32],panel:spatial}),/exceeds current data window/);assert.throws(()=>outwardSourceRectangle([0,0,Infinity,2]),/finite/);
+});
 function selected(panel,start,end,kind){const constrained=constrainSelectionDrag(panel,start,end,{kind,constrained:true});return selectionFromDrag([panel],constrained.start,constrained.end,{kind});}
 
 test('square ROI uses source-pixel edges under anisotropic display mapping and stays square at boundaries',()=>{

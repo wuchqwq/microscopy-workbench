@@ -30,7 +30,7 @@ async function fixture(run,{calibrated=false,spectral=false,changedGrid=false,lo
  const base={kind:'view',parent_object_id:F,panels:[panelGrid],scientific_grid_identity:scientificGrid,shape_yx:[32,32],display:{gamma:1,display_range:[0,255],max_size:32,upscale:false,interpolation:'lanczos',...(spectral?{representation:'log_amplitude',frequency_rect:[0,0,32,32],spectrum_axes:false,spectrum_filter:null}:{scale_bar:false})},annotations:[initialMark],
   ...(calibrated?{xy_calibration:{status:'active',coordinate_domain:'real_space'}}:{})};
  const records=new Map([[A,{...clone(base),object_id:A}],[F,{kind:'frame',object_id:F,frame_index:0,source_object_id:'e'.repeat(32)}]]);
- let panel,failed=false,previewSequence=0;
+ let panel,failed=false,previewSequence=0,annotationSequence=0;
  const client={async rpc(method){return {result:method==='tools/list'?{tools:['image_info','image_preview','image_result','image_annotate'].map(name=>({name,inputSchema:{}}))}:{}};},
   async tool(name,args){
    calls.push({name,args:clone(args)});
@@ -44,17 +44,20 @@ async function fixture(run,{calibrated=false,spectral=false,changedGrid=false,lo
    if(name==='image_annotate'){
     const annotations=args.annotations??[...clone(records.get(args.object_id).annotations)];
     for(const update of args.updates??[]){const current=annotations.find(value=>value.annotation_id===update.annotation_id);Object.assign(current,update);}
-    const data={...clone(base),state:'completed',object_id:D,parent_object_id:args.object_id,request_id:args.request_id,kind:'annotate',annotations};
+    // Provider revisions are immutable: a second annotation write cannot turn
+    // D into its own parent or overwrite the first saved scientific revision.
+    const object_id=++annotationSequence===1?D:(1000+annotationSequence).toString(16).padStart(32,'0');
+    const data={...clone(base),state:'completed',object_id,parent_object_id:args.object_id,request_id:args.request_id,kind:'annotate',annotations};
     if(reorderedKeys){data.panels=reversedKeys(data.panels);data.scientific_grid_identity=reversedKeys(data.scientific_grid_identity);}
     if(annotationMismatch==='grid')data.scientific_grid_identity={...data.scientific_grid_identity,array_sha256:'2'.repeat(64)};
     if(annotationMismatch==='mapping')data.panels=[{...panelGrid,image_rect_xyxy:[0,0,31,32]}];
     if(annotationMismatch==='missing')delete data.scientific_grid_identity;
-    records.set(D,data);return {data:clone(data),png:cleanBytes.toString('base64')};
+    records.set(object_id,data);return {data:clone(data),png:cleanBytes.toString('base64')};
    }
    assert.equal(name,'image_preview');
    const scaled=args.scale_bar===true,id=scaled?C:(++previewSequence===1?B:previewSequence.toString(16).padStart(32,'0'));
    const parent=records.get(args.object_id),controls=Object.fromEntries(Object.entries(args).filter(([key])=>!['request_id','object_id'].includes(key)));
-   const data={...clone(base),object_id:id,parent_object_id:args.object_id,request_id:args.request_id,display:{...clone(parent.display),...controls},annotations:args.gamma!==undefined?clone(parent.annotations):[],scale_bar:scaled?scaleBar:{visible:false}};
+   const data={...clone(base),object_id:id,parent_object_id:args.object_id,request_id:args.request_id,state:'completed',display:{...clone(parent.display),...controls},annotations:args.gamma!==undefined?clone(parent.annotations):[],scale_bar:scaled?scaleBar:{visible:false}};
    if(reorderedKeys)data.panels=reversedKeys(data.panels);
    if(changedGrid&&!scaled)data.panels=[{...panelGrid,image_rect_xyxy:[0,0,31,32]}];
    if(!scaled){
@@ -121,7 +124,7 @@ for(const annotationMismatch of ['grid','mapping','missing'])test(`automatic ann
 test('fresh source display is restricted to the current frame and never dispatches FFT',async()=>fixture(async({act,calls})=>{
  const before=calls.length;assert.equal((await act('show',{object_id:A,source_view:true})).status,409);assert.equal(calls.length,before);
  assert.equal((await act('show',{object_id:F,source_view:false})).status,400);assert.equal(calls.length,before);
- const reply=await act('show',{object_id:F,source_view:true});assert.equal(reply.status,200);
+ const reply=await act('show',{object_id:F,source_view:true});assert.equal(reply.status,200,reply.data.error);
  assert.deepEqual(calls.slice(before).filter(c=>c.name!=='image_info').map(c=>({name:c.name,object_id:c.args.object_id})),[{name:'image_preview',object_id:F}]);
 }));
 
@@ -152,13 +155,13 @@ test('new mark replacement preserves existing presentation and rejects unbounded
  assert.equal(sent[1].status,'hypothesized');assert.equal(sent[1].presentation.category,'unexplained');
 }));
 
-test('layout batch saves one presentation-only revision while retaining selection, anchors and authority',async()=>fixture(async({panel,act,calls})=>{
+test('layout batch saves one presentation-only revision while retaining selection, anchors and authority',async()=>fixture(async({panel,act,calls,records})=>{
  assert.equal((await act('mark',{selection,annotation_id:'new-mark',presentation:{label:{text:'g₂'}}})).status,200);
  const selected={...selection,coordinates:[11,12]};await act('select',{selection:selected});
- const before=clone(panel.state()),writes=calls.filter(value=>value.name==='image_annotate').length;
+ const before=clone(panel.state()),writes=calls.filter(value=>value.name==='image_annotate').length,frozen=JSON.stringify(records.get(before.object.object_id));
  const updates=[{annotation_id:'first',presentation:{label:{offset:[20,-8]}},presentation_replace:true},{annotation_id:'new-mark',presentation:{category:'unexplained',label:{offset:[-12,18]}}}];
  const result=await act('edit-layout',{updates,auto_commit:true});
- assert.equal(result.status,200);assert.equal(result.data.auto_edit_committed,true);assert.deepEqual(result.data.selection,selected);
+ assert.equal(result.status,200);assert.equal(result.data.auto_edit_committed,true);assert.deepEqual(result.data.selection,selected);assert.notEqual(result.data.object.object_id,before.object.object_id);assert.equal(JSON.stringify(records.get(before.object.object_id)),frozen);
  assert.equal(calls.filter(value=>value.name==='image_annotate').length,writes+1);
  assert.deepEqual(calls.filter(value=>value.name==='image_annotate').at(-1).args.updates,updates);
  for(let i=0;i<before.object.annotations.length;i++)for(const key of ['anchor','status','text'])assert.deepEqual(result.data.object.annotations[i][key],before.object.annotations[i][key]);

@@ -25,6 +25,20 @@ function assertCompatibleCatalog(current,frozen){
   'Every frozen tool/schema/description and relative order must remain exactly compatible');
 }
 
+const FROZEN_IMAGE_INFO_DESCRIPTION='Inspect a saved image/view/context object without running analysis.';
+const FRAME_ANCESTRY_GUIDANCE=' Optional include_frame_ancestry qualifies the same bounded parent/base/source chain in one worker; absent projection requires ordinary parent reads.';
+const FRAME_ANCESTRY_PARAMETER={type:'boolean',description:'Optional read-only bounded frame ancestry; no new object, array or inferred identity.'};
+function normalizeNamedFrameAncestryExtension(current,frozen){
+ const info=current.find(tool=>tool.name==='image_info'),old=frozen.find(tool=>tool.name==='image_info');
+ assert.equal(old.description,FROZEN_IMAGE_INFO_DESCRIPTION,'The original frozen image_info description is unchanged');
+ assert.equal(old.inputSchema.properties.include_frame_ancestry,undefined,'The frozen catalog does not already contain this named extension');
+ assert.equal(info.description,FROZEN_IMAGE_INFO_DESCRIPTION+FRAME_ANCESTRY_GUIDANCE,'Only the complete, explicitly authorized ancestry guidance extends image_info');
+ assert.deepEqual(info.inputSchema.properties.include_frame_ancestry,FRAME_ANCESTRY_PARAMETER,'The named optional read parameter retains its exact boolean schema and description');
+ assert.ok(!(info.inputSchema.required??[]).includes('include_frame_ancestry'),'Frame ancestry must remain optional for legacy callers');
+ delete info.inputSchema.properties.include_frame_ancestry;
+ info.description=old.description;
+}
+
 test('additive GPA catalog still rejects removed/modified legacy tools and unexpected additions',()=>{
  const frozen=[{name:'image_fft',description:'frozen',inputSchema:{type:'object'}}];
  const current=[...GPA_ADDITIONS.map(name=>({name})),...frozen];
@@ -33,6 +47,25 @@ test('additive GPA catalog still rejects removed/modified legacy tools and unexp
  assert.throws(()=>assertCompatibleCatalog([...current.slice(0,GPA_ADDITIONS.length),{...frozen[0],description:'changed'}],frozen));
  assert.throws(()=>assertCompatibleCatalog([...current,{name:'unexpected_tool'}],frozen));
  assert.throws(()=>assertCompatibleCatalog([...current,{name:'image_gpa'}],frozen));
+});
+
+test('named optional frame ancestry normalization does not hide changes to frozen fields or other tools',()=>{
+ const frozen=[{name:'image_info',description:FROZEN_IMAGE_INFO_DESCRIPTION,inputSchema:{type:'object',additionalProperties:false,required:['object_id'],properties:{object_id:{type:'string'}}}},{name:'image_fft',description:'frozen FFT description',inputSchema:{type:'object',required:['object_id']}}];
+ const current=structuredClone(frozen);current[0].description+=FRAME_ANCESTRY_GUIDANCE;current[0].inputSchema.properties.include_frame_ancestry=structuredClone(FRAME_ANCESTRY_PARAMETER);
+ const check=value=>{const retained=structuredClone(value);normalizeNamedFrameAncestryExtension(retained,frozen);assert.deepEqual(retained,frozen);};check(current);
+ for(const mutate of [
+  value=>value[0].inputSchema.properties.include_frame_ancestry.type='string',
+  value=>value[0].inputSchema.properties.include_frame_ancestry.description='different guidance',
+  value=>value[0].inputSchema.properties.include_frame_ancestry.default=true,
+  value=>value[0].inputSchema.required.push('include_frame_ancestry'),
+  value=>value[0].description='changed frozen prefix'+FRAME_ANCESTRY_GUIDANCE,
+  value=>value[0].description+=' unexpected extra sentence',
+  value=>value[0].inputSchema.properties.object_id.type='number',
+  value=>value[0].inputSchema.required=[],
+  value=>value[0].inputSchema.properties.unexpected_flag={type:'boolean'},
+  value=>value[1].description='changed unrelated FFT description',
+ ]){const changed=structuredClone(current);mutate(changed);assert.throws(()=>check(changed));}
+ assert.deepEqual(frozen[0].description,FROZEN_IMAGE_INFO_DESCRIPTION,'Normalizing a copy never edits the frozen catalog');
 });
 
 function snapshot(directory,prefix=''){
@@ -167,9 +200,13 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
     assert.ok(!tool.inputSchema.required.includes('response_detail'));
   }
   for(const name of ['image_info','image_result'])delete retainedSchema.find(tool=>tool.name===name).inputSchema.properties.response_detail;
+  // The single-process ancestry read is a separately enumerated optional
+  // extension. Validate its entire schema/guidance before normalizing only it;
+  // every remaining frozen property and every other description stay exact.
+  normalizeNamedFrameAncestryExtension(retainedSchema,schema);
   const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
   for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
-  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except the named optional presentation controls and additive F1a/F4 tools');
+  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except the named optional presentation/ancestry controls and additive F1a/F4 tools');
   const unknown=await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}});
   const oldText=refused.result.content[0].text,newText=unknown.result.content[0].text;
   assert.ok(newText.startsWith(oldText+'. Query image_result with original request_id=unknown-original-request;'));

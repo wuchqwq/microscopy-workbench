@@ -5,6 +5,7 @@ import process from 'node:process';
 import {RpcError} from './schema.mjs';
 import type {Readable, Writable} from 'node:stream';
 import type {RPCRequestId, RuntimePort, ToolResult} from './contracts.mjs';
+import {imageAdmissionFailureFromError} from './image_admission_failure.mjs';
 
 export interface StdioServerOptions {
   runtime?: RuntimePort;
@@ -87,6 +88,7 @@ async function handle(msg: unknown) {
       const failure: ToolResult = {
         content: [{ type: "text", text: `错误: ${field(err, 'message')}` }],
         isError: true,
+        ...(()=>{const admission=imageAdmissionFailureFromError(err,params.name,record(params.arguments)?params.arguments.request_id:undefined);return admission?{structuredContent:admission}:{};})(),
       };
       return ok(id, failure);
     } finally {

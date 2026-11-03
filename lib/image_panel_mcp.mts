@@ -9,6 +9,7 @@ import {panelRoiHandoff} from './panel_roi_handoff.mjs';
 import {attachCrystalEvidence} from './panel_crystal_evidence.mjs';
 import type {CrystalEvidencePayload} from './panel_crystal_evidence.mjs';
 import {prepareOwnedPanelRegistration,readOwnedPanelCheckpoint,assertOwnedPanelStopped,validateOwnedConnection} from './panel_ownership.mjs';
+import {ordinaryWorkspaceMetadataDirectory,ordinaryWorkspaceMetadataTarget} from './workspace_metadata_paths.mjs';
 
 import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
 import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
@@ -50,10 +51,11 @@ function validateArguments(name:string,args:unknown):asserts args is ValidatedPa
     else validateId(value,key,key==='request_id');
   }
 }
-function durableWrite(file:string,value:unknown,{exclusive=false}:{exclusive?:boolean}={}){
+function durableWrite(workspace:string,file:string,value:unknown,{exclusive=false}:{exclusive?:boolean}={}){
+  file=ordinaryWorkspaceMetadataTarget(workspace,file);
   const target=exclusive?file:`${file}.${randomBytes(8).toString('hex')}.tmp`,fd=openSync(target,'wx');
   try{writeFileSync(fd,JSON.stringify(value));fsyncSync(fd);}finally{closeSync(fd);}
-  if(!exclusive)renameSync(target,file);
+  if(!exclusive)renameSync(target,ordinaryWorkspaceMetadataTarget(workspace,file));
 }
 function readJson(file:string,root:string,maxBytes=20*1024*1024):unknown{
   const real=realpathSync.native(file),relative=path.relative(root,real);
@@ -94,7 +96,8 @@ export class ImagePanelManager {
       await new Promise<void>((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();
     });
   }
-  initialize(){mkdirSync(this.requests,{recursive:true});mkdirSync(this.panels,{recursive:true});this.canonicalDirectory=realpathSync.native(this.directory);}
+  initialize(){mkdirSync(this.workspace,{recursive:true});this.canonicalDirectory=ordinaryWorkspaceMetadataDirectory(this.workspace,'panel-registry',{create:true});for(const relative of ['panel-registry/requests','panel-registry/panels'])ordinaryWorkspaceMetadataDirectory(this.workspace,relative,{create:true});}
+  private writeMetadata(file:string,value:unknown,options:{exclusive?:boolean}={}){durableWrite(this.workspace,file,value,options);}
   requestFile(id:unknown){return path.join(this.requests,(id as string)+'.json');}
   connectionFile(id:unknown){return path.join(this.panels,(id as string)+'.json');}
   getConnection(id:unknown){validateId(id,'panel_id');return connection(readJson(this.connectionFile(id),this.canonicalDirectory,4096),id);}
@@ -102,13 +105,14 @@ export class ImagePanelManager {
     if(conn.schema_version===2&&conn.status==='closed')throw new Error('Owned Panel helper was normally closed; use explicit image_panel_resume with a saved new request_id');
     const evidenceKey=method==='POST'&&route==='/api/evidence'?conn.evidence_token:null;
     if(method==='POST'&&route==='/api/evidence'&&!evidenceKey)throw new Error('This saved Panel helper predates qualified evidence attachment; reopen a new Panel without replaying science');
-    const origin=`http://127.0.0.1:${conn.port}`,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),method==='GET'?Math.min(this.requestTimeoutMs,3000):this.requestTimeoutMs);
+    const readonlyHandoff=method==='GET'&&route.startsWith('/api/roi-handoff?');
+    const origin=`http://127.0.0.1:${conn.port}`,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),method==='GET'&&!readonlyHandoff?Math.min(this.requestTimeoutMs,3000):this.requestTimeoutMs);
     try{
       const response=await this.fetch(origin+route,{method,headers:{'X-Panel-Token':conn.token,Origin:origin,...(evidenceKey?{'X-Panel-Evidence-Key':evidenceKey}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:controller.signal});
       const text=await response.text();if(Buffer.byteLength(text)>20*1024*1024)throw new Error('Panel response exceeds bound');
       let value:unknown;try{value=JSON.parse(text);}catch{throw new Error('Invalid owned panel response');}
       if(!response.ok){const error:Error&{httpStatus?:number}=new Error(((value as RawSlots).error??`Panel HTTP ${response.status}`) as string);error.httpStatus=response.status;throw error;}
-      if(conn.schema_version===2&&route==='/api/state'&&((value as RawSlots).helper_session_id!==conn.helper_session_id||(value as RawSlots).panel_generation!==conn.generation))throw new Error('Owned helper generation does not match its connection');
+      if(conn.schema_version===2&&(route==='/api/state'||readonlyHandoff)&&((value as RawSlots).helper_session_id!==conn.helper_session_id||(value as RawSlots).panel_generation!==conn.generation))throw new Error('Owned helper generation does not match its connection');
       return value;
     }finally{clearTimeout(timer);}
   }
@@ -125,7 +129,7 @@ export class ImagePanelManager {
     const {image_png_base64:crystalPng,...crystalMetadata}=payload??{};
     const view=crystal?{...baseView,crystal_evidence:{...crystal,payload:crystalMetadata}}:Object.hasOwn(checked,'crystal_evidence')?{...baseView,crystal_evidence}:baseView;
     const conn=this.getConnection(panelId);
-    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:panelRoiHandoff(checked),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image.',automatic_model_wake:false};
+    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:panelRoiHandoff(checked),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image. Window collection entries are retained saved-view references; object, selection and edit_state describe only the active scientific view. Other windows are read-only displays, not additional active inputs.',automatic_model_wake:false};
     const content:ToolContent[]=[{type:'text',text:JSON.stringify(data,null,2)}];
     for(const image of [png_base64,domain_png_base64,crystalPng])if(image!==null&&image!==undefined){
       if(typeof image!=='string'||image.length>6*1024*1024)throw new Error('Invalid bounded saved panel PNG');
@@ -133,6 +137,18 @@ export class ImagePanelManager {
       content.push({type:'image',mimeType:'image/png',data:image});
     }
     return {content};
+  }
+  private async currentResponse(panelId:string,state:unknown):Promise<ToolResult>{
+    const view=state as RawSlots;
+    if(view.multi_roi_handoff_schema_version!==1)return this.response(panelId,state,{multi_roi_handoff:null});
+    const object=view.object as RawSlots,draft=view.edit_state as RawSlots,collection=view.window_collection as RawSlots;
+    validateId(object?.object_id,'active handoff object_id');
+    if(![view.state_revision,draft?.draft_revision,collection?.revision].every(value=>Number.isSafeInteger(value)&&(value as number)>=0))throw new Error('ROI handoff requires exact current revisions');
+    const query=new URLSearchParams({expected_object_id:object.object_id as string,state_revision:String(view.state_revision),draft_revision:String(draft.draft_revision),collection_revision:String(collection.revision)});
+    const raw=await this.request(this.getConnection(panelId),'GET','/api/roi-handoff?'+query),packet=raw as RawSlots;
+    if(!packet||packet.schema_version!==1||packet.read_only!==true||packet.panel_id!==panelId||packet.active_view_object_id!==object.object_id||packet.state_revision!==view.state_revision||packet.draft_revision!==draft.draft_revision||packet.collection_revision!==collection.revision||packet.frame_object_id!==((view.frame_identity as RawSlots|null)?.frame_object_id??null)||packet.helper_session_id!==view.helper_session_id||packet.panel_generation!==view.panel_generation||!['validated','partial','unavailable'].includes(String(packet.validation_status))||!Array.isArray(packet.source_observations)||packet.source_observations.length>10||!Array.isArray(packet.fft_relations)||packet.fft_relations.length>5)throw new Error('ROI handoff does not match the inspected active view, lease or collection; read current again');
+    for(const source of packet.source_observations){if(!source||typeof source!=='object'||!Array.isArray((source as RawSlots).observations)||((source as RawSlots).observations as unknown[]).length>100)throw new Error('ROI handoff observation budget is invalid');}
+    return this.response(panelId,state,{multi_roi_handoff:packet});
   }
   async current(args:ValidatedPanelArguments):Promise<ToolResult>{
     let panelId=args.panel_id;
@@ -143,9 +159,9 @@ export class ImagePanelManager {
         const id=name.slice(0,-5);try{const conn=this.getConnection(id),state=await this.request(conn,'GET','/api/state');if((state as RawSlots).panel_id!==id)throw new Error('Wrong panel identity');live.push({id,state});}catch{/* A stopped or malformed panel is not selected by recency. */}
       }));
       if(live.length!==1)throw new Error(`Expected exactly one live registered panel; found ${live.length}. Specify the retained panel_id.`);
-      return this.response(live[0].id,live[0].state);
+      return this.currentResponse(live[0].id,live[0].state);
     }
-    return this.response(panelId,await this.request(this.getConnection(panelId),'GET','/api/state'));
+    return this.currentResponse(panelId,await this.request(this.getConnection(panelId),'GET','/api/state'));
   }
   async waitForConnection(panelId:string,helperSession?:string){
     const started=Date.now();
@@ -163,7 +179,7 @@ export class ImagePanelManager {
       // A submitted/crashed resume is never another launch. Only the exact
       // already-published generation can establish its original outcome.
       const conn=this.getConnection(record.panel_id);if(conn.schema_version!==2||conn.helper_session_id!==record.helper_session_id||conn.generation!==record.generation)throw new Error('Original resume remains unverified; no helper was relaunched');
-      const state=await this.request(conn,'GET','/api/state');record.status='completed';record.response=state;durableWrite(this.requestFile(record.request_id),record);
+      const state=await this.request(conn,'GET','/api/state');record.status='completed';record.response=state;this.writeMetadata(this.requestFile(record.request_id),record);
       return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true,resumed:true,panel_generation:record.generation,helper_session_id:record.helper_session_id});
     }
     if(record.name==='image_panel_open'){
@@ -175,14 +191,14 @@ export class ImagePanelManager {
     const evidence=record.name==='image_panel_evidence';
     const state=await this.request(this.getConnection(record.panel_id),'GET',(evidence?'/api/evidence':'/api/present')+'?request_id='+encodeURIComponent(record.request_id as string));
     if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==record.request_id||!(evidence?['attached']:['shown','queued']).includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Original panel presentation is not verified; no operation was repeated.');
-    record.status='completed';record.response=state;if(evidence)record.stage='completed';durableWrite(this.requestFile(record.request_id),record);
+    record.status='completed';record.response=state;if(evidence)record.stage='completed';this.writeMetadata(this.requestFile(record.request_id),record);
     return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true,snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'});
   }
   async mutateEvidence(args:PanelMutationArguments,file:string):Promise<ToolResult>{
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name:'image_panel_evidence',arguments:args,panel_id:args.panel_id as string,status:'submitted',stage:'preflight'};
     // NEW tool only: an accepted request identity is reserved before even a
     // read-only qualification/preflight. Failed IDs cannot later become writes.
-    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_evidence',args);throw error;}
+    try{this.writeMetadata(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_evidence',args);throw error;}
     let dispatched=false;
     try{
       if(!this.inspectEvidence)throw new Error('Explicit structure provider is unavailable; no fallback is permitted');
@@ -193,14 +209,14 @@ export class ImagePanelManager {
       const evidence=attachCrystalEvidence(payload,current,args.request_id,observation);
       const conn=this.getConnection(args.panel_id);
       if(!conn.evidence_token)throw new Error('This saved Panel helper predates qualified evidence attachment; reopen a new Panel without replaying science');
-      record.stage='dispatching';durableWrite(file,record);dispatched=true;
+      record.stage='dispatching';this.writeMetadata(file,record);dispatched=true;
       const state=await this.request(conn,'POST','/api/evidence',{request_id:args.request_id,expected_object_id:args.expected_object_id,draft_revision:args.draft_revision,evidence});
       if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==args.request_id||((state as RawSlots).presentation as RawSlots).status!=='attached')throw new Error('Evidence attachment response is unverified; query the original request_id.');
-      record.status='completed';record.stage='completed';record.response=state;durableWrite(file,record);
+      record.status='completed';record.stage='completed';record.response=state;this.writeMetadata(file,record);
       return this.response(args.panel_id as string,state,{request_id:args.request_id,recovered:false,snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'});
     }catch(error){
       const message=`${error instanceof Error?error.message:String(error)} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`;
-      if(!dispatched||(error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=message;durableWrite(file,record);}
+      if(!dispatched||(error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=message;this.writeMetadata(file,record);}
       throw new Error(message);
     }
   }
@@ -219,7 +235,7 @@ export class ImagePanelManager {
     const panelId=name==='image_panel_open'?randomBytes(16).toString('hex'):args.panel_id as string;
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name,arguments:args,panel_id:panelId,status:'submitted'};
     // Exclusive/fsynced intent is saved before a child or HTTP mutation exists.
-    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate(name,args);throw error;}
+    try{this.writeMetadata(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate(name,args);throw error;}
     try{
       let state:unknown;
       if(name==='image_panel_open'){
@@ -231,27 +247,27 @@ export class ImagePanelManager {
         if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==request_id||!['shown','queued'].includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Presentation response is unverified; query the original request_id.');
       }
       record.status='completed';if(name!=='image_panel_open')record.response=state;
-      durableWrite(file,record);
+      this.writeMetadata(file,record);
       return this.response(panelId,state,{request_id:args.request_id,recovered:false,...(name!=='image_panel_open'?{snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'}:{})});
     }catch(error){
-      if((error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=(error as ThrownSlots).message;durableWrite(file,record);}
+      if((error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=(error as ThrownSlots).message;this.writeMetadata(file,record);}
       throw new Error(`${(error as ThrownSlots).message} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`);
     }
   }
   async resume(args:PanelMutationArguments,file:string):Promise<ToolResult>{
     const record:WrittenPanelRequest={schema_version:1,request_id:args.request_id,name:'image_panel_resume',arguments:args,panel_id:args.panel_id as string,status:'submitted',stage:'preflight'};
-    try{durableWrite(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_resume',args);throw error;}
+    try{this.writeMetadata(file,record,{exclusive:true});}catch(error){if((error as ThrownSlots).code==='EEXIST')return this.mutate('image_panel_resume',args);throw error;}
     let dispatched=false;
     try{
       const old=this.getConnection(args.panel_id);assertOwnedPanelStopped(old);const checkpoint=readOwnedPanelCheckpoint(this.workspace,old);
       await this.inspect(checkpoint.object_id as string);
       const registration=prepareOwnedPanelRegistration({workspace:this.workspace,panel_id:args.panel_id as string});
-      record.helper_session_id=registration.helper_session_id;record.generation=registration.generation;record.stage='launching';durableWrite(file,record);dispatched=true;
+      record.helper_session_id=registration.helper_session_id;record.generation=registration.generation;record.stage='launching';this.writeMetadata(file,record);dispatched=true;
       await this.launch({panel_id:args.panel_id as string,connection_file:this.connectionFile(args.panel_id),object_id:checkpoint.object_id as string,registration_file:registration.registration_file,helper_session_id:registration.helper_session_id,generation:registration.generation});
       const state=await this.request(await this.waitForConnection(args.panel_id as string,registration.helper_session_id),'GET','/api/state');
-      record.status='completed';record.stage='completed';record.response=state;durableWrite(file,record);
+      record.status='completed';record.stage='completed';record.response=state;this.writeMetadata(file,record);
       return this.response(args.panel_id as string,state,{request_id:args.request_id,recovered:false,resumed:true,panel_generation:registration.generation,helper_session_id:registration.helper_session_id});
-    }catch(error){const message=`${error instanceof Error?error.message:String(error)} Original resume request_id: ${args.request_id}; query only this original ID; no automatic relaunch.`;if(!dispatched){record.status='failed';record.error=message;durableWrite(file,record);}throw new Error(message);}
+    }catch(error){const message=`${error instanceof Error?error.message:String(error)} Original resume request_id: ${args.request_id}; query only this original ID; no automatic relaunch.`;if(!dispatched){record.status='failed';record.error=message;this.writeMetadata(file,record);}throw new Error(message);}
   }
   call(name:string,args:unknown={},signal?:AbortSignal):Promise<ToolResult>{
     validateArguments(name,args);this.initialize();

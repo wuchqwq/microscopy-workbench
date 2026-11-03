@@ -1,6 +1,7 @@
 import type {ViewTransform,ViewportSnapshot,RenderedMark,DisplayPanel} from './presentation-contracts.mjs';
 // Browser-only viewport/draft helpers. These never change scientific coordinates.
 import {transformCoordinates} from './coordinates.mjs';
+import {rectangleHitTest} from './roi-editing.mjs';
 const copy = (value: unknown): unknown => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 export function equalRecords(a: unknown,b: unknown){const canonical=(v: unknown): unknown=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical((v as Record<string,unknown>)[k])])):v;return JSON.stringify(canonical(a))===JSON.stringify(canonical(b));}
 export function zoomAt(view: ViewTransform, point: readonly number[], factor: number, {min=.1,max=16}: {min?:number;max?:number}={}) {
@@ -47,14 +48,14 @@ export function hitMark<T extends RenderedMark>(marks: readonly T[],point: reado
   // Reverse paint order matches the visible topmost mark. Hidden/retracted
   // candidates cannot steal a click from evidence beneath them.
   for(const mark of [...marks].reverse()){
-    if(mark.status==='retracted'||mark.visibility==='outside_view')continue;
+    if(mark.status==='retracted'||mark.visibility==='outside_view'||mark.presentation?.geometry_visible===false)continue;
     const c=mark.kind==='arrow'?(mark.arrow_render_coordinates??mark.coordinates):mark.coordinates;if(!Array.isArray(c)||c.length<2)continue;
+    if(mark.kind==='rectangle'&&!rectangleHitTest(c,point,{scale,radius}))continue;
     const pairs: number[][]=[];for(let i=0;i<c.length;i+=2)pairs.push(c.slice(i,i+2));
     const r=radius/scale,dist=pairs.map(p=>Math.hypot(point[0]-p[0],point[1]-p[1]));
     if(Math.min(...dist)<=r)return {mark,handle:dist.indexOf(Math.min(...dist))};
     if(mark.kind==='rectangle'){
-      const [x0,y0,x1,y1]=c,edges=[[[x0,y0],[x1,y0]],[[x1,y0],[x1,y1]],[[x1,y1],[x0,y1]],[[x0,y1],[x0,y0]]];
-      if(edges.some(([a,b])=>segmentDistance(point,a,b)<=r))return {mark,handle:-1};
+      return {mark,handle:-1};
     }else if(pairs.length>1){for(let i=1;i<pairs.length;i++)if(segmentDistance(point,pairs[i-1],pairs[i])<=r)return {mark,handle:-1};if(mark.kind==='polygon'&&segmentDistance(point,pairs.at(-1)!,pairs[0])<=r)return {mark,handle:-1};}
   }
   return null;

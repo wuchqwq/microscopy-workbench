@@ -34,7 +34,7 @@ const inside=(root:string,file:string)=>{const rel=path.relative(root,file);retu
 function reader(workspace:unknown){
  need(typeof workspace==='string'&&path.isAbsolute(workspace),'Explicit absolute image workspace required','INVALID_ARGUMENT');
  need(lstatSync(workspace).isDirectory()&&!lstatSync(workspace).isSymbolicLink(),'Workspace must be an ordinary directory');
- const root=realpathSync.native(workspace),cache=new Map<string,SavedObject>();let bytes=0;
+ const root=realpathSync.native(workspace),cache=new Map<string,SavedObject>(),arrays=new Set<string>();let bytes=0,arrayBytes=0;
  for(const name of ['objects','requests']){const p=path.join(root,name);need(lstatSync(p).isDirectory()&&!lstatSync(p).isSymbolicLink(),'Workspace metadata directory is missing or linked');}
  function json(file:string){
   const info=lstatSync(file);need(info.isFile()&&!info.isSymbolicLink()&&info.size<=MAX_JSON,'Missing, linked or oversized workspace metadata');
@@ -83,8 +83,10 @@ function reader(workspace:unknown){
   const sourceRect=value.source_rect_xyxy??(spectral&&value.spectrum_object_id?object(value.spectrum_object_id).value.source_rect_xyxy:null)??grid?.source_rect_xyxy??null;
   return {value,record,grid,lineage:lineage(ident),panel,sourceRect};
  }
- return {root,json,object,lineage,operand};
+ function verifyArray(ident:unknown){const saved=object(ident),id=saved.value.object_id;if(arrays.has(id))return;const expected=(saved.value.files_sha256 as Metadata|undefined)?.['data.npy'];need(typeof expected==='string'&&/^[a-f0-9]{64}$/.test(expected),'Scientific array hash is absent');const file=path.join(root,'objects',id,'data.npy'),info=lstatSync(file);need(info.isFile()&&!info.isSymbolicLink()&&info.size<=128*1024*1024&&inside(root,realpathSync.native(file)),'Scientific array escapes its bounded workspace');arrayBytes+=info.size;need(arrayBytes<=256*1024*1024,'Scientific array verification exceeds bounded read budget','BUDGET_EXCEEDED');need(sha(readFileSync(file))===expected,'Scientific array hash differs from original committed record');arrays.add(id);}
+ return {root,json,object,lineage,operand,verifyArray};
 }
+export function readImageProviderRecords(workspace:string){return reader(workspace);}
 
 function annotationPoints(mark:Metadata|undefined){
  const c=(mark?.anchor as Metadata|undefined)?.coordinates;if(!Array.isArray(c))return null;

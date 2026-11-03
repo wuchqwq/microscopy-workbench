@@ -116,6 +116,12 @@ export function selectionFromDrag(panels: readonly WirePanel[],start: XY,end: XY
   if(p.domain==='spatial_pixels')return {kind,coordinate_space:coordinateSpace(p),source_object_id:p.source_object_id,coordinates:transformCoordinates(coords,p,{edges}),panel:p};
   return {kind,coordinate_space:coordinateSpace(p),source_object_id:p.source_object_id,coordinates:transformCoordinates(coords,p,{edges}),panel:p};
 }
+// Pure shared edge conversion for GUI/CLI. Scientific/source bounds remain
+// checked by the owning caller; no render mapping or window is created here.
+export function outwardSourceRectangle(coordinates:readonly number[]):number[] {
+  if(coordinates.length!==4||!coordinates.every(Number.isFinite))throw new Error('Rectangle needs four finite edges');
+  return [Math.floor(coordinates[0]+1e-9),Math.floor(coordinates[1]+1e-9),Math.ceil(coordinates[2]-1e-9),Math.ceil(coordinates[3]-1e-9)];
+}
 export function selectionRectangle(selection: SelectionOn<FrequencyPanel>): CoordinateArray<'fft_bins', 'edges'>;
 export function selectionRectangle(selection: SelectionOn<SpatialPanel>): CoordinateArray<'source_pixels', 'edges'>;
 export function selectionRectangle(selection: SelectionOn<ArrayPanel>): CoordinateArray<'source_array_indices', 'edges'>;
@@ -127,7 +133,7 @@ export function selectionRectangle(selection: WireSelection): number[] {
   // Explicit outward integer-bin/edge snapping. The UI shows this rectangle
   // before submission; fractional scientific annotations remain unsnapped.
   const bins=p.domain==='frequency'?c.map((v,i)=>v*p.fft_shape_yx[i%2===0?1:0]+Math.floor(p.fft_shape_yx[i%2===0?1:0]/2)+.5):c;
-  const rect=[Math.floor(bins[0]+1e-9),Math.floor(bins[1]+1e-9),Math.ceil(bins[2]-1e-9),Math.ceil(bins[3]-1e-9)];
+  const rect=outwardSourceRectangle(bins);
   const bounds=p.domain==='frequency'?(p.fft_rect_xyxy??[0,0,p.fft_shape_yx[1],p.fft_shape_yx[0]]):p.source_rect_xyxy;
   if(rect[0]<bounds[0]||rect[1]<bounds[1]||rect[2]>bounds[2]||rect[3]>bounds[3]||rect[0]>=rect[2]||rect[1]>=rect[3])throw new Error('Selection exceeds current data window');
   return rect;
