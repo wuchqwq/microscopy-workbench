@@ -75,11 +75,11 @@
   <div class="usage-content">
     <p class="usage-flow"><strong>常用流程：</strong>打开图像 → 添加多个 ROI → FFT → 点选峰位并测量 → 返回空间观察 → 保存工作区。图像是工作中心；原始文件只读。</p>
     <p>本说明可随时打开、关闭或按 Esc 退出；这些动作不清空草稿、不改变选区、不提交科学计算。Tab 移动焦点，Enter 操作按钮。</p>
-    <details open><summary>1. 打开图像、选择帧与核对标定</summary>
+    <details><summary>1. 打开图像、选择帧与核对标定</summary>
       <p>独立桌面使用“文件 → 打开图像…”或“打开分析工作区…”。开发机入口为 <code>npm run desktop</code>；仍需安装固定桌面运行时并指定科研 Python。浏览器入口仍可用 <code>npm run inspect -- --source 原图绝对路径 --workspace 工作区绝对路径 --python Python绝对路径</code>。源码先运行 <code>npm ci</code>、<code>npm run build</code>。</p>
       <p>TIFF 的“帧”从 1 开始。DM 多数据集、复数分量和高维平面须用明确启动参数选择，不猜缩略图、层深或轴意义。未知物理标定可先在像素域观察，不能凭空填入 nm；文件标定也不等于独立校准验证。</p>
     </details>
-    <details><summary>2. ROI、峰位、测量线与移动图像</summary>
+    <details open><summary>2. ROI、峰位、测量线与移动图像</summary>
       <p>默认“选择”（V）。“添加 ROI”（R）画完回到选择；等待位置记录读回后再添加下一处。点击框的内部或边框选择，拖内部移动，拖八个控制点缩放；很小的 ROI 可先放大。重叠时可点击 ROI 标签或在“对象属性 → 当前标注”中选明确的 ROI。</p>
       <p>“删除 ROI”或画布获得焦点后的 Delete 只撤回明确选中的 ROI。无选择不会全删，文字输入框里的 Delete/Backspace 只编辑文字。Ctrl+Z 撤销一次手势，Ctrl+Shift+Z 重做，Esc 取消未完成手势；旧 FFT 输入和历史测量不会因此删除。</p>
       <p>“平移”（H）或空格拖动移动视野，滚轮缩放；“适应画布”（F）只调整相机。Shift/Ctrl 可约束新框和新测量线。临时矩形可直接 FFT，不要求先保存观察或填写理由。</p>
@@ -114,7 +114,7 @@
       <p>只读保存图像加载失败会保留上一已核对画面并说明状态，可“重试只读图像”，不创建新预览或 FFT。观察理由最多 1000 个 UTF-16 单位，超限保留原稿而不截断。未决任务、工作区冲突或旧格式资格不足时按原因处理，不放宽网格、来源或所有权保护。</p>
     </details>
     <details><summary>8. 如何阅读科学结果</summary><p>分别看计算是否完成、测量可靠性和不确定性、候选解释的条件。像素周期差异不自动等于应变，有限相容不等于唯一物相、晶向、孪晶或缺陷确认。材料背景是研究者提供的证据，不用来反造比例尺。原始数据、标定来源和历史结果继续保留。</p></details>
-    <details><summary>9. 窄窗口与面板</summary><p>“观察与证据”“对象属性”和“显示与高级设置”可收起；窄窗口用抽屉覆盖图像。保存工作区在顶部，选区操作在图像下方，面板内容可滚动；“×”只收起面板。尺寸改变不自动改科学选区；需要时点击“适应画布”。各图已记录的侧栏、设置分组和结果区开合会与相机一起恢复，作为显示偏好，不增加未保存的科学修改；旧记录没有这项偏好时使用明确的默认显示。</p></details>
+    <details><summary>9. 窄窗口与面板</summary><p>“观察与证据”“对象属性”和“显示与高级设置”可收起。界面宽度为 600–850 px 时，属性／观察栏在图像旁预留空间；更窄时使用覆盖图像的抽屉。可点击面板的“×”或对应工具收起面板，再点“适应画布”查看完整图像。保存工作区在顶部，选区操作在图像下方，面板内容可滚动。“对象属性”只显示当前选择相关的字段；标签与图层在“显示与高级设置 → 标签与图层”中。尺寸改变不自动改科学选区。各图已记录的侧栏、设置分组和结果区开合会与相机一起恢复，作为显示偏好，不增加未保存的科学修改；旧记录没有这项偏好时使用明确的默认显示。</p></details>
   </div>
 </dialog>
 <dialog id="execution-history-dialog" class="roi-comparison-dialog" aria-labelledby="execution-history-title"><div class="dialog-heading"><h2 id="execution-history-title">探索执行历史</h2><button id="close-execution-history" aria-label="关闭探索执行历史">关闭</button></div><p>这些是既有原请求和冻结输入的只读记录。执行完成、当前显示、纳入工作分析和明确保存分别处理。丢弃工作编辑不会删除历史；查看不会重算 FFT。</p><p id="execution-history-status" role="status"></p><p id="execution-history-empty">尚无带冻结输入记录的新 GUI FFT；旧记录不补造浮点身份。</p><div class="comparison-table"><table><thead><tr><th>状态</th><th>原始输入</th><th>预处理</th><th>查看与来源</th></tr></thead><tbody id="execution-history-rows"></tbody></table></div></dialog>
