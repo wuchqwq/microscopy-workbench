@@ -209,7 +209,10 @@ export class ImageWorkspace {
       child!.stderr.on('data',chunk=>{stderr=(stderr+chunk.toString()).slice(-4096);});
       child!.once('error',err=>{
         // An error can also mean kill failed while the child is still alive.
-        // Only close releases the write queue, including after spawn failure.
+        // With no PID, spawn positively failed: release this nonce's provider
+        // claim before returning not_submitted to another process. The local
+        // drain still waits for close; errors on a live child retain its claim.
+        if(!child!.pid)try{providerLease?.release();}catch{/* Failed cleanup stays closed until close retries it. */}
         phase='spawn';finish(reject,diagnostic(err,child!.pid?'outcome_unknown':'not_submitted'));
       });
       child!.stdin.on('error',err=>{phase='stdin';finish(reject,diagnostic(err));});
