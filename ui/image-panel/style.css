@@ -121,6 +121,7 @@ body{height:100vh;display:flex;flex-direction:column}.workbench-header{flex-shri
 /* Keep the existing sidebars beside, rather than over, the narrow desktop image.
    Camera/selection state is untouched; Fit uses the actual unobscured viewport. */
 @media(min-width:600px) and (max-width:850px){
+ .canvas-area{transition:none}
  .properties-panel{width:min(292px,40vw);box-shadow:none}
  .properties-open .canvas-area{margin-right:min(292px,40vw)}
  .research-panel{width:min(320px,42vw);box-shadow:none}
