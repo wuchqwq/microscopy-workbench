@@ -1,0 +1,23 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {DesktopCloseCoordinator} from '../lib/desktop_lifecycle.mjs';
+
+const clean={status:'clean',dirty:false,working_revision:4,can_close:true,unresolved_request_id:null,recovery_available:false};
+function fixture(changes={}){const log=[],errors=[];const ports={action:async action=>{log.push(action);return {ok:true};},status:async()=>{log.push('status');return clean;},choose:async()=>{log.push('choose');return 'cancel';},discard:async revision=>{log.push(['discard',revision]);return clean;},close:async revision=>{log.push(['close',revision]);},error:async message=>{errors.push(message);},...changes};return {ports,log,errors,coordinator:new DesktopCloseCoordinator(ports)};}
+test('clean close first flushes renderer metadata then checks authoritative version',async()=>{const f=fixture();assert.equal(await f.coordinator.request(),true);assert.deepEqual(f.log,['prepare-close','status',['close',4]]);});
+test('cancel changes no workspace and keeps dirty edits',async()=>{const f=fixture({status:async()=>({...clean,dirty:true,can_close:false})});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,['prepare-close','choose']);assert.deepEqual(f.errors,[]);});
+test('save uses the same renderer action then requires backend clean readback',async()=>{let reads=0;const f=fixture({status:async()=>++reads===1?{...clean,dirty:true,can_close:false}:clean,choose:async()=>'save'});assert.equal(await f.coordinator.request(),true);assert.deepEqual(f.log,['prepare-close','save',['close',4]]);assert.equal(reads,2);});
+test('new edit arriving during Save prevents closing',async()=>{let reads=0;const f=fixture({status:async()=>({...clean,dirty:true,can_close:false,working_revision:++reads+4}),choose:async()=>'save'});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,['prepare-close','save']);assert.equal(f.errors.length,1);});
+test('known Save failure keeps window and preserves edits',async()=>{const f=fixture({status:async()=>({...clean,dirty:true,can_close:false}),choose:async()=>'save',action:async action=>({ok:action!=='save',error:'disk full'})});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,[]);assert.deepEqual(f.errors,['disk full']);});
+test('unknown scientific or Save state cannot be disguised as Dont Save',async()=>{
+ for(const status of [{...clean,unresolved_request_id:'original-123'},{...clean,status:'save_unknown'},{...clean,status:'saving'}]){const f=fixture({status:async()=>status});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,['prepare-close']);assert.equal(f.errors.length,1);}
+});
+test('Dont Save uses exact working revision and still checks discard outcome',async()=>{const f=fixture({status:async()=>({...clean,dirty:true,can_close:false,working_revision:17}),choose:async()=>'discard'});assert.equal(await f.coordinator.request(),true);assert.deepEqual(f.log,['prepare-close',['discard',17],['close',4]]);});
+test('unconfirmed discard never closes',async()=>{const f=fixture({status:async()=>({...clean,dirty:true,can_close:false}),choose:async()=>'discard',discard:async()=>{throw new Error('discard response unknown');}});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,['prepare-close']);assert.match(f.errors[0],/unknown/);});
+test('an unsaved crash recovery is offered a deliberate decision',async()=>{const f=fixture({status:async()=>({...clean,recovery_available:true,can_close:false})});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,['prepare-close','choose']);});
+test('unpublished renderer edit or missing handler blocks native close',async()=>{const f=fixture({action:async()=>({ok:false,error:'local transport incomplete'})});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,[]);assert.deepEqual(f.errors,['local transport incomplete']);});
+test('one native close attempt is serialized instead of double dialogs or Save',async()=>{
+ let resolve;const waiting=new Promise(r=>{resolve=r;});let actions=0,closes=0;
+ const f=fixture({action:async()=>{actions++;await waiting;return {ok:true};},close:async()=>{closes++;}}),first=f.coordinator.request(),second=f.coordinator.request();assert.equal(first,second);resolve();assert.equal(await first,true);assert.equal(actions,1);assert.equal(closes,1);
+});
+test('server CAS rejection on final close keeps window despite earlier clean status',async()=>{const f=fixture({close:async()=>{throw new Error('working revision changed');}});assert.equal(await f.coordinator.request(),false);assert.match(f.errors[0],/revision changed/);});

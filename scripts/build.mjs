@@ -50,7 +50,7 @@ try{
  // The standalone runtime has no build/install dependency or nested dist path.
  const metadata=JSON.parse(readFileSync(path.join(root,'package.json'),'utf8'));
  delete metadata.devDependencies;
- metadata.scripts={start:'node server.mjs',inspect:'node tools/researcher_inspector.mjs',mwb:'node tools/workbench_cli.mjs'};
+ metadata.scripts={start:'node server.mjs',inspect:'node tools/researcher_inspector.mjs',mwb:'node tools/workbench_cli.mjs',desktop:'node tools/desktop_launcher.mjs'};
  writeFileSync(path.join(staging,'package.json'),JSON.stringify(metadata,null,2)+'\n');
  const migrated=[];
  const inventory=relative=>{

@@ -14,6 +14,8 @@ The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, 
 
 ## What you can do
 
+- **Use a Windows desktop window and a structured CLI.** The [desktop development entry](docs/DESKTOP.md) provides native menus and explicit Save / Don't Save / Cancel through the existing Image Panel. The [headless CLI](docs/CLI.md) reads exact saved ROI identities, reuses independently verified FFT inputs and writes source-bound comparison reports for explicit GUI viewing/adoption. See the [analysis-workspace contract](docs/ANALYSIS_WORKSPACE.md); clean-machine installation remains a separate stage.
+
 - **Save observations and continue beside the image.** The [GUI-first trial](docs/GUI_FIRST_ROUND1.md) adds a visible ROI/reason list, an explicit Agent handoff and qualified finite-comparison evidence in the same Panel. Saved FFT links reopen measurement views; peak revisions keep older evidence visibly pending until updated. This does not embed a chat or automatically wake a model.
 
 - **Continue from two regions selected in the Panel.** The [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md) shares saved FFT/measurement evidence across source-bound reviews and finite candidate comparisons. Real browser gestures and fresh-Agent/recovery tests passed in a [limited public synthetic scope](docs/MANUAL_CRYSTAL_ACCEPTANCE.md); this does not establish a real material's identity.

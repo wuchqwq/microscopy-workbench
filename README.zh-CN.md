@@ -1,5 +1,7 @@
 # Microscopy Workbench
 
+新增开发机入口：[Windows 独立桌面](docs/DESKTOP.md)、[结构化独立 CLI](docs/CLI.md) 与[分析工作区保存合同](docs/ANALYSIS_WORKSPACE.md)。桌面原生菜单和“保存／不保存／取消”复用现有图像工作区；CLI 读取明确保存的 ROI、核验复用已有 FFT，将带来源的对照结果放回 GUI 供明确查看和采用。干净 Windows 安装与升级恢复仍属后续阶段。
+
 **从显微图像出发，建立可追溯、可复核的材料结构证据。**
 
 [简体中文](README.zh-CN.md) · [English](README.md)
