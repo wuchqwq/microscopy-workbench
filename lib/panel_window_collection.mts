@@ -29,7 +29,7 @@ export function readPanelWindowCamera(value:unknown):PanelWindowCamera {
  return {scale:value.scale,center_image_xy:[value.center_image_xy[0] as number,value.center_image_xy[1] as number]};
 }
 export function readPanelWindowUiPanels(value:unknown):PanelWindowUiPanels {
- if(!isRow(value)||Object.keys(value).some(k=>!['side','settings','results'].includes(k))||!['none','properties','research'].includes(String(value.side))||typeof value.settings!=='boolean'||typeof value.results!=='boolean')error('Invalid bounded UI panel preferences');
+ if(!isRow(value)||Object.keys(value).some(k=>!['side','settings','results'].includes(k))||typeof value.side!=='string'||!['none','properties','research'].includes(value.side)||typeof value.settings!=='boolean'||typeof value.results!=='boolean')error('Invalid bounded UI panel preferences');
  return {side:value.side as PanelWindowUiPanels['side'],settings:value.settings,results:value.results};
 }
 export function qualifyPanelWindowContext(raw:unknown,value:Row,checkSelection:(selection:unknown,target:Row)=>PanelSelection):PanelWindowViewContext|null {
