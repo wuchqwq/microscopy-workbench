@@ -35,6 +35,11 @@ const objectId=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0
 const clamp=(n:number,low:number,high:number)=>Math.max(low,Math.min(high,n));
 class AssetLoadTimeout extends Error {constructor(){super('只读保存图像读取超时；可明确重试，不创建新预览或重放科学请求。');}}
 class AssetLoadCancelled extends Error {}
+// Camera preferences belong to one window/object presentation. A replacement
+// accepted by sync retires that target; it does not authorize replaying a write.
+class WindowCameraFailure extends Error {
+ constructor(readonly window_id:string,readonly object_id:string,error:unknown){super(error instanceof Error?error.message:String(error));}
+}
 export function readWindowCamera(raw:unknown):WindowCamera|null {
  if(!record(raw)||!finite(raw.scale)||raw.scale<1e-6||raw.scale>1e4||!Array.isArray(raw.center_image_xy)||raw.center_image_xy.length!==2||!raw.center_image_xy.every(v=>finite(v)&&Math.abs(v)<=1e7))return null;
  return {scale:raw.scale,center_image_xy:[raw.center_image_xy[0] as number,raw.center_image_xy[1] as number]};
@@ -73,7 +78,7 @@ export class WindowWorkspace {
  private readonly desktop:BrowserElement|null;private readonly controls:BrowserElement|null;private readonly frames=new Map<string,Frame>();
  private collection:WindowCollection|null=null;private gesture:LayoutGesture|null=null;private readonly localLayouts=new Map<string,WindowLayout>();
  private writes:Promise<void>=Promise.resolve();private width=0;private narrow=true;private single=false;private layoutEpoch=0;private readonly layoutEpochs=new Map<string,number>();private deferredGeometry:{window_id:string;object_id:string}|null=null;
- private switchLocked=false;private metadataError:Error|null=null;private cameraEpoch=0;private readonly pendingCameras=new Map<string,PendingCamera>();private readonly cameraTimers=new Map<string,unknown>();private readonly failedCameras=new Set<string>();private pendingWrites=0;
+ private switchLocked=false;private metadataError:Error|null=null;private cameraEpoch=0;private readonly pendingCameras=new Map<string,PendingCamera>();private readonly cameraTimers=new Map<string,unknown>();private readonly failedCameras=new Map<string,WindowCameraFailure>();private pendingWrites=0;
  private activeOverlay:BrowserElement|null=null;
  constructor(private readonly options:WindowOptions){
   const d=options.document;this.desktop=d.getElementById('window-desktop');this.controls=d.getElementById('window-controls');
@@ -85,8 +90,9 @@ export class WindowWorkspace {
  sync(state:HostState):void {
   if(!this.desktop||!this.controls)return;
   const parsed=readWindowCollection(state.window_collection),collection=parsed&&(!parsed.windows.length&&parsed.active_window_id===null||parsed.windows.find(entry=>entry.window_id===parsed.active_window_id)?.object_id===state.object.object_id)?parsed:null;
+  if(collection&&this.collection&&collection.revision<this.collection.revision)return;
   if(collection&&!collection.windows.length&&collection.closed_windows?.length){
-   this.collection=collection;this.controls.hidden=false;this.options.viewport.hidden=true;this.desktop.classList.toggle('has-image-windows',false);
+   this.collection=collection;this.retireObsoleteCameras();this.controls.hidden=false;this.options.viewport.hidden=true;this.desktop.classList.toggle('has-image-windows',false);
    for(const frame of this.frames.values())this.cancelAssetLoad(frame);this.frames.clear();
    const empty=this.element('div','empty-workbench','图像显示已关闭，工作编辑与科学记录仍保留。可在窗口列表重新打开。');this.desktop.replaceChildren(this.options.viewport,empty);this.resize();return;
   }
@@ -96,8 +102,7 @@ export class WindowWorkspace {
    this.desktop.replaceChildren(this.options.viewport);
    for(const frame of this.frames.values())this.cancelAssetLoad(frame);this.collection=null;this.frames.clear();this.deferredGeometry=null;return;
   }
-  if(this.collection&&collection.revision<this.collection.revision)return;
-  this.collection=collection;this.controls.hidden=false;this.desktop.classList.toggle('has-image-windows',true);
+  this.collection=collection;this.retireObsoleteCameras();this.controls.hidden=false;this.desktop.classList.toggle('has-image-windows',true);
   const alive=new Set(collection.windows.map(entry=>entry.window_id));
   for(const [id,frame]of this.frames)if(!alive.has(id)){this.cancelAssetLoad(frame);frame.root.remove?.();this.frames.delete(id);this.localLayouts.delete(id);}
   for(const entry of collection.windows){const frame=this.frames.get(entry.window_id)??this.makeFrame(entry.window_id);this.frames.set(entry.window_id,frame);this.updateFrame(frame,entry,entry.window_id===collection.active_window_id);}
@@ -186,26 +191,35 @@ export class WindowWorkspace {
  private finishLayout(event:BrowserEvent){if(!this.gesture||this.gesture.pointer_id!==event.pointerId)return;const g=this.gesture;this.gesture=null;this.persistLayouts();if(g.kind==='move'&&Math.hypot(event.clientX-g.start[0]!,event.clientY-g.start[1]!)<3)void this.requestActivation(g.window_id);}
  private cancelLayout(event:BrowserEvent){const g=this.gesture;if(!g||g.pointer_id!==event.pointerId)return;this.localLayouts.set(g.window_id,g.before);this.gesture=null;const entry=this.collection?.windows.find(value=>value.window_id===g.window_id);if(entry)this.geometry(this.frames.get(g.window_id)!,entry);}
  tile():void {if(this.switchLocked||!this.collection||this.narrow||this.single)return;for(const item of tiledWindowLayouts(this.collection.windows)){this.localLayouts.set(item.window_id,item.layout);this.layoutEpochs.set(item.window_id,++this.layoutEpoch);}for(const entry of this.collection.windows)this.geometry(this.frames.get(entry.window_id)!,entry);this.persistLayouts();this.options.onBoundsChange();}
- private enqueue(task:()=>Promise<void>):Promise<void>{this.pendingWrites++;const operation=this.writes.then(task);this.writes=operation.catch(error=>{this.metadataError=error instanceof Error?error:new Error(String(error));this.options.onError(this.metadataError.message);}).finally(()=>{this.pendingWrites--;});return operation;}
+ private retiredCameraFailure(error:unknown):boolean {return error instanceof WindowCameraFailure&&this.collection!==null&&!this.collection.windows.some(entry=>entry.window_id===error.window_id&&entry.object_id===error.object_id);}
+ private retireObsoleteCameras():void {
+  if(!this.collection)return;
+  for(const [key,pending]of this.pendingCameras)if(!this.collection.windows.some(entry=>entry.window_id===pending.window_id&&entry.object_id===pending.object_id)){this.pendingCameras.delete(key);this.failedCameras.delete(key);const timer=this.cameraTimers.get(key);if(timer!==undefined)this.options.cancelSchedule?.(timer);this.cameraTimers.delete(key);}
+  for(const [key,error]of this.failedCameras)if(this.retiredCameraFailure(error))this.failedCameras.delete(key);
+ }
+ private enqueue(task:()=>Promise<void>):Promise<void>{this.pendingWrites++;const operation=this.writes.then(task);this.writes=operation.catch(error=>{if(this.retiredCameraFailure(error))return;const failure=error instanceof Error?error:new Error(String(error));if(!(error instanceof WindowCameraFailure))this.metadataError=failure;this.options.onError(failure.message);}).finally(()=>{this.pendingWrites--;});return operation;}
  private persistLayouts(){void this.enqueue(async()=>{const collection=this.collection;if(!collection)return;const windows=collection.windows.map(entry=>({window_id:entry.window_id,layout:{...(this.localLayouts.get(entry.window_id)??entry.layout)}})),epochs=new Map(this.layoutEpochs);await this.metadata('window-layout',{collection_revision:collection.revision,windows},epochs);});}
  async closeWindow(id:string):Promise<void>{if(this.switchLocked)return;if(this.options.onClose){try{await this.options.onClose(id);}catch(error){this.options.onError((error as Error).message);}return;}void this.enqueue(async()=>{const collection=this.collection;if(!collection)return;if(id===collection.active_window_id)throw new Error('当前编辑窗口须先返回空间观察，再关闭。');await this.metadata('close-window',{collection_revision:collection.revision,window_id:id});});return this.writes;}
  settled():Promise<void>{return this.writes;}
  hasPendingMetadata():boolean{return this.pendingWrites>0||this.pendingCameras.size>0||Boolean(this.gesture);}
  setSwitchLocked(locked:boolean):void {if(this.switchLocked===locked)return;this.switchLocked=locked;for(const entry of this.collection?.windows??[]){const frame=this.frames.get(entry.window_id);if(frame)this.updateFrame(frame,entry,entry.window_id===this.collection?.active_window_id);}this.resize();}
  async requestActivation(id:string):Promise<void>{if(this.switchLocked)return;const entry=[...this.collection?.windows??[],...this.collection?.closed_windows??[]].find(value=>value.window_id===id);if(!entry||id===this.collection?.active_window_id||!this.options.onActivate)return;try{await this.options.onActivate(id,entry.object_id);}catch(error){this.options.onError((error as Error).message);}}
- async awaitStableMetadata():Promise<void>{if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');for(;;){if(this.metadataError)throw this.metadataError;this.flushCameras();const pending=this.writes;await pending;if(this.metadataError)throw this.metadataError;if(this.writes===pending&&!this.pendingCameras.size)break;}if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');}
+ private currentMetadataError():Error|undefined{return this.metadataError??this.failedCameras.values().next().value;}
+ async awaitStableMetadata():Promise<void>{if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');for(;;){const before=this.currentMetadataError();if(before)throw before;this.flushCameras();const pending=this.writes;await pending;const after=this.currentMetadataError();if(after)throw after;if(this.writes===pending&&!this.pendingCameras.size)break;}if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');}
  async saveActiveContext(camera:WindowCamera,annotationId:string|null,draftRevision:number,uiPanels?:WindowUiPanels):Promise<void>{
   await this.awaitStableMetadata();await this.enqueue(async()=>{const collection=this.collection;if(!collection)throw new Error('当前窗口集合不可用');await this.metadata('window-context',{collection_revision:collection.revision,camera,selected_annotation_id:annotationId,...(uiPanels?{ui_panels:uiPanels}:{})},undefined,{draft_revision:draftRevision});});
  }
  reconcileMetadata(state:HostState):void {
-  this.sync(state);for(const [key,pending]of this.pendingCameras){const entry=this.collection?.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(!entry){this.pendingCameras.delete(key);this.failedCameras.delete(key);continue;}const context=readWindowViewContext(entry.view_context,{object_id:entry.object_id});if(context&&JSON.stringify(context.camera)===JSON.stringify(pending.camera)&&(!pending.ui_panels||JSON.stringify(context.ui_panels)===JSON.stringify(pending.ui_panels))){this.pendingCameras.delete(key);this.failedCameras.delete(key);}}
-  this.metadataError=this.failedCameras.size?new Error('相机保存尚未确认；请在该窗口重新调整或适应图像后再切换，不重放旧保存。'):null;
+  const collection=readWindowCollection(state.window_collection);if(!collection||collection.windows.length&&collection.windows.find(entry=>entry.window_id===collection.active_window_id)?.object_id!==state.object.object_id||this.collection&&collection.revision<this.collection.revision)return;
+  this.sync(state);if(this.collection!==collection)return;for(const [key,pending]of this.pendingCameras){const entry=this.collection.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(!entry){this.pendingCameras.delete(key);this.failedCameras.delete(key);continue;}const context=readWindowViewContext(entry.view_context,{object_id:entry.object_id});if(context&&JSON.stringify(context.camera)===JSON.stringify(pending.camera)&&(!pending.ui_panels||JSON.stringify(context.ui_panels)===JSON.stringify(pending.ui_panels))){this.pendingCameras.delete(key);this.failedCameras.delete(key);}}
+  if(!this.failedCameras.size)this.metadataError=null;
  }
  queueActiveCamera(camera:WindowCamera,uiPanels?:WindowUiPanels):void {const state=this.options.getState(),id=this.collection?.active_window_id;if(this.switchLocked||!state?.panel_mapping_fingerprint||!id)return;this.queueCamera(id,state.object.object_id,camera,uiPanels);}
  private savePassiveCamera(id:string,frame:Frame){const entry=this.collection?.windows.find(value=>value.window_id===id);if(!entry||this.collection?.active_window_id===id||!frame.image||frame.assetObject!==entry.object_id||!frame.mappingFingerprint)return;const box=frame.body.getBoundingClientRect(),camera=readWindowCamera({scale:frame.camera.scale,center_image_xy:[(box.width/2-frame.camera.x)/frame.camera.scale,(box.height/2-frame.camera.y)/frame.camera.scale]});if(!camera)return;frame.appliedCamera=JSON.stringify([camera,box.width,box.height]);this.queueCamera(id,entry.object_id,camera);}
  private queueCamera(windowId:string,object:string,raw:WindowCamera,uiPanels?:WindowUiPanels){
   const camera=readWindowCamera(raw),entry=this.collection?.windows.find(value=>value.window_id===windowId&&value.object_id===object);if(!camera||!entry)return;const key=windowId+':'+object,context=readWindowViewContext(entry.view_context,{object_id:object});
-  this.failedCameras.delete(key);if(!this.failedCameras.size)this.metadataError=null;
+  const failed=this.pendingCameras.get(key);if(this.failedCameras.has(key)&&failed&&JSON.stringify(failed.camera)===JSON.stringify(camera)&&JSON.stringify(failed.ui_panels)===JSON.stringify(uiPanels))return;
+  this.failedCameras.delete(key);
   if(context&&JSON.stringify(context.camera)===JSON.stringify(camera)&&(!uiPanels||JSON.stringify(context.ui_panels)===JSON.stringify(uiPanels))){this.pendingCameras.delete(key);return;}
   this.pendingCameras.set(key,{window_id:windowId,object_id:object,camera,...(uiPanels?{ui_panels:uiPanels}:{}),epoch:++this.cameraEpoch});const timer=this.cameraTimers.get(key);if(timer!==undefined)this.options.cancelSchedule?.(timer);
   if(this.options.schedule)this.cameraTimers.set(key,this.options.schedule(()=>{this.cameraTimers.delete(key);this.flushCameras();},180));else void Promise.resolve().then(()=>this.flushCameras());
@@ -214,7 +228,7 @@ export class WindowWorkspace {
   for(const timer of this.cameraTimers.values())this.options.cancelSchedule?.(timer);this.cameraTimers.clear();
   for(const [key]of this.pendingCameras){if(this.failedCameras.has(key))continue;void this.enqueue(async()=>{if(this.failedCameras.has(key))return;const pending=this.pendingCameras.get(key),collection=this.collection;if(!pending||!collection)return;const entry=collection.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(!entry){this.pendingCameras.delete(key);return;}
     try{await this.metadata('window-camera',{collection_revision:collection.revision,window_id:pending.window_id,object_id:pending.object_id,camera:pending.camera,...(pending.ui_panels?{ui_panels:pending.ui_panels}:{})});if(this.pendingCameras.get(key)?.epoch===pending.epoch){this.pendingCameras.delete(key);const frame=this.frames.get(pending.window_id),latest=this.collection?.windows.find(value=>value.window_id===pending.window_id&&value.object_id===pending.object_id);if(frame&&latest)this.applyPassiveContext(frame,latest);}}
-    catch(error){this.failedCameras.add(key);throw error;}
+    catch(error){const failure=new WindowCameraFailure(pending.window_id,pending.object_id,error);if(this.retiredCameraFailure(failure)){if(this.pendingCameras.get(key)?.epoch===pending.epoch)this.pendingCameras.delete(key);this.failedCameras.delete(key);return;}this.failedCameras.set(key,failure);throw failure;}
    });}
  }
  private async metadata(action:string,params:Readonly<Record<string,unknown>>,epochs?:ReadonlyMap<string,number>,extra:Readonly<Record<string,unknown>>={}){

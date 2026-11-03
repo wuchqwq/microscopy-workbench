@@ -11,8 +11,8 @@ function collection(){return {schema_version:1,revision:1,frame_object_id:id(1),
  {window_id:id(1),object_id:id(11),role:'source',title:'来源图像',layout:{x:0,y:0,width:.5,height:1,z:1}},
  {window_id:id(2),object_id:id(12),role:'fft',title:'FFT A',layout:{x:.5,y:0,width:.5,height:1,z:2},source_reference:{input_view_object_id:id(11),frame_object_id:id(1),raw_fft_object_id:id(22),processing_rect_xyxy:[8,9,40,41],calibration_relation:'same'}}
 ]};}
-async function harness(initial=collection(),{camera=false,onActivate,assetTimeoutMs=1000,activeBase=false}={}){
- const ids=new Map(),requests=[],errors=[],mirrors=[],observers=[],timers=new Map();let timerId=0,metadataWait=null,assetWait=null,assetReadWait=null,imageMounted=null,scientificGesture=false,cameraFailure=false,fitCount=0,bounds=0;
+async function harness(initial=collection(),{camera=false,onActivate,assetTimeoutMs=1000,activeBase=false,rejectStale=false}={}){
+ const ids=new Map(),requests=[],errors=[],mirrors=[],observers=[],timers=new Map();let timerId=0,metadataWait=null,assetWait=null,assetReadWait=null,imageMounted=null,scientificGesture=false,cameraFailure=0,fitCount=0,bounds=0;
  const state={object:{object_id:initial.windows.find(entry=>entry.window_id===initial.active_window_id)?.object_id??id(12)},state_revision:4,selection:{kind:'point',coordinates:[.125,0]},edit_state:{dirty:true,draft_revision:18},last_operation:{state:'submitted',request_id:'original-request'},reason:'未保存的观察理由',window_collection:copy(initial)};
  if(camera)state.panel_mapping_fingerprint='f'.repeat(64);
  class Element{
@@ -33,11 +33,11 @@ async function harness(initial=collection(),{camera=false,onActivate,assetTimeou
   // Model transport serialization: server mutation cannot alter the client's
   // currently captured collection object before the response is adopted.
   const original=copy(state),response=copy(state);if(metadataWait)await metadataWait;
-  if(body.expected_object_id!==state.object.object_id)return {...original,window_collection:{...original.window_collection,revision:original.window_collection.revision+1}};
+  if(body.expected_object_id!==state.object.object_id){if(rejectStale)throw new Error('Stale object revision; reload before editing');return {...original,window_collection:{...original.window_collection,revision:original.window_collection.revision+1}};}
   assert.equal(body.params.collection_revision,state.window_collection.revision);
   if(body.action==='window-layout'){for(const value of body.params.windows)response.window_collection.windows.find(w=>w.window_id===value.window_id).layout=copy(value.layout);}
   else if(body.action==='close-window'){assert.notEqual(body.params.window_id,state.window_collection.active_window_id);response.window_collection.windows=response.window_collection.windows.filter(value=>value.window_id!==body.params.window_id);}
-  else if(['window-context','window-camera'].includes(body.action)){if(cameraFailure){cameraFailure=false;throw new Error('Controlled camera acknowledgement failure');}const entry=response.window_collection.windows.find(value=>value.window_id===(body.params.window_id??response.window_collection.active_window_id));assert.ok(entry);if(body.action==='window-context'){assert.equal(body.draft_revision,state.edit_state.draft_revision);assert.equal(state.edit_state.dirty,false);}else assert.equal(body.params.object_id,entry.object_id);entry.view_context={version:1,object_id:entry.object_id,panel_mapping_fingerprint:'f'.repeat(64),camera:copy(body.params.camera),selection_candidate:body.action==='window-context'?copy(state.selection):copy(entry.view_context?.selection_candidate??null),selected_annotation_id:body.action==='window-context'?body.params.selected_annotation_id:entry.view_context?.selected_annotation_id??null};}
+  else if(['window-context','window-camera'].includes(body.action)){if(cameraFailure){cameraFailure--;throw new Error('Controlled camera acknowledgement failure');}const entry=response.window_collection.windows.find(value=>value.window_id===(body.params.window_id??response.window_collection.active_window_id));assert.ok(entry);if(body.action==='window-context'){assert.equal(body.draft_revision,state.edit_state.draft_revision);assert.equal(state.edit_state.dirty,false);}else assert.equal(body.params.object_id,entry.object_id);entry.view_context={version:1,object_id:entry.object_id,panel_mapping_fingerprint:'f'.repeat(64),camera:copy(body.params.camera),selection_candidate:body.action==='window-context'?copy(state.selection):copy(entry.view_context?.selection_candidate??null),selected_annotation_id:body.action==='window-context'?body.params.selected_annotation_id:entry.view_context?.selected_annotation_id??null};}
   else assert.fail('No scientific action belongs to window layout');
   response.window_collection.revision++;response.state_revision++;
   assert.deepEqual(state.selection,original.selection);assert.deepEqual(state.edit_state,original.edit_state);assert.deepEqual(state.last_operation,original.last_operation);assert.equal(state.reason,original.reason);
@@ -48,7 +48,7 @@ async function harness(initial=collection(),{camera=false,onActivate,assetTimeou
  workspace.sync(state);await settle();
  const frame=windowId=>desktop.children.find(value=>value.attributes['data-window-id']===windowId),header=windowId=>frame(windowId).children[0],body=windowId=>frame(windowId).children[1];
  const event=(target,x,y,extra={})=>({target,clientX:x,clientY:y,pointerId:1,button:0,deltaY:0,preventDefault(){},...extra});
- return {workspace,state,requests,errors,mirrors,viewport,desktop,get,frame,header,body,event,Element,settle,base,expireAssetLoads:async()=>{for(const [id,timer]of [...timers])if(timer.ms===assetTimeoutMs){timers.delete(id);timer.callback();}await settle();},nextImageMount:()=>new Promise(resolve=>{imageMounted=resolve;}),setScientificGesture:value=>{scientificGesture=value;},resize:(width,height=600)=>{desktop.rect.width=width;desktop.rect.height=height;for(const callback of observers)callback();},delayMetadata:value=>{metadataWait=value;},delayAsset:value=>{assetWait=value;},delayAssetRead:value=>{assetReadWait=value;},failCamera:()=>{cameraFailure=true;},fits:()=>fitCount,bounds:()=>bounds};
+ return {workspace,state,requests,errors,mirrors,viewport,desktop,get,frame,header,body,event,Element,settle,base,expireAssetLoads:async()=>{for(const [id,timer]of [...timers])if(timer.ms===assetTimeoutMs){timers.delete(id);timer.callback();}await settle();},flushCameraTimers:async()=>{for(const [id,timer]of [...timers])if(timer.ms===180){timers.delete(id);timer.callback();}await workspace.settled();},nextImageMount:()=>new Promise(resolve=>{imageMounted=resolve;}),setScientificGesture:value=>{scientificGesture=value;},resize:(width,height=600)=>{desktop.rect.width=width;desktop.rect.height=height;for(const callback of observers)callback();},delayMetadata:value=>{metadataWait=value;},delayAsset:value=>{assetWait=value;},delayAssetRead:value=>{assetReadWait=value;},failCamera:(count=1)=>{cameraFailure=count;},fits:()=>fitCount,bounds:()=>bounds};
 }
 async function settle(){for(let i=0;i<12;i++)await Promise.resolve();}
 
@@ -187,6 +187,59 @@ test('window context metadata includes the exact active draft lease and preserve
 });
 test('window camera failure is not silently replayed by another request to flush metadata',async()=>{
  const h=await harness(collection(),{camera:true});h.failCamera();h.body(id(1)).onwheel(h.event(h.body(id(1)),80,60,{deltaY:-30}));await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.length;await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);assert.equal(h.requests.length,count);assert.equal(h.state.last_operation.request_id,'original-request');assert.equal(h.state.edit_state.dirty,true);
+});
+
+function adoptEditedActiveObject(h,next=id(13)){
+ h.state.object.object_id=next;const entry=h.state.window_collection.windows.find(value=>value.window_id===h.state.window_collection.active_window_id);entry.object_id=next;delete entry.view_context;h.state.window_collection.revision++;h.workspace.sync(h.state);
+}
+test('retired camera: a late old-view refusal cannot poison the already adopted annotation revision',async()=>{
+ const h=await harness(collection(),{camera:true,rejectStale:true});let release;h.delayMetadata(new Promise(resolve=>{release=resolve;}));const before=copy({selection:h.state.selection,edit_state:h.state.edit_state,last_operation:h.state.last_operation});
+ h.workspace.queueActiveCamera({scale:2,center_image_xy:[50,30]});const pending=h.workspace.awaitStableMetadata();await settle();assert.equal(h.requests.filter(value=>value.body).length,1);adoptEditedActiveObject(h);release();
+ await assert.doesNotReject(pending);await assert.doesNotReject(h.workspace.awaitStableMetadata());assert.equal(h.requests.filter(value=>value.body).length,1,'the old camera is retired, never replayed');assert.equal(h.state.object.object_id,id(13));assert.deepEqual({selection:h.state.selection,edit_state:h.state.edit_state,last_operation:h.state.last_operation},before);
+});
+test('retired camera: a failed preference is cleared only after its exact window object is replaced',async()=>{
+ const h=await harness(collection(),{camera:true});h.failCamera();h.workspace.queueActiveCamera({scale:2,center_image_xy:[50,30]});await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.length;
+ adoptEditedActiveObject(h);await assert.doesNotReject(h.workspace.awaitStableMetadata());assert.equal(h.requests.length,count);h.delayMetadata(null);h.workspace.queueActiveCamera({scale:3,center_image_xy:[60,40]});await h.workspace.awaitStableMetadata();assert.equal(h.requests.filter(value=>value.body).at(-1).body.expected_object_id,id(13));assert.equal(h.requests.filter(value=>value.body).at(-1).body.params.object_id,id(13));
+});
+test('retired camera: an unchanged passive target retains its failure when the active annotation changes',async()=>{
+ const h=await harness(collection(),{camera:true});h.failCamera();h.body(id(1)).onwheel(h.event(h.body(id(1)),80,60,{deltaY:-30}));await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.length;adoptEditedActiveObject(h);
+ await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);assert.equal(h.requests.length,count);assert.equal(h.state.window_collection.windows[0].object_id,id(11));
+});
+test('retired camera: same-value rendering does not silently retry a failure for the current target',async()=>{
+ const h=await harness(collection(),{camera:true}),camera={scale:2,center_image_xy:[50,30]};h.failCamera();h.workspace.queueActiveCamera(camera);await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.length;h.workspace.queueActiveCamera(camera);
+ await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);assert.equal(h.requests.length,count);assert.equal(h.state.object.object_id,id(12));
+});
+test('retired camera: a separate layout error is not cleared by rendering a new active camera',async()=>{
+ const h=await harness(collection(),{camera:true});let release;h.delayMetadata(new Promise(resolve=>{release=resolve;}));h.workspace.tile();await settle();adoptEditedActiveObject(h);release();await h.workspace.settled();const count=h.requests.length;
+ await assert.rejects(h.workspace.awaitStableMetadata(),/窗口操作读回时当前图已变化/);h.workspace.queueActiveCamera({scale:3,center_image_xy:[50,30]});await assert.rejects(h.workspace.awaitStableMetadata(),/窗口操作读回时当前图已变化/);assert.equal(h.requests.length,count);assert.equal(h.state.object.object_id,id(13));
+});
+
+test('retired camera: retiring the last of two failures still reports the unchanged passive failure',async()=>{
+ const h=await harness(collection(),{camera:true});h.failCamera(2);h.body(id(1)).onwheel(h.event(h.body(id(1)),80,60,{deltaY:-30}));h.workspace.queueActiveCamera({scale:2,center_image_xy:[50,30]});await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.filter(value=>value.body).length;adoptEditedActiveObject(h);
+ // Bound the old infinite microtask loop without timers; then retire the
+ // remaining target so even a failing implementation leaves no live waiter.
+ let outcome;const pending=h.workspace.awaitStableMetadata().then(()=>{outcome={resolved:true};},error=>{outcome={error:error.message};});await settle();const retained=outcome;
+ h.state.window_collection.windows[0].object_id=id(14);h.state.window_collection.revision++;h.workspace.sync(h.state);await pending;
+ assert.match(retained?.error??'metadata waiter did not reject',/Controlled camera/);assert.equal(h.requests.filter(value=>value.body).length,count,'neither failed camera is replayed');await assert.doesNotReject(h.workspace.awaitStableMetadata());
+});
+
+test('retired camera: an older empty collection cannot retire a current camera failure',async()=>{
+ const initial=collection();initial.revision=4;const h=await harness(initial,{camera:true});h.failCamera();h.workspace.queueActiveCamera({scale:2,center_image_xy:[50,30]});await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.length;
+ h.workspace.sync({...h.state,window_collection:{...copy(initial),revision:3,active_window_id:null,windows:[],closed_windows:copy(initial.windows)}});
+ assert.ok(h.frame(id(2)),'a stale closed snapshot cannot remove the accepted current editor');await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);assert.equal(h.requests.length,count);
+});
+
+test('retired camera: invalid or mismatched readback cannot reconcile a current camera failure',async()=>{
+ const h=await harness(collection(),{camera:true});h.failCamera();h.workspace.queueActiveCamera({scale:2,center_image_xy:[50,30]});await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);const count=h.requests.length;
+ for(const window_collection of [null,{...copy(h.state.window_collection),revision:-1},{...copy(h.state.window_collection),windows:h.state.window_collection.windows.map(entry=>entry.window_id===id(2)?{...entry,object_id:id(99)}:entry)}]){
+  h.workspace.reconcileMetadata({...h.state,window_collection});assert.ok(h.frame(id(2)));await assert.rejects(h.workspace.awaitStableMetadata(),/Controlled camera/);assert.equal(h.requests.length,count);
+ }
+});
+
+test('retired camera: a subsequent camera failure cannot overwrite an unresolved layout error',async()=>{
+ const h=await harness(collection(),{camera:true});let release;h.delayMetadata(new Promise(resolve=>{release=resolve;}));h.workspace.tile();await settle();adoptEditedActiveObject(h);release();await h.workspace.settled();h.delayMetadata(null);
+ h.failCamera();h.workspace.queueActiveCamera({scale:3,center_image_xy:[50,30]});await h.flushCameraTimers();adoptEditedActiveObject(h,id(14));const count=h.requests.length;
+ await assert.rejects(h.workspace.awaitStableMetadata(),/窗口操作读回时当前图已变化/);assert.equal(h.requests.length,count);
 });
 
 test('bounded panel preference reader accepts only actual panels and leaves legacy absence unknown',()=>{
