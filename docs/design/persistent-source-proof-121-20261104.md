@@ -60,6 +60,8 @@
 
 GUI/CLI/MCP 均分别返回：原科学执行状态、原证据资格、本次 proof 状态、工作区采用/保存状态。查找结果区分 `verified`、`known_existing_unqualified`、`proven_missing`、`unavailable`；准确旧执行已完成但 proof 不合格时，`--compute-missing` 不得把它当 missing 补算。显式发证不创建新 FFT；仅同整数 support、相近浮点框或后来同几何 ROI 不是原归属证明。
 
+只有准确候选范围完整核对完，才可报告 `proven_missing`；扫描被预算、缺失或读取错误截断时报告 `unavailable`，不自动补算。首版建议 retrospective proof 仅供明确查看和采用当前来源证据，默认不进入严格预执行证据的自动复用分支；若要允许 CLI 自动复用这类证据，应另行确认政策并在报告中持续披露其 retrospective 依据，不能只保留一个 `validated` 布尔值。
+
 ## 后续最小阶段与拟议验收
 
 1. **先审本 ADR 与 proof schema/状态合同。** 确认 provider 对象存放、必需重读范围、父证明/撤回语义、旧 unavailable 的显式当前证明；不先开发通用索引。
