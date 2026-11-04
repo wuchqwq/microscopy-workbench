@@ -5,6 +5,8 @@ import {readRoiComparisonReport} from './roi_comparison_reports.mjs';
 import {readImageProviderRecords} from './image_measurement_records.mjs';
 import type {SpatialReturnReference} from './panel_spatial_return.mjs';
 import {createHash} from 'node:crypto';
+import {readSourceProofReferences} from './image_source_proofs.mjs';
+import type {SourceProofReference} from './image_source_proofs.mjs';
 
 type Row=Record<string,unknown>;
 export type PanelSavedInputReference={kind:'execution';request_id:string}|{kind:'comparison';comparison_id:string;annotation_id:string};
@@ -34,13 +36,15 @@ export function parsePanelSavedInputReference(value:unknown):PanelSavedInputRefe
 }
 export function resolvePanelSavedInputReference(workspace:string,targetObjectId:string,value:unknown):QualifiedPanelSavedInput {
  const reference=parsePanelSavedInputReference(value);if(!objectId.test(targetObjectId))invalid('an exact raw FFT object identity is required');
- let input:Row,rawFft:string,requestedAnnotation:string|undefined;
+ let input:Row,rawFft:string,requestedAnnotation:string|undefined,sourceProofRefs:SourceProofReference[]=[];
  if(reference.kind==='execution'){
   const execution=readPanelExecutionInput(workspace,reference.request_id);
   if(execution.qualification!=='validated'||execution.status!=='completed'||!execution.input_snapshot||!execution.fft_object_id)unavailable('original execution is not a qualified completed FFT');
   input=execution.input_snapshot;rawFft=execution.fft_object_id;
+  sourceProofRefs=execution.source_proof_refs??[];
  }else{
   const report=readRoiComparisonReport(workspace,reference.comparison_id),matches=report.rows.filter(row=>row.annotation_id===reference.annotation_id);
+  sourceProofRefs=readSourceProofReferences(report.source_proof_refs);
   if(matches.length!==1)unavailable('the exact ROI is absent or ambiguous in the comparison');
   const fft=matches[0]!.fft;if(!isRow(fft)||fft.input_snapshot_verified!==true||!isRow(fft.input_association)||!objectId.test(String(fft.object_id)))unavailable('comparison has no verified original floating input');
   const proof=fft.input_association;rawFft=String(fft.object_id);requestedAnnotation=reference.annotation_id;
@@ -48,17 +52,18 @@ export function resolvePanelSavedInputReference(workspace:string,targetObjectId:
    if(typeof proof.input_relative_path!=='string'||typeof proof.input_sha256!=='string')unavailable('original GUI execution proof is incomplete');
    const execution=verifyPanelExecutionInput(workspace,proof.input_relative_path,proof.input_sha256);
    if(execution.qualification!=='validated'||execution.status!=='completed'||execution.fft_object_id!==rawFft||!execution.input_snapshot)unavailable('original GUI FFT input is no longer qualified');
-   input=execution.input_snapshot;
+   input=execution.input_snapshot;sourceProofRefs=execution.source_proof_refs??[];
   }else if((proof.kind==='cli_request_v1'||proof.kind==='gui_savepoint_v1')&&isRow(proof.input_snapshot))input=proof.input_snapshot;
   else return unavailable('unknown or legacy comparison input proof');
  }
  if(rawFft!==targetObjectId)unavailable('reference belongs to a different raw FFT');
  if(!objectId.test(String(input.source_view_object_id))||!objectId.test(String(input.frame_object_id))||input.annotation_id!==null&&(typeof input.annotation_id!=='string'||!id.test(input.annotation_id))||!Array.isArray(input.float_roi_xyxy)||input.float_roi_xyxy.length!==4||input.float_roi_xyxy.some(v=>typeof v!=='number'||!Number.isFinite(v))||!Array.isArray(input.processing_rect_xyxy)||input.processing_rect_xyxy.length!==4||input.processing_rect_xyxy.some(v=>!Number.isSafeInteger(v)))unavailable('original input identities or coordinates are incomplete');
- const reader=readImageProviderRecords(workspace),source=reader.object(input.source_view_object_id),frame=reader.object(input.frame_object_id),fft=reader.object(rawFft),sourceLineage=reader.lineage(source.value.object_id),fftLineage=reader.lineage(rawFft),calibration=reader.operand(source.value.object_id).record;
+ const reader=readImageProviderRecords(workspace,{source_proof_refs:sourceProofRefs}),source=reader.object(input.source_view_object_id),frame=reader.object(input.frame_object_id),fft=reader.object(rawFft),sourceLineage=reader.lineage(source.value.object_id),fftLineage=reader.lineage(rawFft),calibration=reader.operand(source.value.object_id).record;
  if(frame.value.kind!=='frame'||fft.value.kind!=='fft'||sourceLineage.frames.length!==1||sourceLineage.frames[0]!.object_id!==frame.value.object_id||fftLineage.frames.length!==1||fftLineage.frames[0]!.object_id!==frame.value.object_id||!same(fft.value.source_rect_xyxy,input.processing_rect_xyxy)||!same(fft.value.xy_calibration??null,calibration))unavailable('provider source, FFT support or original calibration differs');
  if(input.source_view_manifest_sha256!==source.manifest_sha256||input.frame_manifest_sha256!==frame.manifest_sha256||!isRow(frame.value.files_sha256)||input.frame_array_sha256!==frame.value.files_sha256['data.npy']||input.calibration_sha256!==createHash('sha256').update(canonical(calibration??null)).digest('hex')||Object.hasOwn(input,'calibration_snapshot')&&!same(input.calibration_snapshot,calibration))unavailable('original source/frame/calibration hash changed during readback');
  // The referenced reader already checks the float-to-integer association and
  // producer binding. Recheck arrays without deriving floats from integer bins.
  reader.verifyArray(frame.value.object_id);reader.verifyArray(rawFft);
+ reader.verifyProofContext();
  return {source_view_object_id:String(input.source_view_object_id),frame_object_id:String(input.frame_object_id),raw_fft_object_id:rawFft,processing_rect_xyxy:structuredClone(input.processing_rect_xyxy) as number[],float_roi_xyxy:structuredClone(input.float_roi_xyxy) as number[],annotation_id:input.annotation_id as string|null,calibration_snapshot:structuredClone(calibration??null),...(requestedAnnotation?{requested_annotation_id:requestedAnnotation}:{}),spatial_return_reference:{version:1,view_object_id:String(input.source_view_object_id),frame_object_id:String(input.frame_object_id),fft_object_id:rawFft,source_rect_xyxy:structuredClone(input.processing_rect_xyxy) as number[]}};
 }

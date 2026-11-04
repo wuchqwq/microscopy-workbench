@@ -92,6 +92,41 @@ test('a completed user zoom while tile-fit awaits an asset is preserved rather t
  const h=await harness(collection(),{camera:true});let release;h.delayAssetRead(new Promise(resolve=>release=resolve));h.state.window_collection.windows[0].object_id=id(14);h.state.window_collection.revision++;h.workspace.sync(h.state);
  const operation=h.workspace.tileAndFitAll();await settle();h.workspace.noteCameraIntent();h.workspace.queueActiveCamera({scale:4,center_image_xy:[48,32]});await h.workspace.awaitStableMetadata();release();await assert.rejects(operation,/缩放意图已改变/);assert.equal(h.fits(),0);assert.equal(h.state.window_collection.windows.find(w=>w.window_id===id(2)).view_context.camera.scale,4);
 });
+
+test('explicit source/FFT comparison uses exact source identity and retains every other window',async()=>{
+ const initial=collection();initial.windows.push({...copy(initial.windows[1]),window_id:id(3),object_id:id(13),title:'FFT B'});const h=await harness(initial,{camera:true});
+ assert.deepEqual(await h.workspace.compareSourceFft(id(2)),{status:'presented'});assert.equal(h.fits(),1);assert.equal(h.state.window_collection.active_window_id,id(2));assert.equal(h.state.window_collection.windows.length,3);
+ const [source,a,b]=h.state.window_collection.windows;assert.deepEqual(source.layout,{x:0,y:0,width:.5,height:1,z:1});assert.deepEqual(a.layout,{x:.5,y:0,width:.5,height:.5,z:2});assert.deepEqual(b.layout,{x:.5,y:.5,width:.5,height:.5,z:3});assert.equal(h.requests.filter(r=>r.body?.action==='window-layout').length,1);assert.equal(h.requests.filter(r=>r.body?.action==='window-camera').length,2);
+});
+test('source/FFT comparison abstains for a latest same-frame substitute, inactive FFT and missing history',async()=>{
+ for(const change of [c=>{c.windows[0].object_id=id(99);c.windows[0].latest_observation_view_object_id=id(11);},c=>{c.active_window_id=id(1);},c=>{c.windows=c.windows.slice(1);},c=>{delete c.windows[1].source_reference;}]){
+  const initial=collection();change(initial);const h=await harness(initial,{camera:true}),before=h.requests.length,result=await h.workspace.compareSourceFft(id(2));assert.equal(result.status,'not-ready');assert.equal(h.requests.length,before);assert.equal(h.fits(),0);
+ }
+});
+function freshSourceCollection(){const c=collection();c.windows=c.windows.slice(0,1);c.active_window_id=id(1);c.windows[0].layout={x:0,y:0,width:1,height:1,z:1};c.windows[0].view_context={version:1,object_id:id(11),panel_mapping_fingerprint:'f'.repeat(64),camera:{scale:2.75,center_image_xy:[53,37]},selection_candidate:null,selected_annotation_id:null};return c;}
+function admitFreshFft(h){const next=copy(h.state.window_collection);next.revision++;next.windows.push(copy(collection().windows[1]));next.active_window_id=id(2);h.state.object={object_id:id(12)};h.state.window_collection=next;h.workspace.sync(h.state);}
+test('one-use automatic comparison preserves the existing source camera and fits only the new active FFT',async()=>{
+ const h=await harness(freshSourceCollection(),{camera:true}),ticket=h.workspace.beginAutomaticSourceFftPresentation(true),before=copy(h.state.window_collection.windows[0].view_context);assert.ok(ticket);admitFreshFft(h);
+ assert.deepEqual(await h.workspace.tryAutomaticSourceFftPresentation(ticket,id(2)),{status:'presented'});assert.equal(h.fits(),1);assert.deepEqual(h.state.window_collection.windows[0].view_context,before);assert.equal(h.requests.filter(r=>r.body?.action==='window-camera').length,0);assert.equal(h.state.window_collection.windows[0].layout.width,.5);
+ assert.deepEqual(await h.workspace.tryAutomaticSourceFftPresentation(ticket,id(2)),{status:'not-ready',reason:'automatic-not-eligible'});
+});
+test('automatic tickets require explicit fresh permission and a known source camera; restored two-window states abstain',async()=>{
+ const h=await harness(freshSourceCollection(),{camera:true});assert.equal(h.workspace.beginAutomaticSourceFftPresentation(false),null);
+ const unknown=freshSourceCollection();delete unknown.windows[0].view_context;assert.equal((await harness(unknown)).workspace.beginAutomaticSourceFftPresentation(true),null);
+ assert.equal((await harness(collection(),{camera:true})).workspace.beginAutomaticSourceFftPresentation(true),null);
+ assert.deepEqual(await h.workspace.tryAutomaticSourceFftPresentation({sequence:1},id(2)),{status:'not-ready',reason:'automatic-not-eligible'});
+});
+test('automatic comparison abstains after later gesture, layout, mode, camera or changed source context',async()=>{
+ for(const intent of [h=>h.workspace.notePresentationIntent(),h=>h.workspace.noteCameraIntent(),h=>h.get('single-window').onclick(),h=>{const header=h.header(id(1));header.onpointerdown(h.event(header,10,10));header.onpointercancel(h.event(header,10,10));},h=>{h.state.window_collection.windows[0].view_context.camera.scale=4;h.state.window_collection.revision++;h.workspace.sync(h.state);}]){
+  const h=await harness(freshSourceCollection(),{camera:true}),ticket=h.workspace.beginAutomaticSourceFftPresentation(true);intent(h);admitFreshFft(h);await settle();const before=h.requests.filter(r=>r.body).length;assert.equal((await h.workspace.tryAutomaticSourceFftPresentation(ticket,id(2))).status,'not-ready');assert.equal(h.fits(),0);assert.equal(h.requests.filter(r=>r.body).length,before);
+ }
+});
+test('automatic presentation checks the ticket after delayed asset and layout acknowledgements',async()=>{
+ for(const waitKind of ['asset','layout']){
+  const h=await harness(freshSourceCollection(),{camera:true}),ticket=h.workspace.beginAutomaticSourceFftPresentation(true);let release;const delay=new Promise(resolve=>release=resolve);if(waitKind==='asset')h.delayAssetRead(delay);else h.delayMetadata(delay);admitFreshFft(h);
+  const operation=h.workspace.tryAutomaticSourceFftPresentation(ticket,id(2));await settle();h.workspace.noteCameraIntent();release();assert.equal((await operation).status,'not-ready');assert.equal(h.fits(),0);assert.equal(h.requests.filter(r=>r.body?.action==='window-camera').length,0);
+ }
+});
 test('a verified clean pair renders only that saved object vector annotations, never the baked PNG twice',async()=>{
  const h=await harness(collection(),{vectorAsset:true}),body=h.body(id(1)),image=body.children[0];assert.equal(image.src,'data:image/png;base64,qualified-clean-png');assert.equal(h.frame(id(1)).attributes['data-annotation-rendering'],'vector');
  const layers=body.children.filter(e=>e.className==='window-annotation-overlay');assert.equal(layers.length,1);assert.match(layers[0].innerHTML,/历史 ROI/);assert.doesNotMatch(layers[0].innerHTML,/data-annotation-id=|annotation-label-draggable|data-part="handles"/);assert.equal(h.requests.filter(r=>r.body).length,0);

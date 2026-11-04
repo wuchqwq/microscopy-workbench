@@ -16,6 +16,9 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
  [key:string]:unknown;
  object:AppObject;state_revision:number;effective_display?:AppDisplay|null;selection?:AppSelection|null;last_operation?:AppOperation|null;
  source_identity?:{readonly label?:string;readonly filename?:string};tools:readonly {readonly name:string}[];
+ frame_resolution?:{readonly status:string;readonly reason_code?:string;readonly records_checked?:number;readonly ancestor_reads?:number};
+ source_recheck?:{readonly status:'available'|'pending';readonly reason_code:string;readonly records_checked:number;readonly request_id?:string};
+ source_recheck_query?:{readonly state:string;readonly request_id?:string;readonly automatic_retry?:false;readonly applied_to_current_working?:boolean};
  numeric_results?:Partial<Record<'statistics'|'profile',ProfileResult|null>>;numeric_result_recovery?:{readonly state?:string;readonly results?:Readonly<Record<string,{readonly state?:string}>>};
  png_base64?:string|null;clean_png_base64?:string|null;domain_png_base64?:string|null;clean_png_sha256?:string|null;
  sequence_evidence?:SequenceEvidence|null;domain_evidence?:DomainEvidence|null;render_base_id?:string;display_source_object_id?:string;
@@ -24,7 +27,7 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
  window_collection?:WindowCollection;
  panel_mapping_fingerprint?:string;
  multi_roi_handoff_schema_version?:1;
- edit_state?:{readonly dirty?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
+ edit_state?:{readonly dirty?:boolean;readonly gesture_active?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
  figure_base?:FigureBase;
 }
 type EditableSelection<S extends WireSelection> = S extends WireSelection ? Omit<S,'coordinates'>&{coordinates:readonly number[];rendered?:readonly number[]}:never;

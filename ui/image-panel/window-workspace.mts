@@ -11,6 +11,11 @@ export interface WindowViewContext {version:1;object_id:string;panel_mapping_fin
 export interface ActiveSavedImage {object_id:string;image:BrowserElement;panel_mapping_fingerprint:string;object:unknown;}
 export interface WindowEntry {window_id:string;object_id:string;role:'source'|'roi'|'fft';title:string;layout:WindowLayout;source_reference?:WindowSourceReference;view_context?:WindowViewContext;latest_observation_view_object_id?:string;}
 export interface WindowCollection {schema_version:1;revision:number;frame_object_id:string|null;active_window_id:string|null;windows:readonly WindowEntry[];closed_windows?:readonly WindowEntry[];unavailable_reason?:string;}
+export type WindowPresentationResult={status:'presented'}|{status:'not-ready';reason:'unavailable'|'target-not-active'|'source-unavailable'|'busy'|'stale-intent'|'asset-not-ready'|'metadata-conflict'|'automatic-not-eligible'};
+// Ticket identity is held by this workspace only. It is transient permission
+// to present a newly admitted pair, never a saved mode or navigation record.
+export interface AutomaticSourceFftPresentationTicket {readonly sequence:number;}
+interface AutomaticPresentationStart {intent:number;frame:string;source:WindowEntry;revision:number;}
 interface HostState {object:{object_id:string};state_revision?:number;window_collection?:WindowCollection;panel_mapping_fingerprint?:string;}
 interface WindowOptions {
  document:BrowserDocument;viewport:BrowserElement;getState:()=>HostState|undefined;
@@ -80,12 +85,13 @@ export class WindowWorkspace {
  private writes:Promise<void>=Promise.resolve();private width=0;private narrow=true;private single=false;private layoutEpoch=0;private readonly layoutEpochs=new Map<string,number>();private deferredGeometry:{window_id:string;object_id:string}|null=null;
  private switchLocked=false;private metadataError:Error|null=null;private cameraEpoch=0;private readonly pendingCameras=new Map<string,PendingCamera>();private readonly cameraTimers=new Map<string,unknown>();private readonly failedCameras=new Map<string,WindowCameraFailure>();private pendingWrites=0;
  private activeOverlay:BrowserElement|null=null;private fittingAll=false;private cameraIntentEpoch=0;
+ private presentationIntentEpoch=0;private presentationSequence=0;private readonly automaticPresentations=new WeakMap<AutomaticSourceFftPresentationTicket,AutomaticPresentationStart>();
  constructor(private readonly options:WindowOptions){
   const d=options.document;this.desktop=d.getElementById('window-desktop');this.controls=d.getElementById('window-controls');
   if(!this.desktop||!this.controls)return;
   const tile=d.getElementById('tile-windows');if(tile)tile.onclick=()=>this.tile();
   const tileFit=d.getElementById('tile-fit-windows');if(tileFit)tileFit.onclick=()=>{void this.tileAndFitAll().catch(error=>this.options.onError((error as Error).message));};
-  const single=d.getElementById('single-window');if(single)single.onclick=()=>{this.single=!this.single;this.resize();};
+  const single=d.getElementById('single-window');if(single)single.onclick=()=>{this.notePresentationIntent();this.single=!this.single;this.resize();};
   options.observe?.(this.desktop,()=>this.resize());
  }
  sync(state:HostState):void {
@@ -148,6 +154,7 @@ export class WindowWorkspace {
  private geometry(frame:Frame,entry:WindowEntry,validatedOnly=false){const r=validatedOnly?entry.layout:this.localLayouts.get(entry.window_id)??entry.layout;frame.root.style.zIndex=String(r.z);if(entry.window_id===this.collection?.active_window_id&&this.options.isScientificGesture?.()){this.deferredGeometry={window_id:entry.window_id,object_id:entry.object_id};return;}Object.assign(frame.root.style,{left:`calc(${r.x*100}% + 4px)`,top:`calc(${r.y*100}% + 4px)`,width:`calc(${r.width*100}% - 8px)`,height:`calc(${r.height*100}% - 8px)`});if(entry.window_id!==this.collection?.active_window_id)this.applyPassiveContext(frame,entry);}
  private raiseWindow(id:string,persist=true):void {
   if(this.switchLocked||this.narrow||this.single||!this.collection||!this.frames.has(id))return;
+  if(persist)this.notePresentationIntent();
   const ordered=[...this.collection.windows].sort((a,b)=>(this.localLayouts.get(a.window_id)??a.layout).z-(this.localLayouts.get(b.window_id)??b.layout).z);
   if(ordered.at(-1)?.window_id===id&&ordered.every(entry=>(this.localLayouts.get(entry.window_id)??entry.layout).z<=ordered.length))return;
   const entries=ordered.filter(entry=>entry.window_id!==id);entries.push(ordered.find(entry=>entry.window_id===id)!);
@@ -183,6 +190,7 @@ export class WindowWorkspace {
  }
  private startLayout(event:BrowserEvent,id:string,kind:'move'|'resize',capture:BrowserElement){
   if(this.switchLocked||event.button!==0||this.narrow||this.single||!this.collection||id===this.collection.active_window_id&&this.options.isScientificGesture?.())return;const entry=this.collection.windows.find(value=>value.window_id===id);if(!entry)return;event.preventDefault();this.raiseWindow(id,false);const before={...(this.localLayouts.get(id)??entry.layout)};
+  this.notePresentationIntent();
   this.localLayouts.set(id,before);this.layoutEpochs.set(id,++this.layoutEpoch);this.gesture={kind,window_id:id,pointer_id:event.pointerId,start:[event.clientX,event.clientY],before,capture};capture.setPointerCapture(event.pointerId);this.geometry(this.frames.get(id)!,entry);
  }
  private moveLayout(event:BrowserEvent){
@@ -193,11 +201,63 @@ export class WindowWorkspace {
  }
  private finishLayout(event:BrowserEvent){if(!this.gesture||this.gesture.pointer_id!==event.pointerId)return;const g=this.gesture;this.gesture=null;this.persistLayouts();if(g.kind==='move'&&Math.hypot(event.clientX-g.start[0]!,event.clientY-g.start[1]!)<3)void this.requestActivation(g.window_id);}
  private cancelLayout(event:BrowserEvent){const g=this.gesture;if(!g||g.pointer_id!==event.pointerId)return;this.localLayouts.set(g.window_id,g.before);this.gesture=null;const entry=this.collection?.windows.find(value=>value.window_id===g.window_id);if(entry)this.geometry(this.frames.get(g.window_id)!,entry);}
- tile():void {if(this.switchLocked||!this.collection||this.narrow||this.single)return;for(const item of tiledWindowLayouts(this.collection.windows)){this.localLayouts.set(item.window_id,item.layout);this.layoutEpochs.set(item.window_id,++this.layoutEpoch);}for(const entry of this.collection.windows)this.geometry(this.frames.get(entry.window_id)!,entry);this.persistLayouts();this.options.onBoundsChange();}
- noteCameraIntent():void {this.cameraIntentEpoch++;}
+ tile():void {if(this.switchLocked||!this.collection||this.narrow||this.single)return;this.notePresentationIntent();for(const item of tiledWindowLayouts(this.collection.windows)){this.localLayouts.set(item.window_id,item.layout);this.layoutEpochs.set(item.window_id,++this.layoutEpoch);}for(const entry of this.collection.windows)this.geometry(this.frames.get(entry.window_id)!,entry);this.persistLayouts();this.options.onBoundsChange();}
+ notePresentationIntent():void {this.presentationIntentEpoch++;}
+ presentationVersion():number {return this.presentationIntentEpoch;}
+ noteCameraIntent():void {this.cameraIntentEpoch++;this.notePresentationIntent();}
+ beginAutomaticSourceFftPresentation(allowAutomatic:boolean):AutomaticSourceFftPresentationTicket|null {
+  const collection=this.collection,source=collection?.windows[0];
+  if(!allowAutomatic||!collection||!source||collection.windows.length!==1||source.role!=='source'||collection.active_window_id!==source.window_id||!collection.frame_object_id||collection.closed_windows?.length||this.switchLocked||this.fittingAll||this.narrow||this.single||this.hasPendingMetadata()||this.currentMetadataError()||this.options.isScientificGesture?.()||this.options.getState()?.object.object_id!==source.object_id)return null;
+  // An absent or malformed camera cannot establish what must be preserved.
+  const fingerprint=this.options.getState()?.panel_mapping_fingerprint;if(!fingerprint||source.view_context?.camera_origin==='new_fit_preference'||!readWindowViewContext(source.view_context,{object_id:source.object_id},fingerprint))return null;
+  const ticket=Object.freeze({sequence:++this.presentationSequence});this.automaticPresentations.set(ticket,{intent:this.presentationIntentEpoch,frame:collection.frame_object_id,source:JSON.parse(JSON.stringify(source)) as WindowEntry,revision:collection.revision});return ticket;
+ }
+ async tryAutomaticSourceFftPresentation(ticket:AutomaticSourceFftPresentationTicket|null,fftWindowId:string):Promise<WindowPresentationResult> {
+  const start=ticket&&this.automaticPresentations.get(ticket);if(ticket)this.automaticPresentations.delete(ticket);
+  if(!start)return {status:'not-ready',reason:'automatic-not-eligible'};
+  const eligible=(layoutAccepted=false)=>{const collection=this.collection,source=collection?.windows.find(entry=>entry.window_id===start.source.window_id),fft=collection?.windows.find(entry=>entry.window_id===fftWindowId);return this.presentationIntentEpoch===start.intent&&collection?.frame_object_id===start.frame&&collection.revision>start.revision&&collection.windows.length===2&&!collection.closed_windows?.length&&JSON.stringify(source&&layoutAccepted?{...source,layout:start.source.layout}:source)===JSON.stringify(start.source)&&fft?.role==='fft'&&fft.window_id!==start.source.window_id;};
+  const fft=this.collection?.windows.find(entry=>entry.window_id===fftWindowId);if(!eligible()||fft?.view_context&&(fft.view_context.camera_origin!=='new_fit_preference'||!readWindowViewContext(fft.view_context,{object_id:fft.object_id},this.options.getState()?.panel_mapping_fingerprint)))return {status:'not-ready',reason:'stale-intent'};
+  return this.presentSourceFft(fftWindowId,true,eligible);
+ }
+ async compareSourceFft(fftWindowId:string):Promise<WindowPresentationResult> {
+  this.notePresentationIntent();return this.presentSourceFft(fftWindowId,false,()=>true);
+ }
+ private sourceFftPair(fftWindowId:string):{source:WindowEntry;fft:WindowEntry}|WindowPresentationResult {
+  const collection=this.collection;if(!collection)return {status:'not-ready',reason:'unavailable'};
+  const fft=collection.windows.find(entry=>entry.window_id===fftWindowId);if(!fft||fft.role!=='fft'||collection.active_window_id!==fftWindowId||this.options.getState()?.object.object_id!==fft.object_id)return {status:'not-ready',reason:'target-not-active'};
+  const reference=fft.source_reference,sources=collection.windows.filter(entry=>entry.role==='source'&&entry.object_id===reference?.input_view_object_id);
+  if(!reference||reference.frame_object_id!==collection.frame_object_id||sources.length!==1)return {status:'not-ready',reason:'source-unavailable'};
+  return {source:sources[0]!,fft};
+ }
+ private async presentSourceFft(fftWindowId:string,automatic:boolean,eligible:(layoutAccepted?:boolean)=>boolean):Promise<WindowPresentationResult> {
+  const pair=this.sourceFftPair(fftWindowId);if('status' in pair)return pair;
+  if(this.switchLocked||this.fittingAll||this.narrow||this.gesture||this.options.isScientificGesture?.())return {status:'not-ready',reason:'busy'};
+  const intent=this.presentationIntentEpoch,identity=()=>JSON.stringify([this.collection?.frame_object_id,this.collection?.active_window_id,this.collection?.windows.map(entry=>[entry.window_id,entry.object_id,entry.source_reference])]),expected=identity();
+  // The automatic source entry may acquire only this operation's acknowledged
+  // layout. Its existing camera/context must remain byte-for-byte unchanged.
+  let layoutAccepted=false;
+  const current=()=>this.presentationIntentEpoch===intent&&identity()===expected&&!this.switchLocked&&!this.gesture&&!this.options.isScientificGesture?.()&&eligible(layoutAccepted);
+  this.fittingAll=true;this.resize();
+  try{
+   await this.awaitStableMetadata();if(!current())return {status:'not-ready',reason:'stale-intent'};
+   // Load before laying out, and recheck permission after each asset wait.
+   for(;;){const load=[...this.frames.values()].find(frame=>frame.assetReady)?.assetReady;if(!load)break;await load;if(!current())return {status:'not-ready',reason:'stale-intent'};}
+   for(const entry of this.collection!.windows){if(entry.window_id===fftWindowId)continue;const frame=this.frames.get(entry.window_id);if(!frame?.image||frame.assetObject!==entry.object_id||frame.assetFailedObject===entry.object_id)return {status:'not-ready',reason:'asset-not-ready'};}
+   const other=this.collection!.windows.filter(entry=>entry.window_id!==pair.source.window_id),ordered=[pair.fft,...other.filter(entry=>entry.window_id!==fftWindowId)],layouts=[{window_id:pair.source.window_id,layout:{x:0,y:0,width:.5,height:1,z:1}},...ordered.map((entry,index)=>({window_id:entry.window_id,layout:{x:.5,y:index/ordered.length,width:.5,height:1/ordered.length,z:index+2}}))];
+   let applied=false;await this.enqueue(async()=>{if(!current())return;const collection=this.collection!;if(!automatic)this.single=false;for(const item of layouts){this.localLayouts.set(item.window_id,item.layout);this.layoutEpochs.set(item.window_id,++this.layoutEpoch);}for(const entry of collection.windows)this.geometry(this.frames.get(entry.window_id)!,entry);this.resize();const epochs=new Map(this.layoutEpochs);await this.metadata('window-layout',{collection_revision:collection.revision,windows:layouts},epochs);applied=true;layoutAccepted=true;});
+   if(!applied||!current())return {status:'not-ready',reason:'stale-intent'};
+   // Layout acknowledgements can start a replacement qualified asset read.
+   for(;;){const load=[...this.frames.values()].find(frame=>frame.assetReady)?.assetReady;if(!load)break;await load;if(!current())return {status:'not-ready',reason:'stale-intent'};}
+   if(!current())return {status:'not-ready',reason:'stale-intent'};
+   for(const entry of this.collection!.windows){if(entry.window_id===fftWindowId)continue;const frame=this.frames.get(entry.window_id);if(!frame?.image||frame.assetObject!==entry.object_id||frame.assetFailedObject===entry.object_id)return {status:'not-ready',reason:'asset-not-ready'};if(automatic&&!readWindowViewContext(entry.view_context,{object_id:entry.object_id},frame.mappingFingerprint??''))return {status:'not-ready',reason:'asset-not-ready'};}
+   this.options.onActiveFit();if(!automatic)for(const entry of this.collection!.windows){if(entry.window_id===fftWindowId)continue;const frame=this.frames.get(entry.window_id);if(!frame?.image||frame.assetObject!==entry.object_id||frame.assetFailedObject===entry.object_id)return {status:'not-ready',reason:'asset-not-ready'};this.fitPassive(frame);this.savePassiveCamera(entry.window_id,frame);}
+   await this.awaitStableMetadata();if(!current())return {status:'not-ready',reason:'stale-intent'};return {status:'presented'};
+  }catch{return {status:'not-ready',reason:'metadata-conflict'};}finally{this.fittingAll=false;this.resize();}
+ }
  async tileAndFitAll():Promise<void>{
   if(this.switchLocked||this.fittingAll||!this.collection||this.narrow||this.collection.windows.length<2)return;
   if(this.gesture||this.options.isScientificGesture?.())throw new Error('先结束当前拖动，再平铺并适应全部。');
+  this.notePresentationIntent();
   const targets=()=>JSON.stringify([this.collection?.active_window_id,this.collection?.windows.map(entry=>[entry.window_id,entry.object_id])]),expected=targets(),cameraIntent=this.cameraIntentEpoch;
   this.fittingAll=true;this.resize();
   try{await this.awaitStableMetadata();if(targets()!==expected||this.cameraIntentEpoch!==cameraIntent)throw new Error('图像或缩放意图已改变；保留当前视野，请重新明确操作。');
@@ -216,11 +276,11 @@ export class WindowWorkspace {
  }
  private enqueue(task:()=>Promise<void>):Promise<void>{this.pendingWrites++;const operation=this.writes.then(task);this.writes=operation.catch(error=>{if(this.retiredCameraFailure(error))return;const failure=error instanceof Error?error:new Error(String(error));if(!(error instanceof WindowCameraFailure))this.metadataError=failure;this.options.onError(failure.message);}).finally(()=>{this.pendingWrites--;});return operation;}
  private persistLayouts(){void this.enqueue(async()=>{const collection=this.collection;if(!collection)return;const windows=collection.windows.map(entry=>({window_id:entry.window_id,layout:{...(this.localLayouts.get(entry.window_id)??entry.layout)}})),epochs=new Map(this.layoutEpochs);await this.metadata('window-layout',{collection_revision:collection.revision,windows},epochs);});}
- async closeWindow(id:string):Promise<void>{if(this.switchLocked)return;if(this.options.onClose){try{await this.options.onClose(id);}catch(error){this.options.onError((error as Error).message);}return;}void this.enqueue(async()=>{const collection=this.collection;if(!collection)return;if(id===collection.active_window_id)throw new Error('当前编辑窗口须先返回空间观察，再关闭。');await this.metadata('close-window',{collection_revision:collection.revision,window_id:id});});return this.writes;}
+ async closeWindow(id:string):Promise<void>{if(this.switchLocked)return;this.notePresentationIntent();if(this.options.onClose){try{await this.options.onClose(id);}catch(error){this.options.onError((error as Error).message);}return;}void this.enqueue(async()=>{const collection=this.collection;if(!collection)return;if(id===collection.active_window_id)throw new Error('当前编辑窗口须先返回空间观察，再关闭。');await this.metadata('close-window',{collection_revision:collection.revision,window_id:id});});return this.writes;}
  settled():Promise<void>{return this.writes;}
  hasPendingMetadata():boolean{return this.pendingWrites>0||this.pendingCameras.size>0||Boolean(this.gesture);}
  setSwitchLocked(locked:boolean):void {if(this.switchLocked===locked)return;this.switchLocked=locked;for(const entry of this.collection?.windows??[]){const frame=this.frames.get(entry.window_id);if(frame)this.updateFrame(frame,entry,entry.window_id===this.collection?.active_window_id);}this.resize();}
- async requestActivation(id:string):Promise<void>{if(this.switchLocked)return;const entry=[...this.collection?.windows??[],...this.collection?.closed_windows??[]].find(value=>value.window_id===id);if(!entry||id===this.collection?.active_window_id||!this.options.onActivate)return;try{await this.options.onActivate(id,entry.object_id);}catch(error){this.options.onError((error as Error).message);}}
+ async requestActivation(id:string):Promise<void>{if(this.switchLocked)return;const entry=[...this.collection?.windows??[],...this.collection?.closed_windows??[]].find(value=>value.window_id===id);if(!entry||id===this.collection?.active_window_id||!this.options.onActivate)return;this.notePresentationIntent();try{await this.options.onActivate(id,entry.object_id);}catch(error){this.options.onError((error as Error).message);}}
  private currentMetadataError():Error|undefined{return this.metadataError??this.failedCameras.values().next().value;}
  async awaitStableMetadata():Promise<void>{if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');for(;;){const before=this.currentMetadataError();if(before)throw before;this.flushCameras();const pending=this.writes;await pending;const after=this.currentMetadataError();if(after)throw after;if(this.writes===pending&&!this.pendingCameras.size)break;}if(this.gesture)throw new Error('先结束窗口拖动或调整大小，再切换编辑图。');}
  async saveActiveContext(camera:WindowCamera,annotationId:string|null,draftRevision:number,uiPanels?:WindowUiPanels):Promise<void>{
@@ -289,6 +349,6 @@ export class WindowWorkspace {
   frame.camera={scale:context.camera.scale,x:box.width/2-context.camera.center_image_xy[0]*context.camera.scale,y:box.height/2-context.camera.center_image_xy[1]*context.camera.scale};frame.appliedCamera=key;this.paintPassive(frame);return true;
  }
  private fitPassive(frame:Frame){if(!frame.image)return;const area=frame.body.getBoundingClientRect(),scale=Math.max(.02,Math.min(area.width/frame.imageSize[0]!,area.height/frame.imageSize[1]!)*.94);frame.camera={scale,x:(area.width-frame.imageSize[0]!*scale)/2,y:(area.height-frame.imageSize[1]!*scale)/2};this.paintPassive(frame);}
- private paintPassive(frame:Frame){if(!frame.image)return;const transform=`translate(${frame.camera.x}px,${frame.camera.y}px) scale(${frame.camera.scale})`;frame.image.style.transform=transform;frame.overlay?.remove?.();frame.annotationOverlay?.remove?.();const exact=this.collection?.windows.some(entry=>this.frames.get(entry.window_id)===frame&&entry.object_id===frame.assetObject);frame.annotationOverlay=exact&&frame.vectorAnnotations?createSavedAnnotationOverlay(this.options.document,frame.objectMetadata,frame.imageSize,frame.camera.scale):null;frame.overlay=exact?createSourceOverlay(this.options.document,frame.objectMetadata,this.collection,frame.imageSize,frame.camera.scale):null;for(const overlay of [frame.annotationOverlay,frame.overlay])if(overlay){Object.assign(overlay.style,{width:frame.imageSize[0]+'px',height:frame.imageSize[1]+'px',transform});frame.body.append(overlay);}}
- updateActiveSourceOverlay():void {this.activeOverlay?.remove?.();this.activeOverlay=null;if(!this.options.activeStage||!this.options.getActiveImageSize)return;this.activeOverlay=createSourceOverlay(this.options.document,this.options.getState()?.object,this.collection,this.options.getActiveImageSize(),this.options.getActiveScale?.()??1);if(this.activeOverlay)this.options.activeStage.append(this.activeOverlay);}
+ private paintPassive(frame:Frame){if(!frame.image)return;const transform=`translate(${frame.camera.x}px,${frame.camera.y}px) scale(${frame.camera.scale})`;frame.image.style.transform=transform;frame.overlay?.remove?.();frame.annotationOverlay?.remove?.();const exact=this.collection?.windows.some(entry=>this.frames.get(entry.window_id)===frame&&entry.object_id===frame.assetObject);frame.annotationOverlay=exact&&frame.vectorAnnotations?createSavedAnnotationOverlay(this.options.document,frame.objectMetadata,frame.imageSize,frame.camera.scale):null;frame.overlay=exact?createSourceOverlay(this.options.document,frame.objectMetadata,this.collection,frame.imageSize,frame.camera.scale,frame.mappingFingerprint):null;for(const overlay of [frame.annotationOverlay,frame.overlay])if(overlay){Object.assign(overlay.style,{width:frame.imageSize[0]+'px',height:frame.imageSize[1]+'px',transform});frame.body.append(overlay);}}
+ updateActiveSourceOverlay():void {this.activeOverlay?.remove?.();this.activeOverlay=null;if(!this.options.activeStage||!this.options.getActiveImageSize)return;const state=this.options.getState();this.activeOverlay=createSourceOverlay(this.options.document,state?.object,this.collection,this.options.getActiveImageSize(),this.options.getActiveScale?.()??1,state?.panel_mapping_fingerprint);if(this.activeOverlay)this.options.activeStage.append(this.activeOverlay);}
 }

@@ -7,8 +7,8 @@ import {DesktopCloseCoordinator} from '../lib/desktop_lifecycle.mjs';
 import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow,panelAddress,readDesktopOptions,desktopStartupError} from '../lib/desktop_contracts.mjs';
 import type {DesktopOptions,DesktopAction,DesktopActionReply} from '../lib/desktop_contracts.mjs';
 
-// A small structural port keeps the scientific Node 18 runtime independent of
-// Electron's separately installed Node >=22 development dependency.
+// A small structural port keeps the scientific Node 22/24 runtime independent
+// of Electron's separately installed development dependency.
 interface NativeEvent {preventDefault():void;url?:string;}
 interface DesktopContents extends EventEmitter {
  id:number;mainFrame:unknown;getURL():string;send(channel:string,value:unknown):void;reloadIgnoringCache():void;

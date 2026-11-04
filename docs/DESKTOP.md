@@ -4,7 +4,7 @@
 
 ## 安装开发依赖与启动
 
-使用普通 Node **22.12 或以上**安装单独锁定的 Electron 开发运行时。核心 Node/CLI 仍保持已有的 Node 18 下限；核心 `npm ci` 与 Node CI 不下载或运行 Electron。
+使用普通 Node **22.12+（22.x）或 24.x**安装单独锁定的 Electron 开发运行时。核心 Node/CLI 支持 **22.x 与 24.x**；核心 `npm ci` 与 Node CI 不下载或运行 Electron。参见[支持范围与轻量 CI](CI_SUPPORT.md)。
 
 ```powershell
 npm ci

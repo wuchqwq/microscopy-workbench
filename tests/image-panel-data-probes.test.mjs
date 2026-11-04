@@ -24,10 +24,11 @@ print(sys.executable)`,source],{encoding:'utf8'});assert.equal(fixture.status,0,
   const python=fixture.stdout.trim(),original=readFileSync(source);
   setup=new StdioImageClient({workspace,python});await setup.rpc('initialize',{});
   const opened=(await setup.tool('image_open',{source_path:source,request_id:'probe-open'})).data;
-  const frame=(await setup.tool('image_frame',{object_id:opened.object_id,frame_index:0,request_id:'probe-frame'})).data;await setup.close();setup=null;
+  const frame=(await setup.tool('image_frame',{object_id:opened.object_id,frame_index:0,request_id:'probe-frame'})).data;
+  const initialView=(await setup.tool('image_preview',{object_id:frame.object_id,request_id:'probe-preview',max_size:128})).data;await setup.close();setup=null;
   const actual=new StdioImageClient({workspace,python});let delayNext=false,probeStarted;
   const wrapped={rpc:actual.rpc.bind(actual),close:actual.close.bind(actual),async tool(name,args){const result=await actual.tool(name,args);if(name==='image_probe'&&delayNext){delayNext=false;probeStarted();await new Promise(resolve=>releaseProbe=resolve);}return result;}};
-  panel=await createImagePanel({workspace,python,object_id:frame.object_id,client:wrapped});const origin=panel.url.split('/#')[0],headers={'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json'};
+  panel=await createImagePanel({workspace,python,object_id:initialView.object_id,client:wrapped});const origin=panel.url.split('/#')[0],headers={'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json'};
   const send=async(action,params,status=200)=>{const response=await fetch(origin+'/api/action',{method:'POST',headers,body:JSON.stringify({expected_object_id:panel.state().object.object_id,draft_revision:panel.state().edit_state.draft_revision,action,params})}),value=await response.json();assert.equal(response.status,status,JSON.stringify(value));return value;};
   const select=(kind,coordinates)=>{const p=panel.state().object.panels[0];return {kind,coordinates,panel:p,source_object_id:p.source_object_id,coordinate_space:p.domain==='frequency'?'frequency_cycles_per_pixel':'source_pixels'};};
   const probeBody=(coordinates,component='raw')=>{const selected=select('point',coordinates);return {expected_object_id:panel.state().object.object_id,source_object_id:selected.source_object_id,coordinate_space:selected.coordinate_space,coordinates,component};};

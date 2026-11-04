@@ -1,5 +1,7 @@
 # TypeScript migration — original audit and first-slice evidence
 
+Current runtime support is Node 22.x/24.x with Node 22 typings; see [CI support](CI_SUPPORT.md). Versions in this migration report describe its original qualification.
+
 The full business-source migration now continues in [the completion guide](TYPESCRIPT_COMPLETE.md).
 The sections below retain the original first-PR audit and its bounded evidence.
 

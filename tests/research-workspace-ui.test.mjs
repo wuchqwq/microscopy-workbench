@@ -120,3 +120,20 @@ test('raw observation whitespace counts toward write budget and is never silentl
  const long='x'.repeat(1000)+' ';nodes.get('roi-reason').value=long;nodes.get('roi-reason').oninput();await nodes.get('save-observation').onclick();
  assert.equal(nodes.get('roi-reason').value,long);assert.ok(actions.some(([kind,message])=>kind==='error'&&/actual_length=1001/.test(message)));assert.equal(ui.reasonDirty,true);
 });
+
+function selectReason(s,id='ROI 1'){const saved=s.object.annotations.find(mark=>mark.annotation_id===id);s.selection={kind:'rectangle',...structuredClone(saved.anchor),panel:structuredClone(s.object.panels[0])};return s;}
+test('reason baseline: undoing temporary text to the exact saved empty reason clears only the reason draft',()=>{
+ const {ui,nodes,actions}=setup(),s=selectReason(state());s.object.annotations[0].note='';ui.render(s);const field=nodes.get('roi-reason');field.value='temporary';field.oninput();assert.equal(ui.reasonDirty,true);field.value='';field.oninput();assert.equal(ui.reasonDirty,false);ui.render(s);assert.equal(field.value,'');assert.deepEqual(actions,[['draft'],['draft']]);
+});
+test('reason baseline: saved whitespace and Unicode are exact values, never trimmed aliases',()=>{
+ const {ui,nodes}=setup(),s=selectReason(state());const saved='  观察 😀\n';s.object.annotations[0].note=saved;ui.render(s);const field=nodes.get('roi-reason');assert.equal(field.value,saved);field.value=saved.trim();field.oninput();assert.equal(ui.reasonDirty,true);field.value=saved;field.oninput();assert.equal(ui.reasonDirty,false);
+});
+test('reason baseline: a dirty draft cannot become clean by matching another ROI or a late saved version',()=>{
+ const {ui,nodes}=setup(),a=selectReason(state()),b=selectReason(state(),'ROI 2');ui.render(a);const field=nodes.get('roi-reason');field.value='new draft';field.oninput();ui.render(b);assert.equal(field.value,'new draft');field.value=b.object.annotations[1].note;field.oninput();assert.equal(ui.reasonDirty,true,'another ROI has a different baseline');const late=structuredClone(a);late.object.object_id=E;late.object.annotations[0].note=field.value;ui.render(late,{observationSavePhase:'verifying'});assert.equal(ui.reasonDirty,true);assert.equal(field.value,b.object.annotations[1].note);assert.ok(ui.reasonDirty);
+});
+test('reason baseline: clean selection changes load that ROI saved reason and keep independent baselines',()=>{
+ const {ui,nodes}=setup(),a=selectReason(state()),b=selectReason(state(),'ROI 2');ui.render(a);assert.equal(nodes.get('roi-reason').value,'Why ROI 1');ui.render(b);assert.equal(nodes.get('roi-reason').value,'Why ROI 2');nodes.get('roi-reason').value='Why ROI 1';nodes.get('roi-reason').oninput();assert.equal(ui.reasonDirty,true);nodes.get('roi-reason').value='Why ROI 2';nodes.get('roi-reason').oninput();assert.equal(ui.reasonDirty,false);
+});
+test('reason baseline: legacy dirty flags equal to the exact saved note are reconciled during render and hydration',()=>{
+ const {ui,nodes}=setup(),s=selectReason(state());s.object.annotations[0].note='';ui.render(s);ui.reasonDirty=true;ui.render(s);assert.equal(ui.reasonDirty,false);assert.equal(nodes.get('roi-reason').value,'');ui.restoreReason(s,'');assert.equal(ui.reasonDirty,false);ui.restoreReason(s,'actual unsaved text');assert.equal(ui.reasonDirty,true);assert.equal(nodes.get('roi-reason').value,'actual unsaved text');
+});

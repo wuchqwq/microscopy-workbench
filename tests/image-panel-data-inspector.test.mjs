@@ -8,12 +8,13 @@ import {spawnSync} from 'node:child_process';
 import {mkdtempSync,readFileSync,writeFileSync,readdirSync,rmSync,existsSync} from 'node:fs';
 import {createImagePanel,StdioImageClient} from '../tools/image_panel.mjs';
 import {exportMeasurementTable} from '../ui/image-panel/measurement-workspace.mjs';
+import {prepareOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
 
 const enabled=process.env.DM_INSPECTOR_PANEL_REAL_TEST==='1';
 const almost=(actual,expected)=>assert.ok(Math.abs(actual-expected)<=1e-12*Math.max(1,Math.abs(expected)),`${actual} != ${expected}`);
 
 test('actual provider table retains three reflections, versions, scale and lost-response recovery across new Panel instances',{skip:!enabled,timeout:180000},async()=>{
- const directory=mkdtempSync(path.join(tmpdir(),'data-inspector-panel-')),workspace=path.join(directory,'workspace'),source=path.join(directory,'public-synthetic.tiff');let setup,panel;
+ const directory=mkdtempSync(path.join(tmpdir(),'data-inspector-panel-')),workspace=path.join(directory,'workspace'),source=path.join(directory,'public-synthetic.tiff');let setup,panel,owner;
  try{
   const pythonCommand=process.env.DM_IMAGE_PYTHON??process.env.DM_TEST_PYTHON??'python';
   const created=spawnSync(pythonCommand,['-c',String.raw`import sys,numpy as np,tifffile
@@ -24,6 +25,7 @@ print(sys.executable)`,source],{encoding:'utf8'});assert.equal(created.status,0,
   setup=new StdioImageClient({workspace,python});await setup.rpc('initialize',{});
   const opened=(await setup.tool('image_open',{source_path:source,request_id:'inspector-open'})).data;
   const frame=(await setup.tool('image_frame',{object_id:opened.object_id,frame_index:0,request_id:'inspector-frame'})).data;
+  const view=(await setup.tool('image_preview',{object_id:frame.object_id,request_id:'inspector-preview',max_size:128})).data;
   await setup.close();setup=null;
   const delegate=new StdioImageClient({workspace,python});let dropNext=false,dropped=null,measureSubmissions=0;
   const client={rpc:(...args)=>delegate.rpc(...args),close:()=>delegate.close(),async tool(name,args){
@@ -31,7 +33,11 @@ print(sys.executable)`,source],{encoding:'utf8'});assert.equal(created.status,0,
    if(name==='image_measure'){measureSubmissions++;if(dropNext){dropNext=false;dropped={request_id:args.request_id,object_id:result.data.object_id};throw new Error('Controlled reply loss after actual scientific commit');}}
    return result;
   }};
-  panel=await createImagePanel({workspace,python,object_id:frame.object_id,client});let origin;
+  const openOwned=async(object_id,client)=>{
+   owner=prepareOwnedPanelRegistration({workspace,panel_id:'1'.repeat(32)});
+   panel=await createImagePanel({workspace,python,object_id,...(client?{client}:{}),panel_id:owner.panel_id,helper_session_id:owner.helper_session_id,panel_generation:owner.generation,journalDirectory:owner.journalDirectory,...(owner.checkpoint?{resume_checkpoint:owner.checkpoint}:{})});owner.publish(panel);
+  };
+  await openOwned(view.object_id,client);let origin;
   const headers=()=>({'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json'});
   const send=async(action,params={},status=200)=>{origin=panel.url.split('/#')[0];const response=await fetch(origin+'/api/action',{method:'POST',headers:headers(),body:JSON.stringify({expected_object_id:panel.state().object.object_id,draft_revision:panel.state().edit_state.draft_revision,action,params})}),data=await response.json();assert.equal(response.status,status,JSON.stringify(data));return data;};
   const inspect=async(query='object_id='+panel.state().object.object_id,status=200)=>{origin=panel.url.split('/#')[0];const response=await fetch(origin+'/api/measurements?'+query,{headers:headers()}),data=await response.json();assert.equal(response.status,status,JSON.stringify(data));return data;};
@@ -77,18 +83,19 @@ for r in rows:
  assert r['d_spacing_unit']=='nm' and r['frequency_unit']=='cycles/nm'
  assert r['status']=='当前' and r['result_object_id'] and r['request_id']
 print('csv independent numeric check PASS')`,csvFile],{encoding:'utf8'});assert.equal(independentlyRead.status,0,independentlyRead.stderr);
-  const savedView=panel.state().object.object_id;await panel.close();panel=null;
-  panel=await createImagePanel({workspace,python,object_id:savedView});const reopened=await inspect();assert.deepEqual(reopened.entries,records.entries);assert.deepEqual(readdirSync(path.join(workspace,'requests')).sort(),beforeReads,'new Panel reads existing saved results without another FFT/view');
+  const savedView=panel.state().object.object_id;await owner.close(panel);panel=null;
+  await openOwned(savedView);const reopened=await inspect();assert.deepEqual(reopened.entries,records.entries);assert.deepEqual(readdirSync(path.join(workspace,'requests')).sort(),beforeReads,'owned checkpoint recovery reads existing saved results without another FFT/view');
   const requests=readdirSync(path.join(workspace,'requests')).map(file=>JSON.parse(readFileSync(path.join(workspace,'requests',file))));assert.equal(requests.filter(record=>record.parameters.action==='fft').length,1);assert.deepEqual(readFileSync(spectrumFile),fftBytes);assert.deepEqual(readFileSync(source),original);
- }finally{await setup?.close();await panel?.close();rmSync(directory,{recursive:true,force:true});}
+ }finally{await setup?.close();if(panel)await owner.close(panel);rmSync(directory,{recursive:true,force:true});}
 });
 
 test('uncalibrated actual FFT table stays in cycles/pixel and frame switching does not project old measurements',{skip:!enabled,timeout:90000},async()=>{
  const directory=mkdtempSync(path.join(tmpdir(),'data-inspector-pixel-')),workspace=path.join(directory,'workspace'),source=path.join(directory,'pixel-only.tiff');let client,panel;
  try{
   const command=process.env.DM_IMAGE_PYTHON??process.env.DM_TEST_PYTHON??'python',fixture=spawnSync(command,['-c',"import sys,numpy as np,tifffile; print(sys.executable); a=np.arange(16*24,dtype=np.uint16).reshape(16,24); tifffile.imwrite(sys.argv[1],np.stack([a,a+10]),photometric='minisblack',metadata=None)",source],{encoding:'utf8'});assert.equal(fixture.status,0,fixture.stderr);const python=fixture.stdout.trim(),before=readFileSync(source);
-  client=new StdioImageClient({workspace,python});await client.rpc('initialize',{});const opened=(await client.tool('image_open',{source_path:source,request_id:'pixel-open'})).data,frame=(await client.tool('image_frame',{object_id:opened.object_id,frame_index:0,request_id:'pixel-frame'})).data;await client.close();client=null;
-  panel=await createImagePanel({workspace,python,object_id:frame.object_id});const origin=panel.url.split('/#')[0],headers={'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json'};
+  client=new StdioImageClient({workspace,python});await client.rpc('initialize',{});const opened=(await client.tool('image_open',{source_path:source,request_id:'pixel-open'})).data,frame=(await client.tool('image_frame',{object_id:opened.object_id,frame_index:0,request_id:'pixel-frame'})).data;
+  const view=(await client.tool('image_preview',{object_id:frame.object_id,request_id:'pixel-preview',max_size:128})).data;await client.close();client=null;
+  panel=await createImagePanel({workspace,python,object_id:view.object_id});const origin=panel.url.split('/#')[0],headers={'X-Panel-Token':panel.token,Origin:origin,'Content-Type':'application/json'};
   const send=async(action,params)=>{const response=await fetch(origin+'/api/action',{method:'POST',headers,body:JSON.stringify({expected_object_id:panel.state().object.object_id,action,params})}),value=await response.json();assert.equal(response.status,200,JSON.stringify(value));return value;};
   const pick=(kind,coordinates)=>{const p=panel.state().object.panels[0];return {kind,coordinates,panel:p,source_object_id:p.source_object_id,coordinate_space:p.domain==='frequency'?'frequency_cycles_per_pixel':'source_pixels'};};
   await send('fft',{selection:pick('rectangle',[0,0,24,16]),window:'none',subtract_mean:true});

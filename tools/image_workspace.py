@@ -46,6 +46,7 @@ if __package__:
     from . import image_topology as topology
     from . import image_method_loop as method_loop
     from . import image_discovery as discovery
+    from . import image_source_proof as source_proof
 else:
     import preview_admission
     import image_observation_contract as observation_contract
@@ -69,6 +70,7 @@ else:
     import image_topology as topology
     import image_method_loop as method_loop
     import image_discovery as discovery
+    import image_source_proof as source_proof
 
 BACKEND = "external-image-workspace"
 MAX_PIXELS = 4 * 1024 * 1024
@@ -93,6 +95,7 @@ FIELDS = {
     **topology.FIELDS,
     **method_loop.FIELDS,
     **discovery.FIELDS,
+    **source_proof.FIELDS,
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
@@ -1003,13 +1006,15 @@ class Workspace:
                     "request_id": request["request_id"]}
         if remeasurement is not None:
             metadata["remeasurement"] = remeasurement
-        if "object_id" in request:
+        if "object_id" in request and action not in source_proof.FIELDS:
             inherited, _, _ = self.resolved(request["object_id"])
             if inherited.get("xy_calibration"):
                 metadata["xy_calibration"] = inherited["xy_calibration"]
             if inherited.get("calibration_review"):
                 metadata["calibration_review"] = inherited["calibration_review"]
-        if action in automation.FIELDS:
+        if action in ("source_proof", "source_proof_revoke"):
+            metadata = source_proof.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action in automation.FIELDS:
             metadata = automation.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in sequence.FIELDS:
             metadata = sequence.action(self, action, request, metadata, directory, sys.modules[__name__])
@@ -1966,7 +1971,7 @@ def _execute_core(request, preview_dispatch_authorized=False):
     canonical(request)
     if action == "get" and "include_frame_ancestry" in request:
         need(type(request["include_frame_ancestry"]) is bool, "include_frame_ancestry must be boolean")
-    readonly = action in ("get", "result", "evidence")
+    readonly = action in ("get", "result", "evidence", "source_proof_info")
     ident = request.get("request_id")
     if not readonly:
         need(type(ident) is str and REQUEST_ID.fullmatch(ident), "Write actions require a pre-saved request_id")
@@ -1979,6 +1984,8 @@ def _execute_core(request, preview_dispatch_authorized=False):
                        for slot in range(1, method_journal.MAX_ATTEMPTS+1)]
             need(ident in allowed, "Method request_id must use its root plan's deterministic slot1..8")
     workspace = Workspace(request.get("workspace"), not readonly)
+    if action == "source_proof_info":
+        return source_proof.info(workspace, request, sys.modules[__name__])
     if action == "evidence":
         return {"ok": True, **evidence.detail(workspace, request, sys.modules[__name__])}
     if action == "get":

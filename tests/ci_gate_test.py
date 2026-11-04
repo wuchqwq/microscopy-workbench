@@ -29,13 +29,14 @@ class GateTests(unittest.TestCase):
             self.assertEqual(validate(needs_for(selected), "quick"), [])
 
     def test_required_skip_failure_cancel_or_missing_never_pass(self):
-        for state in ("skipped", "failure", "cancelled", "neutral", "timed_out", None):
-            with self.subTest(state=state):
-                needs = needs_for({"node"})
-                needs["node-smoke"] = {"result": state}
-                self.assertTrue(validate(needs, "quick"))
-        needs = needs_for({"node"}); del needs["node-smoke"]
-        self.assertTrue(validate(needs, "quick"))
+        for job, group in QUICK_JOBS.items():
+            for state in ("skipped", "failure", "cancelled", "neutral", "timed_out", None):
+                with self.subTest(job=job, state=state):
+                    needs = needs_for({group})
+                    needs[job] = {"result": state}
+                    self.assertTrue(validate(needs, "quick"))
+            needs = needs_for({group}); del needs[job]
+            self.assertTrue(validate(needs, "quick"))
 
     def test_unselected_failure_not_hidden(self):
         needs = needs_for(); needs["classical-gpa"]["result"] = "failure"

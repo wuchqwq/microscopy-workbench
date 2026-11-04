@@ -62,13 +62,17 @@ class WorkflowTests(unittest.TestCase):
         for config in ("tsconfig.shared.json", "tsconfig.types.json", "tsconfig.node.json"):
             self.assertIn(config, build)
 
-    def test_science_smoke_moved_not_deleted_and_existing_versions_unchanged(self):
+    def test_science_smoke_preserved_and_supported_node_versions_selected(self):
         quick = jobs(self.texts["quick"])
         self.assertIn("npm run test:science", quick["science-boundary"])
         self.assertNotIn("npm run test:science", quick["f4-gpa-integration"])
         self.assertIn("npm run test:integration:f4-gpa", quick["f4-gpa-integration"])
-        self.assertIn("node: ['18', '22']", quick["node-smoke"])
+        self.assertIn("node: ['22', '24']", quick["node-smoke"])
         self.assertIn("fail-fast: false", quick["node-smoke"])
+        self.assertIn("node-version: '22'", quick["compiled-compatibility"])
+        boundary = quick["science-boundary"]
+        for flag in ("DM_INSPECTOR_PANEL_REAL_TEST", "DM_PROBES_PANEL_REAL_TEST", "DM_PANEL_REAL_RECIPE_TEST"):
+            self.assertIn(flag + ": '1'", boundary)
         f3b = jobs(self.texts["f3b"])["actual-diffsims-mcp"]
         for command in ("test_site_occupancy.py", "npm run test:twin", "npm run test:general-crystal", "npm run test:manual-crystal"):
             self.assertIn(command, f3b)

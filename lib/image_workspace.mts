@@ -16,6 +16,7 @@ import {domainTools,domainActions} from './image_domain_contract.mjs';
 import {activeTools,activeActions} from './image_active_contract.mjs';
 import {methodTools,methodActions} from './image_method_contract.mjs';
 import {discoveryTools,discoveryActions} from './image_discovery_contract.mjs';
+import {sourceProofTools,sourceProofActions} from './image_source_proof_contract.mjs';
 import {gpaTools,gpaActions} from './image_gpa_contract.mjs';
 import {topologyTools,topologyActions} from './image_topology_contract.mjs';
 import {evidenceTools,evidenceActions,withCompactEvidence,compactEvidenceTools} from './image_evidence_contract.mjs';
@@ -83,6 +84,7 @@ const numericComponent: ArgumentSchema={type:'string',enum:['raw','real','imag',
 const numericSpace: ArgumentSchema={type:'string',enum:['source_pixels','source_array_indices','frequency_cycles_per_pixel']};
 const numericPoints: ArgumentSchema={type:'array',minItems:2,maxItems:2,items:{type:'array',minItems:2,maxItems:2,items:{type:'number'}}};
 export const imageTools: ToolDefinition[]=[
+  ...sourceProofTools,
   ...gpaTools,
   ...topologyTools,
   ...automationTools,
@@ -113,7 +115,7 @@ export const imageTools: ToolDefinition[]=[
   make('image_result','Query the pre-saved request ID without re-executing an operation. A missing/pending/failed record is not success.',{request_id:requestId},['request_id']),
 ].map(withCompactEvidence);
 export const IMAGE_INSTRUCTIONS='Explicit multi-source image tools use an independent Python environment and never connect to DM or replace a failed native operation. Choose source and frame IDs, use pixel ROI and fixed cross-frame display ranges. PNG is display only. Save request_id before every write; after cancellation query image_result. Unknown scale permits pixel exploration, but not nm/Angstrom spacings or physical depth. User context is revisable evidence. Validated native READ captures automatically activate sourced XY records when current axis units/domain agree; inspect calibration_admission and source. Use image_calibrate for user revisions with explicit scope/source_text and reciprocal_space for inverse-length calibration; never relabel real-space scale as diffraction calibration; legacy image_context.xy_scale is descriptive only. Sequence calibration follows selected frames; explicitly attach the record to an older saved FFT if needed. After calibration changes preview the new wrapper to redraw bars/physical frequency axes, then remeasure; old physical measurements/interpretations require review and old exports remain immutable. Physical FFT conversion divides cycles/pixel by signed axis scales, with no2pi; intensity units and physical depth remain separate. Optional crystallography is never required. For frequency zoom use image_preview frequency_rect in the original FFT bin grid; keep the full-spectrum reference and shared display range. Zoom never recomputes FFT, increases resolution, or re-centres DC. For an FFT figure, first try image_preview display_preset=fft_detail and inspect the returned image. Preserve the unfiltered texture/streaks; smoothing and background subtraction are optional explicit display treatments, never a default recipe. Use sparse short cyan arrows by default (3px wide, 6px head, maximum24px shaft); stop outside features. Use color=orange for an explicitly proposed second-phase candidate, keeping its hypothesized/user_confirmed/retracted status separate. Color never establishes a phase. Explicit styling overrides defaults; existing revisions keep their styles. Do not copy literature indices or physical scale onto uncalibrated data. Use image_center only to correct an established reciprocal scalar centre, never the mathematical DC of a saved external complex FFT. Use image_remeasure with the current wrapper and old measurement to reuse valid point anchors; only an originally explicit DC endpoint follows a centre correction. Source/frame/ROI/FFT grid must agree. A previously unknown scalar image can be explicitly declared reciprocal via image_calibrate declare_reciprocal=true with inverse scale and user source; known real-space or reconstruction meaning cannot be silently replaced.';
-const actions: Readonly<Record<string,string>>={...discoveryActions,...methodActions,...topologyActions,...gpaActions,...automationActions,...sequenceActions,...domainActions,...activeActions,...evidenceActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_preview_acknowledge:'preview_acknowledge',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
+const actions: Readonly<Record<string,string>>={...sourceProofActions,...discoveryActions,...methodActions,...topologyActions,...gpaActions,...automationActions,...sequenceActions,...domainActions,...activeActions,...evidenceActions,image_probe:'probe',image_statistics:'statistics',image_profile:'profile',image_open:'open',image_info:'get',image_frame:'frame',image_preview:'view',image_preview_acknowledge:'preview_acknowledge',image_compare:'compare',image_fft:'fft',image_peaks:'peaks',image_measure:'measure',image_center:'centre',image_remeasure:'remeasure',image_calibrate:'calibrate',image_annotate:'annotate',image_context:'context',image_export:'export',image_result:'result'};
 
 export class ImageWorkerDiagnosticError extends Error {
  readonly diagnostic:Readonly<Record<string,unknown>>;
@@ -156,7 +158,7 @@ export class ImageWorkspace {
     // The portable coordinator owns queue/wait/deadline mechanics only.
     // The existing worker remains authoritative for hashes, original IDs,
     // scientific admission and durable completion, including after restart.
-    const readonly=action==='result'||action==='get'||action==='evidence';
+    const readonly=action==='result'||action==='get'||action==='evidence'||action==='source_proof_info';
     const spec: ExecutionSpec<ImageRequest>={operation:name,requestId:(readonly?(action==='result'?args.request_id:null):args.request_id) as string | null,
       parameters:payload,resourceKeys:readonly?[]:[this.resourceKey],timeoutMs:this.timeoutMs,
       requestScope:this.requestScope,lane:readonly?'query':'work'};
@@ -200,7 +202,7 @@ export class ImageWorkspace {
     let finishWorker!: () => void,child: ImageProcess | undefined,providerLease:ReturnType<typeof acquireImageWorkspaceWrite>|undefined;
     const workerDone=new Promise<void>(resolve=>{finishWorker=()=>{try{providerLease?.release();}catch{/* Keep a blocked claim fail-closed; query the original completed request. */}resolve();};});
     const waiting=new Promise<ToolResult>((resolve,reject)=>{
-      try {if(!['get','result','evidence'].includes(payload.action))providerLease=acquireImageWorkspaceWrite(this.workspace,payload.request_id);child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
+      try {if(!['get','result','evidence','source_proof_info'].includes(payload.action))providerLease=acquireImageWorkspaceWrite(this.workspace,payload.request_id);child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
       catch(error){finishWorker();const code=(error as {code?:string}).code;if(code==='WORKSPACE_WRITE_CONFLICT'||code==='WORKSPACE_METADATA_BUSY'){reject(error);return;}reject(new ImageWorkerDiagnosticError('Image worker spawn failed; original request was not dispatched.',{phase:'spawn',submission_state:'not_submitted',request_id:payload.request_id??null,provider:'external-image-workspace',workspace:this.workspace,reason:String(error)}));return;}
       let chunks: Buffer[]=[],bytes=0,stderr='',settled=false,exitCode:number|null=null,phase='worker_output';let reportedState:unknown;const stdoutHash=createHash('sha256');
       const hint='Query image_result with original request_id='+String(payload.request_id??payload.query_request_id??'unknown')+'; do not automatically resubmit.';
@@ -252,7 +254,9 @@ export class ImageWorkspace {
         const result=outcome as Record<string,unknown>;
         if(result.backend!=='external-image-workspace'||result.state!=='completed')throw new Error('External image operation did not return a completed external result');
         if(detail==='compact'&&(result.evidence_format!=='image-evidence-summary-v1'||result.authoritative_record!==false||result.inline_image!==false||typeof result.manifest_sha256!=='string'||!/^[a-f0-9]{64}$/.test(result.manifest_sha256)))throw new Error('Image worker did not return a manifest-bound compact evidence projection');
-        if(payload.action==='get'||payload.action==='evidence'){
+        if(payload.action==='source_proof_info'){
+          if(result.proof_object_id!==payload.proof_object_id||result.object_id!==payload.proof_object_id||!['verified','revoked','unavailable'].includes(String(result.status)))throw new Error('Image worker returned a different source proof identity or status');
+        }else if(payload.action==='get'||payload.action==='evidence'){
           if(result.object_id!==payload.object_id)throw new Error('Image worker returned a different requested object identity');
         }else if(result.request_id!==(payload.action==='result'?payload.query_request_id:payload.request_id)){
           throw new Error('Image worker returned a different original request identity; '+hint);

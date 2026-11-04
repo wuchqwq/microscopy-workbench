@@ -1,4 +1,4 @@
-import {coordinateSpace,transformCoordinates} from './coordinates.mjs';
+import {coordinateSpace,transformCoordinates,outwardSourceRectangle} from './coordinates.mjs';
 import type {WirePanel} from './coordinates.mjs';
 import {layoutAnnotations,renderAnnotationsSVG} from './annotation-presentation.mjs';
 import type {RenderedMark} from './presentation-contracts.mjs';
@@ -64,27 +64,42 @@ export function sourceWindowOutlines(object:unknown,collection:unknown):readonly
  return result;
 }
 
-export function sourceWindowLabelLayout(object:unknown,collection:unknown,imageSize:readonly number[],scale:number){
+// A floating input rectangle is a separate historical claim. Same-frame
+// integer support alone never qualifies it on a latest observation image.
+export function activeFftInputOutline(object:unknown,collection:unknown,mappingFingerprint?:string|null):SourceWindowOutline|null {
+ const panel=spatialPanel(object,collection);if(!panel||!row(object)||!row(collection)||!Array.isArray(collection.windows)||collection.windows.length>5||typeof mappingFingerprint!=='string'||!/^[a-f0-9]{64}$/.test(mappingFingerprint))return null;
+ const ids=new Set<string>();for(const entry of collection.windows){if(!row(entry)||!windowId(entry.window_id)||ids.has(entry.window_id))return null;ids.add(entry.window_id);}if(collection.windows.filter(entry=>row(entry)&&entry.role==='source'&&entry.object_id===object.object_id).length!==1)return null;
+ const active=collection.windows.filter(entry=>row(entry)&&entry.window_id===collection.active_window_id);if(active.length!==1)return null;
+ const fft=active[0];if(!row(fft)||fft.role!=='fft'||!windowId(fft.window_id)||!objectId(fft.object_id)||typeof fft.title!=='string'||!fft.title.trim()||fft.title.length>120||!row(fft.source_reference))return null;
+ const reference=fft.source_reference,context=reference.input_view_context;if(reference.input_view_object_id!==object.object_id||reference.frame_object_id!==collection.frame_object_id||!objectId(reference.raw_fft_object_id)||!rectangle(reference.processing_rect_xyxy,true)||!row(context)||context.version!==1||context.object_id!==object.object_id||context.panel_mapping_fingerprint!==mappingFingerprint||!row(context.selection_candidate))return null;
+ if(!['same','different','unknown'].includes(String(reference.calibration_relation))||context.camera_origin!==undefined&&context.camera_origin!=='new_fit_preference'||!row(context.camera)||typeof context.camera.scale!=='number'||!Number.isFinite(context.camera.scale)||context.camera.scale<1e-6||context.camera.scale>1e4||!Array.isArray(context.camera.center_image_xy)||context.camera.center_image_xy.length!==2||!context.camera.center_image_xy.every(n=>typeof n==='number'&&Number.isFinite(n)&&Math.abs(n)<=1e7))return null;
+ const selection=context.selection_candidate;if(selection.kind!=='rectangle'||selection.coordinate_space!=='source_pixels'||selection.source_object_id!==collection.frame_object_id||!rectangle(selection.coordinates)||!inside(selection.coordinates,panel.source_rect_xyxy)||!row(selection.panel))return null;
+ const savedPanel=selection.panel;if(savedPanel.domain!==panel.domain||savedPanel.source_object_id!==panel.source_object_id||JSON.stringify(savedPanel.source_rect_xyxy)!==JSON.stringify(panel.source_rect_xyxy)||JSON.stringify(savedPanel.image_rect_xyxy)!==JSON.stringify(panel.image_rect_xyxy)||JSON.stringify(outwardSourceRectangle(selection.coordinates))!==JSON.stringify(reference.processing_rect_xyxy))return null;
+ try{const mapped=transformCoordinates(selection.coordinates,panel,{edges:true,inverse:true});if(!rectangle(mapped)||!inside(mapped,panel.image_rect_xyxy))return null;return {window_id:fft.window_id,label:fft.title.trim()+' 原输入选区',coordinates:mapped,line_style:'solid'};}catch{return null;}
+}
+
+export function sourceWindowLabelLayout(object:unknown,collection:unknown,imageSize:readonly number[],scale:number,mappingFingerprint?:string|null){
  if(imageSize.length!==2||!imageSize.every(n=>Number.isFinite(n)&&n>0&&n<=1e7)||!Number.isFinite(scale)||scale<1e-6||scale>1e4)return [];
- const outlines=sourceWindowOutlines(object,collection),width=imageSize[0]!,height=imageSize[1]!;
+ const frozen=activeFftInputOutline(object,collection,mappingFingerprint),outlines=[...sourceWindowOutlines(object,collection),...frozen?[frozen]:[]],width=imageSize[0]!,height=imageSize[1]!;
  // Freeze the shared ordinary-label layout first, then let the same placement
  // routine avoid those boxes for auxiliary FFT titles. No offsets are saved.
  const ordinary=savedWindowAnnotationLayout(object,imageSize,scale),fixed=(ordinary?.items??[]).map(item=>({...item.mark,presentation:{...item.mark.presentation,label:{...item.mark.presentation?.label,pinned:true,visible:item.label.visible,offset:[item.label.x-item.anchor[0],item.label.y-item.anchor[1]]}}})),virtual=outlines.map((outline,index)=>({annotation_id:'fft-display-support-'+index,kind:'rectangle',coordinates:outline.coordinates,text:outline.label,color:'amber',presentation:{label:{important:true,font_size:11}}}));
  return layoutAnnotations([...fixed,...virtual],{width,height,scale,preset:'real-space',mode:'analysis'}).items.slice(fixed.length).map(item=>item.label);
 }
 
-export function createSourceOverlay(document:BrowserDocument,object:unknown,collection:unknown,imageSize:readonly number[],scale:number):BrowserElement|null {
+export function createSourceOverlay(document:BrowserDocument,object:unknown,collection:unknown,imageSize:readonly number[],scale:number,mappingFingerprint?:string|null):BrowserElement|null {
  if(imageSize.length!==2||!imageSize.every(n=>Number.isFinite(n)&&n>0&&n<=1e7)||!Number.isFinite(scale)||scale<1e-6||scale>1e4)return null;
  const panel=spatialPanel(object,collection),width=imageSize[0]!,height=imageSize[1]!;
  if(!panel||!inside(panel.image_rect_xyxy,[0,0,width,height]))return null;
- const outlines=sourceWindowOutlines(object,collection);if(!outlines.length)return null;
- const labels=sourceWindowLabelLayout(object,collection,imageSize,scale);
- const layer=document.createElement('div');layer.className='window-source-overlay';
- const namespace='http://www.w3.org/2000/svg',svg=document.createElementNS(namespace,'svg');svg.setAttribute('class','window-source-svg');svg.setAttribute('width',width);svg.setAttribute('height',height);svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('role','img');svg.setAttribute('aria-label','FFT 整数计算区域；不是当前选区或原始浮点 ROI');
+ const frozen=activeFftInputOutline(object,collection,mappingFingerprint),outlines=[...sourceWindowOutlines(object,collection),...frozen?[frozen]:[]];if(!outlines.length)return null;
+ const labels=sourceWindowLabelLayout(object,collection,imageSize,scale,mappingFingerprint);
+ const layer=document.createElement('div');layer.className='window-source-overlay';layer.setAttribute('style','pointer-events:none');
+ const namespace='http://www.w3.org/2000/svg',svg=document.createElementNS(namespace,'svg');svg.setAttribute('class','window-source-svg');svg.setAttribute('width',width);svg.setAttribute('height',height);svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('role','img');svg.setAttribute('pointer-events','none');svg.setAttribute('aria-label',frozen?'FFT 整数计算区域与当前 FFT 经核对的冻结浮点原输入选区；均不是当前编辑选区':'FFT 整数计算区域；不是当前选区或原始浮点 ROI');
  const fontSize=11/scale,gap=3/scale,clamp=(value:number,low:number,high:number)=>Math.max(low,Math.min(high,value));
  for(const [index,outline]of outlines.entries()){
-  const [x0,y0,x1,y1]=outline.coordinates,group=document.createElementNS(namespace,'g');group.setAttribute('class',`window-source-outline window-source-outline-${index}`);group.setAttribute('data-window-id',outline.window_id);
+  const highlighted=outline===frozen,[x0,y0,x1,y1]=outline.coordinates,group=document.createElementNS(namespace,'g');group.setAttribute('class',`window-source-outline window-source-outline-${index}${highlighted?' window-source-frozen-input':''}`);group.setAttribute('data-window-id',outline.window_id);if(highlighted){group.setAttribute('data-frozen-input-object-id',(object as Row).object_id);group.setAttribute('style','color:#69e4eb');}
   const rect=document.createElementNS(namespace,'rect');rect.setAttribute('class','window-source-region');rect.setAttribute('x',x0);rect.setAttribute('y',y0);rect.setAttribute('width',x1-x0);rect.setAttribute('height',y1-y0);rect.setAttribute('fill','none');rect.setAttribute('stroke','currentColor');rect.setAttribute('stroke-width',1.5);rect.setAttribute('vector-effect','non-scaling-stroke');
+  if(highlighted)rect.setAttribute('stroke-width',3);
   if(outline.line_style!=='solid')rect.setAttribute('stroke-dasharray',outline.line_style==='dashed'?'7 4':'2 3');
   const label=labels[index],text=document.createElementNS(namespace,'text');text.setAttribute('class','window-source-label');text.setAttribute('x',label?.x??clamp(x0+gap,0,Math.max(0,width-gap)));text.setAttribute('y',label?label.y+label.fontSize:clamp(index%2?y1+fontSize+gap:y0-gap,Math.min(fontSize+gap,height),Math.max(Math.min(fontSize+gap,height),height-gap)));text.setAttribute('font-size',fontSize);text.setAttribute('fill','currentColor');text.textContent=outline.label;
   group.append(rect,text);svg.append(group);

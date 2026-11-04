@@ -15,7 +15,14 @@ export interface MeasurementWorkspaceOptions {
  onUpdate?: (entry: MeasurementEntry | null)=>unknown;
  onError?: (error: unknown)=>unknown;
  pendingAnnotations?:()=>readonly string[];
+ readContext?:()=>unknown;
  document?: PresentationDocument | null;
+}
+// The Panel's global revision includes camera, selection and disclosure writes.
+// Saved scientific inputs and the last operation distinguish a new measurement
+// on the same object without invalidating a read for those viewing preferences.
+export function measurementReadContext(state:WorkflowState&{readonly last_operation?:unknown}){
+ return {object:state.object??null,frame_identity:state.frame_identity??null,last_operation:state.last_operation??null};
 }
 // Read-only table projection of the provider's saved measurements. Scientific
 // values are never reconstructed from annotation text or preview pixels.
@@ -97,15 +104,23 @@ export function exportMeasurementTable(entries: readonly MeasurementEntry[],{del
 }
 export class MeasurementWorkspace {
  declare pendingAnnotations:NonNullable<MeasurementWorkspaceOptions['pendingAnnotations']>;
+ declare readContext:NonNullable<MeasurementWorkspaceOptions['readContext']>;
  declare getState: MeasurementWorkspaceOptions['getState'];declare api: MeasurementWorkspaceOptions['api'];
  declare onSelect: NonNullable<MeasurementWorkspaceOptions['onSelect']>;declare onJump: NonNullable<MeasurementWorkspaceOptions['onJump']>;declare onUpdate: NonNullable<MeasurementWorkspaceOptions['onUpdate']>;declare onError: NonNullable<MeasurementWorkspaceOptions['onError']>;
  declare document: PresentationDocument | null | undefined;declare entries: MeasurementEntry[];declare selectedId: string | null | undefined;declare checked: Set<string | undefined>;declare ticket: number;declare current: MeasurementCurrent | null | undefined;declare truncated?: boolean;
  declare el: (id: string)=>PresentationElement | null | undefined;
- constructor({getState,api,onSelect=()=>{},onJump=()=>{},onUpdate=()=>{},onError=()=>{},pendingAnnotations=()=>[],document:doc=(globalThis as PresentationEnvironment).document}: MeasurementWorkspaceOptions={}){
+ constructor({getState,api,onSelect=()=>{},onJump=()=>{},onUpdate=()=>{},onError=()=>{},pendingAnnotations=()=>[],readContext,document:doc=(globalThis as PresentationEnvironment).document}: MeasurementWorkspaceOptions={}){
   Object.assign(this,{getState,api,onSelect,onJump,onUpdate,onError,pendingAnnotations,document:doc});this.entries=[];this.selectedId=null;this.checked=new Set();this.ticket=0;this.current=null;
+  this.readContext=readContext??(()=>this.getState?.()?.state_revision);
   const el=(id: string)=>doc?.getElementById(id);this.el=el;
   if(el('measurement-sort'))el('measurement-sort')!.onchange=()=>this.render();
   if(el('measurement-history'))el('measurement-history')!.onchange=()=>this.render();
+  if(el('measurement-show-history'))el('measurement-show-history')!.onclick=event=>{
+   event.preventDefault();event.stopPropagation();
+   const history=el('measurement-history'),disclosure=el('measurement-workspace') as (PresentationElement&{open:boolean})|null|undefined;
+   if(!history||!disclosure||history.checked||!this.entries.length||this.visible().length)return;
+   history.checked=true;disclosure.open=true;this.render();
+  };
   if(el('measurement-jump'))el('measurement-jump')!.onclick=()=>this.run(()=>this.onJump(this.selected()));
   if(el('measurement-update'))el('measurement-update')!.onclick=()=>this.run(()=>this.onUpdate(this.selected()));
   if(el('measurement-copy'))el('measurement-copy')!.onclick=()=>this.run(async()=>{if(!(globalThis as PresentationEnvironment).navigator?.clipboard?.writeText)throw new Error('当前浏览器不能复制，请下载 TSV');await (globalThis as PresentationEnvironment).navigator!.clipboard!.writeText!(exportMeasurementTable(this.exportSelection({selectedOnly:true}),{delimiter:'\t'}));});
@@ -130,8 +145,8 @@ export class MeasurementWorkspace {
  selectAnnotation(id: string){const entry=this.latestForAnnotation(id);if(!entry)return false;this.select(asRecord(entry).object_id,{notify:false});this.el('measurement-rows')?.querySelector(`[data-measurement-id="${asRecord(entry).object_id}"]`)?.scrollIntoView?.({block:'nearest'});return true;}
  select(id: string | undefined,{notify=true}: {notify?:boolean}={}){const entry=this.entries.find(e=>asRecord(e).object_id===id);if(!entry)return false;this.selectedId=id;if(['historical','history'].includes(entry.status as string)&&this.el('measurement-history'))this.el('measurement-history')!.checked=true;this.render();if(notify)this.run(()=>this.onSelect(entry));return true;}
  async refresh(){
-  const state=this.getState!(),objectId=state?.object?.object_id,revision=state?.state_revision;if(!objectId)return false;const ticket=++this.ticket;
-  try{const next=await this.api!(('/api/measurements?object_id='+encodeURIComponent(objectId)) as `/api/measurements${string}`);const latest=this.getState!();if(ticket!==this.ticket||latest?.object?.object_id!==objectId||latest?.state_revision!==revision||next.current?.object_id!==objectId)return false;
+  const state=this.getState!(),objectId=state?.object?.object_id;if(!objectId)return false;const context=JSON.stringify(this.readContext()),ticket=++this.ticket;
+  try{const next=await this.api!(('/api/measurements?object_id='+encodeURIComponent(objectId)) as `/api/measurements${string}`);const latest=this.getState!();if(ticket!==this.ticket||latest?.object?.object_id!==objectId||JSON.stringify(this.readContext())!==context||next.current?.object_id!==objectId)return false;
    this.current=next.current;this.entries=next.entries??next.measurements??[];this.truncated=Boolean(next.truncated);if(this.selectedId&&!this.entries.some(e=>asRecord(e).object_id===this.selectedId))this.selectedId=null;this.checked=new Set([...this.checked].filter(id=>this.entries.some(e=>asRecord(e).object_id===id)));this.render();return true;
   }catch(error){if(ticket===this.ticket&&this.getState!()?.object?.object_id===objectId)this.onError(error);return false;}
  }
@@ -139,7 +154,8 @@ export class MeasurementWorkspace {
  render(){
   const visible=this.visible();this.el('measurement-workspace')?.classList?.toggle('empty-results',visible.length===0);
   this.el('measurement-workspace')?.classList?.toggle('history-hidden-results',this.entries.length>0&&visible.length===0);
-  const empty=this.el('measurement-empty');if(empty){empty.hidden=visible.length>0;empty.textContent=this.entries.length?'当前筛选隐藏了历史结果；勾选“包含历史版本”查看。':'尚无保存测量；点选峰或绘制线段后点击“测量”。';}
+  const showHistory=this.el('measurement-show-history'),history=this.el('measurement-history');if(showHistory)showHistory.hidden=!(history&&!history.checked&&this.entries.length>0&&visible.length===0);
+  const empty=this.el('measurement-empty');if(empty){empty.hidden=visible.length>0;empty.textContent=this.entries.length?'当前筛选隐藏了历史结果；点击“显示历史结果”或勾选“包含历史版本”查看。':'尚无保存测量；点选峰或绘制测量线后，使用图下测量操作。';}
   this.renderDetails(this.el('data-inspector'),inspectorDetails(this.current??{}));const body=this.el('measurement-rows');if(!body||!this.document)return;body.replaceChildren();
   if(this.el('measurement-count'))this.el('measurement-count')!.textContent=visible.length?`${visible.length} / ${this.entries.length} 条${this.truncated?' · 达到读取上限':''}`:this.entries.length?`历史 ${this.entries.length} 条 · 已筛选隐藏`:'尚无测量';
   for(const entry of visible){const m=asRecord(entry),row=this.document!.createElement('tr');row.dataset.measurementId=m.object_id;row.setAttribute('aria-selected',String(this.selectedId===m.object_id));row.classList.toggle('selected',this.selectedId===m.object_id);row.classList.toggle('stale',['stale','needs_remeasure','needs_remeasurement'].includes(entry.status as string));row.tabIndex=0;

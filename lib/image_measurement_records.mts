@@ -5,6 +5,8 @@ import {createHash} from 'node:crypto';
 import type {BinaryLike} from 'node:crypto';
 import {closeSync,existsSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,readdirSync,realpathSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
+import {openImageSourceProofScope} from './image_source_proofs.mjs';
+import type {SourceProofReference} from './image_source_proofs.mjs';
 
 // A journal identity/hash check does not qualify the remaining scientific JSON.
 // Local casts below adapt native legacy property/array operations only.
@@ -31,10 +33,10 @@ const same=(a:unknown,b:unknown)=>canonical(a??null)===canonical(b??null);
 function need(ok:unknown,message:string,code='CORRUPT_OBJECT'):asserts ok{if(!ok)throw Object.assign(new Error(message),{code});}
 const inside=(root:string,file:string)=>{const rel=path.relative(root,file);return rel&&!rel.startsWith('..')&&!path.isAbsolute(rel);};
 
-function reader(workspace:unknown){
+function reader(workspace:unknown,options:{source_proof_refs?:readonly SourceProofReference[]}={}){
  need(typeof workspace==='string'&&path.isAbsolute(workspace),'Explicit absolute image workspace required','INVALID_ARGUMENT');
  need(lstatSync(workspace).isDirectory()&&!lstatSync(workspace).isSymbolicLink(),'Workspace must be an ordinary directory');
- const root=realpathSync.native(workspace),cache=new Map<string,SavedObject>(),arrays=new Set<string>();let bytes=0,arrayBytes=0;
+ const root=realpathSync.native(workspace),cache=new Map<string,SavedObject>(),arrays=new Set<string>();let bytes=0,arrayBytes=0,proofScope:ReturnType<typeof openImageSourceProofScope>|null=null;
  for(const name of ['objects','requests']){const p=path.join(root,name);need(lstatSync(p).isDirectory()&&!lstatSync(p).isSymbolicLink(),'Workspace metadata directory is missing or linked');}
  function json(file:string){
   const info=lstatSync(file);need(info.isFile()&&!info.isSymbolicLink()&&info.size<=MAX_JSON,'Missing, linked or oversized workspace metadata');
@@ -57,6 +59,7 @@ function reader(workspace:unknown){
   const result={value:value as SavedIdentity,manifest_sha256:sha(raw),parameters:journal.parameters as Metadata};cache.set(ident,result);return result;
  }
  function lineage(ident:unknown):Lineage{
+  if(options.source_proof_refs?.length&&typeof ident==='string'){proofScope??=openImageSourceProofScope(root,options.source_proof_refs);const exact=proofScope.lineage(ident);if(exact)return exact;}
   const queue:unknown[]=[ident],seen=new Set<unknown>(),frames:Metadata[]=[],sources:Metadata[]=[];let sourceIdentity:unknown=null;
   while(queue.length){const id=queue.pop();if(seen.has(id))continue;need(seen.size<64,'Scientific source ancestry exceeds budget','BUDGET_EXCEEDED');seen.add(id);
    const value=object(id).value;if(value.kind==='frame')frames.push(value);if((['tiff_source','dm_source'] as readonly unknown[]).includes(value.kind))sources.push(value);
@@ -84,9 +87,9 @@ function reader(workspace:unknown){
   return {value,record,grid,lineage:lineage(ident),panel,sourceRect};
  }
  function verifyArray(ident:unknown){const saved=object(ident),id=saved.value.object_id;if(arrays.has(id))return;const expected=(saved.value.files_sha256 as Metadata|undefined)?.['data.npy'];need(typeof expected==='string'&&/^[a-f0-9]{64}$/.test(expected),'Scientific array hash is absent');const file=path.join(root,'objects',id,'data.npy'),info=lstatSync(file);need(info.isFile()&&!info.isSymbolicLink()&&info.size<=128*1024*1024&&inside(root,realpathSync.native(file)),'Scientific array escapes its bounded workspace');arrayBytes+=info.size;need(arrayBytes<=256*1024*1024,'Scientific array verification exceeds bounded read budget','BUDGET_EXCEEDED');need(sha(readFileSync(file))===expected,'Scientific array hash differs from original committed record');arrays.add(id);}
- return {root,json,object,lineage,operand,verifyArray};
+ return {root,json,object,lineage,operand,verifyArray,verifyProofContext(){proofScope?.verify();}};
 }
-export function readImageProviderRecords(workspace:string){return reader(workspace);}
+export function readImageProviderRecords(workspace:string,options:{source_proof_refs?:readonly SourceProofReference[]}={}){return reader(workspace,options);}
 
 function annotationPoints(mark:Metadata|undefined){
  const c=(mark?.anchor as Metadata|undefined)?.coordinates;if(!Array.isArray(c))return null;

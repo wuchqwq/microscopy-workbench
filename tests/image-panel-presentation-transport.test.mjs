@@ -258,7 +258,7 @@ test('explicit recovery retains the original journaled request identity after la
 
 // Opt in explicitly for bounded backend acceptance; ordinary lightweight CI
 // keeps the controlled transport contracts and needs no analysis environment.
-test('real MCP restores gamma, range and exact clean PNG pixels over spatial and saved FFT arrays',{skip:process.env.DM_PANEL_REAL_RECIPE_TEST!=='1'},async()=>{
+test('real MCP restores gamma, range and exact clean PNG pixels over spatial and saved FFT arrays',{skip:process.env.DM_PANEL_REAL_RECIPE_TEST!=='1',timeout:240000},async()=>{
  const python=process.env.DM_IMAGE_PYTHON??process.env.DM_TEST_PYTHON??'python',dir=mkdtempSync(path.join(tmpdir(),'dm-figure-display-mcp-')),source=path.join(dir,'synthetic.tiff');let setup,panel;
  try{
   const fixture=spawnSync(python,['-c',"import numpy as np,tifffile,sys; y,x=np.indices((32,48)); tifffile.imwrite(sys.argv[1],((x*197+y*357)%4096).astype(np.uint16),photometric='minisblack',metadata=None); print(sys.executable)",source],{encoding:'utf8'});assert.equal(fixture.status,0,fixture.stderr);const executable=fixture.stdout.trim(),sourceBytes=readFileSync(source);

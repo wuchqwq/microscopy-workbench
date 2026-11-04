@@ -45,6 +45,26 @@ export function selectionActionReason(action: string,picked: PickedSelection | n
  return '';
 }
 export function measurementLabel(picked: PickedSelection | null | undefined,count: number){return picked?.kind==='point'&&['frequency','source_array_indices'].includes(picked.panel?.domain as string)?`g${count}`:`测距 ${count}`;}
+// Display labels describe the current image/selection, never an explicit save.
+// Keep SavedViewHistory roles and source references unchanged for recovery.
+export function currentViewLabel(object:ViewObject={},role?:string|null){
+ const panels=object.panels??[];
+ if(panels.length&&panels.every(panel=>panel.domain==='frequency'))return 'FFT';
+ if(panels.length&&panels.every(panel=>panel.domain==='spatial_pixels'))return ['原图','全帧（新显示）','历史空间输入','ROI','空间观察'].includes(role??'')?role!:'空间图';
+ if(panels.length&&panels.every(panel=>panel.domain==='source_array_indices'))return '数组图';
+ return panels.length>1?'多图对照':'图像';
+}
+export function measurementActionName(picked:PickedSelection|null|undefined,object:ViewObject={}){
+ const domain=picked?.panel?.domain??(object.panels?.length===1?object.panels[0]?.domain:undefined),reciprocal=domain==='frequency'||domain==='source_array_indices'&&object.xy_calibration?.status==='active'&&object.xy_calibration.coordinate_domain==='reciprocal_space';
+ if(reciprocal)return ['line','arrow'].includes(picked?.kind??'')?'测量倒易距离':'测量周期';
+ return domain==='spatial_pixels'?'测量长度':'测量距离';
+}
+export function idleSelectionHint(object:ViewObject={}){
+ if(object.panels?.some(panel=>panel.domain==='frequency'))return '点选峰位或按 L 绘制测量线。';
+ if(['complex64','complex128'].includes(object.dtype??''))return '选择 ROI 或按 L 绘制测量线；复数原图暂不支持 FFT。';
+ if(object.panels?.every(panel=>panel.domain==='spatial_pixels')&&object.panels.length)return object.annotations?.some(mark=>mark.kind==='rectangle'&&mark.status!=='retracted')?'点击已有 ROI；按 R 添加，按 L 绘制测量线。':'按 R 圈选 ROI，再点击 FFT；按 L 绘制测量线。';
+ return '选择图中标记，或绘制区域／测量线。';
+}
 // Frequency display ranges are not real-space intensities. Keep a fixed range
 // only for an already spatial view; returning via saved-view navigation uses
 // that saved object's own display recipe instead.

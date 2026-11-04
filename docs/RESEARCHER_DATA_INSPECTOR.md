@@ -6,7 +6,7 @@ Agent 仍可选用同一工具和不可变结果。这里没有另一个计算�
 
 ## 直接打开与重开
 
-先准备 Node.js 18+，以及安装了 `requirements-images.txt` 的独立 Python 3.10+
+先准备 Node.js 22.x 或 24.x，以及安装了 `requirements-images.txt` 的独立 Python 3.10+
 环境。不要在 GMS Python 内安装依赖。在源码仓库根目录先运行 `npm ci` 和
 `npm run build`；若使用已构建的独立运行包，在该包根目录直接运行下面的命令。
 `npm run inspect -- --help` 查看帮助。第一次运行：
