@@ -197,10 +197,12 @@ export class PanelWindowStore {
   const prior=entry.view_context,context:PanelWindowViewContext=prior&&prior.object_id===entry.object_id&&prior.panel_mapping_fingerprint===mapping?(()=>{const {camera_origin,...recorded}=prior;void camera_origin;return {...recorded,camera:checked};})():{version:1,object_id:entry.object_id,panel_mapping_fingerprint:mapping,camera:checked,selection_candidate:null,selected_annotation_id:null};
   if(panels)context.ui_panels=panels;this.records.find(r=>r.entry.window_id===entry.window_id)!.entry.view_context=clone(context);this.revision++;
  }
- async restore(raw:unknown,current:Row,currentFrame:PanelFrameIdentity|null,read:(id:string)=>Promise<{object:Row;frame:PanelFrameIdentity|null;png:unknown}>,checkSelection?:(selection:unknown,target:Row)=>PanelSelection):Promise<void> {
+ async restore(raw:unknown,current:Row,currentFrame:PanelFrameIdentity|null,read:(id:string)=>Promise<{object:Row;frame:PanelFrameIdentity|null;png:unknown}>,checkSelection?:(selection:unknown,target:Row)=>PanelSelection,minimumRevision?:number):Promise<void> {
+  if(minimumRevision!==undefined&&(!Number.isSafeInteger(minimumRevision)||minimumRevision<0||minimumRevision>=Number.MAX_SAFE_INTEGER)||this.revision>=Number.MAX_SAFE_INTEGER)error('Invalid restored window revision floor');
+  const nextRevision=Math.max(this.revision,minimumRevision??0)+1;
   // The active object was already admitted by the owned recovery protocol.
   // Bad passive records are omitted independently, never breaking that path.
-  if(!isRow(raw)||Object.keys(raw).some(k=>!['schema_version','revision','frame_object_id','active_window_id','windows','closed_windows','unavailable_reason','records'].includes(k))||raw.schema_version!==1||raw.frame_object_id!==currentFrame?.frame_object_id||!Array.isArray(raw.records)||raw.records.length>32||!Number.isSafeInteger(raw.revision)||(raw.revision as number)<0||(raw.revision as number)>=Number.MAX_SAFE_INTEGER)return;
+  if(!isRow(raw)||Object.keys(raw).some(k=>!['schema_version','revision','frame_object_id','active_window_id','windows','closed_windows','unavailable_reason','records'].includes(k))||raw.schema_version!==1||raw.frame_object_id!==currentFrame?.frame_object_id||!Array.isArray(raw.records)||raw.records.length>32||!Number.isSafeInteger(raw.revision)||(raw.revision as number)<0||(raw.revision as number)>=Number.MAX_SAFE_INTEGER){if(minimumRevision!==undefined)this.revision=nextRevision;return;}
   const restored:WindowRecord[]=[];const used=new Set<string>(),grids=new Set<string>(),mappings=new Map<string,string>();
   for(const item of raw.records){try{
    if(!isRow(item)||Object.keys(item).some(k=>!['entry','grid_key','asset_fingerprint','input_calibration','hidden','latest_observation_asset_fingerprint','latest_observation_grid_key'].includes(k))||item.hidden!==undefined&&typeof item.hidden!=='boolean'||!isRow(item.entry)||Object.keys(item.entry).some(k=>!['window_id','object_id','role','title','layout','source_reference','view_context','latest_observation_view_object_id'].includes(k))||!objectId.test(String(item.entry.window_id))||!objectId.test(String(item.entry.object_id))||used.has(item.entry.window_id as string))continue;
@@ -228,7 +230,7 @@ export class PanelWindowStore {
    restored.push({entry,grid_key:d.grid_key,asset_fingerprint:d.fingerprint,input_calibration:inputCalibration,...(item.hidden?{hidden:true}:{}),...(latestFingerprint?{latest_observation_asset_fingerprint:latestFingerprint,latest_observation_grid_key:item.latest_observation_grid_key as string}:{})});used.add(entry.window_id);grids.add(d.grid_key);mappings.set(entry.window_id,panelWindowMappingFingerprint(saved.object));
   }catch{/* Omit an unavailable or malformed passive window. */}}
   const active=restored.find(r=>r.entry.object_id===current.object_id);
-  if(!active||raw.active_window_id!==active.entry.window_id&&!(raw.active_window_id===null&&active.hidden)||restored.filter(r=>!r.hidden).length>PANEL_WINDOW_LIMIT)return;
-  this.records=restored;this.mappingFingerprints=mappings;this.frameId=currentFrame!.frame_object_id as string;this.activeId=active.hidden?null:active.entry.window_id;this.unavailableReason=undefined;this.revision=Math.max(this.revision,raw.revision as number)+1;
+  if(!active||raw.active_window_id!==active.entry.window_id&&!(raw.active_window_id===null&&active.hidden)||restored.filter(r=>!r.hidden).length>PANEL_WINDOW_LIMIT){if(minimumRevision!==undefined)this.revision=nextRevision;return;}
+  this.records=restored;this.mappingFingerprints=mappings;this.frameId=currentFrame!.frame_object_id as string;this.activeId=active.hidden?null:active.entry.window_id;this.unavailableReason=undefined;this.revision=Math.max(nextRevision,(raw.revision as number)+1);
  }
 }

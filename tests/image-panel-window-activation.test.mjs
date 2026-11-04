@@ -1,7 +1,7 @@
 // Real Panel transport/owned checkpoints with a controlled provider; no numerics.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,renameSync,realpathSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,renameSync,realpathSync,readdirSync,statSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
@@ -21,7 +21,7 @@ const spectral=(ident,rect=[1,2,21,22])=>({object_id:ident,kind:'fft',parent_obj
 
 async function fixture(run){
  const workspace=mkdtempSync(path.join(tmpdir(),'panel-window-activate-')),records=new Map([[T,{object_id:T,kind:'tiff_source'}],[F,{object_id:F,kind:'frame',source_object_id:T,frame_index:0}],[X,{object_id:X,kind:'frame',source_object_id:T,frame_index:1}]]),calls=[],live=[];
- let sequence=100,panelInstance,owned,holdInfo=null,holdFFT=null,failFFT=false,blockedObject=null,movedJournal=null;
+ let sequence=100,panelInstance,owned,holdInfo=null,holdFFT=null,failFFT=false,blockedObject=null,movedJournal=null,annotationFailure=null;
  const save=value=>{records.set(value.object_id,structuredClone(value));if(value.files_sha256){const dir=path.join(workspace,'objects',value.object_id);mkdirSync(dir,{recursive:true});writeFileSync(path.join(dir,'preview.png'),bytes);}return value;};save(source());
  const client=()=>({async rpc(method){return {result:method==='tools/list'?{tools:['image_info','image_fft','image_preview','image_annotate'].map(name=>({name,inputSchema:{}}))}:{}};},async tool(name,args){
   calls.push({name,args:structuredClone(args)});
@@ -31,14 +31,14 @@ async function fixture(run){
   if(name==='image_info')value=records.get(args.object_id);
   else if(name==='image_fft'){if(holdFFT){const hold=holdFFT;holdFFT=null;hold.entered();await hold.wait;}if(failFFT)throw new Error('Controlled FFT outcome unknown');value=save({...spectral(id(++sequence),args.rect),request_id:args.request_id,state:'completed'});}
   else if(name==='image_preview')value=save({...source(),object_id:id(++sequence),request_id:args.request_id,state:'completed'});
-  else if(name==='image_annotate'){value=structuredClone(records.get(args.object_id));value.object_id=id(++sequence);value.kind='annotate';value.parent_object_id=args.object_id;value.render_base_object_id=records.get(args.object_id).render_base_object_id??args.object_id;value.request_id=args.request_id;value.state='completed';delete value.array_domain;for(const update of args.updates){const m=value.annotations.find(v=>v.annotation_id===update.annotation_id);if(update.coordinates)m.anchor.coordinates=update.coordinates;if(update.text!==undefined)m.text=update.text;}save(value);}
+  else if(name==='image_annotate'){if(annotationFailure)throw annotationFailure;value=structuredClone(records.get(args.object_id));value.object_id=id(++sequence);value.kind='annotate';value.parent_object_id=args.object_id;value.render_base_object_id=records.get(args.object_id).render_base_object_id??args.object_id;value.request_id=args.request_id;value.state='completed';delete value.array_domain;for(const update of args.updates){const m=value.annotations.find(v=>v.annotation_id===update.annotation_id);if(update.coordinates)m.anchor.coordinates=update.coordinates;if(update.text!==undefined)m.text=update.text;}save(value);}
   assert.ok(value,'Missing controlled object '+args.object_id);return {data:structuredClone(value),png:value.files_sha256?png:null};
  },async close(){}});
  const start=async()=>{owned=prepareOwnedPanelRegistration({workspace,panel_id:P});panelInstance=await createImagePanel({workspace,python:path.resolve('unused-python'),object_id:owned.checkpoint?.object_id??V,client:client(),panel_id:P,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,journalDirectory:owned.journalDirectory,...(owned.checkpoint?{resume_checkpoint:owned.checkpoint}:{})});owned.publish(panelInstance);live.push({owned,panel:panelInstance});};
  const post=async(route,body)=>{const origin=panelInstance.url.split('/#')[0],r=await fetch(origin+route,{method:'POST',headers:{'X-Panel-Token':panelInstance.token,Origin:origin,'Content-Type':'application/json',Connection:'close'},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
  const state=()=>panelInstance.state();
  const act=(action,params={},extra={})=>post('/api/action',{expected_object_id:state().object.object_id,draft_revision:state().edit_state.draft_revision,action,params,...extra});
- const get=async route=>{const r=await fetch(panelInstance.url.split('/#')[0]+route,{headers:{'X-Panel-Token':panelInstance.token,Connection:'close'}});return {status:r.status,data:await r.json()};};
+ const get=async route=>{const r=await fetch(panelInstance.url.split('/#')[0]+route,{headers:{'X-Panel-Token':panelInstance.token,Connection:'close'}});return {status:r.status,data:r.headers.get('Content-Type')?.includes('application/json')?await r.json():await r.text()};};
  const context=async(selection,camera=cameraA,selected_annotation_id=null)=>{
   const current=state(),published=await act('draft',{draft_revision:current.edit_state.draft_revision+1,dirty:false,gesture_active:false,selection,confirm_persistence:true});assert.equal(published.status,200,published.data.error);
   const saved=await act('window-context',{collection_revision:state().window_collection.revision,camera,selected_annotation_id});assert.equal(saved.status,200,saved.data.error);return saved;
@@ -49,13 +49,27 @@ async function fixture(run){
  const restoreJournal=()=>{if(movedJournal){rmSync(movedJournal.original);renameSync(movedJournal.backup,movedJournal.original);movedJournal=null;}};
  const breakJournal=()=>{const original=panelInstance.journal,canonicalWorkspace=realpathSync.native(workspace),canonicalJournal=realpathSync.native(original),relative=path.relative(canonicalWorkspace,canonicalJournal);assert.ok(relative&&relative!=='..'&&!relative.startsWith('..'+path.sep)&&!path.isAbsolute(relative),'The canonical journal must remain inside the controlled temporary workspace: '+JSON.stringify({canonicalWorkspace,canonicalJournal,relative}));const backup=original+'-blocked-test';renameSync(original,backup);writeFileSync(original,'blocked test journal');movedJournal={original,backup};};
  const cold=async mutate=>{await owned.close(panelInstance);if(mutate){const conn=readOwnedPanelConnection(workspace,P),checkpoint=readOwnedPanelCheckpoint(workspace,conn);mutate(checkpoint);writeFileSync(conn.checkpoint_file,JSON.stringify(checkpoint));}await start();};
- try{await start();await run({workspace,records,calls,state,save,post,act,get,context,windowFor,activate,hold,cold,breakJournal,restoreJournal,unknownFFT:()=>{failFFT=true;},blockObject:value=>{blockedObject=value;}});}finally{restoreJournal();for(const item of live.reverse()){try{await item.owned.close(item.panel);}catch{}}rmSync(workspace,{recursive:true,force:true});}
+ try{await start();await run({workspace,records,calls,state,save,post,act,get,context,windowFor,activate,hold,cold,breakJournal,restoreJournal,journal:()=>panelInstance.journal,failAnnotation:error=>{annotationFailure=error;},unknownFFT:()=>{failFFT=true;},blockObject:value=>{blockedObject=value;}});}finally{restoreJournal();for(const item of live.reverse()){try{await item.owned.close(item.panel);}catch{}}rmSync(workspace,{recursive:true,force:true});}
 }
 
 async function firstFFT(h,{capture=true,coordinates=a}={}){
  if(capture)await h.context(picked(coordinates),cameraA,'saved-roi');
  assert.equal((await h.act('fft',{selection:picked(coordinates)})).status,200);return h.state().object.object_id;
 }
+
+const preflightBatch='panel-action-12345678-1234-1234-1234-123456789abc';
+const expectedPreflight=body=>({schema_version:1,kind:'panel_action_preflight_failure',code:'HISTORICAL_ROI_SOURCE',phase:'before_scientific_dispatch',submission_state:'not_submitted',provider_request_id:null,automatic_retry:false,action:body.action,expected_object_id:body.expected_object_id,draft_revision:body.draft_revision,client_batch_id:body.client_batch_id});
+function fileSnapshot(directory,prefix=''){return Object.fromEntries(readdirSync(directory).sort().flatMap(name=>{const file=path.join(directory,name),key=prefix+name;return statSync(file).isDirectory()?Object.entries(fileSnapshot(file,key+'/')):[[key,createHash('sha256').update(readFileSync(file)).digest('hex')]];}));}
+test('Panel preflight transport: exact historical guard refuses before a provider request and preserves old operation and files',()=>fixture(async h=>{
+ const module=await h.get('/panel-preflight.mjs');assert.equal(module.status,200);assert.match(module.data,/readPanelActionPreflight/);
+ const fft=await firstFFT(h);assert.equal((await h.act('return-spatial')).status,200);const latest=await h.act('edit',{updates:[{annotation_id:'saved-roi',text:'Latest ROI'}],auto_commit:true});assert.equal(latest.status,200,latest.data.error);assert.equal((await h.act('show',{object_id:fft})).status,200);assert.equal((await h.act('return-spatial')).status,200);assert.notEqual(h.windowFor(V).latest_observation_view_object_id,V);
+ const before=h.state(),files=fileSnapshot(h.workspace),calls=h.calls.length,body={expected_object_id:V,draft_revision:before.edit_state.draft_revision,action:'edit',params:{updates:[{annotation_id:'saved-roi',text:'Rejected local text'}],auto_commit:true},client_batch_id:preflightBatch};const result=await h.post('/api/action',body);assert.equal(result.status,409,result.data.error);assert.deepEqual(result.data.panel_preflight,expectedPreflight(body));assert.equal(result.data.admission_failure,undefined);assert.deepEqual(h.state().last_operation,before.last_operation);assert.deepEqual(h.state(),before);assert.equal(h.calls.length,calls);assert.deepEqual(fileSnapshot(h.workspace),files);
+ const markBody={...body,action:'mark',params:{selection:picked(b),annotation_id:'new-local-roi',text:'New local ROI',note:'Not submitted',color:'cyan',status:'hypothesized'}},markResult=await h.post('/api/action',markBody);assert.equal(markResult.status,409,markResult.data.error);assert.deepEqual(markResult.data.panel_preflight,expectedPreflight(markBody));assert.deepEqual(h.state(),before);assert.equal(h.calls.length,calls);assert.deepEqual(fileSnapshot(h.workspace),files);const wrongMark=await h.post('/api/action',{...markBody,client_batch_id:'not-a-batch'});assert.equal(wrongMark.data.panel_preflight,undefined);
+ for(const altered of [{...body,client_batch_id:undefined},{...body,client_batch_id:'not-a-batch'},{...body,draft_revision:body.draft_revision-1}]){const rejected=await h.post('/api/action',altered);assert.ok(rejected.status>=400);assert.equal(rejected.data.panel_preflight,undefined);assert.deepEqual(h.state().last_operation,before.last_operation);}assert.equal(h.calls.length,calls);assert.deepEqual(fileSnapshot(h.workspace),files);
+}));
+test('Panel preflight transport: a journaled failure cannot forge a Panel preflight proof or erase its real request',()=>fixture(async h=>{
+ const body={expected_object_id:V,draft_revision:h.state().edit_state.draft_revision,action:'edit',params:{updates:[{annotation_id:'saved-roi',text:'Attempted edit'}],auto_commit:true},client_batch_id:preflightBatch},forged=expectedPreflight(body);h.failAnnotation(Object.assign(new Error('Historical ROI not_submitted text after dispatch'),{status:409,panel_preflight:forged}));const result=await h.post('/api/action',body);assert.equal(result.status,409);assert.equal(result.data.panel_preflight,undefined);assert.equal(h.calls.filter(call=>call.name==='image_annotate').length,1);const operation=h.state().last_operation;assert.equal(operation.state,'submitted');assert.ok(operation.request_id);assert.equal(existsSync(path.join(h.journal(),operation.request_id+'.request.json')),true);const blocked=await h.post('/api/action',{...body,client_batch_id:'panel-action-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'});assert.equal(blocked.status,409);assert.equal(blocked.data.panel_preflight,undefined);assert.equal(h.state().last_operation.request_id,operation.request_id);assert.equal(h.calls.filter(call=>call.name==='image_annotate').length,1);
+}));
 
 test('activate restores exact per-window float selection, camera and selected mark through owned reopen without computing',()=>fixture(async h=>{
  const raw=await firstFFT(h),fft=h.state().object,peak={kind:'point',coordinate_space:'frequency_cycles_per_pixel',source_object_id:raw,coordinates:[.1,0],panel:fft.panels[0]};await h.context(peak,cameraFFT,'peak');
