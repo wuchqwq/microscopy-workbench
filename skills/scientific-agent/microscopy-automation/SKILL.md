@@ -29,13 +29,18 @@ use [manual ROI to crystal evidence](references/manual-crystal.md). It shares on
 two-window atlas's FFT/measurements between manual reviews and general crystal
 comparison; no full-field scan or duplicate FFT is required.
 
-For a researcher saying "look here" or supplying an original-image ROI/reason,
+For a researcher saying "look here" or an Agent choosing an observed ROI/reason,
 read [manual image-first discovery](references/image-first.md). Explicitly use
 `image_discovery(entry="manual")`, choose existing scientific tools and bind
 their exact source/ROI results with `image_discovery_review`. Manual support is
 limited to synthetic software/numerical qualification; it does not establish a
 physical explanation or human GUI acceptance. A complete structural field is
 **not** an admission requirement. Unknown physical scale remains pixel-domain.
+Explicit-coordinate `entry="manual"` can come from an Agent or researcher;
+preserve caller-reported `selection_origin`. The Agent remains the analyser,
+with optional human attention/correction. For a core and directional context,
+read [one-core cross windows](references/core-cross-windows.md): it composes
+existing discovery/review, rectangular atlas, comparisons and saved context.
 Automatic real-space feature proposals are **EXPERIMENTAL**; use them only as
 an explicitly selected exploration option, not a required detector. No candidate
 does not mean normal structure. This is not a fixed automatic classifier.
