@@ -6,7 +6,7 @@
 
 已有未合并链为 #110 → #111 → #117 → #118 → #119。新窄窗／文本修复基于 #119 的 `38b1b326f764cb9159ded8ffb5855514b9631597`；来源修复继续基于窄窗分支，不能向缺少这些父提交的 main 重复应用旧功能。
 
-窄窗功能提交 `8f63481f085ee2bcb5cdd52d13c6dee9bb262def`；来源实现独立提交 `24042da0859c3aff0f3deb24c964b9d39e77419a`，已整合到 `fix/source-recheck-integrated-20261104`。整合后来源后端与独立真实协议验证的源码逐文件相同。最终文档提交和托管 CI 以 PR 精确 head 为准。
+窄窗功能提交 `8f63481f085ee2bcb5cdd52d13c6dee9bb262def`（#123）；来源实现独立提交 `24042da0859c3aff0f3deb24c964b9d39e77419a`，已整合到 `fix/source-recheck-integrated-20261104`（#124）。真实协议验证后，`c4200695fd37b6bc5e0f582f8640fbc33355e6b6` 仅补可选 projection 缺省时不重复根读取；正常真实 provider 的捆绑及最终复核路径未改。最终文档提交和托管 CI 以 PR 精确 head 为准。
 
 ## 改了什么
 
@@ -16,6 +16,7 @@
 - 来源解析先评估已经读取到的第 65 条记录，再判断是否允许下一次祖先读取。祖先读取预算仍为 64；没有盲目扩大常数。
 - 对满足严格旧保存条件的 frame=null 提供显式“重新核对来源”；只核对原对象、完整有界祖先和已有资产。来源按钮的未知响应只查本次原请求，正常保存另建保存点。普通保存、网格、PNG、标定、所有权和最终 CAS 保护保留。
 - 捆绑祖先读取仅在一次恢复内复用；最终复核仍重新执行原捆绑 provider。没有跨请求缓存或新的来源数据库。中文帮助同步实际入口。
+- provider 广告可选祖先参数但没有返回 projection 时，资产入口只尝试一次可选根读取，再走原始新鲜父链读取；坏 projection 仍拒绝，不以回退掩盖损坏。
 
 ## 真正生成的长历史
 
@@ -57,6 +58,12 @@
 | 理由组件 | 23 PASS；实际 app 消费者 20 PASS，后续独立权威保护 1 PASS；文本定时器首败 2 PASS／2 FAIL，修后 4 PASS，相关消费者 15 PASS。部分覆盖重叠。 |
 | 真实 provider | 上述 13／64／65／66／80、旧 null、新保存点、唯一 FFT、原请求恢复、准确返回与正常两窗重开；协议操作，不冒充原生手势或科学准确性。 |
 | 独立审查 | 来源后端 bundle 重新验证、异步后 CAS、旧 null／discard 窄分支、原请求与科学保护只读复核未发现阻断；未重复已通过套件。 |
+
+### 托管首败及窄修
+
+#123 的精确 `8f63481` 两条托管 CI 及两个 scope gate 通过。#124 首个 `f919280bd910267bf65c4bec5b2aedfb417a4e7d` 的 [托管 CI](https://github.com/wuchqwq/microscopy-workbench/actions/runs/41762476670) 四个 Node 平台均失败：资产读取夹具在普通回复漏掉 backend/state、仅在 bundle 补上，而且资产负例故障在新增初始化核对时已经触发。正确的严格来源检查因此提前拒绝，原 endpoint 负例到不了。完整 Node22 原始日志保存在 `hosted-first-node22-126353200305.log`；本地原样复现该文件 39 项中 29 PASS／10 FAIL，没有删负例或放宽 validator。
+
+另保留独立 `15 !== 14` 的真实回退反例：provider 省可选 projection 时内部 resolver 又发一次可选根读取。`c420069` 用本次调用内的 `bundleAttempted` 标志消除重复。夹具让普通／捆绑的准确字段一致，资产负例在启动后明确 arm，并新增启动本身的四种坏 projection 拒绝变体。正式 build PASS；只补跑 `image-panel-windows.test.mjs` 全 40 PASS 与 `panel-source-recheck.test.mjs` 7 PASS，没有重复 resolver／restore 套件、MCP 或 FFT。先前真实 65 条的正常捆绑路径和原科学文件未改变。这是 CI 找到的新消费者边界，不把先前本地 PASS 描述成完整托管验证。
 
 测试名称以仓库实际测试文件为准；保存本地首次 foreign-query 断言差异、discard 首败、缺少 readQualified 的旧模块首败、真实 FFT qualification 断言失败。后续针对性成功不覆盖原失败。没有手动跑 FFT/GPA/拓扑/散射/噪声矩阵，也没有通过隐藏失败或删除测试取得 PASS。
 
