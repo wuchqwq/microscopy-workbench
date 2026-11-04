@@ -252,15 +252,15 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if((value.source_identity as Metadata|undefined)?.path)return {kind:'tiff',label:'用户指定 TIFF',filename:path.win32.basename(path.basename(((value.source_identity as Metadata).path as string))),basis:'fixed source TIFF provenance'};
   return {kind:'unknown',label:'来源未声明',basis:'no supported explicit source declaration'};
  };
- const resolveFrame=async(value:Metadata,ancestry:Metadata[]|null=null)=>{
+ const resolveFrame=async(value:Metadata,ancestry:Metadata[]|null=null,bundleAttempted=false)=>{
   const schema=tools.find(tool=>tool.name==='image_info')?.inputSchema as Metadata|undefined,properties=schema?.properties as Metadata|undefined;
-  if(ancestry===null&&(properties?.include_frame_ancestry as Metadata|undefined)?.type==='boolean'&&!['frame','tiff_source','dm_source','compare'].includes(String(value.kind))&&objectId.test(String(value.parent_object_id??value.base_object_id??value.source_object_id??''))){
+  if(ancestry===null&&!bundleAttempted&&(properties?.include_frame_ancestry as Metadata|undefined)?.type==='boolean'&&!['frame','tiff_source','dm_source','compare'].includes(String(value.kind))&&objectId.test(String(value.parent_object_id??value.base_object_id??value.source_object_id??''))){
    const qualified=await journalCall('image_info',{object_id:value.object_id,include_frame_ancestry:true});if(qualified.data.object_id!==value.object_id)fail('Source ancestry returned another root object',409);ancestry=readImageFrameAncestry(qualified.data.frame_ancestry,value);
   }
   const result=await resolvePanelFrame(value,async id=>(await journalCall('image_info',{object_id:id})).data,ancestry);lastFrameDiagnostic=frameDiagnostic(value,result);
   if(result.status==='corrupt'||result.status==='cycle')fail('Source ancestry rejected: '+result.reason_code,409);
   if(result.terminal&&(result.status==='found'||result.status==='source_without_frame'||result.reason_code==='frame_index_unavailable'))sources.set(value.object_id,describeSource(result.terminal,(value.user_context as Metadata|undefined)?.data_meaning));return result;};
- const findFrameIdentity=async(value:Metadata,ancestry:Metadata[]|null=null):Promise<PanelFrameIdentity|null>=>(await resolveFrame(value,ancestry)).frame;
+ const findFrameIdentity=async(value:Metadata,ancestry:Metadata[]|null=null,bundleAttempted=false):Promise<PanelFrameIdentity|null>=>(await resolveFrame(value,ancestry,bundleAttempted)).frame;
  const qualifySpatialReturn=async(raw:unknown)=>{
   const reference=readSpatialReturnReference(raw),view=await journalCall('image_info',{object_id:reference.view_object_id}),fft=await journalCall('image_info',{object_id:reference.fft_object_id});
   validateSpatialReturn(reference,view.data,view.png,await findFrameIdentity(view.data),fft.data,await findFrameIdentity(fft.data));
@@ -291,7 +291,9 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    const gridMatches=reply.data.scientific_grid_identity===undefined||sameRecord(reply.data.scientific_grid_identity,base.scientific_grid_identity??null),displayMatches=reply.data.display===undefined||sameRecord(reply.data.display,base.display??null);
    if(typeof clean==='string'&&clean&&digest&&gridMatches&&displayMatches){const cleanBytes=Buffer.from(clean,'base64');if(bytes.length>=24&&cleanBytes.length>=24&&bytes.subarray(16,24).equals(cleanBytes.subarray(16,24)))cleanRender={object_id:id,render_base_object_id:base.object_id,panel_mapping_fingerprint:panelWindowMappingFingerprint(reply.data),png_sha256:digest,png_base64:clean};}
   }
-  return {object:reply.data,frame:await findFrameIdentity(reply.data,ancestry),png:reply.png,cleanRender};
+  // A provider may omit the optional projection. Do not request it twice before
+  // following the original qualified parent-read path; malformed bundles throw.
+  return {object:reply.data,frame:await findFrameIdentity(reply.data,ancestry,bundled),png:reply.png,cleanRender};
  };
  const returnFailure=(error:unknown)=>error instanceof SpatialReturnError?error.code:'target_unavailable';
  try{
