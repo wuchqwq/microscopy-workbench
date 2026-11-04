@@ -810,7 +810,7 @@ test('human workflow: saved-view back opens the stored object and never resubmit
 });
 test('directly reopened ROI explicitly requests a fresh full-frame display instead of claiming a saved recipe',async()=>{
  const initial=fixture();initial.frame_identity={frame_object_id:sourceId,frame_index:0};const h=await harness(initial);
- assert.equal(h.$('view-current').textContent,'保存视图');assert.equal(h.$('view-original').textContent,'全帧（新显示）');assert.match(h.$('view-original').title,/没有已保存/);
+ assert.equal(h.$('view-current').textContent,'空间图');assert.equal(h.$('view-original').textContent,'全帧（新显示）');assert.match(h.$('view-original').title,/没有已保存/);
  const full=copy(initial);full.object.object_id='c'.repeat(32);full.object.panels[0].source_rect_xyxy=[0,0,128,96];h.actionResult(full);await h.click('view-original');
  assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'show');assert.deepEqual(h.calls[0].params,{object_id:sourceId,source_view:true});assert.match(h.$('message').textContent,/未恢复未知的旧显示配方/);assert.equal(h.$('view-original').disabled,true);
 });
