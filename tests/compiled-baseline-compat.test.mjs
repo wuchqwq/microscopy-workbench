@@ -164,7 +164,9 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // F1a/F4-lite add the explicitly enumerated tools and optional context selections. Keep the frozen
   // comparison exact for every pre-existing field; authorize only these named
   // additive changes, never drop descriptions or weaken old scientific tests.
-  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge'];
+  // #126 authorizes exactly these three additive metadata tools; the frozen
+  // catalog and every retained legacy tool/schema remain compared below.
+  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge','image_source_proof','image_source_proof_info','image_source_proof_revoke'];
   assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
   const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
   // #70 intentionally changes preview admission, not old scientific arguments.

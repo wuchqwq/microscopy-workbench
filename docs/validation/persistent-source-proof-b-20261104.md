@@ -48,6 +48,10 @@
 
 保留 `provider-proof-first.log`（测试 fixture 未先确认原 preview）、联合 DAG／JS key／near-integer 首失败及 `reader-types-first.log`；后续修复不覆盖这些日志。`panel-audit-regression-first.log` 的命令／dist 路径失败也保留，不记为产品回归失败。正式 MCP 本轮首轮通过。独审发现的 GUI 问题即使服务端仍拒绝写入，也作为局部程序错误修复。
 
+首个托管候选 `8595815fe433c0cf99614817c956227adeb083f2` 的 `compiled-compatibility` **FAIL**：冻结兼容性测试的明确新增目录漏列本次批准的三个 source-proof 工具。原基线 SHA、旧 schema／相对顺序检查和未知新增拒绝均保持；仅补这三个准确名称。原失败 run `41778558056`／job `126404589635` 与本地 `ci-compiled-compatibility-first.log` 保留。后续本地只补这项 copied-package/MCP 兼容性回归，新的托管检查按新精确提交记录，不把首个 CI 改写为通过。
+
+该兼容性定向复测 **3/3 PASS**（31.3 秒）：在独立新 32px fixture 中由冻结版本建立原记录，再用复制的编译包读原请求、context、导出、修订测量和 Panel 资产；原字节及那一次原 FFT 保持。它没有触碰本轮已有的 65／80 链或双域工作区，也没有重复这些工作区的 FFT。`compiled-compatibility-fixed-first.log` 保留原输出。
+
 没有手工运行无关 GPA／拓扑／散射／完整噪声矩阵。现有 CI 按仓库规则可能独立触发更广检查，不修改门禁来节省测试。
 
 Windows 短测按用户指定交给 6.1 Terra，使用 computer-use。首次 `get_window_state` 因工具无法可靠确定当前 Chrome URL 而被策略终止；**没有点击、按键或证明派发**，不重试或绕过。故本轮证明入口／采用／Ctrl+S／帮助的原生鼠标范围均为 **NOT_TESTED**，不是产品故障证据。隔离 helper 正常关闭，原科学文件未改变；详见本地 `native-proof/native-proof-report.md`。UI 与 Panel 回归不冒充这段鼠标验收。
