@@ -227,4 +227,28 @@ class PreviewAdmission(unittest.TestCase):
         self.assertNotIn('preview_request_id=',failed['error']['message'])
         self.assertEqual(worker.execute(self.req('result',query_request_id=request['request_id']))['state'],'unknown')
 
+    def test_existing_child_journal_never_claims_child_was_not_dispatched(self):
+        parent={'request_id':'controlled-existing-parent'}
+        child=worker.automation.child_request_id(parent['request_id'],'context-view')
+        self.ok('view',object_id=self.frame_id,request_id=child)
+        journal=self.workspace/'requests'/(child+'.json');before=journal.read_bytes()
+        ws=worker.Workspace(str(self.workspace),True)
+        failure={'ok':False,'error':{'code':'PREVIEW_OUTCOME_UNRESOLVED','message':'Controlled conflicting response'}}
+        with patch.object(worker,'_execute',return_value=failure):
+            with self.assertRaises(worker.WorkspaceError) as caught:
+                worker.automation.run_child(ws,parent,'context-view','view',object_id=self.frame_id)
+        self.assertNotIn('child preview was not reserved or dispatched',str(caught.exception))
+        self.assertIn('Query original child ID',str(caught.exception))
+        self.assertEqual(journal.read_bytes(),before)
+
+    def test_absence_alone_never_proves_unknown_child_was_not_dispatched(self):
+        parent={'request_id':'controlled-unknown-parent'}
+        ws=worker.Workspace(str(self.workspace),True)
+        failure={'ok':False,'state':'unknown','error':{'code':'INCOMPLETE_REQUEST','message':'Controlled unknown'}}
+        with patch.object(worker,'_execute',return_value=failure):
+            with self.assertRaises(worker.WorkspaceError) as caught:
+                worker.automation.run_child(ws,parent,'context-view','view',object_id=self.frame_id)
+        self.assertNotIn('child preview was not reserved or dispatched',str(caught.exception))
+        self.assertIn('do not replay unknown work',str(caught.exception))
+
 if __name__=='__main__':unittest.main()

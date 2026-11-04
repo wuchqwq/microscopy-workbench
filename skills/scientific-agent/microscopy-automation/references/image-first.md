@@ -18,8 +18,8 @@ with image_frame; inspect image_info and an actual preview. Do not invent XY
 scale, phase radians, a material type or a known real-space lattice model.
 
 After receiving a completed `image_preview`, record its operational receipt
-with `image_preview_acknowledge`: use a new acknowledgement `request_id`, the
-preview's exact `preview_request_id`, and its returned `object_id`. This does
+with `image_preview_acknowledge`: use a new acknowledgement `request_id`, set
+`preview_request_id = preview.request_id` and `object_id = preview.object_id`. This does
 not prove visual inspection. Do this before composition on that input, including
 `image_discovery`, whose overview itself renders a preview. Keep the explicit
 full frame (or its calibration/context wrapper) as discovery's `object_id`;
