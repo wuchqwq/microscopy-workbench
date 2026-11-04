@@ -2,7 +2,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import {mkdirSync,writeFileSync,readFileSync,existsSync,readdirSync} from 'node:fs';
+import {mkdirSync,writeFileSync,readFileSync,existsSync,readdirSync,mkdtempSync,rmSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {tmpdir} from 'node:os';
+import {fileURLToPath} from 'node:url';
 import {createSourceProofFixture} from './source-proof-fixture.mjs';
 import {readImageSourceProof,readImageSourceProofs,inspectSourceProofFrame,readSourceProofReferences} from '../lib/image_source_proofs.mjs';
 import {CliObjectReader,savedRois} from '../lib/workbench_cli_records.mjs';
@@ -10,6 +13,15 @@ import {writePanelExecutionInput,verifyPanelExecutionInput} from '../lib/panel_e
 import {findReusableFftResult,parseCliArgs,runCli,cliError,adoptSourceProof} from '../lib/workbench_cli.mjs';
 import {AnalysisWorkspace,acquireAnalysisWorkspaceOwner,readAnalysisWorkspace} from '../lib/analysis_workspace.mjs';
 import {resolvePanelSavedInputReference} from '../lib/panel_saved_input_reference.mjs';
+
+test('validator checkout preserves original LF identity under Windows autocrlf without changing proof policy',t=>{
+ const tests=path.dirname(fileURLToPath(import.meta.url)),root=path.basename(path.dirname(tests))==='dist'?path.resolve(tests,'../..'):path.resolve(tests,'..');
+ const temporary=mkdtempSync(path.join(tmpdir(),'mwb-proof-checkout-'));
+ t.after(()=>{assert.equal(path.dirname(temporary),path.resolve(tmpdir()));rmSync(temporary,{recursive:true,force:true});});
+ const relative='tools/image_source_proof.py',original=spawnSync('git',['show','HEAD:'+relative],{cwd:root,windowsHide:true});assert.equal(original.status,0,String(original.stderr));
+ const exported=spawnSync('git',['-c','core.autocrlf=true','checkout-index','--prefix='+temporary.replaceAll('\\','/')+'/','--',relative],{cwd:root,windowsHide:true});assert.equal(exported.status,0,String(exported.stderr));
+ const actual=readFileSync(path.join(temporary,relative));assert.equal(actual.includes(Buffer.from('\r\n')),false);assert.deepEqual(actual,original.stdout,'same revision checkout must not invalidate an existing validator identity');
+});
 
 const recipe={window:'hann',subtract_mean:true};
 function writeInput(h,{refs,sequence=1}={}){const journal=path.join(h.workspace,'panel-journals','public-proof-session');mkdirSync(journal,{recursive:true});const parameters={object_id:h.frame.object_id,rect:[8,8,49,49],...recipe};const receipt=writePanelExecutionInput({workspace:h.workspace,journal,session_nonce:'a'.repeat(64),sequence,parameters,source_view_object_id:h.root.object_id,frame_object_id:h.frame.object_id,selection:{kind:'rectangle',coordinate_space:'source_pixels',source_object_id:h.frame.object_id,coordinates:h.mark.anchor.coordinates,panel:h.panel},annotation_id:h.mark.annotation_id,calibration:null,...(refs?{source_proof_refs:refs}:{})});return {journal,parameters,receipt,admit(){writeFileSync(path.join(journal,receipt.request_id+'.request.json'),JSON.stringify({name:'image_fft',arguments:{...parameters,request_id:receipt.request_id}}));},complete(){return h.object(500,'fft',{parent_object_id:h.frame.object_id,array_domain:'frequency',dtype:'complex128',shape_yx:[41,41],source_rect_xyxy:parameters.rect,...recipe},{action:'fft',request_id:receipt.request_id,...parameters},{'data.npy':h.array});}};}

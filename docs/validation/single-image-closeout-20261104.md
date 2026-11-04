@@ -4,7 +4,7 @@
 
 ## 版本与依赖
 
-工作树从 #128 精确 `6fc8725deecdd7757d15d50e034742c5d27e61fa` 建立。实际 Windows 受验生产代码为 `03293c937d74490455b135abcd060e1881c38561`；后续仅追加旧名称测试预期与文档，最终 PR head／CI 在交付中列出。父 #128 的两条 CI／scope gate 已按精确提交核对成功，不重复其科学算法套件。
+工作树从 #128 精确 `6fc8725deecdd7757d15d50e034742c5d27e61fa` 建立。实际 Windows 受验生产代码为 `03293c937d74490455b135abcd060e1881c38561`；后续追加旧名称测试预期、文档与保持原 validator 字节的检出属性，Python Git blob／算法代码不变。最终 PR head／CI 在交付中列出。父 #128 的两条 CI／scope gate 已按精确提交核对成功，不重复其科学算法套件。
 
 实时 main 为 `dd9b706786041c6c0a6678ff6cd4dd84dbe06a3e`、`protected=true`，不是本候选的祖先。待审顺序：
 
@@ -31,6 +31,10 @@
 - 工作流 11/11 PASS，结果区 19/19 PASS；先运行 18 项相关 UI 用例通过。
 - 因通用 `showDraft`／状态显示影响多种选择，再运行该 UI 文件的全部直接消费者：259 PASS／1 FAIL（5.5 秒）。唯一失败为旧测试仍期待“保存视图”，与本次有意改名不符。只更新这一文字预期，保留全帧新显示、原 source 与不复算断言；该用例定向复测 1/1 PASS。原 `ui-all-direct-first.log` 不覆盖，不把定向复测称作新的完整盲测。
 - 独审发现的“未决请求可能被隐藏”和“复数空间图提示 FFT”已补负例；其余所审来源对照与历史入口未见保护绕过。
+
+跨 worktree 的额外旧证明读取首次 **FAIL／unavailable**：新 Python 文件 `tools/image_source_proof.py` 原来以 LF 字节签发来源证明，但 Windows 新检出在 `core.autocrlf=true` 下变为 CRLF，同一 Git blob 的字节哈希因此不同。原 proof 的严格 policy/build 检查正确拒绝了它，未改旧记录。首次回执 `proof-identity-roundtrip-first.json` 保留。
+
+最小修复仅在仓库 `.gitattributes` 固定这个新文件 `text eol=lf`，恢复原已验证字节；不更改其他旧 validator、原 proof、hash／policy 判定或全局 Git 设置。新增 Git `checkout-index` 针对用例以单次 `-c core.autocrlf=true` 导出临时副本，与原 HEAD blob 逐字节相同，1/1 PASS。再读取原 80 链 proof `01464d80f43d4637b46998ce0c2aa591`：Node 与正式 MCP `image_source_proof_info` 均 verified、81 个依赖，原 manifest hash `80f1f164dcc2323e361b4337f64a6626126b94c7f19ef006723bedb2b4ff2d38` 不变；0 FFT／预览／测量／新证明。此处只保证该文件同版本检出一致，不扩大不同 validator build 的兼容政策。
 
 没有手工重复 GPA、拓扑、散射、完整 FFT／噪声矩阵。CI 按仓库既有分类规则独立运行；本 PR 不修改分类或门禁来缩短等待。最终源码的精确提交 CI 另核对。
 
