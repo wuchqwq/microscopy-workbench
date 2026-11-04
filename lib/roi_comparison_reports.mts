@@ -7,6 +7,8 @@ import {CliObjectReader,canonical,isRow,same,savedRois} from './workbench_cli_re
 import {verifyFftInputAssociation} from './workbench_cli_inputs.mjs';
 import type {SavedRoi} from './workbench_cli_records.mjs';
 import {outwardSourceRectangle} from '../ui/image-panel/coordinates.mjs';
+import {readSourceProofReferences} from './image_source_proofs.mjs';
+import type {SourceProofReference} from './image_source_proofs.mjs';
 
 export type ReportRow=Record<string,unknown>;
 export interface RoiComparisonReport {
@@ -14,6 +16,7 @@ export interface RoiComparisonReport {
  source_save_id:string|null;source_revision:number|null;source_view_object_id:string;frame_object_id:string;
  recipe:{window:'none'|'hann';subtract_mean:boolean};rows:ReportRow[];
  interpretation:{status:'not_assessed';notes:string[]};
+ source_proof_refs?:SourceProofReference[];
 }
 export const CLI_REPORT_LIMIT=512;
 const id=/^[A-Za-z0-9_-]{1,64}$/,objectId=/^[a-f0-9]{32}$/;
@@ -41,7 +44,7 @@ function directory(workspace:string,create=false){
 }
 const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
 function verifyReferences(workspace:string,report:RoiComparisonReport,requireInputProof=false){
- const reader=new CliObjectReader(workspace),frame=reader.object(report.frame_object_id).value;reader.object(report.source_view_object_id);if(frame.kind!=='frame')throw new Error('Comparison frame reference is not an immutable frame');reader.verifyArray(frame.object_id);
+ const proofRefs=readSourceProofReferences(report.source_proof_refs),reader=new CliObjectReader(workspace,proofRefs),frame=reader.object(report.frame_object_id).value;reader.object(report.source_view_object_id);if(frame.kind!=='frame')throw new Error('Comparison frame reference is not an immutable frame');reader.verifyArray(frame.object_id);
  let savedRows:ReturnType<typeof savedRois>|null=null;
  if(report.source_save_id!==null){
   const savepoint=reader.json(path.join(reader.root,'analysis-workspace','savepoints',report.source_save_id+'.json')).value;
@@ -64,6 +67,7 @@ function verifyReferences(workspace:string,report:RoiComparisonReport,requireInp
   }
   for(const item of row.peaks as ReportRow[]){const peakView=reader.object(item.view_object_id),{view_object_id,view_manifest_sha256,meaning,...peak}=item;void view_object_id;void meaning;if(view_manifest_sha256!==peakView.manifest_sha256||peakView.value.spectrum_object_id!==fft.value.object_id||!same(peakView.value.xy_calibration,fft.value.xy_calibration)||!Array.isArray(peakView.value.peak_table)||!peakView.value.peak_table.some(p=>same(p,peak)))throw new Error('Comparison peak candidate differs from original provider record');}
  }
+ reader.verifyProofContext();
 }
 export function publishRoiComparisonReport(workspace:string,report:RoiComparisonReport){
  validateRoiComparisonReport(report);verifyReferences(workspace,report,true);const dir=directory(workspace,true),file=path.join(dir,report.comparison_id+'.json'),raw=JSON.stringify({schema_version:1,report_sha256:hash(canonical(report)),report})+'\n';

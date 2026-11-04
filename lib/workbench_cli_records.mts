@@ -1,8 +1,10 @@
 // Bounded verified metadata projection, never a replacement science journal.
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {lstatSync,readFileSync,readdirSync,realpathSync} from 'node:fs';
+import {existsSync,lstatSync,readFileSync,readdirSync,realpathSync} from 'node:fs';
 import {outwardSourceRectangle} from '../ui/image-panel/coordinates.mjs';
+import {readImageSourceProofs} from './image_source_proofs.mjs';
+import type {SourceProofReference,SourceProofProjection} from './image_source_proofs.mjs';
 
 export type Row=Record<string,unknown>;
 export const isRow=(v:unknown):v is Row=>Boolean(v)&&typeof v==='object'&&!Array.isArray(v);
@@ -12,8 +14,8 @@ const objectId=/^[a-f0-9]{32}$/,requestId=/^[A-Za-z0-9_-]{1,64}$/;
 function need(ok:unknown,message:string):asserts ok{if(!ok)throw Object.assign(new Error(message),{code:'CORRUPT_OBJECT'});}
 export interface VerifiedObject {value:Row;parameters:Row;manifest_sha256:string;}
 export class CliObjectReader {
- readonly root:string;private bytes=0;private cache=new Map<string,VerifiedObject>();private checkedArrays=new Set<string>();
- constructor(workspace:string){need(path.isAbsolute(workspace)&&lstatSync(workspace).isDirectory()&&!lstatSync(workspace).isSymbolicLink(),'Ordinary absolute workspace required');this.root=realpathSync.native(workspace);}
+ readonly root:string;readonly proofReferences:readonly SourceProofReference[];private bytes=0;private cache=new Map<string,VerifiedObject>();private checkedArrays=new Set<string>();private listing:string[]|null=null;private catalog:string[]|null=null;private proofs:SourceProofProjection[]|null=null;
+ constructor(workspace:string,proofReferences:readonly SourceProofReference[]=[]){need(path.isAbsolute(workspace)&&lstatSync(workspace).isDirectory()&&!lstatSync(workspace).isSymbolicLink(),'Ordinary absolute workspace required');this.root=realpathSync.native(workspace);this.proofReferences=structuredClone(proofReferences);}
  json(file:string){
   const info=lstatSync(file),relative=path.relative(this.root,realpathSync.native(file));need(info.isFile()&&!info.isSymbolicLink()&&info.size<=2*1024*1024&&relative!==''&&relative!=='..'&&!relative.startsWith('..'+path.sep)&&!path.isAbsolute(relative),'Linked, escaping or oversized metadata');this.bytes+=info.size;need(this.bytes<=64*1024*1024,'CLI metadata read budget exceeded');
   const raw=readFileSync(file),value:unknown=JSON.parse(raw.toString('utf8'));need(isRow(value),'Metadata must be an object');return {raw,value};
@@ -26,7 +28,10 @@ export class CliObjectReader {
   need(journal.state==='completed'&&journal.request_id===value.request_id&&journal.object_manifest_sha256===sha&&isRow(journal.parameters)&&journal.parameters.request_id===value.request_id&&typeof journal.parameters.workspace==='string'&&realpathSync.native(journal.parameters.workspace)===this.root&&same(journal.response,{ok:true,state:'completed',backend:'external-image-workspace',request_id:value.request_id,...value}),'Provider object does not match its committed original journal');
   const record={value,parameters:journal.parameters,manifest_sha256:sha};this.cache.set(id,record);return record;
  }
- objects():VerifiedObject[]{const dir=path.join(this.root,'objects');need(lstatSync(dir).isDirectory()&&!lstatSync(dir).isSymbolicLink(),'Missing ordinary object directory');const ids=readdirSync(dir).filter(name=>objectId.test(name));need(ids.length<=2048,'Workspace exceeds CLI listing budget; select exact immutable objects');return ids.sort().map(id=>this.object(id));}
+ objects():VerifiedObject[]{const dir=path.join(this.root,'objects');need(lstatSync(dir).isDirectory()&&!lstatSync(dir).isSymbolicLink(),'Missing ordinary object directory');const catalog=readdirSync(dir).filter(name=>objectId.test(name)).sort();need(catalog.length<=2048,'Workspace exceeds CLI listing budget; select exact immutable objects');const ids=catalog.filter(id=>{const target=path.join(dir,id),info=lstatSync(target);need(info.isDirectory()&&!info.isSymbolicLink(),'Object catalog contains a linked entry');return existsSync(path.join(target,'object.json'));}),objects=ids.map(id=>this.object(id));this.listing=[...ids];this.catalog=catalog;return objects;}
+ completeListing(objects:readonly VerifiedObject[]):boolean {const ids=objects.map(value=>String(value.value.object_id)).sort(),directory=path.join(this.root,'objects'),current=readdirSync(directory).filter(name=>objectId.test(name)).sort(),present=current.filter(id=>existsSync(path.join(directory,id,'object.json')));return this.listing!==null&&same(ids,this.listing)&&same(present,this.listing)&&same(current,this.catalog);}
+ proofContext():SourceProofProjection[]{if(!this.proofReferences.length)return [];if(!this.proofs){this.proofs=readImageSourceProofs(this.root,this.proofReferences);const failed=this.proofs.find(proof=>proof.status!=='verified');if(failed)throw Object.assign(new Error(failed.reason??'Referenced source proof is unavailable'),{code:failed.code??'SOURCE_PROOF_UNAVAILABLE'});}return this.proofs;}
+ verifyProofContext():void {if(!this.proofReferences.length)return;const fresh=readImageSourceProofs(this.root,this.proofReferences);if(fresh.some(proof=>proof.status!=='verified')||!same(fresh,this.proofContext()))throw Object.assign(new Error('Source proof context changed before CLI readback'),{code:'SOURCE_PROOF_UNAVAILABLE'});}
  verifyArray(id:unknown):void {
   const object=this.object(id).value;if(this.checkedArrays.has(String(id)))return;need(isRow(object.files_sha256)&&typeof object.files_sha256['data.npy']==='string','Scientific array hash is absent');
   const file=path.join(this.root,'objects',String(id),'data.npy'),s=lstatSync(file),relative=path.relative(this.root,realpathSync.native(file));need(s.isFile()&&!s.isSymbolicLink()&&s.size<=128*1024*1024&&relative!==''&&!relative.startsWith('..')&&!path.isAbsolute(relative),'Scientific array exceeds read budget or escapes workspace');
@@ -34,7 +39,8 @@ export class CliObjectReader {
  }
  frame(id:unknown):VerifiedObject {
   const seen=new Set<unknown>();for(let n=0;n<64;n++){need(!seen.has(id),'Cyclic source ancestry');seen.add(id);const result=this.object(id);if(result.value.kind==='frame')return result;id=result.value.parent_object_id??result.value.base_object_id??result.value.source_object_id;}
-  throw new Error('Source ancestry exceeds 64 records');
+  if(this.proofReferences.length){const proof=this.proofContext().find(proof=>proof.dependencies.some(dependency=>dependency.object_id===id&&dependency.manifest_sha256===this.object(id).manifest_sha256));if(proof?.frame_identity)return this.object(proof.frame_identity.frame_object_id);}
+  throw new Error('Source ancestry exceeds 64 records; explicitly record and adopt a complete source proof');
  }
 }
 export interface SavedRoi {annotation_id:string;source_view_object_id:string;frame_object_id:string;float_roi_xyxy:number[];processing_rect_xyxy:number[];source_object_id:string;note:string;status:string;}
