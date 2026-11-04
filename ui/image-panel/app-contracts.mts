@@ -24,7 +24,7 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
  window_collection?:WindowCollection;
  panel_mapping_fingerprint?:string;
  multi_roi_handoff_schema_version?:1;
- edit_state?:{readonly dirty?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
+ edit_state?:{readonly dirty?:boolean;readonly gesture_active?:boolean;readonly draft_revision?:number;readonly annotation_edit?:Readonly<Record<string,unknown>>|null};auto_edit_committed?:boolean;
  figure_base?:FigureBase;
 }
 type EditableSelection<S extends WireSelection> = S extends WireSelection ? Omit<S,'coordinates'>&{coordinates:readonly number[];rendered?:readonly number[]}:never;
