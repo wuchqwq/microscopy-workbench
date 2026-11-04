@@ -8,7 +8,9 @@ formats or the server's existing protocol identity during the initial import.
 
 ## Independent environment
 
-Use Node >=18 and a separate Python >=3.10. Install
+Use Node 22.x or 24.x and a separate Python >=3.10 (3.13 recommended). The
+optional configuration registrar requires Python >=3.11. See the exact
+[CI coverage and qualification limits](CI_SUPPORT.md). Install
 [image requirements](../requirements-images.txt) with that environment's Python.
 Use absolute interpreter, repository and workspace paths; do not use GMS Python.
 For example, from the new checkout:

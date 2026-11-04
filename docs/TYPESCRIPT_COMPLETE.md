@@ -1,5 +1,7 @@
 # Strict TypeScript completion and owner acceptance
 
+Current runtime support is Node 22.x/24.x; see [CI support](CI_SUPPORT.md). The original migration versions below are historical.
+
 The complete Node/MCP, execution/context orchestration, provider adapters, Panel
 services, public CLIs and browser business sources are now TypeScript. Python
 remains the scientific kernel. This is the integrated acceptance candidate for

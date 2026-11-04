@@ -48,7 +48,7 @@ The Agent, when present, chooses and combines available operations. Scientific c
 
 ## Quick start — no Agent required
 
-Requires **Node.js 18+** and **Python 3.10+** in a separate scientific environment.
+Requires **Node.js 22.x or 24.x** and an independent scientific Python environment. **Python 3.13 is the CI reference and recommended version**. The scientific tools retain a declared Python 3.10+ minimum, which is not continuously CI-verified; the optional configuration registrar needs 3.11+. See [runtime support and CI scope](docs/CI_SUPPORT.md).
 
 ```bash
 git clone https://github.com/wuchqwq/microscopy-workbench.git

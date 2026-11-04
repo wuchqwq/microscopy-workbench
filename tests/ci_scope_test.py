@@ -71,6 +71,9 @@ class ScopeTests(unittest.TestCase):
             "crystallography/occupancy.py": {"node", "crystal", "compat", "boundary"},
             "tests/preview-recovery.test.mjs": {"node", "images", "boundary"},
             "tests/image-panel-ui.test.mjs": {"node"},
+            "tests/image-panel-data-inspector.test.mjs": {"node", "boundary"},
+            "tests/image-panel-data-probes.test.mjs": {"node", "boundary"},
+            "tests/image-panel-presentation-transport.test.mjs": {"node", "boundary"},
         }
         for path, expected in examples.items():
             with self.subTest(path=path):
