@@ -33,10 +33,10 @@ const sourceId='a'.repeat(32),viewId='b'.repeat(32);
 const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:[20,12,148,108],image_rect_xyxy:[0,0,128,96]};
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
-async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,initialMeasurementRead=null,relationRead=null,draftLeaseAcks=false}={}){
+async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,initialMeasurementRead=null,relationRead=null,draftLeaseAcks=false,editorTimers=false}={}){
  const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,waitMeasurementRead=initialMeasurementRead,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[],relationTimers=new Map();let probeTimerId=0,relationTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[],relationTimers=new Map(),fieldTimers=new Map();let probeTimerId=0,relationTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -119,7 +119,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
    return {ok:true,json:async()=>copy(server)};
   }
  };
- if(relationRead){sandbox.setTimeout=(fn,delay)=>{const id=++relationTimerId;if(delay===180)relationTimers.set(id,fn);else if(delay<1000)Promise.resolve().then(fn);return id;};sandbox.clearTimeout=id=>relationTimers.delete(id);}
+ if(relationRead||editorTimers){sandbox.setTimeout=(fn,delay)=>{const id=++relationTimerId;if(delay===180)relationTimers.set(id,fn);else if(editorTimers&&delay===350)fieldTimers.set(id,fn);else if(delay<1000)Promise.resolve().then(fn);return id;};sandbox.clearTimeout=id=>{relationTimers.delete(id);fieldTimers.delete(id);};}
  const renderSource=readFileSync(new URL('../ui/image-panel/viewer-render.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
  const script=renderSource+'\n'+source.replace(/^import .*from '\.\/[^']+\.mjs';\r?\n/gm,'')
   .replace('refresh().then(','globalThis.ready=refresh().then(')
@@ -132,6 +132,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
  return {$,bodyClasses,calls,draftCalls,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},finishRoi:async()=>{await sandbox.finishRoiSave();flush();},
   flushRelations:async()=>{const pending=[...relationTimers.values()];relationTimers.clear();for(const callback of pending)callback();for(let i=0;i<100;i++)await Promise.resolve();flush();},
+  flushEditorTimers:async()=>{const pending=[...fieldTimers.values()];fieldTimers.clear();for(const callback of pending)callback();for(let i=0;i<100;i++)await Promise.resolve();flush();},setTextCommand:fn=>{sandbox.document.execCommand=fn;},
   delayAction(promise){waitAction=promise;},delayWindowCamera(promise){waitWindowCamera=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
   nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),cameraIntents:()=>cameraIntentCount,
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
@@ -1657,4 +1658,18 @@ test('source recheck UI: an unconfirmed response keeps the original local ID and
 });
 test('source recheck UI: local edits prevent a new qualification without clearing the editor',async()=>{
  const h=await harness(legacySourceUiFixture());h.$('mark-text').value='Keep this unsubmitted label';h.$('mark-text').oninput();const before=h.inspect();await h.click('recheck-source');assert.equal(h.calls.length,0);assert.equal(h.$('mark-text').value,'Keep this unsubmitted label');assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.inspect().dirty,true);assert.match(h.$('message').textContent,/先完成当前编辑/);
+});
+
+test('text undo boundary: the name debounce cannot submit while its input owns editing or native undo',async()=>{
+ const h=await harness(savedRectangleFixture(),{editorTimers:true});selectSavedRoi(h);const field=h.$('mark-text');field.tagName='INPUT';field.focus();const original=field.value,object=h.inspect().state.object;field.value='temporary local name';field.oninput();await h.flushEditorTimers();assert.equal(h.calls.length,0,'350 ms is not an Apply action while editing');assert.equal(h.inspect().dirty,true);
+ h.setTextCommand(command=>{assert.equal(command,'undo');field.value=original;field.oninput();return true;});assert.equal((await h.nativeAction('undo')).ok,true);await h.flushEditorTimers();assert.equal(field.value,original);assert.equal(h.inspect().dirty,false);assert.deepEqual(h.inspect().state.object,object);assert.equal(h.calls.length,0);
+});
+test('text undo boundary: focused label text and dropdown fields stay local until explicit Apply',async()=>{
+ for(const [id,tag,value]of [['label-text','INPUT','local label'],['color','SELECT','orange']]){const h=await harness(savedRectangleFixture(),{editorTimers:true});selectSavedRoi(h);const field=h.$(id);field.tagName=tag;field.focus();field.value=value;field.oninput();await h.flushEditorTimers();assert.equal(h.calls.length,0,id);assert.equal(h.inspect().dirty,true,id);await h.click('save-mark');await h.finish();assert.equal(h.calls.length,1,id);assert.ok(['edit','edit-layout'].includes(h.calls[0].action),id);}
+});
+test('text undo boundary: keyboard undo and redo leave input, textarea, select and editable focus to the browser',async()=>{
+ for(const tag of ['INPUT','TEXTAREA','SELECT','editable']){const h=await harness(savedRectangleFixture());selectSavedRoi(h);const field=h.$('keyboard-editor');field.tagName=tag==='editable'?'SPAN':tag;if(tag==='editable')field.isContentEditable=true;field.focus();const before=h.inspect(),drafts=h.draftCalls.length;let prevented=0;for(const modifiers of [{ctrlKey:true},{metaKey:true},{ctrlKey:true,shiftKey:true}])h.key('z',{target:field,...modifiers,preventDefault(){prevented++;}});await h.settle();assert.equal(prevented,0,tag);assert.deepEqual(h.inspect(),before,tag);assert.equal(h.draftCalls.length,drafts,tag);assert.equal(h.calls.length,0,tag);}
+});
+test('text undo boundary: canvas focus still uses the existing scientific selection undo and redo',async()=>{
+ const h=await harness();h.draw('rectangle');await h.settle();const rectangle=h.inspect().draft;h.draw('point');await h.settle();const point=h.inspect().draft;h.$('canvas').focus();let prevented=0;h.key('z',{ctrlKey:true,preventDefault(){prevented++;}});h.flush();assert.deepEqual(h.inspect().draft,rectangle);h.key('z',{ctrlKey:true,shiftKey:true,preventDefault(){prevented++;}});h.flush();assert.deepEqual(h.inspect().draft,point);assert.equal(prevented,2);assert.equal(h.calls.length,0);
 });
