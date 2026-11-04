@@ -27,7 +27,7 @@ export const discoveryTools:ToolDefinition[]=[
     previous_discovery_id:id,
     max_size:displaySize,
   },['object_id']),
-  write('image_discovery_review','Bind existing numerical evidence to one exact saved ROI. Manual image-first is supported within the documented synthetic software/numerical scope; a review originating from automatic feature proposals remains EXPERIMENTAL and does not validate detection accuracy. Check source/frame/ROI/current calibration, original journals and payloads; retain explanations, unknowns and history as hypotheses, never confirmed defects/twins/phases. Existing FFT/peaks/measurement/GPA tools perform science explicitly; qualified GPA may hand off to the existing F4 method plan. No new FFT/GPA/measurement or hidden model call.',{
+  write('image_discovery_review','Bind existing numerical evidence to one exact saved ROI. Also accepts saved spatial raw statistics with primary ROI equal to candidate (comparison references remain contextual), or a width-one profile wholly inside it (line subset only); reconstructs these from original arrays/requests. Probe is ephemeral, not saved review evidence. Manual image-first is supported within the documented synthetic software/numerical scope; automatic proposals remain EXPERIMENTAL. Check source/frame/ROI/current calibration, journals and payloads; retain hypotheses and unknowns, never confirmed defects/twins/phases. FFT/peaks/measurement/GPA tools perform science explicitly; qualified GPA may hand off to F4. No new FFT/GPA, saved measurement or hidden model call.',{
     object_id:id,candidate_id:id,
     evidence_ids:{type:'array',minItems:1,maxItems:8,items:id},
     observation_text:text,

@@ -194,6 +194,32 @@ def _evidence(workspace, ids, source, rect, api):
     for ident in ids:
         record, directory = workspace.object(ident)
         kind = record["kind"]
+        if kind in ("statistics", "profile"):
+            observed = api.numeric.committed_observation(workspace, record, api)
+            origin, _ = _source(workspace, record["parent_object_id"], api)
+            api.need(origin["science"] == source["science"] and observed["coordinate_space"] == "source_pixels" and
+                     observed["component"] == "raw" and
+                     api.calibration.dependency(observed.get("xy_calibration")) == source["science"]["calibration_dependency"],
+                     "Real-space evidence has a different source/frame/calibration or array domain", "DISCOVERY_SCOPE_MISMATCH")
+            if kind == "statistics":
+                api.need(observed["source_rect_xyxy"] == rect, "Primary statistics ROI must equal the candidate ROI; references remain contextual", "DISCOVERY_SCOPE_MISMATCH")
+                numeric = {key:copy.deepcopy(observed[key]) for key in ("statistics", "source_rect_xyxy", "reference_comparison") if key in observed}
+                support = "exact_candidate_roi"
+            else:
+                points = observed["samples"]["sampled_coordinates_xy"]
+                api.need(all(rect[0] <= x < rect[2] and rect[1] <= y < rect[3] for x,y in points),
+                         "All profile samples must lie inside the candidate ROI; a line is not full-ROI evidence", "DISCOVERY_SCOPE_MISMATCH")
+                values = observed["samples"]["value"]
+                numeric = dict(points=observed["points"], sampling=observed["sampling"],
+                               sample_count=len(values), minimum=min(values), maximum=max(values),
+                               full_samples_in_saved_object=ident)
+                support = "line_subset_of_candidate_roi"
+            refs.append(_dep(record, directory, api))
+            observations.append(dict(object_id=ident, kind=kind, support=support,
+                                     coordinate_space=observed["coordinate_space"], component=observed["component"],
+                                     scientific_grid_identity=observed["scientific_grid_identity"],
+                                     numerical_evidence=numeric, interpretation_status="hypothesized"))
+            continue
         if kind == "measure":
             record, directory = workspace.committed_measurement(ident)
         targets = [ident]
@@ -209,7 +235,7 @@ def _evidence(workspace, ids, source, rect, api):
                 gpas.append(ident)
                 gpa_scopes.add(api.canonical({"fft":record["input_dependency"]["fft"], "mask_sigma":record["parameters"]["mask_sigma"]}))
         else:
-            api.need(kind in ("fft", "fft_view", "measure", "annotate", "calibration"), "Unsupported discovery evidence; use explicit saved FFT/peaks/measure/GPA", "UNSUPPORTED_OPERATION")
+            api.need(kind in ("fft", "fft_view", "measure", "annotate", "calibration"), "Unsupported discovery evidence; use explicit saved FFT/peaks/measure/GPA or spatial statistics/profile", "UNSUPPORTED_OPERATION")
         for target in targets:
             fft, fft_dir = _fft_scope(workspace, target, source, rect, api)
             ffts[fft["object_id"]] = {**_dep(fft, fft_dir, api), "shape_yx": fft["shape_yx"], "window": fft["window"], "subtract_mean": fft["subtract_mean"]}

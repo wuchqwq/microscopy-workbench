@@ -59,7 +59,14 @@ the feature scan/any initial field cost as well. The provider does not secretly
 choose actions or invoke a model. It does not claim a global discovery budget
 over direct tools; the runtime Agent owns this explicit bounded selection.
 
-Use image_fft_batch with selected rectangles, visible window/subtract_mean
+Choose measurements for the question, not just the proposed default action.
+For fixed-site intensity or suspected missing/weak projected columns, use
+[real-space observations](point-observations.md): saved `image_statistics` on
+the exact candidate ROI (optional same-image reference comparison) and/or a
+saved width-one `image_profile` supported inside it. A probe is ephemeral and
+is not a review evidence ID. No FFT is required for this real-space chain.
+
+For periodicity context use image_fft_batch with selected rectangles, visible window/subtract_mean
 choices, then image_peaks and, if useful, image_peak_measurements/image_measure.
 These are the existing algorithms and immutable records. Default proposed Hann
 windowing reduces edge leakage, but changes the band shape. GPA requires its
@@ -70,7 +77,8 @@ Only region0 is exact core evidence; long-window regions1/2 are correlated
 context and cannot satisfy the core's same-ROI review binding.
 
 Call image_discovery_review with object_id=<discovery>, candidate_id,
-evidence_ids=<actual saved batch/FFT/peaks/measurements or qualified GPA>,
+evidence_ids=<actual saved batch/FFT/peaks/measurements, qualified GPA,
+or spatial raw statistics/profile>,
 observation_text, candidate_explanations and unresolved questions. The tool
 checks the exact frame, rectangle and calibration; it retains numeric evidence,
 not text parsed from arrow labels. A successful review authenticates those

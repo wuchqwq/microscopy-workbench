@@ -76,10 +76,19 @@ class ScopeTests(unittest.TestCase):
             "tests/image-panel-presentation-transport.test.mjs": {"node", "boundary"},
             "tests/core-cross-window-contract.test.mjs": {"node"},
             "tests/image_core_cross_test.py": {"spatial"},
+            "tests/image_point_observation_test.py": {"spatial"},
+            "tests/point-observation-contract.test.mjs": {"node"},
         }
         for path, expected in examples.items():
             with self.subTest(path=path):
                 self.assertEqual(groups_for_path(path), expected)
+
+    def test_point_observation_checks_are_in_actual_execution_lists(self):
+        root=Path(__file__).resolve().parents[1]
+        self.assertIn("- run: python -B tests/image_point_observation_test.py", (root/".github/workflows/quick.yml").read_text())
+        import json
+        command=json.loads((root/"package.json").read_text())["scripts"]["test"]
+        self.assertIn("dist/tests/point-observation-contract.test.mjs",command.split())
 
     def test_shared_unknown_and_unregistered_tests_expand(self):
         for path in ("scripts/build.mjs", "server.mts", "science-server.mts",

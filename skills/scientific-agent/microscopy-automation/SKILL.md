@@ -48,6 +48,12 @@ does not mean normal structure. This is not a fixed automatic classifier.
 If a field or qualified GPA already answers the next question, continue it
 directly using the modes below; do not rebuild it just to enter image-first mode.
 
+For atomic-resolution STEM or a suspected missing/weak projected column, read
+[fixed-site real-space observations](references/point-observations.md). Reuse
+the same discovery/statistics/profile/review chain from either Agent-selected
+or researcher-selected attention. FFT peak positions alone cannot exclude a
+point defect. This is numerical observation, not a trained vacancy detector.
+
 ## Budgeted active follow-up
 
 For an existing structural field, use `image_analysis_candidates` on its saved

@@ -106,7 +106,7 @@ FIELDS = {
     "peaks": {"object_id", "max_peaks", "min_separation_bins", "exclude_dc_radius_bins", "threshold_rel", "refinement", "max_size"},
     "annotate": {"object_id", "annotations", "updates"}, "context": {"object_id", "metadata"},
     "measure": {"object_id", "points", "coordinate_space"}, "export": {"object_id", "output_dir"},
-    "statistics": {"object_id", "rect", "frequency_rect", "component"},
+    "statistics": {"object_id", "rect", "frequency_rect", "component", "reference_comparison"},
     "profile": {"object_id", "points", "coordinate_space", "component", "sample_count", "line_width", "interpolation"},
     "centre": {"object_id", "center_xy", "coordinate_space", "source_text"},
     "remeasure": {"object_id", "measurement_object_id", "points", "source_text"},
@@ -1220,6 +1220,8 @@ class Workspace:
             if action == "statistics":
                 metadata.update(numeric.statistics(self, request))
                 write_new(directory / "statistics.json", canonical(metadata["statistics"])+b"\n")
+                if "reference_comparison" in metadata:
+                    write_new(directory / "statistics-comparison.json", canonical(metadata["reference_comparison"])+b"\n")
             else:
                 result, values = numeric.profile(self, request)
                 metadata.update(result)
@@ -1591,7 +1593,7 @@ class Workspace:
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
             numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "statistics-comparison.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")
