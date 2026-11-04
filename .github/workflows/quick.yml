@@ -122,6 +122,7 @@ jobs:
       - run: python -B tests/dm_planes_test.py
       - run: python -B tests/dm_complex_test.py
       - run: python -B tests/test_resumable_observations.py
+      - run: python -B tests/image_source_proof_test.py
       - run: python -B tests/image_peaks_test.py
       - run: python -B tests/test_flat_spectrum.py -v
       - run: python -B tests/test_fft_dc_roundoff.py -v

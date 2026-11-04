@@ -10,6 +10,7 @@ import {discoveryRecipes} from '../image_discovery_contract.mjs';
 import {gpaRecipes} from '../image_gpa_contract.mjs';
 import {topologyRecipes} from '../image_topology_contract.mjs';
 import {evidenceRecipes} from '../image_evidence_contract.mjs';
+import {sourceProofRecipes} from '../image_source_proof_contract.mjs';
 import type {CompositionRecipe} from '../image_provider_contracts.mjs';
 import type {RegistryModule,RegistryTool,ToolContract} from '../runtime/contracts.mjs';
 import type {ImageWorkspaceOptions,ImageWorkspaceProvider} from '../image_workspace.mjs';
@@ -31,6 +32,7 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
   ...evidenceRecipes,
   ...gpaRecipes,
   ...topologyRecipes,
+  ...sourceProofRecipes,
   image_probe: {
     inputs:['ScientificArrayRef:exact immutable saved plane','PointBatch:1..64 source or original FFT frequency coordinates','Component:raw scalar or explicit real/imag/amplitude/power'],
     outputs:['ReadOnlySampleBatch:original-array nearest samples and exact source identity; not PNG brightness'],
@@ -177,7 +179,7 @@ function contract(name: string, workspace: string): ToolContract {
       cancellation: query ? 'Abort stops waiting; recovery only queries the existing durable journal, never resubmits scientific work' : 'Queued cancellation prevents submission; after start abort stops waiting only. Coordinator deadline requests worker termination, response guard may also terminate it; actual close releases the resource. Incomplete/unknown state is not retried',
     },
     recovery: query
-      ? {method: name === 'image_result' ? 'Query the original durable request without re-execution' : 'Inspect the same immutable object; this is not a fresh capture', tool: name, idField: name === 'image_result' ? 'request_id' : 'object_id', scope: 'Configured image workspace and original immutable evidence'}
+      ? {method: name === 'image_result' ? 'Query the original durable request without re-execution' : 'Inspect the same immutable object; this is not a fresh capture', tool: name, idField: name === 'image_result' ? 'request_id' : name === 'image_source_proof_info' ? 'proof_object_id' : 'object_id', scope: 'Configured image workspace and original immutable evidence'}
       : {method: 'Query original pre-saved request; changed arguments need a new request ID and unknown operations are not replayed', tool: 'image_result', idField: 'request_id', scope: 'Configured image workspace durable journal; no live/cross-session DM recovery claim'},
   };
 }

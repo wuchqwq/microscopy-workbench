@@ -1,9 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {UserActionHistory,SavedViewHistory,workflowScope,selectionActionReason,measurementLabel,framePreviewRecipe} from '../ui/image-panel/user-workflow.mjs';
+import {UserActionHistory,SavedViewHistory,workflowScope,selectionActionReason,measurementLabel,framePreviewRecipe,currentViewLabel,measurementActionName,idleSelectionHint} from '../ui/image-panel/user-workflow.mjs';
 import {profileTicks,profileTickLabels,profileReadout,nearestProfileSample,DataProbes} from '../ui/image-panel/data-probes.mjs';
 const state=(id='a',domain='spatial_pixels')=>({frame_identity:{frame_object_id:'frame'},object:{object_id:id,panels:[{source_object_id:'frame',domain,source_rect_xyxy:[0,0,80,80]}]}});
+
+test('image type labels never turn a cropped saved view into a full original or explicit workspace save',()=>{
+ const cropped=state('cropped').object,history=new SavedViewHistory();history.remember({object:cropped});const original=structuredClone(history.entries);
+ assert.equal(currentViewLabel(cropped,history.entries[0].role),'空间图');assert.equal(currentViewLabel(cropped,'原图'),'原图');
+ assert.equal(currentViewLabel(state('fft','frequency').object,'保存视图'),'FFT');assert.deepEqual(history.entries,original);
+ assert.equal(history.original({object:cropped}),null,'a display label must not create a full-source recipe');
+});
+
+test('measurement action names distinguish arbitrary reciprocal lines from DC-to-point periods',()=>{
+ const pick=(kind,domain)=>({kind,panel:{domain},coordinates:kind==='point'?[.1,.2]:[.1,.2,.3,.4]});
+ assert.equal(measurementActionName(pick('line','spatial_pixels')),'测量长度');
+ assert.equal(measurementActionName(pick('point','frequency')),'测量周期');
+ assert.equal(measurementActionName(pick('line','frequency')),'测量倒易距离');
+ assert.equal(measurementActionName(pick('arrow','frequency')),'测量倒易距离');
+ assert.equal(measurementActionName(pick('line','source_array_indices'),{}),'测量距离');
+ assert.match(idleSelectionHint({...state().object,dtype:'complex64'}),/不支持 FFT/);
+ assert.match(idleSelectionHint({...state().object,annotations:[{kind:'rectangle',status:'hypothesized'}]}),/点击已有 ROI/);
+});
 test('history mixes geometry/display/selection in one chronological queue and groups only continuous slider input',()=>{
  const h=new UserActionHistory();h.push({kind:'annotation',before:{x:1},after:{x:2},scope:'one'});h.push({kind:'display',before:{gamma:1},after:{gamma:2},scope:'one'},{group:'gamma'});h.push({kind:'display',before:{gamma:2},after:{gamma:3},scope:'one'},{group:'gamma'});assert.equal(h.undoItems.length,2);assert.deepEqual(h.peek().before,{gamma:1});
  const d=h.peek();h.finish('undo',d);assert.equal(h.peek().kind,'annotation');const a=h.peek();h.finish('undo',a);assert.equal(h.peek('redo').kind,'annotation');h.finish('redo',a);assert.equal(h.peek('redo').kind,'display');

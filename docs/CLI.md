@@ -17,7 +17,7 @@ Except help, stdout contains one versioned JSON response. Diagnostics belong on 
 | 3 | conflict | Exact version/request/ownership conflict; inspect the bound version |
 | 4 | failed | Known failure |
 | 5 | outcome_unknown | Original operation may have executed; query its ID |
-| 6 | unavailable | Environment unavailable |
+| 6 | unavailable | Environment or exact source evidence unavailable; existing/unresolved FFT is not missing |
 
 ## Explicit provider commands
 
@@ -96,6 +96,23 @@ Reports are append-only reference metadata in the original workspace's `cli-comp
 The command writes a frozen comparison plan before its child requests. A repeated comparison ID returns its existing immutable report; a changed ROI/recipe/version under the same ID is rejected. Missing partial reports recover each original child request by ID, never manufacture replacement request IDs. New work intentionally uses a new comparison ID.
 
 Reads are bounded: at most 2,048 objects, 64 MiB cumulative JSON, 128 MiB per checked array, 512 reports per listing and 100 selected ROIs. A budget refusal is not permission to skip provenance checks. Select a narrower immutable snapshot or explicit report when appropriate.
+
+## Explicit source proofs
+
+Source proofs append metadata to the existing provider objects and request journal. They create no FFT, preview, calibration or measurement. `proof-create` and `proof-revoke` need an explicit Python and pre-saved request ID; an unknown response is recovered with `query --request-id ORIGINAL_ID`. `proof-info` is a fresh read and needs no Python or new request ID.
+
+```powershell
+node dist/tools/workbench_cli.mjs proof-create --workspace "F:\Research\analysis" --python "F:\Python\python.exe" --object-id EXACT_EXISTING_SOURCE_VIEW_ID --purpose saved_source --request-id source-check-001
+node dist/tools/workbench_cli.mjs proof-info --workspace "F:\Research\analysis" --proof-id EXACT_RETURNED_PROOF_ID --proof-sha256 EXACT_MANIFEST_SHA256
+```
+
+For `--purpose fft_input`, `--object-id` names the original raw FFT and both `--input-relative-path` and `--input-sha256` name its exact original GUI sidecar. An old `unavailable` input stays unavailable; a new retrospective proof is separately reported and never becomes strict pre-execution evidence. A known existing or unresolved FFT stops `compare-rois --compute-missing` before computation, rather than creating a replacement.
+
+`inspect` / `compare-rois` accept explicit `--proof-id` / `--proof-sha256`, or use exact references already saved in that analysis. No filesystem proof is automatically adopted. Proof coverage includes only its verified dependency members: a later annotation needs an explicit new proof even when its grid is unchanged. Missing, changed, withdrawn or unsupported evidence abstains; hashes are not signatures and current payload checks remain necessary.
+
+To repair a **closed, clean** saved workspace, `proof-adopt --proof-id ID --proof-sha256 SHA --new-save-id NEW_ID` explicitly adopts a verified saved-source proof and publishes a new savepoint through existing ownership/CAS. `--replace-proof-id OLD_ID` replaces only that chosen reference. Open GUI ownership, drafts, recovery and unresolved requests/saves block this command. The old savepoint is unchanged; a repeated new-save ID queries that original save and does not repeat adoption. A now-withdrawn proof is reported separately from whether its save completed.
+
+In GUI use “显示与高级设置 → 诊断与原请求恢复 → 持久来源证明” and “探索执行历史” to explicitly record, query and adopt proofs. Recording is not adoption, and adoption is an unsaved work edit until “保存工作区” / Ctrl+S. No proof action silently applies ROI drafts or repeats rejected scientific edits. See the [approved B contract](design/persistent-source-proof-121-20261104.md) for scope and withdrawal behavior.
 
 ## Validation scope
 

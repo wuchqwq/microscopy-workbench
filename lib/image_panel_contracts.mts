@@ -77,6 +77,8 @@ export interface PanelState {
  helper_session_id?:string|null;panel_generation?:number|null;
  object:PanelMetadata;source_identity:PanelMetadata;effective_display:unknown;display_source_object_id:unknown;render_base_id:unknown;
  frame_identity:PanelFrameIdentity|null;png_base64:unknown;clean_png_base64:unknown;clean_png_sha256:string|null;domain_png_base64:unknown;
+ frame_resolution?:{object_id:unknown;status:string;reason_code:string;records_checked:number;ancestor_reads:number};
+ source_recheck?:{status:'available'|'pending';reason_code:string;records_checked:number;request_id?:unknown};
  sequence_evidence:unknown;domain_evidence:unknown;numeric_results:Record<'statistics'|'profile',PanelMetadata|null>;
  crystal_evidence?:unknown;
  numeric_result_recovery:{state:string;results:Record<string,PanelMetadata>};

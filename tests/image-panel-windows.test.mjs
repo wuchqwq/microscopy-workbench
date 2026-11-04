@@ -90,9 +90,9 @@ test('unsupported active views retain same-frame saved windows without pretendin
  store.admit(raw,frame);assert.equal(store.snapshot().active_window_id,before.active_window_id);assert.deepEqual(store.snapshot().windows,before.windows);
 });
 
-async function fixture(run,{initialAnnotations=[],deepSource=false,ancestry=false,ancestryTransform=value=>value}={}){
+async function fixture(run,{initialAnnotations=[],deepSource=false,ancestry=false,ancestryTransform=value=>value,ancestryFaultAtStartup=false}={}){
  const workspace=mkdtempSync(path.join(tmpdir(),'image-panel-windows-')),records=new Map([[T,{object_id:T,kind:'tiff_source'}],[F,{object_id:F,kind:'frame',source_object_id:T,frame_index:0}]]),calls=[],live=[];
- let sequence=100,panel,owned,holdInfo=null,failFFT=false,changeAnnotationGrid=false;
+ let sequence=100,panel,owned,holdInfo=null,failFFT=false,changeAnnotationGrid=false,ancestryFaultActive=ancestryFaultAtStartup;
  const save=value=>{records.set(value.object_id,structuredClone(value));if(value.files_sha256){const dir=path.join(workspace,'objects',value.object_id);mkdirSync(dir,{recursive:true});writeFileSync(path.join(dir,'preview.png'),pngBytes);}return value;};save({...spatial(),annotations:structuredClone(initialAnnotations)});
  if(deepSource){let parent=save(spatial(id(49)));for(let n=50;n<60;n++)parent=save({...spatial(id(n)),kind:'annotate',parent_object_id:parent.object_id,render_base_object_id:id(49)});save({...spatial(),kind:'annotate',parent_object_id:parent.object_id,render_base_object_id:id(49),annotations:structuredClone(initialAnnotations)});}
  const ancestryFields=['object_id','kind','parent_object_id','base_object_id','source_object_id','frame_index','dm_dataset_index','dm_plane_selection','source_identity','source_file_format','source_reader','upstream_backend','backend','state','image_path','evidence_format'];
@@ -110,10 +110,12 @@ async function fixture(run,{initialAnnotations=[],deepSource=false,ancestry=fals
    if(changeAnnotationGrid){changeAnnotationGrid=false;value.scientific_grid_identity={version:1,source_grid_object_id:id(999),domain:'spatial_pixels'};}
    save(value);
   }
-  assert.ok(value,'Controlled provider missing object '+args.object_id);let data=structuredClone(value);
+  // A real provider returns the same qualified root fields with or without the
+  // optional projection. The flag only adds already-qualified ancestry.
+  assert.ok(value,'Controlled provider missing object '+args.object_id);let data={state:'completed',backend:'external-image-workspace',...structuredClone(value)};
   if(name==='image_info'&&args.include_frame_ancestry===true&&ancestry!=='missing'){
    data={state:'completed',backend:'external-image-workspace',...data};const chain=[];let entry=value;const visited=new Set();for(let step=0;step<=64;step++){const reply={state:'completed',backend:'external-image-workspace',...entry};chain.push(Object.fromEntries(ancestryFields.filter(key=>reply[key]!==undefined).map(key=>[key,structuredClone(reply[key])])));if(step===64||['frame','tiff_source','dm_source','compare'].includes(entry.kind)||visited.has(entry.object_id))break;visited.add(entry.object_id);const next=entry.parent_object_id??entry.base_object_id??entry.source_object_id;if(typeof next!=='string'||!records.has(next))break;entry=records.get(next);}
-   data.frame_ancestry=ancestryTransform({schema_version:1,root_object_id:value.object_id,records:chain});
+   const projection={schema_version:1,root_object_id:value.object_id,records:chain};data.frame_ancestry=ancestryFaultActive?ancestryTransform(projection):projection;
   }
   return {data,png:value.files_sha256?png:null};
  },async close(){}});
@@ -123,7 +125,7 @@ async function fixture(run,{initialAnnotations=[],deepSource=false,ancestry=fals
  const get=async(route)=>{const r=await fetch(panel.url.split('/#')[0]+route,{headers:{'X-Panel-Token':panel.token}});return {status:r.status,data:await r.json()};};
  const cold=async()=>{await owned.close(panel);await start();};
  const hold=object_id=>{let release,entered;const wait=new Promise(r=>release=r),started=new Promise(r=>entered=r);holdInfo={object_id,wait,entered};return {release,started};};
- try{await start();await run({workspace,records,calls,save,act,post,get,cold,hold,state:()=>panel.state(),unknownFFT:()=>{failFFT=true;},changeNextAnnotationGrid:()=>{changeAnnotationGrid=true;}});}finally{for(const entry of live.reverse()){try{await entry.owned.close(entry.panel);}catch{}}rmSync(workspace,{recursive:true,force:true});}
+ try{await start();await run({workspace,records,calls,save,act,post,get,cold,hold,state:()=>panel.state(),armAncestryFault:()=>{ancestryFaultActive=true;},unknownFFT:()=>{failFFT=true;},changeNextAnnotationGrid:()=>{changeAnnotationGrid=true;}});}finally{for(const entry of live.reverse()){try{await entry.owned.close(entry.panel);}catch{}}rmSync(workspace,{recursive:true,force:true});}
 }
 
 test('two GUI FFTs retain source and immutable A/B windows; saved assets are bounded read-only and cold restore retains IDs',()=>fixture(async h=>{
@@ -145,7 +147,7 @@ test('saved asset ancestry: a thirteen-node source uses one explicit qualified r
 
 test('saved asset ancestry: an advertised provider omitting the optional projection keeps the legacy fresh-parent path',()=>fixture(async h=>{
  await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
- const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);assert.equal(h.calls.slice(start).length,14);assert.deepEqual(h.state(),before);
+ const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,200,response.data.error);const reads=h.calls.slice(start);assert.equal(reads.length,14);assert.equal(reads.filter(call=>call.args.include_frame_ancestry===true).length,1,'an omitted optional projection must not trigger a second bundled root read');assert.deepEqual(h.state(),before);
 },{deepSource:true,ancestry:'missing'}));
 
 test('saved asset ancestry: a legacy catalog is never sent a new optional argument',()=>fixture(async h=>{
@@ -158,18 +160,23 @@ test('saved clean render: a corrupted existing base is refused without creating 
  const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,400);assert.match(response.data.error,/Clean PNG hash or format mismatch/);assert.deepEqual(h.state(),before);assert.ok(h.calls.slice(calls).every(call=>call.name==='image_info'));
 },{deepSource:true,ancestry:true}));
 
-for(const [name,mutate]of [
+const ancestryFaults=[
  ['wrong root',value=>({...value,root_object_id:id(999)})],
  ['broken next identity',value=>({...value,records:value.records.map((record,index)=>index===1?{...record,object_id:id(999)}:record)})],
  ['truncated chain',value=>({...value,records:value.records.slice(0,-1)})],
  ['unknown projection field',value=>({...value,records:value.records.map((record,index)=>index===0?{...record,png_base64:png}:record)})],
-])test('saved asset ancestry: rejects '+name+' without changing state or submitting a scientific write',()=>fixture(async h=>{
- await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
+];
+for(const [name,mutate]of ancestryFaults)test('saved asset ancestry: rejects '+name+' without changing state or submitting a scientific write',()=>fixture(async h=>{
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});h.armAncestryFault();const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V),start=h.calls.length;
  const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,409,response.data.error);assert.match(response.data.error,/ancestry|Ancestry/);assert.deepEqual(h.state(),before);assert.ok(h.calls.slice(start).every(call=>call.name==='image_info'));
 },{deepSource:true,ancestry:true,ancestryTransform:mutate}));
 
+test('saved asset ancestry: malformed projections at initialization are refused before the asset callback',async()=>{
+ for(const [,mutate]of ancestryFaults)await assert.rejects(fixture(()=>assert.fail('A malformed startup projection cannot reach the asset test'),{deepSource:true,ancestry:true,ancestryTransform:mutate,ancestryFaultAtStartup:true}),/Invalid qualified frame ancestry projection/);
+});
+
 test('saved asset ancestry: a qualified but different frame still fails the saved window mapping guard',()=>fixture(async h=>{
- await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V);
+ await h.act('fft',{selection:select([2,3,20,25],h.state().object.panels[0])});h.armAncestryFault();const before=h.state(),source=before.window_collection.windows.find(win=>win.object_id===V);
  const response=await h.get(`/api/window-asset?window_id=${source.window_id}&revision=${before.window_collection.revision}`);assert.equal(response.status,409);assert.match(response.data.error,/asset changed/);assert.deepEqual(h.state(),before);
 },{deepSource:true,ancestry:true,ancestryTransform:value=>({...value,records:value.records.map((entry,index)=>index===value.records.length-2?{...entry,parent_object_id:id(999)}:index===value.records.length-1?{...entry,object_id:id(999)}:entry)})}));
 
@@ -289,4 +296,8 @@ test('restore drops a forged source relation but keeps the independently qualifi
 
 test('bounded backend panel preferences reject coerced nonstring sides before metadata mutation',()=>{
  const good={side:'research',settings:false,results:true};assert.deepEqual(readPanelWindowUiPanels(good),good);for(const side of [['research'],null,{value:'research'}])assert.throws(()=>readPanelWindowUiPanels({...good,side}),/bounded UI panel/);
+});
+
+test('restore revision floor preserves default invalid no-op and advances only the explicit live restore lease',async()=>{
+ const current=spatial(),store=new PanelWindowStore();store.admit(current,frame);const before=store.snapshot(),read=async()=>({object:current,frame,png});await store.restore(null,current,frame,read);assert.deepEqual(store.snapshot(),before);const missingActive=store.checkpoint();missingActive.active_window_id=id(999);await store.restore(missingActive,current,frame,read);assert.deepEqual(store.snapshot(),before);await store.restore(null,current,frame,read,undefined,20);assert.equal(store.snapshot().revision,21);assert.deepEqual(store.snapshot().windows,before.windows);const after=store.snapshot();for(const bad of [-1,1.5,Number.MAX_SAFE_INTEGER,Infinity]){await assert.rejects(store.restore(null,current,frame,read,undefined,bad),/revision floor/);assert.deepEqual(store.snapshot(),after);}const saved=store.checkpoint(),savedBytes=JSON.stringify(saved);await store.restore(saved,current,frame,read,undefined,40);assert.equal(store.snapshot().revision,41);assert.equal(JSON.stringify(saved),savedBytes);assert.throws(()=>store.requireRevision(21),/Stale window collection/);
 });

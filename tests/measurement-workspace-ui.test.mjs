@@ -1,7 +1,7 @@
 // Focused read-only presentation/export contracts; not browser acceptance.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MeasurementWorkspace,measurementValues,measurementType,measurementNumber,measurementDetails,measurementSummary,inspectorDetails,tabularCell,exportMeasurementTable} from '../ui/image-panel/measurement-workspace.mjs';
+import {MeasurementWorkspace,measurementReadContext,measurementValues,measurementType,measurementNumber,measurementDetails,measurementSummary,inspectorDetails,tabularCell,exportMeasurementTable} from '../ui/image-panel/measurement-workspace.mjs';
 const A='a'.repeat(32),B='b'.repeat(32),C='c'.repeat(32);
 function result(overrides={}){return {object_id:A,kind:'measure',parent_object_id:B,request_id:'test-measure',points:[[0,0],[.125,-.25]],coordinate_space:'frequency_cycles_per_pixel',dc_reference_point_index:0,physical_frequency_magnitude:5,physical_frequency_unit:'1/nm',period:.2,period_unit:'nm',d_spacing:.2,d_spacing_unit:'nm',frequency_distance_cycles_per_pixel:Math.hypot(.125,.25),status:'current',annotation_id:'g1',source:{frame_index:9,source_rect_xyxy:[20,30,84,94]},...overrides};}
 test('DC-reflection period and an arbitrary two-peak difference stay distinct',()=>{
@@ -46,6 +46,25 @@ test('newer overlapping read wins, and canvas/table selection does not recompute
  const one=workspace.refresh(),two=workspace.refresh();releaseSecond({current:{object_id:A},entries:[result({object_id:B})]});assert.equal(await two,true);releaseFirst({current:{object_id:A},entries:[result({object_id:C})]});assert.equal(await one,false);assert.equal(workspace.entries[0].object_id,B);
  workspace.select(B);assert.deepEqual(selected,[B]);assert.equal(number,2);
 });
+
+test('scientific read context accepts continuous camera and selection metadata without retries or writes',async()=>{
+ let state={object:{object_id:B,annotations:[]},frame_identity:{frame_object_id:C},last_operation:{kind:'measure',request_id:'original-result'},state_revision:1},release;const calls=[];
+ const workspace=new MeasurementWorkspace({document:null,getState:()=>state,readContext:()=>measurementReadContext(state),api:url=>{calls.push(url);return new Promise(resolve=>{release=resolve;});}});
+ const waiting=workspace.refresh();for(let i=0;i<8;i++)state={...state,state_revision:state.state_revision+1,selection:{coordinates:[i,i]},camera:{scale:i+1},ui_panels:{results:i%2===0}};
+ release({current:{object_id:B},entries:[result()]});assert.equal(await waiting,true);assert.equal(workspace.entries.length,1);assert.equal(calls.length,1);assert.ok(calls.every(url=>url.startsWith('/api/measurements?')));
+});
+test('scientific read context rejects a same-object newer measurement and changed scientific inputs',async()=>{
+ for(const change of [s=>({...s,last_operation:{kind:'measure',request_id:'new-result'}}),s=>({...s,object:{...s.object,xy_calibration:{calibration_id:C}}}),s=>({...s,object:{...s.object,annotations:[{annotation_id:'g1',coordinates:[.2,.3]}]}})]){
+  let state={object:{object_id:B,annotations:[]},last_operation:{kind:'measure',request_id:'old-result'},state_revision:1},release;const workspace=new MeasurementWorkspace({document:null,getState:()=>state,readContext:()=>measurementReadContext(state),api:()=>new Promise(resolve=>{release=resolve;})});
+  const waiting=workspace.refresh();state=change(state);release({current:{object_id:B},entries:[result()]});assert.equal(await waiting,false);assert.deepEqual(workspace.entries,[]);
+ }
+});
+test('scientific read context still rejects another object, mismatched response and superseded read',async()=>{
+ let state={object:{object_id:B},last_operation:null,state_revision:1};const releases=[];const workspace=new MeasurementWorkspace({document:null,getState:()=>state,readContext:()=>measurementReadContext(state),api:()=>new Promise(resolve=>releases.push(resolve))});
+ const other=workspace.refresh();state={...state,object:{object_id:C}};releases.shift()({current:{object_id:B},entries:[result()]});assert.equal(await other,false);
+ const mismatch=workspace.refresh();releases.shift()({current:{object_id:B},entries:[result()]});assert.equal(await mismatch,false);
+ const first=workspace.refresh(),second=workspace.refresh(),a=releases.shift(),b=releases.shift();b({current:{object_id:C},entries:[result({object_id:B})]});assert.equal(await second,true);a({current:{object_id:C},entries:[result({object_id:A})]});assert.equal(await first,false);assert.equal(workspace.entries[0].object_id,B);
+});
 test('current bound mark names follow saved automatic labels in table/export without changing historical names or scientific records',async()=>{
  class E{constructor(){this.children=[];this.dataset={};this.attrs={};this.classList={toggle(){}};}replaceChildren(){this.children=[];}append(...values){this.children.push(...values);}setAttribute(key,value){this.attrs[key]=String(value);}}
  const elements=new Map([['measurement-rows',new E()],['measurement-history',{checked:true}]]),state={object:{object_id:B,annotations:[{annotation_id:'g1',text:'d = 0.09287 nm'}]},state_revision:1};
@@ -87,6 +106,37 @@ test('empty results distinguish no measurements from a filter hiding history wit
 
 test('old current table values become historical until a newly revised view is qualified by readback',()=>{
  let state={object:{object_id:B}};const history={checked:false},record=result(),workspace=new MeasurementWorkspace({document:{getElementById:id=>id==='measurement-history'?history:null,createElement(){}},getState:()=>state});workspace.current={object_id:B};workspace.entries=[record];assert.equal(workspace.visible().length,1);state={object:{object_id:C}};assert.equal(workspace.displayEntry(record).status,'historical');assert.equal(workspace.visible().length,0);history.checked=true;assert.equal(workspace.visible()[0].status,'historical');assert.equal(record.status,'current','a read-only status projection never rewrites the immutable entry');workspace.current={object_id:C};assert.equal(workspace.displayEntry(record).status,'current','fresh provider qualification wins even when the original result parent is an earlier display wrapper');assert.equal(record.parent_object_id,B);
+});
+
+function historyDisclosureFixture(entries){
+ class E{constructor(){this.children=[];this.dataset={};this.attrs={};this.hidden=false;this.checked=false;this.open=false;this.textContent='';this.classList={toggle(){}};}replaceChildren(){this.children=[];}append(...values){this.children.push(...values);}setAttribute(key,value){this.attrs[key]=String(value);}}
+ const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,new E());return elements.get(id);},calls=[],selectionCalls=[];
+ const state={object:{object_id:B,annotations:[]},state_revision:1,selection:{coordinates:[[0,0],[.125,0]]},edit_state:{dirty:true,draft_revision:7}};
+ const workspace=new MeasurementWorkspace({document:{getElementById:el,createElement:()=>new E()},getState:()=>state,api:async url=>{calls.push(url);return {current:{object_id:B},entries};},onSelect:entry=>selectionCalls.push(entry.object_id)});
+ return {workspace,el,calls,selectionCalls,state};
+}
+
+test('hidden-history summary action expands once without selecting, writing or changing saved measurements',async()=>{
+ const entries=Object.freeze([Object.freeze(result({status:'historical'})),Object.freeze(result({object_id:C,status:'history'}))]),original=JSON.stringify(entries),h=historyDisclosureFixture(entries);
+ assert.equal(await h.workspace.refresh(),true);h.workspace.selectedId=A;h.workspace.checked.add(C);const originalState=JSON.stringify(h.state);
+ assert.equal(h.el('measurement-show-history').hidden,false);assert.equal(h.el('measurement-workspace').open,false);assert.equal(h.workspace.visible().length,0);
+ let prevented=0,stopped=0;h.el('measurement-show-history').onclick({preventDefault(){prevented++;},stopPropagation(){stopped++;}});
+ assert.equal(prevented,1);assert.equal(stopped,1,'summary must not apply a second disclosure toggle');assert.equal(h.el('measurement-workspace').open,true);assert.equal(h.el('measurement-history').checked,true);assert.equal(h.el('measurement-show-history').hidden,true);
+ assert.equal(h.workspace.visible().length,2);assert.equal(h.workspace.selectedId,A);assert.deepEqual([...h.workspace.checked],[C]);assert.deepEqual(h.selectionCalls,[]);assert.equal(h.calls.length,1,'showing existing results does not read or write the backend');assert.equal(JSON.stringify(entries),original);assert.equal(JSON.stringify(h.state),originalState);
+ assert.equal(await h.workspace.refresh(),true);assert.equal(h.el('measurement-workspace').open,true);assert.equal(h.el('measurement-history').checked,true);assert.equal(h.workspace.selectedId,A);assert.ok(h.calls.every(url=>url.startsWith('/api/measurements?object_id=')));assert.equal(JSON.stringify(entries),original);
+});
+
+test('history shortcut appears only when history filtering hides every result',async()=>{
+ const h=historyDisclosureFixture([]);await h.workspace.refresh();assert.equal(h.el('measurement-show-history').hidden,true);assert.match(h.el('measurement-empty').textContent,/尚无保存测量/);
+ h.workspace.entries=[result()];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true);
+ h.workspace.entries.push(result({object_id:C,status:'historical'}));h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true,'a visible current result keeps the normal result controls');
+ h.workspace.entries=[result({status:'historical'})];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,false);assert.match(h.el('measurement-empty').textContent,/筛选隐藏.*历史/);
+ h.el('measurement-history').checked=true;h.el('measurement-history').onchange();assert.equal(h.el('measurement-show-history').hidden,true);assert.equal(h.el('measurement-empty').hidden,true);assert.equal(h.el('measurement-workspace').open,false,'ordinary filter rendering does not choose disclosure state');assert.equal(h.calls.length,1);
+});
+
+test('later refresh respects an explicit collapse after showing history',async()=>{
+ const h=historyDisclosureFixture([result({status:'historical'})]);await h.workspace.refresh();h.el('measurement-show-history').onclick({preventDefault(){},stopPropagation(){}});assert.equal(h.el('measurement-workspace').open,true);
+ h.el('measurement-workspace').open=false;await h.workspace.refresh();h.workspace.render();assert.equal(h.el('measurement-workspace').open,false);assert.equal(h.el('measurement-history').checked,true);assert.equal(h.workspace.visible().length,1);assert.deepEqual(h.selectionCalls,[]);assert.equal(h.calls.length,2);
 });
 
 test('export selection keeps pending and checked historical records with original precision and provenance',()=>{
