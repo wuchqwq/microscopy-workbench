@@ -33,3 +33,13 @@ All evidence is retained locally under `F:/mircograph-workbench/narrow-native-ui
 - `boxes-before.json` retains the complete DOM-only geometry observations.
 
 Presentation TypeScript was transpiled only into the separate evidence directory for these focused tests; no repository build or distribution output was changed. Formal build, native reload/Save/close behavior, actual clipping cause and real-data interaction remain **NOT_TESTED** for this increment until the separately coordinated native acceptance.
+
+## Follow-up: native text undo versus the annotation timer
+
+A subsequent native report on `5823e8d` restored an ROI name with Ctrl+Z while an annotation apply failed on a historical source. The existing unknown request and native window were left untouched for the original-request investigation.
+
+Source inspection found that renderer keydown already excludes input, textarea, select and editable targets before canvas undo, and the desktop undo bridge calls the browser's text undo for editable focus. No blur submission hook exists; keyup only releases Space. The actual conflicting path was the 350 ms field/label timer applying an annotation while the text field still owned editing.
+
+Field and label debounce now retain local drafts while an editable control owns focus, and also recheck focus before any already-scheduled callback applies. Native/browser text undo stays local. Existing explicit Apply/Save and protected selection-switch submission paths remain; canvas undo/redo and drag completion are unchanged. This change does not cancel, replay or reinterpret an already submitted unknown request. Help states the same Apply/Save boundary.
+
+Local evidence: `F:/mircograph-workbench/text-undo-evidence-20261104/before.log` retains 2 PASS / 2 FAIL: editable keyboard routing and canvas undo were already correct, while actual name/label timers submitted an annotation. `after.log` has 4 PASS for the timer boundary, native name undo, focused label/dropdown drafts with explicit Apply, browser keyboard ownership across editable controls, and the canvas undo/redo comparison. These use the actual app handlers with deterministic timers and DOM/API ports. They do not establish native acceptance or resolve the existing unknown request. No formal build, existing distribution mutation, private-data operation or native window interaction was performed by this follow-up.
