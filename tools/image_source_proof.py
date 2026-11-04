@@ -204,6 +204,30 @@ def frame_path(reads, root):
         root = target
 
 
+def qualified_operand(reads, ident):
+    """Keep the shared Node operand's total 32-wrapper obligation explicit.
+
+    Python's original resolver has separate nested context/annotation loops;
+    this proof contract uses their shared total before calling that resolver.
+    """
+    current, seen = ident, set()
+    value = reads.object(current)["value"]
+    while value["kind"] in ("calibration", "context", "measure", "annotate"):
+        reads.need(current not in seen and len(seen) < 32, "Scientific operand ancestry is cyclic or exceeds budget")
+        seen.add(current)
+        key = "render_base_object_id" if value["kind"] == "annotate" else "parent_object_id" if value["kind"] == "measure" else "base_object_id"
+        current = value.get(key)
+        value = reads.object(current)["value"]
+    return reads.operands.measurement_operand(ident)
+
+
+def outward_support(coordinates):
+    # Exact existing GUI/CLI outwardSourceRectangle policy, including its
+    # numerical edge tolerance. No rounding of the stored original float ROI.
+    return [math.floor(coordinates[0] + 1e-9), math.floor(coordinates[1] + 1e-9),
+            math.ceil(coordinates[2] - 1e-9), math.ceil(coordinates[3] - 1e-9)]
+
+
 class NumberLexeme(str):
     pass
 
@@ -283,7 +307,7 @@ def input_binding(reads, request, fft, found):
     coords, support = frozen.get("float_roi_xyxy"), frozen.get("processing_rect_xyxy")
     reads.need(type(coords) is list and len(coords) == 4 and all(reads.api.number(v) for v in coords) and
                0 <= coords[0] < coords[2] and 0 <= coords[1] < coords[3], "Exact original float ROI is invalid")
-    reads.need(support == [math.floor(coords[0]), math.floor(coords[1]), math.ceil(coords[2]), math.ceil(coords[3])] and
+    reads.need(support == outward_support(coords) and
                type(support) is list and all(type(v) is int for v in support), "Original float ROI and actual support differ")
     panels = source["value"].get("panels", [])
     reads.need(len(panels) == 1 and panels[0].get("domain") == "spatial_pixels" and panels[0].get("source_object_id") == frame_id,
@@ -305,7 +329,7 @@ def input_binding(reads, request, fft, found):
                fft["value"].get("source_rect_xyxy") == support and fft["value"].get("window") == recipe["window"] and
                fft["value"].get("subtract_mean") == recipe["subtract_mean"], "Original FFT recipe or processing support differs")
     calibration = frozen.get("calibration_snapshot")
-    actual, _, _ = reads.operands.measurement_operand(operand_id)
+    actual, _, _ = qualified_operand(reads, operand_id)
     reads.need(calibration == actual.get("xy_calibration") == source["value"].get("xy_calibration") == fft["value"].get("xy_calibration"),
                "Original signed calibration snapshot differs from actual operands")
     reads.need(frame_path(reads, source_id)["object_id"] == frame_id == frame_path(reads, operand_id)["object_id"],
@@ -363,7 +387,7 @@ def derive(reads, request):
                "Proof needs the provider's explicit selected frame index; no default is invented")
     reads.need(frame.get("source_object_id") is None or type(frame["source_object_id"]) is str and reads.api.OBJECT_ID.fullmatch(frame["source_object_id"]),
                "Invalid selected frame source identity")
-    operand, _, _ = reads.operands.measurement_operand(root)
+    operand, _, _ = qualified_operand(reads, root)
     reads.need(operand["kind"] in ("frame", "view", "fft", "fft_view"), "Proof root has no exact scalar scientific operand")
     grid = reads.operands.measurement_grid(root)
     if purpose == "saved_source":

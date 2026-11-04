@@ -287,7 +287,7 @@ class SourceProofTests(unittest.TestCase):
                   'input_snapshot': {'schema_version': 1, 'annotation_id': None, 'source_view_object_id': self.view['object_id'],
                     'provider_input_object_id': self.frame['object_id'], 'frame_object_id': self.frame['object_id'],
                     'source_view_manifest_sha256': None, 'provider_input_manifest_sha256': None, 'frame_manifest_sha256': None,
-                    'frame_array_sha256': None, 'calibration_sha256': None, 'float_roi_xyxy': [8.25, 8.25, 24.75, 24.75],
+                    'frame_array_sha256': None, 'calibration_sha256': None, 'float_roi_xyxy': [7.9999999995, 8.25, 25.0000000005, 24.75],
                     'processing_rect_xyxy': parameters['rect'], 'recipe': {'window': 'hann', 'subtract_mean': True}, 'calibration_snapshot': None}}
         raw = subprocess.run(['node', '-e', JS_SIDECAR], input=json.dumps(frozen), text=True, capture_output=True, check=True).stdout.encode()
         frozen = worker.strict_json(raw.decode())
@@ -305,6 +305,7 @@ class SourceProofTests(unittest.TestCase):
             result = self.info(proof)
             self.assertEqual(result['status'], 'verified', result)
             self.assertEqual(result['basis'], 'retrospective')
+            self.assertEqual(result['input_binding']['float_roi_xyxy'], frozen['input_snapshot']['float_roi_xyxy'])
             self.assertEqual(result['original_qualification'], 'unavailable')
             self.assertFalse(result['eligible_for_strict_reuse'])
             same = self.call('result', query_request_id=proof['request_id'])
@@ -314,6 +315,42 @@ class SourceProofTests(unittest.TestCase):
         after = snapshot(self.workspace)
         self.assertTrue(all(after[name] == digest for name, digest in before.items()))
         self.assertEqual(file.read_bytes(), raw)
+
+
+class SourceProofPureBoundaryTests(unittest.TestCase):
+    def test_outward_support_keeps_original_edge_tolerance_and_does_not_round_float_input(self):
+        near = [7.9999999995, 8.25, 25.0000000005, 24.75]
+        before = copy.deepcopy(near)
+        self.assertEqual(proof_module.outward_support(near), [8, 8, 25, 25])
+        self.assertEqual(near, before)
+        self.assertEqual(proof_module.outward_support([7.99999999, 8.25, 25.00000001, 24.75]), [7, 8, 26, 25])
+        self.assertNotEqual(proof_module.outward_support([7.99999999, 8.25, 25.00000001, 24.75]), [8, 8, 25, 25])
+
+    def test_mixed_wrapper_total_32_passes_original_resolver_and_33_refuses_before_it(self):
+        class ControlledReads:
+            def __init__(self, count):
+                self.rows, self.original_calls = {}, []
+                kinds = ['context', 'calibration', 'annotate', 'measure']
+                for n in range(count):
+                    kind = kinds[n % len(kinds)]
+                    key = 'render_base_object_id' if kind == 'annotate' else 'parent_object_id' if kind == 'measure' else 'base_object_id'
+                    self.rows[str(n)] = {'object_id': str(n), 'kind': kind, key: str(n + 1)}
+                self.rows[str(count)] = {'object_id': str(count), 'kind': 'frame'}
+                def original(ident):
+                    self.original_calls.append(ident)
+                    return ('original semantics', None, None)
+                self.operands = type('Original', (), {'measurement_operand': staticmethod(original)})()
+            def need(self, condition, message):
+                worker.need(condition, message)
+            def object(self, ident):
+                return {'value': self.rows[ident]}
+        legal = ControlledReads(32)
+        self.assertEqual(proof_module.qualified_operand(legal, '0'), ('original semantics', None, None))
+        self.assertEqual(legal.original_calls, ['0'])
+        excessive = ControlledReads(33)
+        with self.assertRaisesRegex(worker.WorkspaceError, 'operand ancestry'):
+            proof_module.qualified_operand(excessive, '0')
+        self.assertEqual(excessive.original_calls, [])
 
 
 if __name__ == '__main__':
