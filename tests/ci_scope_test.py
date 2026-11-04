@@ -77,6 +77,8 @@ class ScopeTests(unittest.TestCase):
             "tests/core-cross-window-contract.test.mjs": {"node"},
             "tests/image_core_cross_test.py": {"spatial"},
             "tests/image_point_observation_test.py": {"spatial"},
+            "tests/image_tiff_admission_test.py": {"spatial"},
+            "tests/panel-helper-launch.test.mjs": {"node"},
             "tests/point-observation-contract.test.mjs": {"node"},
         }
         for path, expected in examples.items():

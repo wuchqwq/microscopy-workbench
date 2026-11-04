@@ -53,6 +53,7 @@ jobs:
       - name: Numerical R3/float32 tests
         run: |
           python -B tests/image_float_tiff_test.py
+          python -B tests/image_tiff_admission_test.py
           python -B tests/image_spatial_atlas_test.py
           python -B tests/image_domain_compare_test.py
           python -B tests/image_feature_field_test.py

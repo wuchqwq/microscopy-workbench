@@ -176,6 +176,7 @@ jobs:
       - run: npm run build
       - run: python -m pip install -r requirements-images.txt
       - run: python -B tests/image_float_tiff_test.py
+      - run: python -B tests/image_tiff_admission_test.py
       - run: python -B tests/image_spatial_atlas_test.py
       - run: python -B tests/image_core_cross_test.py
       - run: python -B tests/image_point_observation_test.py

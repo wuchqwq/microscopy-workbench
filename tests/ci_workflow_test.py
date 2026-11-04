@@ -83,6 +83,14 @@ class WorkflowTests(unittest.TestCase):
         for command in ("test_site_occupancy.py", "npm run test:twin", "npm run test:general-crystal", "npm run test:manual-crystal"):
             self.assertIn(command, f3b)
 
+    def test_existing_tiff_and_panel_regressions_reach_runner_lists(self):
+        self.assertIn("tests/panel-helper-launch.test.mjs", registered_node_tests())
+        quick = jobs(self.texts["quick"])
+        command = "- run: python -B tests/image_tiff_admission_test.py"
+        self.assertIn(command, quick["spatial-evidence"])
+        mac = (ROOT / ".github/workflows/macos-r3-light.yml").read_text()
+        self.assertIn("python -B tests/image_tiff_admission_test.py", mac)
+
     def test_classifier_and_gate_regressions_always_run(self):
         self.assertIn("-p 'ci_*_test.py'", jobs(self.texts["quick"])["changes"])
         self.assertNotIn("unittest discover", jobs(self.texts["f3b"])["changes"])
