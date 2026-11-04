@@ -61,6 +61,7 @@ let observationSaveTrace:{outcome:string;elapsed_ms:Record<string,number>}|null=
 let observationSaveStarted=0;
 type RoiCreationReference={annotation_id:string;source_object_id:string;coordinates:readonly number[];note:string;selection_origin:string;xy_calibration:unknown;object_id:string|null;request_id:string|null;};
 let roiCreationSave:Promise<unknown>|null=null,roiCreationRecovery:RoiCreationReference|null=null;
+let sourceRecheckAttempt:{request_id:string;object_id:string}|null=null;
 type WindowSwitch={phase:'preparing'|'activating'|'decoding'|'recovery';window_id:string;object_id:string;source_object_id:string;source_draft_revision:number;auto_sequence:number;};
 let windowSwitch:WindowSwitch|null=null;
 let workspaceSettling=false,workspaceRestoring=false;
@@ -236,7 +237,7 @@ function lockScientificControls(){
  if(!windowSwitch&&!observationSavePhase&&!roiCreationRecovery&&!noDisplay&&!workspaceSettling&&!workspaceRestoring&&!orphanedDraft&&!recoveryPending())return;
  const names=['add-roi','select-roi','delete-roi','fft','measure','share','apply-roi','full','roi-statistics','line-profile','save-mark','apply-display','apply-complex-component','calibrate','withdraw','known-length-entry','known-length-apply','submit-observation','save-observation','save-observation-entry','agent-continue','undo','redo','frame','set-frame','previous-frame','next-frame','export','recover','fit','fit-canvas','zoom','mode'];
  const controls=[...names.map(id=>$(id)),...['roi-reason','mark-text','color','status','gamma','low','high','axes','scale'].map(id=>$(id)),...document.querySelectorAll('.properties-panel input, .properties-panel select, .properties-panel textarea, .properties-panel button, [data-mode]')];
- for(const control of controls){if(!control||['discard-local','reload','close-properties','toggle-settings','toggle-properties'].includes(control.id)||recoveryPending()&&!workspaceRestoring&&!windowSwitch&&(['fit','fit-canvas','zoom','mode'].includes(control.id)||control.dataset?.mode==='pan'))continue;if(control.id==='recover'&&(roiCreationRecovery&&!observationSavePhase||recoveryPending()&&!busy&&!workspaceRestoring&&!windowSwitch)){control.disabled=false;continue;}if(!switchDisabledControls.has(control))switchDisabledControls.set(control,Boolean(control.disabled));control.disabled=true;}
+ for(const control of controls){if(!control||['discard-local','reload','close-properties','toggle-settings','toggle-properties','recheck-source'].includes(control.id)||recoveryPending()&&!workspaceRestoring&&!windowSwitch&&(['fit','fit-canvas','zoom','mode'].includes(control.id)||control.dataset?.mode==='pan'))continue;if(control.id==='recover'&&(roiCreationRecovery&&!observationSavePhase||recoveryPending()&&!busy&&!workspaceRestoring&&!windowSwitch)){control.disabled=false;continue;}if(!switchDisabledControls.has(control))switchDisabledControls.set(control,Boolean(control.disabled));control.disabled=true;}
 }
 function restoreScientificControls(){for(const [control,disabled]of switchDisabledControls)control.disabled=disabled;switchDisabledControls.clear();}
 function switchState(next:WindowSwitch|null){
@@ -432,6 +433,7 @@ const complexComponentNames:Partial<Record<string,string>>={real:'实部',imag:'
 const importedComplex=()=>!state?.object?.panels?.some(p=>p.domain==='frequency')&&(/^complex(?:64|128)$/.test(state?.object?.dtype??'')||Object.hasOwn(complexComponentNames,(state?.effective_display??state?.object?.display??{}).component as string));
 const dirty=()=>Boolean(researchWorkspace.reasonDirty||orphanedDraft||roiCreationRecovery&&!observationSavePhase||queuedEdits.size||editCoordinates||labelDraft||fieldDirty||remeasuringMarks.size||failedMeasurement||JSON.stringify(displayDraft())!==displayBaseline);
 function diagnostics(){
+ renderSourceRecheck();
  workspaceControls.sync();
  if(!windowSwitch&&!observationSavePhase&&!roiCreationRecovery)restoreScientificControls();
  windowWorkspace.flushDeferredLayout();
@@ -616,6 +618,34 @@ function showPending(){
  $('pending-message').textContent=(state?.pending_result?.reason==='window_capacity'?((state.window_collection?.windows.length??5)>=5?'新结果已保存，显示窗口已满。请从“窗口列表”关闭一个显示窗口后查看；关闭显示不会删除科学结果。':'新结果已保存，显示窗口已有空位，可明确查看保存结果。'):'有新结果等待查看。查看会切换到该结果的保存版本，当前已保存版本仍保留。')+(hasDraft?'请先保存、撤销或明确放弃未保存草稿。':gesturing?'请先结束当前手势。':'');
  $('discard-draft').hidden=!hasDraft;$('discard-draft').disabled=busy||gesturing||Boolean(observationSavePhase)||Boolean(windowSwitch&&windowSwitch.phase!=='recovery');
  $('accept-agent-result').textContent='查看保存结果';$('accept-agent-result').disabled=hasDraft||busy||gesturing||Boolean(observationSavePhase)||Boolean(windowSwitch);
+}
+function sourceRecheckRequest(){return sourceRecheckAttempt&&sourceRecheckAttempt.object_id===state?.object.object_id?sourceRecheckAttempt.request_id:state?.last_operation?.action==='recheck-source'&&state.last_operation.state==='source_recheck_pending'?state.last_operation.request_id:null;}
+function renderSourceRecheck(){
+ const notice=$('source-recheck-notice'),button=$('recheck-source'),label=$('source-recheck-message'),request=sourceRecheckRequest(),available=Boolean(state?.source_recheck),budget=state?.frame_resolution?.status==='ancestry_budget_exhausted';
+ notice.hidden=!available&&!request&&!budget;button.hidden=!available&&!request;button.textContent=request?'查询本次来源核对':'重新核对来源';
+ button.disabled=busy||Boolean(drag||windowSwitch||workspaceRestoring||pending||state?.pending_result)||!request&&(dirty()||autoFailed||recoveryPending()||Boolean(state?.workspace_analysis?.unresolved_request_id||state?.workspace_analysis?.unresolved_save_id));
+ label.textContent=request?'这次来源核对的结果尚待确认。请查询原操作；不会重新计算。':available?'图像和旧保存点仍在。请明确重新核对来源；成功后用“保存工作区”另建保存点，不重算 FFT。':budget?'来源历史超出本次核对范围，保留图像和原记录；当前尚无已核对的可计算来源。':'';
+}
+async function runSourceRecheck(){
+ const request=sourceRecheckRequest();
+ if(request){
+  const object=state.object.object_id,revision=historyDraft.revision;busy=true;activeAction='query-source-recheck';diagnostics();
+  try{const response=api('/api/action',{expected_object_id:object,draft_revision:revision,action:'query-source-recheck',params:{request_id:request}}),epoch=interactionEpoch,next=await response,query=next.source_recheck_query;
+   if(next.object.object_id!==object||state.object.object_id!==object||historyDraft.revision!==revision||interactionEpoch!==epoch||dirty()||drag){
+    if(!equalRecords(next.frame_identity,state.frame_identity))pending=next;
+    else state={...state,last_operation:next.last_operation,source_recheck:next.source_recheck,frame_resolution:next.frame_resolution,state_revision:Math.max(state.state_revision,next.state_revision)};
+    showPending();message('原操作已查询；当前编辑保留，未覆盖新的选择或草稿。');
+   }else await load(next);
+   if(query&&['completed','failed','not_journaled_here'].includes(query.state))sourceRecheckAttempt=null;
+   message(query?.state==='completed'?'原来源核对已完成；当前保存点没有改写，工作引用仍需明确保存。':query?.state==='failed'?'原来源核对已明确失败，原记录和编辑保留；修复原因后可明确发起新核对。':query?.state==='not_journaled_here'?'当前服务没有接纳这次来源核对；保留现状，处理编辑后再明确核对。':'原来源核对仍未知；保留当前状态，不自动重发。',query?.state!=='completed');
+  }finally{busy=false;activeAction='';diagnostics();}return;
+ }
+ if(dirty()||busy||drag||windowSwitch||workspaceRestoring||pending||state.pending_result||autoFailed||recoveryPending())throw new Error('先完成当前编辑、恢复选择或原请求查询，再重新核对来源。');
+ await draftPublisher;if(draftError)throw draftError;
+ const attempt={request_id:'source-check-'+crypto.randomUUID(),object_id:state.object.object_id};sourceRecheckAttempt=attempt;
+ const result=await act('recheck-source',{request_id:attempt.request_id,expected_state_revision:state.state_revision,collection_revision:state.window_collection?.revision,expected_working_revision:state.workspace_analysis?.working_revision});
+ if(result?.last_operation?.request_id===attempt.request_id&&result.last_operation.state==='source_recheck_completed'&&state.frame_identity&&!pending){sourceRecheckAttempt=null;message('来源已重新核对；原图、旧保存点与科学结果保留。请保存工作区以另建保存点。');}
+ diagnostics();
 }
 function positiveUnsubmittedRecovery(reply:AppState,expected?:string):string|null {
  const raw=reply.execution_recovery;
@@ -919,6 +949,7 @@ $('fft').onclick=guarded(async()=>{if(importedComplex())throw new Error('复数�
  const fft=activeFftWindow();if(presentation&&fft&&!relationNavigationBlocked()&&!dirty())await windowWorkspace.tryAutomaticSourceFftPresentation(presentation,fft.window_id);
 });
 $('compare-fft-source').onclick=guarded(compareActiveFft);
+$('recheck-source').onclick=guarded(runSourceRecheck,{allowRecoveryRead:true});
 $('roi-statistics').onclick=guarded(()=>{const picked=selection(),reason=selectionActionReason('statistics',picked,state.object);if(reason)throw new Error(reason);return act('statistics',{selection:picked,component:$('probe-component').value});});
 $('line-profile').onclick=guarded(()=>{const picked=selection(),reason=selectionActionReason('profile',picked,state.object);if(reason)throw new Error(reason);return act('profile',{selection:picked,component:$('probe-component').value,sample_count:Number($('profile-count').value)});});
 $('reload').onclick=()=>windowSwitch?recoverWindowDisplay():guarded(refresh,{allowRecoveryRead:true})();$('window-switch-check').onclick=()=>recoverWindowDisplay();$('zoom').oninput=()=>{if(windowSwitch)return;windowWorkspace.noteCameraIntent();const r=viewport.getBoundingClientRect();view=zoomAt(view,[r.width/2,r.height/2],Number($('zoom').value)/view.scale);resize();};$('fit').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();fitView();}};$('fit-canvas').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();fitView();}};$('focus-image').onclick=()=>{if(!windowSwitch){windowWorkspace.noteCameraIntent();toggleImageFocus();}};

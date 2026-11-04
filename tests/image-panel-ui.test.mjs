@@ -1641,3 +1641,20 @@ test('native field baseline: unapplied name, color and status restored to the ef
 test('native field baseline: an already applied immutable edit remains the effective baseline',async()=>{
  const h=await harness(savedRectangleFixture());selectSavedRoi(h);h.$('mark-text').value='applied version B';h.$('mark-text').oninput();await h.click('save-mark');await h.finish();assert.equal(h.calls.filter(call=>call.action==='edit').length,1);h.$('mark-text').value='ROI saved';h.$('mark-text').oninput();assert.equal(h.inspect().dirty,true);assert.equal(h.server().object.annotations[0].text,'applied version B');assert.equal(h.calls.filter(call=>call.action==='edit').length,1);
 });
+
+function legacySourceUiFixture(){
+ const value=fixture();value.frame_identity=null;value.edit_state={draft_revision:0,dirty:false,gesture_active:false,selection:null,annotation_edit:null};value.state_revision=1;
+ value.window_collection={schema_version:1,revision:1,frame_object_id:null,active_window_id:null,windows:[]};value.workspace_analysis={schema_version:1,status:'clean',dirty:false,working_revision:3,saved_revision:1,save_id:'legacy-null',recovery_available:false,unresolved_request_id:null,unresolved_save_id:null};
+ value.source_recheck={status:'available',reason_code:'legacy_terminal_not_evaluated',records_checked:65};value.frame_resolution={status:'recheck_required',records_checked:65,ancestor_reads:64};return value;
+}
+test('source recheck UI: exact legacy source has an explicit action while budget exhaustion stays read-only',async()=>{
+ const f=legacySourceUiFixture(),h=await harness(f);assert.equal(h.$('source-recheck-notice').hidden,false);assert.equal(h.$('recheck-source').hidden,false);assert.equal(h.$('recheck-source').disabled,false);assert.equal(h.$('recheck-source').textContent,'重新核对来源');assert.match(h.$('source-recheck-message').textContent,/旧保存点|另建保存点/);assert.equal(h.calls.length,0);
+ const exceeded=legacySourceUiFixture();delete exceeded.source_recheck;exceeded.frame_resolution.status='ancestry_budget_exhausted';const q=await harness(exceeded);assert.equal(q.$('source-recheck-notice').hidden,false);assert.equal(q.$('recheck-source').hidden,true);assert.match(q.$('source-recheck-message').textContent,/超出本次核对范围/);assert.equal(q.calls.length,0);assert.equal(q.inspect().state.frame_identity,null);
+});
+test('source recheck UI: an unconfirmed response keeps the original local ID and malformed query never replays it',async()=>{
+ const h=await harness(legacySourceUiFixture());h.failAction('Controlled source response unavailable');await h.click('recheck-source');const sent=h.calls.find(call=>call.action==='recheck-source');assert.ok(sent);assert.match(sent.params.request_id,/^source-check-/);assert.equal(sent.params.expected_working_revision,3);assert.equal(h.$('recheck-source').textContent,'查询本次来源核对');
+ await h.click('recheck-source');await h.click('recheck-source');assert.deepEqual(h.calls.map(call=>call.action),['recheck-source','query-source-recheck','query-source-recheck']);assert.ok(h.calls.slice(1).every(call=>call.params.request_id===sent.params.request_id));assert.equal(h.$('recheck-source').textContent,'查询本次来源核对');assert.match(h.$('message').textContent,/未知|不自动重发/);assert.equal(h.inspect().state.frame_identity,null);
+});
+test('source recheck UI: local edits prevent a new qualification without clearing the editor',async()=>{
+ const h=await harness(legacySourceUiFixture());h.$('mark-text').value='Keep this unsubmitted label';h.$('mark-text').oninput();const before=h.inspect();await h.click('recheck-source');assert.equal(h.calls.length,0);assert.equal(h.$('mark-text').value,'Keep this unsubmitted label');assert.deepEqual(h.inspect().draft,before.draft);assert.equal(h.inspect().dirty,true);assert.match(h.$('message').textContent,/先完成当前编辑/);
+});
