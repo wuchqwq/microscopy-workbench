@@ -181,4 +181,50 @@ class PreviewAdmission(unittest.TestCase):
         self.assertEqual(fresh['kind'],'view')
         self.assertEqual((self.workspace/'requests'/(request['request_id']+'.json')).read_bytes(),interleaved[0][1])
 
+    def test_composition_rejection_names_blocking_preview_not_nonexistent_child(self):
+        first=self.ok('view',object_id=self.frame_id)
+        request=self.req('discovery',object_id=self.frame_id,entry='manual',selection_origin='agent',
+                         regions=[{'rect':[0,0,32,32],'reason':'Controlled receipt recovery'}])
+        failed=worker.execute(request)
+        self.assertEqual(failed['error']['code'],'BATCH_CHILD_FAILED')
+        message=failed['error']['message']
+        self.assertIn('child preview was not reserved or dispatched',message)
+        self.assertIn('Do not query this nonexistent child ID',message)
+        self.assertIn('image_preview_acknowledge',message)
+        self.assertIn(first['request_id'],message)
+        child=worker.automation.child_request_id(request['request_id'],'context-view')
+        self.assertFalse((self.workspace/'requests'/(child+'.json')).exists())
+        journal=self.workspace/'requests'/(request['request_id']+'.json');before=journal.read_bytes()
+        self.ok('preview_acknowledge',preview_request_id=first['request_id'],object_id=first['object_id'])
+        revised=self.ok('discovery',object_id=self.frame_id,entry='manual',selection_origin='agent',
+                        regions=[{'rect':[0,0,32,32],'reason':'Controlled receipt recovered'}])
+        self.assertEqual(revised['kind'],'discovery')
+        self.assertEqual(journal.read_bytes(),before)
+        self.assertEqual(worker.execute(self.req('result',query_request_id=request['request_id'])),failed)
+
+    def test_resolved_preview_rerender_requires_latest_receipt_for_composition(self):
+        first=self.ok('view',object_id=self.frame_id)
+        second=self.ok('view',object_id=self.frame_id,
+                       resolved_preview={'request_id':first['request_id'],'object_id':first['object_id']})
+        self.ok('preview_acknowledge',preview_request_id=first['request_id'],object_id=first['object_id'])
+        request=self.req('discovery',object_id=self.frame_id,entry='manual',selection_origin='agent',
+                         regions=[{'rect':[0,0,32,32],'reason':'Stale receipt must not resolve newer preview'}])
+        failed=worker.execute(request)
+        self.assertFalse(failed['ok'])
+        self.assertIn('preview_request_id='+second['request_id'],failed['error']['message'])
+        self.assertIn('object_id='+second['object_id'],failed['error']['message'])
+        self.ok('preview_acknowledge',preview_request_id=second['request_id'],object_id=second['object_id'])
+        self.assertEqual(self.ok('discovery',object_id=self.frame_id,entry='manual',selection_origin='agent',
+                                regions=[{'rect':[0,0,32,32],'reason':'Latest receipt known'}])['kind'],'discovery')
+
+    def test_unknown_composition_rejection_never_suggests_acknowledging_unknown(self):
+        request=self.req('view',object_id=self.frame_id,_preview_phase='reserve')
+        worker.execute(request)
+        failed=worker.execute(self.req('discovery',object_id=self.frame_id,entry='manual',selection_origin='agent',
+                                      regions=[{'rect':[0,0,32,32],'reason':'Unknown preview remains fenced'}]))
+        self.assertIn('child preview was not reserved or dispatched',failed['error']['message'])
+        self.assertIn('Unknown originals cannot be acknowledged',failed['error']['message'])
+        self.assertNotIn('preview_request_id=',failed['error']['message'])
+        self.assertEqual(worker.execute(self.req('result',query_request_id=request['request_id']))['state'],'unknown')
+
 if __name__=='__main__':unittest.main()

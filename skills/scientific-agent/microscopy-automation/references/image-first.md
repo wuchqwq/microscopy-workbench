@@ -17,6 +17,29 @@ Open the user-selected supported file with image_open and its explicit frame
 with image_frame; inspect image_info and an actual preview. Do not invent XY
 scale, phase radians, a material type or a known real-space lattice model.
 
+After receiving a completed `image_preview`, record its operational receipt
+with `image_preview_acknowledge`: use a new acknowledgement `request_id`, the
+preview's exact `preview_request_id`, and its returned `object_id`. This does
+not prove visual inspection. Do this before composition on that input, including
+`image_discovery`, whose overview itself renders a preview. Keep the explicit
+full frame (or its calibration/context wrapper) as discovery's `object_id`;
+a display view is not a full-frame scientific input.
+
+If admission blocks composition, read the blocking **original preview** with
+`image_result`, then acknowledge that exact completed result (or a confirmed
+failed original without `object_id`). Preserve any failed parent and its ID.
+Only after resolving this known failure may a deliberate new discovery get a
+new ID. Do not query a child explicitly reported as never reserved/dispatched,
+and never replay an unknown operation. An `image_preview` using `resolved_preview`
+is a deliberate NEW render: it resolves the previous receipt, but the new preview
+needs its own acknowledgement. Acknowledging an older preview does not resolve
+a newer outstanding one. Unknown originals cannot be acknowledged.
+
+For compound results, do not guess acknowledgement IDs from annotation or
+overview IDs. Use an actual saved view's `preview_execution` request/object pair,
+reading the referenced view with `image_info` if needed. Missing admission data
+is not permission to fabricate a receipt or clear a lock.
+
 - Manual image-first, supported limited scope: read image_panel_current after the user selects a
   rectangle. Use its original source-pixel coordinates, not screenshot pixels.
   Call image_discovery with entry="manual", regions=[{rect,reason}], retaining
@@ -90,6 +113,12 @@ sourced carriers/model/circuits. Otherwise measure, compare references, inspect
 an adjacent region, request missing conditions, or stop. Do not run every method.
 
 ## Return to the common view and continue
+
+`image_export` creates one new destination under an **existing parent**. Export
+the first object directly to a new directory below the supplied existing output
+parent; subsequent object exports may use new children of that now-existing
+directory. Do not start with a nested child whose parent does not exist. Preserve
+any terminal export failure; choose a corrected new destination/ID deliberately.
 
 Open the returned overview_object_id in the existing image_panel_open/show for
 source/ROI context; use gui_view_object_id from a review to inspect a selected

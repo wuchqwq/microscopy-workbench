@@ -20,6 +20,9 @@ test('discovery descriptions separate the supported manual entrance from experim
   const review=registry.listTools().find(tool=>tool.name==='image_discovery_review');
   assert.match(discovery.description,/manual/i);
   assert.match(discovery.description,/EXPERIMENTAL/);
+  assert.match(discovery.description,/full frame/);
+  assert.match(discovery.description,/not a display view/);
+  assert.match(discovery.description,/image_preview_acknowledge/);
   assert.match(review.description,/EXPERIMENTAL/);
   assert.match(discovery.inputSchema.properties.entry.description,/default remains feature/);
 });
