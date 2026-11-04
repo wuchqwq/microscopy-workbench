@@ -1,5 +1,7 @@
 # Panel, figure and public entry migration
 
+Current runtime support is Node 22.x/24.x; see [CI support](CI_SUPPORT.md). Runtime statements below describe the original migration.
+
 Stacked after the structure adapter slice. The owned loopback Panel producer,
 MCP bridge and registration module, measurement-history reader and Figure asset
 hydration are now strict TypeScript. The science composition root, researcher

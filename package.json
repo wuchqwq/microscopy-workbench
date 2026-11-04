@@ -1,6 +1,6 @@
 {
   "engines": {
-    "node": ">=18"
+    "node": "^22.0.0 || ^24.0.0"
   },
   "license": "MIT",
   "name": "microscopy-core",
@@ -46,7 +46,7 @@
   "type": "module",
   "version": "0.1.0",
   "devDependencies": {
-    "@types/node": "18.19.130",
+    "@types/node": "22.20.5",
     "typescript": "5.9.3"
   }
 }

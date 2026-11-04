@@ -8,7 +8,7 @@ The GUI and old tools continue to work without an Agent or this package.
 
 ## Install once, use in new sessions
 
-Use Node >=18 on PATH and an independent Python environment. Install
+Use Node 22.x or 24.x on PATH and an independent Python environment. Install
 [image requirements](../requirements-images.txt). Candidate simulation/comparison
 also needs [structure requirements](../requirements-structure-tools.txt); optional
 DM file reading needs [reader requirements](../requirements-dm4.txt). Never install
@@ -16,7 +16,7 @@ these into GMS Python. No DM installation or old mcp-dm checkout is required.
 
 In a clean source checkout, run `npm ci`, `npm run typecheck` and `npm run build`
 once. Install or copy the **complete `dist/` directory** as the plugin root,
-including its hidden manifests and Skills. It runs on Node >=18 without
+including its hidden manifests and Skills. It runs on Node 22.x or 24.x without
 TypeScript, npm installation or a build at startup. Keep private specimens,
 scientific workspaces and connection settings outside the package. From inside
 the built package, generate a new local configuration directory:

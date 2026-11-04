@@ -48,7 +48,7 @@ Agent 可以在已有工具之间选择并组织步骤；实际数值仍由正�
 
 ## 快速开始：不需要 Agent
 
-环境要求：**Node.js 18+** 和 **Python 3.10+**（使用独立的科学计算环境）。
+环境要求：**Node.js 22.x 或 24.x**，以及独立的科学计算 Python 环境。**推荐使用 CI 参考版本 Python 3.13**。科学工具仍声明最低 Python 3.10+，但该下限尚无持续 CI 验证；可选配置注册器需要 3.11+。参见[运行时支持与 CI 范围](docs/CI_SUPPORT.md)。
 
 ```bash
 git clone https://github.com/wuchqwq/microscopy-workbench.git

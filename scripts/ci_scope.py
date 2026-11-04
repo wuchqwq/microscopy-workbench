@@ -35,6 +35,9 @@ SPECIAL_TESTS = {
     "tests/dm4-science-smoke.mjs": {"node", "images"},
     "tests/dm-planes-science-smoke.mjs": {"node", "images"},
     "tests/dm-complex-science-smoke.mjs": {"node", "images"},
+    "tests/image-panel-data-inspector.test.mjs": {"node", "boundary"},
+    "tests/image-panel-data-probes.test.mjs": {"node", "boundary"},
+    "tests/image-panel-presentation-transport.test.mjs": {"node", "boundary"},
     "tests/test_register_codex_mcp.py": {"client"},
     "tests/manual_crystal_launcher_test.py": {"client"},
 }

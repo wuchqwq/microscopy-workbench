@@ -1,5 +1,7 @@
 # Shared scientific workspace: two entry routes, no new Agent runtime
 
+Runtime update (2026-11-04): the owner explicitly selected Node 22.x/24.x. See [CI support](CI_SUPPORT.md); the original proposal below records the earlier floor.
+
 Decision/proposal, 2026-11-01; source inspected: `b6dd9075dc730deec24c0f87a0ec3a3cee127d1c`.
 This is the first bounded development slice, **not** completion of both desktop
 launch routes. The frozen Mac core source and historical acceptance stay intact.

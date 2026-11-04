@@ -1,9 +1,7 @@
-// Real HTTP shutdown regression. net.Server.close reproduces the documented
-// v18.20.8 behavior without claiming that this test ran a Node 18 binary.
+// Real HTTP shutdown on the supported runtime, including active-response drain.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import net from 'node:net';
 import {once} from 'node:events';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -33,9 +31,6 @@ async function fixture(run){
  },async close(){}};
  try{
   panel=await createImagePanel({workspace,python:path.resolve('unused-python'),object_id:A,client});
-  // Node 18.20.8's Server.close delegates to net.Server.close and does not reap
-  // idle HTTP sockets. Use that real native implementation on newer runtimes.
-  panel.server.close=function(callback){return net.Server.prototype.close.call(this,callback);};
   const origin=panel.url.split('/#')[0];
   const request=(route,{body,keepAlive=true}={})=>new Promise((resolve,reject)=>{
    const headers={'X-Panel-Token':panel.token,...(body?{Origin:origin,'Content-Type':'application/json'}:{}),...(!keepAlive?{Connection:'close'}:{})};
@@ -50,7 +45,7 @@ async function fixture(run){
  }
 }
 
-test('Panel close reaps an idle keep-alive connection under Node 18 close semantics',()=>fixture(async h=>{
+test('Panel close reaps an idle keep-alive connection on the supported runtime',()=>fixture(async h=>{
  const before=h.panel.state(),idleClosed=once(h.idle.socket,'close');await within(Promise.all([h.close(),idleClosed]),'Panel close waited for the idle keep-alive timeout');assert.equal(h.idle.socket.destroyed,true);
  const checkpoint=JSON.parse(readFileSync(path.join(h.panel.journal,'current-selection.json'),'utf8'));assert.equal(checkpoint.object_id,A);assert.equal(checkpoint.edit_state.draft_revision,before.edit_state.draft_revision);assert.equal(h.calls.filter(call=>call.name!=='image_info').length,0);
 }));
