@@ -52,7 +52,7 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
     budgets:['2..4096 evenly spaced samples; exact immutable scientific input and original request ID recovery'],
   },
   image_open: {
-    inputs: ['ExplicitSourcePath:read-only uint16/float32 TIFF or validated schema-1 numerical capture'],
+    inputs: ['ExplicitSourcePath:read-only ordinary grayscale TIFF (uint8/16/32, int8/16/32, float32/64) or validated schema-1 numerical capture'],
     outputs: ['ScientificArrayRef:tiff_source or fixed capture frame', 'CalibrationRevisionRef:admitted native axes only; otherwise pixel-domain input'],
     kind: 'fixed-source-snapshot-write',
     gates: ['TIFF admission/page metadata or existing native-capture validator; domain and native calibration admission remain delegated'],

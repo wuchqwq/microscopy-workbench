@@ -218,9 +218,13 @@ def scalar_shape(shape, dtype):
 
 def page_info(page, index):
     shape, dtype = tuple(page.shape), np.dtype(page.dtype)
+    need(len(shape) == 2 and dtype in tuple(np.dtype(name) for name in
+         ("uint8", "uint16", "uint32", "int8", "int16", "int32", "float32", "float64")) and
+         page.samplesperpixel == 1 and int(page.photometric) in (0, 1),
+         "TIFF requires ordinary 2D grayscale uint8/16/32, int8/16/32 or float32/64 pages; "
+         "RGB, palette, complex, float16 and 64-bit integers are unsupported; no precision conversion is applied",
+         "UNSUPPORTED_LAYOUT")
     scalar_shape(shape, dtype)
-    need(dtype in (np.dtype("uint16"), np.dtype("float32")) and page.samplesperpixel == 1 and
-         int(page.photometric) in (0, 1), "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported", "UNSUPPORTED_LAYOUT")
     return {"frame_index": index, "shape_yx": list(shape), "dtype": str(dtype), "axes": ["y", "x"],
             "decoded_bytes": int(np.prod(shape)) * dtype.itemsize, "photometric_code": int(page.photometric),
             "compression_code": int(page.compression)}
@@ -346,7 +350,21 @@ def spectrum_filter_display(shown, specification):
 
 def render(values, settings, bound):
     low, high = settings["display_range"]
-    scaled = np.zeros(values.shape, dtype=np.float64) if low == high else np.clip((values.astype(np.float64) - low) / (high - low), 0, 1)
+    if low == high:
+        scaled = np.zeros(values.shape, dtype=np.float64)
+    else:
+        # Clip before subtracting: finite pixels outside an explicit display
+        # interval may otherwise overflow. Opposite-sign finite endpoints can
+        # also have an unrepresentable span; normalize those by a safe scale.
+        clipped = np.clip(values.astype(np.float64), low, high)
+        span = high - low
+        if math.isfinite(span):
+            scaled = (clipped - low) / span
+        else:
+            scale = max(abs(low), abs(high))
+            scaled = (clipped / scale - low / scale) / (high / scale - low / scale)
+        need(np.isfinite(scaled).all(), "Display normalization exceeds finite range")
+        scaled = np.clip(scaled, 0, 1)
     scaled = np.power(scaled, 1.0 / settings["gamma"])
     pixels = np.floor(scaled * 255 + 0.5).astype(np.uint8)
     image = Image.fromarray(pixels)
@@ -1109,6 +1127,9 @@ class Workspace:
                     page = tiff.pages[index]
                     need(page_info(page, index) == parent["pages"][index], "TIFF page metadata changed", "SOURCE_CHANGED")
                     values = page.asarray()
+                need(list(values.shape) == parent["pages"][index]["shape_yx"] and
+                     str(values.dtype) == parent["pages"][index]["dtype"],
+                     "TIFF decoded shape or precision differs from its catalog; no conversion is applied", "UNSUPPORTED_LAYOUT")
                 need(np.isfinite(values).all(), "TIFF scientific pixels must be finite", "NONFINITE_DATA")
                 scalar_shape(values.shape, values.dtype)
                 check_source(parent["source_identity"])
