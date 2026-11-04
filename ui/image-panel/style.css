@@ -136,7 +136,7 @@ body{height:100vh;display:flex;flex-direction:column}.workbench-header{flex-shri
 /* One canvas contextbar; low-frequency commands overlay the retained image windows. */
 .canvas-contextbar{position:relative;z-index:6;min-height:42px;flex-wrap:wrap;gap:6px 12px;padding:6px 10px;background:#15212b}
 .canvas-contextbar .view-navigation{flex:1 1 auto;min-width:0;flex-wrap:wrap;gap:5px;margin:0;padding:0;border:0;background:transparent}
-.canvas-contextbar #view-current{flex:0 1 auto;min-width:4em;max-width:18em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 8px;color:#bdceda;background:#22313d;border:1px solid #354958;border-radius:4px;font-size:11px}
+.canvas-contextbar #view-current{flex:0 1 auto;min-width:4em;max-width:18em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 4px;color:#a6bac8;background:transparent;border:0;border-radius:0;font-size:11px}
 .contextbar-menus{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:5px;margin-left:auto}
 .canvas-contextbar button,.canvas-contextbar summary{font-size:11px;min-height:28px}
 .canvas-contextbar #toggle-research{padding:4px 8px;background:transparent;border-color:transparent;color:#b6cbd7}
@@ -166,7 +166,7 @@ body{height:100vh;display:flex;flex-direction:column}.workbench-header{flex-shri
 .canvas-context #selection{flex:1 1 160px;min-width:0}
 .canvas-context .selection-actions{flex:0 1 auto;flex-wrap:wrap;gap:5px;margin-left:auto}
 .canvas-context .selection-actions button{min-height:28px;padding:5px 8px}
-.canvas-footer{min-height:42px;padding-top:5px;padding-bottom:5px}
+.canvas-footer{min-height:32px;padding-top:4px;padding-bottom:4px}
 .measurement-workspace>summary{min-height:32px;padding:7px 14px;font-size:11px}
 .measurement-workspace>summary::after{top:4px}
 .measurement-workspace>summary .workspace-hint{font-size:10px;margin-left:12px}
@@ -189,3 +189,8 @@ body{height:100vh;display:flex;flex-direction:column}.workbench-header{flex-shri
 .properties-panel .figure-toolbar #figure-options{margin-left:0}
 @media(max-width:1100px){.canvas-contextbar{gap:5px 8px}.canvas-contextbar .view-navigation{gap:4px}.canvas-context #selection{flex-basis:120px}.canvas-context .selection-actions{flex:1 1 auto}}
 @media(max-width:850px){.canvas-contextbar{padding:5px 8px}.contextbar-menus{gap:4px}.canvas-contextbar .view-navigation{flex:1 1 100%}.canvas-contextbar #view-current{flex:1 1 5em;max-width:none}.canvas-contextbar .canvas-menu-content{max-height:58vh}.canvas-context .roi-current-label{max-width:45%}.canvas-context #selection{flex:1 1 120px}.canvas-context .selection-actions{flex-basis:100%;margin-left:0}.measurement-workspace>summary .workspace-hint{display:none}}
+
+/* Current-object actions stay beside the image; the historical-results shortcut is viewing only. */
+.measurement-workspace>summary #measurement-show-history{margin-left:8px;min-height:25px;padding:3px 7px;font-size:11px}
+.canvas-context .roi-current-label{max-width:35%}
+@media(max-width:850px){.canvas-context .roi-current-label{max-width:100%}}

@@ -108,6 +108,37 @@ test('old current table values become historical until a newly revised view is q
  let state={object:{object_id:B}};const history={checked:false},record=result(),workspace=new MeasurementWorkspace({document:{getElementById:id=>id==='measurement-history'?history:null,createElement(){}},getState:()=>state});workspace.current={object_id:B};workspace.entries=[record];assert.equal(workspace.visible().length,1);state={object:{object_id:C}};assert.equal(workspace.displayEntry(record).status,'historical');assert.equal(workspace.visible().length,0);history.checked=true;assert.equal(workspace.visible()[0].status,'historical');assert.equal(record.status,'current','a read-only status projection never rewrites the immutable entry');workspace.current={object_id:C};assert.equal(workspace.displayEntry(record).status,'current','fresh provider qualification wins even when the original result parent is an earlier display wrapper');assert.equal(record.parent_object_id,B);
 });
 
+function historyDisclosureFixture(entries){
+ class E{constructor(){this.children=[];this.dataset={};this.attrs={};this.hidden=false;this.checked=false;this.open=false;this.textContent='';this.classList={toggle(){}};}replaceChildren(){this.children=[];}append(...values){this.children.push(...values);}setAttribute(key,value){this.attrs[key]=String(value);}}
+ const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,new E());return elements.get(id);},calls=[],selectionCalls=[];
+ const state={object:{object_id:B,annotations:[]},state_revision:1,selection:{coordinates:[[0,0],[.125,0]]},edit_state:{dirty:true,draft_revision:7}};
+ const workspace=new MeasurementWorkspace({document:{getElementById:el,createElement:()=>new E()},getState:()=>state,api:async url=>{calls.push(url);return {current:{object_id:B},entries};},onSelect:entry=>selectionCalls.push(entry.object_id)});
+ return {workspace,el,calls,selectionCalls,state};
+}
+
+test('hidden-history summary action expands once without selecting, writing or changing saved measurements',async()=>{
+ const entries=Object.freeze([Object.freeze(result({status:'historical'})),Object.freeze(result({object_id:C,status:'history'}))]),original=JSON.stringify(entries),h=historyDisclosureFixture(entries);
+ assert.equal(await h.workspace.refresh(),true);h.workspace.selectedId=A;h.workspace.checked.add(C);const originalState=JSON.stringify(h.state);
+ assert.equal(h.el('measurement-show-history').hidden,false);assert.equal(h.el('measurement-workspace').open,false);assert.equal(h.workspace.visible().length,0);
+ let prevented=0,stopped=0;h.el('measurement-show-history').onclick({preventDefault(){prevented++;},stopPropagation(){stopped++;}});
+ assert.equal(prevented,1);assert.equal(stopped,1,'summary must not apply a second disclosure toggle');assert.equal(h.el('measurement-workspace').open,true);assert.equal(h.el('measurement-history').checked,true);assert.equal(h.el('measurement-show-history').hidden,true);
+ assert.equal(h.workspace.visible().length,2);assert.equal(h.workspace.selectedId,A);assert.deepEqual([...h.workspace.checked],[C]);assert.deepEqual(h.selectionCalls,[]);assert.equal(h.calls.length,1,'showing existing results does not read or write the backend');assert.equal(JSON.stringify(entries),original);assert.equal(JSON.stringify(h.state),originalState);
+ assert.equal(await h.workspace.refresh(),true);assert.equal(h.el('measurement-workspace').open,true);assert.equal(h.el('measurement-history').checked,true);assert.equal(h.workspace.selectedId,A);assert.ok(h.calls.every(url=>url.startsWith('/api/measurements?object_id=')));assert.equal(JSON.stringify(entries),original);
+});
+
+test('history shortcut appears only when history filtering hides every result',async()=>{
+ const h=historyDisclosureFixture([]);await h.workspace.refresh();assert.equal(h.el('measurement-show-history').hidden,true);assert.match(h.el('measurement-empty').textContent,/尚无保存测量/);
+ h.workspace.entries=[result()];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true);
+ h.workspace.entries.push(result({object_id:C,status:'historical'}));h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true,'a visible current result keeps the normal result controls');
+ h.workspace.entries=[result({status:'historical'})];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,false);assert.match(h.el('measurement-empty').textContent,/筛选隐藏.*历史/);
+ h.el('measurement-history').checked=true;h.el('measurement-history').onchange();assert.equal(h.el('measurement-show-history').hidden,true);assert.equal(h.el('measurement-empty').hidden,true);assert.equal(h.el('measurement-workspace').open,false,'ordinary filter rendering does not choose disclosure state');assert.equal(h.calls.length,1);
+});
+
+test('later refresh respects an explicit collapse after showing history',async()=>{
+ const h=historyDisclosureFixture([result({status:'historical'})]);await h.workspace.refresh();h.el('measurement-show-history').onclick({preventDefault(){},stopPropagation(){}});assert.equal(h.el('measurement-workspace').open,true);
+ h.el('measurement-workspace').open=false;await h.workspace.refresh();h.workspace.render();assert.equal(h.el('measurement-workspace').open,false);assert.equal(h.el('measurement-history').checked,true);assert.equal(h.workspace.visible().length,1);assert.deepEqual(h.selectionCalls,[]);assert.equal(h.calls.length,2);
+});
+
 test('export selection keeps pending and checked historical records with original precision and provenance',()=>{
  const original=result({pixel_period:7.25264723197026,frequency_distance_cycles_per_pixel:.1378806893560076,d_spacing:.20000000000000004,xy_calibration:{calibration_id:C,revision:3,source_text:'public synthetic scale'}}),pending={object_id:A,annotation_id:'g1',name:'Peak A',status:'current',measurement_manifest_sha256:'f'.repeat(64),source:original.source,measurement:original},historical={...pending,object_id:C,status:'historical',measurement:{...original,object_id:C,d_spacing:.30000000000000004}};
  const workspace=new MeasurementWorkspace({document:null,getState:()=>({object:{object_id:B}}),pendingAnnotations:()=>['g1']});workspace.current={object_id:B};workspace.entries=[pending,historical];workspace.checked.add(A);workspace.checked.add(C);const before=JSON.stringify(workspace.entries),selected=workspace.exportSelection();assert.deepEqual(selected.map(entry=>entry.status),['needs_remeasurement','historical']);assert.deepEqual(measurementValues(selected[0]),[]);

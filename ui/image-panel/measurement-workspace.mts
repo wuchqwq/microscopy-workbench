@@ -115,6 +115,12 @@ export class MeasurementWorkspace {
   const el=(id: string)=>doc?.getElementById(id);this.el=el;
   if(el('measurement-sort'))el('measurement-sort')!.onchange=()=>this.render();
   if(el('measurement-history'))el('measurement-history')!.onchange=()=>this.render();
+  if(el('measurement-show-history'))el('measurement-show-history')!.onclick=event=>{
+   event.preventDefault();event.stopPropagation();
+   const history=el('measurement-history'),disclosure=el('measurement-workspace') as (PresentationElement&{open:boolean})|null|undefined;
+   if(!history||!disclosure||history.checked||!this.entries.length||this.visible().length)return;
+   history.checked=true;disclosure.open=true;this.render();
+  };
   if(el('measurement-jump'))el('measurement-jump')!.onclick=()=>this.run(()=>this.onJump(this.selected()));
   if(el('measurement-update'))el('measurement-update')!.onclick=()=>this.run(()=>this.onUpdate(this.selected()));
   if(el('measurement-copy'))el('measurement-copy')!.onclick=()=>this.run(async()=>{if(!(globalThis as PresentationEnvironment).navigator?.clipboard?.writeText)throw new Error('当前浏览器不能复制，请下载 TSV');await (globalThis as PresentationEnvironment).navigator!.clipboard!.writeText!(exportMeasurementTable(this.exportSelection({selectedOnly:true}),{delimiter:'\t'}));});
@@ -148,7 +154,8 @@ export class MeasurementWorkspace {
  render(){
   const visible=this.visible();this.el('measurement-workspace')?.classList?.toggle('empty-results',visible.length===0);
   this.el('measurement-workspace')?.classList?.toggle('history-hidden-results',this.entries.length>0&&visible.length===0);
-  const empty=this.el('measurement-empty');if(empty){empty.hidden=visible.length>0;empty.textContent=this.entries.length?'当前筛选隐藏了历史结果；勾选“包含历史版本”查看。':'尚无保存测量；点选峰或绘制线段后点击“测量”。';}
+  const showHistory=this.el('measurement-show-history'),history=this.el('measurement-history');if(showHistory)showHistory.hidden=!(history&&!history.checked&&this.entries.length>0&&visible.length===0);
+  const empty=this.el('measurement-empty');if(empty){empty.hidden=visible.length>0;empty.textContent=this.entries.length?'当前筛选隐藏了历史结果；点击“显示历史结果”或勾选“包含历史版本”查看。':'尚无保存测量；点选峰或绘制测量线后，使用图下测量操作。';}
   this.renderDetails(this.el('data-inspector'),inspectorDetails(this.current??{}));const body=this.el('measurement-rows');if(!body||!this.document)return;body.replaceChildren();
   if(this.el('measurement-count'))this.el('measurement-count')!.textContent=visible.length?`${visible.length} / ${this.entries.length} 条${this.truncated?' · 达到读取上限':''}`:this.entries.length?`历史 ${this.entries.length} 条 · 已筛选隐藏`:'尚无测量';
   for(const entry of visible){const m=asRecord(entry),row=this.document!.createElement('tr');row.dataset.measurementId=m.object_id;row.setAttribute('aria-selected',String(this.selectedId===m.object_id));row.classList.toggle('selected',this.selectedId===m.object_id);row.classList.toggle('stale',['stale','needs_remeasure','needs_remeasurement'].includes(entry.status as string));row.tabIndex=0;

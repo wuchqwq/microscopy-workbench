@@ -31,6 +31,19 @@ import {randomUUID} from 'node:crypto';
 
 const source=readFileSync(process.env.PANEL_UI_UNDER_TEST??new URL('../ui/image-panel/app.mjs',import.meta.url),'utf8');
 const copy=value=>JSON.parse(JSON.stringify(value));
+
+test('single image context: cold unresolved outcomes stay visible instead of claiming ready',async()=>{
+ for(const kind of ['submitted','unknown','save']){
+  const initial=fixture();if(kind==='save')initial.workspace_analysis={schema_version:1,status:'save_unknown',dirty:true,working_revision:1,unresolved_save_id:'original-save',unresolved_request_id:null,recovery_available:false};
+  else initial.last_operation={state:kind,request_id:'original-unresolved',action:'fft'};
+  const h=await harness(initial);assert.equal(h.$('draft-status').hidden,false,kind);assert.match(h.$('draft-status').textContent,/待核对/,kind);assert.match(h.$('message').textContent,/待核对/,kind);assert.doesNotMatch(h.$('message').textContent,/图像已就绪/,kind);assert.equal(h.calls.length,0,kind);
+ }
+});
+
+test('single image context: normal labels and hints leave coordinates and drafts intact',async()=>{
+ const h=await harness(savedRectangleFixture());assert.equal(h.$('view-current').textContent,'空间图');assert.match(h.$('selection').textContent,/点击已有 ROI/);assert.equal(h.$('draft-status').hidden,true);const initial=h.inspect();
+ selectSavedRoi(h);const selected=h.inspect();assert.match(h.$('current-roi').textContent,/当前 ROI/);assert.match(h.$('selection').textContent,/控制点/);assert.match(h.$('selection').title,/源像素坐标/);assert.equal(h.$('measure').hidden,true);assert.equal(h.$('fft').hidden,false);assert.deepEqual(selected.state.object,initial.state.object);assert.equal(h.calls.length,0);
+});
 const sourceId='a'.repeat(32),viewId='b'.repeat(32);
 const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:[20,12,148,108],image_rect_xyxy:[0,0,128,96]};
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
