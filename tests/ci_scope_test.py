@@ -74,6 +74,8 @@ class ScopeTests(unittest.TestCase):
             "tests/image-panel-data-inspector.test.mjs": {"node", "boundary"},
             "tests/image-panel-data-probes.test.mjs": {"node", "boundary"},
             "tests/image-panel-presentation-transport.test.mjs": {"node", "boundary"},
+            "tests/core-cross-window-contract.test.mjs": {"node"},
+            "tests/image_core_cross_test.py": {"spatial"},
         }
         for path, expected in examples.items():
             with self.subTest(path=path):

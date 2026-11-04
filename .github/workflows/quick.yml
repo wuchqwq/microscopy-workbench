@@ -177,6 +177,7 @@ jobs:
       - run: python -m pip install -r requirements-images.txt
       - run: python -B tests/image_float_tiff_test.py
       - run: python -B tests/image_spatial_atlas_test.py
+      - run: python -B tests/image_core_cross_test.py
       - run: python -B tests/image_domain_compare_test.py
       - run: python -B tests/image_feature_field_test.py
       - run: python -B tests/image_spatial_domains_test.py

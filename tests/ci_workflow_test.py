@@ -8,7 +8,7 @@ import re
 import sys
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from ci_scope import GROUPS, QUICK_JOBS, F3B_JOBS
+from ci_scope import GROUPS, QUICK_JOBS, F3B_JOBS, registered_node_tests
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -61,6 +61,12 @@ class WorkflowTests(unittest.TestCase):
         build = (ROOT / "scripts/build.mjs").read_text()
         for config in ("tsconfig.shared.json", "tsconfig.types.json", "tsconfig.node.json"):
             self.assertIn(config, build)
+
+    def test_core_cross_tests_reach_existing_runner_lists(self):
+        self.assertIn("tests/core-cross-window-contract.test.mjs", registered_node_tests())
+        quick = jobs(self.texts["quick"])
+        self.assertIn("- run: python -B tests/image_core_cross_test.py", quick["spatial-evidence"])
+        self.assertIn("- run: npm test", quick["node-smoke"])
 
     def test_science_smoke_preserved_and_supported_node_versions_selected(self):
         quick = jobs(self.texts["quick"])

@@ -40,6 +40,7 @@ SPECIAL_TESTS = {
     "tests/image-panel-presentation-transport.test.mjs": {"node", "boundary"},
     "tests/test_register_codex_mcp.py": {"client"},
     "tests/manual_crystal_launcher_test.py": {"client"},
+    "tests/image_core_cross_test.py": {"spatial"},
 }
 
 
