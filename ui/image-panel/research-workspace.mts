@@ -45,23 +45,38 @@ function hasRetainedSources(state:PanelRoiSnapshot):boolean {
 }
 export class ResearchWorkspace {
  readonly doc:BrowserDocument;readonly options:Options;reasonDirty=false;model:RoiObservationModel|null=null;
- private previous:RoiDependencySnapshot|null=null;private selected:string|null=null;private scienceSignature='';private rowSignature='';
+ private previous:RoiDependencySnapshot|null=null;private reasonBaseline:{key:string;value:string}|null=null;private reasonContext:{key:string;value:string}|null=null;private scienceSignature='';private rowSignature='';
  constructor(options:Options){this.options=options;this.doc=options.document;
-  this.el('roi-reason').oninput=()=>{if(options.allowEdit?.()===false){this.el('roi-reason').value=this.model?.rows.find(r=>r.selected)?.reason??'';options.onError('先恢复或明确放弃未保存恢复副本，再编辑观察说明。');return;}this.reasonDirty=true;options.onDraftChange();};
+  this.el('roi-reason').oninput=()=>{if(options.allowEdit?.()===false){this.el('roi-reason').value=this.reasonContext?.value??'';options.onError('先恢复或明确放弃未保存恢复副本，再编辑观察说明。');return;}this.reasonDirty=!this.reasonBaseline||!this.sameReasonContext()||this.el('roi-reason').value!==this.reasonBaseline.value;options.onDraftChange();};
   this.el('save-observation').onclick=()=>this.run(()=>options.onSave(this.el('roi-reason').value));
   this.el('copy-agent-prompt').onclick=()=>this.run(async()=>{const clipboard=(globalThis as {navigator?:{clipboard?:{writeText(text:string):PromiseLike<void>}}}).navigator?.clipboard;if(!clipboard)throw new Error('浏览器无法复制；请手动复制下面的提示。');await clipboard.writeText(this.el('agent-prompt').value);this.el('agent-copy-status').textContent='已复制；粘贴给已连接的 Agent 并说继续。尚未自动执行。';});
  }
  private el(name:string){return this.doc.getElementById(name)!;}
  private node(tag:string,text?:unknown){const n=this.doc.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
  private async run(fn:()=>unknown){try{await fn();}catch(e){this.options.onError((e as Error).message);}}
- clearReason(){this.reasonDirty=false;this.selected=null;this.el('roi-reason').value='';}
+ private savedReasonContext(state:PanelRoiSnapshot,model:RoiObservationModel){
+  const selected=model.rows.find(row=>row.selected),matches=selected?.annotation_id?rows(state.object.annotations).filter(mark=>mark.annotation_id===selected.annotation_id):[];
+  // The editor baseline uses the exact saved note, not the model's trimmed summary.
+  const saved=matches.length===1&&typeof matches[0]!.note==='string'?matches[0]!.note as string:'';
+  return {key:JSON.stringify([model.source.view_object_id,model.source.frame_object_id,selected?.annotation_id??null,selected?.original_anchor??model.current_selection?.original_anchor??null]),value:saved};
+ }
+ private sameReasonContext(){return this.reasonBaseline?.key===this.reasonContext?.key&&this.reasonBaseline?.value===this.reasonContext?.value;}
+ clearReason(){this.reasonDirty=false;this.reasonBaseline=null;this.reasonContext=null;this.el('roi-reason').value='';}
+ restoreReason(state:PanelRoiSnapshot,reason:string){
+  // Called only when installing an explicitly owned window draft. A legacy dirty
+  // flag cannot make unchanged text a new scientific edit, or hide different text.
+  this.reasonContext=this.savedReasonContext(state,roiObservationModel(state));this.reasonBaseline={...this.reasonContext};this.el('roi-reason').value=reason;this.reasonDirty=reason!==this.reasonBaseline.value;
+ }
  render(state:PanelRoiSnapshot,{busy=false,gesture=false,observationSavePhase=''}:{busy?:boolean;gesture?:boolean;observationSavePhase?:''|'submitting'|'verifying'|'handoff'}={}){
   const model=roiObservationModel(state,this.previous);this.model=model;if(!this.previous||this.previous.source_frame_object_id!==model.source.frame_object_id)this.previous=model.dependency_snapshot;
   const usable=model.rows.filter(r=>r.usable&&r.status==='saved'),selected=model.rows.find(r=>r.selected),current=model.current_selection;
   const retained=retainedObservationContext(state.crystal_evidence),retainedSources=hasRetainedSources(state);this.el('research-count').textContent=model.rows.length?`${usable.length} 处已记录观察`:retained?`${retained.observations.length} 处原观察 · 另一保存视图`:retainedSources?'来源 ROI · 交接时核对':'0 处已记录观察';this.el('research-source').textContent=`${model.source.filename??'来源未知'} · ${model.source.frame_index===null?'帧未知':`第 ${model.source.frame_index+1} 帧`}`;
   const scale=model.calibration.xy_scale;this.el('research-calibration').textContent=scale?`XY ${scale.x} / ${scale.y} ${scale.unit}/px · 标定版本 ${model.calibration.revision} · ${model.calibration.source==='user_statement_not_independently_verified'?'用户声明，未独立验证':value(model.calibration.source)}`:'物理标尺未知或已撤回 · 像素域观察仍可继续';
   this.el('roi-current').textContent=current?.usable?`${selected?'已记录观察的当前选择':'临时选区'} · 实际处理边界 [${current.rect_xyxy?.join(', ')}]（源像素，向外取整）`:'在原图框选 ROI 后应用观察理由。频域峰位使用测量。';
-  if(!this.reasonDirty&&this.selected!==(selected?.annotation_id??null)){this.selected=selected?.annotation_id??null;this.el('roi-reason').value=selected?.reason??'';}
+  this.reasonContext=this.savedReasonContext(state,model);
+  if(!this.reasonBaseline){this.reasonBaseline={...this.reasonContext};if(!this.reasonDirty)this.el('roi-reason').value=this.reasonBaseline.value;else this.reasonDirty=this.el('roi-reason').value!==this.reasonBaseline.value;}
+  else if(this.reasonDirty){if(this.sameReasonContext()&&this.el('roi-reason').value===this.reasonBaseline.value)this.reasonDirty=false;}
+  else if(!this.sameReasonContext()){this.reasonBaseline={...this.reasonContext};this.el('roi-reason').value=this.reasonBaseline.value;}
   const saving=Boolean(observationSavePhase);
   this.el('roi-reason').disabled=busy||gesture||saving;
   this.el('save-observation').disabled=busy||gesture||saving||!current?.usable;this.el('save-observation').textContent=saving?'正在应用并核对…':selected?'应用这条观察说明':'应用 ROI 观察';
