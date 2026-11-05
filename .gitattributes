@@ -33,3 +33,8 @@ scripts/check_conditional_s2_read_guards.py text eol=lf
 tests/image_column_fit_test.py text eol=lf
 tests/column-fit-contract.test.mjs text eol=lf
 tests/column-fit-stdio-smoke.mjs text eol=lf
+
+# Preserve new readback proof sources and original unittest log formatting.
+scripts/validate_conditional_s2_readback.py text eol=lf
+tests/image_column_fit_readback_test.py text eol=lf
+docs/conditional-s2/validation/readback-p2-*.redacted.txt -text whitespace=cr-at-eol,-blank-at-eol

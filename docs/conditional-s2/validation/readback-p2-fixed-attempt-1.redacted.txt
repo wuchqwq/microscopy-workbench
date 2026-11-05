@@ -1,0 +1,10 @@
+test_rank_deficient_background_solution_and_wrong_unknown_are_refused (image_column_fit_readback_test.ColumnFitReadback.test_rank_deficient_background_solution_and_wrong_unknown_are_refused) ... ok
+test_source_metadata_matches_selected_revision_and_exact_json_types (image_column_fit_readback_test.ColumnFitReadback.test_source_metadata_matches_selected_revision_and_exact_json_types) ... ok
+test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe (image_column_fit_readback_test.ColumnFitReadback.test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe) ... ok
+test_zero_design_and_missing_optimizer_coefficients_are_refused (image_column_fit_readback_test.ColumnFitReadback.test_zero_design_and_missing_optimizer_coefficients_are_refused) ... ok
+test_saved_fit_review_export_and_original_id_without_refit (image_column_fit_readback_test.HistoricalColumnFitReadback.test_saved_fit_review_export_and_original_id_without_refit) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 7.430s
+
+OK

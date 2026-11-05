@@ -181,6 +181,7 @@ jobs:
       - run: python -B tests/image_core_cross_test.py
       - run: python -B tests/image_point_observation_test.py
       - run: python -B tests/image_column_fit_test.py
+      - run: python -B tests/image_column_fit_readback_test.py
       - run: python -B tests/image_domain_compare_test.py
       - run: python -B tests/image_feature_field_test.py
       - run: python -B tests/image_spatial_domains_test.py

@@ -81,3 +81,8 @@ suite, GUI/Panel editor test, browser/model trial or physical acceptance ran.
 CI now registers the new Node contract and bounded Python file. Full CI is
 **NOT_TESTED locally**. The original physical gate remains **FAIL** at
 10.034456% >10%; formal physical blind acceptance remains **NOT_TESTED**.
+
+The subsequent two-P2 saved-readback repair, original-candidate counterexamples,
+focused results and retained evidence are recorded separately in
+[READBACK-P2-VALIDATION.md](READBACK-P2-VALIDATION.md). The original evidence and
+scientific qualification above are unchanged.

@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "initial_cached_whitespace_check": {
+    "status": "FAIL",
+    "reason": "Four original unittest header lines contain trailing spaces",
+    "resolution": "Preserved original redacted bytes with a Git whitespace attribute scoped only to the new readback logs"
+  },
+  "initial_staged_hash_check": {
+    "status": "FAIL",
+    "reason": "The check incorrectly assumed unchanged image_numeric.py platform-CRLF working bytes equal its Git LF blob",
+    "resolution": "Changed adapter, frozen core, new tests and harness staged blobs match tested hashes; existing numeric/workspace working bytes separately match tested hashes"
+  },
+  "final_cached_diff_check": "PASS",
+  "tested_source_bytes_changed_after_run": false,
+  "new_source_checkout_lf_attributes": true,
+  "old_validator_checkout_attributes_changed": false,
+  "numerical_tests_rerun_for_archive_checks": false
+}

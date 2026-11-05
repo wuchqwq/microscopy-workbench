@@ -73,6 +73,8 @@ def _same_numbers(a, b):
         return a.keys() == b.keys() and all(_same_numbers(a[k], b[k]) for k in a)
     if type(a) is list and type(b) is list:
         return len(a) == len(b) and all(_same_numbers(x, y) for x, y in zip(a, b))
+    if type(a) is bool or type(b) is bool:
+        return type(a) is type(b) and a == b
     if _finite(a) and _finite(b):
         return math.isclose(a, b, rel_tol=2e-11, abs_tol=2e-11)
     return a == b
@@ -257,21 +259,40 @@ def _validate_fit(plan, site, api):
     """Algebraic verification of saved values, never minimize/fit_linear_poisson."""
     fit = site.get("diagnostics")
     api.need(type(fit) is dict and fit.get("status") == site.get("status"), "Saved fit diagnostic status mismatch", "CORRUPT_OBJECT")
-    coef, mu = fit.get("coefficients"), fit.get("mu")
-    if coef is None:
-        api.need(site["status"].startswith("UNKNOWN_") and site["accepted"] == _accepted(fit), "Missing accepted coefficients", "CORRUPT_OBJECT")
-        if site["status"] == "UNKNOWN_ZERO_COUNTS":
-            api.need(np.sum(plan["_values"]) == 0 and _same_numbers(mu, [0.0]*81), "Changed zero-count fit", "CORRUPT_OBJECT")
-        return
     B, y = plan["_design"], plan["_values"]
+    # Reconstruct the frozen solver's admission order before inspecting saved
+    # coefficients. A projected-gradient check alone cannot establish rank, and
+    # zero counts can have zero projected gradient at the all-zero coefficients.
+    masses = np.sum(B, axis=0)
+    early = None
+    if np.sum(y) == 0:
+        early = dict(status="UNKNOWN_ZERO_COUNTS", evaluations=0, iterations=0,
+                     mu=np.zeros_like(y).tolist(), coefficients=None)
+    elif np.any(masses <= 0):
+        early = dict(status="UNKNOWN_ZERO_DESIGN_COLUMN", evaluations=0, iterations=0,
+                     mu=None, coefficients=None)
+    else:
+        A = B/masses
+        singular = np.linalg.svd(A, compute_uv=False)
+        if singular[-1] <= 1e-10*singular[0]:
+            early = dict(status="UNKNOWN_NONIDENTIFIABLE_DESIGN", evaluations=0, iterations=0,
+                         mu=None, coefficients=None,
+                         smallest_singular_ratio=float(singular[-1]/singular[0]))
+    if early is not None:
+        api.need(type(fit.get("evaluations")) is int and type(fit.get("iterations")) is int and
+                 _same_numbers(fit, early) and site["accepted"] == _accepted(early),
+                 "Saved fit contradicts zero-count/design/rank admission", "CORRUPT_OBJECT")
+        return
+    coef, mu = fit.get("coefficients"), fit.get("mu")
+    api.need(coef is not None and site["status"] in ("CONDITIONAL_POINT_ESTIMATE", "UNKNOWN_NOT_CONVERGED"),
+             "Missing saved optimizer coefficients or invalid fit status", "CORRUPT_OBJECT")
     coef = np.asarray(coef, dtype=float)
     api.need(coef.shape == (B.shape[1],) and np.isfinite(coef).all() and np.all(coef >= 0), "Invalid saved coefficients", "CORRUPT_OBJECT")
     predicted = np.maximum(B @ coef, 1e-12)
     api.need(_same_numbers(mu, predicted.tolist()), "Saved predicted pixels disagree with coefficients", "CORRUPT_OBJECT")
-    masses = np.sum(B, axis=0)
     scale = max(float(np.sum(y)), 1.)
     x = coef*masses/scale
-    _, gradient = _model().poisson_objective(x, B/masses, y, scale)
+    _, gradient = _model().poisson_objective(x, A, y, scale)
     gradient[(x <= 1e-10) & (gradient > 0)] = 0
     pg = float(np.max(np.abs(gradient)))
     api.need(_same_numbers(pg, fit.get("projected_gradient")), "Changed saved projected gradient", "CORRUPT_OBJECT")
@@ -297,6 +318,15 @@ def validate_references(workspace, record, api):
     report = api.read_json(directory / "column-fit.json")
     api.need(all(record.get(k) == v for k, v in report.items()), "Column-fit report and object disagree", "CORRUPT_OBJECT")
     operand, baseline, unknown, plans = _prepare(workspace, request, api)
+    # These scientific fields are reconstructed from the original request's
+    # selected source/revision, including the actual NPY dtype. Historical
+    # runtime versions describe the original execution and are not rebuilt.
+    source_common = {k: v for k, v in api.numeric.common(operand).items()
+                     if k not in ("software_provenance", "computation")}
+    api.need(all(all(k in saved for k in source_common) and
+                 api.canonical({k: saved[k] for k in source_common}) == api.canonical(source_common)
+                 for saved in (record, report)),
+             "Column-fit source metadata/meaning changed", "CORRUPT_OBJECT")
     def science_baseline(value):
         return None if value is None else {k: v for k, v in value.items() if k not in ("software_provenance", "computation")}
     api.need(record.get("scientific_grid_identity") == operand["scientific_grid_identity"] and
