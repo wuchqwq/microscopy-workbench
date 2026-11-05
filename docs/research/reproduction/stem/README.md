@@ -52,4 +52,3 @@ fresh-point-parent/
 原代码从脚本父目录下的 `point-observation-fix/` 导入 worker 和测试支持。它会自行写 `controls-plan.json`；同目录已经有该文件就立即拒绝，因此冻结计划单独保存在 `frozen-protocol/`，不应复制进新运行目录。生成器还会创建 `inputs/`、`assessor/`、`controlled-provider/`，写调用 JSONL。新计划可与归档计划比较，但不为使哈希或结果相同修改代码/参数。
 
 点代理为固定 ROI 标量高斯强度对照，目标和参考由评估者给定；不是物理 STEM、自动位点搜索或盲检识别率。没有复制任何模型启动脚本、会话、原私有日志或既有生成数组。未来运行需要另行记录结果与环境，这次归档没有新增科研执行。
-

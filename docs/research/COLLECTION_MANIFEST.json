@@ -20,8 +20,8 @@
       "bytes": 5777
     },
     "REPRODUCIBILITY.md": {
-      "sha256": "a131f68a2fb0fb459c6a9a5471136654c3e77480822802509f3f9e698d7becb6",
-      "bytes": 3887
+      "sha256": "ecd412fd0a2a6356fcd2a80299adaa3b952d89b61213858c878e44622119cecc",
+      "bytes": 4193
     },
     "records/baseline-validation.json": {
       "sha256": "38949994c78b8801814f32a163bacceded536fc5256df726cadd702710d89a57",
@@ -68,12 +68,12 @@
       "bytes": 2926
     },
     "reproduction/stem/manifest.json": {
-      "sha256": "566ddc7fb6b664604908f24f9c953b40c75311036a346c7339b88ab7c11857d1",
-      "bytes": 7444
+      "sha256": "1d998775e09f0b943ecd59c3fe7a744fe57b3b67dd002b0a2af71277cb73d54f",
+      "bytes": 7443
     },
     "reproduction/stem/README.md": {
-      "sha256": "12c4b90264b413077826f9ec21225de4c6328a22ea2ea692b16cfd930ed30896",
-      "bytes": 4818
+      "sha256": "ae4318a2d99833c1b54f999e390dd8a23cc687989269a958777e92300db74a5e",
+      "bytes": 4817
     },
     "reproduction/stem/physical/audit-physics.py": {
       "sha256": "515eec6a6ce0fd45af0e91c573fc04bb765a7dbb8aa983f17165ec332dba1050",
@@ -116,5 +116,6 @@
       "bytes": 7952
     }
   },
-  "access": "Source records with git refs are available in Git; controlled artifacts require maintainer access and are not public persistent URLs. No private backend logs are included."
+  "access": "Source records with git refs are available in Git; controlled artifacts require maintainer access and are not public persistent URLs. No private backend logs are included.",
+  "byte_policy": "Dedicated Git -text archive rule preserves original source/protocol and recorded metadata bytes; validate committed blobs, not newline-normalized substitutes."
 }

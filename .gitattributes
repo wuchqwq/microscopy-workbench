@@ -17,3 +17,7 @@ docs/validation/panel-recovery/*.json -text whitespace=cr-at-eol
 # identity. Keep a Windows checkout of the same revision byte-identical; do not
 # normalize older validators or alter hashes in existing scientific records.
 tools/image_source_proof.py text eol=lf
+
+# Retrospective research records include byte-identified original generators and
+# protocols. Preserve archive and manifest bytes rather than normalizing them.
+docs/research/** -text whitespace=cr-at-eol

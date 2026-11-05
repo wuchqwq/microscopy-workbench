@@ -16,6 +16,9 @@
    [STEM原样脚本/协议](reproduction/stem/README.md)带来源hash、所需相对布局、
    固定版本和输出行为说明。它们是原样归档，**本补记没有执行这些实验**。
    必须复制到新目录，并按其README准备兄弟checkout和依赖；不要直接在此目录运行。
+   此归档目录通过专用Git属性保留原始字节；校验应比较`git show`取得的blob与
+   collection manifest。不要用自动换行转换后的哈希替代来源哈希。首个补记提交
+   之后的字节保全修正也保留在Git历史；该修正没有改变实验参数或算法。
 4. [小型基线输入及参数](reproduction/baseline-smoke/fixture.json)包含有限float64
    周期纹理代理和原质量受限STEM输入。它们只服务指定ROI工程烟测，不是方法
    头对头数据集，也不能当真实样品或盲检。数值数组应由其TIFF读取，PNG只作显示。
