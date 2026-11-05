@@ -1,0 +1,14 @@
+鉁?S2 is a separate opt-in tool; absent or unsupported prerequisites reach the worker unchanged (8.7991ms)
+鉁?S2 schema bounds sourced geometry, references and count interpretation before dispatch (5.883ms)
+鉁?legacy statistics accepts its original fields and cannot accidentally opt in to S2 (5.2778ms)
+鉁?S2 recipe declares bounded conditional measurements and original-request recovery (3.5768ms)
+鉁?S2 action mapping preserves inputs; saved-result recovery remains a query, not a new fit action (2.6007ms)
+鉁?existing statistics tool accepts bounded sourced contextual references, without physical labels (9.4494ms)
+鈩?tests 6
+鈩?suites 0
+鈩?pass 6
+鈩?fail 0
+鈩?cancelled 0
+鈩?skipped 0
+鈩?todo 0
+鈩?duration_ms 204.9304

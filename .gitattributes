@@ -23,3 +23,4 @@ tools/image_source_proof.py text eol=lf
 docs/research/** -text whitespace=cr-at-eol
 # Keep copied decision/spec evidence byte-exact across checkouts.
 docs/conditional-s2/* -text
+docs/conditional-s2/** -text

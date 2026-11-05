@@ -1,0 +1,37 @@
+{
+  "research_commit": "c9fc6bd267d67144a85a3dbb42f2049d3cdfc245",
+  "source_model_sha256": "87c0cf265e2b663e01aea622ec4b7b032930d765ea7b45697f50bb5d9088d210",
+  "unchanged_function_asts": [
+    "gaussian_pixels",
+    "background_basis",
+    "poisson_objective",
+    "fit_linear_poisson",
+    "selected_centers"
+  ],
+  "source_sha256": {
+    "tools/image_column_model.py": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+    "tools/image_column_fit.py": "1ec3cd598b8231178d6c58fb31ef6387550d213bfc1faf1e5a5c7ef90b9ae940",
+    "tools/image_workspace.py": "bce86b5bf737f9fa0dd14eab06d86da268af8a379eee5c5945e7d53d6b4c2bc8",
+    "tools/image_discovery.py": "b19c20c5f6bbbabb970f515adc80a2cb1dd77b7b1b6b644902555100c50467bd",
+    "tests/image_column_fit_test.py": "32825fac6fd9382f2ebc861f1eddd9a8bd8ff3731521d8e0c100bbbc9c408e16",
+    "tests/column-fit-contract.test.mjs": "3c461bacad258080bd23a42129540ed7a72665e0a50c0db193c30f6b2c2028f6",
+    "lib/image_workspace.mts": "9673901c53d84d5ca7ba7807b57be52caab58626582989b3b764d838671c80eb",
+    "lib/tools/image_module.mts": "8839b4723f383636bab7680cf3ecff4ebf5558b2f57097f8fcdbfae367e1de25"
+  },
+  "port_changes": "Only these five functions; removed unrelated ratio/CI diagnostic; new pre-admission and persistence adapter outside numerical core",
+  "planned_regression": [
+    "New 9 Python groups with at most16 fit calls and 3 seeded images",
+    "Directly affected legacy PointObservations only",
+    "New 5 Node contracts plus legacy point-observation contract",
+    "One bounded actual stdio handoff, at most2 additional patch fits; no GUI or broad matrix"
+  ],
+  "environment": {
+    "python": "3.13.2",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "Pillow": "11.2.1",
+    "tifffile": "2026.3.3",
+    "node": "24.16.0"
+  },
+  "physics_gate": "FAIL 10.034456% >10%; formal blind NOT_TESTED"
+}

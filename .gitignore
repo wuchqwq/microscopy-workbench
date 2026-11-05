@@ -32,3 +32,8 @@ runtime/
 # Compiled runtime and atomic build staging
 dist/
 .build/
+
+# Original validation traces can contain host/private temporary paths. Keep
+# originals locally and commit separately identified redacted copies/hashes.
+docs/conditional-s2/validation/python-attempt-*.txt
+!docs/conditional-s2/validation/python-attempt-*.redacted.txt
