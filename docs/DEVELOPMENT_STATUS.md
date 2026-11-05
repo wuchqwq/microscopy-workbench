@@ -1,10 +1,52 @@
-# Mainline consolidation and next scientific stage
+# Development status
 
-Updated 2026-11-01. This document is the current implementation index; individual
-acceptance ledgers remain historical records of the exact versions they tested.
-Mainline admission is not a new real-specimen, GUI, model or instrument qualification.
+[English](DEVELOPMENT_STATUS.md) · [简体中文](DEVELOPMENT_STATUS.zh-CN.md) · [Project overview](../README.md)
 
-## Current merged main — 2026-11-01 snapshot
+## Current verified mainline: 2026-11-05
+
+This is the current implementation index. It was checked through the GitHub connector against main [c69424ac25a35efd816d68cacd5904f5381c7485](https://github.com/wuchqwq/microscopy-workbench/commit/c69424ac25a35efd816d68cacd5904f5381c7485), merged on 2026-11-04.
+
+[PR #131](https://github.com/wuchqwq/microscopy-workbench/pull/131) preserves the reviewed workbench stack through #130 and its dependency history. Its merge message explicitly excludes independent [PR #105](https://github.com/wuchqwq/microscopy-workbench/pull/105) and the separate STEM candidate. No GitHub Release was published at this check. Source admission does not create new numerical, Agent, native-platform or real-specimen acceptance evidence.
+
+### Implemented in this mainline
+
+- The DM-free MCP scientific provider, optional Skills, local Image Panel and structured CLI share provider objects and original request journals.
+- Direct image-first ROI → FFT, multiple ROI editing, source/FFT comparison, explicit point/line measurements and conditional peak remeasurement. Basic FFT does not require an observation reason or an explicit workspace save.
+- Whole-analysis explicit savepoints, separate working edits and execution history, guarded normal reopen, crash-draft choices and original-request recovery.
+- Headless saved-ROI comparisons with independently checked source/FFT association, source-bound reports, execution-history reads and explicit missing-computation options.
+- Persistent source-proof create/info/revoke and guarded adoption. Retrospective proof retains original qualification and cannot turn a formerly unavailable FFT input into strict pre-execution reuse.
+- Bounded ROI/atlas/multiscale observations and active follow-up; conditional single-domain GPA, projected winding, finite general/twin structure comparisons and the first cross-method continuation tools.
+- A Windows Electron development entry reusing the Panel/provider, with native menus and Save / Don't Save / Cancel.
+
+See the [workflow](WORKBENCH_WORKFLOW.md), [workspace contract](ANALYSIS_WORKSPACE.md), [CLI](CLI.md), [desktop entry](DESKTOP.md) and [runtime support](CI_SUPPORT.md). Tool presence is not proof that optional dependencies or a scientific input satisfy a tool's qualification gates.
+
+### What the existing evidence actually covers
+
+| Evidence | Recorded scope | Limits |
+| --- | --- | --- |
+| [Single-image closeout](validation/single-image-closeout-20261104.md) | Public synthetic Windows desktop mouse/keyboard ROI edits, two FFTs, source comparison, peak revision, save/cancel/Don't Save/normal reopen; separate read-only source/savepoint audit | Not peak-localization accuracy, strain, real-specimen physics, clean-machine installation or full GUI usability. Exact 760×800 and narrow-window scientific editing remain untested. |
+| [Persistent source-proof acceptance](validation/persistent-source-proof-b-20261104.md) | Formal stdio MCP over existing public long histories, CLI/Panel consumers, original-qualification preservation, revocation/adoption and no new FFT during proof checks | Proof-entry native mouse flow remained NOT_TESTED after a tool safety stop. Hashes are consistency records, not signatures or independent specimen observations. |
+| [Registered Panel recovery](INSPECTOR_PANEL_RECOVERY.md) | Owned registered-helper and Inspector recovery contracts, exact checkpoint/generation and explicit evidence revalidation | Legacy unregistered archives and unsupported states are separate. A restored card can be unvalidated; no blanket cold-recovery qualification follows. |
+| Method-specific acceptance reports | Their exact numerical, protocol, model and synthetic-input scopes | Historical failures and NOT_TESTED/HOLD scopes remain in force where not superseded by specific later evidence. No universal speedup or real-material identification follows. |
+
+The closeout reports name their tested source commits and then-current branch states. Their original “unmerged” wording is historical, even when that source is now in main. They have not been rewritten or rerun for this documentation update. Candidate CI reported in a merge record is not a newly executed check on this documentation patch or a substitute for exact-head release checks.
+
+### Remaining boundaries
+
+- Automatic image-feature proposals remain **EXPERIMENTAL**, including recorded missed positives. Empty proposals do not prove a normal or uniform specimen.
+- Structure/reflection compatibility does not establish a chemical phase, 3D twin, material dislocation or coherent atomic boundary.
+- GPA requires explicit source-domain/reference assumptions; topology remains conditional projected evidence. No ptychographic reconstruction or live instrument control is included.
+- Actual human usability, current native macOS/Linux desktop qualification, real-specimen physical accuracy, clean-machine installation/distribution and upgrade recovery remain separate scopes.
+- Narrow-window/DPI behavior, original unresolved failure sites and long-history proof-reading cost retain their report-specific open limits. Later successful isolated tests do not erase an earlier failure or qualify an unvisited state.
+- Independent STEM analysis, new physical-forward/blind-test candidates and open PR results must be verified and admitted separately before being described as current mainline functionality.
+
+For current releases or another checkout, refresh its exact ref and relevant CI/acceptance records. Do not restore an old branch status from the archive below as the current truth.
+
+## Historical implementation archive
+
+The following is the earlier 2026-11-01 implementation index, preserved for source ancestry and review context. Its branch labels, “current”, “open”, “unmerged” and qualification statements apply to that historical snapshot, not to the verified mainline summary above.
+
+### Current merged main — 2026-11-01 snapshot
 
 - Main after authorized merge-commit sequence: `14613c4f5fba5af941568d5c71413928c627bd9d` (PR #48 `cc41d46` followed by #49 `14613c4`). Its Git tree equals the integrated #49 head tree; refresh the live main before release or Mac migration.
 - #44/#46/#47 implementation ancestry is already contained in #48. #46's obsolete stacked PR was closed administratively as superseded; it was **not** merged separately and must not be merged again. #45 private specimen intake remains independent and unmerged.
@@ -14,7 +56,7 @@ Mainline admission is not a new real-specimen, GUI, model or instrument qualific
 
 **Historical note:** The implementation/branch descriptions below preserve the conditions at their original review dates. Statements such as “open”, “unmerged” and “GUI gestures NOT_TESTED” apply to those earlier snapshots, **not** to the current main status above. Do not rewrite old acceptance ledgers.
 
-## Manual regions / crystal integration candidate (historical review snapshot)
+### Manual regions / crystal integration candidate (historical review snapshot)
 
 The dependent [GUI-first round 1](GUI_FIRST_ROUND1_ACCEPTANCE.md) adds visible
 ROI observations, explicit continuation, finite provider-qualified evidence,
@@ -34,7 +76,7 @@ below retain their original NOT_TESTED/failure scopes. Private-sequence data
 handoff passed locally; independent physical interpretation under #43 stays HOLD.
 See [workflow / remaining calibration-continuation boundary](MANUAL_CRYSTAL_WORKFLOW.md).
 
-## F4b manual image-first freeze (dependent review branch)
+### F4b manual image-first freeze (dependent review branch)
 
 `feature/image-first-discovery` starts from #44 at `9ca6b44`; #44 remains
 independent and unmerged unless its live PR says otherwise. The supported first
@@ -55,7 +97,7 @@ confirmed by appearance. Real experimental validation remains tracked by
 [Issue #43](https://github.com/wuchqwq/microscopy-workbench/issues/43), separately
 from this limited software freeze.
 
-## F4-full first cross-method slice (review branch)
+### F4-full first cross-method slice (review branch)
 
 `feature/f4-cross-method-loop` starts at reviewed main `9fbc769` (F3b #42,
 including its finite-direction correction). It adds three optional formal image
@@ -73,7 +115,7 @@ recovery, with global configuration unchanged. See the separate
 [authorization/performance closeout](F4_CROSS_METHOD_CLOSEOUT.md).
 GUI/real specimen work is separate; no feature PR was merged.
 
-## General crystallographic evidence review increment
+### General crystallographic evidence review increment
 
 An independent branch from main `9fbc769` adds
 [`structure_general_compare`](GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md): two adjacent
@@ -84,7 +126,7 @@ qualifications and conditional evidence. It does not inherit unmerged
 twins. [Executed acceptance](GENERAL_CRYSTALLOGRAPHIC_ACCEPTANCE.md) distinguishes
 analytic checks, actual simulations/MCP, preserved history and NOT_TESTED scopes.
 
-## Reviewed implementation ancestry
+### Reviewed implementation ancestry
 
 | Scope | Source PR | Exact reviewed source commit |
 | --- | --- | --- |
@@ -108,7 +150,7 @@ Scientific kernels, thresholds, historical arrays, journals and acceptance ledge
 are not rewritten for this landing. The landing PR must run the complete existing
 CI on its own candidate and be merged with its checked head SHA.
 
-## Scientific capability and limits
+### Scientific capability and limits
 
 F1a/F4-lite provide bounded local structure evidence and incremental follow-up;
 F2a provides conditional single-domain phase/displacement/finite-tensor fields;
@@ -127,7 +169,7 @@ and [F3a acceptance](F3A_ACCEPTANCE.md) for numerical and protocol evidence.
 Green CI means the declared automated checks passed; it is not experimental
 accuracy, independent physical confirmation or a claim of universal speedup.
 
-## Deferred qualification, not hidden completion
+### Deferred qualification, not hidden completion
 
 - Actual Panel mouse/keyboard gestures, saved peak movement and refresh remain
   NOT_TESTED where recorded. A human-led prepare/resume session can qualify them;
@@ -142,7 +184,7 @@ accuracy, independent physical confirmation or a claim of universal speedup.
 These are follow-up qualification tasks, not prerequisites for F3b algorithm
 work. No release tag or broader validation claim follows from merging the stack.
 
-## F3b first increment (review branch, Issue #41)
+### F3b first increment (review branch, Issue #41)
 
 The new `feature/f3b-twin-interface` branch starts at consolidated main
 `f0acf9e`, with no old-stack merges. It adds source-bound Sigma3 {111}
