@@ -9,6 +9,12 @@ Before choosing tools, read [bounded automation scope](references/automation-sco
 Default to explicit ROI measurements and finite hypotheses; advanced scientific
 interpretations are not automatically validated by successful tool execution.
 
+For whether baseline H0/S0 is sufficient, when to propose conditional S2, and
+when to retain UNKNOWN or request a scientific revision, read
+[conditional method selection](references/conditional-methods.md). It links the
+versioned method evidence and decision-record contract; H1/S1 remain research
+history rather than silently added production methods.
+
 
 For autonomous, evidence-grounded choices and three-layer saved results, read
 [Route A decisions](references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.

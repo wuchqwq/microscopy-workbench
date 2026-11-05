@@ -53,6 +53,12 @@ structural observations, and unchanged peak positions cannot exclude a vacancy.
 
 ## Optional conditional S2 column decomposition
 
+For deciding whether the present question needs decomposition, use
+[conditional method selection](conditional-methods.md) and its evidence index.
+Raw S0 may already answer the question; its availability is not a defect claim.
+An explicit S2 request with missing prerequisites may legally save raw + UNKNOWN.
+Keep that durable abstention separate from an available conditional fit.
+
 Keep the fixed-ROI `image_statistics` result as the default raw observation.
 When overlapping columns matter and the required scientific premises are
 available, explicitly choose `image_column_fit`. This separate tool does not

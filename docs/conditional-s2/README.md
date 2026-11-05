@@ -8,6 +8,13 @@ The optional MCP/provider kind is now implemented, with bounded validation and
 preserved first failures. See [the API](API.md), [validation](VALIDATION.md) and
 [machine-readable summary](validation/summary.json).
 
+The later method-route integration is described in
+[METHOD-ROUTING.md](METHOD-ROUTING.md), with a packaged
+[method evidence index](method-evidence-index-v1.json) and
+[decision record contract](method-decision-contract-v1.json). It preserves the
+defaults, solver/gates and saved-result qualification; it adds no classifier or
+new physical conclusion.
+
 Engineering parent: `a0258f7cb3d108fb106da6cc929af6e769c0cebf`; its production
 code equals `db2d71383bb1d3b50e8dba4701553550d016e46e`. The isolated branch is
 `feat/conditional-stem-column-fit-20261105`. Remote main was reported through

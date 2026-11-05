@@ -5,6 +5,12 @@ description: Choose composable microscopy observation, revision and crystallogra
 
 # Choose the next useful observation
 
+For HRTEM/STEM method choice, read
+[conditional method selection](../microscopy-automation/references/conditional-methods.md).
+Keep H0/S0 as the observation defaults; S2 is a separate explicit decomposition
+or saved UNKNOWN, while H1/S1 remain research history. Choose from the question
+and sourced premises, not a numerical score or an assumed defect label.
+
 For autonomous, evidence-grounded choices and three-layer saved results, read
 [Route A decisions](../microscopy-automation/references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
 

@@ -1,0 +1,744 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic call/record shapes only, not specimen settings or scientific conclusions",
+  "records": [
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-baseline-s0",
+      "selection_origin": "agent",
+      "question": "Synthetic authoring example: report signed fixed-ROI contrast",
+      "reason": "The requested observable is raw intensity; decomposition is unnecessary and physical explanation remains unknown",
+      "choice": "baseline_sufficient",
+      "method": "S0",
+      "estimand": "raw_roi_contrast",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "missing",
+          "source_text": null
+        },
+        "geometry": {
+          "status": "missing",
+          "source_text": null
+        },
+        "width_shape": {
+          "status": "missing",
+          "source_text": null
+        },
+        "reference_equivalence": {
+          "status": "missing",
+          "source_text": null
+        }
+      },
+      "prior_request": null,
+      "next_request": null,
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-baseline-h0",
+      "selection_origin": "agent",
+      "question": "Synthetic selected-core frequency observation",
+      "reason": "Read existing core evidence; arm peaks retain their own support",
+      "choice": "baseline_sufficient",
+      "method": "H0",
+      "estimand": "core_frequency",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "fft_measurement",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "missing",
+          "source_text": null
+        },
+        "geometry": {
+          "status": "missing",
+          "source_text": null
+        },
+        "width_shape": {
+          "status": "missing",
+          "source_text": null
+        },
+        "reference_equivalence": {
+          "status": "missing",
+          "source_text": null
+        }
+      },
+      "prior_request": null,
+      "next_request": null,
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-propose-s2",
+      "selection_origin": "agent",
+      "question": "Synthetic decomposition of central component versus overlap",
+      "reason": "Overlap motivates a different conditional observable alongside the saved raw baseline",
+      "choice": "conditional_s2",
+      "method": "S2",
+      "estimand": "central_component",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "supplied",
+          "source_text": "Synthetic generator produces independent Poisson counts; no specimen acquisition claim"
+        },
+        "geometry": {
+          "status": "supplied",
+          "source_text": "Synthetic supplied fixed sites and all model neighbours on the saved spatial grid"
+        },
+        "width_shape": {
+          "status": "supplied",
+          "source_text": "Synthetic fixed Gaussian sigma=1 pixel supplied; physical shape adequacy NOT_ASSESSED"
+        },
+        "reference_equivalence": {
+          "status": "supplied",
+          "source_text": "Synthetic same-class references supplied by design; same-image patches are correlated"
+        }
+      },
+      "prior_request": null,
+      "next_request": {
+        "tool": "image_column_fit",
+        "request_id": "synthetic-s2-new"
+      },
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-save-unknown",
+      "selection_origin": "agent",
+      "question": "Synthetic decomposition of central component versus overlap",
+      "reason": "Count interpretation is unavailable; deliberately persist raw + UNKNOWN without inventing it",
+      "choice": "save_s2_unknown",
+      "method": "S2",
+      "estimand": "central_component",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "missing",
+          "source_text": null
+        },
+        "geometry": {
+          "status": "supplied",
+          "source_text": "Synthetic supplied fixed sites and all model neighbours on the saved spatial grid"
+        },
+        "width_shape": {
+          "status": "supplied",
+          "source_text": "Synthetic fixed Gaussian sigma=1 pixel supplied; physical shape adequacy NOT_ASSESSED"
+        },
+        "reference_equivalence": {
+          "status": "supplied",
+          "source_text": "Synthetic same-class references supplied by design; same-image patches are correlated"
+        }
+      },
+      "prior_request": null,
+      "next_request": {
+        "tool": "image_column_fit",
+        "request_id": "synthetic-unknown-original"
+      },
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-saved-unknown",
+      "selection_origin": "agent",
+      "question": "Synthetic decomposition of central component versus overlap",
+      "reason": "Count interpretation is unavailable; deliberately persist raw + UNKNOWN without inventing it",
+      "choice": "save_s2_unknown",
+      "method": "S2",
+      "estimand": "central_component",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "column_fit_raw",
+        "object_id": "dddddddddddddddddddddddddddddddd",
+        "request_id": "synthetic-unknown-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "missing",
+          "source_text": null
+        },
+        "geometry": {
+          "status": "supplied",
+          "source_text": "Synthetic supplied fixed sites and all model neighbours on the saved spatial grid"
+        },
+        "width_shape": {
+          "status": "supplied",
+          "source_text": "Synthetic fixed Gaussian sigma=1 pixel supplied; physical shape adequacy NOT_ASSESSED"
+        },
+        "reference_equivalence": {
+          "status": "supplied",
+          "source_text": "Synthetic same-class references supplied by design; same-image patches are correlated"
+        }
+      },
+      "prior_request": null,
+      "next_request": null,
+      "revision_of_request_id": null,
+      "saved_result": {
+        "object_id": "dddddddddddddddddddddddddddddddd",
+        "request_id": "synthetic-unknown-original",
+        "status": "unknown",
+        "comparison_status": "unknown"
+      },
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-saved-conditional",
+      "selection_origin": "agent",
+      "question": "Synthetic decomposition of central component versus overlap",
+      "reason": "Numerical result is available under supplied premises; physical interpretation stays UNKNOWN",
+      "choice": "conditional_s2",
+      "method": "S2",
+      "estimand": "central_component",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "supplied",
+          "source_text": "Synthetic generator produces independent Poisson counts; no specimen acquisition claim"
+        },
+        "geometry": {
+          "status": "supplied",
+          "source_text": "Synthetic supplied fixed sites and all model neighbours on the saved spatial grid"
+        },
+        "width_shape": {
+          "status": "supplied",
+          "source_text": "Synthetic fixed Gaussian sigma=1 pixel supplied; physical shape adequacy NOT_ASSESSED"
+        },
+        "reference_equivalence": {
+          "status": "supplied",
+          "source_text": "Synthetic same-class references supplied by design; same-image patches are correlated"
+        }
+      },
+      "prior_request": null,
+      "next_request": null,
+      "revision_of_request_id": null,
+      "saved_result": {
+        "object_id": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "request_id": "synthetic-s2-new",
+        "status": "available",
+        "comparison_status": "available"
+      },
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-retain-unknown",
+      "selection_origin": "agent",
+      "question": "Synthetic authoring example: report signed fixed-ROI contrast",
+      "reason": "Raw contrast is reportable; ask for the missing count interpretation only if decomposition is still wanted",
+      "choice": "retain_unknown",
+      "method": "S0",
+      "estimand": "raw_roi_contrast",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "missing",
+          "source_text": null
+        },
+        "geometry": {
+          "status": "missing",
+          "source_text": null
+        },
+        "width_shape": {
+          "status": "missing",
+          "source_text": null
+        },
+        "reference_equivalence": {
+          "status": "missing",
+          "source_text": null
+        }
+      },
+      "prior_request": null,
+      "next_request": null,
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-history-h1",
+      "selection_origin": "agent",
+      "question": "Synthetic authoring example: report signed fixed-ROI contrast",
+      "reason": "Frozen analytic research history only; no production dispatch or default promotion",
+      "choice": "research_only",
+      "method": "H1",
+      "estimand": "core_frequency",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "missing",
+          "source_text": null
+        },
+        "geometry": {
+          "status": "missing",
+          "source_text": null
+        },
+        "width_shape": {
+          "status": "missing",
+          "source_text": null
+        },
+        "reference_equivalence": {
+          "status": "missing",
+          "source_text": null
+        }
+      },
+      "prior_request": null,
+      "next_request": null,
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-history-s1",
+      "selection_origin": "agent",
+      "question": "Synthetic authoring example: report signed fixed-ROI contrast",
+      "reason": "Frozen analytic research history only; no production dispatch or default promotion",
+      "choice": "research_only",
+      "method": "S1",
+      "estimand": "central_component",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "missing",
+          "source_text": null
+        },
+        "geometry": {
+          "status": "missing",
+          "source_text": null
+        },
+        "width_shape": {
+          "status": "missing",
+          "source_text": null
+        },
+        "reference_equivalence": {
+          "status": "missing",
+          "source_text": null
+        }
+      },
+      "prior_request": null,
+      "next_request": null,
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-recover",
+      "selection_origin": "agent",
+      "question": "Synthetic decomposition of central component versus overlap",
+      "reason": "Lost response: query the original request, without refitting",
+      "choice": "recover_original",
+      "method": "S2",
+      "estimand": "central_component",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "supplied",
+          "source_text": "Synthetic generator produces independent Poisson counts; no specimen acquisition claim"
+        },
+        "geometry": {
+          "status": "supplied",
+          "source_text": "Synthetic supplied fixed sites and all model neighbours on the saved spatial grid"
+        },
+        "width_shape": {
+          "status": "supplied",
+          "source_text": "Synthetic fixed Gaussian sigma=1 pixel supplied; physical shape adequacy NOT_ASSESSED"
+        },
+        "reference_equivalence": {
+          "status": "supplied",
+          "source_text": "Synthetic same-class references supplied by design; same-image patches are correlated"
+        }
+      },
+      "prior_request": {
+        "request_id": "synthetic-unresolved-original",
+        "outcome": "unknown",
+        "locator": {
+          "provider": "image",
+          "workspace": "synthetic-public-workspace",
+          "session_id": "synthetic-session"
+        }
+      },
+      "next_request": {
+        "tool": "image_result",
+        "request_id": "synthetic-unresolved-original"
+      },
+      "revision_of_request_id": null,
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    },
+    {
+      "version": "method-decision-v1",
+      "method_index_version": "method-evidence-index-v1",
+      "decision_id": "synthetic-revision",
+      "selection_origin": "agent",
+      "question": "Synthetic decomposition of central component versus overlap",
+      "reason": "Deliberately changed supplied width after a known outcome; preserve and link the prior fit",
+      "choice": "conditional_s2",
+      "method": "S2",
+      "estimand": "central_component",
+      "source": {
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source_object_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "frame_index": 0,
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "calibration_object_id": null
+      },
+      "baseline_evidence": {
+        "kind": "raw_statistics",
+        "object_id": "cccccccccccccccccccccccccccccccc",
+        "request_id": "synthetic-raw-original"
+      },
+      "premises": {
+        "counts": {
+          "status": "supplied",
+          "source_text": "Synthetic generator produces independent Poisson counts; no specimen acquisition claim"
+        },
+        "geometry": {
+          "status": "supplied",
+          "source_text": "Synthetic supplied fixed sites and all model neighbours on the saved spatial grid"
+        },
+        "width_shape": {
+          "status": "supplied",
+          "source_text": "Synthetic fixed Gaussian sigma=1 pixel supplied; physical shape adequacy NOT_ASSESSED"
+        },
+        "reference_equivalence": {
+          "status": "supplied",
+          "source_text": "Synthetic same-class references supplied by design; same-image patches are correlated"
+        }
+      },
+      "prior_request": {
+        "request_id": "synthetic-prior-fit",
+        "outcome": "completed",
+        "locator": {
+          "provider": "image",
+          "workspace": "synthetic-public-workspace",
+          "session_id": "synthetic-session"
+        }
+      },
+      "next_request": {
+        "tool": "image_column_fit",
+        "request_id": "synthetic-s2-new"
+      },
+      "revision_of_request_id": "synthetic-prior-fit",
+      "saved_result": null,
+      "physical_status": "UNKNOWN",
+      "locator": {
+        "provider": "image",
+        "workspace": "synthetic-public-workspace",
+        "session_id": "synthetic-session"
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "image_statistics",
+      "arguments": {
+        "request_id": "synthetic-raw-original",
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "reference_comparison": {
+          "reference_rects": [
+            [
+              38,
+              18,
+              43,
+              23
+            ]
+          ],
+          "source_text": "Synthetic fixed same-class assumption; not physically verified"
+        }
+      }
+    },
+    {
+      "tool": "image_column_fit",
+      "arguments": {
+        "request_id": "synthetic-unknown-original",
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "reference_comparison": {
+          "reference_rects": [
+            [
+              38,
+              18,
+              43,
+              23
+            ]
+          ],
+          "source_text": "Synthetic fixed same-class assumption; not physically verified"
+        }
+      }
+    },
+    {
+      "tool": "image_column_fit",
+      "arguments": {
+        "request_id": "synthetic-unsupported-original",
+        "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "rect": [
+          18,
+          18,
+          23,
+          23
+        ],
+        "reference_comparison": {
+          "reference_rects": [
+            [
+              38,
+              18,
+              43,
+              23
+            ]
+          ],
+          "source_text": "Synthetic fixed same-class assumption; not physically verified"
+        },
+        "count_interpretation": {
+          "model": "normalized_brightness",
+          "source_text": "Explicitly unsupported brightness interpretation; preserve UNKNOWN"
+        }
+      }
+    },
+    {
+      "tool": "image_result",
+      "arguments": {
+        "request_id": "synthetic-unresolved-original"
+      }
+    }
+  ]
+}

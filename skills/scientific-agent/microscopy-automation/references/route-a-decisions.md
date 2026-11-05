@@ -24,6 +24,11 @@ significance. Do not invent SNR, uncertainty, probability or false-discovery rat
 
 ## Choose, execute and record
 
+For HRTEM/STEM method choices, use the
+[conditional-method decision contract](conditional-methods.md). It supplements
+the notes below with explicit baseline/S2/UNKNOWN and original-request states;
+it does not add a scientific authority or an automatic method selector.
+
 Use existing ROI/annotation notes and object references, not a new candidate
 store. Record a compact sequence in a note and the analysis answer:
 
