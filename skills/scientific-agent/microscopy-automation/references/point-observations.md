@@ -51,6 +51,80 @@ conditional evidence; do not discard the whole FFT or simply raise its cap as
 a point-defect solution. Positive/negative conjugate peaks are not independent
 structural observations, and unchanged peak positions cannot exclude a vacancy.
 
+## Optional conditional S2 column decomposition
+
+Keep the fixed-ROI `image_statistics` result as the default raw observation.
+When overlapping columns matter and the required scientific premises are
+available, explicitly choose `image_column_fit`. This separate tool does not
+change old statistics or HRTEM requests. It is not a substitute for checking the
+source image, reference equivalence or the image-formation assumptions.
+
+Supply the exact saved spatial scalar `object_id`, a fixed 5x5 primary `rect`
+and `reference_comparison` with 1..8 distinct same-image 5x5 reference rectangles
+and actual `source_text`. Rectangles use half-open source-pixel edges, not PNG
+coordinates. The worker takes a fixed surrounding 9x9 fit support without
+clipping. An edge site without that support is unavailable; do not move its
+readout to make fitting succeed.
+
+`geometry.site_centers_xy` contains fixed source-pixel X,Y centres, primary
+first and then the references in exactly their rectangle order.
+`geometry.supplied_columns_xy` lists the supplied columns on the same grid,
+including those sites; its bound is 256. Provide one positive `sigma_pixels`
+and actual geometry/width `source_text`. These are caller-supplied assumptions.
+The method does not optimize centres or widths, find a missing site's location,
+verify a column type or silently replace a site by a nearby bright maximum.
+Duplicate, excessive or underdetermined geometry is refused before fitting.
+
+The narrow supported noise declaration is
+`count_interpretation.model:"independent_poisson_counts"`, with actual
+`source_text` explaining the acquisition/count interpretation. Admitted pixels
+must be finite, nonnegative and integer valued. Integer dtype alone does not
+establish electron counts or independent Poisson noise. Do not relabel arbitrary
+brightness, normalized, denoised or background-subtracted values as counts; this
+increment performs no gain, exposure or count-scale conversion. Missing geometry
+or an unsupported noise interpretation saves the raw measurements with an
+explicit S2 UNKNOWN rather than supplying a guessed model.
+
+S2 fits nonnegative amplitudes of pixel-integrated isotropic Gaussian columns
+and four nonnegative bilinear corner-background functions. Every supplied
+neighbour whose Gaussian mass in that patch is at least 0.005 is included;
+there is no centre-distance prefilter. "Joint" describes the column amplitudes
+within each patch. Target and reference patches are separate fits, may reuse
+overlapping pixels and do not define a global independent joint likelihood.
+The request performs at most nine patch fits with the recorded solver limits
+and convergence gates.
+
+Read three different quantities separately:
+
+- Raw 5x5 ROI mean and target-minus-reference-median, preserving the baseline.
+- Fitted total 5x5 mean, including background and neighbours, and its contrast.
+- Central-column integral, defined by the Gaussian's unit whole-plane integral
+  and extrapolated from finite fit support, and its contrast. This is neither
+  the directly observed 5x5 sum nor the 9x9 sum.
+
+Inspect individual site status as well as whole-comparison status. A usable
+target does not rescue a failed reference: every requested target/reference fit
+must qualify before either fitted contrast is available. Keep failures, zero
+counts, missing prerequisites and rank/budget reasons visible; do not drop a
+reference, relax gates or expose a failed coefficient as an accepted measurement.
+Numerical full rank and optimizer convergence establish neither statistical nor
+physical identifiability. Wrong widths, geometry or peak shapes can give biased
+values even when numerical checks pass. No calibrated CI, p-value, occupancy,
+chemical identity, phase, vacancy probability or defect classification follows.
+
+Save the original request ID before fitting. `image_info`, `image_result` and
+`image_export` read and verify saved input/result identities without rerunning
+the optimizer. An unknown request is not permission to retry it under a new ID.
+Changed geometry, width, references or count interpretation needs a deliberate
+new request; preserve the earlier evidence. This initial MCP/Skill increment
+adds no Panel result editor, automatic Panel savepoint slot or AnalysisContext
+role. Keep its provider object/request references explicitly; do not place it
+in the old statistics slot. `image_discovery_review` can attach its saved
+conditional numerical evidence to the exact primary ROI and declared 9x9
+context; it does not qualify the physical model or interpretation. The original
+physical convergence gate remains 10.034456% >10%, FAIL, and
+formal physical blind acceptance remains NOT_TESTED.
+
 Report signed raw mean differences and fixed support, not occupancy, electron
 counts, calibrated confidence or vacancy probabilities. A weak projected column
 can arise from composition, thickness, channeling, tilt, scan/background,

@@ -1,0 +1,8 @@
+test_independent_count_truth_raw_baseline_and_distinct_readouts (image_column_fit_test.ConditionalColumnFit.test_independent_count_truth_raw_baseline_and_distinct_readouts) ... ok
+test_historical_read_recovery_export_review_and_original_request_never_refit (image_column_fit_test.ConditionalColumnFit.test_historical_read_recovery_export_review_and_original_request_never_refit) ... ok
+test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence (image_column_fit_test.ConditionalColumnFit.test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 2.250s
+
+OK

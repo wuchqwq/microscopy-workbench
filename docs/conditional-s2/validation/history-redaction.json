@@ -1,0 +1,9 @@
+{
+  "scope": "Only unpublished local S2 documentation history was rewritten for complete host-path redaction",
+  "original_commit": "b4afa342023e3075b9522012921f6e26bb64bb3c",
+  "preserved_local_only_ref": "refs/local-evidence/s2-amendment-before-redaction",
+  "portable_replacement_commit": "7c0be096f19a0535a815840573b2c79036b51937",
+  "original_raw_trace_hashes_unchanged": true,
+  "scientific_results_or_model_changed": false,
+  "bundle_rule": "Explicit clean feature branch range only; never --all; original local-evidence ref must not be included"
+}

@@ -4,6 +4,9 @@ The accepted route keeps baseline HRTEM peak observation and STEM S0 fixed ROI
 statistics as defaults. An explicit `image_column_fit` tool adds conditional S2
 measurements. It is not an automatic occupancy, defect or phase classifier.
 The scientific contract in this directory was committed before implementation.
+The optional MCP/provider kind is now implemented, with bounded validation and
+preserved first failures. See [the API](API.md), [validation](VALIDATION.md) and
+[machine-readable summary](validation/summary.json).
 
 Engineering parent: `a0258f7cb3d108fb106da6cc929af6e769c0cebf`; its production
 code equals `db2d71383bb1d3b50e8dba4701553550d016e46e`. The isolated branch is
@@ -28,7 +31,7 @@ Byte-exact route evidence copied here:
 
 The research numerical model has SHA256
 `87c0cf265e2b663e01aea622ec4b7b032930d765ea7b45697f50bb5d9088d210`.
-Only its fixed S2 numerical functions will be ported. Operational bounds are
+Its five fixed S2 numerical functions were ported without AST changes. Operational bounds are
 checked before its rank test/optimizer; the separate confidence diagnostic is
 excluded. Numerical convergence is conditional on unverified caller assumptions.
 

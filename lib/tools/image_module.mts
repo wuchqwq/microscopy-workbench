@@ -45,6 +45,13 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
     kind:'measurement-record-write',gates:['NumPy float64 finite reductions; ddof0; original scientific samples, never display values; complex component explicit'],
     budgets:['One admitted bounded plane/ROI; original request ID recovery and no source mutation'],
   },
+  image_column_fit: {
+    inputs:['ScientificArrayRef:exact saved spatial scalar plane','FixedReadouts:primary plus1..8 ordered same-image 5x5 reference ROIs','OptionalCallerAssumptions:fixed source-pixel column centres/common sigma and explicit count/noise source; neither is inferred or verified'],
+    outputs:['ColumnFitRef:saved raw ROI means, full fitted ROI means and central-column whole-plane integrals extrapolated by a unit-integral Gaussian, kept distinct','PerSiteEligibility and WholeComparisonEligibility:every requested site must qualify; saved UNKNOWN retains raw baseline evidence'],
+    kind:'measurement-record-write',
+    gates:['Explicit opt-in only; old statistics and HRTEM requests remain unchanged','Supported path requires caller independent_poisson_counts interpretation and finite nonnegative integer-valued pixels; dtype alone does not establish counts; no gain/exposure conversion','Fixed pixel-integrated isotropic Gaussian columns plus four nonnegative bilinear backgrounds; all supplied neighbours with integrated support mass >=0.005; no centre or width refinement','Dimensions, duplicate geometry and coefficient budget checked before SVD/optimization; numerical rank and convergence do not establish statistical or physical identifiability','Immutable stored input/request/result verification on info, recovery and export; no optimizer replay or new Panel/AnalysisContext slot; no CI, occupancy, phase or defect classification'],
+    budgets:['At most256 supplied column centres; each design has Gaussian columns plus4 backgrounds strictly fewer than81 pixels before SVD','Primary plus1..8 references; at most9 patch fits, each fixed9x9 support with central5x5 readout; no boundary clipping','Existing research solver limits and gates; original request ID recovery without automatic retry'],
+  },
   image_profile: {
     inputs:['ScientificArrayRef:exact immutable plane','PointPair:domain-bound endpoints and explicit sampling'],
     outputs:['ProfileRef:saved NPY/CSV plus coordinates, original-array samples, calibration and component provenance'],

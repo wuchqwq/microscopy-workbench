@@ -194,6 +194,20 @@ def _evidence(workspace, ids, source, rect, api):
     for ident in ids:
         record, directory = workspace.object(ident)
         kind = record["kind"]
+        if kind == "column_fit":
+            # object() has verified saved input/coefficient/result relations.
+            # This path must never execute the optimizer during a review/read.
+            origin, _ = _source(workspace, record["parent_object_id"], api)
+            api.need(origin["science"] == source["science"] and record["coordinate_space"] == "source_pixels" and
+                     record["source_rect_xyxy"] == rect and
+                     api.calibration.dependency(record.get("xy_calibration")) == source["science"]["calibration_dependency"],
+                     "Column-fit evidence has a different source/frame/ROI/calibration", "DISCOVERY_SCOPE_MISMATCH")
+            refs.append(_dep(record, directory, api))
+            observations.append(dict(object_id=ident, kind=kind, support="exact_candidate_readout_with_declared_9x9_fit_context",
+                coordinate_space=record["coordinate_space"], component="raw", scientific_grid_identity=record["scientific_grid_identity"],
+                numerical_evidence={k:copy.deepcopy(record[k]) for k in ("raw_baseline", "raw_baseline_status", "sites", "whole_comparison", "assumptions", "limitations")},
+                interpretation_status="hypothesized"))
+            continue
         if kind in ("statistics", "profile"):
             observed = api.numeric.committed_observation(workspace, record, api)
             origin, _ = _source(workspace, record["parent_object_id"], api)

@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "seconds": 26.087,
+  "calls": [
+    "image_open",
+    "image_frame",
+    "image_statistics",
+    "image_column_fit",
+    "image_result",
+    "image_info",
+    "image_export",
+    "image_discovery",
+    "image_discovery_review"
+  ],
+  "fit_calls": 2,
+  "optimizer_calls": 2,
+  "source_sha256": "6aefa7a8bca478fab090964e6f6b54b8aae4f569321572a776160ae615e138b1",
+  "source_reused_from": "Accepted original target9x9 repeated by translation to reference; identical patch bytes, not independent observations or an accuracy positive",
+  "result_kind": "column_fit",
+  "result_id": "02d0507ac1674c22afa16c196b66b2d3",
+  "export_sha256": "f010e66a62d36c2a9a469e9bb8e220a45cd72232adf8e67cb1adf8e821c04424",
+  "baseline_preserved": true,
+  "restart_recovery": true,
+  "review_is_verification": false,
+  "panel": "NOT_TESTED; no new Panel slot",
+  "physical_validation": "NOT_TESTED"
+}

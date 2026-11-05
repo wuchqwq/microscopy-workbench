@@ -1,0 +1,44 @@
+{
+  "status": "IMPLEMENTED_AND_BOUNDED_REGRESSION_COMPLETE",
+  "initial_permission_failure_preserved": true,
+  "initial_bad_whole_row_test_assumption_preserved": true,
+  "old_diagnostics": "UNKNOWN_NO_SAVED_DIAGNOSTIC",
+  "new_diagnostic_is_original": false,
+  "python": {
+    "original_attempt_2": {
+      "passed": 14,
+      "failed": 3,
+      "fits": 16,
+      "optimizers": 13
+    },
+    "affected_followup": {
+      "passed": 3,
+      "failed": 0,
+      "fits": 2,
+      "optimizers": 2
+    },
+    "legacy8_rerun": false
+  },
+  "node_contracts": {
+    "passed": 6,
+    "failed": 0,
+    "rerun": false
+  },
+  "stdio": {
+    "status": "PASS",
+    "fits": 2,
+    "optimizers": 2,
+    "repeated_patch_not_accuracy_positive": true
+  },
+  "zero_fit_post_amendment_checks": "PASS",
+  "total_fit_calls": 20,
+  "total_optimizer_calls": 17,
+  "new_physical_simulations": 0,
+  "training": false,
+  "panel_auto_slot": "NOT_INTEGRATED",
+  "full_ci": "NOT_TESTED locally",
+  "physics_gate": "FAIL:10.034456percent>10percent",
+  "formal_physical_blind_acceptance": "NOT_TESTED",
+  "all_started_validation_build_and_stdio_processes": "EXITED",
+  "push_or_merge": false
+}

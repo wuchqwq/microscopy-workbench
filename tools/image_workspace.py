@@ -30,6 +30,7 @@ if __package__:
     from .image_annotation_updates import plan_annotation_updates
     from . import image_calibration as calibration
     from . import image_numeric as numeric
+    from . import image_column_fit as column_fit
     from . import image_dm as dmfile
     from . import image_peaks as peaks
     from . import image_automation as automation
@@ -54,6 +55,7 @@ else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
     import image_numeric as numeric
+    import image_column_fit as column_fit
     import image_dm as dmfile
     import image_peaks as peaks
     import image_automation as automation
@@ -81,6 +83,7 @@ MAX_JSON_BYTES = 2 * 1024 * 1024
 REQUEST_ID = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 OBJECT_ID = re.compile(r"[a-f0-9]{32}\Z")
 FIELDS = {
+    **column_fit.FIELDS,
     **automation.FIELDS,
     **sequence.FIELDS,
     **joint.FIELDS,
@@ -634,6 +637,8 @@ class Workspace:
                 method_loop.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in discovery.FIELDS:
                 discovery.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in column_fit.FIELDS:
+                column_fit.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in topology.FIELDS:
                 topology.validate_references(self, metadata, sys.modules[__name__])
             # Cache completed qualifications only, bounded in count and bytes.
@@ -994,7 +999,7 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("preview_admission.py", "result_semantics.py", "image_observation_contract.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
+                                                                       ("preview_admission.py", "result_semantics.py", "image_observation_contract.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_column_fit.py", "image_column_model.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
         intent_path = self.root / "preview-admission-v1" / "intents" / (metadata["request_id"] + ".json")
         if intent_path.exists():
             admitted = preview_admission._intent(self.root / "preview-admission-v1", metadata["request_id"], sys.modules[__name__])
@@ -1215,6 +1220,8 @@ class Workspace:
                             next_step="image_preview on this wrapper to redraw physical scale/axes; image_measure to calculate geometry with the selected record")
         elif action == "peaks":
             metadata = peaks.run(self, request, ident, directory, metadata, sys.modules[__name__])
+        elif action == "column_fit":
+            metadata = column_fit.run(self, request, ident, directory, metadata, sys.modules[__name__])
         elif action in ("statistics", "profile"):
             metadata.update(parent_object_id=request["object_id"])
             if action == "statistics":
@@ -1592,8 +1599,8 @@ class Workspace:
                 need(scientific.get("display_calibration_id") == (record["calibration_id"] if record else None),
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
-            numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "statistics-comparison.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
+            numeric_result = scientific["kind"] in ("statistics", "profile", "column_fit")
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and (name in ("statistics.json", "statistics-comparison.json", "profile.csv") or scientific["kind"] == "column_fit" and name.startswith("column-fit") and name.endswith(".json")) or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")

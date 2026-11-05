@@ -53,6 +53,12 @@ For atomic-resolution STEM or a suspected missing/weak projected column, read
 the same discovery/statistics/profile/review chain from either Agent-selected
 or researcher-selected attention. FFT peak positions alone cannot exclude a
 point defect. This is numerical observation, not a trained vacancy detector.
+That reference also describes explicit `image_column_fit` S2 decomposition when
+the caller supplies sourced count interpretation, fixed geometry and width.
+Keep raw ROI observation as default; unavailable premises remain UNKNOWN, and
+fitted components are not occupancy or defect classifications. This optional
+tool persists through the provider journal, without a new Panel editor or
+AnalysisContext role.
 
 ## Budgeted active follow-up
 
