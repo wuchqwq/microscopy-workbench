@@ -70,6 +70,12 @@ Keep these distinct, with their units and eligibility:
 3. S2 central-column integral and its target-minus-reference-median only when
    target and every requested reference component qualify.
 
+The Gaussian basis has unit integral over the whole plane. Its coefficient is
+therefore a model-extrapolated whole-plane column integral, not the directly
+observed sum in the finite 5x5 or 9x9 support. Dividing by the captured Gaussian
+mass is one reason width/shape assumptions matter. State this meaning explicitly
+with the component output; do not label it an observed atom count or ROI sum.
+
 Per-site results and whole-comparison availability are separate. A usable target
 fit cannot mask a failed reference. Expose zero-count, rank, budget and optimizer
 failures as UNKNOWN, including diagnostic numeric evidence where appropriate,
