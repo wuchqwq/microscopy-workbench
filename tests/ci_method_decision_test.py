@@ -4,6 +4,8 @@ import importlib.util
 import json
 from pathlib import Path
 import subprocess
+import shutil
+import re
 import sys
 import tempfile
 import unittest
@@ -175,6 +177,33 @@ class MethodDecisionContractTests(unittest.TestCase):
         record["premises"]["width_shape"]["source_text"] = "Width supplied; shape adequacy NOT_ASSESSED"
         checker.validate_record(record)
 
+    def test_standalone_resources_are_byte_identical_to_repository_evidence(self):
+        for name in ("method-decision-contract-v1.json", "method-evidence-index-v1.json", "method-selection-v1.json", "research-selection-spec-v1.json", "READBACK-P2-BOUNDARY.md"):
+            self.assertEqual((SCRIPT.parent.parent / "references" / name).read_bytes(), (ROOT / "docs/conditional-s2" / name).read_bytes(), name)
+
+    def test_selected_skill_alone_relocates_and_checks_real_records(self):
+        with tempfile.TemporaryDirectory(prefix="standalone-method-skill-") as folder:
+            selected = Path(folder) / "selected-skill"
+            shutil.copytree(SCRIPT.parent.parent, selected, ignore=shutil.ignore_patterns("__pycache__"))
+            reference = selected / "references"
+            for link in re.findall(r"\[[^\]]*\]\(([^\s)]+)\)", (reference / "conditional-methods.md").read_text(encoding="utf-8")):
+                self.assertTrue((reference / link).resolve().is_relative_to(selected))
+                self.assertTrue((reference / link).exists(), link)
+            before = {str(p.relative_to(selected)): p.read_bytes() for p in selected.rglob("*") if p.is_file()}
+            for name, invalid in (("synthetic-baseline-s0", False), ("synthetic-recover", False), ("synthetic-recover", True)):
+                record = self.record(name)
+                if invalid:
+                    record["next_request"]["request_id"] = "different-original-id"
+                record_path = Path(folder) / "record.json"
+                record_path.write_text(json.dumps(record), encoding="utf-8")
+                result = subprocess.run([sys.executable, "-B", str(selected / "scripts/check_method_decision.py"), str(record_path)], cwd=folder, capture_output=True, text=True, check=False)
+                self.assertEqual(result.returncode, 1 if invalid else 0, result.stderr)
+                payload = json.loads(result.stderr if invalid else result.stdout)
+                self.assertEqual(payload["valid"], not invalid)
+                if invalid:
+                    self.assertIn("exact original ID", payload["error"])
+            self.assertEqual(before, {str(p.relative_to(selected)): p.read_bytes() for p in selected.rglob("*") if p.is_file()})
+
     def test_cli_reads_a_record_without_writing_or_executing_science(self):
         with tempfile.TemporaryDirectory(prefix="method-record-") as folder:
             record_path = Path(folder) / "decision.json"
@@ -189,3 +218,4 @@ class MethodDecisionContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

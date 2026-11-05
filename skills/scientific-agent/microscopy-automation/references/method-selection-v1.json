@@ -1,0 +1,135 @@
+{
+  "schema_version": "method-selection-v1",
+  "status": "COMPLETED_ANALYTIC_COMPARISON_AND_METHOD_SELECTION",
+  "baseline_code": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+  "baseline_archive": "a0258f7cb3d108fb106da6cc929af6e769c0cebf",
+  "scope": {
+    "modalities": ["HRTEM analytic spectral proxy", "STEM analytic image proxy"],
+    "design_pairs_per_modality": 12,
+    "design_states_per_modality": 24,
+    "observations_per_modality": 1464,
+    "observations_total": 2928,
+    "clean_entries_total": 48,
+    "poisson_draws_total": 2880,
+    "main_method_rows": 7320,
+    "supplement_method_rows": 1280,
+    "stem_main_and_supplement_patch_fits": 31068,
+    "hrtem_main_and_supplement_optimizer_calls": 1378,
+    "counting_note": "Pair IDs and paired states reuse some base expected images. These are not 12 independent specimens or 24 unique structures per modality. Fits exclude development checks. Supplements reuse 128 observations per modality rather than generate new data.",
+    "training": "NONE",
+    "new_physical_simulations": 0,
+    "automatic_atom_discovery": "NOT_TESTED",
+    "physical_HRTEM_transfer_validation": "NOT_TESTED",
+    "real_specimen_defect_accuracy": "NOT_TESTED",
+    "PCA_NMF_comparison": "NOT_TESTED",
+    "full_AI_Skill_MCP_workflow_comparison": "NOT_TESTED"
+  },
+  "selection": {
+    "default": "Keep H0/S0 from the stable baseline as the main observation and measurement path. This is a choice among tested candidates, not proof of physical accuracy.",
+    "H1": "Do not replace default H0 with this bounded Hann-squared variable-projection prototype. Preserve as an explicitly conditional research option for strong isolated stationary frequencies. Do not generalize this result to all continuous-frequency estimators.",
+    "S1": "Do not prioritize as a standalone default replacement. Limited gains in total-ROI noise averaging are offset by model mismatch and it does not consistently provide the central-component benefit sought from S2.",
+    "S2": "Preserve as the most useful optional development route for separating central-column signal from neighbour/background contributions, alongside raw S0 observations. Current numerical coverage and supplied-shape assumptions prevent default promotion or occupancy/defect claims.",
+    "context_windows": "Retain core/horizontal/vertical support identity. Use context for corroboration and mixture detection; a frequency supported by an arm is not automatically a frequency belonging to the core.",
+    "implementation_status": "Recommendations only; no production change, push or merge in this research task."
+  },
+  "primary_HRTEM": {
+    "estimator": "Same baseline FFT candidates followed by bounded joint continuous frequency refinement; linear amplitudes and plane eliminated by variable projection.",
+    "strict_H1_qualified": 427,
+    "denominator": 1464,
+    "fallback_to_H0": 1037,
+    "unknown_reasons": {"boundary": 706, "mode_budget": 319, "rank": 9, "no_candidates": 3},
+    "examples": [
+      {"pair_id": "H01", "count_level": 100, "common_eligible_observations": 40, "observation_denominator": 40, "same_association_modes": 40, "H0_rmse_bins": 0.019682410390660064, "H1_rmse_bins": 0.014447354380003117, "interpretation": "High-count isolated-frequency gain under the supplied analytic model."},
+      {"pair_id": "H01", "count_level": 1, "common_eligible_observations": 10, "observation_denominator": 40, "same_association_modes": 10, "H0_rmse_bins": 0.11474174923870123, "H1_rmse_bins": 0.14938175014799374, "interpretation": "Worse conditional error at low counts, with 30 additional observations falling back."},
+      {"pair_id": "H04", "count_level": "clean", "same_association_modes": 3, "H0_rmse_bins_rounded": 0.146794, "H1_rmse_bins_rounded": 0.180300, "interpretation": "Near-frequency counterexample remains even without random noise."}
+    ],
+    "interpretation_limits": [
+      "Errors compare the same candidate/truth associations and include eligibility denominators; no pooled score selects a winner.",
+      "Some nonperiodic controls also converge. Numerical convergence is not evidence of physical periodicity or a calibrated detection probability.",
+      "Cause of failures has not been separated among nuisance candidates, weighting, bounds and nonlinear conditioning. Do not assert a unique cause.",
+      "Clean near-exact sinusoid recovery is analytic-model recovery, not a demonstrated gain in physical resolution."
+    ]
+  },
+  "primary_STEM": {
+    "common_estimand": "Exposure-normalized full 5x5 expected intensity, including background and neighbours, then target mean minus median of eight reference means.",
+    "full_observation_denominator": 1464,
+    "supplied_geometry_denominator": 1342,
+    "designed_no_geometry_observations": 122,
+    "eligible": {"S0_full": 1464, "S1_with_geometry": 1309, "S2_with_geometry": 993},
+    "S1_unknown": {"not_converged": 32, "zero_counts": 1, "no_geometry": 122},
+    "S2_unknown": {"not_converged": 348, "zero_counts": 1, "no_geometry": 122},
+    "interpretation": "No consistent superiority of either fitted model for the common total-ROI target. S0 counts raw signal; its availability is not a defect-classification success rate. Never compare each method's different eligible-subset pooled RMSE as if all denominators matched.",
+    "illustrative_clean_mismatch": [
+      {"pair_id": "S02", "method": "S1", "condition": "zero central target", "total_ROI_contrast_bias": 0.4124883476},
+      {"pair_id": "S04", "method": "S2", "condition": "wrong supplied target centre", "total_ROI_contrast_bias": -0.0601015857},
+      {"pair_id": "S10", "method": "S2", "condition": "true width 1.6, fitted width 1.0", "total_ROI_contrast_bias": 0.1093106466}
+    ]
+  },
+  "secondary_STEM_component": {
+    "status": "PREDECLARED_SECONDARY_OBSERVABLE_FROM_SAVED_FITS",
+    "new_fits": 0,
+    "S0": "NOT_APPLICABLE: raw ROI is not an isolated-column component estimator",
+    "observable": "Central Gaussian integral/coefficient, assessed separately at target-site and complete-nine-site contrast eligibility.",
+    "units": "Generator central-component integral after division by known exposure; not atom count, occupancy, Z or scattering cross-section.",
+    "examples": [
+      {"pair_id": "S01", "state": 1, "count_level": 20, "site_index": 0, "common_eligible": 20, "denominator": 20, "S1_rmse": 15.755645292175931, "S2_rmse": 5.327400100788278},
+      {"pair_id": "S03", "state": 1, "count_level": 20, "site_index": 0, "common_eligible": 20, "denominator": 20, "S1_rmse": 7.9807946926650954, "S2_rmse": 6.394623064699333},
+      {"pair_id": "S09", "state": 1, "count_level": 20, "site_index": 0, "common_eligible": 20, "denominator": 20, "S2_bias": -8.88485649573525, "S2_rmse": 10.711287556562771, "meaning": "Non-Gaussian target: improved against S1 is not unbiased."},
+      {"pair_id": "S10", "state": 1, "count_level": 20, "site_index": 0, "common_eligible": 19, "denominator": 20, "true_target_integral": 50, "S2_bias": -24.820131596110844, "S2_rmse": 25.141941478606018, "meaning": "Incorrect fixed width produces a large conditional component error."},
+      {"pair_id": "S02", "state": 1, "count_level": 20, "site_index": 0, "common_eligible": 20, "denominator": 20, "S1_rmse": 0.0, "S2_rmse": 0.9340709250612544, "meaning": "Zero-target counterexample: S2 is not uniformly better."}
+    ],
+    "eligibility_caution": "Target-site 20/20 must not be substituted for whole-nine-site eligibility. For S10 state1 count20, whole-row common eligibility is only 1/20.",
+    "decision_reason": "S2 addresses a scientifically different estimand from raw intensity. Its component separation is useful under supported geometry and shape, but its assumptions must remain visible."
+  },
+  "supplements": {
+    "STEM": {"reused_observations": 128, "additional_fit_variants": 3, "additional_patch_fits": 6912, "primary_rows_reused": 384, "reference_rows_eligible": 347, "reference_deletion_combinations_per_eligible_row": 36, "interpretation": "Window, width and leave-one/two-reference sensitivity are diagnostics on the same observations. No best-parameter selection, independent replication or calibrated confidence interval is claimed."},
+    "HRTEM": {"reused_observations": 128, "supports_per_observation": 2, "strict_H1_qualified": 143, "denominator": 256, "interpretation": "Clean H10 contaminated arms contain frequencies absent from the exact core, including in converged H1 fits. Retain source support instead of propagating every context peak into the core."}
+  },
+  "mathematical_interpretation": [
+    "For fixed nonnegative STEM templates mu=X*a, Poisson negative log likelihood sum(mu-y*log(mu)) is convex in a. Optimization convergence only solves that supplied-template problem; overlapping templates or incorrect widths can still make component coefficients poorly determined or biased.",
+    "If fitted support equals readout support and unconstrained overall positive scaling is available, differentiating L(t*a) at a genuine nonzero optimum gives sum(mu)=sum(y), subject to no clipping or active scale restriction. Thus matching a fitted 5x5 total to the raw 5x5 total is expected and is not independent accuracy evidence. A 9x9 fit used to predict a 5x5 total trades extra-data averaging against shape assumptions.",
+    "Variable projection removes linear amplitude/background nuisance parameters but frequency optimization remains nonlinear. Full rank of the linear block and a small optimization gradient do not prove nonlinear identifiability, low sampling variance or physical interpretability.",
+    "Different physical mechanisms can share the same expected image. A one-image estimator cannot distinguish such mechanisms without additional information; a fitted label must not override that non-identifiability."
+  ],
+  "proposed_mainline": [
+    "Use unchanged scientific image arrays, explicit calibration and immutable ROI/support provenance as the common observation layer.",
+    "HRTEM: baseline core FFT and horizontal/vertical context comparison first; report frequency/geometry observations and mixtures before material interpretation.",
+    "STEM: raw target/reference measurements first; human or existing component supplies and reviews geometry/reference classes. Retain S2 as a separate conditional decomposition result when warranted.",
+    "AI invokes existing components through Skill/MCP, records chosen supports, reference identities, assumptions and UNKNOWN states, and asks for human correction where the scientific alternatives matter.",
+    "If future work is commissioned, prioritize S2 geometry/shape adequacy and complete-row numerical availability before classifier thresholds; keep H1 weighting/candidate-selection changes as a separately frozen candidate. No such follow-up experiment is launched here."
+  ],
+  "historical_boundaries": {
+    "physical_grid_gate": "FAIL",
+    "physical_grid_change_percent": 10.034456314668976,
+    "frozen_gate_percent": 10,
+    "formal_physical_blind_acceptance": "NOT_TESTED",
+    "old_missing_C27_sigma2": "Original missing record preserved; not replaced or rerun in this task",
+    "old_physical_raw_data": "Not redistributed; controlled historical inputs are distinct from the newly archived analytic arrays"
+  },
+  "evidence": {
+    "scientific_spec": {"path": "selection-spec-v1.json", "sha256": "ab5515cc18092f4d56a267294e4b0e7731ee8273b633039c9a0081044474f7f6"},
+    "decision_data": {"path": "stages/aggregate-v1/decision-data.json", "sha256": "5fdb2c2996056972589a7e060530099575aa2d8f356698bc4274566e39e87c04"},
+    "STEM_main_rows": {"path": "stages/main-stem-v1/scored-rows.json", "sha256": "3af2cc71bef601a825b788adb821112120b769201a709519de3afe932da64e3c"},
+    "HRTEM_main_rows": {"path": "stages/main-hrtem-v1/scored-rows.json", "sha256": "d4591c7f2b3b213a5751bf0b59ec33a478a437169a72f8efa134e66b28cc3b3d"},
+    "components": "stages/aggregate-v1/component-summaries.json",
+    "STEM_supplement": "stages/supplement-stem-v1",
+    "HRTEM_supplement": "stages/supplement-hrtem-v1",
+    "inputs": {"path": "artifacts/baseline-comparison-inputs-v1.zip", "sha256": "7f0e0ddb82b82e96d13f4a31bd46141af38ebdb9e0ec4324fa6728a828a0ee5d"},
+    "literature": "LITERATURE.md"
+  },
+  "provenance_notes": [
+    "This is a method-design and selection review of Sol execution records, not an external independent audit or an independent laboratory replication.",
+    "Initial generation metadata failure remains FAILED. Completed HRTEM inputs were verified and reused; a recorded amendment generated STEM only. No result-dependent threshold or solver change was made.",
+    "The STEM execution-final status field retained STARTED from initial metadata; its outcome, wrapper, final summary and persisted event counts record COMPLETE. Original bytes are preserved; no computation was repeated to repair presentation.",
+    "Some frozen independence field names are misleading. Interpret them as design-pair IDs with shared base means, not independent material specimens.",
+    "Requested executor configuration was GPT-6.1 Sol ultra; this runtime does not independently expose effective per-response reasoning metadata.",
+    "All evidence paths above are relative to the isolated research repository. Import into the main project history is an engineering handoff, not a completed merge."
+  ],
+  "references": [
+    {"title": "Golub and Pereyra (1973), variable projection", "url": "https://epubs.siam.org/doi/10.1137/0710036", "role": "Established mathematical foundation of H1; not a new invention or validation of this prototype"},
+    {"title": "Jany et al., local FFT/PCA/NMF", "url": "https://arxiv.org/abs/1907.10929", "role": "Motivation for discovery; PCA/NMF not compared here"},
+    {"title": "Nord et al., Atomap", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5306439/", "role": "Column-fitting context; not an exact reproduction of Atomap"},
+    {"title": "Leitherer et al., AI-STEM", "url": "https://doi.org/10.1038/s41524-023-01133-1", "role": "Related trained workflow; no dedicated model training here"},
+    {"title": "Hong et al., MoS2 defects", "url": "https://www.nature.com/articles/ncomms7293", "role": "Physical context, not truth labels for the analytic benchmark"}
+  ]
+}

@@ -38,3 +38,9 @@ tests/column-fit-stdio-smoke.mjs text eol=lf
 scripts/validate_conditional_s2_readback.py text eol=lf
 tests/image_column_fit_readback_test.py text eol=lf
 docs/conditional-s2/validation/readback-p2-*.redacted.txt -text whitespace=cr-at-eol,-blank-at-eol
+
+# Self-contained conditional-method resources mirror byte-identified docs.
+skills/scientific-agent/microscopy-automation/references/method-*-v1.json -text whitespace=cr-at-eol
+skills/scientific-agent/microscopy-automation/references/research-selection-spec-v1.json -text whitespace=cr-at-eol
+skills/scientific-agent/microscopy-automation/references/READBACK-P2-BOUNDARY.md -text whitespace=cr-at-eol
+skills/scientific-agent/microscopy-automation/references/science-records-v1/** -text whitespace=cr-at-eol

@@ -8,8 +8,8 @@ from pathlib import Path
 import re
 import sys
 
-ROOT = Path(__file__).resolve().parents[4]
-CONTRACT = json.loads((ROOT / "docs/conditional-s2/method-decision-contract-v1.json").read_text(encoding="utf-8"))
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+CONTRACT = json.loads((SKILL_ROOT / "references/method-decision-contract-v1.json").read_text(encoding="utf-8"))
 
 
 def require(condition, message):

@@ -65,10 +65,12 @@ scientific assumption, not automatically a verified observation.
 Keep these distinct, with their units and eligibility:
 
 1. Baseline raw 5x5 mean and target-minus-reference-median, unchanged.
-2. S2 full fitted 5x5 mean, including background and neighbours, plus the same
-   total-intensity contrast when all required fits qualify.
-3. S2 central-column integral and its target-minus-reference-median only when
-   target and every requested reference component qualify.
+2. Each site's S2 full fitted 5x5 mean, including background and neighbours,
+   when that site qualifies; total-intensity target-minus-reference-median only
+   when the target and every requested reference qualify.
+3. Each site's S2 central-column integral when that site qualifies; its
+   target-minus-reference-median only when the target and every requested
+   reference component qualify.
 
 The Gaussian basis has unit integral over the whole plane. Its coefficient is
 therefore a model-extrapolated whole-plane column integral, not the directly

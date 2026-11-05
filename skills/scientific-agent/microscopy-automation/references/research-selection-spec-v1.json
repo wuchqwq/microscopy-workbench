@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "status": "PROSPECTIVE_SCIENTIFIC_SPEC_PENDING_IMPLEMENTATION_FREEZE",
+  "purpose": "Select useful conditional methods using a broad analytic numerical comparison, then inspect historical physical examples separately. This is not formal physical blind acceptance.",
+  "baseline_code": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+  "baseline_archive": "a0258f7cb3d108fb106da6cc929af6e769c0cebf",
+  "training": "NONE; no dedicated model training or tuning to evaluation outcomes",
+  "execution": {
+    "owner": "6.1 Sol executor; Astra freezes design and selects methods",
+    "main_matrix_launch": "Only after complete implementation/config/input manifest hashes and root method review. This is an internal scientific freeze, not a new user permission request.",
+    "development": "Independent non-evaluation controls only,60seconds per modality: H1 gradient finite differences/known-frequency recovery/no-candidate/rank guards with at most10 optimizer calls; S1/S2 adapter total-readout/support identities with at most36 patch calls. Preserve failures/fixes; do not repeat old engine test suites.",
+    "main_budget_per_modality": {"wall_seconds":1200,"logical_cores":2,"processes":1,"memory_bytes":2147483648},
+    "supplement_budget_each": {"wall_seconds":300,"logical_cores":2,"processes":1,"memory_bytes":2147483648},
+    "budget_policy": "If development timing predicts insufficiency, report before freeze. No silent reduction, retry or exceeding limits after results are inspected.",
+    "persistence": "Immutable result shards and source/config hashes before completion records; preserve first errors and exact completed/unissued sets."
+  },
+  "shared_sampling": {
+    "pairs_per_modality":12,
+    "states_per_pair":2,
+    "clean_states_per_modality":24,
+    "seeds_per_count_level":20,
+    "seed_indices":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],
+    "master_seed":20261105,
+    "seed_derivation": "NumPy SeedSequence([20261105, modality_id, pair_index_1_to_12, state_index_0_or_1, count_level_index_0_to_2, seed_index]); modality_id=1 HRTEM,2 STEM. Persist explicit seeds and NumPy version.",
+    "draw_rule": "Independent Poisson draws conditional on each nonnegative expected image. Every algorithm gets the identical realized array for that case. No truth or clean counterpart is passed to method functions.",
+    "clean_scoring": "Deterministic estimator-bias check; no random-count uncertainty interpretation.",
+    "primary_observations_per_modality":1464,
+    "split": "Historical data and distinct development fixtures are already-seen development. New fixed matrix is evaluation; no evaluation-based tuning or best-width selection. Paired scenes/noise/dtypes are not independent physical specimens.",
+    "axes": "Scientific arrays Y,X; coordinates and vectors X,Y; ROI edges half-open integer source pixels. Unknown physical calibration remains cycles/pixel or intensity units."
+  },
+  "hrtem": {
+    "source_shape_yx":[96,96],
+    "core_xyxy":[24,24,72,72],
+    "image_model": "I(x,y)=background+sum a_j*cos(2*pi*q_j.[x,y]+phase_j), coordinates at integer pixel centres, with explicit piecewise support when specified. No multislice claim.",
+    "default_background":1.0,
+    "default_phases":[0.3,0.8,1.1],
+    "default_two_q":[[0.16666666666666666,0.041666666666666664],[-0.041666666666666664,0.16666666666666666]],
+    "default_two_amplitudes":[0.25,0.25],
+    "count_levels_mean_per_core_pixel":[1,10,100],
+    "exposure": "One positive scale per pair and count level from state0 core mean, shared unchanged by state1. Persist actual achieved means. Fit/count readout is divided by this known global exposure for numerical scaling; no per-image normalization.",
+    "pairs": [
+      {"id":"H01","purpose":"on/off-grid isolated frequency","state0":{"q":[[0.16666666666666666,0.041666666666666664]],"a":[0.45]},"state1":{"q":[[0.17395833333333333,0.04729166666666667]],"a":[0.45]}},
+      {"id":"H02","purpose":"two-mode rotation/off-grid localization","state0":{"two_default":true},"state1":{"two_default":true,"rotate_degrees":13}},
+      {"id":"H03","purpose":"three hexagonal-direction modes","state0":{"q_radius":0.18,"angles_degrees":[17,77,137],"a":[0.22,0.22,0.22]},"state1":{"q_radius":0.18,"angles_degrees":[23,83,143],"a":[0.22,0.22,0.22]}},
+      {"id":"H04","purpose":"separated versus near-resolution modes","state0":{"q":[[0.15,0.04],[0.23333333333333334,0.04]],"a":[0.25,0.15]},"state1":{"q":[[0.15,0.04],[0.18125,0.04]],"a":[0.25,0.15]}},
+      {"id":"H05","purpose":"fixed reciprocal vectors, altered amplitudes/phases","state0":{"two_default":true},"state1":{"two_default":true,"a":[0.25,0.03],"phases":[1.8707963267948966,2.3707963267948964]}},
+      {"id":"H06","purpose":"vanished-transfer proxy, same latent reciprocal vector","state0":{"q":[[0.17,0.05]],"a":[0.45]},"state1":{"q":[[0.17,0.05]],"a":[0],"observable_q":[]}},
+      {"id":"H07","purpose":"known affine structure change","state0":{"two_default":true},"state1":{"two_default":true,"F":[[1.01,0],[0,0.995]],"q_rule":"F inverse transpose times original q"}},
+      {"id":"H08","purpose":"known small orientation change","state0":{"two_default":true},"state1":{"two_default":true,"rotate_degrees":2}},
+      {"id":"H09","purpose":"mixed core support","state0":{"two_default":true},"state1":{"two_default":true,"right_half_x_ge":48,"right_half_rotation_degrees":15},"score_stratum":"mixed_support; known underlying q only, no claim of stationary-core truth"},
+      {"id":"H10","purpose":"unchanged core with contaminated arms","state0":{"two_default":true},"state1":{"two_default":true,"outside_core_rotation_degrees":20},"score_stratum":"same_core and separate context-locality ablation"},
+      {"id":"H11","purpose":"nonperiodic nulls","state0":{"constant":1},"state1":{"plane":"1+0.002*(x-47.5)-0.001*(y-47.5)"},"observable_q":[]},
+      {"id":"H12","purpose":"localized/nonperiodic texture nulls","state0":{"constant":1,"additional_impulse":{"xy":[48,48],"height":8}},"state1":{"broadband_mean":"1+0.5*U[-1,1] per pixel with fixed independent recipe seed20261019"},"observable_q":[]}
+    ],
+    "H0": {
+      "entry":"baseline tools/image_peaks.py detect on fftshift(fft2(core*outer(hanning(height),hanning(width)))) complex128. Explicit experiment window=Hann; subtract_mean=False, matching the worker's default mean-removal convention. Worker default window=none is deliberately overridden by the documented Hann parameter for both algorithms.",
+      "parameters":{"max_peaks":12,"min_separation_bins":3,"exclude_dc_radius_bins":3,"threshold_rel":0.05,"refinement":"quadratic"},
+      "code_policy":"Import exact confirmed source read-only, hash it; no reimplementation of detector or rerunning its old test suite."
+    },
+    "H1": {
+      "name":"same-candidate continuous-frequency variable projection",
+      "initialization":"H0 integer-bin coordinates, not truth. Map each integer-bin vector to fx>0 or fx==0,fy>0 by multiplying by+/-1. Iterate in H0 returned order and merge within1 bin of an existing canonical vector, retaining source peak IDs. Unpaired modes remain explicitly unpaired. Maximum6 distinct modes; excess produces UNKNOWN_MODE_BUDGET.",
+      "linear_basis":"1, t_x=(x-(width-1)/2)/width, t_y=(y-(height-1)/2)/height, and cos/sin pairs for each mode on centred pixel coordinates; constant phase is absorbed by coefficients",
+      "objective":"sum w^2*(I-X(q)*beta)^2 / sum w^2, w=outer(Hann,Hann), I is the unwindowed raw core divided by known exposure. Do not pre-window I again. Profile beta by linear least squares for each q.",
+      "parameters":"q optimized in bin coordinates, each axis bounded within +/-0.5 bin of its initial integer bin; analytic variable-projection gradient from the residual",
+      "optimizer":{"name":"L-BFGS-B","maxiter":80,"maxfun":200,"ftol":1e-12,"gtol":1e-6},
+      "least_squares":"rcond=1e-10; a rank failure during optimization terminates as UNKNOWN_RANK rather than changing the model. Rank eligibility still requires singular ratio>1e-8.",
+      "eligibility":"Finite solution, linear full rank and smallest/largest singular value>1e-8, optimizer success, projected gradient infinity norm<=1e-5, no frequency within1e-4 bin of a bound. Exact implementation of the projected-gradient sign/bound handling is frozen before evaluation.",
+      "failure":"Retain raw numerical result and reason; strict H1 abstains. Also report predeclared operational H1-with-H0-fallback, explicitly marking fallback cases. Never rename fallback as successful H1 refinement.",
+      "meaning":"A numerical refinement of spectral candidates, not new optical resolution, calibrated uncertainty or phase identification."
+    },
+    "scoring": {
+      "association":"Vectors are equivalent under+/-: distance=min(norm(q-t),norm(q+t)) in ROI-bin units. Deterministic minimum-total-distance one-to-one assignment with1.0-bin maximum matching distance; tie rule by sorted truth index/candidate order. This avoids a sign discontinuity near a vertical vector.",
+      "report":"Per-family vector error/bias/RMSE and matched recall, unmatched candidates, strict H1 coverage, fallback frequency and cost. Compare identical successfully matched modes separately from all mode/method denominators.",
+      "negative_controls":"Count numerical candidates and refinement outcomes for nonperiodic/zero-transfer means. These are not automatically false chemical claims because baseline explicitly returns hypotheses.",
+      "structural_decisions":"Report known q changes and deviations under fixed latent q; no newly calibrated change detector is claimed. H09 mixed-support errors are separate from stationary-mode localization scores."
+    },
+    "context_supplement": {
+      "pairs":["H01","H07","H09","H10"],
+      "states":[0,1],
+      "cases":"clean and each3 count levels at seeds0..4; reuse already generated full source arrays",
+      "supports":{"horizontal":[0,24,96,72],"vertical":[24,0,72,96]},
+      "methods":["H0","H1"],
+      "method_calls":512,
+      "purpose":"Distinguish estimator benefit from added support and context pollution; no best-arm selection."
+    }
+  },
+  "stem": {
+    "source_shape_yx":[81,81],
+    "target_xy":[40,40],
+    "reference_xy":[[20,20],[40,20],[60,20],[20,40],[60,40],[20,60],[40,60],[60,60]],
+    "measurement_support":"5x5 pixels centred at each nominal integer site; fixed across states/methods",
+    "fit_support":"9x9 pixels centred at each nominal integer site; all candidate methods see the same available context",
+    "default_columns":"Each of9 sites has central Gaussian integral100 and four neighbours integral40 at offsets(+d,0),(-d,0),(0,+d),(0,-d); d=5 pixels; all peak integrals are pixel-integrated with sigma=1 pixel.",
+    "default_background":0.2,
+    "geometry":"Supply the full common centre list and nominal sigma=1 to S1/S2; record oracle supplied geometry. The only deliberate centre error is S04 state1. No data-driven centre or width optimization.",
+    "count_levels_mean_per_reference_roi_pixel":[0.2,2,20],
+    "exposure":"One scale from the median of state0 expected8 reference ROI means per pair/count level, shared with state1. For S12 zero state use the canonical default-scene reference mean as predefined fallback. Save the scale; score contrast after dividing counts/predictions by it.",
+    "pairs": [
+      {"id":"S01","purpose":"moderate known intensity reduction","state0":{"target_multiplier":1},"state1":{"target_multiplier":0.75}},
+      {"id":"S02","purpose":"zero target signal at supplied site","state0":{"target_multiplier":1},"state1":{"target_multiplier":0}},
+      {"id":"S03","purpose":"neighbour overlap without target loss","state0":{"neighbour_distance":6},"state1":{"neighbour_distance":3}},
+      {"id":"S04","purpose":"incorrect supplied target centre, fixed measurement support","state0":{},"state1":{"supplied_target_centre_offset":[0.35,0.25],"actual_image_unchanged":true,"geometry_rule":"Replace the nominal central target item in the supplied list; do not retain the true target as an extra neighbour. Other supplied neighbours and fixed patch/readout supports stay unchanged."}},
+      {"id":"S05","purpose":"global gain, same structural/intensity-deficit model","state0":{"target_multiplier":0.5,"global_gain":1},"state1":{"target_multiplier":0.5,"global_gain":1.25}},
+      {"id":"S06","purpose":"nonuniform background, intact target","state0":{},"state1":{"background":"0.2+0.0005*((x-40)^2+(y-40)^2)"}},
+      {"id":"S07","purpose":"one wrong-type reference","state0":{},"state1":{"central_reference_multipliers":{"0":2}}},
+      {"id":"S08","purpose":"four wrong-type references","state0":{},"state1":{"central_reference_multipliers":{"0":2,"1":2,"2":2,"3":2}}},
+      {"id":"S09","purpose":"non-Gaussian target shape at unchanged integral","state0":{},"state1":{"target_shape":"0.75*G(centre,sigma1)+0.25*G(centre+[1.0,0.3],sigma1.6), combined integral100"}},
+      {"id":"S10","purpose":"width mismatch","state0":{"target_multiplier":0.5,"true_sigma":1},"state1":{"target_multiplier":0.5,"true_sigma":1.6,"fit_sigma":1,"scope":"true_sigma applies to every real Gaussian column"}},
+      {"id":"S11","purpose":"indistinguishable mechanisms","state0":{"target_multiplier":0.5,"mechanism_label":"analytic signal deficit"},"state1":{"target_multiplier":0.5,"mechanism_label":"local gain applied to the target component"},"requirement":"Bit-identical clean mean arrays; noisy samples have identical conditional laws. No method may identify mechanism from this image alone."},
+      {"id":"S12","purpose":"unsupported geometry and empty counts","state0":{"constant_image":0,"supplied_geometry":null},"state1":{"constant_image":0.2,"supplied_geometry":null},"method_rule":"S0 may report fixed-ROI raw statistics with no site interpretation; S1/S2 return UNKNOWN_NO_GEOMETRY without fitting."}
+    ],
+    "methods": {
+      "S0":"Exact confirmed baseline raw ROI mean-minus-median8 reference means. Use its numerical entry/helper with recorded source hash and necessary single interface identity check, not a new algorithm.",
+      "S1":"Existing corrected Poisson fixed isotropic single Gaussian plus four nonnegative bilinear background bases.",
+      "S2":"Same plus every supplied neighbour with integrated mass>=0.005 in the fit support, no preliminary3-sigma exclusion.",
+      "model_sha256":"87c0cf265e2b663e01aea622ec4b7b032930d765ea7b45697f50bb5d9088d210",
+      "optimizer":"Keep frozen maxiter200/maxfun800 and projected gradient threshold5e-6; preserve existing zero/design/nonconverged statuses. No optimizer replacement in this main comparison.",
+      "output":"Mean of the FULL fitted expected image on each5x5 readout, including all fitted backgrounds/neighbours; then target-minus-median references. Central coefficient is not the common estimand.",
+      "count_adapter":"Retain integer count originals. Convert to float64 only after exact representability checks where required by baseline FFT/fitting. No product TIFF/MCP admission claim without a separately checked supported dtype adapter."
+    },
+    "scoring": {
+      "truth":"Exact expected-image D on the fixed readout supports; never central Gaussian coefficient or chemical label as a substitute.",
+      "report":"Per-family signed bias/RMSE/absolute errors, common eligible subset, all-case method coverage and failure reasons, per-site convergence, optimizer cost. Nonzero D on intact controls is a possible correct measurement, not proof of vacancy.",
+      "identifiability":"Track supplied-geometry and linear-rank guards, but do not claim full finite-count identification from them. Existing model remains conditional. Optional mathematical certificate work is outside this main comparison.",
+      "uncertainty":"No S1/S2 statistical CI or calibrated defect classifier is introduced. No Gaussian Wald intervals at low counts; reference-deletion ranges are sensitivity only."
+    },
+    "sensitivity_supplement": {
+      "pairs":["S03","S07","S09","S10"],
+      "states":[0,1],
+      "cases":"clean and each3 count levels at seeds0..4, reused arrays",
+      "primary_reuse":"Reuse primary9x9/sigma1 fit results without rerunning",
+      "variants":[{"fit_size":5,"sigma":1},{"fit_size":9,"sigma":0.8},{"fit_size":9,"sigma":1.25}],
+      "new_patch_calls_upper_bound":6912,
+      "reference_deletions":"For eligible primary rows of these cases, recalculate contrast deleting each reference and every pair of references from already fitted means; no extra fits; sensitivity is not confidence."
+    }
+  },
+  "physical_appendix": {
+    "source":"Historical STEM one-pair run03 and corrected saved results; no new multislice in this phase",
+    "actions":"Read and summarize saved results/means with provenance; any new method evaluation must have a separate counted supplemental budget and exploratory label",
+    "qualifier":"10.034456 percent>10 percent remains FAIL; no trustworthy physical-accuracy or chemical-occupancy conclusion follows from analytic success",
+    "hrtem":"Analytic amplitude/phase controls are CTF-inspired proxies, not a completed physical defocus-series comparison; physical HRTEM remains NOT_TESTED."
+  },
+  "decision_policy": {
+    "priority":"Choose conditional algorithm use, not find as many bugs as possible.",
+    "default_candidate":"Keep raw/source-bound baseline measurements available even if an optional estimator improves some regimes.",
+    "promotion_evidence":"Compare same-input errors with coverage/cost and negative/model-mismatch cases. A method improving only a restricted regime is recommended for that regime, not as a universal replacement.",
+    "hypotheses":"H1 may improve isolated off-grid localization without resolving lost modes; S1 may help a well-specified isolated-column signal; S2 may help overlap but suffer conditioning/model mismatch. These are hypotheses, not expected successful outcomes.",
+    "no_grand_score":"Use predeclared per-family paired tables and error/coverage/cost tradeoffs. No post-result weighted score, test-set tuning or significance claim from treating seeds as independent structures."
+  },
+  "git_traceability": {
+    "policy":"Preserve plan/source/environment hashes, all results/failures, scripts and decision report in a local research Git history or project-importable commit/bundle. No pushing/merging and no edits to the engineering checkout.",
+    "large_arrays":"Stable relative IDs, hashes and exact regeneration scripts in Git; raw arrays remain controlled if too large. Do not claim public persistence or full Git-only availability.",
+    "amendment":"Any pre-freeze implementation clarification is explicit; any post-result repair is a new candidate/run with first results retained."
+  }
+}

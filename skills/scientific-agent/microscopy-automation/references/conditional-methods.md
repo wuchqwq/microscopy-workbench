@@ -2,7 +2,7 @@
 
 Use this reference when deciding whether existing HRTEM/STEM observations answer
 the question, whether to propose S2, or what remains UNKNOWN. Read the packaged
-[method evidence index](../../../../docs/conditional-s2/method-evidence-index-v1.json)
+[method evidence index](method-evidence-index-v1.json)
 and its linked evidence for the relevant route. This is guidance for the host
 Agent, not an automatic classifier or a mandatory sequence.
 
@@ -72,7 +72,7 @@ disagreement or wrong shape/width can matter even when all numerical gates pass.
 
 Keep the decision in the analysis answer and existing source-bound ROI/annotation
 notes. For a reusable handoff, use the
-[decision record contract](../../../../docs/conditional-s2/method-decision-contract-v1.json)
+[decision record contract](method-decision-contract-v1.json)
 and [synthetic examples](method-decision-examples-v1.json). Keep a short note with
 the decision/evidence references within the existing note limit; a longer record
 may be an explicitly saved sidecar. Do not add a provider journal, candidate
@@ -91,7 +91,7 @@ researcher choice. Include the method-index version and evidence used, not a
 claim that an analytic benchmark proves this image is physically accurate.
 
 The optional stdlib-only checker
-`python skills/scientific-agent/microscopy-automation/scripts/check_method_decision.py RECORD.json`
+`python scripts/check_method_decision.py RECORD.json` (from this Skill directory)
 checks the explicit record's shape and permitted state transitions, without
 choosing a method, reading image arrays, submitting tools or writing files. It is
 a record-specific check, not a general JSON Schema implementation or a verifier
@@ -106,7 +106,7 @@ by this authoring checker. After a known outcome, a deliberate change of geometr
 reference or count interpretation uses a new request ID linked to the old one;
 preserve the old evidence. Read/info/export/review must use the existing P2
 source/design qualification without optimizer replay. See the
-[readback boundary](../../../../docs/conditional-s2/READBACK-P2-BOUNDARY.md) for the
+[readback boundary](READBACK-P2-BOUNDARY.md) for the
 local consistency threat model; unkeyed hashes are not authentication.
 
 The selection evidence is an analytic method comparison, not physical blind

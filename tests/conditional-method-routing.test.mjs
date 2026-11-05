@@ -77,7 +77,9 @@ test('Skill entry points and their new method references resolve inside the relo
    assert.ok(existsSync(target),`${relative}: missing ${match[1]}`);
   }
  }
- assert.ok(existsSync(path.resolve(directory,index.skill_reference)));
+ assert.ok(existsSync(path.resolve(directory,index.repository_skill_reference)));
  assert.ok(existsSync(path.resolve(directory,index.decision_contract)));
+ assert.ok(existsSync(path.resolve(reference,index.skill_reference)));
+ assert.deepEqual(read(path.join(reference,'method-evidence-index-v1.json')),index);
  assert.ok(existsSync(path.join(reference,'../scripts/check_method_decision.py')));
 });

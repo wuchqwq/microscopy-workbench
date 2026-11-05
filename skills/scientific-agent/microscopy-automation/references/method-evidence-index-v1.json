@@ -1,0 +1,167 @@
+{
+  "schema_version": "method-evidence-index-v1",
+  "integration_base": "8bff842bd084be2986f0bf99613da7b947fe0bae",
+  "authority": "Packaged index of frozen method-selection evidence; not an image classifier, physical qualification or provider receipt",
+  "defaults": {
+    "HRTEM": "H0",
+    "STEM": "S0"
+  },
+  "evidence": {
+    "selection": {
+      "path": "method-selection-v1.json",
+      "sha256": "6493d69f9ffe724ba371e615a6ec1a6db54d66f7076a4511f72ba48d51b67ab5"
+    },
+    "research_spec": {
+      "path": "research-selection-spec-v1.json",
+      "sha256": "ab5515cc18092f4d56a267294e4b0e7731ee8273b633039c9a0081044474f7f6"
+    },
+    "source_binding": {
+      "path": "READBACK-P2-BOUNDARY.md",
+      "sha256": "84c18605658ed3ac7b0256af676be223e9a05c680d0975fb9e5a2aa1a4c710ce"
+    }
+  },
+  "research_scope": {
+    "kind": "analytic proxies with supplied assumptions",
+    "observations_per_modality": 1464,
+    "observations_total": 2928,
+    "independence": "Design pairs/states reuse some base expected images; not independent specimens",
+    "physical_accuracy": "NOT_ESTABLISHED",
+    "training": "NONE",
+    "new_simulations_in_this_integration": 0
+  },
+  "methods": [
+    {
+      "id": "H0",
+      "modality": "HRTEM",
+      "availability": "production_default",
+      "estimand": "core_frequency",
+      "tools": [
+        "image_fft",
+        "image_peaks",
+        "image_measure"
+      ],
+      "use_when": "Existing selected-support frequency/geometry observations answer the question; directional context can test corroboration or mixture",
+      "evidence_sections": [
+        "selection.default",
+        "selection.context_windows",
+        "supplements.HRTEM"
+      ],
+      "limits": [
+        "Each core/arm retains its own support",
+        "Arm-only frequency is not core evidence",
+        "Peak presence is not physical periodicity, phase identity or defect absence"
+      ]
+    },
+    {
+      "id": "H1",
+      "modality": "HRTEM",
+      "availability": "research_history_only",
+      "estimand": "core_frequency",
+      "tools": [],
+      "use_when": "Discuss the frozen bounded variable-projection prototype as research history; a new comparison needs separate scope",
+      "evidence_sections": [
+        "selection.H1",
+        "primary_HRTEM"
+      ],
+      "coverage": {
+        "qualified": 427,
+        "denominator": 1464,
+        "fallback_to_H0": 1037
+      },
+      "limits": [
+        "No production dispatch in this integration",
+        "Isolated high-count gains do not imply low-count or near-frequency gains",
+        "Linear rank and optimizer convergence do not establish nonlinear identifiability or physical resolution"
+      ]
+    },
+    {
+      "id": "S0",
+      "modality": "STEM",
+      "availability": "production_default",
+      "estimand": "raw_roi_contrast",
+      "tools": [
+        "image_statistics",
+        "image_profile"
+      ],
+      "use_when": "Report raw target/reference measurements, signed contrast, profile observations or reference disagreement on fixed sites",
+      "evidence_sections": [
+        "selection.default",
+        "primary_STEM",
+        "secondary_STEM_component.S0"
+      ],
+      "limits": [
+        "Raw ROI includes neighbours/background",
+        "Not an isolated-column component estimator",
+        "No occupancy or defect classification follows from availability"
+      ]
+    },
+    {
+      "id": "S1",
+      "modality": "STEM",
+      "availability": "research_history_only",
+      "estimand": "central_component",
+      "tools": [],
+      "use_when": "Discuss the frozen isolated-column fit as research history rather than a default replacement",
+      "evidence_sections": [
+        "selection.S1",
+        "primary_STEM",
+        "secondary_STEM_component"
+      ],
+      "limits": [
+        "No production dispatch in this integration",
+        "No consistent total-ROI superiority",
+        "Neighbour/background mixing and shape mismatch remain relevant"
+      ]
+    },
+    {
+      "id": "S2",
+      "modality": "STEM",
+      "availability": "explicit_conditional",
+      "estimand": "central_component",
+      "tools": [
+        "image_column_fit"
+      ],
+      "use_when": "A central-component versus neighbour/background question warrants a separate conditional decomposition alongside S0",
+      "premises_for_available_fit": [
+        "counts",
+        "geometry",
+        "width_shape",
+        "reference_equivalence"
+      ],
+      "missing_premise_route": "Retain scoped UNKNOWN or request revision. Optional count/geometry/width prerequisites may be missing/unsupported in a legal raw + UNKNOWN request; required MCP reference fields still apply. Reference equivalence is not an automatic worker gate.",
+      "evidence_sections": [
+        "selection.S2",
+        "primary_STEM",
+        "secondary_STEM_component",
+        "mathematical_interpretation"
+      ],
+      "coverage": {
+        "whole_comparison_eligible": 993,
+        "supplied_geometry_denominator": 1342,
+        "full_denominator": 1464
+      },
+      "counterexamples": [
+        "S02 zero target: S2 is not uniformly better",
+        "S09 non-Gaussian target: conditional component bias remains",
+        "S10 supplied width mismatch: target-site eligibility cannot replace complete-row eligibility"
+      ],
+      "limits": [
+        "Fixed Gaussian shape/width/geometry and count interpretation remain unverified premises",
+        "Central integral is extrapolated to the whole plane, not the observed ROI sum",
+        "Every requested reference must qualify for fitted contrast",
+        "Rank/convergence is not statistical or physical identifiability"
+      ]
+    }
+  ],
+  "decision_contract": "method-decision-contract-v1.json",
+  "historical_boundaries": {
+    "physical_grid_gate": "FAIL",
+    "physical_grid_change_percent": 10.034456314668976,
+    "frozen_gate_percent": 10,
+    "formal_physical_blind_acceptance": "NOT_TESTED",
+    "meaning": "Historical records retained; this routing integration does not update physical conclusions"
+  },
+  "repository_skill_reference": "../../skills/scientific-agent/microscopy-automation/references/conditional-methods.md",
+  "skill_reference": "conditional-methods.md",
+  "path_scope": "Evidence and decision contract paths are local to this index. skill_reference is local in the selected Skill install; repository_skill_reference is relative to the repository docs index. Frozen selection records may cite external historical archives not bundled in a standalone Skill."
+}
