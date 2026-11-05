@@ -44,6 +44,17 @@ and NOT_TESTED conclusions are preserved. Later physical validation must freeze
 its input/implementation and record new evidence separately; this document does
 not predict its result.
 
+## Later independent physical evidence and local review
+
+The [local integration review](INTEGRATION-REVIEW.md) and
+[safe three-study package](science-records-v1/manifest.json) record later evidence
+separately from the historical FAIL and then-NOT_TESTED records above. Original
+blind S2 was not requested; revealed same-frame exploration is nonblind; fresh
+unseen latent-totalmean results favoured S0. These do not promote a default or
+establish occupancy, accuracy from numerical gates, or a physical retest of the
+new integration branch. The selected automation Skill now includes its own
+contract, index and safe package for manual single-Skill installation.
+
 ## Focused validation and CI entry
 
 After `npm run build`, run:

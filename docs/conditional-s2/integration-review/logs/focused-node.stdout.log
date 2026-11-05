@@ -1,0 +1,33 @@
+✔ S2 is a separate opt-in tool; absent or unsupported prerequisites reach the worker unchanged (8.7334ms)
+✔ S2 schema bounds sourced geometry, references and count interpretation before dispatch (5.4436ms)
+✔ legacy statistics accepts its original fields and cannot accidentally opt in to S2 (4.687ms)
+✔ S2 recipe declares bounded conditional measurements and original-request recovery (3.6485ms)
+✔ S2 action mapping preserves inputs; saved-result recovery remains a query, not a new fit action (2.466ms)
+✔ method evidence index binds the frozen evidence and actual selection sections (10.5505ms)
+✔ method availability and call examples match the discoverable catalog without adding historical production routes (8.0178ms)
+✔ Skill entry points and their new method references resolve inside the relocatable package (28.9057ms)
+✔ later physical evidence stays separate and preserves default and negative unseen result (4.3636ms)
+﹣ canonical CLI identity survives macOS /var aliases and ordinary symlinks (0.5057ms) # Symlink behavior qualified on Unix
+✔ plugin paths resolve inside its installed root without shell interpolation (6.6556ms)
+✔ packaged Skills reference present resources and discoverable tool names (30.3281ms)
+✔ explicit generated config is write-new and preserves scope across working directories (19.4709ms)
+✔ optional structures stay opt-in and invalid config cannot silently fall back (7.6226ms)
+✔ relocated plugin starts shared MCP and exposes image, context and optional structure catalog (524.0519ms)
+✔ existing statistics tool accepts bounded sourced contextual references, without physical labels (8.462ms)
+✔ registry snapshots metadata and returned descriptions without changing the handler result (2.6154ms)
+✔ failed or duplicate registration cannot partially expose or replace tools (0.9626ms)
+✔ input and unknown-name refusals happen before handler invocation; cancellation signal is forwarded (0.7585ms)
+✔ schema registration retains partial combinator metadata without adding argument-validation semantics (0.5936ms)
+✔ non-JSON metadata and invalid contracts are refused before module publication (0.3873ms)
+✔ module closure and sealing retain their original registration lifecycle (0.9143ms)
+✔ trusted accessor-backed entries preserve legacy property reads and handler selection (0.2583ms)
+✔ compiled stdio preserves envelopes, IDs, legacy errors, cancellation and close (23.109ms)
+✔ core: independent catalog, namespace and no Python/DM startup (233.9014ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 1049.8091

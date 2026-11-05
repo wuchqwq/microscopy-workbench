@@ -83,3 +83,21 @@ test('Skill entry points and their new method references resolve inside the relo
  assert.deepEqual(read(path.join(reference,'method-evidence-index-v1.json')),index);
  assert.ok(existsSync(path.join(reference,'../scripts/check_method_decision.py')));
 });
+
+
+test('later physical evidence stays separate and preserves default and negative unseen result',()=>{
+ const physical=index.physical_evidence;
+ assert.equal(physical.tested_science_revision,'2ed81e1564f2299c7d052bbb89c2f7f016714aa7');
+ assert.equal(physical.integration_candidate_physical_retest,'NOT_TESTED');
+ assert.deepEqual(physical.studies.map(s=>s.queries),[8,8,4]);
+ const studies=physical.studies.map(s=>read(path.resolve(directory,s.path)));
+ assert.equal(studies[0].methods.S2.status,'NOT_TESTED_NOT_REQUESTED');
+ assert.equal(studies[0].methods.AI_ROUTE.requested,0);
+ assert.equal(studies[1].whole_comparison_UNKNOWN,2);
+ const last=studies[2].methods;
+ assert.ok(last.S0.mae<last.AI_ROUTE.routed_or_fixed_with_fallback.mae);
+ assert.ok(last.S0.mae<last.FIXED_S2.routed_or_fixed_with_fallback.mae);
+ assert.equal(last.AI_ROUTE.query_CPE,2);
+ assert.equal(last.FIXED_S2.query_CPE,4);
+ assert.deepEqual(index.defaults,{HRTEM:'H0',STEM:'S0'});
+});

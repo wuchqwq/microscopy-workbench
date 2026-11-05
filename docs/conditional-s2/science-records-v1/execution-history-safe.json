@@ -1,0 +1,33 @@
+{
+  "original_blind": {
+    "human_interruption": true,
+    "successful_forward_frames": 4,
+    "total_forward_attempts": 5,
+    "human_interrupted_attempts": 1,
+    "continuation_attempts": 1,
+    "wall_seconds_including_pause": 2141.373703,
+    "active_seconds": 1847.5988873000024,
+    "pause_seconds": 293.7748156999978,
+    "original_wall_limit": 2400,
+    "completed_first3_reused": true,
+    "interrupted_input_logs_retained": true,
+    "zero_turn_host_environment_failure": {
+      "native_model_events": 0,
+      "MCP_calls": 0,
+      "fit_calls": 0,
+      "reason": "OS5 local Codex self-state/app-server initialization access denied under outer sandbox; historical bytes archived. One prospective environment continuation used normally approved outer permission; inner readonly4MCP unchanged."
+    }
+  },
+  "new_unseen": {
+    "preexecution_approval_denials": 2,
+    "native_processes_started_by_denied_actions": 0,
+    "normal_approval_after_explicit_payload_destination_human_consent": true,
+    "actual_native_controller_launches": 1,
+    "fresh_model_sessions": 2,
+    "approval_evidence": "Only safe source SHA/reference metadata is supplied; exact denial/tool-argument records remain in original local study commits.",
+    "fixed_independent_provider": true,
+    "AI_outputs_sealed_before_fixed": true,
+    "both_outputs_audited_and_sealed_before_local_truth_score": true
+  },
+  "rules": "No denial bypass, hidden retries, completed-frame replay, refit/threshold/seed tuning or selected result replacement. Historical failure, negative and UNKNOWN outcomes remain separate."
+}

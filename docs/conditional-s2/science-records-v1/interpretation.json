@@ -1,0 +1,18 @@
+{
+  "production_policy": "Keep H0/S0 default, S2 explicit conditional opt-in and UNKNOWN; no solver/gate changes or new heuristic learned from these small samples.",
+  "separate_evidence_levels": [
+    "Original blind: autonomous allS0; S2accuracy NOT_TESTED_NOT_REQUESTED.",
+    "Revealed same-frame fixedS2: descriptive improvement on8points with2wholeUNKNOWN, not blind validation/route gain.",
+    "New unseen:4relatedqueries, S0lowest errors; AIroute and fixedS2worse despite numerical qualification. Preserve this negative result."
+  ],
+  "prohibited_inferences": [
+    "Numerical CPE/convergence does not verify Gaussian physical shape, atom intensity additivity, occupancy or defect classification.",
+    "Non-use of S2 is not evidence of S2inferiority; original task framing may confound selection, without causal proof.",
+    "Old positive exploratory results cannot overwrite or be pooled with new negative unseen results as independent validation.",
+    "No paired prompt ablation, calibratedCI/p-value/population accuracy or optimal-routing/mechanistic error claim."
+  ],
+  "tested_science_revision": "2ed81e1564f2299c7d052bbb89c2f7f016714aa7",
+  "integration_base_requested_by_parent": "31f4f014",
+  "integration_base_verification_owner": "Integration engineer; this package does not claim the new integrated candidate has been physically retested.",
+  "reproduction_scope": "Package independently verifies its own file hashes and reported aggregate arithmetic from included safe absolute errors. Full physics generation/CPE requalification is NOT self-contained: requires preserved original research Git repositories, nonbundled runtime/source manifests, simulation arrays and provider journals. External absolute paths are local audit links, not repository contents."
+}

@@ -1,0 +1,32 @@
+{
+  "executable_full_protocol": false,
+  "materials": "Ideal static unrelaxed same-material MoS2 IAM Lobato/finite projection, coherent external abTEM/ASE STEM, independent official Poisson count draws; no private specimen data.",
+  "geometry": "Oracle nominal columns/sites supplied, no automatic defect localization or verified intact/reference-equivalent sites.",
+  "calibration": "Descriptive sigma1.5px transferred from separate2%biaxially-strained pristine calibration; not physical width truth.",
+  "original_holdout": "Unstrained same material, two acquisition blocks; four frames/eight correlated queries.",
+  "new_holdout": "New1%uniaxialX withYunchanged, one acquisition block; two frames/four correlated queries; physically different case, not merely new noise.",
+  "common_estimand": "Clean forward expected TOTAL intensity/count mean in exact5x5ROI, including all physical sources. S0 uses25 observed pixels; S2 uses9x9fit support then reads SAME5x5 totalmean including modelled neighbours/background.",
+  "count_units": "Production inputs remain native counts. Offline detector-fraction scoring divides counts by disclosed dose*0.0625A2; original pooled primary uses this normalization across different doses.",
+  "S2_eligibility": "Actual original requested journal+immutable source/frame/fixedROI/geometry/4refs, query-local CPE+finite totalmean. ReferenceUNKNOWN forbids wholecontrast but does not delete eligible localmean; all4refs preserved. RequestedUNKNOWN uses S0fallback; no request is not solver failure.",
+  "route_commitment": "New AI task explicitly states requestS2 precommits to eligible saved totalmean. Actual journals, not final prose/numbers, choose routed value.",
+  "numerical_gate": "Historical1target5x5 minus median8reference5x5, then counterfactual-minus-base contrast. Same sign and relative change<=0.1; abs(base)>1e-12. This is numerical stability, not classification accuracy.",
+  "old_historical_failure_retained": "10.034456% relative change failed the unchanged10% threshold; later scoped tests do not erase that FAIL.",
+  "physical_model_verified": false,
+  "physical_classification": "UNKNOWN",
+  "central_integral": "Fixed Gaussian full-plane coefficient is not a known additive atom contribution or occupancy truth and is not scored.",
+  "HRTEM": "NOT_TESTED",
+  "excluded_from_package": [
+    "full_prospective_seed_tables",
+    "sealed_clean_arrays",
+    "groundtruth_label_mapping",
+    "raw_true_perquery_means",
+    "raw_count_arrays",
+    "credentials",
+    "rawstderr_account_logs",
+    "large_runtime_caches"
+  ],
+  "primary_sources": [
+    "https://abtem.github.io/doc/user_guide/walkthrough/scan_and_detect.html",
+    "https://abtem.github.io/doc/user_guide/walkthrough/multislice.html"
+  ]
+}

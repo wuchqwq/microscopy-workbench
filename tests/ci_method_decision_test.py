@@ -181,6 +181,13 @@ class MethodDecisionContractTests(unittest.TestCase):
         for name in ("method-decision-contract-v1.json", "method-evidence-index-v1.json", "method-selection-v1.json", "research-selection-spec-v1.json", "READBACK-P2-BOUNDARY.md"):
             self.assertEqual((SCRIPT.parent.parent / "references" / name).read_bytes(), (ROOT / "docs/conditional-s2" / name).read_bytes(), name)
 
+    def test_safe_physical_package_mirrors_are_byte_identical(self):
+        docs = ROOT / "docs/conditional-s2/science-records-v1"
+        bundled = SCRIPT.parent.parent / "references/science-records-v1"
+        files = lambda root: {str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file() and "__pycache__" not in p.parts}
+        self.assertEqual(files(docs), files(bundled))
+        self.assertEqual(len(files(docs)), 14)
+
     def test_selected_skill_alone_relocates_and_checks_real_records(self):
         with tempfile.TemporaryDirectory(prefix="standalone-method-skill-") as folder:
             selected = Path(folder) / "selected-skill"
@@ -202,6 +209,9 @@ class MethodDecisionContractTests(unittest.TestCase):
                 self.assertEqual(payload["valid"], not invalid)
                 if invalid:
                     self.assertIn("exact original ID", payload["error"])
+            verified = subprocess.run([sys.executable, "-B", str(reference / "science-records-v1/verify_package.py")], cwd=folder, capture_output=True, text=True, check=False)
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+            self.assertEqual(json.loads(verified.stdout)["status"], "PASS")
             self.assertEqual(before, {str(p.relative_to(selected)): p.read_bytes() for p in selected.rglob("*") if p.is_file()})
 
     def test_cli_reads_a_record_without_writing_or_executing_science(self):
@@ -218,4 +228,3 @@ class MethodDecisionContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

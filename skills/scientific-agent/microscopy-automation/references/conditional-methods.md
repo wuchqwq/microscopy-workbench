@@ -12,6 +12,7 @@ Agent, not an automatic classifier or a mandatory sequence.
 | --- | --- | --- |
 | HRTEM periodicity/orientation on a selected support | H0, the existing FFT/peak/measurement path; use core and directional context when useful | Keep each support's identity. An arm-only frequency is not established in the core. Peak fitting or convergence does not establish physical periodicity. |
 | STEM raw target/reference intensity on fixed same-image sites | S0, the existing fixed-ROI statistics and optional profile | Sufficient for reporting signed observed contrast and reference disagreement. An unexplained weak column is still a useful observation; S2 is not required to make it reportable. |
+| Estimating a latent expected total ROI mean under detector noise | S0 remains an available estimator; consider conditional S2 fitted total mean only with explicit premises and the estimation goal | Raw observed mean is exact for the observed array; latent expected mean is a different estimation goal. New unseen evidence below favoured S0; no automatic denoising benefit follows from CPE. |
 | Separating a central-column component from overlapping neighbours/background | Consider explicit conditional S2 alongside S0 | A different estimand, not a more accurate replacement for raw ROI intensity. Require sourced count interpretation, fixed geometry, width/shape and reference assumptions before describing a fit as available. |
 | Missing or conflicting acquisition, geometry, width/shape or reference information | Retain the raw observation and scoped UNKNOWN; ask for the missing scientific information when it changes the answer | Do not turn integer pixels into an acquisition claim, guess a sigma, drop a disagreeing reference, or move the expected site to a bright maximum. |
 | H1 continuous-frequency refinement or S1 isolated-column fitting | Cite the research history if relevant | Neither is a production default or an additional tool in this increment. A new research comparison needs separate scope; do not silently implement or dispatch it. |
@@ -109,7 +110,37 @@ source/design qualification without optimizer replay. See the
 [readback boundary](READBACK-P2-BOUNDARY.md) for the
 local consistency threat model; unkeyed hashes are not authentication.
 
-The selection evidence is an analytic method comparison, not physical blind
-acceptance. Preserve its historical FAIL and NOT_TESTED records. This integration
-does not update physical conclusions; later frozen-input physical evidence must
-be recorded separately.
+## Read the separate physical evidence before proposing an improvement
+
+The [safe physical records](science-records-v1/manifest.json) supplement the
+analytic selection comparison. They tested scientific revision `2ed81e1`, not a
+physical retest of this integration candidate. Read the relevant study and
+[interpretation](science-records-v1/interpretation.json):
+
+- [Original blind](science-records-v1/studies/01-original-blind.json), 8 queries:
+  AI used S0 throughout. S2 was NOT_REQUESTED, not a solver UNKNOWN or evidence
+  that S2 was worse. Observed-intensity wording did not clearly specify latent
+  denoising; this possible confound does not establish why the Agent chose S0.
+- [Revealed same-frame exploration](science-records-v1/studies/02-revealed-same-frame.json),
+  8 queries: fixed S2 totalmean error improved on 6 and worsened on 2. Two whole
+  comparisons remained UNKNOWN because references failed, while query-local
+  CPEs were available. This was nonblind, not blind validation or routing gain.
+- [New unseen blind](science-records-v1/studies/03-new-unseen.json), 4 related
+  queries on 2 frames with an explicit latent expected-totalmean goal: S0 had
+  the lowest MAE and RMSE. AI requested S2 for 2/4 queries; fixed S2 qualified
+  4/4, but both routes had worse aggregate errors than S0. Numerical acceptance
+  therefore does not establish accurate physical estimation.
+
+Keep these studies separate; neither the earlier exploratory gain nor the new
+negative result establishes general superiority or a new default. Preserve H0/S0,
+explicit conditional S2 and scoped UNKNOWN. The historical run03 grid FAIL and
+then-NOT_TESTED blind record remain unchanged in the frozen analytic evidence.
+Per-site accepted total means/central integrals require that site's qualification;
+target-minus-reference comparison requires every requested reference too. None
+of these quantities or numerical gates establishes occupancy or atom counts.
+
+From this Skill's `references` directory,
+`python -B science-records-v1/verify_package.py` checks bundled hashes and safe
+error arithmetic. The small package is not self-contained physical reproduction:
+external Git/local-only arrays and journals are not bundled. It contains no
+hidden truth, seeds, credentials or raw account stderr.

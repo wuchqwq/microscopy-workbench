@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "manifest_sha256": "b741b575658269144fe44cb6dca522c0e99eea0c7dc40ae35ded5e55109ed9b4",
+  "files_verified": 13,
+  "studies": [
+    {
+      "study": "01-original-blind",
+      "queries": 8,
+      "arithmetic": "PASS"
+    },
+    {
+      "study": "02-revealed-same-frame",
+      "queries": 8,
+      "arithmetic": "PASS"
+    },
+    {
+      "study": "03-new-unseen",
+      "queries": 4,
+      "arithmetic": "PASS"
+    }
+  ],
+  "scope": "File integrity and safe-error aggregate arithmetic only; no physics, fitting, model, original-journal requalification or hidden truth reconstruction."
+}

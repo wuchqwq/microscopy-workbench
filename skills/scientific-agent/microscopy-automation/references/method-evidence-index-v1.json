@@ -1,7 +1,7 @@
 {
   "schema_version": "method-evidence-index-v1",
   "integration_base": "8bff842bd084be2986f0bf99613da7b947fe0bae",
-  "authority": "Packaged index of frozen method-selection evidence; not an image classifier, physical qualification or provider receipt",
+  "authority": "Packaged analytic and separately scoped physical evidence; not an image classifier, physical qualification or provider receipt",
   "defaults": {
     "HRTEM": "H0",
     "STEM": "S0"
@@ -18,6 +18,10 @@
     "source_binding": {
       "path": "READBACK-P2-BOUNDARY.md",
       "sha256": "84c18605658ed3ac7b0256af676be223e9a05c680d0975fb9e5a2aa1a4c710ce"
+    },
+    "physical_records": {
+      "path": "science-records-v1/manifest.json",
+      "sha256": "b741b575658269144fe44cb6dca522c0e99eea0c7dc40ae35ded5e55109ed9b4"
     }
   },
   "research_scope": {
@@ -163,5 +167,40 @@
   },
   "repository_skill_reference": "../../skills/scientific-agent/microscopy-automation/references/conditional-methods.md",
   "skill_reference": "conditional-methods.md",
-  "path_scope": "Evidence and decision contract paths are local to this index. skill_reference is local in the selected Skill install; repository_skill_reference is relative to the repository docs index. Frozen selection records may cite external historical archives not bundled in a standalone Skill."
+  "path_scope": "Evidence and decision contract paths are local to this index. skill_reference is local in the selected Skill install; repository_skill_reference is relative to the repository docs index. Frozen selection records may cite external historical archives not bundled in a standalone Skill.",
+  "historical_boundary_scope": "historical_boundaries refers to the original run03 grid gate and then-unperformed formal blind acceptance, not the later separate studies below; frozen original evidence and hashes are retained.",
+  "physical_evidence": {
+    "stage": "Three separately reported studies; no default promotion",
+    "tested_science_revision": "2ed81e1564f2299c7d052bbb89c2f7f016714aa7",
+    "integration_candidate_physical_retest": "NOT_TESTED",
+    "records_directory": "science-records-v1",
+    "verification": "python -B science-records-v1/verify_package.py",
+    "verification_scope": "Bundled file hashes and safe-error arithmetic; not self-contained physics reproduction or original-journal requalification",
+    "studies": [
+      {
+        "id": "01-original-blind",
+        "path": "science-records-v1/studies/01-original-blind.json",
+        "queries": 8,
+        "finding": "AI used S0 throughout; S2 NOT_TESTED_NOT_REQUESTED, not solver UNKNOWN. Original observed-intensity wording did not clearly state latent denoising goal; this is a possible framing confound, not a causal attribution."
+      },
+      {
+        "id": "02-revealed-same-frame",
+        "path": "science-records-v1/studies/02-revealed-same-frame.json",
+        "queries": 8,
+        "finding": "Nonblind fixed S2 exploratory totalmean errors improved on 6 points and worsened on 2; 2 whole comparisons UNKNOWN despite query-local CPE. No blind validation or route-gain inference."
+      },
+      {
+        "id": "03-new-unseen",
+        "path": "science-records-v1/studies/03-new-unseen.json",
+        "queries": 4,
+        "finding": "New explicit latent expected-totalmean task: S0 lowest MAE/RMSE; AI requested S2 on 2/4, fixed S2 qualified 4/4 but both had worse aggregate errors than S0. Preserve negative result; not a paired prompt ablation."
+      }
+    ],
+    "limits": [
+      "Related queries within few frames; do not pool studies as independent replication",
+      "Numerical CPE and gates do not verify physical model or accuracy",
+      "Total ROI expected mean, raw observed mean and extrapolated central integral remain distinct; no occupancy interpretation",
+      "External source/local-only references are not bundled; no physical retest of integration candidate claimed"
+    ]
+  }
 }
