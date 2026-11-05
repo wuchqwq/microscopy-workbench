@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "record_kind": "Sanitized derived historical facts, not original transcripts",
+  "source_receipts": [
+    {
+      "controlled_source": "evidence-7a1d3e0/SUMMARY.json",
+      "sha256": "ba8b325ff47a41185f7ddd18236c24cc4e43c548cea6f198ecbca2ee01768782"
+    },
+    {
+      "controlled_source": "codex-blind-7a1d3e0/SUMMARY.json",
+      "sha256": "abe2ffa4b37b10c76c66a8da29b0c31a04a45e6a0a9a9d2215332f1a8c5f1066"
+    },
+    {
+      "controlled_source": "codex-blind-panel-fix/SUMMARY.json",
+      "sha256": "4e17a61b095ea9514db13d2296359bb658465cd165918655616f7c10a73f0f6e"
+    },
+    {
+      "controlled_source": "timeout-diagnosis-7a1d3e0/timing-summary.json",
+      "sha256": "d9f2cfbd3ed59f213b8f42ee8e8e3f052caff0d94249539d559cd93f28db062a"
+    }
+  ],
+  "routes": [
+    {
+      "id": "complex-known-support-tools",
+      "version": "7a1d3e01f9142432345fa4754268437c90a17d04",
+      "data_scope": "30 finite synthetic tool cases with assessor-prescribed ROI/carrier/orientation/loop supports; no model blind run, specimen, calibration or instrument qualification",
+      "counts": {
+        "source_cases": 30,
+        "completed": 29,
+        "refused_or_failed": 1,
+        "expected_blank_refusals": 1,
+        "paid_or_external_model_calls": 0
+      },
+      "noise": "One deterministic replicate each: no noise; iid additive Gaussian sigma/clean contrast RMS=1 and3; pure-noise controls use absolute sigma1 and3. No clipping, Poisson dose, scan distortion or measured SNR.",
+      "bounded_check_count": 73,
+      "failed_checks": [],
+      "status": "PASS",
+      "physics_limits": [
+        "Twin cosine and continuum defect textures are not atomistic or multislice image simulations.",
+        "Multiphase means explicit structurally distinct model cells projected as Gaussian Z-weighted independent atoms, not verified experimental phases. Cu a4A and Fe a3.2A are deliberately declared synthetic model metrics.",
+        "FCC/BCC hard seam and linear overlap do not simulate coherent interface relaxation, thickness-dependent/dynamical scattering or HRTEM CTF.",
+        "ROI boundaries, carrier vectors, scale, orientation and loops are supplied by assessor truth. Autonomous localization/ROI choice/phase search/defect diagnosis remain NOT_TESTED.",
+        "One noise realization per condition, bin-centered periodic signals, fixed calibration/registration and no sub-bin refinement. Tiny geometric residuals are grid agreement, not uncertainty or general accuracy.",
+        "16-peak catalog cap can truncate higher reflections; unmatched simulated reflections and coverage retained. Friedel pairs and same-image processing are not independent experiments.",
+        "Overlapping-component sources can be incompatible with every pure reference; no general multiphase segmentation/unmixing capability demonstrated.",
+        "No GUI acceptance, fresh Agent cognition, API model performance, real specimen, native DM, Linux/Mac or instrument qualification."
+      ],
+      "first_failures": [
+        {
+          "operation": "structure_simulate",
+          "client_wait_seconds": 130,
+          "journal_outcome": "incomplete preserved without replay",
+          "instances": 2
+        },
+        {
+          "operation": "image_panel_open",
+          "outcome": "fetch failed after prior numerical/export/recovery work; cause unqualified"
+        }
+      ],
+      "decision": "Keep numerical known-support evidence separate from autonomous research performance.",
+      "reproduce": "Controlled archive member create_complex_data.py plus preregister.json and source receipts; never replay incomplete originals."
+    },
+    {
+      "id": "native-agent-original-four-groups",
+      "version": "7a1d3e01f9142432345fa4754268437c90a17d04",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "planned_groups": 4,
+      "input_images": 7,
+      "completed_groups": 2,
+      "completed_image_analyses": 3,
+      "unfinished_groups": [
+        "B",
+        "C"
+      ],
+      "deadline_seconds": 780,
+      "completed_mcp_calls": 138,
+      "failed_mcp_responses": 20,
+      "findings": [
+        "Clean reciprocal-cosine twin geometry: independently separated halves, about0.23096 synthetic nm; did not confirm a material twin.",
+        "Noisy Gaussian projected FCC/BCC proxy: about0.20025 vs0.22599 synthetic nm and45degree change; pure fixed-scale rotation insufficient, no chemical phase identification.",
+        "Clean contrast-only vortex: stable8pixel carrier and broadening; did not determine winding/Burgers vector or locate physical core.",
+        "Groups B/C produced measurements but no final analysis by780seconds."
+      ],
+      "first_attempts": "First A configuration failure retained separately; group count is not asserted to be all launch attempts.",
+      "limits": [
+        "Explicitly supplied public Skills, not automatic plugin/Skill discovery qualification.",
+        "General neutral research question; no forced diagnosis or method chain.",
+        "No statistical accuracy, sensitivity, false-positive rate or noise robustness inferred from7 selected images and4 sessions.",
+        "Successful numerical measurements and cautious interpretations do not establish unique phase/3D twin/physical-dislocation identification.",
+        "No before/after baseline model comparison, so causation of any GUI-related AI regression is unproven.",
+        "Raw CLI stderr contains routine account telemetry; use this redacted summary for sharing."
+      ],
+      "blindness_status": "Input/prompt separation recorded in original assessment; do not retroactively infer stronger isolation from disabled feature flags.",
+      "reproduce": "Controlled frozen public-input packet, allowed-tool/Skill manifest, original runner and assessor; new sessions are stochastic and not original-request recovery."
+    },
+    {
+      "id": "timeout-and-owned-panel-diagnosis",
+      "version": "7a1d3e01f9142432345fa4754268437c90a17d04",
+      "new_model_sessions": 0,
+      "old_requests_replayed": false,
+      "status": "DIAGNOSIS_COMPLETE_STOPPED",
+      "limits": "Backend latency decomposition and original second-helper exit trace unavailable; do not infer a single root cause.",
+      "finding": "A separate owned-helper control reproduced helper exit with caller waiting about121seconds; full original model/backend latency remained non-identifiable.",
+      "decision": "Repair only confirmed helper startup observation, not assign all780seconds to one cause."
+    },
+    {
+      "id": "panel-fix-rerun",
+      "version": "a56018dd5206427d5f9881efaf98cd159be21814",
+      "first_targeted_regression": "1pass4fail before correction;41pass after",
+      "real_control_seconds": 3.5193,
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "data": "Same four frozen synthetic inputs across original unfinished B/C groups, one Gaussian seed where noisy.",
+      "findings": [
+        "B/C reruns completed; source scale/carrier and mirror-related geometry were measured conditionally.",
+        "No autonomous GPA/topology/structure/twin-comparison qualification was established.",
+        "B did not open Panel whereas C used the repaired path, so aggregate speed cannot be attributed solely to this repair."
+      ],
+      "limits": [
+        "Original B/C were right-censored at780s, not completed baselines. No controlled aggregate speedup estimate.",
+        "Fresh stochastic sessions/backend load differ; B never opened a Panel, C exercised the fixed path. Total time improvement cannot be assigned solely to this fix.",
+        "Model RPC duration includes transport/backend queue/inference/streaming; TTFT and token counts do not separate all components.",
+        "Four same frozen synthetic inputs, one noisy seed each; no real-specimen validation or statistical robustness claim.",
+        "No autonomous GPA/topology/structure/twin comparison in these reruns; advanced ability remains unverified.",
+        "Scientific review performed by executing agent against frozen truth and saved measurements; no additional independent scoring-model session."
+      ],
+      "decision": "Include bounded operational recovery in the engineering baseline; retain original censored runs and stochastic reruns as distinct records.",
+      "reproduce": "Controlled original public-input hashes, candidate identity, run settings and assessor artifacts; not a controlled performance effect estimate."
+    }
+  ],
+  "retrospective_compilation": true,
+  "recording_note": "Compiled retrospectively from preserved evidence. This compilation is not a contemporaneous preregistration or a new experiment.",
+  "engineering_baseline": {
+    "commit": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+    "main_parent": "c69424ac25a35efd816d68cacd5904f5381c7485",
+    "status": "LOCAL_CANDIDATE_NOT_MERGED"
+  }
+}

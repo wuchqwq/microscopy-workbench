@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "record_kind": "Source archival review and byte copy only; no scientific execution",
+  "recorded_utc": "2026-11-04T23:51:52.952730+00:00",
+  "maximum_sources_reviewed": 3,
+  "sources_reviewed": 3,
+  "source_scripts_copied": 2,
+  "public_source_review_scope": [
+    "User absolute paths",
+    "Private log paths",
+    "Session bodies or actual session IDs",
+    "Credentials",
+    "Restricted Library identifiers"
+  ],
+  "archived_sources": [
+    {
+      "source_locator": "navigation-local-prepare.py",
+      "archive_basename": "navigation-local-prepare.py",
+      "sha256": "bf1fbb6a9d1af664da36e8b4ed392e5d3bec489e1b76cf377394abb5f5a7c08f",
+      "role": "Generator and preparation of the new local analytic navigation dataset",
+      "source_lines": 39,
+      "frozen_identity": "Matches navigation-local-a83-01/freeze.json generator SHA256",
+      "dependencies": [
+        "Python",
+        "Git CLI",
+        "NumPy",
+        "tifffile",
+        "Sibling core-cross-ci-wiring checkout pinned to a83bf8aae5fcffc30adfb81059232b180e3000df with the six specified Skill/reference texts"
+      ],
+      "relative_layout": [
+        "Script-relative root",
+        "Sibling core-cross-ci-wiring/",
+        "New sibling navigation-local-a83-01/ output"
+      ],
+      "fresh_output_required": true,
+      "fresh_output_details": "Line10 uses OUT.mkdir(exist_ok=False); use a new isolated reproduction root, never the original evidence root.",
+      "new_output_publication_caution": "Lines31,38,39 write resolved runtime paths into newly generated manifests/freeze/console. Review new outputs separately before public release.",
+      "review_status": "SAFE_FOR_UNMODIFIED_SOURCE_ARCHIVE",
+      "byte_count": 7837,
+      "forbidden_content_review": "Full source text reviewed; no user absolute path, private-log path, session body/ID, credential or restricted Library identifier found.",
+      "archive_sha256": "bf1fbb6a9d1af664da36e8b4ed392e5d3bec489e1b76cf377394abb5f5a7c08f",
+      "copy_status": "BYTE_IDENTICAL"
+    },
+    {
+      "source_locator": "fft_boundary_experiment.py",
+      "archive_basename": "fft_boundary_experiment.py",
+      "sha256": "ec32c63cab8ce5f8865763f9ce290300f7c34700e70a5dd7169736b283d8795c",
+      "role": "Frozen analytic FFT/peak boundary matrix generator and direct production-detector evaluator",
+      "source_lines": 121,
+      "frozen_identity": "Matches fft-peak-boundary-7a1d3e0/plan-sha256.json experiment_script SHA256",
+      "dependencies": [
+        "Python",
+        "Git CLI",
+        "NumPy",
+        "SciPy linear_sum_assignment",
+        "tifffile",
+        "Sibling science-7a1d3e0 checkout pinned to 7a1d3e01f9142432345fa4754268437c90a17d04, including tools/image_peaks.py"
+      ],
+      "relative_layout": [
+        "Script-relative root",
+        "Sibling science-7a1d3e0/",
+        "New sibling fft-peak-boundary-7a1d3e0/ output"
+      ],
+      "fresh_output_required": true,
+      "fresh_output_details": "prepare requires the complete output directory absent (line31). run requires observations/ absent and checks plan/runner hashes and Git SHA (lines78..83).",
+      "documented_commands": [
+        "python -B fft_boundary_experiment.py prepare",
+        "python -B fft_boundary_experiment.py run"
+      ],
+      "review_status": "SAFE_FOR_UNMODIFIED_SOURCE_ARCHIVE",
+      "byte_count": 14388,
+      "forbidden_content_review": "Full source text reviewed; no user absolute path, private-log path, session body/ID, credential or restricted Library identifier found.",
+      "archive_sha256": "ec32c63cab8ce5f8865763f9ce290300f7c34700e70a5dd7169736b283d8795c",
+      "copy_status": "BYTE_IDENTICAL"
+    }
+  ],
+  "not_copied": [
+    {
+      "source_locator": "navigation-local-a83-01/score.py",
+      "sha256": "06f297f62381d9193df4fc88f23d55f3ae6e21f76f917e2d170ba4f9572b3674",
+      "review_status": "NOT_SAFE_FOR_UNMODIFIED_PUBLIC_ARCHIVE_UNDER_CURRENT_RULE",
+      "reason_categories": [
+        "Private session-log/event record access and session-identity output logic at lines30,35"
+      ],
+      "dependent_scientific_context": [
+        "Frozen assessor protocol/truth/freeze",
+        "Measured episode artifacts and NPZ patches",
+        "NumPy, tifffile, SciPy"
+      ],
+      "write_behavior": "Writes scores.json, scores.csv and score-summary.json beneath assessor; fresh output or a separately preserved copy of existing episode evidence is needed.",
+      "action": "NOT_COPIED; no source sanitization or scientific parameter change attempted; no referenced log was opened or executed."
+    }
+  ],
+  "package_limits": [
+    "This is an archival staging subset, not a standalone installed or fully replayed package.",
+    "Pinned scientific repository checkouts and dependencies are required separately.",
+    "The source scorer is intentionally absent; its SHA256 and archival gap are preserved.",
+    "Original arrays/provider workspaces and private logs are not copied.",
+    "New runtime-generated files may contain resolved paths and need a separate publication review."
+  ],
+  "execution": [
+    "No prepare/run/scoring entry executed",
+    "No algorithm, model, test, dependency installation or scientific parameter modification",
+    "No Library cache accessed",
+    "No Git mutation by this subtask"
+  ]
+}

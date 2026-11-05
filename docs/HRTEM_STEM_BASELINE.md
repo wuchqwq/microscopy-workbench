@@ -76,3 +76,6 @@ The integration record and local targeted validation accompany the exact SHA;
 local Node 24 evidence does not imply local Node 22/macOS/DM/browser qualification
 or hosted CI success. Builds must finish before starting a provider/model run;
 never rebuild or replace its `dist` while it is in use.
+
+Retrospective research routes, decisions, evidence identities and reproduction
+limits are recorded separately in [the research index](research/README.md).

@@ -1,0 +1,1241 @@
+{
+  "schema_version": 1,
+  "record_date_utc": "2026-11-04",
+  "retrospective_status": "Retrospective history note assembled after the experiments; this note is not a preregistration. References to frozen or predeclared protocols describe the original saved protocol records, not this later narrative.",
+  "title": "STEM observation and runtime-friction research route",
+  "purpose": "Historical research and decision record for future paper preparation; assembled from saved evidence without new tests, models, simulations, or changes to historical results.",
+  "provenance_policy": {
+    "scope": "Public protocols, aggregate summaries, sanitized audits, shared Git objects, and read-only file hashes.",
+    "evidence_strength": "Engineering conformance, proxy numerical checks, physical simulation diagnostics, and formal blind qualification are separate evidence classes.",
+    "exclusions": [
+      "Absolute user paths",
+      "Internal conversation bodies or identifiers",
+      "Credentials and secrets",
+      "Raw private runtime logs",
+      "Private specimen data"
+    ],
+    "controlled_custody": "Evidence archives and restricted runtime records remain in the controlled evidence collection; no public URL or unrestricted publication is asserted. Only archive basenames, relative evidence locators, and hashes are recorded here.",
+    "hash_method": "SHA-256; the three archive hashes and listed source-file fingerprints were re-read during this historical-note preparation.",
+    "source_time_note": "Experiment request labels and local dates are retained in the original controlled evidence; this note does not rewrite their timing or imply a new execution."
+  },
+  "versions": {
+    "historical_main_base": "7a1d3e01f9142432345fa4754268437c90a17d04",
+    "reviewed_main": "c69424ac25a35efd816d68cacd5904f5381c7485",
+    "local_engineering_baseline_reported_by_integration_owner": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+    "local_engineering_baseline_status": "Local only; not pushed or merged. Historical notes are intended for a separate commit; this note did not execute integration validation.",
+    "point_baseline": "a83bf8aae5fcffc30adfb81059232b180e3000df",
+    "point_candidate": "03ea9534c34e606295b851637d6e9e03b35bcab5",
+    "stem_recovery_host_test_candidate": "7b938ad2ffc483f96198c50c6716339978544991",
+    "stem_recovery_candidate": "680bf94452df21367c391db105b5c1f90692252e",
+    "tiff_candidate": "12a57ef771f18e14d74ff3a1df7d7a8458a656b2",
+    "panel_candidate": "a56018dd5206427d5f9881efaf98cd159be21814",
+    "integration_note": "Historical candidate testing status is distinct from later integration. This record does not itself establish a passing combined integration SHA."
+  },
+  "route_decisions": [
+    {
+      "stage": "Point-observation diagnosis",
+      "decision": "Reuse fixed-support raw-array statistics, profiles, and source-bound review.",
+      "reason": "Raising max_peaks does not supply missing-column evidence. A missing site may have no bright maximum; free-center fitting could move toward a neighboring column. Existing review did not admit saved real-space statistics/profile evidence.",
+      "rejected_or_deferred": [
+        "Changing the existing peak detector, cap, ranking, or adding a universal classifier",
+        "A new atom-column detector or unconstrained Gaussian fitting without applicability evidence",
+        "Training or fine-tuning",
+        "Single-image depth or multilayer reconstruction"
+      ],
+      "attribution_limit": "A prior physical MoS2 comparison with 18 above-threshold maxima and cap16, and unchanged peak positions after cap expansion, was reported from a separate controlled experiment; the point-observation local experiment did not possess or independently reproduce that source array."
+    },
+    {
+      "stage": "Physical simulation qualification",
+      "decision": "Use an explicit physical forward model and a frozen convergence gate before formal blind qualification.",
+      "reason": "The Gaussian intensity proxy cannot establish probe, scattering, detector, or physical vacancy validity. One bounded refinement was permitted; a failing physical gate is retained rather than selecting a grid that passes."
+    },
+    {
+      "stage": "Runtime recovery",
+      "decision": "Correct receipt recovery guidance and preserve the preview-admission safety gate.",
+      "reason": "Preview acknowledgements, scientific frame versus display-view identity, and existing export parents were operational obstacles. Repairing them must not relabel failed physical evidence or claim better defect recognition."
+    },
+    {
+      "stage": "Finite path diagnostic",
+      "decision": "Stop after the pre-frozen 18 propagated positions.",
+      "reason": "The GridScan/CustomScan comparison only probes path consistency at selected sites. It cannot replace the original 225-point metric and 10-percent gate.",
+      "future_only": "At most24 fixed points for co-translated atom/scan grid-phase control, then only if necessary at most 12 node-preserving points. Neither was run during this note preparation."
+    }
+  ],
+  "point_proxy": {
+    "evidence_class": "Fixed-site intensity proxy numerical and provenance control; not physical STEM and not blind detection.",
+    "evidence_root": "point-observation-evidence",
+    "protocol": "fixed-site-proxy-v1",
+    "candidate": "03ea9534c34e606295b851637d6e9e03b35bcab5",
+    "sample": {
+      "shape_yx": [
+        128,
+        128
+      ],
+      "dtype": "float32",
+      "background": 0.1,
+      "sublattices": {
+        "spacing_pixels": 16,
+        "gaussian_amplitudes": [
+          1,
+          0.6
+        ],
+        "sigma_pixels": 1.2
+      },
+      "target_xy": [
+        64,
+        64
+      ],
+      "primary_rect_half_open_xyxy": [
+        60,
+        60,
+        68,
+        68
+      ],
+      "reference_count": 8,
+      "reference_support": "8x8, same nominal proxy sublattice"
+    },
+    "sample_scope": {
+      "cases": 39,
+      "principal_states": [
+        "pristine",
+        "target amplitude reduced by 0.3",
+        "target amplitude reduced by 0.6"
+      ],
+      "principal_repeats": "One clean case and four cases at each Gaussian noise sigma per principal state.",
+      "noise": {
+        "kind": "Additive iid Gaussian on stored intensity; not dose-derived Poisson noise",
+        "sigmas": [
+          0.08,
+          0.2
+        ],
+        "generator": "NumPy PCG64",
+        "seeds": [
+          100,
+          101,
+          102,
+          103
+        ]
+      },
+      "negative_controls": "Linear background without defect, wrong-type references, pixel-identical contrast-subtraction alternative, and contrast inversion; three cases each.",
+      "site_selection": "Target and references supplied by assessor in numerical controls; no automatic discovery denominator."
+    },
+    "metric": "Primary raw-array mean minus median of the 8 reference ROI means, in arbitrary original scalar units.",
+    "principal_results": [
+      {
+        "state": "pristine",
+        "clean": 0,
+        "sigma_0_08_range": [
+          -0.010729030189395417,
+          0.0094101125312136
+        ],
+        "sigma_0_2_range": [
+          -0.026822574738162075,
+          0.023525287622760516
+        ]
+      },
+      {
+        "state": "partial_column",
+        "clean": -0.042292773141525686,
+        "sigma_0_08_range": [
+          -0.053021803814772284,
+          -0.03288266071945145
+        ],
+        "sigma_0_2_range": [
+          -0.06911534912387651,
+          -0.01876748661379679
+        ]
+      },
+      {
+        "state": "missing_column_proxy",
+        "clean": -0.08458554744720459,
+        "sigma_0_08_range": [
+          -0.09531457952834899,
+          -0.07517543528706483
+        ],
+        "sigma_0_2_range": [
+          -0.1114081233131401,
+          -0.061060263111357926
+        ]
+      }
+    ],
+    "positive_results": [
+      "39/39 saved differences match independent original-array sum/count calculations; source hashes and frame arrays unchanged.",
+      "Five assessor-selected MCP cases preserve saved arrays and have FFTs bit-identical to independent mean-subtracted, sequential-Hann NumPy references.",
+      "60 old/new detector comparisons (6 inputs x 5 caps x 2 refinement modes) retain peaks, ordering, parameters, and historical quality fields.",
+      "New provider can review genuinely old saved statistics/profiles; 17 historical files unchanged."
+    ],
+    "negative_results": [
+      "Wrong-type references in pristine clean data give a deficit of-0.05639025429263711.",
+      "High-noise pristine and partial-column ranges overlap; four seeds do not establish a real-sample false-positive rate.",
+      "Inverted missing-column contrast reverses the sign to+0.08458553161472082.",
+      "Three missing-column proxies and alternative contrast explanations are pixel-identical; image measurements cannot distinguish their assigned causes.",
+      "Peak-cap residual maxima are not a count of independent reflections or phases."
+    ],
+    "first_errors_and_recovery": [
+      "Initial 9 implementation tests: 2 pass, 4 fail, 3 error before implementation; later fixture parameter and publisher-label mismatches were corrected without weakening numeric/source/ROI checks.",
+      "One final read-only MCP recovery was interrupted by a concurrent build temporarily removing the compiled worker. Original candidate-control outcome remainsFAIL; no scientific request was replayed, and 5/5 existing objects/original requests were recovered after build.",
+      "83 outer controlled MCP calls and107 receiver-side RPCs use different denominators;7 errors comprised 1 expected old-provider refusal, 5 deliberate ROI refusals, 1 harness-induced read failure."
+    ],
+    "historical_validation": {
+      "python_passed": 47,
+      "node_contract_passed": 6,
+      "build": "PASS",
+      "remote_ci": "NOT_RECORDED",
+      "new_checks_registered": "Python quick/spatial list and Node npm list verified and explicitly exercised."
+    },
+    "host_run": {
+      "cli": "Codex CLI 0.166.0-alpha.5.1",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "attempts": 1,
+      "deadline_seconds": 780,
+      "wall_seconds": 310.89,
+      "exit_code": 0,
+      "timed_out": false,
+      "input": "One anonymous noisy proxy TIFF/preview, general question, 5 explicitly injected project Skill/reference texts; no target coordinates, generator, truth labels, or pristine pair supplied in visible test input.",
+      "skill_discovery": "Disabled; explicit injection test, not installed-plugin automatic discovery qualification.",
+      "result": "Model selected proxy target (64,64), 0 px from hidden proxy coordinate, held center fixed, selected 5 x 5 / 7 x 7 supports, 8 references, remote control and width-one profile. Saved 3 statistics, 1 profile, 4 reviews; physical_conclusion=null.",
+      "measurements": {
+        "target_5x5_difference": -0.185095694,
+        "target_7x7_difference": -0.089885099,
+        "remote_5x5_difference": -0.011780959,
+        "profile_samples_checked": 49
+      },
+      "calls": {
+        "outer_mcp": 24,
+        "new_fft": 0,
+        "failed_responses": 7,
+        "first_operation_failures": 3,
+        "failed_recovery_reads": 4
+      },
+      "timing": {
+        "tool_inflight_union_seconds": 29.702,
+        "no_tool_inflight_seconds": 281.188,
+        "limit": "These partitions include transport, host, service and invisible waits; neither is pure compute time."
+      },
+      "usage": {
+        "input_tokens": 815180,
+        "cached_input_tokens": 763648,
+        "output_tokens": 11718,
+        "reasoning_output_tokens": 4533,
+        "limit": "CLI aggregate runtime counters, not unique prompt length, billed dollar cost or an independent sample count."
+      },
+      "qualification": "One method-guided anonymous proxy workflow; no general blind vacancy accuracy, physical chemistry-equivalence certification, Panel interaction or automatic site-generator qualification."
+    },
+    "stopped_or_unmeasured": "At this stage the local experiment lacked the separate physical source arrays and an available supported transfer path. No retry or bypass of the restricted Library materialization was attempted. Physical STEM, real specimens, varied imaging conditions, automatic site/reference classification, subpixel fitting, occupancy and depth remainedNOT_TESTED."
+  },
+  "physical": {
+    "evidence_root": "stem-physical-03ea953",
+    "evidence_class": "New abTEM physical forward simulation; not an experimental specimen, inverse reconstruction, or product simulation backend.",
+    "candidate": "03ea9534c34e606295b851637d6e9e03b35bcab5",
+    "protocols": [
+      "physical-stem-mos2-v1",
+      "physical-stem-mos2-v2-numerical-refinement"
+    ],
+    "software": {
+      "python": "3.13.2",
+      "abtem": "1.0.11",
+      "ase": "3.29.0",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pyfftw": "0.15.1",
+      "tifffile": "2026.10.15",
+      "pillow": "13.0.0",
+      "locked_package_count": 64,
+      "version_record": "versions.txt",
+      "installation": "Independent environment using official PyPI binary wheels; pip check PASS.",
+      "device": "CPU/FFTW; at most 2 local compute threads; no GPU or training."
+    },
+    "model": {
+      "structure_builder": "ASE mx2(\"MoS2\", kind=\"2H\", a=3.18 Angstrom, thickness=3.172 Angstrom, vacuum=2 Angstrom)",
+      "supercell": "Orthogonalized, then 5 x 3 lateral periodic replication.",
+      "pristine_formula": "Mo30S60",
+      "vacancy_formula": "Mo30S59",
+      "intervention": "Delete one geometrically topmost S at a selected projected S2 column; projected S2 becomes S, the other S is retained.",
+      "target_selection": "PCG64 seed 48015; selected before intensity generation among S2 columns at least 1.25 Angstrom from scan edges.",
+      "forward_model": "Static unrelaxed IAM/Lobato finite-projection multislice.",
+      "energy_eV": 80000,
+      "probe_semiangle_mrad": 20,
+      "defocus_A": 0,
+      "Cs_A": 0,
+      "annular_detector_mrad": [
+        90,
+        200
+      ],
+      "excluded_physics": [
+        "Bonding",
+        "Thermal displacements and thermal diffuse scattering",
+        "Partial coherence",
+        "Vacancy relaxation",
+        "Source/scan aberrations",
+        "Beam evolution"
+      ],
+      "dimensional_scope": "One material layer with S-Mo-S atomic planes. This does not establish multilayer inverse depth or distinguish top versus bottom S experimentally."
+    },
+    "scan_and_fidelity": {
+      "extent_A": [
+        10,
+        12
+      ],
+      "probe_grid_xy": [
+        40,
+        48
+      ],
+      "step_A": 0.25,
+      "endpoint": false,
+      "interpolation": "None",
+      "abtem_native_shape_xy": [
+        40,
+        48
+      ],
+      "saved_shape_yx": [
+        48,
+        40
+      ],
+      "dtype": "float32",
+      "mapping": "Exact transpose-copy into TIFF/NPY YX; no precision conversion; full-array and asymmetric-index fidelity checked.",
+      "roi_control": "Fixed 5 x 5 primary support and at most 8 geometrically nearest complete S2 references; no brightness-based reference selection."
+    },
+    "noise": {
+      "api": "abTEM Images.poisson_noise",
+      "dose_e_per_A2": [
+        10000,
+        100000
+      ],
+      "pixel_area_A2": 0.0625,
+      "incident_e_per_pixel": [
+        625,
+        6250
+      ],
+      "expectation": "annular intensity x dose x pixel area; no min-max or image-total normalization",
+      "output": "Native float32 integer counts.",
+      "seeds": {
+        "pristine_D10000": [
+          17661,
+          17662,
+          17663,
+          17664
+        ],
+        "pristine_D100000": [
+          27661,
+          27662,
+          27663,
+          27664
+        ],
+        "vacancy_D10000": [
+          19911,
+          19912,
+          19913,
+          19914
+        ],
+        "vacancy_D100000": [
+          29911,
+          29912,
+          29913,
+          29914
+        ]
+      },
+      "sample_scope": "Per numerical version: 2 clean images plus 16 noise realizations from one structural counterfactual pair. These are not 18 independent structures, and run-02/run-03 cannot be pooled as independent samples. Four seeds per condition do not establish real-sample false-positive rates."
+    },
+    "first_error": {
+      "script": "simulate.py",
+      "result": "TypeError from duplicate seconds keyword while logging after potential save, before any scan.",
+      "correction": "simulate-r2.py changes the accumulated timing key only; first failure preserved, physical protocol unchanged."
+    },
+    "numerical_gate": {
+      "metric": "For each state: mean(primary ROI) minus median(8 reference ROI means); compare vacancy minus pristine local effects. Require same sign and at most 10 percent relative change.",
+      "threshold_percent": 10,
+      "run02": {
+        "script": "run-02/simulate-r2.py",
+        "nominal_grid_A": 0.05,
+        "nominal_slice_A": 1,
+        "actual_slices": 8,
+        "actual_slice_A": 0.8965,
+        "simulation_seconds": 386.1,
+        "grid_change_percent": 4.75106,
+        "grid": "PASS",
+        "slice_change_percent": 10.678125,
+        "slice": "FAIL",
+        "domain_change_percent": 9.460946,
+        "domain": "PASS"
+      },
+      "bounded_refinement": "One predeclared numerical refinement only; no threshold relaxation or favorable-grid selection.",
+      "run03": {
+        "script": "run-03/simulate-r3.py",
+        "main_grid_xy": [
+          400,
+          432
+        ],
+        "actual_sampling_A": [
+          0.03975,
+          0.0382494553
+        ],
+        "nominal_slice_A": 0.5,
+        "actual_slices": 15,
+        "actual_slice_A": 0.47813333333333335,
+        "comparison_grid_xy": [
+          480,
+          512
+        ],
+        "comparison_nominal_slice_A": 0.25,
+        "comparison_supercell_xy": [
+          7,
+          5
+        ],
+        "comparison_domain_grid_xy": [
+          560,
+          720
+        ],
+        "simulation_seconds": 260.16,
+        "grid_change_percent": 10.034456314668976,
+        "grid": "FAIL",
+        "slice_change_percent": 0.821422,
+        "slice": "PASS",
+        "domain_change_percent": 0.8915,
+        "domain": "PASS"
+      },
+      "stop": "STOPPED after the one bounded refinement. 10.034456 percent remains above 10 percent; not rounded into PASS. Vacuum/angle checks passing do not replace convergence.",
+      "formal_blind_status": "NOT_TESTED; both numerical versions failed a gate before model launch."
+    },
+    "clean_and_noisy_results": {
+      "run03_clean": {
+        "pristine_primary_mean": 0.001435244279,
+        "vacancy_primary_mean": 0.001090836695,
+        "pristine_primary_minus_reference_median": -5.575719e-06,
+        "vacancy_primary_minus_reference_median": -0.000349495793,
+        "paired_effect": -0.000343920074,
+        "primary_mean_ratio": 0.760035564,
+        "ratio_limit": "Includes background and probe contribution; not occupancy."
+      },
+      "normalized_difference_ranges_four_seeds": {
+        "pristine_D10000": [
+          -0.00016,
+          0.00032
+        ],
+        "pristine_D100000": [
+          -0.0002336,
+          9.28e-05
+        ],
+        "vacancy_D10000": [
+          -0.0008,
+          0
+        ],
+        "vacancy_D100000": [
+          -0.0004384,
+          -0.0002464
+        ]
+      },
+      "inference_limit": "Pristine data can have negative differences. No sign rule, universal threshold, confidence calibration or real-specimen vacancy probability follows."
+    },
+    "known_roi_mcp": {
+      "evidence_class": "Assessor-specified ROI conformance, not blind automatic discovery.",
+      "conditions": "Pristine/vacancy clean plus first high-dose noise seed of each state.",
+      "outer_mcp_calls": 44,
+      "receiver_rpcs": 59,
+      "tool_errors": 0,
+      "results": "4 frames preserve dtype/value; statistics match independent original-array calculations; 4 FFTs are bit-identical to independent mean-subtraction -> Hann -> NumPy references; 4 source-bound reviews retain quality unknown; export and original-request recovery pass.",
+      "audit_first_failure": "First audit compared xy_scale to a dict missing a legal null uncertainty field; audit-only field comparison fixed. Product and science requests were not changed or replayed."
+    },
+    "fft_diagnostic": {
+      "local_maxima_each_condition": 18,
+      "default_cap": 16,
+      "max32_returned": 18,
+      "default_changed": false,
+      "clean_integer_bin_sets": "Same 18 integer bins for pristine/vacancy.",
+      "max_refined_position_difference_bins": 0.0056200999,
+      "limits": "Not all sub-bin positions identical, 18 independent physical reflections/phases, or real-space defect recognition."
+    },
+    "quality_limited_diagnostic": {
+      "status": "DIAGNOSTIC_ONLY; not formal physical qualification.",
+      "predeclared_change": "Common source-quality warning and diagnostic label only; target, data, seeds, budgets, matching tolerance and one-attempt rule unchanged.",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "ultra",
+      "conditions": 4,
+      "attempts_per_condition": 1,
+      "max_parallel": 2,
+      "deadline_seconds_each": 780,
+      "mcp_budget_each": 40,
+      "new_fft_budget_each": 4,
+      "max_final_point_candidates": 3,
+      "primary_roi_width_height_pixels": [
+        4,
+        8
+      ],
+      "position_match_tolerance_A": 0.5,
+      "visible_input": "One anonymous single TIFF/preview per condition, common acquisition parameters, 5 explicitly injected project Skill/reference texts; no paired image, GT, target position, generator or label. Outputs sealed before scoring. Does not qualify automatic Skill discovery.",
+      "results": [
+        {
+          "id": "h412",
+          "condition": "vacancy clean",
+          "mcp": 25,
+          "failures": 3,
+          "reviews": 2,
+          "result": "One intensity-anomaly candidate; target distance 0.09118 Angstrom; 6 same-nominal S2 references."
+        },
+        {
+          "id": "h807",
+          "condition": "pristine high-dose first seed",
+          "mcp": 38,
+          "failures": 10,
+          "reviews": 0,
+          "result": "Initial visual candidate withdrawn; no supported anomaly retained."
+        },
+        {
+          "id": "h239",
+          "condition": "pristine clean",
+          "mcp": 37,
+          "failures": 7,
+          "reviews": 3,
+          "result": "Two S2 and one Mo sites kept as distinct nominal types; no supported anomaly."
+        },
+        {
+          "id": "h956",
+          "condition": "vacancy high-dose first seed",
+          "mcp": 38,
+          "failures": 13,
+          "reviews": 0,
+          "result": "One tentative intensity-anomaly candidate; target distance 0.06669 Angstrom; 8 S2 references. Additional Mo check has no supported anomaly."
+        }
+      ],
+      "saved_evidence": {
+        "raw_statistics": 11,
+        "profiles": 17,
+        "reviews": 5,
+        "verification": "Each saved object checked against original array/current reader."
+      },
+      "exit": "All 4 main sessions exit 0 without timeout; parallel total wall 916.654 seconds.",
+      "caveats": "All retain quality_unknown. Two matched locations are not an accuracy rate or 4/4 success. No global defect-free conclusion, occupancy, vacancy probability or calibrated confidence. Both noisy sessions lack completed review.",
+      "auxiliary_isolation": "NOT_VERIFIED. Public observability audit reports 4 auxiliary spawn failures and 3 successes despite requested options; later sanitized audit corroborates 5 returned child turns. Child plaintext, full trace and final lifecycle are not established. No assertion of either GT leakage or strict blindness."
+    },
+    "conclusion": "Physical numerical convergence remains failed; formal blind qualification, real specimens, cross-structure generalization, complete end-to-end noisy review, full auxiliary blind isolation and inverse depth remain unestablished. This is an independent experimental forward-model route, not a new product capability."
+  },
+  "recovery": {
+    "evidence_root": "stem-recovery-evidence",
+    "evidence_class": "Engineering receipt/discovery recovery and a supplied-ROI host control; not improved scientific recognition.",
+    "candidate": "680bf94452df21367c391db105b5c1f90692252e",
+    "original_failure_denominator": {
+      "sessions": 4,
+      "outer_mcp_calls": 138,
+      "failure_responses": 33,
+      "first_operation_failures": 13,
+      "failed_recovery_reads": 20
+    },
+    "failure_groups": [
+      {
+        "cause": "Latest preview unresolved; compound tool recommended a child that had not been reserved/dispatched",
+        "first": 7,
+        "recovery_reads": 14,
+        "codes": {
+          "BATCH_CHILD_FAILED": 14,
+          "REQUEST_NOT_FOUND": 7
+        },
+        "effect": "Clean sessions recovered; two noisy sessions did not complete discovery/review."
+      },
+      {
+        "cause": "Display view used where full scientific frame or qualified wrapper was required",
+        "first": 2,
+        "recovery_reads": 2,
+        "codes": {
+          "INVALID_ARGUMENT": 4
+        },
+        "effect": "Correct refusal; existing statistics/profiles retained."
+      },
+      {
+        "cause": "Nested export requested below missing parent",
+        "first": 3,
+        "recovery_reads": 3,
+        "codes": {
+          "OUTPUT_PARENT_MISSING": 6
+        },
+        "effect": "All3 sessions later recovered by creating the first-level export."
+      },
+      {
+        "cause": "Internal annotation/overview request guessed as an admitted preview acknowledgement",
+        "first": 1,
+        "recovery_reads": 1,
+        "codes": {
+          "PREVIEW_ADMISSION_CORRUPT": 2
+        },
+        "effect": "Incorrect ACK identity, not established storage corruption; that clean session still produced3 reviews."
+      }
+    ],
+    "original_cases": [
+      {
+        "id": "h412",
+        "state": "vacancy clean",
+        "calls": 25,
+        "failures": 3,
+        "reviews": 2
+      },
+      {
+        "id": "h239",
+        "state": "pristine clean",
+        "calls": 37,
+        "failures": 7,
+        "reviews": 3
+      },
+      {
+        "id": "h807",
+        "state": "pristine noisy",
+        "calls": 38,
+        "failures": 10,
+        "reviews": 0
+      },
+      {
+        "id": "h956",
+        "state": "vacancy noisy",
+        "calls": 38,
+        "failures": 13,
+        "reviews": 0
+      }
+    ],
+    "repair_scope": [
+      "Only identify pre-reservation non-dispatch when an explicit PREVIEW_OUTCOME_UNRESOLVED occurs and the child journal is absent; retain original parent failure / BATCH_CHILD_FAILED.",
+      "Guide image_result(original preview) then exact  image_preview_acknowledge pair; unknown outcomes cannot be acknowledged or replayed.",
+      "Distinguish full scientific frame from display view and actual preview_execution from internal annotation; require existing export parent.",
+      "No automatic ACK, no proof of model visual inspection from ACK, no change to numerical algorithms, physical assumptions, original arrays or old scoring."
+    ],
+    "validation": {
+      "admission_passed": 20,
+      "discovery_passed": 15,
+      "automation_passed": 6,
+      "portable_node_passed": 9,
+      "optional_fault_injection_skipped": 2,
+      "optional_windows_first_attempt": "Both POSIX fault-python wrappers failed at source opening with ENOENT; retained as failure, not counted PASS.",
+      "mcp_recovery": {
+        "calls": 26,
+        "preset_refusals": 4,
+        "cases": 2,
+        "selection": "Original noisy inputs and supplied original model ROIs; direct tools/call to avoid client autoACK.",
+        "outcome": "Both latest ACK paths saved reviews; new-client reread PASS; original failed journal hashes unchanged."
+      },
+      "compound_receipt": {
+        "calls": 8,
+        "errors": 0,
+        "outcome": "On final 680bf94, obtain actual view via render_base_object_id and exact preview_execution pair, ACK, then second discovery/history succeeded."
+      },
+      "historical_read": "Original 03ea failed discovery/completed preview returned field-equal; 87 original provider files and file set unchanged.",
+      "source_build": "Final build PASS and compiled/source byte identity; first Windows rename EPERM retained and one retry succeeded.",
+      "initial_test_harness": "Two newly added protective tests first passed Path instead of explicit string; corrected setup, final 20/20 PASS."
+    },
+    "host_control": {
+      "evidence_class": "One supplied-ROI operational control, not blind or automatic selection",
+      "tested_candidate": "7b938ad2ffc483f96198c50c6716339978544991",
+      "final_candidate_relation": "Final680bf94 tools/ and lib/ diff from tested version empty; final changes clarify Skill field mapping and add 2 protective tests.",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "ultra",
+      "attempts": 1,
+      "deadline_seconds": 360,
+      "mcp_budget": 14,
+      "wall_seconds": 158.693,
+      "mcp_calls": 14,
+      "mcp_failures": 0,
+      "exit_code": 0,
+      "timed_out": false,
+      "roi_half_open_xyxy": [
+        24,
+        3,
+        30,
+        9
+      ],
+      "roi_pixels": 36,
+      "roi_mean": 6,
+      "roi_population_stddev": 3.100179206289712,
+      "roi_range": [
+        0,
+        15
+      ],
+      "profile_y": 6,
+      "profile_x_inclusive": [
+        24,
+        29
+      ],
+      "profile_values": [
+        5,
+        15,
+        6,
+        9,
+        5,
+        8
+      ],
+      "skill_texts": 3,
+      "skill_discovery": "Disabled; explicit injection.",
+      "completed_chain": "preview -> exactACK -> discovery -> statistics/profile -> review -> export -> originalID and object reads",
+      "review_physical_conclusion": null,
+      "usage": {
+        "input_tokens": 398333,
+        "cached_input_tokens": 356352,
+        "output_tokens": 5273,
+        "reasoning_output_tokens": 2160,
+        "sampling_requests": 10,
+        "sampling_retries": 0
+      },
+      "limits": [
+        "Same-client reread only; cross-client qualification comes from separate controlled MCP test.",
+        "14 successful MCP calls do not resolve the saved attachment-loader diagnostic lacking its original request ID.",
+        "Newest internal preview completed without explicit ACK; later numeric/read operations did not test another render. Separate 8-call control shows how to ACK actual view and continue.",
+        "No visible auxiliary spawn/communication receipt in this host control; not inferred from feature flags.",
+        "Not a speed or accuracy head-to-head comparison with the original40-call science sessions."
+      ]
+    },
+    "finite_physics_path": {
+      "protocol": "physics-path-identity-v1",
+      "api_scans": 2,
+      "positions_per_state": 9,
+      "full_thickness_positions": 18,
+      "retry_count": 0,
+      "wrapper_wall_seconds": 11.082,
+      "inner_result_seconds": 10.242706199991517,
+      "input": "Existing native float32 saved potentials, 15 slices; no new potential construction and no full-image scan.",
+      "physics": {
+        "energy_eV": 80000,
+        "semiangle_mrad": 20,
+        "defocus_A": 0,
+        "Cs_A": 0,
+        "detector_mrad": [
+          90,
+          200
+        ],
+        "device": "cpu",
+        "fft": "fftw",
+        "gpts_xy": [
+          400,
+          432
+        ]
+      },
+      "selection": "Geometry only: center/four sampled corners of primaryROI plus first 4 distance-ordered reference centers; 2 states.",
+      "max_abs_gridscan_customscan_difference": 1.1641532182693481e-09,
+      "max_relative_difference": 7.71824693913622e-07,
+      "all_bitwise_equal": false,
+      "source_hashes_unchanged": true,
+      "qualification": "No large path discrepancy at these 9 sites; not all 225 sites, convergence proof, or explanation of the 10.034456-percent grid failure."
+    },
+    "grid_failure_diagnosis": {
+      "metric_main": -0.0003439200739,
+      "metric_fine": -0.0003784305835,
+      "relative_change_percent": 10.034456,
+      "frozen_threshold_percent": 10,
+      "status": "FAIL_UNCHANGED",
+      "checked": "Same states, same ROI/reference order, 225 coordinates; no transposition/group mismatch found.",
+      "observations": "Same extent / 15 slices and 15096 physical frequency points in 90-200mrad ring. Near-core radial quadrature lower bound, atom/grid phase and propagation bandwidth change; target fine-grid y phase 7/9. Stored delta-potential area integral changes about 0.053 percent and ring potential Fourier power about 4.638 percent.",
+      "interpretation": "Evidence of discretization variation; potential-power change is not STEM-intensity change and does not uniquely explain the full instability. No directly established abTEM defect.",
+      "next_steps": "At most24 fixed co-translated atom/scan positions, and only if needed at most 12 node-preserving positions were proposed, not executed here. Original225-point metric and 10percent gate remain required."
+    },
+    "restricted_runtime_audit": {
+      "public_locator": "stem-recovery-evidence/runtime-audit.json",
+      "status": "Sanitized aggregate audit only; original runtime transcripts are retained in controlled evidence and excluded from public archive.",
+      "recorded_findings": "7 actual spawn receipts: 4 inherited-context failures and 3 fresh-context successes; 3 successful auxiliary executions produced 5 response turns, with matching send/receive records and gpt-6.1-sol ultra profiles.",
+      "usage": {
+        "child_input_tokens": 57545,
+        "child_cached_input_tokens": 23936,
+        "child_output_tokens": 5454,
+        "child_turns": 5,
+        "root_input_tokens": 5651607,
+        "root_output_tokens": 57385
+      },
+      "non_mcp_receipts": {
+        "total": 101,
+        "exec": 85,
+        "clock": 7,
+        "spawn": 7,
+        "followup": 2
+      },
+      "limits": "No child plaintext assessment, complete per-tool trace or terminal lifecycle proof. Strict blind isolation NOT_VERIFIED; neither leakage nor blindness established. Runtime counters are not billing dollars; exec may contain MCP waits and cannot be added to MCP durations."
+    },
+    "not_established": [
+      "Automatic target/reference selection",
+      "Strict blind vacancy detection",
+      "Real specimen qualification",
+      "Multilayer or depth reconstruction",
+      "Human Panel workflow",
+      "Training",
+      "An improved scientific classifier or physical stability"
+    ]
+  },
+  "engineering_inputs": {
+    "tiff": {
+      "candidate": "12a57ef771f18e14d74ff3a1df7d7a8458a656b2",
+      "evidence_root": "tiff-float64-evidence",
+      "scope": "Scalar 2D TIFF admission and overflow-safe finite float64 display normalization; scientific arrays stay unchanged.",
+      "supported_dtypes": [
+        "uint8",
+        "uint16",
+        "uint32",
+        "int8",
+        "int16",
+        "int32",
+        "float32",
+        "float64"
+      ],
+      "validation": {
+        "python_passed": 50,
+        "node_passed": 5,
+        "build": "PASS",
+        "mcp_calls": 16,
+        "expected_refusals": 2,
+        "unexpected_failures": 0,
+        "byte_exact_cases": 4,
+        "extreme_preview_pixels": [
+          0,
+          128,
+          255
+        ]
+      },
+      "limits": "Not generic OME/vendor/volume/codec support, automatic calibration, contrast inversion, or a guarantee that all extreme finite inputs pass FFT/statistics guards.",
+      "reproduction": [
+        "prepare-fixtures.py",
+        "mcp-smoke.mjs"
+      ],
+      "archive": "No standalone ZIP catalogued in supplied scoped archive records; use the evidence SHA256.json fingerprint."
+    },
+    "panel": {
+      "candidate": "a56018dd5206427d5f9881efaf98cd159be21814",
+      "evidence_root": "panel-helper-fix-evidence",
+      "scope": "Observe default owned helper startup close/error, bounded 8192-character stderr and WORKSPACE_* machine code; preserve submitted unknown intent/original request ID and no automatic relaunch.",
+      "validation": {
+        "before_new_tests": {
+          "pass": 1,
+          "fail": 4
+        },
+        "after_tests": 41,
+        "build": "PASS",
+        "real_first_panel_seconds": 3.5964597,
+        "real_conflict_seconds": 3.5193044,
+        "real_control": "Same ID query and provider restart preserve refusal; first Panel remains usable."
+      },
+      "limits": "Startup diagnostic and engineering recovery only; no model or algorithm accuracy/speed claim, real specimen qualification, or direct real-process early-exit resume qualification.",
+      "reproduction": [
+        "real-panel-control.mjs",
+        "tests/panel-helper-launch.test.mjs"
+      ],
+      "archive": "No standalone ZIP catalogued in supplied scoped archive records; use the evidence SHA256.json fingerprint."
+    },
+    "integration_audit": {
+      "main": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "result": "Main contains neither equivalent fix; relevant pre-existing source files equal 7a1d3e0. No known textual conflict with main or STEM chain through 680bf94. This was read-only comparison, not combined execution.",
+      "test_registration_gap_at_historical_candidates": "image_tiff_admission_test.py and panel-helper-launch.test.mjs are absent from automatic test entrypoints; stable integration should register them.",
+      "policy": "Preserve reviewed main Node 22/24 policy; these engineering fixes add no project dependency and no new scientific engine."
+    }
+  },
+  "reproduction": {
+    "execution_policy": "Record only; no script was run to regenerate science/models for this note. Scripts and frozen inputs stay in controlled evidence. Historical scripts may need explicit environment/path adaptation; record any adaptation and new outcome as a new experiment.",
+    "stages": {
+      "point": {
+        "protocols": [
+          "point-observation-evidence/controls-plan.json"
+        ],
+        "scripts": [
+          "run-controls.py",
+          "mcp-controls.mjs",
+          "mcp-recovery.mjs",
+          "mcp-legacy-compat.mjs",
+          "prepare-agent.py",
+          "run-agent.py",
+          "audit-controls.py",
+          "audit-agent.py",
+          "audit-peak-compat.py"
+        ],
+        "reports": [
+          "REPORT.md",
+          "DIAGNOSIS.md",
+          "assessor/controls-summary.json",
+          "assessor/control-audit.json",
+          "assessor/ambiguity-control.json"
+        ]
+      },
+      "physical": {
+        "protocols": [
+          "stem-physical-03ea953/protocol.json",
+          "stem-physical-03ea953/run-03/protocol.json"
+        ],
+        "scripts": [
+          "run-02/simulate-r2.py",
+          "run-03/simulate-r3.py",
+          "simulate.py",
+          "audit-physics.py",
+          "audit-peaks.py",
+          "mcp-physical.mjs",
+          "audit-mcp.py",
+          "prepare-blind.py",
+          "run-blind.py",
+          "prepare-diagnostic.py",
+          "run-diagnostic.py",
+          "audit-diagnostic.py",
+          "summarize-diagnostic.py"
+        ],
+        "formal_blind_status": "Prepared scripts are not proof that formal blind sessions ran.",
+        "reports": [
+          "REPORT.md",
+          "formal-blind-status.json",
+          "refinement-decision.json",
+          "peak-cap-diagnostic.json",
+          "mcp-summary.json",
+          "mcp-audit-first-failure.json",
+          "mcp-audit.json",
+          "diagnostic/freeze-assessor.json",
+          "diagnostic/audit-summary.json",
+          "diagnostic/operational-summary.json",
+          "diagnostic/auxiliary-observability-audit.json",
+          "versions.txt"
+        ]
+      },
+      "recovery": {
+        "protocols": [
+          "stem-recovery-evidence/host-control/freeze.json",
+          "stem-recovery-evidence/physics-path-control/protocol.json"
+        ],
+        "scripts": [
+          "classify-failures.py",
+          "mcp-recovery.mjs",
+          "mcp-compound-receipt.mjs",
+          "prepare-host-control.py",
+          "run-host-control.py",
+          "audit-mcp-source.py",
+          "audit-historical-read.py",
+          "physics-path-control/control.py",
+          "package-evidence.py"
+        ],
+        "reports": [
+          "REPORT.md",
+          "failure-groups.json",
+          "harness-notes.json",
+          "validation.json",
+          "host-control/audit.json",
+          "physics-path-control/result.json",
+          "runtime-audit.json"
+        ]
+      }
+    }
+  },
+  "archives": [
+    {
+      "basename": "point-observation-03ea953-evidence.zip",
+      "bytes": 11677017,
+      "sha256": "63d9c8c88c2af992e46f6292b1386ed9be358fc0868a0ca547d4055ae6576845",
+      "access": "Controlled evidence collection; archive is not committed by this note.",
+      "hash_verified_during_note_preparation": true
+    },
+    {
+      "basename": "stem-physical-03ea953-evidence.zip",
+      "bytes": 137479524,
+      "sha256": "1f08e3a55fcf9d17fc4c21714267df6cc4b40065cff0767374798bc93c1857d4",
+      "access": "Controlled evidence collection; archive is not committed by this note.",
+      "hash_verified_during_note_preparation": true
+    },
+    {
+      "basename": "stem-recovery-680bf94-evidence.zip",
+      "bytes": 589237,
+      "sha256": "9e12bf326fe314ac4f7b1dcf961cab83ef85d735c81fef9c55ec52336e786021",
+      "access": "Controlled evidence collection; archive is not committed by this note.",
+      "hash_verified_during_note_preparation": true
+    }
+  ],
+  "source_fingerprints": [
+    {
+      "path": "point-observation-evidence/REPORT.md",
+      "bytes": 15388,
+      "sha256": "585ac06eb7d45597a4e1487c8734a66d838946879f8803174393a1db8eb12b2d"
+    },
+    {
+      "path": "point-observation-evidence/controls-plan.json",
+      "bytes": 7566,
+      "sha256": "80fecb30eedde399cfb617b25b18ea68f45449a2e7cc0123c4613aaf9f002962"
+    },
+    {
+      "path": "point-observation-evidence/run-controls.py",
+      "bytes": 5725,
+      "sha256": "4bc55c84d2a09b5cfc0d101647af7926d6e1700140212eb8270e7d0eca9c6354"
+    },
+    {
+      "path": "point-observation-evidence/prepare-agent.py",
+      "bytes": 4521,
+      "sha256": "5c94a2458a3b4f981fa5598cdd4bfaf6ef24919406f39e90774b441cf179f5dc"
+    },
+    {
+      "path": "point-observation-evidence/run-agent.py",
+      "bytes": 3682,
+      "sha256": "52a43214a4a62267264001abd968122aa4398c298effb87337320370e7949ffc"
+    },
+    {
+      "path": "point-observation-evidence/audit-agent.py",
+      "bytes": 7000,
+      "sha256": "50d8d80e1440850ed576015cf743900bfd0374713d894b2ff220bea54695c448"
+    },
+    {
+      "path": "point-observation-evidence/audit-controls.py",
+      "bytes": 3083,
+      "sha256": "63ced88106488a467a50e4d6a47c42abcb6263d6c04184fee421c00148a967d9"
+    },
+    {
+      "path": "point-observation-evidence/audit-peak-compat.py",
+      "bytes": 1683,
+      "sha256": "68a4bae7097dc7ef3917db6c7427ca0c46374b64a23c8467eabd85eb40e87ac8"
+    },
+    {
+      "path": "point-observation-evidence/mcp-controls.mjs",
+      "bytes": 5906,
+      "sha256": "1693b94ff74356d1e9772a9126ed10fd6faa13175f88778d4c2001fd87bee048"
+    },
+    {
+      "path": "point-observation-evidence/mcp-recovery.mjs",
+      "bytes": 2240,
+      "sha256": "3ea2772aad13d2eea225dbb2221e39713a98ebfa3df3b2cb5ce8b9d4ea96d608"
+    },
+    {
+      "path": "point-observation-evidence/mcp-legacy-compat.mjs",
+      "bytes": 3096,
+      "sha256": "766749bb94d28354761e6f8667d97be1624b583ca9acc2a3097b92715e4b5b70"
+    },
+    {
+      "path": "point-observation-evidence/SHA256SUMS.json",
+      "bytes": 123299,
+      "sha256": "7bdd74ef852027e1e2bcf09e6b98a6ef80893c081d6def23ab2093a40d096d14"
+    },
+    {
+      "path": "stem-physical-03ea953/REPORT.md",
+      "bytes": 15629,
+      "sha256": "0c117b8a982fb941c66a697e6fe6fd67ed43696cf1d1d99b5e490dbca4cc2bc5"
+    },
+    {
+      "path": "stem-physical-03ea953/protocol.json",
+      "bytes": 4967,
+      "sha256": "0a51775e47b4ac4fe62d53c47c58df4125fc80e264541466ae5c1c34fbfa65b1"
+    },
+    {
+      "path": "stem-physical-03ea953/simulate.py",
+      "bytes": 11546,
+      "sha256": "16a432d8e8baf5e54096c3958d94302bbcd76566cb31c4d440dde9ea33d7f3d7"
+    },
+    {
+      "path": "stem-physical-03ea953/audit-physics.py",
+      "bytes": 4753,
+      "sha256": "515eec6a6ce0fd45af0e91c573fc04bb765a7dbb8aa983f17165ec332dba1050"
+    },
+    {
+      "path": "stem-physical-03ea953/audit-peaks.py",
+      "bytes": 1661,
+      "sha256": "aaef84d9fe724b37f6726e7b6e1cc933f760b447d5a844ea6b2ce237651dc0b2"
+    },
+    {
+      "path": "stem-physical-03ea953/audit-mcp.py",
+      "bytes": 2531,
+      "sha256": "d54f384ad962c84997d5ba58b09e71063e7984aed4fae63531248d621e72b70b"
+    },
+    {
+      "path": "stem-physical-03ea953/audit-diagnostic.py",
+      "bytes": 8918,
+      "sha256": "a4fd59af75d7d6bb20177f7716ec6895a07fcfef6f1b38b769a849edbd383f06"
+    },
+    {
+      "path": "stem-physical-03ea953/prepare-blind.py",
+      "bytes": 6395,
+      "sha256": "1410be243207ce7a63856110b2da370772513760f88c433a96d40c3363a6cc68"
+    },
+    {
+      "path": "stem-physical-03ea953/run-blind.py",
+      "bytes": 4145,
+      "sha256": "863a173180317b41daa84e22b0db2c1c8e859d71b46e2431212b5f6978e0abe0"
+    },
+    {
+      "path": "stem-physical-03ea953/prepare-diagnostic.py",
+      "bytes": 6849,
+      "sha256": "714896a8fe96d8e1429db3a083239e5804d75ef862c0a977f30026ca82a079ee"
+    },
+    {
+      "path": "stem-physical-03ea953/run-diagnostic.py",
+      "bytes": 5000,
+      "sha256": "d7e6223546e122bf24477e411968a40deaa64438557c362d0411405cfa720105"
+    },
+    {
+      "path": "stem-physical-03ea953/summarize-diagnostic.py",
+      "bytes": 4732,
+      "sha256": "d54fd8f0142582c3ae00bc9428a16b5591bc1e05e6bc147cdf28c25dae6ced60"
+    },
+    {
+      "path": "stem-physical-03ea953/SHA256SUMS.json",
+      "bytes": 134604,
+      "sha256": "b1d08b909f8bf0498943768cc9cbe0223a04a96d49a47e7d21951c6e6ebb2fdb"
+    },
+    {
+      "path": "stem-recovery-evidence/REPORT.md",
+      "bytes": 11424,
+      "sha256": "16002ecbfc69417f3e55afab5ae17c066308c699499ce334eb67b093f972305c"
+    },
+    {
+      "path": "stem-recovery-evidence/classify-failures.py",
+      "bytes": 4127,
+      "sha256": "8fb7c23f730fa651cf66abedf020f5c83a1fc980c1065ba047b08fd498f670a3"
+    },
+    {
+      "path": "stem-recovery-evidence/mcp-recovery.mjs",
+      "bytes": 5350,
+      "sha256": "799ab2dfa5490d55c1d87b2c1c186ef6ee9efbc65c3da20ff9e55cf49df1cebb"
+    },
+    {
+      "path": "stem-recovery-evidence/mcp-compound-receipt.mjs",
+      "bytes": 2983,
+      "sha256": "c743b4dc2ced87ccf2722890a408d6e5b7c484afa9ab4a2993855d8ad10c7617"
+    },
+    {
+      "path": "stem-recovery-evidence/prepare-host-control.py",
+      "bytes": 3049,
+      "sha256": "ea2e3e10278f7365d8ebd9b36a4b26b84e5966b24ea3d95930ef4ee90e0f81a9"
+    },
+    {
+      "path": "stem-recovery-evidence/run-host-control.py",
+      "bytes": 4377,
+      "sha256": "2e3b99d61a908c53c4a853151e640b047c724b434e93477b47d16eff046d630b"
+    },
+    {
+      "path": "stem-recovery-evidence/audit-mcp-source.py",
+      "bytes": 1173,
+      "sha256": "bba5aa98d2702591a2cb8d9279074ba36681bac762076a62c44f70dd331d3f00"
+    },
+    {
+      "path": "stem-recovery-evidence/audit-historical-read.py",
+      "bytes": 1364,
+      "sha256": "935468ecc441ad59eb6971fb1716f2093b0da32ccc223b5b5eae34e49a812b09"
+    },
+    {
+      "path": "stem-recovery-evidence/package-evidence.py",
+      "bytes": 1612,
+      "sha256": "d13cdd4a9b58fca95b2d3dbaea1cd848104228f2fe6a0d1d6a18ef1fc1c17642"
+    },
+    {
+      "path": "stem-recovery-evidence/physics-path-control/control.py",
+      "bytes": 15976,
+      "sha256": "304480c415f3d42f907b1f15935099e24d294053f058a7b2398a54f94be25815"
+    },
+    {
+      "path": "stem-recovery-evidence/physics-path-control/protocol.json",
+      "bytes": 4123,
+      "sha256": "74943ece58673ddc61c109601b7149beb792260fb1fa49fca998af22a7d2bfa1"
+    },
+    {
+      "path": "stem-recovery-evidence/runtime-audit.json",
+      "bytes": 12535,
+      "sha256": "35815a4c304d3f5f1e9bd28e1a4be06e2bb50452d7aaac9987035bef3bcb201a"
+    },
+    {
+      "path": "stem-recovery-evidence/host-control/audit.json",
+      "bytes": 27516,
+      "sha256": "609d85724f87a762c514a976a2af40804643eade95c660b297de641bb446960a"
+    },
+    {
+      "path": "tiff-float64-evidence/SHA256.json",
+      "bytes": 13613,
+      "sha256": "97314a50e67964568fdc76d458a9d05c51c0c678152f4613bdfd554f69062970"
+    },
+    {
+      "path": "tiff-float64-evidence/REPORT.txt",
+      "bytes": 5840,
+      "sha256": "13384f6e80311d6e9e936b4838764983e3715aa05d80e9323694bc6a6f1f9954"
+    },
+    {
+      "path": "tiff-float64-evidence/prepare-fixtures.py",
+      "bytes": 937,
+      "sha256": "c4eec6bd427797780dd10af49ed9fd03691d6b9ab6ac2055ff0c6fb85db95dcb"
+    },
+    {
+      "path": "tiff-float64-evidence/mcp-smoke.mjs",
+      "bytes": 3326,
+      "sha256": "f75054cf8acb5575d6028837ab1ae5db507579717be42225d2af8e7009e368dd"
+    },
+    {
+      "path": "panel-helper-fix-evidence/SHA256.json",
+      "bytes": 7925,
+      "sha256": "573d4f64e82a47ec95d7a91e11cdc12865a73c96913d555aba55f3179cc47aef"
+    },
+    {
+      "path": "panel-helper-fix-evidence/real-panel-control.mjs",
+      "bytes": 3531,
+      "sha256": "20cb4cf740d6ecd2f1b7010e3d7e1b020977a31726e2535a379272337cd8b169"
+    },
+    {
+      "path": "panel-helper-fix-evidence/candidate.patch",
+      "bytes": 16109,
+      "sha256": "8a2da31a05a60aedcd9e4c185379f5a8da50056361740c3a934d41e1d355a345"
+    },
+    {
+      "path": "stem-physical-03ea953/run-02/simulate-r2.py",
+      "bytes": 11702,
+      "sha256": "86c6a6774498a942b1b7598d73e80fc35647dbbe09db0c667baa5be761d0ff22"
+    },
+    {
+      "path": "stem-physical-03ea953/run-03/simulate-r3.py",
+      "bytes": 11708,
+      "sha256": "e35499c9881d2fe0d1487a68c5f2d7b8c8699c5e50f30039ce75acd27bab83fb"
+    },
+    {
+      "path": "stem-physical-03ea953/run-03/protocol.json",
+      "bytes": 6828,
+      "sha256": "d04fcc2dd57b090ad97370edc605c95801554496d2371ccd42f115c9a99382d2"
+    },
+    {
+      "path": "stem-physical-03ea953/versions.txt",
+      "bytes": 1166,
+      "sha256": "44723354b7f6b8e9394fe5c0cc3292b25dc21636c6826e86f0d01a858a4667a9"
+    },
+    {
+      "path": "stem-physical-03ea953/formal-blind-status.json",
+      "bytes": 705,
+      "sha256": "43512511ca16ee9a59852eba77fad2abefab7e428dc383fbb4b47477db090993"
+    },
+    {
+      "path": "stem-physical-03ea953/diagnostic/freeze-assessor.json",
+      "bytes": 4141,
+      "sha256": "5a3d0fb8ae5752ea90cec4c81ae739444b4c4c3c2669b966881e00b28882aa89"
+    },
+    {
+      "path": "stem-physical-03ea953/diagnostic/audit-summary.json",
+      "bytes": 158121,
+      "sha256": "c5c70a149c1b2f4433e5327429ac0de163baa6550a5a548f339350f8ac6ffb3c"
+    },
+    {
+      "path": "stem-physical-03ea953/diagnostic/operational-summary.json",
+      "bytes": 9633,
+      "sha256": "e927d6e8c683c6ea7d24f6177a7c88c5b716d31658c7cab76ffcc2d2825eea1e"
+    },
+    {
+      "path": "stem-physical-03ea953/diagnostic/auxiliary-observability-audit.json",
+      "bytes": 6185,
+      "sha256": "ca05fab5a61c8e3c9047b707daa8cbd80fa40097600661c8f808bb231560b7c3"
+    },
+    {
+      "path": "stem-physical-03ea953/mcp-physical.mjs",
+      "bytes": 5983,
+      "sha256": "cecd91899ffe18b26d802e7502d8ea844ef4986b2e36c63463ac05325e1755e4"
+    },
+    {
+      "path": "stem-recovery-evidence/physics-path-control/result.json",
+      "bytes": 9771,
+      "sha256": "22e2ae12459cab4aeac55c27adbfa515097903ff2c192b0f09c2e7585aa761d7"
+    },
+    {
+      "path": "stem-recovery-evidence/failure-groups.json",
+      "bytes": 21186,
+      "sha256": "c89ff06daa8564e983a96e541df5d85b90b9a28991fce37cdc83d259f4ad088e"
+    },
+    {
+      "path": "stem-recovery-evidence/validation.json",
+      "bytes": 1248,
+      "sha256": "e00d1c0c6f3d5e5ab78b445aff99afa17ad4dd60e6af3c5129b37f3a8592df08"
+    }
+  ],
+  "overall_status": {
+    "engineering_observation_and_recovery": "SUPPORTED_WITH_STATED_SCOPE",
+    "proxy_numerical_checks": "PASS_WITH_FIXED_SITE_AND_PROXY_LIMITS",
+    "physical_grid_gate": "FAIL_RETAINED",
+    "formal_blind_physical_qualification": "NOT_TESTED",
+    "strict_diagnostic_blind_isolation": "NOT_VERIFIED",
+    "real_specimen_qualification": "NOT_TESTED",
+    "new_experiments_during_note_preparation": 0
+  },
+  "retrospective_compilation": true,
+  "recording_note": "Compiled retrospectively from preserved evidence. This compilation is not a contemporaneous preregistration or a new experiment.",
+  "engineering_baseline": {
+    "commit": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+    "main_parent": "c69424ac25a35efd816d68cacd5904f5381c7485",
+    "status": "LOCAL_CANDIDATE_NOT_MERGED"
+  }
+}

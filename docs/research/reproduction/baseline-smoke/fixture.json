@@ -1,0 +1,60 @@
+{
+  "scope": "Two supplied-ROI engineering fixtures, not a scientific method comparison or blind localization",
+  "A": {
+    "model": "Two exact sinusoidal waves, HRTEM-like texture proxy only; no multislice/CTF",
+    "shape_yx": [
+      128,
+      128
+    ],
+    "dtype": "float64",
+    "frequency_vectors_cycles_per_pixel": [
+      [
+        0.1640625,
+        0.0234375
+      ],
+      [
+        -0.03125,
+        0.1328125
+      ]
+    ],
+    "amplitudes": [
+      1,
+      0.6
+    ],
+    "phases": [
+      0,
+      0.3
+    ],
+    "noise": "none",
+    "core": [
+      48,
+      48,
+      80,
+      80
+    ],
+    "arms": [
+      32,
+      32,
+      32,
+      32
+    ],
+    "expected_fft_pixels": 7168
+  },
+  "B": {
+    "model": "Previously frozen abTEM static IAM quality-limited MoS2 source; no new simulation or noise",
+    "shape_yx": [
+      48,
+      40
+    ],
+    "dtype": "float32",
+    "roi": [
+      24,
+      3,
+      30,
+      9
+    ],
+    "source_sha256": "f814b849bc6cd9d1096be3e1ff16963fcb86d3bc9064cbef6d737f1e333e43e2",
+    "physical_gate": "FAIL:10.034456percent exceeds frozen10percent",
+    "not_blind": true
+  }
+}
