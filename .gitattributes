@@ -21,3 +21,5 @@ tools/image_source_proof.py text eol=lf
 # Retrospective research records include byte-identified original generators and
 # protocols. Preserve archive and manifest bytes rather than normalizing them.
 docs/research/** -text whitespace=cr-at-eol
+# Keep copied decision/spec evidence byte-exact across checkouts.
+docs/conditional-s2/* -text
