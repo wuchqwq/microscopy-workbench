@@ -1,5 +1,7 @@
 # Standalone science provider: client setup
 
+[English](CLIENT_SETUP.md) · [简体中文](CLIENT_SETUP.zh-CN.md) · [Working loop](WORKBENCH_WORKFLOW.md)
+
 This is the current installation entry for Windows/macOS/Linux. No GMS,
 DigitalMicrograph or old mcp-dm checkout is required. Copied technical references
 may retain pre-split `DM_IMAGE_*` examples; use `MICROSCOPY_*` below for this server.
@@ -16,6 +18,8 @@ Use absolute interpreter, repository and workspace paths; do not use GMS Python.
 For example, from the new checkout:
 
 ```sh
+npm ci
+npm run build
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-images.txt
 ```
@@ -101,11 +105,19 @@ Use equivalent quoted absolute Windows paths. Keep the local process running;
 open its private loopback URL without sharing the token. Supported TIFF types
 remain limited; see [the inspector guide](RESEARCHER_DATA_INSPECTOR.md).
 
-Run `npm test` for portable checks. With the configured independent Python,
-run `npm run test:science` for the retained synthetic numerical/HTTP smoke.
+For development, select checks from the actual diff and affected contracts as
+required by [AGENTS.md](../AGENTS.md). `npm test` provides portable checks;
+with the configured independent Python, `npm run test:science` runs the retained
+synthetic numerical/HTTP smoke. These full commands are not required for every
+documentation-only change.
 Actual ordinary-client vision and full browser gestures are separate acceptance.
 The [array/ROI/profile guide](IMAGE_NUMERIC_INSPECTION.md) and included screenshots
 are source-pinned synthetic examples, not new platform or specimen evidence.
+
+For Agent automation, install the selected Skills through the
+[plugin guide](AUTOMATION_PLUGIN.md) and read the [Agent guide](../README.agent.md).
+The workspace and MCP provider must address the same actual scientific data;
+matching path text alone is not an identity check.
 
 DM can be installed as a separate peer provider on a qualified Windows host.
 Do not register this server with the old DM-only PowerShell helper or set

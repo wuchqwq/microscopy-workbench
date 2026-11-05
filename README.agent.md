@@ -1,4 +1,26 @@
-# Agent guide: independent microscopy science
+# Agent guide: researcher-guided crystallography
+
+[English](README.agent.md) · [简体中文](README.agent.zh-CN.md) · [Researcher workflow](docs/WORKBENCH_WORKFLOW.md)
+
+## Your role in the loop
+
+Use MCP and the installed Skills to automate the authorized analysis with explicit numerical tools. The researcher supplies the question, relevant knowledge and corrections; keep internal IDs and routine tool orchestration on the Agent side. Inspect actual images and saved evidence before interpreting them. Do not replace numerical work with a plausible narrative.
+
+Basic direct ROI → FFT does not require a written reason or explicit workspace save. The manual observation workflow below is a distinct supported entry for evidence-guided continuation, not a prerequisite for all image operations. Use only the methods needed for the question, with explicit budgets and stopping conditions.
+
+Before acting, discover this connection's actual tool schemas, read its source/frame/calibration and current Panel/draft state, and recover relevant saved context. A tool's presence is not optional-dependency or scientific qualification. Return concise findings, alternative explanations and the smallest useful next observation to the researcher.
+
+## Shared workspace, provenance and recovery
+
+Working edits, explicit savepoints, immutable executions and display preferences are separate. Read the [workspace contract](docs/ANALYSIS_WORKSPACE.md) and [CLI contract](docs/CLI.md) before combining GUI and headless work. A saved A must not adopt an exploratory FFT(B) after Don't Save. Retain exact floating ROI association separately from integer processing support and never infer it from matching bounds alone.
+
+For every write retain the original request ID before dispatch. Query the advertised original-outcome endpoint after timeout/cancellation; do not create a new ID to retry an unknown effect. A known existing/unqualified or unresolved FFT is not missing computation. Returning a saved view or reopening a helper is not permission to rerun science.
+
+Use [owned Panel recovery](docs/INSPECTOR_PANEL_RECOVERY.md) only where its registration/checkpoint contract applies. A restored crystal card remains unvalidated until a new guarded evidence attachment checks current dependencies. Read current state separately from an old completed receipt.
+
+When source proof is needed, inspect the advertised `image_source_proof`, `image_source_proof_info` and `image_source_proof_revoke` contracts. Recording a proof, adopting a reference and saving a workspace are separate actions. A retrospective proof preserves the FFT's original qualification; it cannot make unavailable pre-execution input evidence strictly reusable. Hash records are not digital signatures.
+
+## Scientific routes
 
 To continue from two saved Panel regions into a finite structure comparison,
 use the [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md). Read its

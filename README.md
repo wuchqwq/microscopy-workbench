@@ -1,54 +1,44 @@
 # Microscopy Workbench
 
-**From microscopy images to traceable structural evidence.**
+**An AI-assisted crystallography workbench, with the researcher in the loop.**
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-Microscopy Workbench is an open-source, cross-platform workbench for scientific microscopy analysis. It combines numerical tools, persistent scientific records, and a local Image Panel. Through the **Model Context Protocol (MCP)** and installable **Skills**, compatible AI agents can use those same tools to organize an analysis—not replace its numerical or physical foundations.
+Microscopy Workbench is an open-source workbench for building traceable crystallographic evidence from microscopy images. An AI Agent uses the **Model Context Protocol (MCP)** and installable **Skills** to automate bounded analysis with explicit scientific tools. The researcher guides the question, selects or corrects regions and measurements, reviews alternatives, and decides what the evidence supports.
 
-The workbench runs on **Windows, macOS, and Linux**, without DigitalMicrograph, GMS, or the separate `mcp-dm` repository. **No AI model is needed** to inspect and measure images locally. Platform and scientific qualification scopes are recorded separately in the acceptance reports.
+The local Image Panel, structured CLI and MCP provider share saved scientific objects and request journals. You can also inspect images and measure them **without an AI model**. The core supports Windows, macOS and Linux without DigitalMicrograph, GMS or the separate `mcp-dm` repository. Native desktop and platform qualification have narrower, separately recorded scopes.
 
-![R3 local structural evidence in the Image Panel](docs/examples/r3/browser-field.png)
+![Local structural evidence in the Image Panel](docs/examples/r3/browser-field.png)
 
-*R3 structural-field review in the local Panel, using a public synthetic test image. This is workflow evidence, not validation on real specimens.*
+*Public synthetic example of local structural evidence. The screenshot demonstrates a workflow, not accuracy on real specimens.*
 
-## What you can do
+## The working loop
 
-- **Use a Windows desktop window and a structured CLI.** The [desktop development entry](docs/DESKTOP.md) provides native menus and explicit Save / Don't Save / Cancel through the existing Image Panel. The [headless CLI](docs/CLI.md) reads exact saved ROI identities, reuses independently verified FFT inputs and writes source-bound comparison reports for explicit GUI viewing/adoption. See the [analysis-workspace contract](docs/ANALYSIS_WORKSPACE.md); clean-machine installation remains a separate stage.
+1. **Open and inspect.** Select the real source, frame or dataset. Inspect the original numerical data, signed calibration and explicit unknowns.
+2. **Guide the analysis.** Select one or more ROIs. For the observation/Agent route, save an observation or question and hand the exact context to a connected Agent. Basic ROI → FFT does not require a reason or an explicit workspace save.
+3. **Let the Agent do the bounded work.** Reuse saved FFTs and measurements where their inputs are verified. Run the relevant numerical tools, compare supplied structure hypotheses, or propose a budgeted next observation.
+4. **Review and correct.** Return to the source beside the FFT, inspect unmatched evidence, adjust a saved ROI or peak, and explicitly continue from the revised record.
+5. **Save and resume.** Save the analysis workspace, retain original request IDs, and reopen or query existing results before starting new work.
 
-- **Save observations and continue beside the image.** The [GUI-first trial](docs/GUI_FIRST_ROUND1.md) adds a visible ROI/reason list, an explicit Agent handoff and qualified finite-comparison evidence in the same Panel. Saved FFT links reopen measurement views; peak revisions keep older evidence visibly pending until updated. This does not embed a chat or automatically wake a model.
+“Hand to Agent” prepares an explicit handoff for an already connected client. It does not embed a chat, select a model or automatically wake an Agent. See the bilingual [workflow guide](docs/WORKBENCH_WORKFLOW.md) and [Agent guide](README.agent.md).
 
-- **Continue from two regions selected in the Panel.** The [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md) shares saved FFT/measurement evidence across source-bound reviews and finite candidate comparisons. Real browser gestures and fresh-Agent/recovery tests passed in a [limited public synthetic scope](docs/MANUAL_CRYSTAL_ACCEPTANCE.md); this does not establish a real material's identity.
+## What is available
 
-- **Compare explicit structures across adjacent ROIs.** [General crystallographic evidence](docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md) composes supplied ordered FCC/BCC/HCP or multi-element models, actual qualified simulations and saved reflection measurements. It preserves alternatives and insufficient evidence; generic relations are not automatically twins or phase identifications.
+- **Image-first exploration.** Inspect supported TIFF and optional DM3/DM4 inputs, numerical values, profiles and calibrated or pixel-only measurements. Save multiple editable ROIs on one source frame, keep source/ROI/FFT views side by side, and return to the exact FFT input rather than a newer selection.
+- **FFT and reflection evidence.** Compute local FFTs, locate/refine numerical peak candidates, and retain reciprocal vectors, spacings, uncertainties and unmatched observations. A numerical maximum is not automatically a true reflection.
+- **Explicit crystallographic comparisons.** Use supplied structures and qualified ASE/diffsims operations to compare finite structure/orientation hypotheses across saved regions. Preserve FCC/BCC/HCP, multi-element and projection alternatives within each tool's declared scope. Generic relations are not automatically twins or identified phases.
+- **Human-guided automation.** MCP tools and Skills compose ROI/FFT/measurement steps, bounded structural fields and incremental follow-up. The supported image-first observation route starts from a researcher's ROI and reason. Automatic spatial-feature proposals remain **EXPERIMENTAL** and can miss visible changes.
+- **Conditional physical and topology evidence.** Classical single-domain GPA provides projected displacement, finite strain and rotation under explicit reference assumptions. Saved wrapped GPA phases support conditional projected winding evidence. The bounded twin and cross-method tools retain compatibility, ambiguity, missing information and stopping outcomes.
+- **A shared analysis workspace.** GUI, CLI and Agent use the same provider records. Explicit saves, execution history, guarded recovery and source-proof metadata retain input identity. A retrospective source proof does not upgrade an originally unqualified FFT into strict reuse eligibility.
+- **Local review and export.** Review sequences with explicit frame meaning, export scientific arrays/tables separately from display images, and compose figures. The Windows desktop development entry wraps the existing Panel; the headless CLI does not require Electron.
 
-- **Inspect and measure microscopy data.** Open supported TIFF images and, with an optional reader, selected DM3/DM4 files. Preserve original arrays, data types, axes, signed calibration, and explicit frame/ROI selections. Compute local FFTs, detect/refine peaks and measure reciprocal vectors and spacings.
-- **Continue from a researcher-selected ROI (F4b).** The supported first-version path records an explicit ROI and observation reason, lets an Agent call existing FFT/measurement or qualified GPA tools, then binds, revises and recovers the evidence. No full structure field is required. The original F4b standalone qualification used public synthetic inputs; the later integrated GUI-first route also has Codex-operated Chrome checks on public synthetic data. Human-operated usability and independent real-specimen physics remain NOT_TESTED. Automatic spatial-feature proposals are **EXPERIMENTAL**, can miss visible changes, and do not establish physical defects. See [scope and limits](docs/IMAGE_FIRST_DISCOVERY.md) and the [freeze acceptance](docs/F4B_FREEZE.md).
-- **Build structural evidence and choose follow-up analyses (F1a / F4-lite).** Create bounded multiscale fields, candidate domains and finite boundary-support bands; append explicit ROI observations without recalculating unchanged FFTs. Read compact summaries or exact-manifest evidence pages, and obtain budgeted next-analysis proposals with explicit stopping rules.
-- **Estimate single-domain physical fields (F2a).** Reuse a qualified saved FFT to extract geometric phase, projected displacement, finite Green–Lagrange strain and polar rotation. Reference choices, signed pixel metrics, invalid masks and pseudo-strain limitations remain explicit.
-- **Inspect conditional projected topology (F3a).** Measure winding on explicit circuits in saved wrapped GPA bands. Version 2 evaluates strictly nested geometry groups separately and retains remote zero or unavailable observations. It does not confirm a material dislocation or a unique three-dimensional Burgers vector.
-- **Compare saved sequences and review results.** Preserve explicit frame meaning and ROI correspondence (R2). Use the local Panel, scientific exports and Figure Composer to inspect source-linked evidence; frame indices are not assumed to be physical depth.
-- **Resume reproducibly.** Scientific objects, request journals, source hashes, measurement dependencies and supported named AnalysisContext references preserve previous analyses. GPA/topology retain their exact provider object/request IDs; no unrelated context role is silently reused.
+The [current status](docs/DEVELOPMENT_STATUS.md) separates implemented functionality from the tests actually performed. Individual method and acceptance reports retain their original dates and limitations.
 
-### How it fits together
+## Quick start
 
-```text
-Researcher or optional AI Agent + Skills
-                    |
-            MCP server (TypeScript)
-                    |
-       Scientific tools (Python)
-                    |
-       Versioned scientific workspace
-             /                 \
-    Local Image Panel      Figure Composer
-```
+Use **Node.js 22.x or 24.x** and an independent scientific Python environment. **Python 3.13 is recommended and is the CI reference**. Scientific tools still declare Python 3.10+, which is not continuously CI-qualified; the optional configuration registrar needs 3.11+. See [runtime support](docs/CI_SUPPORT.md).
 
-The Agent, when present, chooses and combines available operations. Scientific calculations are performed by explicit tools; the researcher can inspect and correct their results. Optional native DigitalMicrograph support lives in a **separate peer MCP server**, not inside this cross-platform core. The repository split and source attribution are documented in [MIGRATION_MANIFEST.json](MIGRATION_MANIFEST.json).
-
-## Quick start — no Agent required
-
-Requires **Node.js 22.x or 24.x** and an independent scientific Python environment. **Python 3.13 is the CI reference and recommended version**. The scientific tools retain a declared Python 3.10+ minimum, which is not continuously CI-verified; the optional configuration registrar needs 3.11+. See [runtime support and CI scope](docs/CI_SUPPORT.md).
+From a new checkout on macOS/Linux:
 
 ```bash
 git clone https://github.com/wuchqwq/microscopy-workbench.git
@@ -64,45 +54,44 @@ npm run inspect -- --source /absolute/path/to/image.tiff \
   --python /absolute/path/to/microscopy-workbench/.venv/bin/python
 ```
 
-Replace the example paths with real **absolute paths**. The inspector prints a private local Panel URL; keep its process running while using the Panel. On Windows, use `py -3 -m venv .venv` and `.venv\Scripts\python.exe`. See the [client setup guide](docs/CLIENT_SETUP.md) for platform-specific details and supported file types.
+Replace all example paths with real **absolute paths**. Keep the Inspector running and open the private local URL it prints. On Windows, create the environment with `py -3 -m venv .venv` and use `.venv\Scripts\python.exe`. Supported formats, explicit dataset/plane selection and safe MCP configuration are in [client setup](docs/CLIENT_SETUP.md).
 
-For optional GPA and the upstream GPA records used by topology, install `requirements-gpa.txt` in the **same independent Python environment**:
+For GPA and the upstream GPA records used by topology, install the optional requirements in the **same** scientific environment:
 
 ```bash
 .venv/bin/python -m pip install -r requirements-gpa.txt
 ```
 
-For development checks, run `npm run typecheck`, `npm test`, and—after setting `MICROSCOPY_PYTHON` to the absolute interpreter path—`npm run test:science`. Optional checks include `npm run test:gpa`, `npm run test:topology` and `npm run test:integration:f4-gpa`.
+Structure simulations need their separately documented [optional dependencies](docs/STRUCTURE_DIFFRACTION_TOOLS.md). Do not install every optional package just to open an image.
 
-### Use it with an AI Agent
+### Choose an entry
 
-Connect the compiled MCP server to a compatible client, or install the packaged MCP + Skills plugin. The same science tools and local Panel are available with or without an Agent. See [client setup](docs/CLIENT_SETUP.md), [automation plugin setup](docs/AUTOMATION_PLUGIN.md), and the [Agent guide](README.agent.md). No model provider, API keys, or approval settings are silently configured by this project.
+- **Local image review:** start with the Inspector above. No Agent is required.
+- **AI-assisted analysis:** connect the MCP provider and install the selected Skills or the [MCP + Skills plugin](docs/AUTOMATION_PLUGIN.md). The Agent uses the same saved science and guarded Panel operations. Model choice, credentials and client approval policy are not silently configured.
+- **Windows desktop development trial:** follow [desktop setup](docs/DESKTOP.md). Its Electron runtime has a separate lockfile and requires Node 22.12+ within 22.x, or 24.x. This is not a clean-machine installer.
+- **Headless analysis:** use the [structured CLI](docs/CLI.md) for explicit provider commands, saved-ROI comparisons, execution history and source-proof operations.
 
-## Status and research roadmap
+## Status and scientific limits
 
-**Implemented in this checkout:** R2/R3 evidence workflows, F1a multiscale structural fields, F4-lite budgeted incremental analysis, F2a classical GPA and F3a versioned projected phase-winding evidence. The [development status](docs/DEVELOPMENT_STATUS.md) records the reviewed source commits and qualification boundaries. Historical acceptance reports describe their original branch state; they are not rewritten as new experiments.
+This overview was checked against merged `main` commit [c69424ac](https://github.com/wuchqwq/microscopy-workbench/commit/c69424ac25a35efd816d68cacd5904f5381c7485) on **2026-11-05**. [PR #131](https://github.com/wuchqwq/microscopy-workbench/pull/131) integrated the reviewed workbench stack through #130. Independent [PR #105](https://github.com/wuchqwq/microscopy-workbench/pull/105) and the separate STEM candidate are outside that merge. No GitHub Release was published at this check; a mainline merge is not a desktop or scientific release qualification.
 
-**Current increments:** [F3b projected twin evidence](docs/PROJECTED_TWIN_EVIDENCE.md) retains finite compatibility/ambiguity; the [first F4-full cross-method loop](docs/CROSS_METHOD_ANALYSIS.md) can propose a sourced phase follow-up, conditional topology check, information request or stop over saved GPA. All-attempt reservations and original requests remain inspectable. [Acceptance](docs/F4_CROSS_METHOD_ACCEPTANCE.md) distinguishes actual MCP success from the client-policy-blocked new-model gate. Domain/twin/multiframe routing, Encoder training and instrument control are outside this slice. See [roadmap #16](https://github.com/wuchqwq/microscopy-workbench/issues/16).
+This is **research software**. It does not provide universal automatic phase/twin/dislocation identification, ptychographic reconstruction or live microscope control. Missing calibration remains missing. A local spectral match or projected geometry does not prove chemical phase, a physical defect or unique three-dimensional structure.
 
-**Current merged GUI scope:** #48 and #49 were merged on 2026-11-01. Codex-operated Chrome gestures, explicit Agent handoff, limited synthetic crystal comparison, science revision and read-only recovery have recorded passes; the separately tested public API helper cold restart restores an **unvalidated** card, not a qualified registered-MCP Panel. **Still NOT_TESTED/HOLD:** human usability, current-macOS GUI/optional crystal integration, registered-Panel cold reattachment, fresh-model use of the complete GPA/topology Skill, feature-specific worker interruption and real-specimen physical accuracy. See [pre-Mac baseline gates](docs/PRE_MAC_BASELINE_GATE.md).
+Original arrays, display images and annotations remain separate. Saved results preserve sources, assumptions, units, revisions and unknown/ambiguous states. Synthetic numerical tests, DOM/HTTP tests, Agent trials, native mouse interaction, platform support and real-specimen physical accuracy are different evidence scopes. Passing one does not imply the others passed.
 
-## Scientific scope
-
-This is **research software**, not an autonomous microscope controller or a universally validated phase-identification system. It does not currently perform ptychographic reconstruction, general automatic phase/twin/dislocation identification, or live instrument control. Missing calibration stays missing; local spectral agreement is not proof of a phase, a defect, or a three-dimensional structure. Successful synthetic tests do not imply accuracy on real specimens.
-
-Original scientific data remain separate from display images and annotations. Saved evidence retains provenance, units, hypotheses, and unknown/ambiguous states rather than converting them into confident-looking labels. V1 topology receipts retain their original interpretation; an explicit new request creates a v2 revision.
+For development, follow [AGENTS.md](AGENTS.md) and [scoped regression](docs/CI_SCOPED_REGRESSION.md): test the changed layer and its affected contracts. Documentation-only changes need formatting, links and stated-contract checks, not an unrelated full numerical suite.
 
 ## Documentation
 
-| Topic | Guide |
-| --- | --- |
-| Installation and MCP clients | [Client setup](docs/CLIENT_SETUP.md) · [Automation plugin](docs/AUTOMATION_PLUGIN.md) |
-| Local images and review | [Image Panel](docs/LOCAL_IMAGE_PANEL.md) · [Researcher inspector](docs/RESEARCHER_DATA_INSPECTOR.md) |
-| Structural and sequence evidence | [R3 fields](docs/SPATIAL_DOMAINS.md) · [Multiscale domains](docs/MULTISCALE_DOMAINS.md) · [R2 sequences](docs/SEQUENCE_PLUGIN.md) |
-| Active analysis and physical fields | [Active analysis](docs/ACTIVE_ANALYSIS.md) · [Classical GPA](docs/CLASSICAL_GPA.md) · [Projected topology](docs/PROJECTED_TOPOLOGY.md) |
-| Crystallography and publication | [Structure tools](docs/STRUCTURE_DIFFRACTION_TOOLS.md) · [Figure Composer](docs/FIGURE_COMPOSER.md) |
-| Status and qualification | [Development status](docs/DEVELOPMENT_STATUS.md) · [F4/GPA integration](docs/F4_F2A_INTEGRATION.md) · [F3a acceptance](docs/F3A_ACCEPTANCE.md) |
+| Start here | English | 简体中文 |
+| --- | --- | --- |
+| Researcher/Agent working loop | [Workflow](docs/WORKBENCH_WORKFLOW.md) | [工作流程](docs/WORKBENCH_WORKFLOW.zh-CN.md) |
+| Installation and MCP clients | [Client setup](docs/CLIENT_SETUP.md) | [客户端配置](docs/CLIENT_SETUP.zh-CN.md) |
+| Agent responsibilities and recovery | [Agent guide](README.agent.md) | [Agent 使用说明](README.agent.zh-CN.md) |
+| Current mainline and evidence boundaries | [Development status](docs/DEVELOPMENT_STATUS.md) | [开发状态](docs/DEVELOPMENT_STATUS.zh-CN.md) |
+
+Detailed method guides: [image windows](docs/IMAGE_FIRST_WINDOWS.md), [manual ROI → crystal evidence](docs/MANUAL_CRYSTAL_WORKFLOW.md), [structure comparison](docs/GENERAL_CRYSTALLOGRAPHIC_EVIDENCE.md), [multiscale fields](docs/MULTISCALE_DOMAINS.md), [active follow-up](docs/ACTIVE_ANALYSIS.md), [GPA](docs/CLASSICAL_GPA.md), [projected topology](docs/PROJECTED_TOPOLOGY.md), [projected twin evidence](docs/PROJECTED_TWIN_EVIDENCE.md), [cross-method continuation](docs/CROSS_METHOD_ANALYSIS.md), [sequences](docs/SEQUENCE_PLUGIN.md), [Panel recovery](docs/INSPECTOR_PANEL_RECOVERY.md) and [Figure Composer](docs/FIGURE_COMPOSER.md).
 
 ## License
 
-[MIT](LICENSE). Reproducible issues, scientific counterexamples, and focused pull requests are welcome.
+[MIT](LICENSE). Reproducible issues, scientific counterexamples and focused pull requests are welcome.
