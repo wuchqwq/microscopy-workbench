@@ -11,8 +11,9 @@ define a question-driven research workflow or change provider records/statuses.
 | FFT observation list: `当前图没有空间 ROI` | Names the current FFT/reciprocal domain and explains that spatial observations belong to the source image, not spectral selection |
 | General `尚未评估` could look like no analysis | Names the saved object and each unassessed aspect's original scope; does not empty or reclassify other evidence |
 
-Qualified `spatial_return.status=ready` names the existing Return to Spatial
-Observation and Original/FFT Comparison controls. Without that qualified return,
+Qualified `spatial_return.status=ready` describes only the verified return
+relationship. Return to Spatial Observation remains conditional on its actual
+button state; it does not imply Original/FFT Comparison is available. Without that qualified return,
 the notice explicitly says a verified return is unavailable; it does not invent
 an association from ROI bounds. These are explanatory labels over existing
 controls; no navigation policy, scientific question, algorithm, write format or
@@ -51,3 +52,28 @@ new scientific requests, and identical completed savepoint/manifest after reopen
 Screenshots and AX observations in this turn are new evidence, not replacements
 for missing earlier screenshots. Private receipts distinguish tool-return images
 from any locally saved files. Whole research-workflow design remains deferred.
+
+## Follow-up: separate persistent return evidence from operation availability
+
+Review base: `02a97f587f6ffffff6583b49ce45eb44d040aba9`.
+The earlier notice incorrectly recommended both controls from `ready` alone.
+The narrowed text says the return relationship is verified, asks the user to use
+Return only when its button is available, and explicitly states that verified
+evidence does not mean an operation is currently clickable. No comparison
+availability is promised. No actual button/handler, identity check or async gate
+is changed.
+
+Direct cross-checks cover an active FFT with ready return but no optional
+`source_reference`: Return remains enabled, Comparison remains disabled, and the
+notice makes no comparison promise. Presentation checks additionally exercise
+dirty, busy, gesture, unavailable, unknown and absent-relation cases without
+mutating their source state. The earlier ready-only expectation was replaced by
+these assertions, not deleted. Follow-up build PASS and
+`node --test dist/tests/research-workspace-ui.test.mjs dist/tests/image-panel-ui.test.mjs`
+PASS 285/285, zero skips. Other unchanged suites are not repeated.
+The normal Electron workspace was reopened and the narrowed notice inspected
+visually and through AX. Unavailable/blocked cases remained controlled fixtures,
+not edits to the private specimen workspace. Its original file, all 67 provider
+files and completed savepoint set remained unchanged. Local audit JSON and a
+manually transcribed AX excerpt are explicitly not complete raw GUI receipts;
+the new screenshot exists only in the conversation tool return, not a local PNG.
