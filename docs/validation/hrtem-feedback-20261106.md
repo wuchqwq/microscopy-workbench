@@ -1,5 +1,10 @@
 # Saved-band HRTEM feedback: bounded Windows validation
 
+This is the historical validation at the feedback increment. The later
+[analytic read compatibility contract](../GPA_ANALYTIC_READ_COMPATIBILITY.md)
+addresses the GPA assessment refusal only; it does not reinterpret the failures
+recorded here or grant approximate comparison of upper method decisions.
+
 Base: `7620f4accf1bb1e5857cf6347da3d077ef55a11c` (Task A), whose parent
 is `31f4f014a4293d24de72402727b1efd084fc1022`. Work is isolated in
 `hrtem-baseline-local-20261106`, branch `research/hrtem-baseline-local-20261106`.
