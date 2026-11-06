@@ -8,6 +8,7 @@ import {ImageWorkspace} from '../lib/image_workspace.mjs';
 const id='a'.repeat(32),candidate='b'.repeat(32),evidence='c'.repeat(32);
 const proposed=()=>({object_id:id,entry:'manual',regions:[{rect:[16,32,80,96],reason:'Researcher observed an interruption',candidate_explanations:['Contrast or structure change; not confirmed'],unresolved:['Unknown imaging contribution']}],request_id:'saved-discovery'});
 const reviewed=()=>({object_id:id,candidate_id:candidate,evidence_ids:[evidence],observation_text:'Saved numerical evidence requires source-bound review',request_id:'saved-review'});
+const assessment=()=>({hypothesis:'Specified nonzero closure candidate',real_space_evidence:{origin:'synthetic_construction',source_text:'Explicit public analytic displacement construction',observation_text:'Supplied input, not automatically traced lattice planes',relation:'supports',anchors_xy:[[128.5,128.5]]}});
 const fixture=()=>{
   const calls=[];
   const module=createImageModule({imageWorkspace:{workspace:path.resolve('discovery-images'),call(name,args){calls.push({name,args});return {content:[]};}}});
@@ -53,6 +54,20 @@ test('review cannot accept arbitrary files, unbounded evidence or a confirmed ma
   }
   assert.equal(calls.length,0);
   const args={...reviewed(),previous_review_id:evidence,candidate_explanations:['Alternative remains hypothesized'],unresolved:['Unknown physical cause']};
+  await registry.call('image_discovery_review',args);
+  assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
+});
+
+test('candidate composition retains bounded caller provenance and four-way scope without a new tool',async()=>{
+  const {registry,calls}=fixture();
+  const tool=registry.listTools().find(tool=>tool.name==='image_discovery_review');
+  assert.match(tool.inputSchema.properties.candidate_assessment.description,/never confirms/);
+  for(const mutate of [a=>{delete a.real_space_evidence.source_text;},a=>{a.real_space_evidence.origin='automatic_lattice_tracing';},a=>{a.real_space_evidence.relation='confirmed';},a=>{a.real_space_evidence.anchors_xy=[];},a=>{a.real_space_evidence.anchors_xy=Array(17).fill([1,2]);},a=>{a.material_dislocation_confirmed=true;}]){
+    const args={...reviewed(),candidate_assessment:assessment()};mutate(args.candidate_assessment);
+    await assert.rejects(registry.call('image_discovery_review',args));
+  }
+  assert.equal(calls.length,0);
+  const args={...reviewed(),candidate_assessment:assessment()};
   await registry.call('image_discovery_review',args);
   assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
 });

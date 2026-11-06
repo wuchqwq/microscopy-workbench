@@ -965,6 +965,17 @@ class Workspace:
                 pending_ids.append(metadata["overview_object_id"])
                 pending_ids.extend(row["object_id"] for row in metadata.get("evidence_refs", []))
                 pending_ids.extend(row["object_id"] for row in metadata.get("history", []))
+            if metadata.get("kind") == "method_plan":
+                pending_ids.append(metadata["root_plan_id"])
+                pending_ids.extend(row["object_id"] for row in metadata["input_refs"])
+                pending_ids.extend(metadata["plan_history"])
+                pending_ids.extend(row["object_id"] for row in metadata["ledger"]["attempts"] if row.get("object_id"))
+                if metadata.get("latest_topology_object_id"):
+                    pending_ids.append(metadata["latest_topology_object_id"])
+            if metadata.get("kind") == "method_step":
+                pending_ids.extend([metadata["root_plan_id"], metadata["plan_object_id"]])
+                if (metadata.get("child_receipt") or {}).get("object_id"):
+                    pending_ids.append(metadata["child_receipt"]["object_id"])
             record = metadata.get("xy_calibration")
             if record and record["calibration_id"] != current:
                 pending_ids.append(record["calibration_id"])
@@ -987,6 +998,7 @@ class Workspace:
                                                                        ("preview_admission.py", "result_semantics.py", "image_observation_contract.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
         metadata["software_provenance"]["helper_modules_sha256"]["image_gpa_assessment_validation.py"] = sha_file(Path(__file__).with_name("image_gpa_assessment_validation.py"))
         metadata["software_provenance"]["helper_modules_sha256"]["image_peak_summary_validation.py"] = sha_file(Path(__file__).with_name("image_peak_summary_validation.py"))
+        metadata["software_provenance"]["helper_modules_sha256"]["image_candidate_assessment.py"] = sha_file(Path(__file__).with_name("image_candidate_assessment.py"))
         intent_path = self.root / "preview-admission-v1" / "intents" / (metadata["request_id"] + ".json")
         if intent_path.exists():
             admitted = preview_admission._intent(self.root / "preview-admission-v1", metadata["request_id"], sys.modules[__name__])
