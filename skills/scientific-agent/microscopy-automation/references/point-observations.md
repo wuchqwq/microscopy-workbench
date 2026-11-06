@@ -90,7 +90,11 @@ the old review path. See [the workflow](../../../../docs/STEM_EXPECTED_SITE.zh-C
 When the user asks to continue the fixed-site question, explicitly request
 `include_site_continuation:true` with site_context on `image_discovery_review`.
 Read the actual evidence first. `site_continuation` is a deterministic suggestion,
-not a fresh AI decision or a dispatched tool. For `tool_proposed`, retain its
+not a fresh AI decision or a dispatched tool. Current version 2 checks both
+source-array centre bounds and ROI nearest-sample support. A version-1 saved
+proposal remains historical and can contain an out-of-bounds line: request an
+explicit linked current review before dispatching it; never rewrite the old
+proposal or replay an old failed/unknown request. For `tool_proposed`, retain its
 source review and saved original IDs; choose whether the five-sample profile is
 useful, then call the existing `action.tool` with its exact `action.arguments`.
 After a known completed matching kind/request_id, append the result object_id
@@ -99,8 +103,12 @@ Never drop the original off-site profile or references, move the expected point,
 or treat a proposal as measured coverage. Inspect actual new profile_coverage;
 if still unverified stop and inspect, do not loop automatically until it passes.
 
-Reference conflict/information/ROI-support/evidence-budget states have no tool
+Reference conflict/information/source-or-ROI-support/evidence-budget states have no tool
 action. Ask for the specific scientific correction or stop with raw evidence.
+`needs_supported_profile` lists each attempted axis in `profile_support`; a
+source-centre failure cannot necessarily be fixed by changing the ROI. Consider
+an explicitly supported through-site line or additional image support without
+moving the expected point, clipping or padding.
 Unknown write outcomes require their original image_result query. The existing
 CLI `tool` now also admits statistics/profile/discovery/review with schema and
 durable original-intent recovery; it does not admit S2 by this extension. There

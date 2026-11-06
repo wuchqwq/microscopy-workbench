@@ -74,7 +74,7 @@ class SiteContinuation(unittest.TestCase):
         _, discovery, stats, context = self.case.fixture()
         context["expected_position_xy"] = [20.25,20.25]
         result = self.case.review(discovery, stats, context, include_site_continuation=True)
-        self.assertEqual(result["site_continuation"]["status"], "needs_explicit_roi_revision")
+        self.assertEqual(result["site_continuation"]["status"], "needs_supported_profile")
         self.assertEqual(result["site_continuation"]["expected_position_xy"], [20.25,20.25])
         context["expected_position_xy"] = [20.25,22.25]
         vertical = self.case.review(discovery, stats, context, include_site_continuation=True)
@@ -94,6 +94,80 @@ class SiteContinuation(unittest.TestCase):
         blocked = image_site_continuation.derive(at_limit, dict(request_id="history-check",evidence_ids=[stats["object_id"]]), worker)
         self.assertEqual(blocked["status"], "needs_history_budget")
         self.assertIsNone(blocked["action"])
+
+    def test_four_source_edges_and_exact_centre_limits_execute_and_reconnect(self):
+        self.case.refs = [[10,10,15,15],[40,40,45,45]]
+        cases = [
+            ("right", [59,20,64,25], [61.25,22.25], "vertical", [[61.25,20.25],[61.25,24.25]]),
+            ("left", [0,20,5,25], [1.75,22.25], "vertical", [[1.75,20.25],[1.75,24.25]]),
+            ("top", [20,0,25,5], [22.25,1.75], "horizontal", [[20.25,1.75],[24.25,1.75]]),
+            ("bottom", [20,59,25,64], [22.25,61.25], "horizontal", [[20.25,61.25],[24.25,61.25]]),
+            ("exact_left", [0,20,5,25], [2,22.25], "horizontal", [[0,22.25],[4,22.25]]),
+            ("exact_right", [59,20,64,25], [61,22.25], "horizontal", [[59,22.25],[63,22.25]]),
+        ]
+        for name, rect, point, axis, points in cases:
+            with self.subTest(edge=name):
+                self.case.rect = rect
+                _, discovery, stats, context = self.case.fixture(target=4)
+                context["expected_position_xy"] = point
+                initial = self.case.review(discovery,stats,context,include_site_continuation=True)
+                saved = {p:p.read_bytes() for folder in ("objects","requests") for p in (self.case.workspace/folder).rglob("*") if p.is_file()}
+                proposal = initial["site_continuation"]
+                self.assertEqual(proposal["version"],2)
+                self.assertEqual(proposal["axis"],axis)
+                self.assertEqual(proposal["action"]["arguments"]["points"],points)
+                profile, final = self.follow(proposal)  # real worker, not a mocked coordinate predicate
+                self.assertEqual(profile["request_id"],proposal["action"]["arguments"]["request_id"])
+                self.assertEqual(final["request_id"],proposal["after_success"]["arguments"]["request_id"])
+                self.assertEqual(final["site_observation"]["profile_coverage"]["status"],"covered")
+                self.assertEqual(final["site_observation"]["context"]["expected_position_xy"],point)
+                self.assertEqual(final["site_observation"]["raw_observation"],initial["site_observation"]["raw_observation"])
+                for record in (initial,profile,final):
+                    self.assertEqual(self.direct("get",dict(object_id=record["object_id"]))["object_id"],record["object_id"])
+                    self.assertEqual(self.direct("result",dict(query_request_id=record["request_id"]))["object_id"],record["object_id"])
+                self.assertEqual({p:p.read_bytes() for p in saved},saved)
+
+    def test_source_corners_and_outside_centre_point_propose_no_action(self):
+        self.case.refs = [[10,10,15,15],[40,40,45,45]]
+        for rect,point in [([0,0,5,5],[1.75,1.75]), ([59,0,64,5],[61.25,1.75]),
+                           ([0,59,5,64],[1.75,61.25]), ([59,59,64,64],[61.25,61.25]),
+                           ([59,20,64,25],[63.25,22.25])]:
+            with self.subTest(point=point):
+                self.case.rect = rect
+                _, discovery, stats, context = self.case.fixture(target=4)
+                context["expected_position_xy"] = point
+                review = self.case.review(discovery,stats,context,include_site_continuation=True)
+                proposal = review["site_continuation"]
+                self.assertEqual(proposal["status"],"needs_supported_profile")
+                self.assertIsNone(proposal["action"])
+                self.assertIsNone(proposal["after_success"])
+                self.assertEqual(proposal["expected_position_xy"],point)
+                self.assertEqual(len(review["site_observation"]["raw_observation"]["references"]),2)
+                self.assertEqual(len(proposal["profile_support"]["axes"]),2)
+                self.assertTrue(all(not a["inside_source_centres"] for a in proposal["profile_support"]["axes"]))
+                child = worker.automation.child_request_id(review["request_id"],"site-profile")
+                self.assertFalse((self.case.workspace/"requests"/(child+".json")).exists())
+                self.assertEqual(self.direct("result",dict(query_request_id=review["request_id"]))["site_continuation"],proposal)
+
+    def test_version_one_saved_proposal_is_preserved_without_silent_repair(self):
+        self.case.rect = [59,20,64,25]
+        _, discovery, stats, context = self.case.fixture(target=4)
+        context["expected_position_xy"] = [61.25,22.25]
+        derive = image_site_continuation.derive
+        with patch.object(image_site_continuation,"derive",side_effect=lambda r,q,a,version=1:derive(r,q,a,version=version)):
+            historical = self.case.review(discovery,stats,context,include_site_continuation=True)
+        original = historical["site_continuation"]
+        self.assertEqual(original["version"],1)
+        self.assertEqual(original["axis"],"horizontal")
+        self.assertNotIn("profile_support",original)
+        before = {p:p.read_bytes() for folder in ("objects","requests") for p in (self.case.workspace/folder).rglob("*") if p.is_file()}
+        self.assertEqual(self.direct("get",dict(object_id=historical["object_id"]))["site_continuation"],original)
+        self.assertEqual(self.direct("result",dict(query_request_id=historical["request_id"]))["site_continuation"],original)
+        revised = self.case.review(discovery,stats,context,include_site_continuation=True,previous_review_id=historical["object_id"])
+        self.assertEqual(revised["site_continuation"]["version"],2)
+        self.assertEqual(revised["site_continuation"]["axis"],"vertical")
+        self.follow(revised["site_continuation"])
+        self.assertEqual({p:p.read_bytes() for p in before},before)
 
     def test_recovery_export_and_original_feedback_remain_immutable(self):
         _, discovery, stats, context = self.case.fixture(target=4)

@@ -7,20 +7,23 @@ import {appendFileSync,existsSync,mkdirSync,readFileSync,readdirSync,writeFileSy
 import path from 'node:path';
 import {StdioImageClient} from '../tools/image_panel.mjs';
 
-const output=process.argv[2],mcpMode=process.argv[3]==='--mcp';
+const output=process.argv[2],flags=new Set(process.argv.slice(3)),mcpMode=flags.has('--mcp'),boundsMode=flags.has('--source-bounds');
 assert.ok(output&&path.isAbsolute(output)&&!existsSync(output),'Supply a fresh absolute output directory');
-assert.ok(!process.argv[3]||mcpMode,'Only --mcp is supported');
+assert.ok([...flags].every(f=>['--mcp','--source-bounds'].includes(f)),'Only --mcp and --source-bounds are supported');
 mkdirSync(output,{recursive:true});
 const root=process.cwd(),workspace=path.join(output,'workspace');
 const runtime=spawnSync(process.env.MICROSCOPY_PYTHON??'python',['-B','-c','import sys;print(sys.executable)'],{encoding:'utf8',windowsHide:true});
 assert.equal(runtime.status,0,runtime.stderr);const python=runtime.stdout.trim();
-const cases=[{name:'weak_with_offsite_profile',target:4,refs:[10,10],modality:'haadf',expected:'tool_proposed'},
+const cases=boundsMode?[
+ {name:'right_source_edge',target:4,refs:[10,10],modality:'haadf',expected:'tool_proposed',rect:[59,20,64,25],point:[61.25,22.25],off:[[59,20],[63,20]],axis:'vertical',points:[[61.25,20.25],[61.25,24.25]]},
+ {name:'no_supported_axis',target:4,refs:[10,10],modality:'haadf',expected:'needs_supported_profile',rect:[59,59,64,64],point:[61.25,61.25]}
+]:[{name:'weak_with_offsite_profile',target:4,refs:[10,10],modality:'haadf',expected:'tool_proposed'},
  {name:'reference_conflict',target:5,refs:[2,8],modality:'haadf',expected:'needs_reference_review'},
  {name:'unknown_channel',target:4,refs:[10,10],modality:'unknown',expected:'needs_information'}].slice(0,mcpMode?1:3);
-const spec={scope:'Scripted existing-tool continuation only, not autonomous AI or physical STEM',rect:[20,20,25,25],refs:[[4,4,9,9],[40,40,45,45]],point:[22.25,22.5],cases};
+const spec={scope:'Scripted existing-tool continuation only, not autonomous AI or physical STEM',rect:[20,20,25,25],refs:boundsMode?[[10,10,15,15],[40,40,45,45]]:[[4,4,9,9],[40,40,45,45]],point:[22.25,22.5],cases};
 writeFileSync(path.join(output,'cases.json'),JSON.stringify(spec,null,2)+'\n',{flag:'wx'});
 const generated=spawnSync(python,['-B','-X','utf8','-c',
- `from pathlib import Path\nimport json,sys,numpy as np,tifffile\np=Path(sys.argv[1]);s=json.loads((p/'cases.json').read_text())\nfor c in s['cases']:\n a=np.ones((64,64),np.float32)\n for r,v in zip([s['rect'],*s['refs']],[c['target'],*c['refs']]):\n  x0,y0,x1,y1=r;a[y0:y1,x0:x1]=v\n a[22,27]=100\n tifffile.imwrite(p/(c['name']+'.tiff'),a,metadata=None)`,output],{encoding:'utf8',windowsHide:true});
+ `from pathlib import Path\nimport json,sys,numpy as np,tifffile\np=Path(sys.argv[1]);s=json.loads((p/'cases.json').read_text())\nfor c in s['cases']:\n a=np.ones((64,64),np.float32)\n for r,v in zip([c.get('rect',s['rect']),*s['refs']],[c['target'],*c['refs']]):\n  x0,y0,x1,y1=r;a[y0:y1,x0:x1]=v\n a[22,27]=100\n tifffile.imwrite(p/(c['name']+'.tiff'),a,metadata=None)`,output],{encoding:'utf8',windowsHide:true});
 assert.equal(generated.status,0,generated.stderr);
 const hash=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
 let number=0,client;const delivered=new Set(),records=[];
@@ -55,17 +58,20 @@ async function call(name,input={},read=false){
 }
 try{
  for(const c of cases){
+  const rect=c.rect??spec.rect,point=c.point??spec.point;
   const source=path.join(output,c.name+'.tiff'),sourceHash=hash(source);
   const opened=await call('image_open',{source_path:source});const frame=await call('image_frame',{object_id:opened.object_id,frame_index:0});
-  const discovery=await call('image_discovery',{object_id:frame.object_id,entry:'manual',selection_origin:'agent',regions:[{rect:spec.rect,reason:'Why does the fixed expected site differ from comparable references?'}]});
-  const stats=await call('image_statistics',{object_id:frame.object_id,rect:spec.rect,reference_comparison:{reference_rects:spec.refs,source_text:'Two predeclared analytic comparison supports; material equivalence remains unverified'}});
+  const discovery=await call('image_discovery',{object_id:frame.object_id,entry:'manual',selection_origin:'agent',regions:[{rect,reason:'Why does the fixed expected site differ from comparable references?'}]});
+  const stats=await call('image_statistics',{object_id:frame.object_id,rect,reference_comparison:{reference_rects:spec.refs,source_text:'Two predeclared analytic comparison supports; material equivalence remains unverified'}});
   const evidence=[stats.object_id];
-  if(c.expected==='tool_proposed'){const off=await call('image_profile',{object_id:frame.object_id,points:[[20,20],[24,20]]});evidence.push(off.object_id);}
-  const site_context={question:'Is the observed difference consistent across references and has the expected site been sampled?',statistics_id:stats.object_id,expected_position_xy:spec.point,
+  if(c.expected==='tool_proposed'){const off=await call('image_profile',{object_id:frame.object_id,points:c.off??[[20,20],[24,20]]});evidence.push(off.object_id);}
+  const site_context={question:'Is the observed difference consistent across references and has the expected site been sampled?',statistics_id:stats.object_id,expected_position_xy:point,
    position_source_text:'Fixed predeclared expected location, not a detected column',modality:c.modality,signal_kind:'stored_scalar',signal_source_text:'Analytic scalar fixture; no physical count interpretation'};
   const initial=await call('image_discovery_review',{object_id:discovery.object_id,candidate_id:discovery.candidates[0].candidate_id,evidence_ids:evidence,site_context,
    include_site_continuation:true,observation_text:'Retain all references and the actual off-site profile if supplied; physical cause unknown'});
   const proposal=initial.site_continuation;assert.equal(proposal.status,c.expected);
+  assert.equal(proposal.version,2);
+  if(c.axis){assert.equal(proposal.axis,c.axis);assert.deepEqual(proposal.action.arguments.points,c.points);}
   const protectedFiles=snapshot();let final=initial,profile=null;
   if(proposal.action){
    assert.equal(proposal.action.tool,'image_profile');
@@ -82,7 +88,7 @@ try{
    // Repeating this exact CLI invocation is query-only, never a second profile.
    if(!mcpMode){const state=snapshot();const again=await call(proposal.action.tool,proposal.action.arguments);assert.equal(again.object_id,profile.object_id);assert.deepEqual(snapshot(),state);}
   }else assert.equal(proposal.after_success,null);
-  assert.deepEqual(final.site_observation.context.expected_position_xy,spec.point);assert.equal(final.physical_conclusion,null);unchanged(protectedFiles);
+  assert.deepEqual(final.site_observation.context.expected_position_xy,point);assert.equal(final.physical_conclusion,null);unchanged(protectedFiles);
   const exported=await call('image_export',{object_id:final.object_id,output_dir:path.join(output,'export-'+c.name)});
   assert.equal(hash(path.join(exported.output_dir,'site-continuation.json')),hash(path.join(workspace,'objects',final.object_id,'site-continuation.json')));
   if(final.image_path)copyFileSync(final.image_path,path.join(output,c.name+'-final.png'));

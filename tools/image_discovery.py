@@ -401,7 +401,8 @@ def validate_references(workspace, metadata, api):
         api.need(type(include) is bool and ("site_continuation" in metadata) == include and (not include or "site_context" in original),
                  "Site continuation differs from the original explicit request", "CORRUPT_OBJECT")
         if include:
-            expected = site_continuation.derive(metadata, original, api)
+            api.need(type(metadata["site_continuation"]) is dict, "Invalid saved site continuation", "CORRUPT_OBJECT")
+            expected = site_continuation.derive(metadata, original, api, version=metadata["site_continuation"].get("version"))
             folder = Path(metadata["manifest_path"]).parent
             api.need(metadata["site_continuation"] == expected and api.read_json(folder/"site-continuation.json") == expected and
                      (folder/"site-continuation.txt").read_text(encoding="utf-8") == site_continuation.report_text(expected) and

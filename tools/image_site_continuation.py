@@ -4,11 +4,12 @@ import json
 import math
 
 
-def derive(review, request, api):
+def derive(review, request, api, version=2):
+    api.need(type(version) is int and version in (1, 2), "Unsupported saved site-continuation version", "CORRUPT_OBJECT")
     site = review["site_observation"]
     api.need(site["version"] == 2, "Executable site continuation requires current profile-coverage semantics")
     kind = site["next_step"]["kind"]
-    result = dict(version=1, source_review_id=review["object_id"], source_review_request_id=review["request_id"],
+    result = dict(version=version, source_review_id=review["object_id"], source_review_request_id=review["request_id"],
                   source_science=copy.deepcopy(review["source_dependency"]["science"]),
                   expected_position_xy=copy.deepcopy(site["context"]["expected_position_xy"]),
                   status="unavailable", reason=site["next_step"]["reason"], action=None, after_success=None,
@@ -35,6 +36,10 @@ def derive(review, request, api):
         result.update(status="needs_evidence_budget", reason="Appending a new profile would exceed the existing eight-evidence limit. Keep all evidence; no silent dropping or new store.")
         return result
     point, rect = result["expected_position_xy"], review["candidate"]["rect"]
+    height, width = review["source_dependency"]["science"]["shape_yx"]
+    if version == 2:
+        result["profile_support"] = dict(source_centres_xyxy_inclusive=[0, 0, width-1, height-1],
+                                         roi_nearest_rect_xyxy=copy.deepcopy(rect), axes=[])
     points, axis = None, None
     # A short exact through-point line removes manual aiming error without
     # loosening 8-ULP qualification. Actual saved sampling is checked AFTER use.
@@ -42,11 +47,25 @@ def derive(review, request, api):
         a, b = list(point), list(point)
         a[coordinate] -= 2
         b[coordinate] += 2
-        if all(rect[0] <= math.floor(p[0]+.5) < rect[2] and rect[1] <= math.floor(p[1]+.5) < rect[3] for p in (a, b)):
+        roi_ok = all(rect[0] <= math.floor(p[0]+.5) < rect[2] and rect[1] <= math.floor(p[1]+.5) < rect[3] for p in (a, b))
+        # image_numeric.sample rejects centres outside [0,w-1] x [0,h-1]
+        # BEFORE nearest rounding. Endpoint checks suffice for this straight,
+        # axis-aligned line: centres and nearest indices are monotone between
+        # endpoints. Saved five-sample coverage is still verified after use.
+        centres_ok = all(0 <= p[0] <= width-1 and 0 <= p[1] <= height-1 for p in (a, b))
+        if version == 2:
+            result["profile_support"]["axes"].append(dict(axis=name, points=[a,b],
+                inside_source_centres=centres_ok, inside_roi_nearest_support=roi_ok))
+        # Version 1 preserves the original historical proposal, including its
+        # missing source-centre check. Never rewrite it to appear repaired.
+        if roi_ok and (version == 1 or centres_ok):
             points, axis = [a, b], name
             break
     if points is None:
-        result.update(status="needs_explicit_roi_revision", reason="Neither five-sample axis fits the original ROI's nearest-sample support. Explicitly revise the ROI and measurements; do not move the point, clip or pad.")
+        if version == 1:
+            result.update(status="needs_explicit_roi_revision", reason="Neither five-sample axis fits the original ROI's nearest-sample support. Explicitly revise the ROI and measurements; do not move the point, clip or pad.")
+        else:
+            result.update(status="needs_supported_profile", reason="Neither five-sample axis satisfies both source-array centre bounds and the original ROI's nearest-sample support. Inspect profile_support; explicitly supply a supported through-site line, revise ROI/measurements where appropriate, or acquire additional image support. No point movement, clipping or padding.")
         return result
     profile_request = api.automation.child_request_id(request["request_id"], "site-profile")
     review_request = api.automation.child_request_id(request["request_id"], "site-review")
