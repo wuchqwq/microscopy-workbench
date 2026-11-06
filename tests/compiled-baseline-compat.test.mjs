@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 
 const BASELINE='3790b3d57e427010f0a5cbfce8a31143a7883eef';
 const here=fileURLToPath(new URL('../',import.meta.url));
@@ -16,11 +16,14 @@ const packageRoot=path.basename(path.resolve(here))==='dist'?here:path.join(here
 const sourceRoot=path.basename(path.resolve(here))==='dist'?path.dirname(path.resolve(here)):here;
 const hash=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
 
-const GPA_ADDITIONS=['image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology'];
+const CATALOG_ADDITIONS=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_column_fit','image_preview_acknowledge','image_source_proof','image_source_proof_info','image_source_proof_revoke'].sort();
+const reviewedExtensions=JSON.parse(readFileSync(new URL('./fixtures/reviewed-catalog-extensions-v1.json',import.meta.url),'utf8'));
+assert.equal(reviewedExtensions.schema_version,1);
+assert.equal(reviewedExtensions.frozen_baseline,BASELINE);
 function assertCompatibleCatalog(current,frozen){
- const additions=new Set(GPA_ADDITIONS);
- assert.deepEqual(current.filter(tool=>additions.has(tool.name)).map(tool=>tool.name).sort(),GPA_ADDITIONS,
-  'Only the explicitly enumerated GPA/topology, cross-method, image-first and explicit owned Panel recovery tools may extend the frozen catalog');
+ const additions=new Set(CATALOG_ADDITIONS);
+ assert.deepEqual(current.filter(tool=>additions.has(tool.name)).map(tool=>tool.name).sort(),CATALOG_ADDITIONS,
+  'Only the explicitly enumerated additions, including conditional image_column_fit, may extend the frozen catalog');
  assert.deepEqual(current.filter(tool=>!additions.has(tool.name)),frozen,
   'Every frozen tool/schema/description and relative order must remain exactly compatible');
 }
@@ -55,12 +58,48 @@ function normalizeNamedReportExportGuidance(current,frozen){
  tool.description=old.description;
 }
 
-test('additive GPA catalog still rejects removed/modified legacy tools and unexpected additions',()=>{
+
+function exactlyOne(catalog,name){
+ const selected=catalog.filter(tool=>tool.name===name);
+ assert.equal(selected.length,1,'Exactly one named tool is required: '+name);
+ return selected[0];
+}
+function at(value,keys){for(const key of keys){assert.ok(value&&typeof value==='object'&&Object.hasOwn(value,key),'Missing named schema container: '+keys.join('/'));value=value[key];}return value;}
+function assertReviewedFrozenCatalog(current,frozen){
+ // Every licence is static, pinned to reviewed input metadata. Never derive an
+ // allowlist from the candidate under test or erase an unchecked descriptor.
+ const retained=structuredClone(current);
+ for(const licence of reviewedExtensions.new_tool_definitions){
+  assert.ok(CATALOG_ADDITIONS.includes(licence.definition.name));
+  assert.equal(frozen.some(tool=>tool.name===licence.definition.name),false,'This named addition must not overwrite a frozen tool');
+  assert.deepEqual(exactlyOne(retained,licence.definition.name),licence.definition,'The complete named new tool remains exactly reviewed');
+ }
+ for(const licence of reviewedExtensions.properties){
+  const old=at(exactlyOne(frozen,licence.tool),licence.container);
+  const tool=exactlyOne(retained,licence.tool),properties=at(tool,licence.container);
+  assert.equal(Object.hasOwn(old,licence.key),false,'Named optional extension was absent from the frozen input');
+  assert.deepEqual(properties[licence.key],licence.schema,'Exact optional schema required: '+licence.tool+'.'+licence.key);
+  const parent=at(tool,licence.container.slice(0,-1));
+  assert.ok(!(parent.required??[]).includes(licence.key),'An additive field cannot become required: '+licence.key);
+  delete properties[licence.key];
+ }
+ for(const licence of reviewedExtensions.descriptions){
+  const tool=exactlyOne(retained,licence.tool),old=exactlyOne(frozen,licence.tool);
+  assert.equal(old.description,licence.frozen,'Never rewrite the pinned frozen description');
+  assert.equal(tool.description,licence.allowed,'Only the complete named reviewed guidance is permitted: '+licence.tool);
+  tool.description=old.description;
+ }
+ normalizeNamedFrameAncestryExtension(retained,frozen);
+ normalizeNamedReportExportGuidance(retained,frozen);
+ assertCompatibleCatalog(retained,frozen);
+}
+
+test('named catalog additions still reject removed/modified legacy tools and unexpected additions',()=>{
  const frozen=[{name:'image_fft',description:'frozen',inputSchema:{type:'object'}}];
- const current=[...GPA_ADDITIONS.map(name=>({name})),...frozen];
+ const current=[...CATALOG_ADDITIONS.map(name=>({name})),...frozen];
  assertCompatibleCatalog(current,frozen);
- assert.throws(()=>assertCompatibleCatalog(current.slice(0,GPA_ADDITIONS.length),frozen));
- assert.throws(()=>assertCompatibleCatalog([...current.slice(0,GPA_ADDITIONS.length),{...frozen[0],description:'changed'}],frozen));
+ assert.throws(()=>assertCompatibleCatalog(current.slice(0,CATALOG_ADDITIONS.length),frozen));
+ assert.throws(()=>assertCompatibleCatalog([...current.slice(0,CATALOG_ADDITIONS.length),{...frozen[0],description:'changed'}],frozen));
  assert.throws(()=>assertCompatibleCatalog([...current,{name:'unexpected_tool'}],frozen));
  assert.throws(()=>assertCompatibleCatalog([...current,{name:'image_gpa'}],frozen));
 });
@@ -163,6 +202,105 @@ class Client{
  });}
 }
 
+
+let catalogueOnlyPromise;
+function catalogueOnlyInputs(){
+ return catalogueOnlyPromise??=(async()=>{
+  const directory=mkdtempSync(path.join(tmpdir(),'microscopy-catalog-only-'));
+  try{
+   const archived=path.join(directory,'frozen.zip'),frozenRoot=path.join(directory,'frozen-js');
+   const archive=spawnSync('git',['archive','--format=zip','--output='+archived,BASELINE],{cwd:sourceRoot,encoding:'utf8',windowsHide:true});
+   assert.equal(archive.status,0,archive.stderr);
+   mkdirSync(frozenRoot);
+   pythonRun(process.env.MICROSCOPY_PYTHON??(process.platform==='win32'?'python':'python3'),
+    'import sys,zipfile;zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])',[archived,frozenRoot]);
+   const capture=async(root,name)=>{
+    const {createScienceRuntime}=await import(pathToFileURL(path.join(root,'lib/science/create_science_runtime.mjs')).href);
+    const workspace=path.join(directory,'never-created-'+name);
+    const runtime=createScienceRuntime({env:{
+     MICROSCOPY_IMAGE_WORKSPACE:path.join(workspace,'images'),
+     MICROSCOPY_CONTEXT_WORKSPACE:path.join(workspace,'contexts'),
+     MICROSCOPY_PYTHON:process.execPath,
+     MICROSCOPY_PANEL:'1',MICROSCOPY_EXECUTION_OBSERVABILITY:'1',
+    }});
+    try{
+     // Source registration metadata only. No registry.call, worker, scientific
+     // request, context mutation, link, Panel helper or network operation.
+     return runtime.registry.listTools();
+    }finally{runtime.close();assert.equal(existsSync(workspace),false,'Catalogue inspection cannot create any workspace');}
+   };
+   return {frozen:await capture(frozenRoot,'frozen'),current:await capture(packageRoot,'candidate')};
+  }finally{
+   assert.equal(path.dirname(path.resolve(directory)),path.resolve(tmpdir()));
+   assert.ok(path.basename(directory).startsWith('microscopy-catalog-only-'));
+   rmSync(directory,{recursive:true,force:true,maxRetries:10,retryDelay:100});
+  }
+ })();
+}
+
+test('catalog-only actual frozen and reviewed interfaces compare without context writes',async t=>{
+ const {current,frozen}=await catalogueOnlyInputs();
+ const currentBefore=structuredClone(current),oldBefore=structuredClone(frozen);
+ // Reproduce the original missing whitelist entry independently of the denied
+ // atomic-save path. The new licences must explain this real source difference.
+ assert.equal(frozen.some(tool=>tool.name==='image_column_fit'),false);
+ assert.equal(current.some(tool=>tool.name==='image_column_fit'),true);
+ const beforeS2=CATALOG_ADDITIONS.filter(name=>name!=='image_column_fit');
+ assert.throws(()=>assert.deepEqual(current.filter(tool=>!frozen.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),beforeS2));
+ assertReviewedFrozenCatalog(current,frozen);
+ assert.deepEqual(current,currentBefore);assert.deepEqual(frozen,oldBefore);
+ t.diagnostic('PASS: source-only exact catalog comparison. No scientific/context calls, filesystem links or full workspace acceptance.');
+});
+
+test('catalog-only negative controls reject every unlicensed schema or legacy-field change',async t=>{
+ const {current,frozen}=await catalogueOnlyInputs();
+ let count=0;
+ const reject=async(name,mutate)=>{
+  await t.test(name,()=>{const changed=structuredClone(current),old=structuredClone(frozen);mutate(changed,old);assert.throws(()=>assertReviewedFrozenCatalog(changed,old));});
+  count++;
+ };
+ for(const licence of reviewedExtensions.properties){
+  const label=licence.tool+'.'+licence.container.slice(2).join('/')+'/'+licence.key;
+  await reject(label+' missing',value=>{delete at(exactlyOne(value,licence.tool),licence.container)[licence.key];});
+  await reject(label+' unchecked schema keyword',value=>{at(exactlyOne(value,licence.tool),licence.container)[licence.key].unreviewed_keyword=true;});
+  await reject(label+' made required',value=>{const parent=at(exactlyOne(value,licence.tool),licence.container.slice(0,-1));(parent.required??=[]).push(licence.key);});
+ }
+ for(const licence of reviewedExtensions.descriptions){
+  await reject(licence.tool+' extra prose',value=>{exactlyOne(value,licence.tool).description+=' unreviewed promise';});
+  await reject(licence.tool+' missing reviewed guidance',value=>{exactlyOne(value,licence.tool).description=licence.frozen;});
+  await reject(licence.tool+' rewritten frozen text',(_value,old)=>{exactlyOne(old,licence.tool).description+=' changed history';});
+ }
+ for(const licence of reviewedExtensions.new_tool_definitions){
+  const name=licence.definition.name;
+  await reject(name+' missing',value=>{value.splice(value.findIndex(tool=>tool.name===name),1);});
+  await reject(name+' duplicate',value=>{value.push(structuredClone(exactlyOne(value,name)));});
+  await reject(name+' changed schema',value=>{exactlyOne(value,name).inputSchema.properties.request_id.type='number';});
+ }
+ for(const [name,mutate] of [
+  ['unknown additional tool',value=>value.push({name:'unknown_science_tool',description:'Not licensed',inputSchema:{type:'object',properties:{}}})],
+  ['unknown field on statistics',value=>{exactlyOne(value,'image_statistics').inputSchema.properties.unreviewed_flag={type:'boolean'};}],
+  ['legacy object ID type changed',value=>{exactlyOne(value,'image_statistics').inputSchema.properties.object_id.type='number';}],
+  ['legacy required fields removed',value=>{exactlyOne(value,'image_statistics').inputSchema.required.pop();}],
+  ['legacy extra properties admitted',value=>{exactlyOne(value,'image_statistics').inputSchema.additionalProperties=true;}],
+  ['legacy tool removed',value=>{value.splice(value.findIndex(tool=>tool.name==='image_fft'),1);}],
+  ['legacy order changed',value=>{const a=value.findIndex(tool=>tool.name==='image_fft'),b=value.findIndex(tool=>tool.name==='image_statistics');[value[a],value[b]]=[value[b],value[a]];}],
+  ['unrelated FFT description changed',value=>{exactlyOne(value,'image_fft').description+=' unreviewed promise';}],
+  ['ancestry schema widened',value=>{exactlyOne(value,'image_info').inputSchema.properties.include_frame_ancestry.default=true;}],
+  ['export refusal removed',value=>{const tool=exactlyOne(value,'image_export');tool.description=tool.description.replace('Refuse overwrite; ','');}],
+  ['raw reference budget widened',value=>{exactlyOne(value,'image_statistics').inputSchema.properties.reference_comparison.properties.reference_rects.maxItems=9;}],
+  ['cross-window arm count widened',value=>{exactlyOne(value,'image_spatial_atlas').inputSchema.properties.cross_window.properties.arm_lengths.maxItems=5;}],
+  ['cross-window clipping option invented',value=>{exactlyOne(value,'image_spatial_atlas').inputSchema.properties.cross_window.properties.clip={type:'boolean'};}],
+  ['S2 column budget widened',value=>{exactlyOne(value,'image_column_fit').inputSchema.properties.geometry.properties.supplied_columns_xy.maxItems=257;}],
+  ['S2 count source requirement removed',value=>{exactlyOne(value,'image_column_fit').inputSchema.properties.count_interpretation.required=['model'];}],
+  ['S2 unreviewed gain conversion added',value=>{exactlyOne(value,'image_column_fit').inputSchema.properties.count_interpretation.properties.implicit_gain={type:'number'};}],
+  ['review expected position narrowed to integer',value=>{exactlyOne(value,'image_discovery_review').inputSchema.properties.site_context.properties.expected_position_xy.items.type='integer';}],
+ ]){
+  await reject(name,mutate);
+ }
+ assertReviewedFrozenCatalog(current,frozen);
+ t.diagnostic('PASS: '+count+' named negative controls; original catalogs remain valid and unchanged.');
+});
+
 test('frozen JS workspace and schema survive a copied compiled plugin without FFT replay',{timeout:300000},async t=>{
  assert.ok(existsSync(path.join(packageRoot,'.mcp.json')),'Run npm run build before compiled compatibility acceptance');
  const directory=mkdtempSync(path.join(tmpdir(),'microscopy-compiled-baseline-'));
@@ -204,57 +342,10 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   assert.equal(fftCount(),1);
   const current=new Client(installed,config,tmpdir());clients.push(current);await current.rpc('initialize');
   const currentSchema=(await current.rpc('tools/list')).result.tools;
-  // F1a/F4-lite add the explicitly enumerated tools and optional context selections. Keep the frozen
-  // comparison exact for every pre-existing field; authorize only these named
-  // additive changes, never drop descriptions or weaken old scientific tests.
-  // #126 authorizes exactly these three additive metadata tools; the frozen
-  // catalog and every retained legacy tool/schema remain compared below.
-  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge','image_source_proof','image_source_proof_info','image_source_proof_revoke'];
-  assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
-  const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
-  // #70 intentionally changes preview admission, not old scientific arguments.
-  const preview=retainedSchema.find(tool=>tool.name==='image_preview'),oldPreview=schema.find(tool=>tool.name==='image_preview');
-  const resolved=preview.inputSchema.properties.resolved_preview;
-  assert.deepEqual(resolved.required,['request_id']);assert.equal(resolved.additionalProperties,false);
-  assert.deepEqual(Object.keys(resolved.properties).sort(),['object_id','request_id']);
-  assert.ok(!preview.inputSchema.required.includes('resolved_preview'));
-  delete preview.inputSchema.properties.resolved_preview;
-  assert.ok(preview.description.endsWith(oldPreview.description),'Only recovery guidance prefixes the old render description');
-  assert.match(preview.description,/new ID or size does not recover/);preview.description=oldPreview.description;
-  const panelOpen=retainedSchema.find(tool=>tool.name==='image_panel_open');
-  assert.match(panelOpen.description,/explicitly saved preview\/view/);assert.match(panelOpen.description,/PREVIEW_REQUIRED means no rendering was dispatched/);
-  panelOpen.description=schema.find(tool=>tool.name==='image_panel_open').description;
-  // #72 adds optional intent on NEW annotations; anonymous historical inputs
-  // and every pre-existing scientific field/required argument stay unchanged.
-  const annotate=retainedSchema.find(tool=>tool.name==='image_annotate');
-  for(const field of ['annotations','updates']){
-    const item=annotate.inputSchema.properties[field].items;
-    assert.deepEqual(item.properties.purpose.enum,['resumable_observation']);
-    assert.deepEqual(item.properties.selection_origin.enum,['researcher','agent','unspecified']);
-    for(const key of ['purpose','selection_origin']){
-      assert.ok(!(item.required??[]).includes(key));delete item.properties[key];
-    }
-  }
-  const intentGuidance='For a new resumable ROI set purpose=resumable_observation with stable annotation_id and selection_origin; read back image_panel_current and verify the exact handoff after saving. ';
-  assert.ok(annotate.description.includes(intentGuidance));annotate.description=annotate.description.replace(intentGuidance,'');
-  // Presentation controls are explicitly additive and must never become a
-  // required scientific parameter or alter old full-return behavior.
-  for(const name of ['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_info','image_result']){
-    const tool=currentSchema.find(tool=>tool.name===name),detail=tool.inputSchema.properties.response_detail;
-    assert.equal(detail.type,'string');assert.deepEqual(detail.enum.slice().sort(),['compact','full']);
-    assert.ok(!tool.inputSchema.required.includes('response_detail'));
-  }
-  for(const name of ['image_info','image_result'])delete retainedSchema.find(tool=>tool.name===name).inputSchema.properties.response_detail;
-  // The single-process ancestry read is a separately enumerated optional
-  // extension. Validate its entire schema/guidance before normalizing only it;
-  // every remaining frozen property and every other description stay exact.
-  normalizeNamedFrameAncestryExtension(retainedSchema,schema);
-  // Owner-authorized HRTEM report guidance is one exact prose-only extension;
-  // validate it and the unchanged entire export contract before normalizing.
-  normalizeNamedReportExportGuidance(retainedSchema,schema);
-  const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
-  for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
-  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except named presentation/ancestry controls, exact report export guidance and additive F1a/F4 tools');
+  // Same exact named comparison as the independent source-only regression.
+  // This does not imply the earlier atomic context save or later workspace
+  // compatibility checks have passed in an environment that blocks them.
+  assertReviewedFrozenCatalog(currentSchema,schema);
   const unknown=await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}});
   const oldText=refused.result.content[0].text,newText=unknown.result.content[0].text;
   assert.ok(newText.startsWith(oldText+'. Query image_result with original request_id=unknown-original-request;'));
