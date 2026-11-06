@@ -181,6 +181,9 @@ jobs:
       - run: python -B tests/image_core_cross_test.py
       - run: python -B tests/image_point_observation_test.py
       - run: python -B tests/image_site_observation_test.py
+      - run: python -B tests/image_site_continuation_test.py
+      - run: node dist/tests/site-continuation-entry-smoke.mjs "${{ runner.temp }}/site-continuation-cli"
+      - run: node dist/tests/site-continuation-entry-smoke.mjs "${{ runner.temp }}/site-continuation-mcp" --mcp
       - run: node dist/tests/site-observation-stdio-smoke.mjs "${{ runner.temp }}/site-observation-smoke" --profile-coverage
       - run: python -B tests/image_column_fit_test.py
       - run: python -B tests/image_column_fit_readback_test.py

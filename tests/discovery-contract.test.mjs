@@ -87,7 +87,7 @@ test('expected-site context is optional, sourced, bounded and forwarded without 
     await assert.rejects(registry.call('image_discovery_review',{...reviewed(),site_context:{...site_context,...change}}));
   }
   assert.equal(calls.length,0);
-  const args={...reviewed(),site_context};
+  const args={...reviewed(),site_context,include_site_continuation:true};
   await registry.call('image_discovery_review',args);
   assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
 });

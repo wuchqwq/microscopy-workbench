@@ -90,6 +90,8 @@ class ScopeTests(unittest.TestCase):
         self.assertIn("- run: python -B tests/image_point_observation_test.py", (root/".github/workflows/quick.yml").read_text())
         self.assertIn("- run: python -B tests/image_site_observation_test.py", (root/".github/workflows/quick.yml").read_text())
         self.assertEqual(groups_for_path("tests/image_site_observation_test.py"), {"spatial"})
+        self.assertIn("- run: python -B tests/image_site_continuation_test.py", (root/".github/workflows/quick.yml").read_text())
+        self.assertEqual(groups_for_path("tests/image_site_continuation_test.py"), {"spatial"})
         import json
         command=json.loads((root/"package.json").read_text())["scripts"]["test"]
         self.assertIn("dist/tests/point-observation-contract.test.mjs",command.split())

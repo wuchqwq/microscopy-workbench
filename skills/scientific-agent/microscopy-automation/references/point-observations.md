@@ -85,6 +85,29 @@ After a known outcome, revise with a new request linked by `previous_review_id`;
 recover an unknown write only by the original ID. Omitting site_context preserves
 the old review path. See [the workflow](../../../../docs/STEM_EXPECTED_SITE.zh-CN.md).
 
+## Executable continuation of the raw question
+
+When the user asks to continue the fixed-site question, explicitly request
+`include_site_continuation:true` with site_context on `image_discovery_review`.
+Read the actual evidence first. `site_continuation` is a deterministic suggestion,
+not a fresh AI decision or a dispatched tool. For `tool_proposed`, retain its
+source review and saved original IDs; choose whether the five-sample profile is
+useful, then call the existing `action.tool` with its exact `action.arguments`.
+After a known completed matching kind/request_id, append the result object_id
+to ALL `after_success.arguments.evidence_ids` and call its existing review tool.
+Never drop the original off-site profile or references, move the expected point,
+or treat a proposal as measured coverage. Inspect actual new profile_coverage;
+if still unverified stop and inspect, do not loop automatically until it passes.
+
+Reference conflict/information/ROI-support/evidence-budget states have no tool
+action. Ask for the specific scientific correction or stop with raw evidence.
+Unknown write outcomes require their original image_result query. The existing
+CLI `tool` now also admits statistics/profile/discovery/review with schema and
+durable original-intent recovery; it does not admit S2 by this extension. There
+is no new Panel slot, automatic model wake-up or AnalysisContext role. Save the
+provider/workspace locator and exact review/request IDs for continuation.
+See [user path and interface inventory](../../../../docs/STEM_TOOL_CONTINUATION.zh-CN.md).
+
 ## Optional conditional S2 column decomposition
 
 For deciding whether the present question needs decomposition, use

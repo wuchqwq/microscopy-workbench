@@ -65,6 +65,10 @@ Keep raw ROI observation as default; unavailable premises remain UNKNOWN, and
 fitted components are not occupancy or defect classifications. This optional
 tool persists through the provider journal, without a new Panel editor or
 AnalysisContext role.
+For the raw expected-site question, that reference also connects an explicitly
+requested `site_continuation` to existing profile/review calls and original-ID
+recovery. Inspect/choose the proposal; a saved action is not executed science or
+proof of autonomous AI choice. Retain all references and old off-site profiles.
 
 ## Budgeted active follow-up
 

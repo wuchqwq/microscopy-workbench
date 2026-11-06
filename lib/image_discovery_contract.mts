@@ -44,6 +44,7 @@ export const discoveryTools:ToolDefinition[]=[
     unresolved:observations,
     previous_review_id:id,
     site_context:siteContext,
+    include_site_continuation:{type:'boolean',description:'Opt in to a source-bound existing-tool handoff and linked review template. Requires site_context; no tool is dispatched. The host must inspect the saved original outcome and append a known completed profile before the linked review. Omission preserves historical output.'},
   },['object_id','candidate_id','evidence_ids','observation_text']),
 ];
 

@@ -9,12 +9,14 @@ from pathlib import Path
 import shutil
 try:
     from . import image_site_observation as site_observation
+    from . import image_site_continuation as site_continuation
 except ImportError:
     import image_site_observation as site_observation
+    import image_site_continuation as site_continuation
 
 FIELDS = {
     "discovery": {"object_id", "entry", "selection_origin", "window_sizes", "max_candidates", "regions", "previous_discovery_id", "max_size"},
-    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id", "site_context"},
+    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id", "site_context", "include_site_continuation"},
 }
 LEGACY_VERSION = "image-first-discovery-v1"
 VERSION = "image-first-discovery-v2"
@@ -281,6 +283,8 @@ def _site_feedback(workspace, context, observations, rect, api, version=2):
 
 
 def _review(workspace, request, metadata, directory, api):
+    include = request.get("include_site_continuation", False)
+    api.need(type(include) is bool and (not include or "site_context" in request), "include_site_continuation requires a boolean and an explicit site_context")
     discovery, discovery_dir = workspace.object(request["object_id"])
     api.need(discovery["kind"] == "discovery", "Select the exact saved image-first discovery record")
     matches = [r for r in discovery["candidates"] if r["candidate_id"] == request.get("candidate_id")]
@@ -316,6 +320,9 @@ def _review(workspace, request, metadata, directory, api):
                     cost={"new_fft_pixels":0,"new_scientific_method_calls":0},
                     method_handoff=_handoff(gpas),
                     scientific_data_changed=False, fft_recomputed=False, limitations=LIMITS)
+    if include:
+        metadata["site_continuation"] = site_continuation.derive(metadata, request, api)
+        site_continuation.save(directory, metadata["site_continuation"], api)
     api.write_new(directory/"discovery-review.json", api.canonical({k:v for k,v in metadata.items() if k not in ("created_utc",)})+b"\n")
     return metadata
 
@@ -390,6 +397,16 @@ def validate_references(workspace, metadata, api):
                      site_file.with_suffix(".txt").read_text(encoding="utf-8") == site_observation.report_text(expected_site) and
                      api.read_json(site_file.with_name("discovery-review.json")).get("site_observation") == expected_site,
                      "Site observation differs from its original context/raw evidence", "CORRUPT_OBJECT")
+        include = original.get("include_site_continuation", False)
+        api.need(type(include) is bool and ("site_continuation" in metadata) == include and (not include or "site_context" in original),
+                 "Site continuation differs from the original explicit request", "CORRUPT_OBJECT")
+        if include:
+            expected = site_continuation.derive(metadata, original, api)
+            folder = Path(metadata["manifest_path"]).parent
+            api.need(metadata["site_continuation"] == expected and api.read_json(folder/"site-continuation.json") == expected and
+                     (folder/"site-continuation.txt").read_text(encoding="utf-8") == site_continuation.report_text(expected) and
+                     api.read_json(folder/"discovery-review.json").get("site_continuation") == expected,
+                     "Site tool handoff differs from its bound review/evidence", "CORRUPT_OBJECT")
         api.need(metadata["evidence_refs"] == refs and metadata["numerical_observations"] == observations and metadata["fft_refs"] == ffts and
                  metadata["observation_text"] == original["observation_text"] and metadata["candidate_explanations"] == original.get("candidate_explanations",[]) and
                  metadata["unresolved"] == original.get("unresolved",[]) and metadata["physical_conclusion"] is None,

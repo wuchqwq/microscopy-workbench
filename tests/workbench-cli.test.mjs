@@ -34,6 +34,21 @@ test('unknown first outcome retains exact request; next invocation is query-only
  const f=fixture(t),calls=[],provider={async call(name,args){calls.push(name);if(name==='image_fft')throw Object.assign(new Error('lost response'),{code:'OUTCOME_UNKNOWN'});return reply({state:'unknown',request_id:args.request_id});},close(){}};const execution=new CliExecution(f.workspace,provider),args={object_id:id(1),request_id:'lost'};
  await assert.rejects(execution.call('image_fft',args),e=>e.request_id==='lost');assert.equal((await execution.call('image_fft',args)).state,'unknown');assert.deepEqual(calls,['image_fft','image_result']);assert.equal(cliError('tool',Object.assign(new Error('unknown'),{code:'OUTCOME_UNKNOWN',request_id:'lost'})).status,'outcome_unknown');
 });
+
+test('CLI forwards existing STEM observation tools under schema and original-intent recovery',async t=>{
+ const f=fixture(t),calls=[],provider={async call(name,args){calls.push({name,args});return reply({state:'completed',request_id:args.request_id,object_id:id(5)});},close(){}};
+ const execution=new CliExecution(f.workspace,provider),rect=[20,20,25,25];
+ const inputs=[['image_statistics',{object_id:id(1),rect,request_id:'stem-stats'}],
+  ['image_profile',{object_id:id(1),points:[[20.25,22.5],[24.25,22.5]],sample_count:5,request_id:'stem-profile'}],
+  ['image_discovery',{object_id:id(1),entry:'manual',regions:[{rect,reason:'Expected position question'}],request_id:'stem-discovery'}],
+  ['image_discovery_review',{object_id:id(2),candidate_id:id(3),evidence_ids:[id(4)],observation_text:'Retain raw evidence',include_site_continuation:true,
+   site_context:{question:'Compare the expected site',statistics_id:id(4),expected_position_xy:[22.25,22.5],position_source_text:'Supplied prior',modality:'haadf',signal_kind:'stored_scalar',signal_source_text:'Analytic fixture'},request_id:'stem-review'}]];
+ for(const [name,args] of inputs){await execution.call(name,args);await execution.call(name,args);}
+ assert.deepEqual(calls.map(c=>c.name),inputs.flatMap(([name])=>[name,'image_result']));
+ await assert.rejects(execution.call('image_profile',{object_id:id(1),points:[[1,2]],request_id:'invalid-line'}));
+ await assert.rejects(execution.call('image_column_fit',{request_id:'not-opened-by-this-change'}),/Unsupported/);
+ assert.equal(calls.length,8);
+});
 test('query never wraps a nonthrowing failed/pending/unknown/missing outcome as CLI success',async t=>{
  const f=fixture(t);for(const [state,status]of [['completed','completed'],['failed','failed'],['not_submitted','failed'],['pending','outcome_unknown'],['unknown','outcome_unknown'],['not_found','outcome_unknown']]){
   const calls=[],provider={async call(name,args){calls.push({name,args});return reply({state,request_id:'original-query'});},close(){}};

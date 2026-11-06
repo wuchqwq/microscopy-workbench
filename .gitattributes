@@ -48,5 +48,8 @@ skills/scientific-agent/microscopy-automation/references/science-records-v1/** -
 # New expected-site helper and bounded checks have byte-identified LF sources.
 # Do not renormalize existing helpers or historical scientific evidence.
 tools/image_site_observation.py text eol=lf
+tools/image_site_continuation.py text eol=lf
 tests/image_site_observation_test.py text eol=lf
+tests/image_site_continuation_test.py text eol=lf
 tests/site-observation-stdio-smoke.mjs text eol=lf
+tests/site-continuation-entry-smoke.mjs text eol=lf
