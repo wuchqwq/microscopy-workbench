@@ -73,3 +73,12 @@ historical sidecars and previews are not rewritten by reading them.
 
 For the broader question-to-tool route and currently unverified scopes, read
 the [HRTEM capability map](HRTEM_BASELINE.zh-CN.md).
+
+Saved cross-platform coherence reductions have a separate, versioned
+[read contract](SAVED_BAND_SUMMARY_READ_COMPATIBILITY.md). It checks an
+independent reference and sample/cancellation-dependent interval, preserving
+all historical values, statuses, nulls, actions and budget. Only the four
+coherence diagnostics can differ; amplitude/phase comparisons remain exact.
+A compatibility interval crossing 0.9 refuses the read, rather than changing a
+saved decision. Full metadata and compact reads expose a fresh
+`peak_summary_read_validation` receipt, separate from GPA analytic validation.

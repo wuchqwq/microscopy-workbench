@@ -13,10 +13,12 @@ from PIL import Image, ImageDraw
 
 if __package__:
     from . import image_peak_comparison as peak_comparison
+    from . import image_peak_summary_validation as summary_validation
     from . import image_method_policy as policy
     from . import image_method_journal as journal
 else:
     import image_peak_comparison as peak_comparison
+    import image_peak_summary_validation as summary_validation
     import image_method_policy as policy
     import image_method_journal as journal
 
@@ -263,6 +265,7 @@ def action(workspace, name, request, metadata, directory, api):
 
 
 def validate_references(workspace, metadata, api):
+    validation = None
     api.need(metadata.get("policy_version") == VERSION, "Unknown cross-method policy version", "CORRUPT_OBJECT")
     if metadata["kind"] == "method_plan":
         _cost(api, metadata["budget"]); _info(api, metadata["information"])
@@ -300,7 +303,14 @@ def validate_references(workspace, metadata, api):
                         if metadata["information"]["goal"] == peak_comparison.GOAL else
                         policy.propose(expected_gpas, topology, metadata["information"], ledger["remaining"], attempted))
             proposed = expected["actions"]
-            api.need(metadata["decision"] == expected["decision"], "Method decision changed", "CORRUPT_OBJECT")
+            if metadata['information']['goal'] == peak_comparison.GOAL:
+                try:
+                    validation = summary_validation.validate(workspace, expected_gpas[0], metadata['information'],
+                                                             metadata['decision'], expected['decision'], api)
+                except (ValueError, TypeError, KeyError, ArithmeticError) as error:
+                    api.need(False, 'Method decision changed: '+str(error), 'CORRUPT_OBJECT')
+            else:
+                api.need(metadata["decision"] == expected["decision"], "Method decision changed", "CORRUPT_OBJECT")
         api.need(metadata["actions"] == _actions(proposed, root, ledger, api), "Method actions/costs differ from frozen evidence", "CORRUPT_OBJECT")
     else:
         plan, _ = workspace.object(metadata["plan_object_id"])
@@ -311,3 +321,4 @@ def validate_references(workspace, metadata, api):
             child, _ = workspace.object(receipt["object_id"])
             api.need(child["request_id"] == receipt["request_id"] and child["kind"] == metadata["selected_action"]["kind"],
                      "Method result differs from original child", "CORRUPT_OBJECT")
+    return validation

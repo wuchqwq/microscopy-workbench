@@ -1,5 +1,10 @@
 # Versioned GPA analytic read validation: Windows review candidate
 
+This records the `d78653a` scope and its then-unresolved upper-plan refusal.
+The later, separate [saved-band summary read contract](../SAVED_BAND_SUMMARY_READ_COMPATIBILITY.md)
+addresses coherence reductions without reinterpreting the historical failures
+or extending the GPA analytic envelope.
+
 Base: `7b63507c04415087e8f0f79b3e909278b610e43d`, branch
 `research/hrtem-baseline-local-20261106`. Same isolated C: clone; no F: access,
 STEM changes, main movement, push or merge. No original evidence was rewritten.

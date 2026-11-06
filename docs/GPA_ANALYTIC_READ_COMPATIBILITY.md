@@ -79,3 +79,7 @@ This policy does not authorize approximate comparisons of measured fields,
 ROI reductions, method decisions, status dictionaries, FFTs, masks, parameters
 or calibrations. It does not fix unrelated saved absolute display paths or
 qualify material strain, phase identity or dislocations.
+
+The separate [saved-band coherence contract](SAVED_BAND_SUMMARY_READ_COMPATIBILITY.md)
+handles the observed ROI reduction issue with its own data-dependent reference
+and bounds. This analytic policy is not reused as a reduction tolerance.
