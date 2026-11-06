@@ -8,7 +8,8 @@ import textwrap
 
 from PIL import Image, ImageDraw
 
-VERSION = "source-bound-candidate-assessment-v1"
+LEGACY_VERSION = "source-bound-candidate-assessment-v1"
+VERSION = "source-bound-candidate-assessment-v2"
 
 
 def parameters(value, rect, api):
@@ -39,7 +40,9 @@ def gpa_ids(record, api):
     return [ref["object_id"] for ref in record["input_refs"]]
 
 
-def result(workspace, supplied, ids, rect, api):
+def _result_v1(workspace, supplied, ids, rect, api):
+    # Frozen saved-v1 reconstruction, including its inaccurate tool advice.
+    # Historical bytes are not repaired/reinterpreted on read. New writes use v2.
     supplied = parameters(supplied, rect, api)
     records = [workspace.object(ident)[0] for ident in ids]
     topologies = [r for r in records if r["kind"] == "topology"]
@@ -81,7 +84,7 @@ def result(workspace, supplied, ids, rect, api):
         {"tool": "image_profile", "purpose": "Inspect explicit source-pixel real-space lines at the supplied anchors; manual lattice/fringe interpretation is still required, no automatic tracing."},
         {"tool": None, "purpose": "Obtain independent lattice-position/structure evidence and an appropriate image-formation model or additional imaging data to distinguish displacement from contrast-only modulation."},
     ]
-    return {"version": VERSION, "hypothesis": supplied["hypothesis"],
+    return {"version": LEGACY_VERSION, "hypothesis": supplied["hypothesis"],
             "real_space_evidence": supplied_evidence, "origin_basis": "caller_reported_not_authenticated",
             "supports": support, "opposes": oppose, "unknown": unknown, "next_tools": next_tools,
             "topology_object_id": topology["object_id"], "method_plan_object_id": plan["object_id"],
@@ -99,15 +102,42 @@ def result(workspace, supplied, ids, rect, api):
             "new_scientific_method_calls": 0}
 
 
+def result(workspace, supplied, ids, rect, api, *, version=VERSION):
+    api.need(version in (LEGACY_VERSION, VERSION), "Unknown candidate assessment version", "CORRUPT_OBJECT")
+    value = _result_v1(workspace, supplied, ids, rect, api)
+    if version == LEGACY_VERSION:
+        return value
+    value.update(version=VERSION, hypothesis_evaluation="free_text_not_parsed_or_tested",
+                 numerical_scope="net_image_phase_closure_on_specified_circuits_only")
+    value["unknown"].insert(0, "The free-text hypothesis is recorded, not parsed or tested. Numerical support/opposition concerns only net image-phase closure on the specified circuits, not arbitrary hypotheses, material displacement or real dislocations.")
+    value["next_tools"] = [{"tool": "image_info", "object_id": value["topology_object_id"],
+        "purpose": "Read the saved topology report.loops[].reflections[] failures, low_amplitude_path_pixels, ineligible_path_pixels and edge_invalid_path_pixels for each specified path; invalid paths are not zero winding."}]
+    for ident in gpa_ids(workspace.object(value["topology_object_id"])[0], api):
+        gpa, _ = workspace.object(ident)
+        names = ("amplitude.npy", "low_amplitude.npy", "valid_phase.npy", "valid_displacement.npy", "valid_tensor.npy", "edge_invalid.npy")
+        value["next_tools"].append({"tool": "image_export", "object_id": ident,
+            "files_sha256": {name: gpa["files_sha256"][name] for name in names},
+            "purpose": "Export this GPA object to a new output_dir with a new request_id for amplitude.npy and saved mask NPYs (low_amplitude, valid_phase, valid_displacement, valid_tensor, edge_invalid). Verify manifest.json/files_sha256 and provenance.json against this GPA object. Exporting a review or gpa_read object does not export these GPA arrays."})
+    value["next_tools"].extend([
+        {"tool": "image_gpa_read", "purpose": "Optional 1..64 explicitly selected integer local [x,y] samples of phase_1/phase_2, displacement ux/uy and tensors exx/eyy/exy/rotation, with phase_valid/tensor_valid and invalid_reason. It does not return amplitude or per-band low-amplitude masks; do not round supplied fractional anchors silently."},
+        {"tool": "image_profile", "purpose": "Inspect explicit source-pixel real-space lines at the supplied anchors; manual lattice/fringe interpretation is still required, no automatic tracing."},
+        {"tool": None, "purpose": "Obtain independent lattice-position/structure evidence and an appropriate image-formation model or additional imaging data to distinguish displacement from contrast-only modulation."}])
+    return value
+
+
 def readable(value):
     lines = ["Candidate: " + value["hypothesis"], "Conditional image evidence; material dislocation NOT confirmed."]
+    if value["version"] == VERSION:
+        lines[0] = "Caller hypothesis (free text, not parsed or tested): " + value["hypothesis"]
+        lines.append("Numerical scope: net image-phase closure on specified circuits only; no test of arbitrary hypotheses or material displacement.")
     for title, key in (("Supports", "supports"), ("Opposes", "opposes"), ("Unknown", "unknown")):
         lines.append(title + ":")
         lines.extend("- " + item for item in value[key])
         if not value[key]:
             lines.append("- No evidence in this category was established.")
     lines.append("Next tools/data:")
-    lines.extend("- " + (item["tool"] or "Independent data/model") + ": " + item["purpose"] for item in value["next_tools"])
+    lines.extend("- " + (item["tool"] or "Independent data/model") +
+                 (" [object_id=" + item["object_id"] + "]" if "object_id" in item else "") + ": " + item["purpose"] for item in value["next_tools"])
     lines.extend(["Real-space source: " + value["real_space_evidence"]["source_text"],
                   "Anchors (source pixels): " + str(value["real_space_evidence"]["anchors_xy"]),
                   "Model assumption: " + value["conditions"]["model_assumption_text"],
@@ -120,7 +150,7 @@ def readable(value):
 
 def preview_lines(value):
     statuses = [g["status"] for g in value["conditions"]["loop_groups"]]
-    return ["Candidate review | conditional image evidence; material dislocation NOT confirmed",
+    lines = ["Candidate review | conditional image evidence; material dislocation NOT confirmed",
         "Saved path status: " + ", ".join(statuses) + "; method: " + value["method_decision"]["reason"],
         "Supports: " + ("qualified nonzero image-phase closure on saved nested paths" if "projected_topological_evidence" in statuses else "no qualified nonzero closure established"),
         "Opposes: " + ("zero net winding on saved valid paths; not universal defect absence" if "no_net_winding_detected" in statuses else "see separately attributed real-space statement; no numerical physical rejection"),
@@ -128,6 +158,13 @@ def preview_lines(value):
         "Unknown: displacement versus contrast-only origin; physical model, 3D interpretation and independent real-space validation",
         "Next: image_gpa_read for path amplitude/reference validity; image_profile at explicit real-space anchors; independent structure/imaging evidence",
         "Units: source pixels; physical scale unknown unless separately calibrated. Full sources, paths and references: candidate-review.txt"]
+    if value["version"] == VERSION:
+        lines.insert(1, "Hypothesis: free text recorded only, not parsed or tested. Numerical support/opposition: specified-circuit net image-phase closure only.")
+        lines[-2:-1] = [
+            "Next: image_info on topology for path failures/low-amplitude counts; image_export on each GPA for amplitude.npy and masks with manifest/provenance.",
+            "Optional image_gpa_read: integer phase/displacement/tensor samples and validity flags only; no amplitude or per-band mask output.",
+            "Then image_profile on explicit real-space lines and independent structure/imaging evidence; no automatic lattice tracing."]
+    return lines
 
 
 def append_preview(directory, value):

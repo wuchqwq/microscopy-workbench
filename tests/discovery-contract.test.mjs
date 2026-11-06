@@ -62,6 +62,8 @@ test('candidate composition retains bounded caller provenance and four-way scope
   const {registry,calls}=fixture();
   const tool=registry.listTools().find(tool=>tool.name==='image_discovery_review');
   assert.match(tool.inputSchema.properties.candidate_assessment.description,/never confirms/);
+  assert.match(tool.inputSchema.properties.candidate_assessment.properties.hypothesis.description,/without parsing or testing/);
+  assert.match(tool.inputSchema.properties.candidate_assessment.properties.hypothesis.description,/specified circuits/);
   for(const mutate of [a=>{delete a.real_space_evidence.source_text;},a=>{a.real_space_evidence.origin='automatic_lattice_tracing';},a=>{a.real_space_evidence.relation='confirmed';},a=>{a.real_space_evidence.anchors_xy=[];},a=>{a.real_space_evidence.anchors_xy=Array(17).fill([1,2]);},a=>{a.material_dislocation_confirmed=true;}]){
     const args={...reviewed(),candidate_assessment:assessment()};mutate(args.candidate_assessment);
     await assert.rejects(registry.call('image_discovery_review',args));

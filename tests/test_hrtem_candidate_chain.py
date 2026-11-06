@@ -168,6 +168,9 @@ class CandidateChain(unittest.TestCase):
             with self.subTest(case=name):
                 self.assertEqual(topology["report"]["status"], expected[name])
                 result = review["candidate_result"]
+                self.assertEqual(result["version"], assessment.VERSION)
+                self.assertEqual(result["hypothesis_evaluation"], "free_text_not_parsed_or_tested")
+                self.assertEqual(result["numerical_scope"], "net_image_phase_closure_on_specified_circuits_only")
                 self.assertFalse(result["material_dislocation_confirmed"])
                 self.assertFalse(result["automatic_real_space_tracing"])
                 self.assertTrue(result["unknown"])
@@ -266,6 +269,86 @@ class CandidateChain(unittest.TestCase):
         for name, digest in exported["exported_files_sha256"].items():
             self.assertEqual(worker.sha_file(Path(exported["output_dir"]) / name), digest)
         self.assertEqual(review["software_provenance"]["helper_modules_sha256"]["image_candidate_assessment.py"], worker.sha_file(Path(assessment.__file__)))
+
+    def test_next_tools_match_actual_topology_samples_and_gpa_exports(self):
+        client, review, topology, receipt = self.cases["low_amplitude"]
+        recommendations = review["candidate_result"]["next_tools"]
+        info = next(item for item in recommendations if item["tool"] == "image_info")
+        actual = client.call("get", object_id=info["object_id"])
+        self.assertEqual(actual["object_id"], topology["object_id"])
+        rows = [row for loop in actual["report"]["loops"] for row in loop["reflections"]]
+        self.assertTrue(any(row["low_amplitude_path_pixels"] > 0 and "ineligible_path_pixel" in row["failures"] for row in rows))
+        for row in rows:
+            for field in ("failures", "low_amplitude_path_pixels", "ineligible_path_pixels", "edge_invalid_path_pixels"):
+                self.assertIn(field, row)
+        exports = [item for item in recommendations if item["tool"] == "image_export"]
+        self.assertEqual([item["object_id"] for item in exports], receipt["gpa_ids"])
+        for index, item in enumerate(exports):
+            exported = client.call("export", object_id=item["object_id"], output_dir=str(client.root / ("recommended-gpa-export-%d" % index)))
+            directory = Path(exported["output_dir"])
+            manifest = worker.read_json(directory / "manifest.json")
+            provenance = worker.read_json(directory / "provenance.json")
+            self.assertEqual(manifest["scientific_object"]["object_id"], item["object_id"])
+            self.assertIn(item["object_id"], provenance["objects"])
+            for name, digest in item["files_sha256"].items():
+                self.assertEqual(worker.sha_file(directory / name), digest)
+                self.assertEqual(manifest["files_sha256"][name], digest)
+                np.testing.assert_array_equal(np.load(directory / name, allow_pickle=False), np.load(client.workspace / "objects" / item["object_id"] / name, allow_pickle=False))
+            self.assertEqual(np.load(directory / "amplitude.npy").shape, (2, 256, 256))
+            self.assertEqual(np.load(directory / "low_amplitude.npy").dtype, np.dtype(bool))
+        samples = client.call("gpa_read", object_id=receipt["gpa_ids"][0], points=[[175, 128], [191, 128]])
+        for row in samples["samples"]:
+            self.assertTrue({"phase_1", "phase_2", "ux", "uy", "exx", "eyy", "exy", "rotation", "phase_valid", "tensor_valid", "invalid_reason"} <= set(row))
+            self.assertTrue({"amplitude", "low_amplitude", "valid_phase", "mask"}.isdisjoint(row))
+        self.assertTrue(any(not row["phase_valid"] and row["invalid_reason"] is not None for row in samples["samples"]))
+        sample_advice = next(item for item in recommendations if item["tool"] == "image_gpa_read")["purpose"]
+        self.assertIn("does not return amplitude", sample_advice)
+        self.assertIn("integer local", sample_advice)
+
+    def test_arbitrary_hypothesis_is_retained_but_never_becomes_a_numerical_target(self):
+        client, review, _, receipt = self.cases["positive"]
+        args = copy.deepcopy(receipt["review_args"])
+        args["candidate_assessment"]["hypothesis"] = "The specimen is gold and has a real 3D dislocation; arbitrary untested caller text"
+        changed = client.call("discovery_review", **args)["candidate_result"]
+        original = review["candidate_result"]
+        self.assertEqual(changed["hypothesis"], args["candidate_assessment"]["hypothesis"])
+        for key in ("supports", "opposes", "unknown", "conditions", "next_tools", "hypothesis_evaluation", "numerical_scope"):
+            self.assertEqual(changed[key], original[key])
+        self.assertFalse(changed["material_dislocation_confirmed"])
+        for message in (assessment.readable(changed), "\n".join(assessment.preview_lines(changed))):
+            self.assertIn("not parsed or tested", message)
+            self.assertIn("image-phase closure", message)
+
+
+LEGACY_ROOT = Path(os.environ.get("HRTEM_TASK_B_LEGACY_ROOT", "__legacy_not_configured__"))
+
+
+@unittest.skipUnless((LEGACY_ROOT / "review" / "MANIFEST.json").is_file(), "Set HRTEM_TASK_B_LEGACY_ROOT to the original reviewed Task B evidence")
+class HistoricalTaskB(unittest.TestCase):
+    def test_all_original_v1_reviews_get_result_compact_and_inventory_unchanged(self):
+        inventory = worker.read_json(LEGACY_ROOT / "review" / "MANIFEST.json")["files"]
+        before = {name: worker.sha_file(LEGACY_ROOT / name) for name in inventory}
+        self.assertEqual(before, {name: item["sha256"] for name, item in inventory.items()})
+        root = LEGACY_ROOT / "cases-final"
+        mcp = worker.read_json(root / "mcp-review-receipts.json")["results"]
+        for name in ("positive", "negative", "low_amplitude", "contrast_vortex"):
+            receipt = worker.read_json(root / name / "receipt.json")
+            ids = [receipt["review"], next(item["review"] for item in mcp if item["case"] == name)]
+            workspace = root / name / "workspace"
+            for ident in ids:
+                original = worker.read_json(workspace / "objects" / ident / "object.json")
+                self.assertEqual(original["candidate_result"]["version"], assessment.LEGACY_VERSION)
+                for action in ("get", "result"):
+                    for compact in (False, True):
+                        request = dict(workspace=str(workspace), action=action,
+                            **({"object_id": ident} if action == "get" else {"query_request_id": original["request_id"]}),
+                            **({"response_detail": "compact"} if compact else {}))
+                        response = worker.execute(request)
+                        self.assertTrue(response["ok"], response)
+                        self.assertEqual(response["result"]["candidate_result"], original["candidate_result"])
+                        if not compact:
+                            self.assertEqual(response["result"], {"state": "completed", **original})
+        self.assertEqual({name: worker.sha_file(LEGACY_ROOT / name) for name in inventory}, before)
 
 
 if __name__ == "__main__":

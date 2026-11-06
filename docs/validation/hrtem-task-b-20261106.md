@@ -4,6 +4,13 @@ Scope: explicitly specified synthetic candidates, supplied real-space constructi
 truth, existing qualified GPA/v3 topology/method-loop records, material-user
 four-way feedback. No true material dislocation or GUI human usability claim.
 
+Erratum after independent review: the original v1 recommendation attributing
+amplitude/mask output to `image_gpa_read` was wrong. Use the actual topology report
+and GPA exports described in [the v2 correction](hrtem-task-b-p2-20261106.md).
+The v1 acceptance artifacts below remain historical and are never rewritten.
+Free-text hypotheses were not parsed/tested; numerical support/opposition only
+concerns net image-phase closure on the specified circuits.
+
 Repository: `C:\Users\13471\Documents\ChatGPT\mircograph-workbench\hrtem-baseline-local-20261106`
 
 Branch: `research/hrtem-baseline-local-20261106`

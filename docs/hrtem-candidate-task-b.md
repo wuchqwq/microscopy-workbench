@@ -45,11 +45,21 @@ Existing discovery admission still checks exact source/frame identity, array has
 ROI and calibration. GPA/topology admission checks the shared FFT/grid, reference,
 mask, saved arrays and journals. Review creates no FFT, GPA or topology operation.
 The returned `candidate_result` is versioned
-`source-bound-candidate-assessment-v1`; it is reconstructed exactly from the
+`source-bound-candidate-assessment-v2`; it is reconstructed exactly from the
 original statement and qualified evidence on reads, with no new float tolerance.
 An absent opt-in retains the historical review contract and cannot acquire a
 candidate result. Historical v1/v2 topology remains separately readable; this
 composition does not promote it to v3 qualification.
+
+The `hypothesis` string is retained without parsing or testing; numerical
+support/opposition concerns only net image-phase closure on the specified
+circuits. It does not test arbitrary text, a particular material displacement,
+or a real dislocation. Caller-supplied real-space relations retain separate
+authority and are not automatically verified against that text.
+
+Saved v1 reports retain their original text, hashes and read semantics, including
+their inaccurate `image_gpa_read` amplitude/mask recommendation. That historical
+advice is superseded by v2; reading v1 never silently rewrites it into v2.
 
 ## Result for a materials user
 
@@ -63,8 +73,17 @@ supports, opposes, unknown and next tools. Claims retain their authority:
 - **Unknown:** invalid/partial paths do not become physical negative evidence.
   Even qualified closure does not establish a material dislocation, unique 3D
   Burgers vector, independent observations, or a validated image-formation model.
-- **Next tools/data:** `image_gpa_read` for saved amplitude/validity and reference
-  support, `image_profile` on explicit real-space lines, then independent
+- **Next tools/data:** `image_info` on the saved topology for
+  `report.loops[].reflections[]` failures and low-amplitude/ineligible/edge counts.
+  Use `image_export` on **each GPA object**, with a new output directory and
+  request ID, for `amplitude.npy`, `low_amplitude.npy`, `valid_phase.npy`,
+  `valid_displacement.npy`, `valid_tensor.npy`, `edge_invalid.npy` and the
+  original scientific provenance and hash manifest. Exporting a review or
+  `gpa_read` record does not export the parent GPA arrays. Optional
+  `image_gpa_read` returns only 1..64 exact integer local phase/displacement/tensor
+  samples with `phase_valid`, `tensor_valid` and `invalid_reason`, not amplitude
+  or per-band masks. Fractional anchors must not be silently rounded.
+  Use `image_profile` on explicit real-space lines, then independent
   lattice-position/structure evidence and an appropriate image-formation model
   or additional imaging data. The final step is a data need, not an implemented
   automatic identification tool.
@@ -74,7 +93,7 @@ For the contrast-only counterexample, a readable Chinese interpretation is:
 > 支持：两个嵌套回路在已保存的三个方向上给出一致的非零图像相位闭合。
 > 反对：调用者提供的对比系数构造规定材料位移为零，因此反对把这个构造解释为材料位错。
 > 未知：同一组像素能来自位移模型，也能来自纯对比调制；图像相位拓扑无法独立区分。
-> 下一步：先检查幅度、参考与路径有效性，再检查明确指定的实空间剖面；物理确认需要独立晶格位置或结构证据以及成像模型／额外数据。
+> 下一步：用 image_info 查看 topology 中逐路径失败原因和低幅计数；用 image_export 导出各 GPA 的幅值、mask、manifest 与 provenance。image_gpa_read 只用于整数点的相位／位移／张量采样及有效性标志。物理确认仍需要独立晶格位置或结构证据以及成像模型／额外数据。
 
 The executable report stays in the provider's existing English vocabulary.
 No overall material-confirmed label is inferred from the four lists.

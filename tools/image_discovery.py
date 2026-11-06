@@ -340,7 +340,8 @@ def validate_references(workspace, metadata, api):
         enabled = "candidate_assessment" in original
         refs, observations, ffts, gpas = _evidence(workspace, original["evidence_ids"], discovery["source_dependency"], candidate["rect"], api, candidate_assessment=enabled)
         if enabled:
-            expected = assessment.result(workspace, original["candidate_assessment"], original["evidence_ids"], candidate["rect"], api)
+            expected = assessment.result(workspace, original["candidate_assessment"], original["evidence_ids"], candidate["rect"], api,
+                                         version=metadata.get("candidate_result", {}).get("version"))
             report_dir = Path(metadata["manifest_path"]).parent
             report = api.read_json(report_dir/"discovery-review.json")
             api.need(metadata.get("candidate_result") == report.get("candidate_result") == expected and

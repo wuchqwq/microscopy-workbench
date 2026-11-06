@@ -8,7 +8,7 @@ const observations:ArgumentSchema={type:'array',minItems:0,maxItems:8,items:text
 const rect:ArgumentSchema={type:'array',minItems:4,maxItems:4,items:{type:'integer',minimum:0}};
 const displaySize:ArgumentSchema={type:'integer',minimum:32,maximum:1024};
 const candidateAssessment:ArgumentSchema={type:'object',additionalProperties:false,required:['hypothesis','real_space_evidence'],properties:{
-  hypothesis:text,
+  hypothesis:{...text,description:'Caller free text retained without parsing or testing. Numerical support/opposition is limited to net image-phase closure on the specified circuits, not arbitrary hypotheses, material displacement or real dislocations.'},
   real_space_evidence:{type:'object',additionalProperties:false,required:['origin','source_text','observation_text','relation','anchors_xy'],properties:{
     origin:{type:'string',enum:['manual_review','specified_points','synthetic_construction']},
     source_text:text,observation_text:text,
