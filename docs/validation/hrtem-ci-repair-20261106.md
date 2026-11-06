@@ -15,6 +15,12 @@ Keep the newer export advice in the already additive `image_method_plan` and
 available PNG and provenance; amplitude/masks require exporting the GPA object.
 The export implementation, scientific calculations and saved records are unchanged.
 
+Subsequent owner direction permits updating overly strict legacy prose tests.
+The [description-policy review](hrtem-export-description-policy-20261106.md)
+supersedes the choice above: report export guidance is now also directly in
+`image_export`, checked as one exact named extension. This report retains the
+earlier repair and test results as historical evidence, not the final prose policy.
+
 ## Explicit portable CI coverage
 
 `quick.yml` now explicitly invokes these files with
