@@ -69,6 +69,14 @@ function assertReviewedFrozenCatalog(current,frozen){
  // Every licence is static, pinned to reviewed input metadata. Never derive an
  // allowlist from the candidate under test or erase an unchecked descriptor.
  const retained=structuredClone(current);
+ // These four tools are named additions and are filtered at the final legacy
+ // comparison, but their pre-existing presentation contract must still hold.
+ const detail=reviewedExtensions.properties.find(licence=>licence.tool==='image_info'&&licence.key==='response_detail').schema;
+ for(const name of ['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend']){
+  const tool=exactlyOne(retained,name);
+  assert.deepEqual(tool.inputSchema.properties.response_detail,detail,'Exact response_detail schema required: '+name);
+  assert.ok(Array.isArray(tool.inputSchema.required)&&!tool.inputSchema.required.includes('response_detail'),'response_detail remains optional: '+name);
+ }
  for(const licence of reviewedExtensions.new_tool_definitions){
   assert.ok(CATALOG_ADDITIONS.includes(licence.definition.name));
   assert.equal(frozen.some(tool=>tool.name===licence.definition.name),false,'This named addition must not overwrite a frozen tool');
@@ -299,6 +307,30 @@ test('catalog-only negative controls reject every unlicensed schema or legacy-fi
  }
  assertReviewedFrozenCatalog(current,frozen);
  t.diagnostic('PASS: '+count+' named negative controls; original catalogs remain valid and unchanged.');
+});
+
+test('catalog-only additive presentation response contracts survive tool filtering',async t=>{
+ const {current,frozen}=await catalogueOnlyInputs();
+ const expected=reviewedExtensions.properties.find(licence=>licence.tool==='image_info'&&licence.key==='response_detail').schema;
+ for(const name of ['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend']){
+  await t.test(name+' valid string/full-compact and optional',()=>{
+   const tool=exactlyOne(current,name);
+   assert.deepEqual(tool.inputSchema.properties.response_detail,expected);
+   assert.ok(!tool.inputSchema.required.includes('response_detail'));
+   assertReviewedFrozenCatalog(current,frozen);
+  });
+  for(const [label,mutate] of [
+   ['missing',tool=>{delete tool.inputSchema.properties.response_detail;}],
+   ['wrong type',tool=>{tool.inputSchema.properties.response_detail.type='number';}],
+   ['changed enum',tool=>{tool.inputSchema.properties.response_detail.enum=['full','summary'];}],
+   ['made required',tool=>{tool.inputSchema.required.push('response_detail');}],
+  ]){
+   await t.test(name+' response_detail '+label,()=>{
+    const changed=structuredClone(current);mutate(exactlyOne(changed,name));
+    assert.throws(()=>assertReviewedFrozenCatalog(changed,frozen));
+   });
+  }
+ }
 });
 
 test('frozen JS workspace and schema survive a copied compiled plugin without FFT replay',{timeout:300000},async t=>{
