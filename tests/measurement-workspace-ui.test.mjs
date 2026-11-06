@@ -100,7 +100,7 @@ test('pending geometry: current summary hides old values while evidence/export k
 });
 test('empty results distinguish no measurements from a filter hiding history without changing disclosure',()=>{
  const elements=new Map(),element=id=>{if(!elements.has(id))elements.set(id,{hidden:false,open:true,textContent:'',children:[],dataset:{},classList:{toggle(){}},replaceChildren(){this.children=[];},append(...v){this.children.push(...v);},setAttribute(){}});return elements.get(id);};const workspace=new MeasurementWorkspace({document:{getElementById:element,createElement:()=>({children:[],dataset:{},classList:{toggle(){}},append(...v){this.children.push(...v);},setAttribute(){}})},getState:()=>({object:{object_id:B}})});
- workspace.render();assert.match(element('measurement-empty').textContent,/尚无保存测量/);workspace.entries=[result({status:'historical'})];workspace.render();assert.match(element('measurement-empty').textContent,/筛选隐藏.*历史/);assert.equal(element('measurement-workspace').open,true);element('measurement-history').checked=true;workspace.render();assert.equal(element('measurement-empty').hidden,true);assert.equal(element('measurement-workspace').open,true);
+ workspace.render();assert.match(element('measurement-empty').textContent,/尚无保存的峰位/);assert.match(element('measurement-empty').textContent,/不表示 ROI 统计或 FFT 为空/);assert.equal(element('measurement-count').textContent,'峰位/测量线：0 条');workspace.entries=[result({status:'historical'})];workspace.render();assert.match(element('measurement-empty').textContent,/筛选隐藏.*历史/);assert.equal(element('measurement-workspace').open,true);element('measurement-history').checked=true;workspace.render();assert.equal(element('measurement-empty').hidden,true);assert.equal(element('measurement-workspace').open,true);
 });
 
 
@@ -127,7 +127,7 @@ test('hidden-history summary action expands once without selecting, writing or c
 });
 
 test('history shortcut appears only when history filtering hides every result',async()=>{
- const h=historyDisclosureFixture([]);await h.workspace.refresh();assert.equal(h.el('measurement-show-history').hidden,true);assert.match(h.el('measurement-empty').textContent,/尚无保存测量/);
+ const h=historyDisclosureFixture([]);await h.workspace.refresh();assert.equal(h.el('measurement-show-history').hidden,true);assert.match(h.el('measurement-empty').textContent,/尚无保存的峰位/);
  h.workspace.entries=[result()];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true);
  h.workspace.entries.push(result({object_id:C,status:'historical'}));h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true,'a visible current result keeps the normal result controls');
  h.workspace.entries=[result({status:'historical'})];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,false);assert.match(h.el('measurement-empty').textContent,/筛选隐藏.*历史/);

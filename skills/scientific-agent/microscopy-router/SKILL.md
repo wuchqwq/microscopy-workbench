@@ -5,6 +5,13 @@ description: Choose composable microscopy observation, revision and crystallogra
 
 # Choose the next useful observation
 
+For an explicit comparison of already saved fixed-g GPA bands, use the
+`peak_roi_comparison` route in
+[cross-method continuation](../microscopy-automation/references/method-loop.md).
+Report amplitude, wrapped phase, valid support and the smallest useful next
+analysis separately. This adapter is not raw HRTEM ingress; ordinary single-peak
+FFT measurement remains usable without passing a two-direction GPA gate.
+
 For autonomous, evidence-grounded choices and three-layer saved results, read
 [Route A decisions](../microscopy-automation/references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
 

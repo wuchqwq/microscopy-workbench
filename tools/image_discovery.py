@@ -7,10 +7,14 @@ import copy
 import hashlib
 from pathlib import Path
 import shutil
+if __package__:
+    from . import image_candidate_assessment as assessment
+else:
+    import image_candidate_assessment as assessment
 
 FIELDS = {
     "discovery": {"object_id", "entry", "selection_origin", "window_sizes", "max_candidates", "regions", "previous_discovery_id", "max_size"},
-    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id"},
+    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id", "candidate_assessment"},
 }
 LEGACY_VERSION = "image-first-discovery-v1"
 VERSION = "image-first-discovery-v2"
@@ -188,7 +192,7 @@ def _fft_scope(workspace, ident, source, rect, api):
     return fft, directory
 
 
-def _evidence(workspace, ids, source, rect, api):
+def _evidence(workspace, ids, source, rect, api, *, candidate_assessment=False):
     api.need(type(ids) is list and 1 <= len(ids) <= 8 and len(set(ids)) == len(ids), "Select1..8 distinct saved evidence IDs")
     refs, observations, ffts, gpas, gpa_scopes = [], [], {}, [], set()
     for ident in ids:
@@ -202,6 +206,13 @@ def _evidence(workspace, ids, source, rect, api):
             targets = [r["fft_object_id"] for r in record["regions"] if r["rect"] == rect]
         elif kind == "peak_measurements":
             targets = [record["parent_object_id"]]
+        elif candidate_assessment and kind in ("topology", "method_plan"):
+            linked = assessment.gpa_ids(record, api)
+            # Reuse the same GPA/FFT/grid/calibration admission. No science is run.
+            _, _, linked_ffts, _ = _evidence(workspace, linked, source, rect, api)
+            for fft_ref in linked_ffts:
+                ffts[fft_ref["object_id"]] = fft_ref
+            targets = []
         elif kind == "gpa":
             targets = [record["input_dependency"]["selected"]["object_id"]]
             api.need(record.get("calibration_dependency") == source["science"]["calibration_dependency"], "GPA calibration is stale for this attention record", "DISCOVERY_SCOPE_MISMATCH")
@@ -233,7 +244,9 @@ def _review(workspace, request, metadata, directory, api):
     matches = [r for r in discovery["candidates"] if r["candidate_id"] == request.get("candidate_id")]
     api.need(len(matches) == 1, "Select an actual source-bound candidate, not a region/peak number")
     candidate = matches[0]
-    refs, observations, ffts, gpas = _evidence(workspace, request.get("evidence_ids"), discovery["source_dependency"], candidate["rect"], api)
+    enabled = "candidate_assessment" in request
+    refs, observations, ffts, gpas = _evidence(workspace, request.get("evidence_ids"), discovery["source_dependency"], candidate["rect"], api, candidate_assessment=enabled)
+    candidate_result = assessment.result(workspace, request["candidate_assessment"], request["evidence_ids"], candidate["rect"], api) if enabled else None
     text = _text(request.get("observation_text"), api)
     explanations, unresolved = _texts(request.get("candidate_explanations", []), api), _texts(request.get("unresolved", []), api)
     history = _history(workspace, request, "previous_review_id", "discovery_review", discovery["source_dependency"]["science"], api)
@@ -258,6 +271,10 @@ def _review(workspace, request, metadata, directory, api):
                     cost={"new_fft_pixels":0,"new_scientific_method_calls":0},
                     method_handoff=_handoff(gpas),
                     scientific_data_changed=False, fft_recomputed=False, limitations=LIMITS)
+    if enabled:
+        metadata["candidate_result"] = candidate_result
+        assessment.append_preview(directory, candidate_result)
+        api.write_new(directory/"candidate-review.txt", assessment.readable(candidate_result).encode("utf-8"))
     api.write_new(directory/"discovery-review.json", api.canonical({k:v for k,v in metadata.items() if k not in ("created_utc",)})+b"\n")
     return metadata
 
@@ -320,7 +337,18 @@ def validate_references(workspace, metadata, api):
         candidate = next((r for r in discovery["candidates"] if r["candidate_id"] == original["candidate_id"]), None)
         api.need(candidate is not None and metadata["candidate"] == candidate and metadata["discovery_dependency"] == _dep(discovery,directory,api) and
                  metadata["source_dependency"] == discovery["source_dependency"], "Review has a different original discovery/ROI", "CORRUPT_OBJECT")
-        refs, observations, ffts, gpas = _evidence(workspace, original["evidence_ids"], discovery["source_dependency"], candidate["rect"], api)
+        enabled = "candidate_assessment" in original
+        refs, observations, ffts, gpas = _evidence(workspace, original["evidence_ids"], discovery["source_dependency"], candidate["rect"], api, candidate_assessment=enabled)
+        if enabled:
+            expected = assessment.result(workspace, original["candidate_assessment"], original["evidence_ids"], candidate["rect"], api,
+                                         version=metadata.get("candidate_result", {}).get("version"))
+            report_dir = Path(metadata["manifest_path"]).parent
+            report = api.read_json(report_dir/"discovery-review.json")
+            api.need(metadata.get("candidate_result") == report.get("candidate_result") == expected and
+                     (report_dir/"candidate-review.txt").read_text(encoding="utf-8") == assessment.readable(expected),
+                     "Candidate assessment differs from original supplied evidence or saved dependencies", "CORRUPT_OBJECT")
+        else:
+            api.need("candidate_result" not in metadata, "Historical review cannot acquire a new assessment", "CORRUPT_OBJECT")
         api.need(metadata["evidence_refs"] == refs and metadata["numerical_observations"] == observations and metadata["fft_refs"] == ffts and
                  metadata["observation_text"] == original["observation_text"] and metadata["candidate_explanations"] == original.get("candidate_explanations",[]) and
                  metadata["unresolved"] == original.get("unresolved",[]) and metadata["physical_conclusion"] is None,

@@ -17,3 +17,12 @@ test('cross-method registration exposes bounded explicit actions without central
  await registry.call('image_method_step',{object_id:id,root_plan_id:id,action_id:id,selection_reason:'Inspect explicit saved phase evidence first',request_id:'method-'+id+'-1'});
  assert.deepEqual(calls.map(x=>x.name),['image_method_plan','image_method_next','image_method_step']);
 });
+
+test('saved-band Task A uses existing plan transport with explicit ROI/reference',async()=>{
+ const calls=[];
+ const registry=new ToolRegistry().register(createImageModule({imageWorkspace:{workspace:path.resolve('images'),call(name,args){calls.push({name,args});return {content:[]};}}}));
+ const input={object_ids:[id],budget:{method_calls:0,fft_pixels:0,gpa_band_pixels:0,topology_path_samples:0},information:{goal:'peak_roi_comparison',roi_rect:[64,32,96,64],reference_rect:[32,32,64,64],reference_text:'Explicit same-image reference'},request_id:'peak-plan'};
+ await registry.call('image_method_plan',input);
+ assert.equal(calls[0].args.information.goal,'peak_roi_comparison');
+ await assert.rejects(registry.call('image_method_plan',{...input,information:{...input.information,roi_rect:[0,0,1.5,2]}}));
+});

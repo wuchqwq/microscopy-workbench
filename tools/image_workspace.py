@@ -570,6 +570,8 @@ class Workspace:
     def object(self, ident):
         outer = getattr(self, "_qualification_depth", 0) == 0
         if outer:
+            self.gpa_read_validations = {}
+            self.peak_summary_read_validations = {}
             self._qualification_snapshots, self._qualification_bytes = {}, 0
             self._qualification_own_proofs, self._qualification_frames = {}, []
             self._qualification_rechecking = set()
@@ -611,9 +613,15 @@ class Workspace:
             if metadata.get("kind") in active_analysis.FIELDS:
                 active_analysis.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in gpa.FIELDS:
-                gpa.validate_references(self, metadata, sys.modules[__name__])
+                validation = gpa.validate_references(self, metadata, sys.modules[__name__])
+                if validation:
+                    self.gpa_read_validations[ident] = {**validation, "object_id": ident,
+                        "manifest_sha256": sha_file(directory / "object.json")}
             if metadata.get("kind") in method_loop.FIELDS:
-                method_loop.validate_references(self, metadata, sys.modules[__name__])
+                validation = method_loop.validate_references(self, metadata, sys.modules[__name__])
+                if validation:
+                    self.peak_summary_read_validations[ident] = {**validation, 'object_id': ident,
+                        'manifest_sha256': sha_file(directory / 'object.json')}
             if metadata.get("kind") in discovery.FIELDS:
                 discovery.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in topology.FIELDS:
@@ -957,6 +965,17 @@ class Workspace:
                 pending_ids.append(metadata["overview_object_id"])
                 pending_ids.extend(row["object_id"] for row in metadata.get("evidence_refs", []))
                 pending_ids.extend(row["object_id"] for row in metadata.get("history", []))
+            if metadata.get("kind") == "method_plan":
+                pending_ids.append(metadata["root_plan_id"])
+                pending_ids.extend(row["object_id"] for row in metadata["input_refs"])
+                pending_ids.extend(metadata["plan_history"])
+                pending_ids.extend(row["object_id"] for row in metadata["ledger"]["attempts"] if row.get("object_id"))
+                if metadata.get("latest_topology_object_id"):
+                    pending_ids.append(metadata["latest_topology_object_id"])
+            if metadata.get("kind") == "method_step":
+                pending_ids.extend([metadata["root_plan_id"], metadata["plan_object_id"]])
+                if (metadata.get("child_receipt") or {}).get("object_id"):
+                    pending_ids.append(metadata["child_receipt"]["object_id"])
             record = metadata.get("xy_calibration")
             if record and record["calibration_id"] != current:
                 pending_ids.append(record["calibration_id"])
@@ -977,6 +996,9 @@ class Workspace:
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
                                                                        ("preview_admission.py", "result_semantics.py", "image_observation_contract.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
+        metadata["software_provenance"]["helper_modules_sha256"]["image_gpa_assessment_validation.py"] = sha_file(Path(__file__).with_name("image_gpa_assessment_validation.py"))
+        metadata["software_provenance"]["helper_modules_sha256"]["image_peak_summary_validation.py"] = sha_file(Path(__file__).with_name("image_peak_summary_validation.py"))
+        metadata["software_provenance"]["helper_modules_sha256"]["image_candidate_assessment.py"] = sha_file(Path(__file__).with_name("image_candidate_assessment.py"))
         intent_path = self.root / "preview-admission-v1" / "intents" / (metadata["request_id"] + ".json")
         if intent_path.exists():
             admitted = preview_admission._intent(self.root / "preview-admission-v1", metadata["request_id"], sys.modules[__name__])
@@ -1556,6 +1578,9 @@ class Workspace:
             source_directory = self.root / "objects" / scientific["object_id"]
             record = metadata.get("xy_calibration")
             feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map", "field_extend", "analysis_candidates", "discovery", "discovery_review")
+            saved_comparison = (scientific["kind"] == "method_plan" and
+                                scientific.get("information", {}).get("goal") == "peak_roi_comparison" and
+                                "peak_comparison" in scientific.get("decision", {}))
             gpa_result = scientific["kind"] in ("gpa", "gpa_read")
             topology_result = scientific["kind"] == "topology"
             if topology_result:
@@ -1570,7 +1595,7 @@ class Workspace:
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
             numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json", "candidate-review.txt") or saved_comparison and name in ("method-decision.json", "peak-comparison.txt") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")
@@ -1888,6 +1913,17 @@ def annotation(item, image_size, panels, reproject=False, previous=None, incomin
             "mapping_status": "one_source" if len(matches) == 1 else "not_a_single_source_region"}
 
 
+def annotation_text_font(text):
+    """Use an existing Windows CJK font for new labels; keep Latin rendering."""
+    if os.name == "nt" and any("\u2e80" <= char <= "\u9fff" or "\uf900" <= char <= "\ufaff" for char in text):
+        try:
+            return ImageFont.truetype("msyh.ttc", size=12)
+        except OSError:
+            # Do not add a font dependency or fail an otherwise valid export.
+            pass
+    return None
+
+
 def overlay(image, annotations, panels, reproject=False, updates=None, previous_annotations=None):
     image = image.convert("RGB")
     draw, result, seen = ImageDraw.Draw(image), [], set()
@@ -1906,6 +1942,7 @@ def overlay(image, annotations, panels, reproject=False, updates=None, previous_
             continue
         color = {"white": "#ffffff", "cyan": "#45e8ff", "orange": "#ff8c32", "amber": "#ffba30", "green": "#00e060"}[mark["color"]]
         coords, kind = mark["coordinates"], mark["kind"]
+        font = annotation_text_font(mark["text"])
         if kind == "arrow":
             coords = mark["arrow_render_coordinates"]
         if kind == "point":
@@ -1925,9 +1962,9 @@ def overlay(image, annotations, panels, reproject=False, updates=None, previous_
                 points = [(x1, y1)] + [(x1-size*math.cos(angle+a), y1-size*math.sin(angle+a)) for a in (-.5, .5)]
                 draw.polygon(points, fill=color)
         else:
-            draw.text(coords, mark["text"], fill=color)
+            draw.text(coords, mark["text"], fill=color, font=font)
         if mark["text"] and kind != "text":
-            draw.text(coords[:2], mark["text"], fill=color)
+            draw.text(coords[:2], mark["text"], fill=color, font=font)
     return image, result
 
 
@@ -1990,7 +2027,8 @@ def _execute_core(request, preview_dispatch_authorized=False):
         return {"ok": True, **evidence.detail(workspace, request, sys.modules[__name__])}
     if action == "get":
         metadata, _ = workspace.object(request.get("object_id"))
-        response = {"ok": True, "state": "completed", "backend": BACKEND, **metadata}
+        response = gpa.assessment_validation.feedback(workspace, {"ok": True, "state": "completed", "backend": BACKEND, **metadata})
+        response = method_loop.summary_validation.feedback(workspace, response)
         if request.get("include_frame_ancestry") is True:
             # Never let a persisted/legacy field masquerade as this read's proof,
             # including when a large projection falls back to the old path.
@@ -2026,7 +2064,7 @@ def _execute_core(request, preview_dispatch_authorized=False):
                 return {**saved["response"], "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
             elif saved.get("parameters", {}).get("action") in field_increment.FIELDS:
                 return {**saved["response"], "partial_results": field_increment.recovery(workspace, saved, sys.modules[__name__])}
-            return saved["response"]
+            return method_loop.summary_validation.feedback(workspace, gpa.assessment_validation.feedback(workspace, saved["response"]))
         if saved.get("parameters", {}).get("action") in spatial_domains.FIELDS:
             return {**pending(ident), "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
         if saved.get("parameters", {}).get("action") in field_increment.FIELDS:
@@ -2132,7 +2170,13 @@ def _execute_response(request):
         if response.get("ok") and detail == "compact":
             try:
                 readonly_workspace = Workspace(scientific["workspace"], False)
+                read_validation = response.get(gpa.assessment_validation.RECEIPT_KEY)
+                summary_validation = response.get(method_loop.summary_validation.RECEIPT_KEY)
                 response = {"ok": True, **evidence.summary(readonly_workspace, response, sys.modules[__name__])}
+                if read_validation is not None:
+                    response[gpa.assessment_validation.RECEIPT_KEY] = read_validation
+                if summary_validation is not None:
+                    response[method_loop.summary_validation.RECEIPT_KEY] = summary_validation
             except Exception as error:
                 if getattr(error, "code", None) != "EVIDENCE_BUDGET_EXCEEDED":
                     raise

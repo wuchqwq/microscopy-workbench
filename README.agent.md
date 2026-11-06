@@ -22,6 +22,13 @@ When source proof is needed, inspect the advertised `image_source_proof`, `image
 
 ## Scientific routes
 
+For HRTEM, use the [capability and evidence map](docs/HRTEM_BASELINE.zh-CN.md)
+to connect the research question to the smallest useful existing route. The
+[saved-band comparison](docs/hrtem-saved-band-task-a.md) describes ROI/reference
+amplitude and wrapped phase from one eligible saved GPA. It is not raw-image
+ingress or a reason to dispatch topology. Return usable per-band observations,
+missing support and a next analysis suggestion separately from material claims.
+
 To continue from two saved Panel regions into a finite structure comparison,
 use the [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md). Read its
 additive `roi_handoff` for exact anchors/current calibration; share the two-window
