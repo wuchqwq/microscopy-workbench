@@ -72,6 +72,15 @@ acquisition information. Declared raw_counts does not verify independent Poisson
 derived iDPC/reconstruction values must not be relabelled as native counts. A raw
 profile can be attached within the exact ROI; wider context needs a separate
 observation. The review dispatches no S2/FFT/GPA and never localizes a column.
+For version2, read each `profile_coverage` assessment: mere ROI containment does
+not establish expected-site coverage. The finite requested line must pass the
+original point within arithmetic roundoff; its actual nearest samples must
+include that point's half-open pixel cell and distinct context samples on both
+sides. Off-site, endpoint-only and sparse profiles stay attached but do not
+complete this step. When coverage is not_verified, inspect it or add a through-site
+profile without moving the point. This is minimal 1D support, not physical
+resolution or adequate material evidence. Historical version1 suggestions are
+unchanged and do not carry this qualification; deliberately revise with version2.
 After a known outcome, revise with a new request linked by `previous_review_id`;
 recover an unknown write only by the original ID. Omitting site_context preserves
 the old review path. See [the workflow](../../../../docs/STEM_EXPECTED_SITE.zh-CN.md).

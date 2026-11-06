@@ -8,7 +8,7 @@ SIGNALS = ("raw_counts", "stored_scalar", "derived_scalar", "unknown")
 FIELDS = {"question", "statistics_id", "expected_position_xy", "position_source_text", "modality", "signal_kind", "signal_source_text"}
 
 
-def derive(context, observations, rect, api):
+def _derive_v1(context, observations, rect, api):
     """Context is a caller declaration. Statistics have passed source/ROI readback."""
     api.need(type(context) is dict and set(context) == FIELDS, "site_context requires question, selected statistics, expected position and sourced modality/signal declarations")
     for key in ("question", "position_source_text", "signal_source_text"):
@@ -79,6 +79,71 @@ def derive(context, observations, rect, api):
                              "All references and failures remain in their original evidence; no scientific computation is dispatched"])
 
 
+def _profile_coverage(ident, record, point):
+    result = dict(object_id=ident, status="not_verified", reason="sampling_support_unavailable")
+    if not record or record.get("sampling", {}).get("interpolation") != "nearest" or record["sampling"].get("line_width") != 1 or record["sampling"].get("tie_rule") != "floor(array_index+0.5)":
+        return result
+    points, samples = record.get("points"), record.get("samples", {})
+    requested, actual = samples.get("coordinates_xy"), samples.get("sampled_coordinates_xy")
+    if not points or len(points) != 2 or not requested or not actual or len(requested) != len(actual):
+        return result
+    a, b = points
+    dx, dy = b[0]-a[0], b[1]-a[1]
+    length = math.hypot(dx, dy)
+    if not math.isfinite(length) or length <= 0:
+        return result
+    ux, uy = dx/length, dy/length
+    px, py = point[0]-a[0], point[1]-a[1]
+    along = math.fsum((px*ux, py*uy))
+    normal = abs(math.fsum((px*uy, -py*ux)))
+    # Arithmetic tolerance only, in source pixels. It is NOT a physical tube
+    # around the line. Eight ULPs cover the few subtraction/product/sum steps.
+    tolerance = 8 * max(math.ulp(float(v)) for v in [*a, *b, *point, dx, dy, length])
+    on_segment = normal <= tolerance and -tolerance <= along <= length+tolerance
+    # Same half-open nearest-neighbour cells as image_numeric.sample; no new
+    # resampling or inferred support between sparse saved samples.
+    target_pixel = [math.floor(v+.5) for v in point]
+    hits = [i for i, sample in enumerate(actual) if list(sample) == target_pixel]
+    before, after = False, False
+    for q, sample in zip(requested, actual):
+        if list(sample) == target_pixel:
+            continue
+        distance = math.fsum(((q[0]-a[0])*ux, (q[1]-a[1])*uy))
+        before = before or distance < along-tolerance
+        after = after or distance > along+tolerance
+    reason = ("expected_point_off_finite_segment" if not on_segment else
+              "expected_nearest_pixel_not_sampled" if not hits else
+              "expected_position_lacks_two_sided_distinct_samples" if not (before and after) else
+              "finite_segment_and_saved_nearest_samples_cover_expected_neighbourhood")
+    result.update(status="covered" if on_segment and hits and before and after else "not_verified", reason=reason,
+                  geometry=dict(on_finite_segment=on_segment, normal_distance_pixels=normal, along_distance_pixels=along,
+                                segment_length_pixels=length, roundoff_tolerance_pixels=tolerance),
+                  sampling=dict(expected_nearest_pixel_xy=target_pixel,
+                                expected_pixel_cell_xyxy=[target_pixel[0]-.5, target_pixel[1]-.5, target_pixel[0]+.5, target_pixel[1]+.5],
+                                cell_convention="half-open [n-0.5,n+0.5); tie rounds upward", target_sample_count=len(hits),
+                                first_target_sample_index=hits[0] if hits else None,
+                                distinct_sample_before=before, distinct_sample_after=after))
+    return result
+
+
+def derive(context, observations, rect, api, version=2, profile_records=None):
+    api.need(type(version) is int and version in (1, 2), "Unsupported saved site observation version", "CORRUPT_OBJECT")
+    result = _derive_v1(context, observations, rect, api)
+    if version == 1:
+        return result  # Historical values/suggestions are not silently reinterpreted.
+    assessments = [_profile_coverage(ident, (profile_records or {}).get(ident), context["expected_position_xy"])
+                   for ident in result["profile_ids"]]
+    covered = any(row["status"] == "covered" for row in assessments)
+    result.update(version=2, profile_coverage=dict(policy="finite_segment_nearest_samples_v1",
+        status="covered" if covered else "not_verified" if assessments else "not_available", assessments=assessments,
+        basis="Finite requested line passes original expected XY within arithmetic roundoff; its saved nearest samples include the expected half-open pixel cell and distinct samples on both sides",
+        scope="Minimal one-dimensional sampling support only; not localization, resolution, noise significance or adequate physical context"))
+    if result["next_step"]["kind"] == "review_alternative_causes_or_stop" and not covered:
+        result["next_step"] = dict(kind="inspect_profile_coverage", tool="image_profile",
+            reason="Attached profiles are retained, but expected-site neighbourhood coverage is not verified. Inspect their finite geometry and saved samples, or add a through-site profile with two-sided sampled context; do not move the expected point.")
+    return result
+
+
 def report_lines(result):
     raw, context = result["raw_observation"], result["context"]
     lines = ["Expected-site raw observation (not physical identification)",
@@ -88,6 +153,10 @@ def report_lines(result):
              (raw["target_mean"], raw["reference_mean_median"], raw["target_minus_reference_median"])]
     lines.extend("Reference %d %s: mean %.10g; target - reference %+.10g" %
                  (r["reference_index"], r["rect"], r["mean"], r["target_minus_reference"]) for r in raw["references"])
+    if result["version"] >= 2:
+        lines.append("Expected-site profile coverage: " + result["profile_coverage"]["status"])
+        lines.extend("Profile %s: %s (%s)" % (r["object_id"][:8], r["status"], r["reason"])
+                     for r in result["profile_coverage"]["assessments"])
     lines.extend([result["comparison"]["summary"], "Noise significance / reference equivalence / physical cause: NOT ESTABLISHED.",
                   "Next: " + result["next_step"]["reason"]])
     return lines

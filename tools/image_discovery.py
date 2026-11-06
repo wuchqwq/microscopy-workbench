@@ -271,6 +271,15 @@ def _evidence(workspace, ids, source, rect, api):
     return refs, observations, list(ffts.values()), gpas if len(gpa_scopes) <= 1 else []
 
 
+def _site_feedback(workspace, context, observations, rect, api, version=2):
+    # _evidence has already reconstructed each profile from its original request
+    # and array. Read its ACTUAL saved samples rather than inferring line coverage
+    # from an ROI, minimum/maximum, endpoints alone or a different sample density.
+    records = ({r["object_id"]: workspace.object(r["object_id"])[0]
+                for r in observations if r["kind"] == "profile"} if version == 2 else None)
+    return site_observation.derive(context, observations, rect, api, version=version, profile_records=records)
+
+
 def _review(workspace, request, metadata, directory, api):
     discovery, discovery_dir = workspace.object(request["object_id"])
     api.need(discovery["kind"] == "discovery", "Select the exact saved image-first discovery record")
@@ -284,7 +293,7 @@ def _review(workspace, request, metadata, directory, api):
     if history:
         old, _ = workspace.object(history[-1]["object_id"])
         api.need(old["candidate"]["rect"] == candidate["rect"], "Review revision must retain its exact scientific ROI", "DISCOVERY_SCOPE_MISMATCH")
-    site = (site_observation.derive(request["site_context"], observations, candidate["rect"], api)
+    site = (_site_feedback(workspace, request["site_context"], observations, candidate["rect"], api)
             if "site_context" in request else None)
     overview, _ = workspace.object(discovery["overview_object_id"])
     visible = [overview]
@@ -373,7 +382,9 @@ def validate_references(workspace, metadata, api):
         api.need(("site_observation" in metadata) == ("site_context" in original),
                  "Site observation presence differs from original request", "CORRUPT_OBJECT")
         if "site_context" in original:
-            expected_site = site_observation.derive(original["site_context"], observations, candidate["rect"], api)
+            api.need(type(metadata["site_observation"]) is dict, "Invalid saved site observation", "CORRUPT_OBJECT")
+            saved_version = metadata["site_observation"].get("version")
+            expected_site = _site_feedback(workspace, original["site_context"], observations, candidate["rect"], api, version=saved_version)
             site_file = Path(metadata["manifest_path"]).parent / "site-observation.json"
             api.need(metadata["site_observation"] == expected_site and api.read_json(site_file) == expected_site and
                      site_file.with_suffix(".txt").read_text(encoding="utf-8") == site_observation.report_text(expected_site) and

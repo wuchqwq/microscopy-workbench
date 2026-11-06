@@ -111,13 +111,76 @@ class ExpectedSiteReview(unittest.TestCase):
 
     def test_profile_changes_next_step_but_not_roi_measurement(self):
         frame, discovery, stats, context = self.fixture(target=4)
-        profile = self.call("profile", object_id=frame["object_id"], points=[[20,22],[24,22]])
+        profile = self.call("profile", object_id=frame["object_id"], points=[[20,22.5],[24,22.5]])
         first = self.review(discovery, stats, context)
         second = self.review(discovery, stats, context, evidence=[stats["object_id"],profile["object_id"]], previous_review_id=first["object_id"])
         self.assertEqual(first["site_observation"]["next_step"]["tool"], "image_profile")
         self.assertEqual(second["site_observation"]["next_step"]["kind"], "review_alternative_causes_or_stop")
         self.assertEqual(first["site_observation"]["raw_observation"], second["site_observation"]["raw_observation"])
         self.assertEqual(len(second["history"]), 1)
+
+    def test_off_site_profile_is_retained_without_completing_expected_site_check(self):
+        frame, discovery, stats, context = self.fixture(target=4)
+        off = self.call("profile", object_id=frame["object_id"], points=[[20,20],[24,20]])
+        result = self.review(discovery, stats, context, evidence=[stats["object_id"],off["object_id"]])["site_observation"]
+        self.assertEqual(result["version"], 2)
+        self.assertEqual(result["profile_ids"], [off["object_id"]])
+        self.assertEqual(result["profile_coverage"]["status"], "not_verified")
+        self.assertEqual(result["profile_coverage"]["assessments"][0]["reason"], "expected_point_off_finite_segment")
+        self.assertEqual(result["next_step"]["kind"], "inspect_profile_coverage")
+        self.assertEqual(result["context"]["expected_position_xy"], [22.25,22.5])
+
+    def test_geometry_sampling_and_endpoint_boundaries(self):
+        frame, discovery, stats, context = self.fixture(target=4)
+        cases = [
+            # Default nearest sampling at y=22.5 rounds UP to row23.
+            ([[20,22.5],[24,22.5]], None, "covered", None),
+            # Finite segment, not its infinite extension, must cross the point.
+            ([[20,22.5],[21,22.5]], None, "not_verified", "expected_point_off_finite_segment"),
+            # Exact endpoint has no two-sided measured neighbourhood.
+            ([[20,22.5],[22.25,22.5]], None, "not_verified", "expected_position_lacks_two_sided_distinct_samples"),
+            # Through-site line with sparse endpoints misses the nearest pixel.
+            ([[20,22.5],[24,22.5]], 2, "not_verified", "expected_nearest_pixel_not_sampled"),
+            # Geometry is within arithmetic roundoff, but the actual saved row
+            # immediately below the half-open tie is22, not the expected row23.
+            ([[20,float(np.nextafter(22.5, -np.inf))],[24,float(np.nextafter(22.5, -np.inf))]], None,
+             "not_verified", "expected_nearest_pixel_not_sampled"),
+        ]
+        for points, count, status, reason in cases:
+            with self.subTest(points=points, count=count):
+                profile = self.call("profile", object_id=frame["object_id"], points=points,
+                                    **({"sample_count": count} if count is not None else {}))
+                result = self.review(discovery, stats, context, evidence=[stats["object_id"],profile["object_id"]])["site_observation"]
+                assessment = result["profile_coverage"]["assessments"][0]
+                self.assertEqual(assessment["status"], status)
+                self.assertEqual(assessment["sampling"]["expected_nearest_pixel_xy"], [22,23])
+                if reason is not None:
+                    self.assertEqual(assessment["reason"], reason)
+                    self.assertEqual(result["next_step"]["kind"], "inspect_profile_coverage")
+                else:
+                    self.assertEqual(result["next_step"]["kind"], "review_alternative_causes_or_stop")
+
+    def test_mixed_profiles_keep_individual_coverage_and_diagonal_direction(self):
+        frame, discovery, stats, context = self.fixture(target=4)
+        context["expected_position_xy"] = [22.25,22.25]
+        off = self.call("profile", object_id=frame["object_id"], points=[[20,20],[24,20]])
+        for points in [[[20,20],[24,24]], [[24,24],[20,20]]]:
+            through = self.call("profile", object_id=frame["object_id"], points=points)
+            result = self.review(discovery, stats, context, evidence=[stats["object_id"],off["object_id"],through["object_id"]])["site_observation"]
+            self.assertEqual(result["profile_ids"], [off["object_id"],through["object_id"]])
+            self.assertEqual([a["status"] for a in result["profile_coverage"]["assessments"]], ["not_verified","covered"])
+            self.assertEqual(result["profile_coverage"]["status"], "covered")
+
+    def test_fractional_expected_position_near_roi_edge_is_not_clipped_into_sampled_support(self):
+        frame, discovery, stats, context = self.fixture(target=4)
+        context["expected_position_xy"] = [24.5,22.5]
+        profile = self.call("profile", object_id=frame["object_id"], points=[[20,22.5],[24,22.5]])
+        result = self.review(discovery, stats, context, evidence=[stats["object_id"],profile["object_id"]])["site_observation"]
+        assessment = result["profile_coverage"]["assessments"][0]
+        self.assertEqual(assessment["sampling"]["expected_nearest_pixel_xy"], [25,23])
+        self.assertEqual(assessment["sampling"]["target_sample_count"], 0)
+        self.assertEqual(result["profile_coverage"]["status"], "not_verified")
+        self.assertEqual(result["context"]["expected_position_xy"], [24.5,22.5])
 
     def test_original_read_recovery_export_and_legacy_review_do_not_dispatch_science(self):
         _, discovery, stats, context = self.fixture(target=0)

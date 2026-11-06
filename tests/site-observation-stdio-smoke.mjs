@@ -8,9 +8,17 @@ import path from 'node:path';
 import {StdioImageClient} from '../tools/image_panel.mjs';
 
 const output=process.argv[2];
+const profileMode=process.argv[3]==='--profile-coverage';
+assert.ok(!process.argv[3]||profileMode,'Only --profile-coverage is supported');
 assert.ok(output&&path.isAbsolute(output)&&!existsSync(output),'Supply a fresh absolute evidence directory');
 mkdirSync(output,{recursive:true});
-const cases=[
+const cases=profileMode?[
+ {name:'off_site',points:[[20,20],[24,20]],coverage:'not_verified',next:'inspect_profile_coverage'},
+ {name:'through_site',points:[[20,22.5],[24,22.5]],coverage:'covered',next:'review_alternative_causes_or_stop'},
+ {name:'sparse_through_site',points:[[20,22.5],[24,22.5]],sample_count:2,coverage:'not_verified',next:'inspect_profile_coverage'},
+ {name:'endpoint_only',points:[[20,22.5],[22.25,22.5]],coverage:'not_verified',next:'inspect_profile_coverage'},
+ {name:'below_sampling_tie',points:[[20,22.499999999999996],[24,22.499999999999996]],coverage:'not_verified',next:'inspect_profile_coverage'},
+].map(c=>({...c,target:4,refs:[10,10,10],modality:'haadf',signal_kind:'stored_scalar',direction:'below_or_equal_to_all_references'})):[
  {name:'brighter',target:7,refs:[5,5,5],modality:'haadf',signal_kind:'stored_scalar',direction:'above_or_equal_to_all_references',next:'inspect_local_profile'},
  {name:'conflicting',target:7,refs:[2,7,11],modality:'haadf',signal_kind:'stored_scalar',direction:'references_straddle_target',next:'inspect_reference_comparability'},
  {name:'empty_expected',target:0,refs:[6,6,6],modality:'haadf',signal_kind:'raw_counts',direction:'below_or_equal_to_all_references',next:'inspect_local_profile'},
@@ -18,7 +26,9 @@ const cases=[
  {name:'unknown_channel',target:1,refs:[1,1,1],modality:'unknown',signal_kind:'unknown',direction:'equal_to_all_references',next:'request_acquisition_context'},
 ];
 const spec={scope:'Small analytic scalar-answer transport checks, no physical STEM or calibrated significance',
- shape_yx:[72,80],rect:[24,25,31,32],refs:[[4,5,11,12],[46,8,53,15],[52,50,59,57]],expected_position_xy:[26.75,28.25],cases};
+ shape_yx:[72,80],rect:profileMode?[20,20,25,25]:[24,25,31,32],
+ refs:profileMode?[[4,4,9,9],[40,40,45,45],[52,50,57,55]]:[[4,5,11,12],[46,8,53,15],[52,50,59,57]],
+ expected_position_xy:profileMode?[22.25,22.5]:[26.75,28.25],cases};
 writeFileSync(path.join(output,'predeclared-cases.json'),JSON.stringify(spec,null,2)+'\n',{flag:'wx'});
 const python=process.env.MICROSCOPY_PYTHON??'python';
 const generated=spawnSync(python,['-B','-X','utf8','-c',
@@ -48,22 +58,25 @@ try{
   const frame=await call('image_frame',{object_id:opened.object_id,frame_index:0});
   const discovery=await call('image_discovery',{object_id:frame.object_id,entry:'manual',selection_origin:'agent',regions:[{rect:spec.rect,reason:'Inspect an expected location; it has not been detected'}]});
   const stats=await call('image_statistics',{object_id:frame.object_id,rect:spec.rect,reference_comparison:{reference_rects:spec.refs,source_text:'All three predeclared analytic references; not independently verified physical equivalents'}});
+  const profile=profileMode?await call('image_profile',{object_id:frame.object_id,points:c.points,...(c.sample_count?{sample_count:c.sample_count}:{})}):null;
   const context={question:'What raw evidence supports a directional difference and what should be checked next?',statistics_id:stats.object_id,
    expected_position_xy:spec.expected_position_xy,position_source_text:'Predeclared expected coordinate; nearest bright pixel is outside the ROI',
    modality:c.modality,signal_kind:c.signal_kind,signal_source_text:'Analytic scalar fixture; raw_counts is a caller declaration, not acquisition or Poisson verification'};
-  const review=await call('image_discovery_review',{object_id:discovery.object_id,candidate_id:discovery.candidates[0].candidate_id,evidence_ids:[stats.object_id],observation_text:'Compare every reference and retain unresolved causes',site_context:context});
+  const review=await call('image_discovery_review',{object_id:discovery.object_id,candidate_id:discovery.candidates[0].candidate_id,evidence_ids:[stats.object_id,...(profile?[profile.object_id]:[])],observation_text:'Compare every reference and retain unresolved causes',site_context:context});
   const site=review.site_observation;
   assert.equal(site.raw_observation.target_mean,c.target);
   assert.deepEqual(site.raw_observation.references.map(r=>r.target_minus_reference),c.refs.map(r=>c.target-r));
   assert.equal(site.comparison.direction,c.direction);assert.equal(site.next_step.kind,c.next);
   assert.deepEqual(site.context.expected_position_xy,spec.expected_position_xy);assert.equal(site.measured_position_xy,null);
   assert.equal(site.physical_conclusion,null);assert.equal(site.s2_dispatched,false);
+  assert.equal(site.version,2);
+  if(profile){assert.deepEqual(site.profile_ids,[profile.object_id]);assert.equal(site.profile_coverage.status,c.coverage);}
   if(c.name==='conflicting')assert.equal(site.raw_observation.target_minus_reference_median,0);
   const exported=await call('image_export',{object_id:review.object_id,output_dir:path.join(output,'export-'+c.name)});
   assert.equal(hash(path.join(exported.output_dir,'site-observation.json')),hash(path.join(workspace,'objects',review.object_id,'site-observation.json')));
   assert.equal(hash(source),sourceHash);
   records.push({case:c.name,source_sha256:sourceHash,frame:frame.object_id,statistics:stats.object_id,
-   review:review.object_id,request_id:review.request_id,site_observation:site,export:exported});
+   profile,review:review.object_id,request_id:review.request_id,site_observation:site,export:exported});
  }
  // Snapshot ALL object and request bytes before a fresh provider process reads them.
  const snapshot=()=>Object.fromEntries(['objects','requests'].flatMap(folder=>readdirSync(path.join(workspace,folder),{recursive:true,withFileTypes:true}).filter(e=>e.isFile())
@@ -79,7 +92,7 @@ try{
  const kinds=readdirSync(path.join(workspace,'objects')).map(id=>JSON.parse(readFileSync(path.join(workspace,'objects',id,'object.json'),'utf8')).kind);
  assert.equal(kinds.filter(k=>['fft','gpa','column_fit'].includes(k)).length,0);
  writeFileSync(path.join(output,'results.json'),JSON.stringify({status:'PASS',cases:records,restart_recovery:true,immutable_readback:true,
-   scientific_calls:{fft:0,gpa:0,s2:0},physical_validation:'NOT_TESTED',human_gui:'NOT_TESTED',scope:spec.scope},null,2)+'\n',{flag:'wx'});
+   scientific_calls:{fft:0,gpa:0,s2:0,profiles:profileMode?5:0},physical_validation:'NOT_TESTED',human_gui:'NOT_TESTED',scope:spec.scope},null,2)+'\n',{flag:'wx'});
  console.log('PASS: five predeclared cases, complete raw reference evidence, actual MCP save/export/restart recovery, no FFT/GPA/S2.');
 }catch(error){writeFileSync(path.join(output,'failure.json'),JSON.stringify({status:'FAIL',error:String(error),stack:error.stack},null,2)+'\n',{flag:'wx'});throw error;}
 finally{await client.close();}
