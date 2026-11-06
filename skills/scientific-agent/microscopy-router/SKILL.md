@@ -11,6 +11,13 @@ Keep H0/S0 as the observation defaults; S2 is a separate explicit decomposition
 or saved UNKNOWN, while H1/S1 remain research history. Choose from the question
 and sourced premises, not a numerical score or an assumed defect label.
 
+For an explicit comparison of already saved fixed-g GPA bands, use the
+`peak_roi_comparison` route in
+[cross-method continuation](../microscopy-automation/references/method-loop.md).
+Report amplitude, wrapped phase, valid support and the smallest useful next
+analysis separately. This adapter is not raw HRTEM ingress; ordinary single-peak
+FFT measurement remains usable without passing a two-direction GPA gate.
+
 For autonomous, evidence-grounded choices and three-layer saved results, read
 [Route A decisions](../microscopy-automation/references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
 

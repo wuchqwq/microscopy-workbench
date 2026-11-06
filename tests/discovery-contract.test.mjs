@@ -8,6 +8,7 @@ import {ImageWorkspace} from '../lib/image_workspace.mjs';
 const id='a'.repeat(32),candidate='b'.repeat(32),evidence='c'.repeat(32);
 const proposed=()=>({object_id:id,entry:'manual',regions:[{rect:[16,32,80,96],reason:'Researcher observed an interruption',candidate_explanations:['Contrast or structure change; not confirmed'],unresolved:['Unknown imaging contribution']}],request_id:'saved-discovery'});
 const reviewed=()=>({object_id:id,candidate_id:candidate,evidence_ids:[evidence],observation_text:'Saved numerical evidence requires source-bound review',request_id:'saved-review'});
+const assessment=()=>({hypothesis:'Specified nonzero closure candidate',real_space_evidence:{origin:'synthetic_construction',source_text:'Explicit public analytic displacement construction',observation_text:'Supplied input, not automatically traced lattice planes',relation:'supports',anchors_xy:[[128.5,128.5]]}});
 const fixture=()=>{
   const calls=[];
   const module=createImageModule({imageWorkspace:{workspace:path.resolve('discovery-images'),call(name,args){calls.push({name,args});return {content:[]};}}});
@@ -60,6 +61,22 @@ test('review cannot accept arbitrary files, unbounded evidence or a confirmed ma
   assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
 });
 
+test('candidate composition retains bounded caller provenance and four-way scope without a new tool',async()=>{
+  const {registry,calls}=fixture();
+  const tool=registry.listTools().find(tool=>tool.name==='image_discovery_review');
+  assert.match(tool.inputSchema.properties.candidate_assessment.description,/never confirms/);
+  assert.match(tool.inputSchema.properties.candidate_assessment.properties.hypothesis.description,/without parsing or testing/);
+  assert.match(tool.inputSchema.properties.candidate_assessment.properties.hypothesis.description,/specified circuits/);
+  for(const mutate of [a=>{delete a.real_space_evidence.source_text;},a=>{a.real_space_evidence.origin='automatic_lattice_tracing';},a=>{a.real_space_evidence.relation='confirmed';},a=>{a.real_space_evidence.anchors_xy=[];},a=>{a.real_space_evidence.anchors_xy=Array(17).fill([1,2]);},a=>{a.material_dislocation_confirmed=true;}]){
+    const args={...reviewed(),candidate_assessment:assessment()};mutate(args.candidate_assessment);
+    await assert.rejects(registry.call('image_discovery_review',args));
+  }
+  assert.equal(calls.length,0);
+  const args={...reviewed(),candidate_assessment:assessment()};
+  await registry.call('image_discovery_review',args);
+  assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
+});
+
 test('discovery adapter preserves explicit worker action, configured provider and saved request ID',async()=>{
   const workspace=path.resolve('discovery-adapter-images');
   const adapter=new ImageWorkspace({workspace});
@@ -90,4 +107,15 @@ test('expected-site context is optional, sourced, bounded and forwarded without 
   const args={...reviewed(),site_context,include_site_continuation:true};
   await registry.call('image_discovery_review',args);
   assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
+});
+
+test('shared review forwards both explicit reports without conflating their inputs',async()=>{
+  const {registry,calls}=fixture();
+  const args={...reviewed(),candidate_assessment:assessment(),include_site_continuation:true,
+    site_context:{question:'Separate raw observations from supplied closure evidence',statistics_id:evidence,
+      expected_position_xy:[22.25,22.5],position_source_text:'Explicit nominal point',
+      modality:'unknown',signal_kind:'stored_scalar',signal_source_text:'No physical channel qualification'}};
+  await registry.call('image_discovery_review',args);
+  assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
+  assert.match(registry.listTools().find(t=>t.name==='image_discovery_review').description,/candidate-review text/);
 });

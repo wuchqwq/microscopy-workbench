@@ -77,6 +77,11 @@ def derive(review, request, api, version=2):
                  candidate_explanations=copy.deepcopy(request.get("candidate_explanations", [])),
                  unresolved=copy.deepcopy(request.get("unresolved", [])), previous_review_id=review["object_id"],
                  include_site_continuation=True, request_id=review_request)
+    # Both reports are explicit opt-ins on the shared review. Retain the
+    # caller's other report input through this linked review; old requests
+    # without it keep exactly their historical derived template.
+    if "candidate_assessment" in request:
+        after["candidate_assessment"] = copy.deepcopy(request["candidate_assessment"])
     result.update(status="tool_proposed", axis=axis,
         reason="Propose one five-sample line through the unchanged point, horizontal first if supported, otherwise vertical. This is minimum context, not an optimal physical direction.",
         action=dict(tool="image_profile", arguments=arguments, expected_result_kind="profile"),

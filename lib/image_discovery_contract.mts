@@ -7,6 +7,15 @@ const text:ArgumentSchema={type:'string',minLength:1,maxLength:2000};
 const observations:ArgumentSchema={type:'array',minItems:0,maxItems:8,items:text};
 const rect:ArgumentSchema={type:'array',minItems:4,maxItems:4,items:{type:'integer',minimum:0}};
 const displaySize:ArgumentSchema={type:'integer',minimum:32,maximum:1024};
+const candidateAssessment:ArgumentSchema={type:'object',additionalProperties:false,required:['hypothesis','real_space_evidence'],properties:{
+  hypothesis:{...text,description:'Caller free text retained without parsing or testing. Numerical support/opposition is limited to net image-phase closure on the specified circuits, not arbitrary hypotheses, material displacement or real dislocations.'},
+  real_space_evidence:{type:'object',additionalProperties:false,required:['origin','source_text','observation_text','relation','anchors_xy'],properties:{
+    origin:{type:'string',enum:['manual_review','specified_points','synthetic_construction']},
+    source_text:text,observation_text:text,
+    relation:{type:'string',enum:['supports','opposes','unknown'],description:'Caller-supplied relation to the hypothesis, never an authenticated or automatically measured physical conclusion.'},
+    anchors_xy:{type:'array',minItems:1,maxItems:16,items:{type:'array',minItems:2,maxItems:2,items:{type:'number'}},description:'Explicit anchors inside the exact candidate ROI, in original source pixels; no automatic tracing.'},
+  }},
+}};
 const region:ArgumentSchema={type:'object',additionalProperties:false,required:['rect','reason'],properties:{
   rect,reason:text,candidate_explanations:observations,unresolved:observations,
 }};
@@ -36,7 +45,7 @@ export const discoveryTools:ToolDefinition[]=[
     previous_discovery_id:id,
     max_size:displaySize,
   },['object_id']),
-  write('image_discovery_review','Bind existing numerical evidence to one exact saved ROI. Also accepts saved spatial raw statistics with primary ROI equal to candidate (comparison references remain contextual), or a width-one profile wholly inside it (line subset only); reconstructs these from original arrays/requests. Optional site_context selects attached reference statistics and a fixed expected position: saves every raw reference difference, reference sign disagreement, unknown physical causes and a suggested next step. This is neither localization nor significance; declared modality/count meaning is not verified and S2 is never dispatched. Probe is ephemeral, not saved review evidence. Manual image-first is supported within the documented synthetic software/numerical scope; automatic proposals remain EXPERIMENTAL. Check source/frame/ROI/current calibration, journals and payloads; retain hypotheses and unknowns, never confirmed defects/twins/phases. FFT/peaks/measurement/GPA tools perform science explicitly; qualified GPA may hand off to F4. No new FFT/GPA, saved measurement or hidden model call.',{
+  write('image_discovery_review','Bind existing numerical evidence to one exact saved ROI. Also accepts saved spatial raw statistics with primary ROI equal to candidate (comparison references remain contextual), or a width-one profile wholly inside it (line subset only); reconstructs these from original arrays/requests. Optional site_context selects attached reference statistics and a fixed expected position: saves every raw reference difference, reference sign disagreement, unknown physical causes and a suggested next step. This is neither localization nor significance; declared modality/count meaning is not verified and S2 is never dispatched. Probe is ephemeral, not saved review evidence. Manual image-first is supported within the documented synthetic software/numerical scope; automatic proposals remain EXPERIMENTAL. Check source/frame/ROI/current calibration, journals and payloads; retain hypotheses and unknowns, never confirmed defects/twins/phases. FFT/peaks/measurement/GPA tools perform science explicitly; qualified GPA may hand off to F4. image_export on this review saves report JSON, existing candidate-review text, available PNG and provenance; export each GPA separately for amplitude/masks. No new FFT/GPA, saved measurement or hidden model call.',{
     object_id:id,candidate_id:id,
     evidence_ids:{type:'array',minItems:1,maxItems:8,items:id},
     observation_text:text,
@@ -45,6 +54,7 @@ export const discoveryTools:ToolDefinition[]=[
     previous_review_id:id,
     site_context:siteContext,
     include_site_continuation:{type:'boolean',description:'Opt in to a source-bound existing-tool handoff and linked review template. Requires site_context; no tool is dispatched. The host must inspect the saved original outcome and append a known completed profile before the linked review. Omission preserves historical output.'},
+    candidate_assessment:{...candidateAssessment,description:'Opt-in source-bound four-way report: supports/opposes/unknown/next tools. Requires exactly one saved topology and one projected_topology method plan in evidence_ids, identical GPA inputs, explicit paths and model. Real-space input is caller supplied; synthetic truth is not independent specimen evidence. Review dispatches no science and never confirms a material dislocation.'},
   },['object_id','candidate_id','evidence_ids','observation_text']),
 ];
 
