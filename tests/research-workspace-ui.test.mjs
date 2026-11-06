@@ -9,6 +9,13 @@ function state(){return {panel_id:P,object:{object_id:B,annotations:[mark('ROI 1
 class Element{constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.value='';this.textContent='';this.disabled=false;this.hidden=false;}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=[...nodes];}querySelectorAll(selector){return this.children.flatMap(n=>[...(n.tagName===selector.toUpperCase()?[n]:[]),...n.querySelectorAll(selector)]);}showModal(){this.open=true;}set innerHTML(_){throw Error('Untrusted text must never become HTML');}}
 function setup(){const nodes=new Map(),actions=[];const doc={getElementById:id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);},createElement:tag=>new Element(tag)};const ui=new ResearchWorkspace({document:doc,onSave:reason=>actions.push(['save',reason]),onSelect:id=>actions.push(['select',id]),onNavigate:id=>actions.push(['navigate',id]),onError:error=>actions.push(['error',error]),onDraftChange:()=>actions.push(['draft'])});return {ui,nodes,actions};}
 const text=n=>[n.textContent,...n.children.map(text)].join(' ');
+
+test('FFT notice separates source observations and only offers the qualified return scope',()=>{
+ const {ui,nodes,actions}=setup(),s=state();s.object.annotations=[];s.object.panels=[{domain:'frequency',source_object_id:E,image_rect_xyxy:[0,0,32,32],fft_shape_yx:[32,32],fft_rect_xyxy:[0,0,32,32]}];s.spatial_return={status:'ready',view_object_id:B};
+ const original=structuredClone(s);ui.render(s);assert.match(nodes.get('roi-current').textContent,/当前编辑域：FFT/);assert.match(text(nodes.get('roi-observations')),/空间 ROI 属于来源原图/);assert.match(text(nodes.get('roi-observations')),/返回空间观察.*均不重算/);assert.deepEqual(s,original);assert.deepEqual(actions,[]);
+ s.spatial_return={status:'unavailable'};ui.render(s);assert.match(text(nodes.get('roi-observations')),/当前没有已核对的来源返回入口/);assert.doesNotMatch(text(nodes.get('roi-observations')),/可用“返回空间观察”/);
+ const spatial=state();spatial.object.annotations=[];ui.render(spatial);assert.doesNotMatch(nodes.get('roi-current').textContent,/FFT/);assert.match(text(nodes.get('roi-observations')),/暂无已记录观察/);
+});
 test('continuation includes only saved exact observations, not current draft selection or a pretend wake',()=>{
  const s=state();s.selection={kind:'rectangle',source_object_id:A,coordinate_space:'source_pixels',coordinates:[1,1,8,8],panel:s.object.panels[0]};const model=roiObservationModel(s),prompt=agentContinuationText(model,P);
  assert.match(prompt,/Why ROI 1/);assert.match(prompt,/Why ROI 2/);assert.doesNotMatch(prompt,/1, 1, 8, 8/);assert.match(prompt,/不会自动唤醒/);assert.match(prompt,new RegExp(P));assert.doesNotMatch(prompt,/https?:/);

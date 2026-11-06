@@ -104,7 +104,7 @@ export class DataProbes {
      }
     }catch(error){host.replaceChildren();status.textContent=(error as Error).message;onError(error);}finally{reading=false;}
    };
-   for(const id of ['open-statistics-history','open-statistics-history-inline'])if(this.el(id))this.el(id)!.onclick=open;
+   for(const id of ['open-statistics-history','open-statistics-history-inline','open-statistics-history-measurements'])if(this.el(id))this.el(id)!.onclick=open;
    this.el('close-statistics-history')!.onclick=()=>dialog.close();
    dialog.addEventListener('cancel',event=>{event.preventDefault();dialog.close();});
    dialog.addEventListener('close',()=>{returnFocus?.focus();returnFocus=null;});

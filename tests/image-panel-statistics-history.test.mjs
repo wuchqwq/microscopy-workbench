@@ -85,7 +85,7 @@ test('actual history UI opens from both entries, shows full identity and unknown
  for(const value of ['Saved A','均值 5','标准差 1','最小 4','最大 6','n=4','强度单位未声明','保存时间（UTC）：未知',A,'saved-A'])assert.ok(text.includes(value),value);
  assert.match(h.el('statistics-history-status').textContent,/不代表当前选区、周期、方向、应变或物理解释/);
  h.el('close-statistics-history').onclick();assert.equal(h.el('statistics-history-dialog').open,false);assert.equal(h.active(),h.el('origin'));
- await h.el('open-statistics-history-inline').onclick();assert.equal(h.reads(),2);assert.deepEqual(h.errors,[]);
+ await h.el('open-statistics-history-inline').onclick();assert.equal(h.reads(),2);h.el('close-statistics-history').onclick();await h.el('open-statistics-history-measurements').onclick();assert.equal(h.reads(),3);assert.deepEqual(h.errors,[]);
 });
 test('history UI refuses stale sources, shows true empty state and does not reuse old rows',async()=>{
  const stale=ui({...history,object_id:C});await stale.el('open-statistics-history').onclick();assert.equal(stale.el('statistics-history-rows').children.length,0);assert.equal(stale.errors.length,1);
