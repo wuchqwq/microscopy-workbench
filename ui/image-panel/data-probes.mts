@@ -3,7 +3,7 @@ import type {ProbeResult,ProfileResult,ProfileSamples,NumericReply,ProbeState,Pr
 export type {ProbeResult,ProfileResult,ProfileSamples,ProbeState} from './data-probe-contracts.mjs';
 declare const Blob:BrowserBlobConstructor;declare const URL:BrowserURL;declare const performance:{now():number};
 type Environment=typeof globalThis & BrowserEnvironment;
-export interface DataProbesOptions {getState?:()=>ProbeState|null|undefined;api?:(url:'/api/probe',body:Readonly<Record<string,unknown>>)=>Promise<ProbeResult>;onError?:(error:unknown)=>unknown;document?:BrowserDocument|null;interval?:number;setTimer?:(callback:()=>void,ms:number)=>unknown;clearTimer?:(id:unknown)=>void;now?:()=>number;}
+export interface DataProbesOptions {getState?:()=>ProbeState|null|undefined;api?:(url:'/api/probe',body:Readonly<Record<string,unknown>>)=>Promise<ProbeResult>;readStatisticsHistory?:()=>Promise<unknown>;onOpenStatisticsHistory?:()=>BrowserElement|null;onError?:(error:unknown)=>unknown;document?:BrowserDocument|null;interval?:number;setTimer?:(callback:()=>void,ms:number)=>unknown;clearTimer?:(id:unknown)=>void;now?:()=>number;}
 // Scientific readouts from the same saved provider arrays used by MCP. Canvas
 // colors are never sampled and pointer motion creates no scientific records.
 import {tabularCell} from './measurement-workspace.mjs';
@@ -75,11 +75,40 @@ export function nearestProfileSample(result:ProfileResult,x:unknown){
 export class DataProbes {
  declare getState:DataProbesOptions['getState'];declare api:DataProbesOptions['api'];declare onError:NonNullable<DataProbesOptions['onError']>;declare document:BrowserDocument|null|undefined;declare interval:number;declare setTimer:DataProbesOptions['setTimer'];declare clearTimer:DataProbesOptions['clearTimer'];declare now:()=>number;declare el:(id:string)=>BrowserElement|null|undefined;
  declare pending:PendingProbe|null;declare inflight:boolean;declare timer:unknown;declare sequence:number;declare lastStart:number;declare lastSelection:ProbeSelection|null;declare currentBinding:ProbeBinding|null;declare statistics:ProfileResult|null;declare profile:ProfileResult|null;declare lastResult:ProbeResult;
- constructor({getState,api,onError=()=>{},document:doc=(globalThis as Environment).document,interval=125,setTimer=(globalThis as Environment).setTimeout?.bind(globalThis),clearTimer=(globalThis as Environment).clearTimeout?.bind(globalThis),now=()=>performance.now()}:DataProbesOptions={}){
+ constructor({getState,api,readStatisticsHistory,onOpenStatisticsHistory,onError=()=>{},document:doc=(globalThis as Environment).document,interval=125,setTimer=(globalThis as Environment).setTimeout?.bind(globalThis),clearTimer=(globalThis as Environment).clearTimeout?.bind(globalThis),now=()=>performance.now()}:DataProbesOptions={}){
   if(!finite(interval)||interval<100||interval>1000)throw new Error('Scientific probe throttle must be 100–1000 ms');
   Object.assign(this,{getState,api,onError,document:doc,interval,setTimer,clearTimer,now});this.el=(id:string)=>doc?.getElementById(id);this.pending=null;this.inflight=false;this.timer=null;this.sequence=0;this.lastStart=-Infinity;this.lastSelection=null;this.currentBinding=null;this.statistics=null;this.profile=null;
   if(this.el('probe-component'))this.el('probe-component')!.onchange=()=>{this.sequence++;this.pending=null;this.setProbeText('分量已切换；等待原数组采样');if(this.lastSelection)this.observe(this.lastSelection);};
   if(this.el('profile-csv')){this.el('profile-csv')!.disabled=true;this.el('profile-csv')!.onclick=()=>{try{if(!this.profile)throw new Error('先保存一条剖面');const url=URL.createObjectURL(new Blob(['\uFEFF',exportProfileCSV(this.profile)],{type:'text/csv;charset=utf-8'})),anchor=this.document!.createElement('a');anchor.href=url;anchor.download='mcp-dm-profile.csv';anchor.click();this.setTimer!(()=>URL.revokeObjectURL(url),1000);}catch(error){this.onError(error);}};}
+  if(readStatisticsHistory&&doc){
+   const dialog=this.el('statistics-history-dialog')!,status=this.el('statistics-history-status')!,host=this.el('statistics-history-rows')!;
+   let returnFocus:BrowserElement|null=null,reading=false;
+   const element=(tag:string,text:unknown)=>{const e=doc.createElement(tag);e.textContent=text;return e;};
+   const row=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
+   const text=(value:unknown)=>value===null||value===undefined?'未知':String(value);
+   const open=async()=>{
+    if(reading)return;reading=true;returnFocus=onOpenStatisticsHistory?.()??doc.activeElement??null;host.replaceChildren();status.textContent='正在只读核对已保存统计；不重新计算。';dialog.showModal();this.el('close-statistics-history')?.focus();
+    try{
+     const response=row(await readStatisticsHistory());
+     if(response.schema_version!==1||response.read_only!==true||response.scope!=='same_frame_source_pixels'||response.object_id!==getState?.()?.object?.object_id||!Array.isArray(response.entries))throw new Error('统计历史来源无法核对；请从当前图像重新打开。');
+     status.textContent=`同一帧的已保存实空间统计 ${response.entries.length} 条 / 共 ${text(response.total)} 条${response.truncated?'；仅显示最近记录，清单已截断':''}。帧 ID：${text(response.frame_object_id)}。只作历史数值对照，不代表当前选区、周期、方向、应变或物理解释。`;
+     if(!response.entries.length)status.textContent+=' 暂无可核对记录；不自动计算或借用其他帧。';
+     for(const value of response.entries){
+      const entry=row(value),stats=row(entry.statistics),matches=Array.isArray(entry.matching_input_annotations)?entry.matching_input_annotations.map(row):[],tr=element('tr','');
+      const name=matches.length===1?text(matches[0].name):matches.length?'多个同边界标注；身份不唯一':'无可匹配的保存标注名';
+      tr.append(element('td',`${name}\n保存 ROI：${JSON.stringify(entry.source_rect_xyxy)}\n源像素半开边界；名称仅按统计时输入中的同处理边界匹配，不绑定当前标注。`),
+       element('td',`n=${numberText(stats.sample_count)}\n分量：${text(entry.component)}\ndtype：${text(entry.dtype)}\n强度单位未声明；不使用 XY 长度单位代替。`),
+       element('td',`均值 ${numberText(stats.mean)}\n标准差 ${numberText(stats.stddev)}\n最小 ${numberText(stats.minimum)}\n最大 ${numberText(stats.maximum)}\n标准差约定：${text(entry.standard_deviation)}`),
+       element('td',`保存时间（UTC）：${text(entry.created_utc)}\n来源：${text(row(entry.source_identity).path)}\n原始强度语义：${text(entry.intensity_semantics)}`));
+      const details=element('details','');details.append(element('summary','对象、请求与来源证据'),element('pre',JSON.stringify(entry,null,2)));const cell=element('td','');cell.append(details);tr.append(cell);host.append(tr);
+     }
+    }catch(error){host.replaceChildren();status.textContent=(error as Error).message;onError(error);}finally{reading=false;}
+   };
+   for(const id of ['open-statistics-history','open-statistics-history-inline'])if(this.el(id))this.el(id)!.onclick=open;
+   this.el('close-statistics-history')!.onclick=()=>dialog.close();
+   dialog.addEventListener('cancel',event=>{event.preventDefault();dialog.close();});
+   dialog.addEventListener('close',()=>{returnFocus?.focus();returnFocus=null;});
+  }
  }
  component():string{return this.el('probe-component')?.value||'raw';}
  setProbeText(text:string){if(this.el('probe-value'))this.el('probe-value')!.textContent=text;}
