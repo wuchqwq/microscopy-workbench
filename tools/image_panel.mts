@@ -14,7 +14,7 @@ interface NativeImageReply {data:Metadata;png?:unknown;sequenceEvidence?:unknown
 interface PreparedView {object:Metadata;png:unknown;clean:unknown;digest:string|null;baseId:unknown;display:unknown;displayId:unknown;sequenceEvidence?:unknown;domainEvidence?:unknown;domainPng?:unknown;}
 interface PendingView {prepared:PreparedView;frameIdentity:PanelFrameIdentity|null;request_id:unknown;annotationIds?:unknown[];preserve_selection?:boolean;spatialReturnReference?:SpatialReturnReference|null;spatialReturnReason?:string;inputViewContext?:PanelWindowViewContext|null;viewContextRestore?:PanelWindowViewContext|null;navigationLease?:boolean;reason?:'unsaved_draft'|'window_capacity';}
 export interface ImagePanelOptions {workspace?:string;python?:string;object_id?:string;port?:number;panel_id?:string|null;helper_session_id?:string;panel_generation?:number;resume_checkpoint?:unknown;analysis_restore?:unknown;analysis_legacy?:boolean;execution_recovery_checkpoint?:unknown;client?:PanelClient;journalDirectory?:string;numeric_result_refs?:unknown;crystal_evidence_snapshot?:unknown;}
-interface StdioClientOptions {workspace:string;python:string;serverPath?:string;}
+interface StdioClientOptions {workspace:string;python:string;serverPath?:string;serverArgs?:string[];}
 interface PendingRPC {resolve:(value:unknown)=>void;reject:(error:unknown)=>void;timer:ReturnType<typeof setTimeout>;}
 
 import {spawn} from 'node:child_process';
@@ -69,8 +69,8 @@ function publicObject(value:Metadata):Metadata{
 export class StdioImageClient implements PanelClient {
  declare child:ChildProcessWithoutNullStreams;declare next:number;declare pending:Map<unknown,PendingRPC>;declare stderr:string;
  private receivedRenderReferences?:Set<string>;private acknowledgedPreviewReferences?:Set<string>;
- constructor({workspace,python,serverPath=path.join(root,'server.mjs')}:StdioClientOptions){
-  this.child=spawn(process.execPath,[serverPath],{env:{...process.env,DM_MCP_BACKEND:'images',DM_IMAGE_WORKSPACE:workspace,DM_IMAGE_PYTHON:python,MICROSCOPY_IMAGE_WORKSPACE:workspace,MICROSCOPY_PYTHON:python,MICROSCOPY_STRUCTURE_WORKSPACE:'',MICROSCOPY_CONTEXT_WORKSPACE:'',MICROSCOPY_EXECUTION_OBSERVABILITY:'0'},stdio:['pipe','pipe','pipe'],windowsHide:true});
+ constructor({workspace,python,serverPath=path.join(root,'server.mjs'),serverArgs=[]}:StdioClientOptions){
+  this.child=spawn(process.execPath,[serverPath,...serverArgs],{env:{...process.env,DM_MCP_BACKEND:'images',DM_IMAGE_WORKSPACE:workspace,DM_IMAGE_PYTHON:python,MICROSCOPY_IMAGE_WORKSPACE:workspace,MICROSCOPY_PYTHON:python,MICROSCOPY_STRUCTURE_WORKSPACE:'',MICROSCOPY_CONTEXT_WORKSPACE:'',MICROSCOPY_EXECUTION_OBSERVABILITY:'0'},stdio:['pipe','pipe','pipe'],windowsHide:true});
   this.next=1;this.pending=new Map();let buffer='';this.stderr='';
   this.child.stderr.on('data',(c:Buffer)=>{this.stderr=(this.stderr+c).slice(-4000);});
   this.child.stdout.on('data',(c:Buffer)=>{buffer+=c;let n;while((n=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,n);buffer=buffer.slice(n+1);try{const msg=JSON.parse(line) as Metadata,p=this.pending.get(msg.id);if(p){this.pending.delete(msg.id);clearTimeout(p.timer);p.resolve(msg);}}catch(e){this.rejectAll(e);}}});

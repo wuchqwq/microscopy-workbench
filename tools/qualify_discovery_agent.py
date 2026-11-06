@@ -20,8 +20,14 @@ def main():
     parser.add_argument("--handoff", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--timeout", type=int, default=600)
+    parser.add_argument("--preflight", action="store_true", help="Only inspect the explicit local MCP server; no model, tool calls or registration changes")
     args = parser.parse_args()
     codex, node = shutil.which("codex"), shutil.which("node")
+    if args.preflight:
+        if not node or args.source or args.handoff:
+            parser.error("Preflight requires Node, explicit config/output and no source/handoff")
+        repo = Path(__file__).resolve().parents[1]
+        return subprocess.call([node, str(repo/"dist/tools/discovery_agent_preflight.mjs"), "--config", str(args.config.resolve(strict=True)), "--output", str(args.output.resolve())])
     if not codex or not node or bool(args.source) == bool(args.handoff):
         parser.error("Installed Codex/Node and exactly one explicit source/handoff required")
     repo = Path(__file__).resolve().parents[1]
