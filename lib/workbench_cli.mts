@@ -17,7 +17,7 @@ import type {SourceProofReference} from './image_source_proofs.mjs';
 
 export const CLI_VERSION='0.1.0';
 export const CLI_EXIT={completed:0,invalid_arguments:2,conflict:3,failed:4,outcome_unknown:5,unavailable:6} as const;
-export const CLI_HELP=`Microscopy Workbench CLI ${CLI_VERSION} — headless, JSON output\n\nnode dist/tools/workbench_cli.mjs COMMAND --workspace ABS_DIRECTORY --python ABS_PYTHON [OPTIONS]\n\nCommands:\n  version | --help\n  doctor                                Check runtime and scientific environment; no image computation\n  tool --name image_fft --input FILE     Call a supported existing provider tool with exact JSON arguments\n  query --request-id ID                  Query an original request; never resubmit it\n  inspect [--save-id ID | --snapshot-object ID]\n  compare-rois --roi ID,ID,ID --request-id ID [--compute-missing] [--detect-missing-peaks]\n              [--save-id ID | --snapshot-object ID] [--window hann|none] [--subtract-mean true|false]\n  reports [--report-id ID]               Read append-only reference reports; does not adopt results\n  history [--request-id ID]              Read original GUI FFT inputs, including unsaved exploration\n  proof-create --object-id ID --purpose saved_source|fft_input --request-id ID\n               [--input-relative-path PATH --input-sha256 SHA] [--parent-proof-id ID]\n  proof-info --proof-id ID [--proof-sha256 SHA]   Verify current evidence; no scientific write\n  proof-revoke --proof-id ID --reason TEXT --request-id ID\n  proof-adopt --proof-id ID --proof-sha256 SHA --new-save-id ID [--replace-proof-id ID]\n\ninspect/compare accept --proof-id ID --proof-sha256 SHA as an explicit proof context.\nproof-adopt requires a closed, clean workspace and publishes the explicitly named new savepoint; old points remain unchanged.\n\nNo command opens a browser, hidden window or MCP server. inspect/compare use the explicit saved workspace version; --snapshot-object is an explicit immutable handoff, never the GUI's guessed current ROI.\nWrite tool arguments must contain their original request_id. After interruption/timeout use query with that ID. Existing FFT reuse requires exact saved float ROI, source, support, preprocessing and calibration.\nExit: 0 completed, 2 arguments, 3 conflict, 4 known failure, 5 unknown outcome, 6 unavailable. Pixel geometry/candidates do not establish a crystal phase or material strain.\n`;
+export const CLI_HELP=`Microscopy Workbench CLI ${CLI_VERSION} — headless, JSON output\n\nnode dist/tools/workbench_cli.mjs COMMAND --workspace ABS_DIRECTORY --python ABS_PYTHON [OPTIONS]\n\nCommands:\n  version | --help\n  doctor                                Check runtime and scientific environment; no image computation\n  tool --name image_fft --input FILE     Call a supported existing provider tool with exact JSON arguments\n  query --request-id ID                  Query an original request; never resubmit it\n  site-followup --request-id REVIEW_ID   Read review/profile receipts and prepare existing review arguments; dispatches nothing\n  inspect [--save-id ID | --snapshot-object ID]\n  compare-rois --roi ID,ID,ID --request-id ID [--compute-missing] [--detect-missing-peaks]\n              [--save-id ID | --snapshot-object ID] [--window hann|none] [--subtract-mean true|false]\n  reports [--report-id ID]               Read append-only reference reports; does not adopt results\n  history [--request-id ID]              Read original GUI FFT inputs, including unsaved exploration\n  proof-create --object-id ID --purpose saved_source|fft_input --request-id ID\n               [--input-relative-path PATH --input-sha256 SHA] [--parent-proof-id ID]\n  proof-info --proof-id ID [--proof-sha256 SHA]   Verify current evidence; no scientific write\n  proof-revoke --proof-id ID --reason TEXT --request-id ID\n  proof-adopt --proof-id ID --proof-sha256 SHA --new-save-id ID [--replace-proof-id ID]\n\ninspect/compare accept --proof-id ID --proof-sha256 SHA as an explicit proof context.\nproof-adopt requires a closed, clean workspace and publishes the explicitly named new savepoint; old points remain unchanged.\n\nNo command opens a browser, hidden window or MCP server. inspect/compare use the explicit saved workspace version; --snapshot-object is an explicit immutable handoff, never the GUI's guessed current ROI.\nWrite tool arguments must contain their original request_id. After interruption/timeout use query with that ID. Existing FFT reuse requires exact saved float ROI, source, support, preprocessing and calibration.\nExit: 0 completed, 2 arguments, 3 conflict, 4 known failure, 5 unknown outcome, 6 unavailable. Pixel geometry/candidates do not establish a crystal phase or material strain.\n`;
 const requestPattern=/^[A-Za-z0-9_-]{1,64}$/,objectPattern=/^[a-f0-9]{32}$/;
 const supported=new Set(['image_open','image_frame','image_preview','image_preview_acknowledge','image_fft','image_peaks','image_measure','image_remeasure','image_info','image_result','image_calibrate','image_annotate','image_context','image_export','image_source_proof','image_source_proof_info','image_source_proof_revoke','image_statistics','image_profile','image_discovery','image_discovery_review']);
 export interface CliOptions {command:string;workspace?:string;python?:string;name?:string;input?:string;request_id?:string;save_id?:string;snapshot_object?:string;roi?:string;window?:'none'|'hann';subtract_mean?:boolean;compute_missing?:boolean;detect_missing_peaks?:boolean;report_id?:string;proof_id?:string;proof_sha256?:string;object_id?:string;purpose?:'saved_source'|'fft_input';input_relative_path?:string;input_sha256?:string;parent_proof_id?:string;reason?:string;new_save_id?:string;replace_proof_id?:string;}
@@ -25,11 +25,11 @@ export interface CliResponse {schema_version:1;cli_version:string;command:string
 function invalid(message:string):never{throw Object.assign(new Error(message),{code:'INVALID_ARGUMENT'});}
 export function parseCliArgs(argv:readonly string[]):CliOptions {
  if(!argv.length||argv.length===1&&['--help','help','-h'].includes(argv[0]))return {command:'help'};
- const command=argv[0];if(!['version','doctor','tool','query','inspect','compare-rois','reports','history','proof-create','proof-info','proof-revoke','proof-adopt'].includes(command))invalid('Unknown command; use --help');
+ const command=argv[0];if(!['version','doctor','tool','query','inspect','compare-rois','reports','history','proof-create','proof-info','proof-revoke','proof-adopt','site-followup'].includes(command))invalid('Unknown command; use --help');
  const result:Row={command};const flags=new Set(['--compute-missing','--detect-missing-peaks']),values=new Set(['--workspace','--python','--name','--input','--request-id','--save-id','--snapshot-object','--roi','--window','--subtract-mean','--report-id','--proof-id','--proof-sha256','--object-id','--purpose','--input-relative-path','--input-sha256','--parent-proof-id','--reason','--new-save-id','--replace-proof-id']);
  for(let i=1;i<argv.length;i++){const flag=argv[i],key=flag.slice(2).replaceAll('-','_');if(result[key]!==undefined)invalid('Duplicate option '+flag);if(flags.has(flag)){result[key]=true;continue;}if(!values.has(flag)||!argv[i+1]||argv[i+1].startsWith('--'))invalid('Unknown/missing option '+flag);result[key]=argv[++i];}
  if(command!=='version'&&(!result.workspace||!path.isAbsolute(String(result.workspace))))invalid('Explicit absolute --workspace required');
- if(['tool','query','doctor','proof-create','proof-revoke'].includes(command)&&(!result.python||!path.isAbsolute(String(result.python))))invalid('Explicit absolute --python required');
+ if(['tool','query','doctor','proof-create','proof-revoke','site-followup'].includes(command)&&(!result.python||!path.isAbsolute(String(result.python))))invalid('Explicit absolute --python required');
  if(result.python!==undefined&&!path.isAbsolute(String(result.python)))invalid('--python must be absolute');
  if(result.save_id!==undefined&&result.snapshot_object!==undefined)invalid('Choose one exact savepoint or immutable snapshot');
  for(const key of ['request_id','save_id','report_id','new_save_id'])if(result[key]!==undefined&&!requestPattern.test(String(result[key])))invalid('Invalid '+key);
@@ -37,7 +37,7 @@ export function parseCliArgs(argv:readonly string[]):CliOptions {
  if(result.window!==undefined&&!['none','hann'].includes(String(result.window)))invalid('--window is hann or none');
  if(result.subtract_mean!==undefined){if(!['true','false'].includes(String(result.subtract_mean)))invalid('--subtract-mean is true or false');result.subtract_mean=result.subtract_mean==='true';}
  if(command==='tool'&&(!result.name||!result.input||!path.isAbsolute(String(result.input))))invalid('tool requires --name and absolute --input JSON file');
- if(command==='query'&&!result.request_id)invalid('query requires original --request-id');
+ if(['query','site-followup'].includes(command)&&!result.request_id)invalid(command+' requires original --request-id');
  if(command==='compare-rois'&&(!result.roi||!result.request_id))invalid('compare-rois requires stable --roi IDs and original --request-id');
  for(const key of ['proof_id','object_id','parent_proof_id','replace_proof_id'])if(result[key]!==undefined&&!objectPattern.test(String(result[key])))invalid('Invalid '+key);
  for(const key of ['proof_sha256','input_sha256'])if(result[key]!==undefined&&!/^[a-f0-9]{64}$/.test(String(result[key])))invalid('Invalid '+key);
@@ -128,6 +128,48 @@ function providerStatus(data:Row):keyof typeof CLI_EXIT {
  if(data.state==='failed'||data.state==='not_submitted')return 'failed';
  return data.state==='completed'&&data.ok!==false?'completed':'outcome_unknown';
 }
+// Read-only adapter for the already saved profile -> review handoff. It neither
+// submits science nor decides that an earlier unknown write may be replayed.
+async function siteFollowup(execution:CliExecution,requestId:string):Promise<{status:keyof typeof CLI_EXIT;data:Row}>{
+ const outcome=(value:Row):keyof typeof CLI_EXIT=>typeof value.query_status==='string'&&Object.hasOwn(CLI_EXIT,value.query_status)?value.query_status as keyof typeof CLI_EXIT:isRow(value.error)&&value.error.code==='REQUEST_NOT_FOUND'?'outcome_unknown':providerStatus(value);
+ const readOriginal=async(ident:string):Promise<Row>=>{try{return await execution.call('image_result',{request_id:ident});}
+  catch(error){const result=cliError('query',error,ident);return {state:'unknown',request_id:ident,query_status:result.status,error:result.error};}};
+ const review=await readOriginal(requestId);
+ const base:Row={read_only:true,review_request_id:requestId,next_tool_call:null,physical_conclusion:null,
+  decision_authority:'deterministic_receipt_check_not_AI',
+  dispatch_policy:'Arguments only. Host chooses whether to act. If the linked review was attempted, query its original request ID; never replace it or replay an unknown write.'};
+ const finish=(phase:string,message:string,status:keyof typeof CLI_EXIT='completed',extra:Row={})=>({status,data:{...base,phase,message,...extra}});
+ if(review.request_id!==requestId)return finish('needs_review_outcome','Review receipt does not match the original request ID','outcome_unknown',{original_outcome:review});
+ if(outcome(review)!=='completed')return finish('needs_review_outcome','Query the original review; no new request is prepared',outcome(review),{original_outcome:review});
+ if(review.kind!=='discovery_review'||!isRow(review.site_continuation))return finish('needs_site_review','An explicit saved expected-site review with continuation is required','unavailable');
+ const saved=review.site_continuation;
+ base.review_object_id=review.object_id;base.site_observation=review.site_observation;
+ if(saved.version!==2)return finish('needs_current_review','Keep the historical proposal; explicitly create a linked current review before dispatch','unavailable');
+ if(saved.status!=='tool_proposed')return finish(String(saved.status),String(saved.reason));
+ const action=saved.action,after=saved.after_success;
+ if(!isRow(action)||action.tool!=='image_profile'||!isRow(action.arguments)||!isRow(after)||after.tool!=='image_discovery_review'||!isRow(after.arguments)||
+    saved.source_review_id!==review.object_id||saved.source_review_request_id!==requestId||after.arguments.previous_review_id!==review.object_id||
+    action.arguments.request_id!==after.require_result_request_id||after.require_result_kind!=='profile')
+  return finish('unavailable_handoff','Saved handoff does not bind this review and original profile request','unavailable');
+ const profileId=String(action.arguments.request_id),profile=await readOriginal(profileId);
+ base.profile_request_id=profileId;
+ if(profile.request_id!==profileId)return finish('needs_original_profile_outcome','Profile receipt does not match the original saved request ID','outcome_unknown',{original_outcome:profile});
+ if(outcome(profile)!=='completed')return finish('needs_original_profile_outcome','Query the original profile request. No measurement or linked review is submitted',outcome(profile),{original_outcome:profile});
+ const grid=profile.scientific_grid_identity,science=saved.source_science,sampling=profile.sampling;
+ if(profile.kind!=='profile'||profile.parent_object_id!==action.arguments.object_id||profile.component!=='raw'||
+    !same(profile.points,action.arguments.points)||!isRow(sampling)||sampling.interpolation!==action.arguments.interpolation||
+    sampling.line_width!==action.arguments.line_width||sampling.sample_count!==action.arguments.sample_count||
+    !isRow(grid)||!isRow(science)||grid.source_grid_object_id!==science.frame_object_id||grid.array_sha256!==science.array_sha256||
+    grid.dtype!==science.dtype||!same(grid.shape_yx,science.shape_yx))
+  return finish('profile_receipt_mismatch','Completed receipt differs from the saved source, points or sampling. Preserve it; do not substitute or retry','unavailable',{profile_object_id:profile.object_id});
+ const args=structuredClone(after.arguments),oldIds=Array.isArray(review.evidence_refs)?review.evidence_refs.map(ref=>isRow(ref)?ref.object_id:null):[];
+ if(!same(args.evidence_ids,oldIds)||!Array.isArray(args.evidence_ids)||args.evidence_ids.includes(profile.object_id)||typeof profile.object_id!=='string')
+  return finish('unavailable_handoff','Saved template does not preserve the exact complete original evidence list','unavailable');
+ args.evidence_ids.push(profile.object_id);
+ validate(args,imageTools.find(tool=>tool.name==='image_discovery_review')!.inputSchema);
+ return finish('review_arguments_prepared','All original evidence retained; only the matching completed profile was appended. Host may inspect and submit this existing tool call, then inspect actual coverage.', 'completed',
+  {profile_object_id:profile.object_id,next_tool_call:{tool:'image_discovery_review',arguments:args},linked_review_request_id:args.request_id});
+}
 export async function compareRois(options:CliOptions,execution:CliExecution):Promise<RoiComparisonReport>{
  const base=snapshot(options),reader=new CliObjectReader(options.workspace!,proofReferences(options,base.snapshot)),rois=savedRois(reader,base.snapshot),chosen=String(options.roi).split(',');if(chosen.length<1||chosen.length>100||new Set(chosen).size!==chosen.length||chosen.some(id=>!requestPattern.test(id)))invalid('Select one to 100 distinct stable ROI IDs');
  const selected=chosen.map(id=>{const found=rois.find(roi=>roi.annotation_id===id);if(!found)invalid('ROI is absent from the exact saved snapshot: '+id);return found;});if(new Set(selected.map(r=>r.frame_object_id)).size!==1)invalid('First-release comparison requires ROIs from one exact source frame');
@@ -187,6 +229,7 @@ export async function runCli(options:CliOptions,{signal,provider}:{signal?:Abort
   if(options.command==='proof-create'){const data=await execution.call('image_source_proof',{object_id:options.object_id,purpose:options.purpose,request_id:options.request_id,...(options.input_relative_path?{input_relative_path:options.input_relative_path,input_sha256:options.input_sha256}:{}),...(options.parent_proof_id?{parent_proof_id:options.parent_proof_id}:{})});return {...result(data),status:providerStatus(data)};}
   if(options.command==='proof-revoke'){const data=await execution.call('image_source_proof_revoke',{proof_object_id:options.proof_id,reason:options.reason,request_id:options.request_id});return {...result(data),status:providerStatus(data)};}
   if(options.command==='compare-rois')return result(await compareRois(options,execution));
+  if(options.command==='site-followup'){const prepared=await siteFollowup(execution,options.request_id!);return {...result(prepared.data),status:prepared.status};}
   if(options.command==='query'){const data=await execution.call('image_result',{request_id:options.request_id}),status=data.request_id!==options.request_id?'outcome_unknown':providerStatus(data);return {...result(data),status};}
   if(options.command==='tool'){const stat=lstatSync(options.input!);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>256*1024)invalid('Input must be an ordinary JSON file, at most 256 KiB');const input:unknown=JSON.parse(readFileSync(options.input!,'utf8'));if(!isRow(input))invalid('Tool input must be a JSON object');const data=await execution.call(options.name!,input);const envelope=result(data);envelope.request_id=typeof data.request_id==='string'?data.request_id:typeof input.request_id==='string'?input.request_id:null;return {...envelope,status:providerStatus(data)};}
   return invalid('Unknown CLI command');

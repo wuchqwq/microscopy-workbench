@@ -116,6 +116,19 @@ is no new Panel slot, automatic model wake-up or AnalysisContext role. Save the
 provider/workspace locator and exact review/request IDs for continuation.
 See [user path and interface inventory](../../../../docs/STEM_TOOL_CONTINUATION.zh-CN.md).
 
+For headless CLI continuation after the profile, use the read-only
+`site-followup --request-id ORIGINAL_REVIEW_REQUEST_ID` with the same explicit
+workspace and Python. It queries that review and its prescribed original profile
+receipt, checks source/points/sampling, and returns `next_tool_call` containing
+the existing review arguments with every old evidence ID plus the matching
+profile. It submits nothing. A missing/unknown/failed/mismatched receipt has no
+prepared call; query the original outcome, never replace it. Reference conflict
+or missing information remains a no-action state. Inspect actual evidence before
+using the prepared call and inspect coverage after the linked review completes.
+`review_arguments_prepared` means parameters are prepared, not that this review
+has never been attempted: if it was attempted, query its saved original ID.
+The helper is CLI integration, not a new MCP tool, Panel wake-up or AI controller.
+
 ## Optional conditional S2 column decomposition
 
 For deciding whether the present question needs decomposition, use

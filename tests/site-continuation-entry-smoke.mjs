@@ -7,9 +7,9 @@ import {appendFileSync,existsSync,mkdirSync,readFileSync,readdirSync,writeFileSy
 import path from 'node:path';
 import {StdioImageClient} from '../tools/image_panel.mjs';
 
-const output=process.argv[2],flags=new Set(process.argv.slice(3)),mcpMode=flags.has('--mcp'),boundsMode=flags.has('--source-bounds');
+const output=process.argv[2],flags=new Set(process.argv.slice(3)),mcpMode=flags.has('--mcp'),boundsMode=flags.has('--source-bounds'),followupMode=flags.has('--site-followup');
 assert.ok(output&&path.isAbsolute(output)&&!existsSync(output),'Supply a fresh absolute output directory');
-assert.ok([...flags].every(f=>['--mcp','--source-bounds'].includes(f)),'Only --mcp and --source-bounds are supported');
+assert.ok([...flags].every(f=>['--mcp','--source-bounds','--site-followup'].includes(f)),'Only --mcp, --source-bounds and --site-followup are supported');
 mkdirSync(output,{recursive:true});
 const root=process.cwd(),workspace=path.join(output,'workspace');
 const runtime=spawnSync(process.env.MICROSCOPY_PYTHON??'python',['-B','-c','import sys;print(sys.executable)'],{encoding:'utf8',windowsHide:true});
@@ -28,7 +28,7 @@ assert.equal(generated.status,0,generated.stderr);
 const hash=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
 let number=0,client;const delivered=new Set(),records=[];
 if(mcpMode){client=new StdioImageClient({workspace,python});await client.rpc('initialize');}
-function snapshot(){return Object.fromEntries(['objects','requests'].flatMap(folder=>existsSync(path.join(workspace,folder))?readdirSync(path.join(workspace,folder),{recursive:true,withFileTypes:true})
+function snapshot(){return Object.fromEntries(['objects','requests','cli-requests'].flatMap(folder=>existsSync(path.join(workspace,folder))?readdirSync(path.join(workspace,folder),{recursive:true,withFileTypes:true})
  .filter(e=>e.isFile()).map(e=>{const p=path.join(e.parentPath,e.name);return [p,hash(p)];}):[]));}
 function unchanged(before){for(const [p,h]of Object.entries(before))assert.equal(hash(p),h,'Original evidence changed: '+p);}
 async function call(name,input={},read=false){
@@ -56,6 +56,17 @@ async function call(name,input={},read=false){
  }
  return data;
 }
+function prepareFollowup(reviewRequest){
+ const before=snapshot(),index=++number;
+ const p=spawnSync(process.execPath,[path.join(root,'dist/tools/workbench_cli.mjs'),'site-followup','--workspace',workspace,'--python',python,'--request-id',reviewRequest],
+  {encoding:'utf8',windowsHide:true,timeout:30000,env:{...process.env,PYTHONUTF8:'1'}});
+ writeFileSync(path.join(output,'followup-'+index+'-stdout.json'),p.stdout??'');writeFileSync(path.join(output,'followup-'+index+'-stderr.txt'),p.stderr??'');
+ const response=JSON.parse(p.stdout);assert.equal(p.status,({completed:0,failed:4,outcome_unknown:5,unavailable:6})[response.status]);
+ assert.deepEqual(snapshot(),before,'site-followup must not write provider or CLI journals');
+ appendFileSync(path.join(output,'calls.jsonl'),JSON.stringify({phase:'read_only_prepare',name:'CLI site-followup',reviewRequest,response})+'\n');
+ return response;
+}
+
 try{
  for(const c of cases){
   const rect=c.rect??spec.rect,point=c.point??spec.point;
@@ -72,19 +83,22 @@ try{
   const proposal=initial.site_continuation;assert.equal(proposal.status,c.expected);
   assert.equal(proposal.version,2);
   if(c.axis){assert.equal(proposal.axis,c.axis);assert.deepEqual(proposal.action.arguments.points,c.points);}
-  const protectedFiles=snapshot();let final=initial,profile=null;
+  const protectedFiles=snapshot();let final=initial,profile=null,prepared=null,beforeProfile=null;
+  if(followupMode){beforeProfile=prepareFollowup(initial.request_id);if(proposal.action){assert.equal(beforeProfile.status,'outcome_unknown');assert.equal(beforeProfile.data.next_tool_call,null);}else{assert.equal(beforeProfile.status,'completed');assert.equal(beforeProfile.data.next_tool_call,null);assert.equal(beforeProfile.data.phase,proposal.status);}}
   if(proposal.action){
    assert.equal(proposal.action.tool,'image_profile');
    profile=await call(proposal.action.tool,proposal.action.arguments);
    const after=proposal.after_success;assert.equal(profile.request_id,after.require_result_request_id);assert.equal(profile.kind,after.require_result_kind);
    const reviewArgs=structuredClone(after.arguments);reviewArgs.evidence_ids.push(profile.object_id);
-   final=await call(after.tool,reviewArgs);
+   if(followupMode){prepared=prepareFollowup(initial.request_id);assert.equal(prepared.status,'completed');assert.equal(prepared.data.phase,'review_arguments_prepared');assert.deepEqual(prepared.data.next_tool_call,{tool:after.tool,arguments:reviewArgs});}
+   final=await call(prepared?.data.next_tool_call.tool??after.tool,prepared?.data.next_tool_call.arguments??reviewArgs);
    assert.equal(final.site_continuation.status,'stop_at_observation');assert.equal(final.site_continuation.action,null);
    assert.equal(final.site_observation.profile_coverage.status,'covered');
    assert.deepEqual(final.evidence_refs.map(r=>r.object_id),[...evidence,profile.object_id]);
    assert.deepEqual(final.site_observation.profile_coverage.assessments.map(r=>r.status),['not_verified','covered']);
    assert.deepEqual(final.site_observation.raw_observation,initial.site_observation.raw_observation);
    assert.equal(final.history.at(-1).object_id,initial.object_id);
+   if(followupMode){const again=prepareFollowup(initial.request_id);assert.deepEqual(again.data.next_tool_call,prepared.data.next_tool_call);}
    // Repeating this exact CLI invocation is query-only, never a second profile.
    if(!mcpMode){const state=snapshot();const again=await call(proposal.action.tool,proposal.action.arguments);assert.equal(again.object_id,profile.object_id);assert.deepEqual(snapshot(),state);}
   }else assert.equal(proposal.after_success,null);
@@ -93,17 +107,17 @@ try{
   assert.equal(hash(path.join(exported.output_dir,'site-continuation.json')),hash(path.join(workspace,'objects',final.object_id,'site-continuation.json')));
   if(final.image_path)copyFileSync(final.image_path,path.join(output,c.name+'-final.png'));
   assert.equal(hash(source),sourceHash);
-  records.push({case:c.name,source_sha256:sourceHash,initial_review:initial,profile,final_review:final,export:exported});
+  records.push({case:c.name,source_sha256:sourceHash,initial_review:initial,profile,final_review:final,export:exported,before_profile_followup:beforeProfile,prepared_followup:prepared});
  }
  const before=snapshot();
  if(mcpMode){await client.close();client=new StdioImageClient({workspace,python});await client.rpc('initialize');}
- for(const record of records){const recovered=await call('image_result',{request_id:record.final_review.request_id},true);assert.deepEqual(recovered.site_continuation,record.final_review.site_continuation);}
+ for(const record of records){const recovered=await call('image_result',{request_id:record.final_review.request_id},true);assert.deepEqual(recovered.site_continuation,record.final_review.site_continuation);if(followupMode){const reopened=prepareFollowup(record.final_review.request_id);assert.equal(reopened.status,'completed');assert.equal(reopened.data.next_tool_call,null);assert.equal(reopened.data.phase,record.final_review.site_continuation.status);}}
  assert.deepEqual(snapshot(),before,'Reopen is read-only');
  const objects=readdirSync(path.join(workspace,'objects')).map(id=>JSON.parse(readFileSync(path.join(workspace,'objects',id,'object.json'),'utf8')));
  assert.equal(objects.filter(r=>['fft','gpa','column_fit'].includes(r.kind)).length,0);
  const result={status:'PASS',entry:mcpMode?'MCP':'CLI tool/query',decision_actor:'scripted_test_harness',
   verification_layers:{deterministic_suggestions:'PASS',executable_existing_tool_continuation:'PASS',real_AI_autonomous_decision:'NOT_TESTED'},
-  saved_reopen:'PASS',original_evidence_unchanged:true,records,physical_validation:'NOT_TESTED',gui_gestures:'NOT_TESTED'};
+  saved_reopen:'PASS',original_evidence_unchanged:true,read_only_followup:followupMode?'PASS':'NOT_TESTED',records,physical_validation:'NOT_TESTED',gui_gestures:'NOT_TESTED'};
  writeFileSync(path.join(output,'results.json'),JSON.stringify(result,null,2)+'\n',{flag:'wx'});
  console.log('PASS: '+result.entry+' -> saved review -> exact existing profile -> linked review/stop -> export/reopen; scripted choice only.');
 }catch(error){writeFileSync(path.join(output,'failure.json'),JSON.stringify({error:String(error),stack:error.stack},null,2)+'\n',{flag:'wx'});throw error;}

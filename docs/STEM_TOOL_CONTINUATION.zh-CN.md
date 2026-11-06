@@ -49,6 +49,20 @@ node dist/tools/workbench_cli.mjs tool --workspace ABS_WORKSPACE --python ABS_PY
 node dist/tools/workbench_cli.mjs query --workspace ABS_WORKSPACE --python ABS_PYTHON --request-id ORIGINAL_ID
 ```
 
+剖线已完成时，现有 CLI 还提供只读回接准备，免去手工核对并拼接证据列表：
+
+```text
+node dist/tools/workbench_cli.mjs site-followup --workspace ABS_WORKSPACE --python ABS_PYTHON --request-id ORIGINAL_REVIEW_REQUEST_ID
+```
+
+入口读取原 review 及它指定的原剖线请求，核对源数组、端点和采样参数后，输出
+`data.next_tool_call`。Agent 可以直接采用其中既有工具名和完整参数，不要求研究者手抄
+ID 或删改 JSON；调用仍由宿主明确选择。全部参考、旧剖线和原预期位置保留。结果未知、
+失败或不匹配时不生成调用；参考冲突或缺信息时保留原状态和具体提示。它不执行新测量。
+`review_arguments_prepared` 只说明参数已准备，不能证明回接从未执行：若先前已尝试过，
+应查询输出里的原回接请求 ID，不能新建 ID 重试。此入口没有新 MCP 工具或 GUI 按钮。
+精确操作、反例与重新打开证据见[回接准备验证](validation/stem-site-followup-20261106.md)。
+
 CLI各次进程退出后仍可查询原结果。显式导出包含 `site-continuation.json/.txt`、原始
 复核报告和 provenance；原科学数据仍在 provider workspace。CLI 的预览回执需按现有
 合同明确确认，回执不等于看过像素。MCP示例客户端已有收到结果后的回执逻辑。
