@@ -7,6 +7,7 @@ request journals own attempt reservations, failed outcomes and recovery.
 import copy
 import hashlib
 import time
+import textwrap
 
 from PIL import Image, ImageDraw
 
@@ -240,13 +241,20 @@ def action(workspace, name, request, metadata, directory, api):
     metadata = _step(workspace, request, metadata, api) if name == "method_step" else _plan(workspace, request, metadata, api)
     metadata["decision_or_step_wall_ms"] = (time.monotonic()-started)*1000
     # Small decision feedback, never a scientific image or a new viewer.
-    image = Image.new("RGB", (800, 240), "#151c23")
+    comparison = metadata.get("decision", {}).get("peak_comparison")
+    feedback = ([line for item in peak_comparison.preview_lines(comparison)
+                 for line in textwrap.wrap(item, width=110)] if comparison else [])
+    image = Image.new("RGB", (800, max(240, 65 + 22 * len(feedback))), "#151c23")
     draw = ImageDraw.Draw(image)
     title = metadata.get("decision", {}).get("status", metadata.get("selected_action", {}).get("kind", "method step"))
-    draw.text((16, 15), "Cross-method evidence | "+str(title), fill="#63dcdf")
-    draw.text((16, 45), "Conditional image evidence. No confirmed material defect or unique 3D interpretation.", fill="white")
-    for i, item in enumerate(metadata.get("actions", [])[:4]):
-        draw.text((16, 80+32*i), (item["kind"]+": "+str(item["reason"]))[:115], fill="white")
+    draw.text((16, 15), ("Saved-band ROI comparison | " if comparison else "Cross-method evidence | ")+str(title), fill="#63dcdf")
+    if comparison:
+        for i, line in enumerate(feedback):
+            draw.text((16, 48+22*i), line, fill="white")
+    else:
+        draw.text((16, 45), "Conditional image evidence. No confirmed material defect or unique 3D interpretation.", fill="white")
+        for i, item in enumerate(metadata.get("actions", [])[:4]):
+            draw.text((16, 80+32*i), (item["kind"]+": "+str(item["reason"]))[:115], fill="white")
     image.save(directory / "preview.png")
     if "peak_comparison" in metadata.get("decision", {}):
         api.write_new(directory / "peak-comparison.txt", peak_comparison.readable(metadata["decision"]["peak_comparison"]).encode("utf-8"))

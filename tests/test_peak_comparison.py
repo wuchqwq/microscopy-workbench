@@ -61,7 +61,7 @@ class SavedComparison(unittest.TestCase):
         self.assertTrue(queried['ok'],queried)
         self.assertEqual(queried['result']['decision'],result['decision'])
         artifact = self.workspace/'objects'/result['object_id']/'peak-comparison.txt'
-        self.assertIn('Band 0',artifact.read_text())
+        self.assertIn('Band 0',artifact.read_text(encoding='utf-8'))
         revised = self.call('method_next',object_id=result['object_id'],information_patch={'roi_rect':[180,100,212,132]})
         self.assertEqual(revised['root_plan_id'],result['object_id'])
         self.assertAlmostEqual(revised['decision']['peak_comparison']['peaks'][0]['phase_difference_wrapped_rad'],.4,delta=.003)

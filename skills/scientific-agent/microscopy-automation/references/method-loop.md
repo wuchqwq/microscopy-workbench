@@ -14,7 +14,7 @@ method check, but smooth strain magnitude does not locate a dislocation.
 1. Save a request ID and call `image_method_plan` with `object_ids` (1..3 exact
    GPA IDs), `information` and an explicit additional-work `budget`. The initial
    GPA must carry the actual image-domain declaration, reference and mask source.
-   `information.goal` is currently `projected_topology`. Optional fields are:
+   For `information.goal="projected_topology"`, optional fields are:
    `followup_g_vectors` (two exact cycles/pixel vectors), `followup_basis`,
    `loops` (existing topology local-grid oriented rectangles), and
    `model_assumption_text`. Missing information produces an inspectable request,
@@ -58,6 +58,24 @@ numeric agreement cannot decide that material interpretation. Keep results
 `hypothesized`, preserve alternative explanations and never claim unique 3D b or
 material dislocation confirmation. Stop when the bounded question has conditional
 evidence, evidence quality is insufficient, budget runs out or the user stops.
+
+## Describe an ROI difference without dispatching another method
+
+For the separate `information.goal="peak_roi_comparison"` route, select exactly
+one saved fixed-g GPA and supply local half-open `roi_rect`, `reference_rect` and
+an actual `reference_text`. All four budget fields can be zero. Read each band's
+amplitude ratio, wrapped phase difference and validity/coherence diagnostics;
+an unavailable phase does not erase a usable amplitude observation.
+
+The saved preview and `peak-comparison.txt` summarize observed values, support
+and next analysis suggestions. They do not dispatch those suggestions or change
+admission. Use `image_method_next` to revise justified ROI/reference choices on
+the same bands; there is no scientific `image_method_step` action for this goal.
+Do not switch a budget root's goal. A periodicity question belongs to the FFT
+measurement route; a phase difference alone does not authorize topology.
+This route inherits joint two-band GPA guards and is not general raw-image or
+single-carrier HRTEM entry. See the
+[Task A contract](../../../../docs/hrtem-saved-band-task-a.md).
 
 `image_info` / `image_result` recover the immutable plan/step and PNG; source GPA,
 FFT and topology IDs remain usable by existing read/export/Panel tools. These

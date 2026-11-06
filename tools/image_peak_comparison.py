@@ -81,10 +81,59 @@ def propose(workspace, seeds, info, api):
             "semantics":"Read/summary work only, observed wall time recorded; no method-call reservation or numerical rerun"}}}
 
 
+def next_observations(report):
+    """Presentation advice only; never actions, admission or new science."""
+    if any(p["amplitude_ratio"] is None for p in report["peaks"]):
+        first = ("Some bands lack valid amplitude support. Inspect the source ROI and saved "
+                 "validity/low-amplitude masks; keep unsupported values unavailable.")
+    elif any(p["phase_difference_wrapped_rad"] is None for p in report["peaks"]):
+        first = ("Amplitude comparisons remain usable. Inspect spatial phase variation; "
+                 "a single regional phase difference is unavailable.")
+    else:
+        first = ("Inspect the source ROI and saved FFT alongside the band comparisons. "
+                 "These numbers have no calibrated uncertainty or significance test.")
+    return [first,
+            "If the observation warrants a different ROI/reference, compare again using the same saved bands; do not recompute the FFT merely to move a summary window.",
+            "For periodicity or direction, use the FFT measurement route. This summary does not measure local frequency, strain or fringe termination.",
+            "A wrapped phase difference alone does not justify topology or confirm a dislocation; retain contrast/imaging-transfer alternatives."]
+
+
+def _number(value, signed=False):
+    return "unavailable" if value is None else format(value, "+.6g" if signed else ".6g")
+
+
+def preview_lines(report):
+    """Compact, source-bound feedback for the existing saved result preview."""
+    lines = ["ROI %s | reference %s (local pixels)" % (report["roi_rect"], report["reference_rect"]),
+             "Same saved bands; no new FFT/GPA. g in cycles/pixel; ratios compare ROI / reference.",
+             "Ratios/phase shown to 6 significant digits; exact values remain in the saved decision."]
+    for p in report["peaks"]:
+        roi, ref = (p["regions"][key] for key in ("roi_rect", "reference_rect"))
+        phase = p["phase_difference_wrapped_rad"]
+        lines.extend([
+            "Band %d, g=%s: amplitude ratio %s; wrapped phase %s%s" %
+            (p["band_index"], p["g_cycles_per_pixel"], _number(p["amplitude_ratio"]),
+             _number(phase, signed=True), " rad" if phase is not None else ""),
+            "Valid support: ROI %d/%d, reference %d/%d; low amplitude: %d / %d" %
+            (roi["valid_count"], roi["pixel_count"], ref["valid_count"], ref["pixel_count"],
+             roi["low_amplitude_count"], ref["low_amplitude_count"])])
+    lines.extend(["Next: " + next_observations(report)[0],
+                  "A phase difference is not material strain or dislocation confirmation."])
+    return lines
+
+
 def readable(report):
     lines = ["Saved-band ROI comparison / 已保存频带ROI比较（条件性图像证据）", "Status: "+report["status"],
              "ROI: %s; reference: %s" % (report["roi_rect"], report["reference_rect"]), report["reference_text"]]
+    lines.extend(preview_lines(report)[:-2])
     for p in report["peaks"]:
-        lines.append("Band %d, g=%s: %s; wrapped phase change=%s rad; amplitude ratio=%s" %
-                     (p["band_index"], p["g_cycles_per_pixel"], p["status"], p["phase_difference_wrapped_rad"], p["amplitude_ratio"]))
-    return "\n".join(lines + [report["phase_semantics"]] + report["limitations"]) + "\n"
+        lines.append("Band %d status: %s; exact saved band: %s" % (p["band_index"], p["status"], p["band_id"]))
+        for name in ("roi_rect", "reference_rect"):
+            region = p["regions"][name]
+            lines.append("  %s: amplitude %s; phase %s; coherence %s; reason %s" %
+                         (name, region["amplitude_status"], region["status"],
+                          _number(region["amplitude_weighted_phase_coherence"]), region["reason"] or "none"))
+    lines.extend(["Next analysis:", *next_observations(report),
+                  "Guards: at least 9 valid pixels, 90% support and 0.9 phase coherence; deterministic guards, not confidence.",
+                  report["validity_semantics"], report["phase_semantics"], *report["limitations"]])
+    return "\n".join(lines) + "\n"

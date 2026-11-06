@@ -60,3 +60,16 @@ outside this increment.
 
 No full GUI suite, real microscope qualification, real-image interpretation,
 publication or merging is implied by these synthetic checks.
+
+## Researcher feedback
+
+New saved comparisons show band amplitude ratios, wrapped phase differences,
+ROI/reference valid support and low-amplitude counts in the existing preview.
+The text sidecar also distinguishes amplitude and phase admission, gives
+coherence/reasons and suggests what to inspect next. Suggestions are display
+feedback, not executable actions, evidence of significance or new science.
+The numerical report, guards and frozen-decision validation are unchanged;
+historical sidecars and previews are not rewritten by reading them.
+
+For the broader question-to-tool route and currently unverified scopes, read
+the [HRTEM capability map](HRTEM_BASELINE.zh-CN.md).
