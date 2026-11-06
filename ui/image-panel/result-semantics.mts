@@ -58,9 +58,10 @@ export function renderResultSemantics(host:BrowserElement,object:Row,document:Br
  const node=(tag:string,text:unknown)=>{const n=document.createElement(tag);n.textContent=text;return n;};
  host.append(node('h2','科学结果的三层含义'),node('p',`保存对象：${object.object_id??'未知'} · ${String(object.kind??'未知')}`),node('p',model.headline));
  if(model.status==='available'&&model.assessment){
+  host.append(node('p','以下状态只针对上述保存对象及各项所述范围。“尚未评估”不表示其它统计、FFT 或计算检查为空。下一步取决于你的研究问题，此处不自动选择问题或安排新分析。'));
   for(const [key,title,rowsKey] of [['numerical','数值计算与检查','checks'],['measurement_reliability','测量可靠性','assessments'],['interpretation','候选解释与判断','assessments']]){
    const layer=model.assessment[key!] as Row;host.append(node('h3',title),node('p',layer.scope));
-   for(const a of layer[rowsKey!] as Row[])host.append(node('p',`${a.aspect} · ${labels[String(a.status)]} · ${a.scope}\n${a.basis}\n依据字段：${(a.source_fields as string[]).join(', ')||'没有已执行的资格检查字段'}`));
+   for(const a of layer[rowsKey!] as Row[])host.append(node('p',`${a.aspect} · ${labels[String(a.status)]} · ${a.status==='not_assessed'?'本项未评估范围：':''}${a.scope}\n${a.basis}\n依据字段：${(a.source_fields as string[]).join(', ')||'没有已执行的资格检查字段'}`));
   }
  }
  host.append(node('p','旧 valid 等状态按各算法原合同解释；数值有效不等于测量已获资格或物理解释成立。'));

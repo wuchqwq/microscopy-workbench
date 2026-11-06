@@ -1954,6 +1954,17 @@ def annotation(item, image_size, panels, reproject=False, previous=None, incomin
             "mapping_status": "one_source" if len(matches) == 1 else "not_a_single_source_region"}
 
 
+def annotation_text_font(text):
+    """Use an existing Windows CJK font for new labels; keep Latin rendering."""
+    if os.name == "nt" and any("\u2e80" <= char <= "\u9fff" or "\uf900" <= char <= "\ufaff" for char in text):
+        try:
+            return ImageFont.truetype("msyh.ttc", size=12)
+        except OSError:
+            # Do not add a font dependency or fail an otherwise valid export.
+            pass
+    return None
+
+
 def overlay(image, annotations, panels, reproject=False, updates=None, previous_annotations=None):
     image = image.convert("RGB")
     draw, result, seen = ImageDraw.Draw(image), [], set()
@@ -1972,6 +1983,7 @@ def overlay(image, annotations, panels, reproject=False, updates=None, previous_
             continue
         color = {"white": "#ffffff", "cyan": "#45e8ff", "orange": "#ff8c32", "amber": "#ffba30", "green": "#00e060"}[mark["color"]]
         coords, kind = mark["coordinates"], mark["kind"]
+        font = annotation_text_font(mark["text"])
         if kind == "arrow":
             coords = mark["arrow_render_coordinates"]
         if kind == "point":
@@ -1991,9 +2003,9 @@ def overlay(image, annotations, panels, reproject=False, updates=None, previous_
                 points = [(x1, y1)] + [(x1-size*math.cos(angle+a), y1-size*math.sin(angle+a)) for a in (-.5, .5)]
                 draw.polygon(points, fill=color)
         else:
-            draw.text(coords, mark["text"], fill=color)
+            draw.text(coords, mark["text"], fill=color, font=font)
         if mark["text"] and kind != "text":
-            draw.text(coords[:2], mark["text"], fill=color)
+            draw.text(coords[:2], mark["text"], fill=color, font=font)
     return image, result
 
 

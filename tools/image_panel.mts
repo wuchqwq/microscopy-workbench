@@ -29,6 +29,7 @@ import {annotationPresentation} from '../lib/image_workspace.mjs';
 import {validate} from '../lib/runtime/schema.mjs';
 import {figureDisplayParameters,readFigureRecipe,recipeIdentity} from '../ui/image-panel/figure-export.mjs';
 import {readImageMeasurements,writeMeasurementLink} from '../lib/image_measurement_records.mjs';
+import {readImageStatisticsHistory} from '../lib/image_statistics_history.mjs';
 import {framePreviewRecipe} from '../ui/image-panel/user-workflow.mjs';
 import type {DisplayParameters} from '../ui/image-panel/figure-export.mjs';
 import {resolveComposition} from '../lib/figure_composer_assets.mjs';
@@ -1082,6 +1083,10 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
     const latest=windowStore.lookup(entry.window_id,revision);
     if(latest.object_id!==entry.object_id||saved.frame?.frame_object_id!==windowStore.snapshot().frame_object_id||!windowStore.assetMatches(entry.window_id,saved.object,saved.frame))fail('Saved window asset changed while reading; inspect the current collection',409);
     res.end(JSON.stringify({schema_version:1,collection_revision:revision,window_id:entry.window_id,object_id:entry.object_id,object:publicImageObject(saved.object),panel_mapping_fingerprint:panelWindowMappingFingerprint(saved.object),png_base64:saved.png,...(saved.cleanRender?{clean_render:saved.cleanRender}:{})}));return;
+   }
+   if(req.method==='GET'&&url.pathname==='/api/statistics-history'){
+    if([...url.searchParams.keys()].some(key=>key!=='object_id')||url.searchParams.getAll('object_id').length!==1||url.searchParams.get('object_id')!==current.object_id)fail('Statistics history requires the exact current object',409);
+    res.end(JSON.stringify(readImageStatisticsHistory({workspace:workspace!,objectId:current.object_id as string})));return;
    }
    if(req.method==='GET'&&url.pathname==='/api/measurements'){
     if([...url.searchParams.keys()].some(key=>key!=='object_id')||url.searchParams.get('object_id')!==current.object_id)fail('Measurement inspection requires the exact current object',409);

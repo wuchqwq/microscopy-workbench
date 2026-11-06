@@ -826,6 +826,13 @@ test('directly reopened FFT returns through the validated server reference witho
  assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.inspect().state.object.annotations[0].note,'saved reason');assert.equal(h.$('return-spatial').hidden,true);assert.match(h.$('message').textContent,/已返回对应的保存空间观察/);
  assert.equal(h.$('view-back').disabled,false);assert.equal(h.calls.some(c=>['fft','preview'].includes(c.action)),false);
 });
+test('verified return with active FFT missing comparison reference keeps actual gates and conditional notice',async()=>{
+ const f=relationUiFixture({fft:true});f.initial.spatial_return={version:1,status:'ready',view_object_id:viewId,frame_object_id:sourceId};
+ const active=f.initial.window_collection.windows.find(entry=>entry.window_id===f.initial.window_collection.active_window_id);assert.equal(active.role,'fft');delete active.source_reference;
+ const h=await harness(f.initial,{windowStates:f.windowStates,relationRead:emptyRelationRead});await h.finishWindows();
+ assert.equal(h.$('return-spatial').disabled,false);assert.equal(h.$('compare-fft-source').disabled,true);
+ const notice=h.$('roi-current').textContent+' '+elementText(h.$('roi-observations'));assert.match(notice,/来源返回关系已核对/);assert.match(notice,/按钮可用时/);assert.doesNotMatch(notice,/原图与 FFT 对照/);assert.equal(h.calls.length,0);
+});
 test('legacy or unqualified FFT shows why spatial return is unavailable and never guesses from a frame',async()=>{
  for(const code of ['no_saved_return','legacy_checkpoint_missing','different_fft','different_frame','target_unavailable']){
   const initial=returnableFft();initial.spatial_return={version:1,status:'unavailable',reason_code:code};const h=await harness(initial),before=h.inspect();
