@@ -36,8 +36,8 @@ duration and result must be checked after a separately reviewed push.
 
 ## Local commands and results
 
-Windows; Node 24.16; Python 3.13. All writable test temporaries are in the sibling
-`hrtem-ci-repair-evidence-20261106/tmp` directory. Full logs remain in that sibling
+Windows; Node 24.16; Python 3.13. Writable test temporaries are under the sibling
+`hrtem-ci-repair-evidence-20261106` directory (`temp` or `tmp`). Full logs remain in that sibling
 directory. Commands below run from the repository; use the explicit installed
 Python executable when reproducing in this environment.
 
