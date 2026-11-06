@@ -8,7 +8,7 @@ node dist/tools/workbench_cli.mjs version
 node dist/tools/workbench_cli.mjs doctor --workspace "F:\Research\分析 工作区" --python "F:\Scientific Python\python.exe"
 ```
 
-Except help, stdout contains one versioned JSON response. Diagnostics belong on stderr; PNG/base64 is not printed. `version` and help need no Python/workspace. `doctor` checks required environment imports without creating image objects. Optional peak detection needs the existing SciPy dependency and is never substituted silently.
+Except help, stdout contains one versioned JSON response. Diagnostics belong on stderr; PNG/base64 is not printed. `version` and help need no Python/workspace. `doctor` checks basic NumPy/Pillow/tifffile imports without creating image objects; it does not qualify every declared dependency or optional method. Optional peak detection needs the existing SciPy dependency and is never substituted silently.
 
 | Exit | Status | Meaning |
 | --- | --- | --- |
@@ -43,6 +43,30 @@ node dist/tools/workbench_cli.mjs query --workspace "F:\Research\analysis" --pyt
 ```
 
 The CLI fsyncs its request intent before provider submission. Repeating the same command with the same request/parameters queries `image_result`; it does not submit another computation. Different parameters with the same ID are rejected. Ctrl+C stops waiting using the existing coordinator and retains original IDs. Worker cancellation is not proof that nothing executed. Unknown, missing or incomplete original outcomes are not automatically replayed.
+
+## Local STEM expected-site continuation
+
+The unmerged STEM candidate additionally allows the existing `image_statistics`,
+`image_profile`, `image_discovery` and `image_discovery_review` tools.
+See the [baseline, inputs and minimal Agent route](STEM_BASELINE.zh-CN.md).
+S2 is not in this CLI allowlist. This path does not require an FFT.
+
+```text
+node dist/tools/workbench_cli.mjs site-followup --workspace ABS_IMAGE_WORKSPACE --python ABS_PYTHON --request-id ORIGINAL_REVIEW_REQUEST_ID
+```
+
+This command only reads the original review and prescribed original profile
+outcome. After matching the completed receipt to source identity, geometry and
+sampling, it prepares `data.next_tool_call` for the existing review tool.
+It never dispatches that call. Preserve all original evidence and inspect the
+reported phase when the original outcome is unknown, failed or mismatched.
+`review_arguments_prepared` does not prove that the proposed review has never
+been attempted; query its original linked-review ID before any retry.
+
+For a plugin configured with `workspace_root`, its `images` subdirectory is the
+actual image workspace. Use that same directory for `--workspace`. Reopening a
+CLI/MCP client there and querying original IDs reads saved provider records;
+this is separate from a GUI savepoint or GUI acceptance.
 
 ## Three-ROI comparison
 

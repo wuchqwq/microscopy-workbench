@@ -22,6 +22,13 @@ When source proof is needed, inspect the advertised `image_source_proof`, `image
 
 ## Scientific routes
 
+For the local, unmerged STEM expected-site observation candidate, use the
+[baseline and minimal route (Chinese)](docs/STEM_BASELINE.zh-CN.md).
+Keep every reference and original expected coordinate; manage IDs on the Agent
+side. Deterministic suggestions, actual tool continuations and the verified
+developer-context model trial are distinct from independent blind qualification
+and physical specimen validity.
+
 To continue from two saved Panel regions into a finite structure comparison,
 use the [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md). Read its
 additive `roi_handoff` for exact anchors/current calibration; share the two-window

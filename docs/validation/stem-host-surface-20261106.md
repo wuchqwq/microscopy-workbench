@@ -4,6 +4,12 @@
 `C:\Users\13471\Documents\ChatGPT\mircograph-workbench\stem-tool-continuation-local-20261106`，
 分支 `feat/stem-host-preflight-20261106`。本地提交，不推送、合并或修改 HRTEM 算法。
 
+**复审状态更新（2026-11-06）：** 主对话已通过完整HEAD
+`88cb7426533575d7021c84693ead854744608d91` 的独立review，并核验下述原生turn的
+逐步工具选择、实际调用与回读；preflight无科学workspace副作用。开发上下文模型试验
+记为已执行且经核验，独立自主盲测仍为NOT_TESTED。旧证据包中的pending字段保留其
+生成时状态，不覆盖原始记录。当前基线见[入口与清单](../STEM_BASELINE.zh-CN.md)。
+
 ## 实际发现
 
 | 层次 | 本轮证据 | 不能据此推出什么 |
@@ -12,7 +18,7 @@
 | 显式本地 MCP 服务 | 实际 initialize/tools/list 返回54个工具，包含统计、剖线、review及回执工具 | 不证明宿主已经注册、放行或展示给模型，也不证明后端科学执行成功 |
 | 旧 source 模式启动器 | 静态白名单缺 statistics/profile/preview_acknowledge | 不能只补一个 Codex CLI 就宣称 STEM 自主链路可用 |
 | 当前真实开发 Agent | 通过已有执行接口逐步选择工具、读取真实结果、决定停止并保存/回读 | 带历史与实现上下文，不是独立、无历史或盲测科学 Agent |
-| 原生模型事件认证 | 本活跃 turn 的 read_thread 只返回入站委派，未暴露模型名/服务请求ID | 本地桥接日志本身不能认证模型作者；不能宣布独立自主资格 PASS |
+| 原生模型事件认证 | 活跃期间只读到入站委派；结束后主对话已核验原生turn中的逐步选择、实际调用与回读 | 没有另起模型服务request ID；带开发上下文，不能宣布独立自主盲测资格PASS |
 
 当前实际可用路线是 `functions.exec -> exec_command -> 现有 Workbench CLI -> provider`。
 直接原生 MCP 注册未建立；本轮没有修改注册、全局设置、认证或权限，也没有安装软件、
@@ -77,10 +83,12 @@ host:   durable
 title:  调研 STEM 分析路线
 ```
 
-活跃期间 read_thread 只暴露入站委派；请在本轮结束后由独立 reviewer 使用原生 read_thread
-的 includeOutputs=true 检查本 turn 的 agentMessage 与 commandExecution，核对实际工具选择、
-参数和回读顺序。导出时排除 reasoning 项，不记录凭证或秘密。当前状态严格为
-`EXECUTED_CURRENT_HOST_AGENT_PENDING_NATIVE_AUDIT`；独立新科学 Agent 自主资格仍为 NOT_TESTED。
+活跃期间read_thread只暴露入站委派，故原证据状态为
+`EXECUTED_CURRENT_HOST_AGENT_PENDING_NATIVE_AUDIT`。此后主对话已使用原生记录核验
+实际工具选择、参数及回读顺序，当前状态更新为
+`EXECUTED_DEVELOPER_CONTEXT_MODEL_NATIVE_AUDIT_CONFIRMED`。
+这不新增模型名或模型服务request ID，也不把桥接日志本身当作认证；独立新科学Agent
+自主盲测仍为NOT_TESTED。保留原证据，不导出reasoning、凭证或秘密。
 
 ## 验证与最小接入差距
 
