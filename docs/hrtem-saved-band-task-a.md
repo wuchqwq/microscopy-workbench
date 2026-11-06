@@ -29,6 +29,14 @@ and the authoritative object/journal preserve the structured result. Read with
 ROIs/reference without changing the budget root or goal. Old topology plans keep
 the existing policy version and reopening path. No new GUI controls are added.
 
+`image_export` on the comparison plan now copies its saved `method-decision.json`,
+available `peak-comparison.txt`, display PNG and manifest/provenance into a new
+directory under an existing parent. Query the original plan/export requests to
+reopen. This report export does not copy parent GPA arrays: export the actual
+GPA object separately for amplitude/masks. Historical missing or absolute PNG
+pointers are not silently repaired; an explicit new comparison over qualified
+saved bands creates a new record with a native preview, preserving the old plan.
+
 ## Scientific boundary
 
 This is **not general raw-image HRTEM ingress**. It inherits existing GPA

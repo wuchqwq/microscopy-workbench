@@ -1578,6 +1578,9 @@ class Workspace:
             source_directory = self.root / "objects" / scientific["object_id"]
             record = metadata.get("xy_calibration")
             feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map", "field_extend", "analysis_candidates", "discovery", "discovery_review")
+            saved_comparison = (scientific["kind"] == "method_plan" and
+                                scientific.get("information", {}).get("goal") == "peak_roi_comparison" and
+                                "peak_comparison" in scientific.get("decision", {}))
             gpa_result = scientific["kind"] in ("gpa", "gpa_read")
             topology_result = scientific["kind"] == "topology"
             if topology_result:
@@ -1592,7 +1595,7 @@ class Workspace:
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
             numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
+            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json", "candidate-review.txt") or saved_comparison and name in ("method-decision.json", "peak-comparison.txt") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")

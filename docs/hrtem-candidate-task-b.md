@@ -144,3 +144,10 @@ replace them. Export now follows existing method plan/step references as well
 as discovery evidence references, retaining the budget root, completed attempts
 and child evidence. Source software provenance includes the new composition
 helper hash. Old evidence is never regenerated or resaved to adopt this result.
+
+The closeout export also includes the existing `candidate-review.txt` beside
+`discovery-review.json`, preview PNG and manifest/provenance. This exports saved
+report bytes, not new interpretation or parent arrays. Export each GPA for
+amplitude/masks and the topology object for full circuit arrays/report. See the
+[final closeout](validation/hrtem-final-closeout-20261106.md) for actual A/B exports,
+image inspection and fresh-client reopens.
