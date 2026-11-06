@@ -88,6 +88,8 @@ class ScopeTests(unittest.TestCase):
     def test_point_observation_checks_are_in_actual_execution_lists(self):
         root=Path(__file__).resolve().parents[1]
         self.assertIn("- run: python -B tests/image_point_observation_test.py", (root/".github/workflows/quick.yml").read_text())
+        self.assertIn("- run: python -B tests/image_site_observation_test.py", (root/".github/workflows/quick.yml").read_text())
+        self.assertEqual(groups_for_path("tests/image_site_observation_test.py"), {"spatial"})
         import json
         command=json.loads((root/"package.json").read_text())["scripts"]["test"]
         self.assertIn("dist/tests/point-observation-contract.test.mjs",command.split())

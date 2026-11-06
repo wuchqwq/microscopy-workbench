@@ -10,6 +10,15 @@ const displaySize:ArgumentSchema={type:'integer',minimum:32,maximum:1024};
 const region:ArgumentSchema={type:'object',additionalProperties:false,required:['rect','reason'],properties:{
   rect,reason:text,candidate_explanations:observations,unresolved:observations,
 }};
+const siteContext:ArgumentSchema={type:'object',additionalProperties:false,
+  required:['question','statistics_id','expected_position_xy','position_source_text','modality','signal_kind','signal_source_text'],properties:{
+    question:text,statistics_id:id,
+    expected_position_xy:{type:'array',minItems:2,maxItems:2,items:{type:'number'},description:'Fixed expected source-pixel X,Y inside this candidate; caller prior, not a detected position. Never snapped to a maximum.'},
+    position_source_text:text,
+    modality:{type:'string',enum:['haadf','adf','abf','bf','idpc','dpc_component','ptychography_reconstruction','other','unknown']},
+    signal_kind:{type:'string',enum:['raw_counts','stored_scalar','derived_scalar','unknown']},
+    signal_source_text:{...text,description:'Actual source of channel and processing/count meaning. These are unverified declarations; derived iDPC is not independent Poisson counts.'},
+  }};
 const write=(name:string,description:string,properties:Record<string,ArgumentSchema>,required:string[]):ToolDefinition=>({
   name,description,inputSchema:{type:'object',additionalProperties:false,properties:{...properties,
     request_id:{type:'string',pattern:'^[A-Za-z0-9_-]{1,64}$',description:'Save before submission; recover through image_result using this original ID after cancellation or timeout. Unknown operations are never automatically replayed.'},
@@ -27,13 +36,14 @@ export const discoveryTools:ToolDefinition[]=[
     previous_discovery_id:id,
     max_size:displaySize,
   },['object_id']),
-  write('image_discovery_review','Bind existing numerical evidence to one exact saved ROI. Also accepts saved spatial raw statistics with primary ROI equal to candidate (comparison references remain contextual), or a width-one profile wholly inside it (line subset only); reconstructs these from original arrays/requests. Probe is ephemeral, not saved review evidence. Manual image-first is supported within the documented synthetic software/numerical scope; automatic proposals remain EXPERIMENTAL. Check source/frame/ROI/current calibration, journals and payloads; retain hypotheses and unknowns, never confirmed defects/twins/phases. FFT/peaks/measurement/GPA tools perform science explicitly; qualified GPA may hand off to F4. No new FFT/GPA, saved measurement or hidden model call.',{
+  write('image_discovery_review','Bind existing numerical evidence to one exact saved ROI. Also accepts saved spatial raw statistics with primary ROI equal to candidate (comparison references remain contextual), or a width-one profile wholly inside it (line subset only); reconstructs these from original arrays/requests. Optional site_context selects attached reference statistics and a fixed expected position: saves every raw reference difference, reference sign disagreement, unknown physical causes and a suggested next step. This is neither localization nor significance; declared modality/count meaning is not verified and S2 is never dispatched. Probe is ephemeral, not saved review evidence. Manual image-first is supported within the documented synthetic software/numerical scope; automatic proposals remain EXPERIMENTAL. Check source/frame/ROI/current calibration, journals and payloads; retain hypotheses and unknowns, never confirmed defects/twins/phases. FFT/peaks/measurement/GPA tools perform science explicitly; qualified GPA may hand off to F4. No new FFT/GPA, saved measurement or hidden model call.',{
     object_id:id,candidate_id:id,
     evidence_ids:{type:'array',minItems:1,maxItems:8,items:id},
     observation_text:text,
     candidate_explanations:observations,
     unresolved:observations,
     previous_review_id:id,
+    site_context:siteContext,
   },['object_id','candidate_id','evidence_ids','observation_text']),
 ];
 

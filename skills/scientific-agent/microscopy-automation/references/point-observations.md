@@ -51,6 +51,31 @@ conditional evidence; do not discard the whole FFT or simply raise its cap as
 a point-defect solution. Positive/negative conjugate peaks are not independent
 structural observations, and unchanged peak positions cannot exclude a vacancy.
 
+## Optional expected-site feedback on the raw evidence
+
+For a question about a supplied expected position, `image_discovery_review` can
+optionally take `site_context`: question, an explicitly selected attached
+`statistics_id`, fixed `expected_position_xy`, `position_source_text`, declared
+`modality`, `signal_kind` and actual `signal_source_text`. The exact-ROI statistics
+must include every supplied same-image reference. The coordinate is a prior,
+not a detected peak; never move it to make the observation succeed.
+
+Read the saved `site_observation`, preview and exported `site-observation.txt`.
+They preserve each signed difference and identify references straddling the
+target even when the median difference is zero. Exact signs have no significance
+threshold. Agreement of signs does not verify reference equivalence. Explain the
+raw observation, unresolved causes and the suggested next step in the user's
+language; do not present the feedback as a defect probability or dump a score.
+
+Unknown channel/processing keeps raw comparison available and recommends missing
+acquisition information. Declared raw_counts does not verify independent Poisson;
+derived iDPC/reconstruction values must not be relabelled as native counts. A raw
+profile can be attached within the exact ROI; wider context needs a separate
+observation. The review dispatches no S2/FFT/GPA and never localizes a column.
+After a known outcome, revise with a new request linked by `previous_review_id`;
+recover an unknown write only by the original ID. Omitting site_context preserves
+the old review path. See [the workflow](../../../../docs/STEM_EXPECTED_SITE.zh-CN.md).
+
 ## Optional conditional S2 column decomposition
 
 For deciding whether the present question needs decomposition, use

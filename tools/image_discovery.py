@@ -7,10 +7,14 @@ import copy
 import hashlib
 from pathlib import Path
 import shutil
+try:
+    from . import image_site_observation as site_observation
+except ImportError:
+    import image_site_observation as site_observation
 
 FIELDS = {
     "discovery": {"object_id", "entry", "selection_origin", "window_sizes", "max_candidates", "regions", "previous_discovery_id", "max_size"},
-    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id"},
+    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id", "site_context"},
 }
 LEGACY_VERSION = "image-first-discovery-v1"
 VERSION = "image-first-discovery-v2"
@@ -280,6 +284,8 @@ def _review(workspace, request, metadata, directory, api):
     if history:
         old, _ = workspace.object(history[-1]["object_id"])
         api.need(old["candidate"]["rect"] == candidate["rect"], "Review revision must retain its exact scientific ROI", "DISCOVERY_SCOPE_MISMATCH")
+    site = (site_observation.derive(request["site_context"], observations, candidate["rect"], api)
+            if "site_context" in request else None)
     overview, _ = workspace.object(discovery["overview_object_id"])
     visible = [overview]
     for ref in refs[:2]:
@@ -287,6 +293,9 @@ def _review(workspace, request, metadata, directory, api):
         if value.get("image_path"):
             visible.append(value)
     api.automation.contact_sheet(directory, [("Observation / saved evidence", r) for r in visible], api)
+    if site is not None:
+        site_observation.save(directory, site, api)
+        metadata["site_observation"] = site
     metadata.update(policy_version=VERSION, parent_object_id=request["object_id"], discovery_dependency=_dep(discovery, discovery_dir, api),
                     support_status=_support_status(discovery["parameters"]["entry"]),
                     source_dependency=discovery["source_dependency"], source_context=discovery["source_context"], candidate=candidate,
@@ -361,6 +370,15 @@ def validate_references(workspace, metadata, api):
         api.need(candidate is not None and metadata["candidate"] == candidate and metadata["discovery_dependency"] == _dep(discovery,directory,api) and
                  metadata["source_dependency"] == discovery["source_dependency"], "Review has a different original discovery/ROI", "CORRUPT_OBJECT")
         refs, observations, ffts, gpas = _evidence(workspace, original["evidence_ids"], discovery["source_dependency"], candidate["rect"], api)
+        api.need(("site_observation" in metadata) == ("site_context" in original),
+                 "Site observation presence differs from original request", "CORRUPT_OBJECT")
+        if "site_context" in original:
+            expected_site = site_observation.derive(original["site_context"], observations, candidate["rect"], api)
+            site_file = Path(metadata["manifest_path"]).parent / "site-observation.json"
+            api.need(metadata["site_observation"] == expected_site and api.read_json(site_file) == expected_site and
+                     site_file.with_suffix(".txt").read_text(encoding="utf-8") == site_observation.report_text(expected_site) and
+                     api.read_json(site_file.with_name("discovery-review.json")).get("site_observation") == expected_site,
+                     "Site observation differs from its original context/raw evidence", "CORRUPT_OBJECT")
         api.need(metadata["evidence_refs"] == refs and metadata["numerical_observations"] == observations and metadata["fft_refs"] == ffts and
                  metadata["observation_text"] == original["observation_text"] and metadata["candidate_explanations"] == original.get("candidate_explanations",[]) and
                  metadata["unresolved"] == original.get("unresolved",[]) and metadata["physical_conclusion"] is None,

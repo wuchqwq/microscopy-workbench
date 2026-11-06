@@ -76,3 +76,18 @@ test('discovery adapter preserves explicit worker action, configured provider an
     assert.deepEqual(accepted[1].evidence_ids,[evidence]);
   }finally{adapter.close();}
 });
+
+test('expected-site context is optional, sourced, bounded and forwarded without a fit',async()=>{
+  const {registry,calls}=fixture();
+  const site_context={question:'Compare this expected site with all supplied references',statistics_id:evidence,
+    expected_position_xy:[22.25,22.5],position_source_text:'Supplied nominal coordinate, not detected',
+    modality:'idpc',signal_kind:'derived_scalar',signal_source_text:'Integrated channel, not independent Poisson counts'};
+  for(const change of [{expected_position_xy:[22]}, {signal_kind:'poisson_by_dtype'}, {modality:'guessed'},
+    {position_source_text:''}, {vacancy_confirmed:true}, {statistics_id:'latest'}]){
+    await assert.rejects(registry.call('image_discovery_review',{...reviewed(),site_context:{...site_context,...change}}));
+  }
+  assert.equal(calls.length,0);
+  const args={...reviewed(),site_context};
+  await registry.call('image_discovery_review',args);
+  assert.deepEqual(calls,[{name:'image_discovery_review',args}]);
+});

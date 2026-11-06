@@ -42,6 +42,7 @@ SPECIAL_TESTS = {
     "tests/manual_crystal_launcher_test.py": {"client"},
     "tests/image_core_cross_test.py": {"spatial"},
     "tests/image_point_observation_test.py": {"spatial"},
+    "tests/image_site_observation_test.py": {"spatial"},
     "tests/image_tiff_admission_test.py": {"spatial"},
 }
 
