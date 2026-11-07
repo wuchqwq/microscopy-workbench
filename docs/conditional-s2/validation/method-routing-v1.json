@@ -1,0 +1,489 @@
+{
+  "schema_version": "method-routing-validation-v1",
+  "base": "8bff842bd084be2986f0bf99613da7b947fe0bae",
+  "branch": "feat/conditional-method-evidence-routing-20261105",
+  "scope": "Skill guidance, evidence index, explicit record authoring/state check and focused regression; no production selector",
+  "environment": {
+    "node": "v24.16.0",
+    "python": "3.13",
+    "dependencies": "Physical copies of existing TypeScript5.9.3, Node types22.20.5, undici-types6.21.0; no installs/links"
+  },
+  "final_results": {
+    "build": "PASS",
+    "node_route_plus_unchanged_consumers": {
+      "pass": 9,
+      "fail": 0,
+      "skipped": 0
+    },
+    "node_route_after_final_refinements": {
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0
+    },
+    "packaged_skill": {
+      "pass": 1,
+      "fail": 0
+    },
+    "packaged_stdlib_record_contracts": {
+      "pass": 17,
+      "fail": 0
+    },
+    "quick_validate_skills": {
+      "pass": 2,
+      "mode": "python -X utf8"
+    },
+    "ci_discovery": 17,
+    "unchanged_engine_diff_exit": 0
+  },
+  "independent_forward": {
+    "initial_cases": 4,
+    "initial_cases_result": "Choice review and checker pass before locator amendment; original fixtures kept unchanged",
+    "findings_applied": [
+      "Original provider/workspace/session locator",
+      "Null source/ROI during original-result recovery or stopped unresolved write",
+      "Supplied width/model does not verify shape adequacy"
+    ],
+    "additional_case_E": "PASS; locator-only same-ID query record with source=null",
+    "E_checker_sha256": "356029287a4a88b821d9e9b7c9612c1e162cfe20cf0f7da53a86f0c8279de1a5",
+    "E_contract_sha256": "ccbd3d301a9d7a49f102c295a0588f69e23701704d0907feec7120e8cb12f704",
+    "science_calls_or_fits": false
+  },
+  "first_failures_preserved": [
+    "sandbox Temp PermissionError in one of initial14 record tests",
+    "quick_validate GBK decode errors before UTF8-mode pass"
+  ],
+  "unchanged_base_evidence_reused": {
+    "base_only": true,
+    "ordinary_node": {
+      "tests": 1145,
+      "pass": 1137,
+      "skipped": 8,
+      "fail": 0
+    },
+    "bounded_python_pass": 41,
+    "actual_mcp_stdio": "PASS; original-ID recovery/info/export/discovery review"
+  },
+  "physical_scope": "No physical execution or new physical conclusion in this routing integration; historical FAIL/NOT_TESTED left unchanged",
+  "runs": {
+    "build": {
+      "started": "2026-11-05T07:36:40.7792074Z",
+      "exitCode": 0,
+      "command": "npm run build",
+      "finished": "2026-11-05T07:37:01.2747115Z"
+    },
+    "node-routing-contracts": {
+      "exitCode": 0,
+      "command": "node --test --test-reporter=tap dist/tests/conditional-method-routing.test.mjs dist/tests/point-observation-contract.test.mjs dist/tests/column-fit-contract.test.mjs"
+    },
+    "node-routing-locator-final": {
+      "scope": "Final evidence-index/catalog/resource check after locator feedback and documentation update",
+      "command": "node --test --test-reporter=tap dist/tests/conditional-method-routing.test.mjs",
+      "exitCode": 0
+    },
+    "packaged-skill-contract": {
+      "command": "node --test --test-reporter=tap --test-name-pattern=packaged Skills reference dist/tests/plugin-package.test.mjs",
+      "exitCode": 0
+    },
+    "record-contract": {
+      "command": "python -B tests/ci_method_decision_test.py -v",
+      "exitCode": 1
+    },
+    "record-contract-escalated": {
+      "reason": "Review same command after sandbox Temp file permission failure",
+      "command": "python -B tests/ci_method_decision_test.py -v",
+      "exitCode": 0
+    },
+    "record-contract-final": {
+      "command": "python -B dist/tests/ci_method_decision_test.py -v",
+      "scope": "Final packaged stdlib checker/fixtures; source and dist edited files hash-equal",
+      "exitCode": 0
+    },
+    "record-contract-locator-final": {
+      "exitCode": 0,
+      "command": "python -B dist/tests/ci_method_decision_test.py -v",
+      "scope": "After fresh forward feedback: locator and source-unknown recovery contracts"
+    },
+    "microscopy-router-quick-validate": {
+      "exitCode": 1,
+      "command": "quick_validate.py microscopy-router"
+    },
+    "microscopy-router-quick-validate-utf8": {
+      "reason": "Original validator default GBK could not decode existing UTF8 Skill text",
+      "exitCode": 0,
+      "command": "python -X utf8 quick_validate.py microscopy-router"
+    },
+    "microscopy-automation-quick-validate": {
+      "exitCode": 1,
+      "command": "quick_validate.py microscopy-automation"
+    },
+    "microscopy-automation-quick-validate-utf8": {
+      "reason": "Original validator default GBK could not decode existing UTF8 Skill text",
+      "exitCode": 0,
+      "command": "python -X utf8 quick_validate.py microscopy-automation"
+    },
+    "ci-discovery-locator-final": {
+      "command": "unittest TestLoader discover ci_*_test.py; inspect new IDs",
+      "exitCode": 0,
+      "testsDiscovered": 17
+    },
+    "scope-integrity": {
+      "scope": "lib tools ui server.mjs science-server.mjs",
+      "base": "8bff842bd084be2986f0bf99613da7b947fe0bae",
+      "diffCheckExitCode": 0,
+      "unchangedEngineExitCode": 0
+    },
+    "recovery-locator-only": {
+      "exitCode": 0,
+      "command": "check_method_decision.py recovery-locator-only.json",
+      "scope": "Synthetic CLI authoring check, not independent forward test"
+    }
+  },
+  "raw_evidence_location": "External local task7/conditional-methods-evidence-v1; raw host paths are not copied into Git",
+  "raw_evidence_sha256": [
+    {
+      "path": "build.result.json",
+      "sha256": "383edce7c3e2862fdbf60e0c6435df2f116d4a6893046251a8f50fd529d05b71",
+      "bytes": 147
+    },
+    {
+      "path": "build.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build.stdout.log",
+      "sha256": "50220a77989fe6f96ed2f7c6720baa2a1a215f8577d1396894386409956359d7",
+      "bytes": 139
+    },
+    {
+      "path": "checkout.log",
+      "sha256": "1ad5e582a34eae214d504b6863e92e9b34c1a4b3a99aae0b35c894a331871287",
+      "bytes": 78
+    },
+    {
+      "path": "ci-discovery-locator-final.result.json",
+      "sha256": "6a251282f84067d0dfa39352e1367429599c1981af584e4d3e432f3307271799",
+      "bytes": 125
+    },
+    {
+      "path": "ci-discovery-locator-final.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "ci-discovery-locator-final.stdout.log",
+      "sha256": "8fea1a1d0bf7d23bd7ac161e9d5062be6ec7d4e2857923ccab01401d77a75dd4",
+      "bytes": 90
+    },
+    {
+      "path": "ci-discovery.result.json",
+      "sha256": "e93d2f3ecbeef3712a4ce40dddb1c19239704f619cc2078510e1f1206084bdf3",
+      "bytes": 113
+    },
+    {
+      "path": "ci-discovery.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "ci-discovery.stdout.log",
+      "sha256": "b3ab397d998d7d6495f94fa6284dce3d5bc90acfdfa0807e1443a7adf69da8b9",
+      "bytes": 105
+    },
+    {
+      "path": "clone.log",
+      "sha256": "e1b6137f39bdc332ad5469f438f65e4b5dc7f2162e34614b8f4c3ade8dd5e20c",
+      "bytes": 107
+    },
+    {
+      "path": "dependency-copy.exitcode",
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "bytes": 3
+    },
+    {
+      "path": "dependency-copy.log",
+      "sha256": "3859e32e80e0f84f7029d981c3b6148370d689396e611df558e4a250f83a5def",
+      "bytes": 18010
+    },
+    {
+      "path": "diff-check.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "diff-check.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "forward-independent/A-decision.json",
+      "sha256": "f8d7f92d6c2a695ad05526aed0cb66f4e4bb75718ff7ef82befb691ce5ee0545",
+      "bytes": 2121
+    },
+    {
+      "path": "forward-independent/B-decision.json",
+      "sha256": "25f80b908036fa692c8158d43557a19287ffb9a365742719ee2bb3d34b0d2b2c",
+      "bytes": 2053
+    },
+    {
+      "path": "forward-independent/C-decision.json",
+      "sha256": "db503ad1e90b65d465b43fa00c2ccba38ddf57906b0162930992bafdcd0d575b",
+      "bytes": 2698
+    },
+    {
+      "path": "forward-independent/checker-results.json",
+      "sha256": "8345f50218656d2a41e96242d1d668139dce372b44c7f34d1a7a6b89bb03e4f2",
+      "bytes": 2488
+    },
+    {
+      "path": "forward-independent/D-decision.json",
+      "sha256": "043a543f47469f55a3be2171519f1bf38880db12f79b23d55539224cc3fd88c9",
+      "bytes": 1929
+    },
+    {
+      "path": "forward-independent/E-checker-results.json",
+      "sha256": "cfed6aad43bfdd03a9419c9274e1aefdf536179acd4716a0f0811f69ea14e04e",
+      "bytes": 859
+    },
+    {
+      "path": "forward-independent/E-decision.json",
+      "sha256": "a18d144791deb20a6396da502767eca91f583854e539b492ad36d2a82dc7a7b8",
+      "bytes": 2560
+    },
+    {
+      "path": "forward-independent/E-REPORT.md",
+      "sha256": "45317a19706004772c9538652f9d02e717729ec84df0e75b7188741e36f6dbde",
+      "bytes": 1841
+    },
+    {
+      "path": "forward-independent/fixture-manifest.json",
+      "sha256": "8e3f82c794aa17cbb34560003b35aad3be167a3e979f7139c042ca5894fe377f",
+      "bytes": 1211
+    },
+    {
+      "path": "forward-independent/REPORT.md",
+      "sha256": "1555b21613221e109056ceb5e2f87535798b4efa455674054ca9bcb577310c95",
+      "bytes": 8901
+    },
+    {
+      "path": "microscopy-automation-quick-validate-utf8.result.json",
+      "sha256": "83130ddd0ce12ccb01600270b57726a459494eed5e48b4b3cc3427cacfc45a17",
+      "bytes": 184
+    },
+    {
+      "path": "microscopy-automation-quick-validate-utf8.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "microscopy-automation-quick-validate-utf8.stdout.log",
+      "sha256": "6cf9e7f0d34ccd36dbd28f270cd28dd04277b2e1516bd4333ce7bb501d7b18d4",
+      "bytes": 17
+    },
+    {
+      "path": "microscopy-automation-quick-validate.result.json",
+      "sha256": "de0e810e05bc0f6ea4d7e7b9c6ae422ecf0ac8934f15da407145d51df018b09a",
+      "bytes": 80
+    },
+    {
+      "path": "microscopy-automation-quick-validate.stderr.log",
+      "sha256": "0354d6efbef75d8789fbf3fd1354a1c8e462e63d742b90b094388cb413fec2a6",
+      "bytes": 888
+    },
+    {
+      "path": "microscopy-automation-quick-validate.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "microscopy-router-quick-validate-utf8.result.json",
+      "sha256": "65d86fff8851341424a4f72a7da98128bb2125efb5c9a04b53fc331e71a26adb",
+      "bytes": 180
+    },
+    {
+      "path": "microscopy-router-quick-validate-utf8.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "microscopy-router-quick-validate-utf8.stdout.log",
+      "sha256": "6cf9e7f0d34ccd36dbd28f270cd28dd04277b2e1516bd4333ce7bb501d7b18d4",
+      "bytes": 17
+    },
+    {
+      "path": "microscopy-router-quick-validate.result.json",
+      "sha256": "3b2a27b5186724756578e342dc7161f15c2e239aa0181d221b0eed64c7359b30",
+      "bytes": 76
+    },
+    {
+      "path": "microscopy-router-quick-validate.stderr.log",
+      "sha256": "092c35fdef1c1de99906b0656f8a6c7912d3d950c37a6d4303a272e321671e56",
+      "bytes": 888
+    },
+    {
+      "path": "microscopy-router-quick-validate.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "node-routing-contracts.result.json",
+      "sha256": "8352fe5e689df4796651597d96f994913d9ac47b31af12f3bf7b4d25121d57ae",
+      "bytes": 206
+    },
+    {
+      "path": "node-routing-contracts.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "node-routing-contracts.stdout.log",
+      "sha256": "2a42f9ab955f000ab988eca104db7be22b9268eee50a0de6d1c8e00546ad45be",
+      "bytes": 2353
+    },
+    {
+      "path": "node-routing-final.result.json",
+      "sha256": "840f3c02c22c704c9b33a8424805bde363f8f275fb88c31f87e7af67ab23ae32",
+      "bytes": 222
+    },
+    {
+      "path": "node-routing-final.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "node-routing-final.stdout.log",
+      "sha256": "e234f34cc194b8d609c975fa64ef2360c831b73e65b0b05011ead4350d2e24cc",
+      "bytes": 880
+    },
+    {
+      "path": "node-routing-locator-final.result.json",
+      "sha256": "2b5dbec51b5c7bfe7a04061c17d6288ccec55bdb65a9012ed3440cf14836b50b",
+      "bytes": 226
+    },
+    {
+      "path": "node-routing-locator-final.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "node-routing-locator-final.stdout.log",
+      "sha256": "effcdbff1d9c0185fc64d5365a04be9a105ed8031ac71ef0aa997e6235315e2e",
+      "bytes": 880
+    },
+    {
+      "path": "packaged-skill-contract.result.json",
+      "sha256": "6225369432d205568ce949be80e19665bd695cf1a97c3cb9c891b0f5af62ea15",
+      "bytes": 153
+    },
+    {
+      "path": "packaged-skill-contract.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "packaged-skill-contract.stdout.log",
+      "sha256": "a0b777d16f8f1acb6f9bdad7e2fe61bc55ea6c032ec2e99e4d73b042bf6938cd",
+      "bytes": 329
+    },
+    {
+      "path": "record-contract-escalated.result.json",
+      "sha256": "17bf111b94250df94facbd333e1013f9b5a08cf04263920cd662125abfb09d48",
+      "bytes": 165
+    },
+    {
+      "path": "record-contract-escalated.stderr.log",
+      "sha256": "46c3cdef59b0ede60337b2e0d8712af6bca8b11c7ba435310bc852a9a5738832",
+      "bytes": 2496
+    },
+    {
+      "path": "record-contract-escalated.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "record-contract-final.result.json",
+      "sha256": "5905812256b5a32e5b2a58730c148dd66f048a0839b8243e6ce03062e7f38bd1",
+      "bytes": 186
+    },
+    {
+      "path": "record-contract-final.stderr.log",
+      "sha256": "82aedc7babe5196265f6c772eeefd15ae008f5d8a90a8a7f6bd281484bd3c753",
+      "bytes": 2496
+    },
+    {
+      "path": "record-contract-final.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "record-contract-locator-final.result.json",
+      "sha256": "47fdd33e6f749e23df2436b991e4dc725d3e5ccf83bf006fd4fda2fb7354dff5",
+      "bytes": 182
+    },
+    {
+      "path": "record-contract-locator-final.stderr.log",
+      "sha256": "1a87aac1f9ebc82586c629152161b3dbd00ca7670fe2c5a69bad7c50879b642f",
+      "bytes": 3043
+    },
+    {
+      "path": "record-contract-locator-final.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "record-contract.result.json",
+      "sha256": "81584296e3cd52b56338cf2d4938fac0ceeeca5c0cb0361f4a3338fd603b3532",
+      "bytes": 86
+    },
+    {
+      "path": "record-contract.stderr.log",
+      "sha256": "9f2ba18af94e6aa40ba95925c58f5ab3a5b9e03b4c6fc2732259450956b6f178",
+      "bytes": 6723
+    },
+    {
+      "path": "record-contract.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "recovery-locator-only.json",
+      "sha256": "34a97ad5d2d38865f0b543b151a21de038a3018981b91414ea181c9a6236d36d",
+      "bytes": 1815
+    },
+    {
+      "path": "recovery-locator-only.result.json",
+      "sha256": "04737d7e48f38fe94b672495af4304b2ae22211c51614fcb59dd542efccdbdd2",
+      "bytes": 167
+    },
+    {
+      "path": "recovery-locator-only.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "recovery-locator-only.stdout.log",
+      "sha256": "18b09380a17b9712ed9e4373df5ba295cce61d93ccf4962f814b026320132b4c",
+      "bytes": 97
+    },
+    {
+      "path": "scope-integrity.result.json",
+      "sha256": "f4839e260304d8d6f5d36972c0db76d3b191a69475de227c45290490a1c5d1aa",
+      "bytes": 178
+    },
+    {
+      "path": "source-head.log",
+      "sha256": "18118b5683aacaac19b8df5d0461b0ea9f8ee08c9498bc81375d12797598064b",
+      "bytes": 42
+    },
+    {
+      "path": "unchanged-engine.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "unchanged-engine.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ]
+}

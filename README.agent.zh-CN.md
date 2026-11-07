@@ -22,6 +22,10 @@
 
 ## 科学路径
 
+本地未合并的STEM预期点观察候选见[基线与最小入口](docs/STEM_BASELINE.zh-CN.md)。
+Agent管理ID，保留原预期位置、全部参考、失败与未知；确定性建议、实际工具接续、
+已核验的开发上下文模型试验，与独立盲测及真实材料有效性分别记账。
+
 ### 从明确 ROI 接续
 
 从两个保存的 Panel 区域进入有限结构比较，使用[人工 ROI → 晶体学路径](docs/MANUAL_CRYSTAL_WORKFLOW.md)。读取其中补充的 `roi_handoff`，取得准确锚点与当前标定；区域复核和比较共用双区域 atlas 的 FFT/测量子对象。不要求全场扫描或让研究者输入内部 ID。[集成记录](docs/MANUAL_CRYSTAL_ACCEPTANCE.md)区分真实浏览器、模型、软件与物理资格。

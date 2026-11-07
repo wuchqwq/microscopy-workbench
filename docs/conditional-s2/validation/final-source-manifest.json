@@ -1,0 +1,30 @@
+{
+  "engineering_base": "a0258f7cb3d108fb106da6cc929af6e769c0cebf",
+  "files_sha256": {
+    "tools/image_column_model.py": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+    "tools/image_column_fit.py": "9c2f973c5e1b41453e4fbcb1f58982b77bf783ff3642790767cdfd5567d8200c",
+    "tools/image_workspace.py": "bce86b5bf737f9fa0dd14eab06d86da268af8a379eee5c5945e7d53d6b4c2bc8",
+    "tools/image_discovery.py": "b19c20c5f6bbbabb970f515adc80a2cb1dd77b7b1b6b644902555100c50467bd",
+    "tests/image_column_fit_test.py": "7130563476a7dfbecdd9f01ea92006ed896b144cc350baacc5ef727683363cdd",
+    "tests/column-fit-contract.test.mjs": "3c461bacad258080bd23a42129540ed7a72665e0a50c0db193c30f6b2c2028f6",
+    "tests/column-fit-stdio-smoke.mjs": "3812736e79bf50f2be6b6b1c4bb30c95a9190c75e552d1e4a338946bcd21dd53",
+    "scripts/validate_conditional_s2.py": "829d230c030a6e735a53e9f5e18c70c32bb2e24339610c20de51def03f3dfb3e",
+    "scripts/check_conditional_s2_read_guards.py": "0c6e5d8ba92f8ffd51db9695397e6c1fc75d75485901708ec99d44918d081448",
+    "lib/image_workspace.mts": "9673901c53d84d5ca7ba7807b57be52caab58626582989b3b764d838671c80eb",
+    "lib/tools/image_module.mts": "8839b4723f383636bab7680cf3ecff4ebf5558b2f57097f8fcdbfae367e1de25",
+    "package.json": "548d196180a0a1bc03db8e4d7816e6bdc8b6e46c5c5adc44066a34ed91692374",
+    ".github/workflows/quick.yml": "05bd7c8a597917336b21201fb9b619709002d10a162661069943ec4b50f4db97",
+    "skills/scientific-agent/microscopy-automation/SKILL.md": "ce5131bcbc2df3c8ddaebb4f9a5c1ebe191b5a60ccdc7347ec29ea4c2f4eeb74",
+    "skills/scientific-agent/microscopy-automation/references/point-observations.md": "a93d69155e58872c2dcce892e3d49f71a78bad241553148001fbfeddb544f88d"
+  },
+  "exact_numerical_function_asts": [
+    "gaussian_pixels",
+    "background_basis",
+    "poisson_objective",
+    "fit_linear_poisson",
+    "selected_centers"
+  ],
+  "research_source_sha256": "87c0cf265e2b663e01aea622ec4b7b032930d765ea7b45697f50bb5d9088d210",
+  "baseline_numeric_source_git_diff": "",
+  "notes": "Adapter admission/persistence changes are separate from the unchanged numerical functions; no ratio/CI diagnostic is included"
+}

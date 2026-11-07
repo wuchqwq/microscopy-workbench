@@ -9,7 +9,7 @@ are explicitly enabled. No native failure automatically selects this route.
 
 | Input | Selection and execution |
 | --- | --- |
-| Independent TIFF | `image_open` → `image_frame`, using external tifffile; ordinary 2D grayscale uint16/float32 pages |
+| Independent TIFF | `image_open` → `image_frame`, using external tifffile; ordinary 2D grayscale uint8/16/32, int8/16/32, float32/64 pages; [support and limits](TIFF_IMPORT.md) |
 | DM sequence | Existing native DATASETS → FRAME → bounded READ/NPY handoff, with original native session and frame identity |
 | Saved DM numerical capture | `image_open(source_kind:"capture")` independently validates the existing NPY/sidecar before copying a bounded plane; no diffraction declaration or indexing is required |
 
@@ -40,7 +40,7 @@ No installer or client configuration is silently changed.
 | Tool | Action |
 | --- | --- |
 | `image_open` | Inspect TIFF page metadata or validate a saved DM capture |
-| `image_frame` | Read one explicit zero-based page, retaining its uint16/float32 dtype and values |
+| `image_frame` | Read one explicit zero-based page, retaining its supported original dtype and values |
 | `image_info` / `image_result` | Inspect an object / query a pre-saved request |
 | `image_preview` | Render a scalar plane/ROI, or re-render a saved external FFT without recomputing it |
 | `image_compare` | Compare 2..4 same-grid planes/ROIs with one shared gray range |

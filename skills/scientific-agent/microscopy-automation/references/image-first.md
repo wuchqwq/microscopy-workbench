@@ -5,7 +5,7 @@ developer fixture. Save each request_id before a write. Image pixels, source
 frame and calibrated scientific arrays are authoritative; display PNGs and
 heuristic scores are observations, not physical proof.
 
-The supported first-version path is researcher ROI/reason → existing scientific
+The supported first-version path is explicit researcher/Agent ROI/reason → existing scientific
 tools → source-bound evidence review → save/revise/recover. Its qualification is
 limited to public synthetic software/numerical use; real specimens and human GUI
 gestures remain NOT_TESTED. Automatic proposals remain **EXPERIMENTAL** even if
@@ -17,11 +17,36 @@ Open the user-selected supported file with image_open and its explicit frame
 with image_frame; inspect image_info and an actual preview. Do not invent XY
 scale, phase radians, a material type or a known real-space lattice model.
 
+After receiving a completed `image_preview`, record its operational receipt
+with `image_preview_acknowledge`: use a new acknowledgement `request_id`, set
+`preview_request_id = preview.request_id` and `object_id = preview.object_id`. This does
+not prove visual inspection. Do this before composition on that input, including
+`image_discovery`, whose overview itself renders a preview. Keep the explicit
+full frame (or its calibration/context wrapper) as discovery's `object_id`;
+a display view is not a full-frame scientific input.
+
+If admission blocks composition, read the blocking **original preview** with
+`image_result`, then acknowledge that exact completed result (or a confirmed
+failed original without `object_id`). Preserve any failed parent and its ID.
+Only after resolving this known failure may a deliberate new discovery get a
+new ID. Do not query a child explicitly reported as never reserved/dispatched,
+and never replay an unknown operation. An `image_preview` using `resolved_preview`
+is a deliberate NEW render: it resolves the previous receipt, but the new preview
+needs its own acknowledgement. Acknowledging an older preview does not resolve
+a newer outstanding one. Unknown originals cannot be acknowledged.
+
+For compound results, do not guess acknowledgement IDs from annotation or
+overview IDs. Use an actual saved view's `preview_execution` request/object pair,
+reading the referenced view with `image_info` if needed. Missing admission data
+is not permission to fabricate a receipt or clear a lock.
+
 - Manual image-first, supported limited scope: read image_panel_current after the user selects a
   rectangle. Use its original source-pixel coordinates, not screenshot pixels.
   Call image_discovery with entry="manual", regions=[{rect,reason}], retaining
   the user's reason, optional candidate_explanations and unresolved questions.
-  The returned entry_basis="researcher_statement" is not numerical verification.
+  Set caller-reported selection_origin="researcher" or "agent". Current
+  entry_basis="explicit_caller_supplied_roi" is not numerical verification;
+  historical researcher_statement records retain their original meaning.
 - Experimental feature proposal: call image_discovery with entry="feature", 1–2 window_sizes
   fitting the explicit frame (32–256 pixels), and max_candidates<=4. It reads raw
   values and uses spatial texture/tensor proxies, no FFT or full structural field.
@@ -35,8 +60,10 @@ feature default for compatibility, not as a support endorsement. New records
 expose support_status=MANUAL_SUPPORTED_LIMITED or EXPERIMENTAL; a review follows
 its originating discovery's status. Do not rewrite legacy fields or hashes.
 
-A quality-limited or empty proposal is a bounded stop: request useful context
-or explicit researcher attention if needed. It does not prove that no anomaly
+A quality-limited or empty proposal ends that heuristic attempt. The Agent may
+choose a justified explicit ROI using actual image/FFT/field observations,
+preserving selection_origin="agent"; request context or researcher attention
+when available evidence cannot support a useful selection. It does not prove that no anomaly
 exists. Do not repeatedly lower thresholds or resize windows until noise looks
 like a defect. A contrast change can mimic a structural interruption.
 The registered64px scan missed both positive comparison cases; its later32px
@@ -55,15 +82,26 @@ the feature scan/any initial field cost as well. The provider does not secretly
 choose actions or invoke a model. It does not claim a global discovery budget
 over direct tools; the runtime Agent owns this explicit bounded selection.
 
-Use image_fft_batch with selected rectangles, visible window/subtract_mean
+Choose measurements for the question, not just the proposed default action.
+For fixed-site intensity or suspected missing/weak projected columns, use
+[real-space observations](point-observations.md): saved `image_statistics` on
+the exact candidate ROI (optional same-image reference comparison) and/or a
+saved width-one `image_profile` supported inside it. A probe is ephemeral and
+is not a review evidence ID. No FFT is required for this real-space chain.
+
+For periodicity context use image_fft_batch with selected rectangles, visible window/subtract_mean
 choices, then image_peaks and, if useful, image_peak_measurements/image_measure.
 These are the existing algorithms and immutable records. Default proposed Hann
 windowing reduces edge leakage, but changes the band shape. GPA requires its
 already-qualified window="none" FFT and a sourced lattice/reference assumption;
 do not silently reuse a Hann FFT or declare a lattice from the visual candidate.
+For core/context observations read [one-core cross windows](core-cross-windows.md).
+Only region0 is exact core evidence; long-window regions1/2 are correlated
+context and cannot satisfy the core's same-ROI review binding.
 
 Call image_discovery_review with object_id=<discovery>, candidate_id,
-evidence_ids=<actual saved batch/FFT/peaks/measurements or qualified GPA>,
+evidence_ids=<actual saved batch/FFT/peaks/measurements, qualified GPA,
+or spatial raw statistics/profile>,
 observation_text, candidate_explanations and unresolved questions. The tool
 checks the exact frame, rectangle and calibration; it retains numeric evidence,
 not text parsed from arrow labels. A successful review authenticates those
@@ -75,6 +113,12 @@ sourced carriers/model/circuits. Otherwise measure, compare references, inspect
 an adjacent region, request missing conditions, or stop. Do not run every method.
 
 ## Return to the common view and continue
+
+`image_export` creates one new destination under an **existing parent**. Export
+the first object directly to a new directory below the supplied existing output
+parent; subsequent object exports may use new children of that now-existing
+directory. Do not start with a nested child whose parent does not exist. Preserve
+any terminal export failure; choose a corrected new destination/ID deliberately.
 
 Open the returned overview_object_id in the existing image_panel_open/show for
 source/ROI context; use gui_view_object_id from a review to inspect a selected

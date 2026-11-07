@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "compilation": "Retrospective; not preregistration",
+  "engineering_baseline": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+  "files": {
+    "BASELINE_VALIDATION.md": {
+      "sha256": "1960006e7b217778e91017022db732039b0af8087d4d46efeb3a3f759f23f5bd",
+      "bytes": 2414
+    },
+    "DECISIONS.md": {
+      "sha256": "a9fe3bcc9b8ce2b48c1ededa901080b43f8d1fd272aacadfb77df32e6c8468fe",
+      "bytes": 3296
+    },
+    "LITERATURE.md": {
+      "sha256": "e22134916eaae02b52d4e8e6b5caac368133c40877bbedab58c7da6d478c9b5f",
+      "bytes": 2140
+    },
+    "README.md": {
+      "sha256": "1e03be6fa40c0708074f16a50fda218fddd038f35f0b8fd74d32563c3c8a22ba",
+      "bytes": 5777
+    },
+    "REPRODUCIBILITY.md": {
+      "sha256": "ecd412fd0a2a6356fcd2a80299adaa3b952d89b61213858c878e44622119cecc",
+      "bytes": 4193
+    },
+    "records/baseline-validation.json": {
+      "sha256": "38949994c78b8801814f32a163bacceded536fc5256df726cadd702710d89a57",
+      "bytes": 11045
+    },
+    "records/early-synthetic-agent-record.json": {
+      "sha256": "b31de273e1b4216fc65dfe49d45f3470eeb570a94986d0d6bb280a0dc894d12e",
+      "bytes": 8998
+    },
+    "records/hrtem-route-record.json": {
+      "sha256": "f7b5510c9b159906c763ed05ace46d65524df9631df4969f8d99e29aa4051e56",
+      "bytes": 49539
+    },
+    "records/stem-route-record.json": {
+      "sha256": "3fbe893c4c68e4b17671b4d3f210ab31fd43d492af87f4b69817fbacffe9f5ad",
+      "bytes": 53963
+    },
+    "reproduction/baseline-smoke/fixture.json": {
+      "sha256": "8bf9b68f71e4c36e3fc10438589e452d5d064efc7537f7c9286d4ca2706d13c9",
+      "bytes": 1195
+    },
+    "reproduction/baseline-smoke/generate-hrtem.py": {
+      "sha256": "795cd68ad778e145546ef9f748e77d256abad712d278bb7be37a70e3f8178f32",
+      "bytes": 857
+    },
+    "reproduction/baseline-smoke/README.md": {
+      "sha256": "b0f7d0d6df95d45e4680914f44f1819a099abbf8f980a92d78fa0179961f17e4",
+      "bytes": 1787
+    },
+    "reproduction/hrtem/fft_boundary_experiment.py": {
+      "sha256": "ec32c63cab8ce5f8865763f9ce290300f7c34700e70a5dd7169736b283d8795c",
+      "bytes": 14388
+    },
+    "reproduction/hrtem/navigation-local-prepare.py": {
+      "sha256": "bf1fbb6a9d1af664da36e8b4ed392e5d3bec489e1b76cf377394abb5f5a7c08f",
+      "bytes": 7837
+    },
+    "reproduction/hrtem/provenance.json": {
+      "sha256": "d035dce35cd353554e48cf15aef9e075e7e80caeb9758d159222fe4571bbe2c0",
+      "bytes": 5318
+    },
+    "reproduction/hrtem/README.md": {
+      "sha256": "61386751cee0c7c37c6f6a15f216495dc6c66740aba33d2e8e23b6f66b6cfdca",
+      "bytes": 2926
+    },
+    "reproduction/stem/manifest.json": {
+      "sha256": "1d998775e09f0b943ecd59c3fe7a744fe57b3b67dd002b0a2af71277cb73d54f",
+      "bytes": 7443
+    },
+    "reproduction/stem/README.md": {
+      "sha256": "ae4318a2d99833c1b54f999e390dd8a23cc687989269a958777e92300db74a5e",
+      "bytes": 4817
+    },
+    "reproduction/stem/physical/audit-physics.py": {
+      "sha256": "515eec6a6ce0fd45af0e91c573fc04bb765a7dbb8aa983f17165ec332dba1050",
+      "bytes": 4753
+    },
+    "reproduction/stem/physical/versions.txt": {
+      "sha256": "44723354b7f6b8e9394fe5c0cc3292b25dc21636c6826e86f0d01a858a4667a9",
+      "bytes": 1166
+    },
+    "reproduction/stem/point/run-controls.py": {
+      "sha256": "4bc55c84d2a09b5cfc0d101647af7926d6e1700140212eb8270e7d0eca9c6354",
+      "bytes": 5725
+    },
+    "reproduction/stem/point/frozen-protocol/controls-plan.json": {
+      "sha256": "80fecb30eedde399cfb617b25b18ea68f45449a2e7cc0123c4613aaf9f002962",
+      "bytes": 7566
+    },
+    "reproduction/stem/physical/run-03/protocol.json": {
+      "sha256": "d04fcc2dd57b090ad97370edc605c95801554496d2371ccd42f115c9a99382d2",
+      "bytes": 6828
+    },
+    "reproduction/stem/physical/run-03/simulate-r3.py": {
+      "sha256": "e35499c9881d2fe0d1487a68c5f2d7b8c8699c5e50f30039ce75acd27bab83fb",
+      "bytes": 11708
+    },
+    "reproduction/baseline-smoke/inputs/source-A.png": {
+      "sha256": "1fce0ea478f5ff41c18e99e3e780eb421fe10d25bd29fdd6a24b9236265ba7de",
+      "bytes": 13403
+    },
+    "reproduction/baseline-smoke/inputs/source-A.tiff": {
+      "sha256": "ee3496296827fbdca29ab7d1b7327e2e6b8913d4e561fc0d0479a62b8242e693",
+      "bytes": 131296
+    },
+    "reproduction/baseline-smoke/inputs/source-B.png": {
+      "sha256": "809a4fbfb0f001f7a1c5eae9390d8bdeb4fa504d4446ddbf901e91369eaacc60",
+      "bytes": 4145
+    },
+    "reproduction/baseline-smoke/inputs/source-B.tiff": {
+      "sha256": "f814b849bc6cd9d1096be3e1ff16963fcb86d3bc9064cbef6d737f1e333e43e2",
+      "bytes": 7952
+    }
+  },
+  "access": "Source records with git refs are available in Git; controlled artifacts require maintainer access and are not public persistent URLs. No private backend logs are included.",
+  "byte_policy": "Dedicated Git -text archive rule preserves original source/protocol and recorded metadata bytes; validate committed blobs, not newline-normalized substitutes."
+}

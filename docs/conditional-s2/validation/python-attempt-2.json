@@ -1,0 +1,12 @@
+{
+  "status": "FAIL",
+  "tests": 17,
+  "failures": 3,
+  "errors": 0,
+  "seconds": 11.293030699947849,
+  "fit_calls": 16,
+  "optimizer_calls": 13,
+  "scope": "Bounded conditional-S2 software integration; not physical validation",
+  "full_suite_run": false,
+  "generated_physical_simulations": 0
+}

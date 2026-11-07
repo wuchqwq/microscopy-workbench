@@ -14,7 +14,7 @@ except ImportError:
 
 
 FIELDS = {"spatial_atlas": {"object_id", "rects", "window", "subtract_mean", "peak_options",
-                            "max_peaks", "max_size", "previous_atlas_id", "measurement_overrides"}}
+                            "max_peaks", "max_size", "previous_atlas_id", "measurement_overrides", "cross_window"}}
 
 
 def _settings(request, api):
@@ -22,15 +22,81 @@ def _settings(request, api):
     return fft, peaks, size
 
 
-def _rects(request, shape, api):
+def _selection(request, shape, api):
     entries = request.get("rects")
     api.need(type(entries) is list and 1 <= len(entries) <= 8, "Supply 1..8 explicit source-pixel half-open ROIs")
     rects = [api.rectangle(rect, shape) for rect in entries]
+    plan = None
+    if "cross_window" in request:
+        options = request["cross_window"]
+        api.need(len(rects) == 1 and type(options) is dict and set(options) <=
+                 {"arm_lengths", "selection_origin", "source_text", "discovery_object_id", "candidate_id"},
+                 "cross_window requires exactly one core rectangle and only advertised options")
+        origin, text = options.get("selection_origin"), options.get("source_text")
+        api.need(origin in ("researcher", "agent", "unspecified") and type(text) is str and 0 < len(text.strip()) <= 2000,
+                 "cross_window requires caller-reported selection_origin and a bounded source_text/reason")
+        core = rects[0]
+        x0, y0, x1, y1 = core
+        width, height = x1-x0, y1-y0
+        default_arm = max(width, height)
+        arms = options.get("arm_lengths", [default_arm]*4)
+        api.need(type(arms) is list and len(arms) == 4 and all(api.integer(v, 0, max(shape)) for v in arms),
+                 "arm_lengths requires four integer source-pixel lengths [left,right,top,bottom]")
+        left, right, top, bottom = arms
+        api.need(left+right > 0 and top+bottom > 0, "Each cross axis must extend beyond the core; zero opposite arms would duplicate it")
+        horizontal = [x0-left, y0, x1+right, y1]
+        vertical = [x0, y0-top, x1, y1+bottom]
+        api.need(horizontal[0] >= 0 and horizontal[2] <= shape[1] and vertical[1] >= 0 and vertical[3] <= shape[0],
+                 "Cross windows exceed the selected frame. Choose explicit fitting arm_lengths or revise the core; no clipping or padding is performed")
+        rects = [core, horizontal, vertical]
+        plan = {"version": 1, "core_rect_xyxy": core, "arm_lengths_lrtb": arms,
+                "arm_policy": "explicit" if "arm_lengths" in options else "symmetric_max_core_extent_pixels",
+                "region_roles": [{"region_index": i, "role": role, "rect_xyxy": r}
+                                 for i, (role, r) in enumerate(zip(("core", "horizontal", "vertical"), rects))],
+                "intersection_rect_xyxy": core, "coordinate_space": "selected_frame_pixels",
+                "axis_semantics": "extensions along stored image x/y axes, not crystallographic or metric directions",
+                "selection_origin": origin, "selection_origin_basis": "caller_reported_not_authenticated",
+                "source_text": text, "edge_policy": "explicit_lengths_only_no_clipping_or_padding",
+                "two_sided_support": {"horizontal": left > 0 and right > 0, "vertical": top > 0 and bottom > 0},
+                "arm_stability": "not_assessed", "independent_validation": False,
+                "limitations": ["Arm locations are geometric proposals; surrounding stable structure has not been selected or certified",
+                                "The two long windows share the exact core, so their observations are correlated",
+                                "Each full rectangle has its own FFT grid/window response; compare calibrated frequencies, not FFT bin indices",
+                                "A shared, missing or additional peak does not locate its source or identify a phase"]}
     api.need(len({tuple(rect) for rect in rects}) == len(rects), "Duplicate ROI in spatial atlas")
     api.need(all(min(r[2]-r[0], r[3]-r[1]) >= 4 for r in rects), "Each atlas ROI must be at least 4 by 4 pixels")
     api.need(sum((r[2]-r[0])*(r[3]-r[1]) for r in rects) <= api.MAX_PIXELS,
              "Atlas total FFT pixels exceed 4194304", "BUDGET_EXCEEDED")
-    return rects
+    return rects, plan
+
+
+def _rects(request, shape, api):
+    return _selection(request, shape, api)[0]
+
+
+def _linked_plan(workspace, request, plan, api):
+    if plan is None:
+        return None
+    options = request["cross_window"]
+    has_discovery, has_candidate = "discovery_object_id" in options, "candidate_id" in options
+    api.need(has_discovery == has_candidate, "Supply both discovery_object_id and candidate_id, or neither")
+    plan["discovery_dependency"] = None
+    if has_discovery:
+        discovery, directory = workspace.object(options["discovery_object_id"])
+        source, _ = api.discovery._source(workspace, request["object_id"], api)
+        api.need(discovery.get("kind") == "discovery" and discovery.get("source_dependency") == source,
+                 "Cross core discovery must bind the exact selected source/frame/calibration", "DISCOVERY_SCOPE_MISMATCH")
+        matches = [r for r in discovery["candidates"] if r["candidate_id"] == options["candidate_id"]]
+        api.need(len(matches) == 1 and matches[0]["rect"] == plan["core_rect_xyxy"],
+                 "Cross core must equal the exact saved discovery candidate ROI", "DISCOVERY_SCOPE_MISMATCH")
+        if discovery["parameters"]["entry"] == "manual":
+            api.need(matches[0].get("selection_origin", "unspecified") == plan["selection_origin"],
+                     "Cross core origin differs from its saved caller-reported discovery origin", "DISCOVERY_SCOPE_MISMATCH")
+        plan["discovery_dependency"] = {"object_id": discovery["object_id"], "request_id": discovery["request_id"],
+                                        "manifest_sha256": api.sha_file(directory / "object.json"),
+                                        "candidate_id": options["candidate_id"], "entry": discovery["parameters"]["entry"],
+                                        "support_status": discovery.get("support_status")}
+    return plan
 
 
 def _overrides(request, count, api):
@@ -83,7 +149,9 @@ def validate_references(workspace, metadata, api):
         api.need(request.get("action") == "spatial_atlas" and request.get("object_id") == metadata.get("parent_object_id"),
                  "Atlas differs from original operation/source", "CORRUPT_OBJECT")
         parent, _, context = workspace.resolved(request["object_id"])
-        rects = _rects(request, parent["shape_yx"], api)
+        rects, plan = _selection(request, parent["shape_yx"], api)
+        plan = _linked_plan(workspace, request, plan, api)
+        api.need(metadata.get("cross_window_plan") == plan, "Atlas cross-window selection/provenance changed", "CORRUPT_OBJECT")
         fft_settings, peak_settings, size = _settings(request, api)
         api.need(parent["kind"] == "frame" and metadata.get("source_context") == automation.context_record(parent, context)
                  and metadata.get("xy_calibration") == parent.get("xy_calibration")
@@ -116,9 +184,10 @@ def validate_references(workspace, metadata, api):
                          "Inherited atlas correction lacks original provenance", "CORRUPT_OBJECT")
                 original = automation._saved_parameters(workspace, {"request_id": origin.get("request_id")}, api)
                 origin_index = origin.get("region_index")
+                origin_rects = _rects(original, parent["shape_yx"], api)
                 api.need(original.get("action") == "spatial_atlas" and original.get("object_id") == request["object_id"]
-                         and type(origin_index) is int and 0 <= origin_index < len(original.get("rects", []))
-                         and original["rects"][origin_index] == row["rect"] and any(
+                         and type(origin_index) is int and 0 <= origin_index < len(origin_rects)
+                         and origin_rects[origin_index] == row["rect"] and any(
                              item.get("region_index") == origin_index and item.get("measurement_object_ids") == ids
                              for item in original.get("measurement_overrides", [])),
                          "Inherited atlas correction differs from its original exact source/ROI selection", "CORRUPT_OBJECT")
@@ -147,7 +216,8 @@ def validate_references(workspace, metadata, api):
 
 def action(workspace, name, request, metadata, directory, api):
     parent, context, values = automation.source_frame(workspace, request, api)
-    rects = _rects(request, values.shape, api)
+    rects, plan = _selection(request, values.shape, api)
+    plan = _linked_plan(workspace, request, plan, api)
     fft_settings, peak_settings, size = _settings(request, api)
     selected = _overrides(request, len(rects), api)
     previous, prior_rows = _previous(workspace, request, fft_settings, api)
@@ -200,7 +270,11 @@ def action(workspace, name, request, metadata, directory, api):
         roi, _ = workspace.object(region["roi_object_id"])
         pictures.extend([("R%d spatial ROI" % (index+1), roi), ("R%d observed reflections" % (index+1), shown)])
     automation.contact_sheet(directory, pictures, api)
-    api.write_new(directory / "atlas-observations.json", api.canonical({"coordinate_space": "frequency_cycles_per_pixel", "regions": regions})+b"\n")
+    observations = {"coordinate_space": "frequency_cycles_per_pixel", "regions": regions}
+    if plan is not None:
+        observations["cross_window_plan"] = plan
+        metadata["cross_window_plan"] = plan
+    api.write_new(directory / "atlas-observations.json", api.canonical(observations)+b"\n")
     metadata.update(parent_object_id=request["object_id"], source_context=automation.context_record(parent, context),
                     xy_calibration=parent.get("xy_calibration"), fft_batch_object_id=batch["object_id"], fft_batch_request_id=batch["request_id"],
                     overview_object_id=batch["overview_object_id"], regions=regions, fft_parameters=fft_settings, peak_parameters=peak_settings,
@@ -227,7 +301,9 @@ def recovery(workspace, saved, api):
               "scientific_operations_submitted": False, "scope": "Read-only inspection of original atlas child journals"}
     try:
         parent, _, _ = workspace.resolved(request["object_id"])
-        rects = _rects(request, parent["shape_yx"], api)
+        rects, plan = _selection(request, parent["shape_yx"], api)
+        if plan is not None:
+            result["cross_window_plan"] = _linked_plan(workspace, request, plan, api)
         fft_settings, peak_settings, size = _settings(request, api)
         selected = _overrides(request, len(rects), api)
         previous, prior_rows = _previous(workspace, request, fft_settings, api)

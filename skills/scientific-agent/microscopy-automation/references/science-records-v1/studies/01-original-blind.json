@@ -1,0 +1,178 @@
+{
+  "study_id": "01-original-blind",
+  "design": "PROSPECTIVE_BLIND_AUTONOMOUS_ROUTING",
+  "frames": 4,
+  "query_denominator": 8,
+  "primary_unit": "normalized_detector_fraction",
+  "methods": {
+    "S0": {
+      "n": 8,
+      "mae": 0.00017792607690729202,
+      "rmse": 0.00022242027141121935
+    },
+    "AI_ROUTE": {
+      "requested": 0,
+      "not_requested": 8,
+      "query_CPE": 0,
+      "coverage": 0.0,
+      "requested_UNKNOWN": 0,
+      "baseline_S0": {
+        "n": 8,
+        "mae": 0.00017792607690729202,
+        "rmse": 0.00022242027141121935
+      },
+      "estimate_with_fallback": {
+        "n": 8,
+        "mae": 0.00017792607690729202,
+        "rmse": 0.00022242027141121935
+      },
+      "accepted_subset_S2": {
+        "n": 0,
+        "mae": null,
+        "rmse": null
+      },
+      "S0_on_same_accepted_subset": {
+        "n": 0,
+        "mae": null,
+        "rmse": null
+      },
+      "estimate_minus_S0_MAE": 0.0
+    },
+    "S2": {
+      "status": "NOT_TESTED_NOT_REQUESTED",
+      "requests": 0,
+      "physical_accuracy_measured": false
+    }
+  },
+  "points": [
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00012687864341214298,
+      "absolute_error_counts_per_pixel": 0.7929915213258933
+    },
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 1,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.00012687864341214298,
+      "absolute_error_counts_per_pixel": 0.7929915213258933
+    },
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00018447813816964637,
+      "absolute_error_counts_per_pixel": 1.15298836356029
+    },
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 4,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.00018447813816964637,
+      "absolute_error_counts_per_pixel": 1.15298836356029
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 4.4680245856940776e-05,
+      "absolute_error_counts_per_pixel": 0.2792515366058801
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 1,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 4.4680245856940776e-05,
+      "absolute_error_counts_per_pixel": 0.2792515366058801
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 8.962890524342668e-05,
+      "absolute_error_counts_per_pixel": 0.5601806577714159
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 4,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 8.962890524342668e-05,
+      "absolute_error_counts_per_pixel": 0.5601806577714159
+    },
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.0004738778160437941,
+      "absolute_error_counts_per_pixel": 0.2961736350273714
+    },
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 1,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.0004738778160437941,
+      "absolute_error_counts_per_pixel": 0.2961736350273714
+    },
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.0001021224470548331,
+      "absolute_error_counts_per_pixel": 0.0638265294092707
+    },
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 4,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.0001021224470548331,
+      "absolute_error_counts_per_pixel": 0.0638265294092707
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00010107513291016221,
+      "absolute_error_counts_per_pixel": 0.06317195806885134
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 1,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.00010107513291016221,
+      "absolute_error_counts_per_pixel": 0.06317195806885134
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00030066728656738995,
+      "absolute_error_counts_per_pixel": 0.18791705410461867
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 4,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.00030066728656738995,
+      "absolute_error_counts_per_pixel": 0.18791705410461867
+    }
+  ],
+  "MCP_tool_calls": 12,
+  "AI_fit_requests": 0,
+  "AI_sessions": 4,
+  "physical_model_verified": false,
+  "physical_classification": "UNKNOWN",
+  "HRTEM": "NOT_TESTED",
+  "interpretation": "All8 queries autonomously used S0. Identical routed/S0 errors do not validate S2 or show S2 inferiority. Original prompt emphasized observed ROI mean/contrast; latent expected-totalmean score was not explicit to the selectors. Potential task-framing confound, not demonstrated causality.",
+  "source_ids": [
+    "source-1",
+    "source-2",
+    "source-3",
+    "source-4",
+    "source-5",
+    "source-6",
+    "source-7",
+    "source-8"
+  ]
+}

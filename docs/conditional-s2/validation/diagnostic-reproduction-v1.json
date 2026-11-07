@@ -1,0 +1,60 @@
+{
+  "run_id": "conditional-s2-diagnostic-reproduction-v1",
+  "original_attempt_2": false,
+  "original_attempt_2_diagnostics": "UNKNOWN_NO_SAVED_DIAGNOSTIC",
+  "whole_comparison": {
+    "status": "UNKNOWN_REQUIRED_SITE",
+    "failed_site_indices": [
+      1
+    ],
+    "fitted_total_mean_difference": null,
+    "central_integral_difference": null
+  },
+  "sites": [
+    {
+      "site_index": 0,
+      "status": "CONDITIONAL_POINT_ESTIMATE",
+      "accepted": {
+        "fitted_total_roi_mean": 1694.5248784331607,
+        "central_integral": 39726.183980242444
+      },
+      "optimizer_success": true,
+      "projected_gradient": 3.799687267014331e-07,
+      "reason": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "iterations": 19,
+      "evaluations": 21
+    },
+    {
+      "site_index": 1,
+      "status": "UNKNOWN_NOT_CONVERGED",
+      "accepted": {
+        "fitted_total_roi_mean": null,
+        "central_integral": null
+      },
+      "optimizer_success": true,
+      "projected_gradient": 6.6177332360100975e-06,
+      "reason": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "iterations": 17,
+      "evaluations": 20
+    }
+  ],
+  "scipy": "1.15.3",
+  "source_array_sha256": "cac99fd4c19fff589999c3e679d6b9089a82ec1bcc045de3a6711597a0b39b09",
+  "stored_provider_records": "outputs/conditional-s2-diagnostic-reproduction-v1/images",
+  "transport_copy": {
+    "source_xyxy": [
+      16,
+      16,
+      25,
+      25
+    ],
+    "destination_xyxy": [
+      40,
+      40,
+      49,
+      49
+    ],
+    "independent_observations": false,
+    "purpose": "CPE transport only; no accuracy evidence"
+  }
+}

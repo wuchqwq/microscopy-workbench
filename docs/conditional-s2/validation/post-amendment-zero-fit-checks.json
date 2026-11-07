@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Subpixel center22.75 lies in half-open ROI[18,23), with no new nominal-distance restriction",
+    "Center exactly on exclusive edge23 is refused before fitting",
+    "Changed physical classification/model-verification/CI labels are rejected on read"
+  ],
+  "fit_calls": 0,
+  "optimizer_calls": 0,
+  "original_objects_changed": false,
+  "scientific_gates_changed": false
+}

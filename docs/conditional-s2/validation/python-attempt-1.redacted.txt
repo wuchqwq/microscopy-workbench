@@ -1,0 +1,617 @@
+test_duplicate_and_too_many_selected_coefficients_are_rejected_before_svd (image_column_fit_test.ConditionalColumnFit.test_duplicate_and_too_many_selected_coefficients_are_rejected_before_svd) ... ERROR
+test_finite_pixels_with_unsafe_total_or_model_range_do_not_reach_optimizer (image_column_fit_test.ConditionalColumnFit.test_finite_pixels_with_unsafe_total_or_model_range_do_not_reach_optimizer) ... ERROR
+test_historical_read_recovery_export_review_and_original_request_never_refit (image_column_fit_test.ConditionalColumnFit.test_historical_read_recovery_export_review_and_original_request_never_refit) ... ERROR
+test_independent_count_truth_raw_baseline_and_distinct_readouts (image_column_fit_test.ConditionalColumnFit.test_independent_count_truth_raw_baseline_and_distinct_readouts) ... ERROR
+test_missing_or_unsupported_scientific_prerequisites_preserve_raw_without_fit (image_column_fit_test.ConditionalColumnFit.test_missing_or_unsupported_scientific_prerequisites_preserve_raw_without_fit) ... ERROR
+test_readout_size_and_surrounding_fit_boundary_are_explicit (image_column_fit_test.ConditionalColumnFit.test_readout_size_and_surrounding_fit_boundary_are_explicit) ... ERROR
+test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence (image_column_fit_test.ConditionalColumnFit.test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence) ... ERROR
+test_zero_support_and_failed_reference_preserve_per_site_and_whole_eligibility (image_column_fit_test.ConditionalColumnFit.test_zero_support_and_failed_reference_preserve_per_site_and_whole_eligibility) ... ERROR
+test_zero_target_low_counts_and_wrong_width_do_not_become_classifications (image_column_fit_test.ConditionalColumnFit.test_zero_target_low_counts_and_wrong_width_do_not_become_classifications) ... ERROR
+test_coherently_rehashed_forged_numbers_are_refused_by_review (image_point_observation_test.PointObservations.test_coherently_rehashed_forged_numbers_are_refused_by_review) ... ERROR
+test_different_frame_and_calibration_fail_binding (image_point_observation_test.PointObservations.test_different_frame_and_calibration_fail_binding) ... ERROR
+test_invalid_reference_scope_and_fields_are_rejected (image_point_observation_test.PointObservations.test_invalid_reference_scope_and_fields_are_rejected) ... ERROR
+test_large_finite_values_remain_numerical_not_physical (image_point_observation_test.PointObservations.test_large_finite_values_remain_numerical_not_physical) ... ERROR
+test_original_values_and_signed_reference_difference (image_point_observation_test.PointObservations.test_original_values_and_signed_reference_difference) ... ERROR
+test_overlapping_context_references_are_explicit_not_independent (image_point_observation_test.PointObservations.test_overlapping_context_references_are_explicit_not_independent) ... ERROR
+test_realspace_review_exact_primary_and_profile_subset (image_point_observation_test.PointObservations.test_realspace_review_exact_primary_and_profile_subset) ... ERROR
+test_standalone_historical_stats_and_old_fft_review_still_work (image_point_observation_test.PointObservations.test_standalone_historical_stats_and_old_fft_review_still_work) ... ERROR
+
+======================================================================
+ERROR: test_duplicate_and_too_many_selected_coefficients_are_rejected_before_svd (image_column_fit_test.ConditionalColumnFit.test_duplicate_and_too_many_selected_coefficients_are_rejected_before_svd)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-241acx22\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_finite_pixels_with_unsafe_total_or_model_range_do_not_reach_optimizer (image_column_fit_test.ConditionalColumnFit.test_finite_pixels_with_unsafe_total_or_model_range_do_not_reach_optimizer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-1itlk00m\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_historical_read_recovery_export_review_and_original_request_never_refit (image_column_fit_test.ConditionalColumnFit.test_historical_read_recovery_export_review_and_original_request_never_refit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-udhqbwr8\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_independent_count_truth_raw_baseline_and_distinct_readouts (image_column_fit_test.ConditionalColumnFit.test_independent_count_truth_raw_baseline_and_distinct_readouts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-qrxgipq5\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_missing_or_unsupported_scientific_prerequisites_preserve_raw_without_fit (image_column_fit_test.ConditionalColumnFit.test_missing_or_unsupported_scientific_prerequisites_preserve_raw_without_fit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-o1pi539h\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_readout_size_and_surrounding_fit_boundary_are_explicit (image_column_fit_test.ConditionalColumnFit.test_readout_size_and_surrounding_fit_boundary_are_explicit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-a713zmdi\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence (image_column_fit_test.ConditionalColumnFit.test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-5t9f_prf\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_zero_support_and_failed_reference_preserve_per_site_and_whole_eligibility (image_column_fit_test.ConditionalColumnFit.test_zero_support_and_failed_reference_preserve_per_site_and_whole_eligibility)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-_9b4f_ob\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_zero_target_low_counts_and_wrong_width_do_not_become_classifications (image_column_fit_test.ConditionalColumnFit.test_zero_target_low_counts_and_wrong_width_do_not_become_classifications)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 66, in setUp
+    self.frame = self.make_frame(self.positive)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 85, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\conditional-column-fit-gvx9nwy_\\public-count-fixture-0.tiff'
+
+======================================================================
+ERROR: test_coherently_rehashed_forged_numbers_are_refused_by_review (image_point_observation_test.PointObservations.test_coherently_rehashed_forged_numbers_are_refused_by_review)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-tpdeyqgs\\public-0.tiff'
+
+======================================================================
+ERROR: test_different_frame_and_calibration_fail_binding (image_point_observation_test.PointObservations.test_different_frame_and_calibration_fail_binding)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-c6f5uqcg\\public-0.tiff'
+
+======================================================================
+ERROR: test_invalid_reference_scope_and_fields_are_rejected (image_point_observation_test.PointObservations.test_invalid_reference_scope_and_fields_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-n5za5m63\\public-0.tiff'
+
+======================================================================
+ERROR: test_large_finite_values_remain_numerical_not_physical (image_point_observation_test.PointObservations.test_large_finite_values_remain_numerical_not_physical)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-9ofonwg0\\public-0.tiff'
+
+======================================================================
+ERROR: test_original_values_and_signed_reference_difference (image_point_observation_test.PointObservations.test_original_values_and_signed_reference_difference)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-cw25lu_e\\public-0.tiff'
+
+======================================================================
+ERROR: test_overlapping_context_references_are_explicit_not_independent (image_point_observation_test.PointObservations.test_overlapping_context_references_are_explicit_not_independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-cr5i0012\\public-0.tiff'
+
+======================================================================
+ERROR: test_realspace_review_exact_primary_and_profile_subset (image_point_observation_test.PointObservations.test_realspace_review_exact_primary_and_profile_subset)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-6efwb3jx\\public-0.tiff'
+
+======================================================================
+ERROR: test_standalone_historical_stats_and_old_fft_review_still_work (image_point_observation_test.PointObservations.test_standalone_historical_stats_and_old_fft_review_still_work)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 25, in setUp
+    self.frame = self.make_frame(self.values)
+                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_point_observation_test.py", line 45, in make_frame
+    tifffile.imwrite(source, values, photometric="minisblack")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1453, in imwrite
+    with TiffWriter(
+         ~~~~~~~~~~^
+        file,
+        ^^^^^
+    ...<6 lines>...
+        shaped=shaped,
+        ^^^^^^^^^^^^^^
+    ) as tif:
+    ^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 1791, in __init__
+    self._fh = FileHandle(file, mode=mode, size=0)
+               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13979, in __init__
+    self.open()
+    ~~~~~~~~~^^
+  File "<user>\AppData\Local\Programs\Python\Python313\Lib\site-packages\tifffile\tifffile.py", line 13999, in open
+    self._fh = open(  # noqa: SIM115
+               ~~~~^^^^^^^^^^^^^^^^^
+        self._file, self._mode, encoding=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+PermissionError: [Errno 13] Permission denied: '<user>\\AppData\\Local\\Packages\\sandbox.{a26b9bbe-8a2d-4045-8b1f-b24306b8abbc}\\AC\\Temp\\point-observation-521zfx52\\public-0.tiff'
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.100s
+
+FAILED (errors=17)

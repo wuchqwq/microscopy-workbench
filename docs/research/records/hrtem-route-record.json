@@ -1,0 +1,948 @@
+{
+  "schema_version": 1,
+  "title": "HRTEM相关FFT、核心交叉窗与导航研究路线历史",
+  "recorded_utc": "2026-11-04T23:41:23Z",
+  "record_kind": "Existing evidence synthesis; no new experiment, algorithm, model or test execution",
+  "main_at_review": "c69424ac25a35efd816d68cacd5904f5381c7485",
+  "integration_candidate": "db2d71383bb1d3b50e8dba4701553550d016e46e (local engineering candidate, not merged main)",
+  "scope": [
+    "本轮仅复核指定FFT/core-cross/navigation目录内既有摘要、协议与相关固定Git文档。",
+    "历史执行结果保留当时版本、数据、预算、失败和停止规则；不能当作本轮集成候选的新验证。",
+    "算法方案选择交由独立Astra比较；这里记录路线与证据，不替代当前方案选择。",
+    "原始大型数组、完整provider工作区和归档受控保存；不随本笔记公开。没有复制私有原日志、内部对话、凭据或机器绝对路径。",
+    "受限Library缓存未读取或使用；曾受阻的原数据比较与后来本地替代数据实验分开记载。"
+  ],
+  "interpretation_limits": [
+    "有限FFT、DFT数值一致性、候选峰、几何匹配、质量状态和物理解释是不同层次的证据。",
+    "已知核心或评估者给定ROI不记作自主发现或盲检；后验对照不回写冻结协议。",
+    "同源窗口、共轭峰、配对噪声种子及重复测量相关，不按独立样本累加。",
+    "本笔记不升级真实样品、物相/缺陷确认、实验FDR/FWER、动力学散射或多层HRTEM强度的资格。",
+    "独立物理STEM记录的10.034456% > 10% FAIL及未验证真实样品边界不因本历史整理改变；该物理数据不在本轮读取范围内。"
+  ],
+  "routes": [
+    {
+      "id": "R01",
+      "title": "第一轮科学算法与证据边界审计",
+      "version_refs": {
+        "tested_commit": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c",
+        "tested_tree": "82facfce75c5909c510cb5014e228918904f5de4"
+      },
+      "status": "HISTORICAL_AUDIT_COMPLETE_WITH_FAILURES",
+      "data_scope": [
+        "新生成合成图像和小结构；不是私人样品或完整显微成像资格实验。"
+      ],
+      "parameters_and_budget": [
+        "main探针9组59调用；edge探针3组34调用。",
+        "独立Astra最终25项：18 PASS、4 FAIL、3 METHOD_LIMIT、0 PROBE_ERROR。"
+      ],
+      "positive_results": [
+        "审计完成并保存可追溯调用/原始结果；脚本exit0仅表示审计运行完成。"
+      ],
+      "negative_results": [
+        "4项FAIL与方法边界保留，未通过放宽生产算法或容限消除。",
+        "初轮float64 TIFF输入错误与驱动消息匹配错误保留；后续修正输入/驱动，未改生产算法。"
+      ],
+      "unmeasured": [
+        "真实样品准确性、唯一物相或三维结构、实验假发现率未资格化。"
+      ],
+      "decision_and_stop": [
+        "先区分产品缺陷、探针/驱动问题和方法限制，保留失败来源，再作有界修复或解释限制。"
+      ],
+      "reproduce_entries": [
+        "audits/scientific_algorithms/main_probes.py",
+        "audits/scientific_algorithms/edge_probes.py",
+        "audits/scientific_algorithms/astra_probes.py；需要新输出目录，不能覆盖旧证据"
+      ],
+      "evidence_ids": [
+        "G06"
+      ]
+    },
+    {
+      "id": "R02",
+      "title": "DC舍入尺度修复与独立预处理真值",
+      "version_refs": {
+        "old_commit": "31e0edeca7a9e07b8ec575e0781dfea5dec1ab0a",
+        "old_tree": "be6b655b96965000a345d0fb99ac674a34d9c790",
+        "new_commit": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a",
+        "new_tree": "e9d9af137e0d80b6d1cc590a65b3063dee0e52d6"
+      },
+      "status": "BOUNDED_NUMERICAL_REPAIR_ACCEPTED_WITH_CONSERVATIVE_COST",
+      "data_scope": [
+        "63x63 float32图100+delta(25,20)，无窗、不减均值；解析DC=396901，其余频率模恒1。",
+        "独立预处理检验使用7源、28种保存FFT配置、44次worker调用；Decimal70位直接DFT及可分离解析式。"
+      ],
+      "parameters_and_budget": [
+        "指定保存请求max_peaks16、min_separation_bins16。",
+        "预处理顺序为原ROI均值扣除、对称Hann(n-1)、FFT、shift。"
+      ],
+      "positive_results": [
+        "用完整FFT L2范数计账，包含DC与被排除的系数；保持FFT、相对阈值、NMS与精化不变。",
+        "保存的原212个失败子例保留；修复后5项回归通过。独立预处理真值4项通过。"
+      ],
+      "negative_results": [
+        "旧版该平坦背景反例返回15峰、feature valid及14 families。",
+        "保守成本：零背景脉冲+谱增量1e-12由接受变未判；1e-11与1e-9仍保留。",
+        "Hann产生真实窗谱，不能套用无窗平坦谱真值；B=1e8时float32的+1量化为0，不要求恢复。"
+      ],
+      "unmeasured": [
+        "eta=k*u没有PocketFFT误差证明；全局准入不是逐峰准确度、显著性或物理资格。"
+      ],
+      "decision_and_stop": [
+        "拒绝只用DC或最大系数估计舍入尺度，因为不能覆盖高能零均值谱。局部修复止于数值准入，不扩展成逐峰显著性声明。"
+      ],
+      "reproduce_entries": [
+        "tests/test_fft_dc_roundoff.py",
+        "tests/fixtures/fft_dc_saved.py",
+        "tests/fft-dc-science-smoke.mjs",
+        "tests/test_fft_preprocessing_oracle.py；预处理原证据在提交文档索引的preprocessing.json.gz"
+      ],
+      "evidence_ids": [
+        "G04",
+        "G05"
+      ]
+    },
+    {
+      "id": "R03",
+      "title": "510源受控Poisson/Gaussian噪声与旧新版本比较",
+      "version_refs": {
+        "protocol_frozen_commit": "d2ca026d6432f532140cd6519e9dafd9575750ab",
+        "coverage_amendment_commit": "c4cc9faff291c085478d0f34a70b6cc6355eed9a",
+        "old_detector_commit": "31e0edeca7a9e07b8ec575e0781dfea5dec1ab0a",
+        "new_detector_commit": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a"
+      },
+      "status": "CONTROLLED_MATRIX_COMPLETE_NOT_PHYSICAL_QUALIFICATION",
+      "data_scope": [
+        "13场景、16种子100..115；D=50/500/2000预期平均电子/像素，独立Poisson，可加sigma5独立Gaussian。",
+        "这是指定计数/读出噪声模型，不是完整显微镜或探测器模型。"
+      ],
+      "parameters_and_budget": [
+        "Hann+减均值及none+不减均值，各配none/quadratic精化；threshold_rel0.05、max_peaks16、min_separation3、DC半径3。",
+        "510源、2432 ROI/config与196比较；两版本各2628条，未见执行异常。",
+        "实际保存主配置609 ROI+49比较、2091 worker执行、11295保存对象/终态请求；不能称全部为MCP传输。",
+        "数据manifest SHA256=ce76f85693acc4498fcbc496a18679ab37f7c87041f2a91f6f44adf977c12792。"
+      ],
+      "positive_results": [
+        "覆盖补记在读取指标前冻结。只有原delta无窗两配置峰表从16变0，其余受控噪声结果未变。"
+      ],
+      "negative_results": [
+        "弱周期48/48真分量匹配，仍48/48 ambiguous；0.6bin双频每剂量仅16/32匹配。",
+        "纯噪声64/64 ambiguous；6个特定噪声/扰动样本返回valid并含额外候选，反驳valid等于可靠二维晶格。"
+      ],
+      "unmeasured": [
+        "这些有限合成样本不是材料误报率、实验FDR/FWER或真实样品准确性。"
+      ],
+      "decision_and_stop": [
+        "保留DC局部修复与全部噪声限制；不以调阈值使矩阵全绿，不把raw计算和保存链误称完整MCP资格。"
+      ],
+      "reproduce_entries": [
+        "tests/fixtures/controlled_fft_noise.py",
+        "tests/fixtures/evaluate_fft_noise.py",
+        "tests/fixtures/controlled_fft_saved.py；遵循冻结协议与新输出目录"
+      ],
+      "evidence_ids": [
+        "G01",
+        "G02"
+      ]
+    },
+    {
+      "id": "R04",
+      "title": "独立背景留出：数字偏置、Poisson背景、读噪与仿射扰动",
+      "version_refs": {
+        "protocol_frozen_commit": "2cb579d7a3f8cd54a26e3db26f253934ac0c50db",
+        "tested_detector_commit": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a"
+      },
+      "status": "HOLDOUT_COMPLETE_WITH_ABSTENTIONS",
+      "data_scope": [
+        "128x128，弱载波幅0.02、q=(8,5)/128；5场景乘以1无噪声+16种子1000..1015，共85源。",
+        "信号500；数字偏置+100不增方差；独立Poisson背景100增均值与方差、总期望600；读噪sigma5。"
+      ],
+      "parameters_and_budget": [
+        "仿射矩阵[[1.08,0.06],[-0.03,0.94]]与位移(3,-2)。",
+        "四配置340 raw；85主配置完成保存。"
+      ],
+      "positive_results": [
+        "每个噪声场景16/16真分量匹配；64对数字偏置四配置峰表完全一致。"
+      ],
+      "negative_results": [
+        "全部80噪声图仍含额外候选且ambiguous；5个无噪声单方向图为insufficient。"
+      ],
+      "unmeasured": [
+        "配对不增加独立样本；经验p95不是置信区间，也不是实验总体误差率。"
+      ],
+      "decision_and_stop": [
+        "将不增加计数方差的数字偏置与真实Poisson背景分开保留；不由真分量匹配推导所有候选可靠。"
+      ],
+      "reproduce_entries": [
+        "tests/fixtures/controlled_fft_backgrounds.py",
+        "tests/fixtures/controlled_fft_backgrounds.parameters.json及现有evaluator"
+      ],
+      "evidence_ids": [
+        "G03",
+        "G02"
+      ]
+    },
+    {
+      "id": "R05",
+      "title": "FFT后续架构路线：探索性输出或逐峰资格（暂停）",
+      "version_refs": {
+        "context_detector_commit": "3d59c2b5cc4d90e9cbbb7d5475d5b0b42617880a"
+      },
+      "status": "DESIGN_OPTIONS_RECORDED_NOT_IMPLEMENTED",
+      "data_scope": [
+        "来自DC反例、受控噪声矩阵和背景留出的限制，不是新算法实验。"
+      ],
+      "parameters_and_budget": [
+        "方案一保留探索纹理输出，拆开数值准入、测量可靠性与物理解释及版本语义。",
+        "方案二另设计逐峰数值突出度、分辨与指定噪声模型/多重检验资格。"
+      ],
+      "positive_results": [
+        "记录了全局门只能承担整体数值准入的证据范围。"
+      ],
+      "negative_results": [
+        "脉冲+真实谱增量1e-9可开启全局门，同时仍保留其它舍入峰。"
+      ],
+      "unmeasured": [
+        "两方案当时均未实施、未训练、未通过后验调阈值资格化。"
+      ],
+      "decision_and_stop": [
+        "暂停整体算法替换；本历史选项不替代本轮Astra方案比较与选择。"
+      ],
+      "reproduce_entries": [
+        "阅读冻结Git文档中的后续选择与限制；本路线没有已执行的新算法入口。"
+      ],
+      "evidence_ids": [
+        "G02",
+        "G04",
+        "G05"
+      ]
+    },
+    {
+      "id": "R06",
+      "title": "第二轮GPA不确定性、晶体几何身份和缺标定边界审计",
+      "version_refs": {
+        "tested_commit": "b6dd9075dc730deec24c0f87a0ec3a3cee127d1c"
+      },
+      "status": "HISTORICAL_AUDIT_COMPLETE_NO_PRODUCTION_REPAIR",
+      "data_scope": [
+        "GPA合成观察和小晶体几何反例；没有生产修复或真实样品资格实验。"
+      ],
+      "parameters_and_budget": [
+        "7组GPA观察、6带宽、20固定噪声种子、200000次误差前向采样。",
+        "晶体主32次worker调用、18准入控制、5个预声明容限。"
+      ],
+      "positive_results": [
+        "GPA慢变例Exx最大绝对误差5.69e-5，支持该带宽条件下的数值计算。"
+      ],
+      "negative_results": [
+        "带外k=8/256、sigma=0.008时测量/真值RMS比5.32e-13，仍有16384个valid_tensor像素。",
+        "20/20纯噪声可算hypothesized场，valid_tensor比例36.8%..51.5%；不是实验假阳性率。",
+        "近重复held-out坐标相距0.0199996094 FFT bins仍pass，不能称独立峰；缺标定局部比较输出incompatible的语义问题未解决。"
+      ],
+      "unmeasured": [
+        "物理应变准确度、独立反射身份与实验错误率均未因此资格化。"
+      ],
+      "decision_and_stop": [
+        "保留条件几何计算、限制物理解释，先审身份、未判和误差模型方案；未替换整套FFT/GPA或后验调阈值。"
+      ],
+      "reproduce_entries": [
+        "audits/scientific_algorithms_round2/probe_gpa_uncertainty.py",
+        "audits/scientific_algorithms_round2/probe_missing_calibration.py",
+        "audits/scientific_algorithms_round2/crystal/probe_saved_crystal.py、probe_admission_controls.py、probe_tolerance_sweep.py"
+      ],
+      "evidence_ids": [
+        "G07",
+        "G08"
+      ]
+    },
+    {
+      "id": "R07",
+      "title": "7a基线FFT/峰边界矩阵及独立DFT、dtype、机制对照",
+      "version_refs": {
+        "baseline_commit": "7a1d3e01f9142432345fa4754268437c90a17d04",
+        "detector_version": 3
+      },
+      "status": "BOUNDARY_STUDY_COMPLETE_ALGORITHM_UNCHANGED",
+      "data_scope": [
+        "128x128标量余弦代理，37种场景；无散射、原子结构或物理标定。",
+        "等强双频间隔0.3/0.6/1/1.5/2/2.5/3/4/6 bins、相位0及90度；强弱幅比0.5/0.2/0.1/0.05/0.02/0.01、间隔6bins及单强峰负对照。",
+        "clean contrast RMS=1；Gaussian sigma/RMS=0/0.25/1/2；PCG64种子100..115配对使用。"
+      ],
+      "parameters_and_budget": [
+        "实际默认none窗、不减均值；peaks max12、minsep3、DC半径3、threshold0.05、quadratic。主矩阵穷举none/Hann与减均值false/true。",
+        "每dtype1813输入、8278直接评估（主7252+敏感性1026），两dtype共16556评估；每dtype934汇总组。",
+        "敏感性minsep1/2/4，threshold0.01/0.1/0.25/0.5/0.9，指定子场景、噪声0/1/2、仅种子100..103；不混成16种子结果。",
+        "固定Hungarian最大基数后最小距离、一对一0.5bin门；严格双分量需各正负模板在min(0.5,gap/4)互不重叠门内且各支间隔误差不超25%。"
+      ],
+      "positive_results": [
+        "支持的float32正式MCP：7预选case、2预处理、42次调用、0错误、14组FFT/峰；保存FFT与本地逐bit一致，峰内在字段与quality一致。",
+        "显式128x128复指数DFT对保存FFT最大相对L2差3.3907233781899173e-14；是独立有限精度对照，不是误差证明。",
+        "934组计数指标float32与内部float64参考一致；定位小数误差不假定相同。296对固定其余处理的减均值比较无计数变化。"
+      ],
+      "negative_results": [
+        "float64首轮正式MCP在TIFF导入处7调用均UNSUPPORTED_LAYOUT，尚未执行FFT/峰；随后float32是独立支持dtype复核，未改写首轮失败。",
+        "干净非整数单频默认定位误差0.21494301716698144bin；Hann+减均值为0.02073249421095509bin。",
+        "相位0干净双频默认0.3..2bin仅2/4签名匹配；2.5/3/4/6bin为4/4且通过记录中的严格双分量准则，不能外推通用分辨率。",
+        "sigma1纯噪声16/16均返回cap12且numerical contrast resolved，总192个额外签名候选。",
+        "sigma2单低频d3负对照：默认5/16通过双模板准则，Hann+减均值0/16；strong-only为2/16与0/16。因此同一准则不能独立资格化分辨。",
+        "后验机制控制分开保存：d2默认minsep3返回2，minsep1无窗返回4而Hann仍2；整数弱幅0.02在threshold0.05返回2，后验threshold0.01返回4。这些是机制区分，未用于改产品默认。"
+      ],
+      "unmeasured": [
+        "单尺寸、两相位、有限相关种子；非Agent盲测、非材料相误报率。",
+        "旧3d59c2b/#63的D50及0.6bin历史摘要未导入原数据，不能把其D50等同本轮Gaussian sigma。"
+      ],
+      "decision_and_stop": [
+        "保持算法与阈值不变；先区分探索性候选输出与有噪声模型的信号分辨目标，再决定局部修复。",
+        "没有以放宽匹配、增大cap或降低阈值把负对照改成通过。预运行Hann轴顺序对齐记录在pre-run-preparation-hash.json，发生于指标前。"
+      ],
+      "reproduce_entries": [
+        "fft_boundary_experiment.py prepare/run（入口basename由既有REPORT记录；原目录不能覆盖）",
+        "fft_float32_followup.py（入口basename由既有REPORT记录）",
+        "fft-peak-boundary-7a1d3e0/float32/mcp-control.mjs",
+        "fft-peak-boundary-7a1d3e0/float32/dft-and-parity.py",
+        "fft-peak-boundary-7a1d3e0/mechanism-controls.py"
+      ],
+      "evidence_ids": [
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "F05",
+        "F06",
+        "F07",
+        "F08",
+        "F09",
+        "F10"
+      ]
+    },
+    {
+      "id": "R08",
+      "title": "核心+横/竖长窗的既有工具编排增量与一次真实Agent接受",
+      "version_refs": {
+        "baseline_commit": "7a1d3e01f9142432345fa4754268437c90a17d04",
+        "feature_commit": "9e8c2c1cd9bf6c199960bbc58147421489e2f8ed",
+        "ci_wiring_commit": "a83bf8aae5fcffc30adfb81059232b180e3000df"
+      },
+      "status": "BOUNDED_WORKFLOW_ACCEPTED_NOT_GENERAL_DISCOVERY_QUALIFICATION",
+      "data_scope": [
+        "受控交接为128x160双频标量纹理，q=(0.125,0)/(0,0.25)，指定非方核心[64,56,96,72]；不是散射或物相证据。",
+        "Agent接受为一个干净Gaussian Z加权独立原子投影代理，sigma0.35A、一个周期晶胞厚；无动力学、CTF、弛豫或界面物理。"
+      ],
+      "parameters_and_budget": [
+        "cross_window复用image_spatial_atlas，不新增数值引擎或全局控制器；精确矩形相交为核心，不裁剪或填充。",
+        "一次gpt-6.1-sol、请求xhigh；实际35 MCP调用、3个FFT、45056 FFT输入像素、556.624618700007秒、未超时。允许工具与强制限制来自既有freeze；本笔记不猜测摘要未列的数字cap。",
+        "Agent自选核心[128,288,192,352]、横窗[32,288,288,352]、竖窗[128,128,192,512]，显式臂长[96,96,160,160]；未给精确核心或生成真值。"
+      ],
+      "positive_results": [
+        "39 Python与8 Node测试及build通过；受控MCP四阶段51调用，3个FFT，Context revision8，最终有界交接PASS。",
+        "Agent实际完成discovery、cross atlas、比较、仅核心review和Context回读；三FFT数组一致，Context revision4。",
+        "生成真值在执行后核对，核心跨越名义y320边界；只支持该一次工作流。"
+      ],
+      "negative_results": [
+        "受控51调用保留4个错误响应：调用schema、错ROI证据拒绝、缺CAS revision、测量与当前网格不符。",
+        "Agent35调用含8个错误响应：5预览准入、1不存在子项查询、2调用schema错误。不能写成零错误首跑。",
+        "Agent各窗局部极大值16/22/30但只返回8峰；比较仍incomplete_detection，未强行确认相或峰来源。"
+      ],
+      "unmeasured": [
+        "仅一个clean case，无噪声矩阵；稳定臂自动选择未实现，arm_stability=not_assessed。",
+        "真实GUI手势、自动唤醒、全新独立Agent续跑、可靠缺陷/相/峰源识别均未资格化。",
+        "该接受受工作流指导，未宣称盲科学准确率或AI导航优越性。"
+      ],
+      "decision_and_stop": [
+        "选最小atlas几何/来源约束+Skill编排，保留原有field/GPA路线；不另造数值引擎，不默认引入PCA/NMF或固定兴趣阈值。"
+      ],
+      "reproduce_entries": [
+        "core-cross-evidence/prepare-control.py",
+        "core-cross-evidence/mcp-chain.mjs、mcp-chain-resume.mjs、mcp-chain-accept.mjs、mcp-chain-final.mjs；使用独立新工作区",
+        "Agent协议和既有接受摘要供追溯；本轮不重跑模型。"
+      ],
+      "evidence_ids": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06"
+      ]
+    },
+    {
+      "id": "R09",
+      "title": "a83核心交叉窗受控边界与旧方窗路线对照",
+      "version_refs": {
+        "candidate_commit": "a83bf8aae5fcffc30adfb81059232b180e3000df"
+      },
+      "status": "CONTROLLED_KNOWN_CORE_STUDY_COMPLETE_NAVIGATION_SEPARATE",
+      "data_scope": [
+        "42个256x256 float32分段解析余弦/掩膜输入：均匀、水平双域、四域交会、5像素细条、8x8小夹杂，以及Gaussian噪声、相关噪声和空白。",
+        "解析掩膜边缘会产生真实展宽/旁瓣；不是原子结构、散射、物理相/双晶/界面或缺陷模拟。噪声sigma0.5/1.5使用配对PCG64种子1101..1103；相关噪声Gaussian平滑sigma1.5px并归一单位RMS。"
+      ],
+      "parameters_and_budget": [
+        "评估者给定核心[112,112,144,144]，臂[80,80,80,80]；核心32x32、横192x32、竖32x192，共13312 FFT像素。已知核心不作发现成功。",
+        "Hann、减均值、max_peaks8、minsep3、DC半径3、threshold0.12、quadratic；固定0.5bin各向异性FFT-bin一对一匹配。",
+        "126个本地窗口；13个MCP案例、39个cross FFT，包含field共75 FFT。方窗对照9个32x32、stride112，9216 FFT像素、覆盖14.0625%，预算与支持范围不同。"
+      ],
+      "positive_results": [
+        "42输入hash不变，126本地窗口无执行异常；13/13几何正确，39/39 MCP FFT逐bit及quality与本地一致。",
+        "均匀双频核心在记录条件下仍恢复2/2 carrier families；空白0峰且比较insufficient_geometry。",
+        "42核心显式直接DFT相对L2最大约7.80e-15，支持数值变换一致，不支持物理归属。"
+      ],
+      "negative_results": [
+        "5像素细条与8x8夹杂核心即使覆盖目标也未恢复其B域独立carrier；四域交会核心严格匹配0/8 families。",
+        "纯噪声3种子x3窗均返回cap8且数值对比resolved；相关噪声核心6/8/2峰。",
+        "默认自动proposal(window_sizes=[64],max_candidates=4)对42/42输入均零候选，最大分数0.11177128669681075低于未改0.18阈值；不能外推AI看图选点也失败。",
+        "后验常量域C同一结构核心/横窗2峰、竖窗4峰：qy0.0625在32px短轴为2bin、192px为12bin，反映DC门与窗口形状效应，不能当新增结构峰。",
+        "方窗纯噪声5/9 valid、水平双域sigma0.5为8/9 valid、空白0/9 valid；valid不是结构准确性。",
+        "原Context在sandbox有13个EPERM，驱动误用查询namespace造成另13 NOT_FOUND；原534工具调用26错误。按原结果查询后在不同namespace创建13个Context、CAS和断连恢复；恢复156调用仍保留26原查询/namespace拒绝。原科学结果、FFT及失败未重放或覆盖。"
+      ],
+      "unmeasured": [
+        "本轨模型调用0，自主AI选择NOT_TESTED；方窗与cross不是同预算导航胜负比较。",
+        "arm stability、物理相/缺陷/峰源及一般检出率不资格化；三噪声种子和共享窗口不作为独立总体样本。"
+      ],
+      "decision_and_stop": [
+        "同时保留针对指定核心的cross与广域方窗field；按问题与预算选，不固定为两窗取并集。",
+        "不降低proposal阈值通过矩阵；统一512px导航比较另行冻结，原传输受阻见R10。"
+      ],
+      "reproduce_entries": [
+        "cross-boundary.py（入口basename由既有REPORT记录，runner身份见plan-hash.json）",
+        "core-cross-boundary-a83/mcp-boundary.mjs",
+        "core-cross-boundary-a83/recover-context.mjs",
+        "core-cross-boundary-a83/analyze.py、mechanism-controls.py；后验控制与主42例分开"
+      ],
+      "evidence_ids": [
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ]
+    },
+    {
+      "id": "R10",
+      "title": "原统一navigation输入路线：受支持元数据传输受阻",
+      "version_refs": {
+        "tested_commit": null,
+        "version_note": "materialization-status摘要没有精确提交SHA；不凭目录名a83补填"
+      },
+      "status": "BLOCKED_LIBRARY_METADATA_UNSUPPORTED_COMPARISON_NOT_TESTED",
+      "data_scope": [
+        "预期输入basename为navigation_blind_inputs.zip；预期SHA256为0d46856f9aa537aca514559baba5896581c641f9e3b7bfe400a5ccd5812ada45。",
+        "该预期hash不是已安装文件验证；本轮未读取受限缓存、归档内容或私人样品。"
+      ],
+      "parameters_and_budget": [
+        "拟统一512x512 overview、最多16个64x64测量ROI、65536 FFT输入像素、最多4个已测final，重复/重叠计费。",
+        "这些是拟比较协议；模型启动0次，没有可评估AI导航结果。"
+      ],
+      "positive_results": [
+        "传输失败与停止位置被保存，没有把未取得的数据替换成同名输入。"
+      ],
+      "negative_results": [
+        "一次sandbox下载失败；另一次helper到apply_xattrs后因Windows缺少os.setxattr而失败，元数据安装未确认。"
+      ],
+      "unmeasured": [
+        "提取/使用停止，统一AI/fixed/random比较NOT_TESTED。"
+      ],
+      "decision_and_stop": [
+        "遵循受支持元数据传输要求停止；没有原始URL替代、helper修改、来源替换或元数据绕过。",
+        "后来的本地解析纹理实验是新的替代数据路线R11，不是本输入继续运行或等价物理资格。"
+      ],
+      "reproduce_entries": [
+        "navigation-ai-a83/materialization-status.json仅供既有停止状态追溯；没有获准可继续执行的本地入口。"
+      ],
+      "evidence_ids": [
+        "N01",
+        "B01",
+        "B03"
+      ]
+    },
+    {
+      "id": "R11",
+      "title": "替代本地解析纹理：AI/fixed/random同预算导航与共同readout",
+      "version_refs": {
+        "candidate_commit": "a83bf8aae5fcffc30adfb81059232b180e3000df",
+        "generator_sha256_recorded_in_freeze": "bf1fbb6a9d1af664da36e8b4ed392e5d3bec489e1b76cf377394abb5f5a7c08f",
+        "truth_sha256_recorded_in_freeze": "ebfa9aa386eb006770fd7d31ab82a315f5919e182f1496453c01b43b34eb8146",
+        "skill_bundle_sha256_recorded_in_freeze": "6303485a43f83fe75d5886d93171f763f45a1ea83ecdf6c193f713dcc1e11923"
+      },
+      "status": "LOCAL_SYNTHETIC_DIAGNOSTIC_COMPLETE_STRICT_SUBSET_TWO_CASES",
+      "data_scope": [
+        "512x512 float32解析余弦标量纹理；2底图含24x24局部inclusion或junction，各clean/noise sigma0.75，共4case。",
+        "不是原子投影、散射、CTF、物理STEM或真实样品。目标、mask、生成器与标签对selector隐藏；同一完整MCP overview起步，没有初始ROI测量。",
+        "这是局部目标隐藏的合成导航对照，不能描述成已知ROI物理盲检或原Library输入的继续执行。"
+      ],
+      "parameters_and_budget": [
+        "每case最多16个64x64 ROI、65536 FFT输入像素、batch最多4、final最多4个实际测过的ROI；重复和重叠计费，不padding/resize。",
+        "Hann、subtract_mean=true、max_peaks8、minsep3、DC半径3、threshold0.12、quadratic、display max_size256。",
+        "fixed为4x4网格、中心64/192/320/448；random为单个PCG64 seed740231产生的16个预声明位置，四case共用。",
+        "AI为4个独立gpt-6.1-sol/xhigh会话，每case1200秒，0重启/重试；6份冻结Skill文本注入。"
+      ],
+      "positive_results": [
+        "12回合的预算/source/FFT/ROI检查均通过；180个NPZ/source patch/FFT复核无差异。",
+        "严格共同子集仅n057、n902：fixed命中1/2、random2/2、AI2/2；AI实际24 ROI/98304像素，另两策略各32 ROI/131072像素。",
+        "all4诊断fixed2/4、random4/4、AI4/4；仅作为该四case的描述。"
+      ],
+      "negative_results": [
+        "n214、n663额外有空资源枚举或不支持的template查询，保守排除严格七接口比较，保留原诊断结果、未重跑。",
+        "全部10个AI实际final窗均达到peak cap，物理解释未确立。",
+        "原生分析MCP1866次未报错；另有4次metadata调用、2次错误，不能概括为全部MCP零错误。",
+        "只有2底图、一个随机drawset、没有negative image，不能推导总体命中率、误报率或优于random。",
+        "后验共同readout按既定feature_field family_count降序、query顺序及pairwise IoU<=0.25，最多4窗，仅读已测ROI：all4 AI共同readout为10/16个final符合target，而AI实际final为10/10；fixed与random各8/16。严格子集AI共同5/8、实际5/5，fixed/random各4/8。",
+        "n902 AI实际final与共同readout不同，target coverage分别0.3350908025776216与0.3210310486233158；最终筛选效果不能混作采样导航优越性。"
+      ],
+      "unmeasured": [
+        "原输入包比较、物理样品、通用目标发现、稳健随机基线分布及独立误报率均未资格化。"
+      ],
+      "decision_and_stop": [
+        "保持四个原回合与排除理由，不为凑齐严格样本而重启。",
+        "共同readout与调度副本是对已有测量的后验对照，未增加采样或改变算法；记录声明normalize等同原脚本，仅拆分不相交episodes。",
+        "结果不足以宣称AI优于random；导航采样与最终选择两种效应分开留档。"
+      ],
+      "reproduce_entries": [
+        "navigation-local-a83-01/prepare-episodes.mjs",
+        "navigation-local-a83-01/run-baselines.mjs",
+        "navigation-local-a83-01/run-models.py",
+        "navigation-local-a83-01/score.py",
+        "navigation-local-a83-01/posthoc-readout.mjs",
+        "navigation-local-a83-01/verify-package.py；受控归档解包复核入口，本轮未执行"
+      ],
+      "evidence_ids": [
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "N12",
+        "N13",
+        "N14"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "G01",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "docs/FFT_CONTROLLED_NOISE_PROTOCOL.md",
+      "git_blob_id": "f4c72ea869039213fe5dbd24bbc8c5caa460203f",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "8bc25e1d8460a4d5327ba642b6d6fae9164635c4477606c0eb06cc89818baf03",
+      "byte_count": 14093
+    },
+    {
+      "id": "G02",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "docs/FFT_CONTROLLED_NOISE_VALIDATION.md",
+      "git_blob_id": "fcda21f5125252d2da323c84c4a3b92cdf8e4c2f",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "6a668e685cd578bdcd144e9732b6fa4a01d6b84be10a5b5479bbac0656287f06",
+      "byte_count": 13044
+    },
+    {
+      "id": "G03",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "docs/FFT_BACKGROUND_HOLDOUT_PROTOCOL.md",
+      "git_blob_id": "646cc18e850c0e7bd942551575cd34cc9c8ab31a",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "6b36e8b64f58911576ceaf335a9b0897392eb274d678ef612e79e9f6c14c8b99",
+      "byte_count": 7057
+    },
+    {
+      "id": "G04",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "docs/FFT_DC_ROUNDOFF_DESIGN.md",
+      "git_blob_id": "02190e14ae8b0febd36592771d2b8550b834ee19",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "b69a2e4b10eb0765b11a6e625a6f1c567cbd82c7eaf5523d8bc4bb48ca5ccd56",
+      "byte_count": 5078
+    },
+    {
+      "id": "G05",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "docs/FFT_DC_ROUNDOFF_VALIDATION.md",
+      "git_blob_id": "6ecabdb30f5fa8c1ccdf413ca89c33ff5df3f8e1",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "383642fee7192c17a8a200b1fb20d2e5afdd3b5380fcd5272693c0dcc500491e",
+      "byte_count": 8277
+    },
+    {
+      "id": "G06",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "audits/scientific_algorithms/EXECUTION.md",
+      "git_blob_id": "6dea5b447b7b4001fc6b1c339082ef37a0f8ea52",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "f9ea0625cc3f2c0cfe78693865c931cb73bd6059a835b3dc710da64b6efd30e5",
+      "byte_count": 7026
+    },
+    {
+      "id": "G07",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "audits/scientific_algorithms_round2/EXECUTION.md",
+      "git_blob_id": "82ae6027ffd03bf5fdcffb832ba50cd51065cabd",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "bc8e5692439ad82d207172e046cb91475668e7633f6bf8d6b08dda715587ae44",
+      "byte_count": 5057
+    },
+    {
+      "id": "G08",
+      "kind": "git",
+      "ref": "c69424ac25a35efd816d68cacd5904f5381c7485",
+      "locator": "audits/scientific_algorithms_round2/ALGORITHM_AUDIT.md",
+      "git_blob_id": "e669f62561c75c15c1de9f963d80c269445baec1",
+      "hash_scope": "Exact committed blob bytes; no working-tree checkout conversion",
+      "sha256": "c4de229c101877afafcbeb8357a793a7c6e3608fe9367939a026b126cb1812c7",
+      "byte_count": 17940
+    },
+    {
+      "id": "F01",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/SUMMARY.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "ff8d5e9ddb4487aaa1c4318927f8f7e974c6c678f4619368ba5d6ba72296a08e",
+      "byte_count": 12848
+    },
+    {
+      "id": "F02",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/frozen-plan.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "320ff7dd9fe8b6a5649c0ab99465c8c7dc9360c6a7492ea0c284342a21456010",
+      "byte_count": 1577520
+    },
+    {
+      "id": "F03",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/source-integrity.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "5d8285d590e28dadf683acf6a25201876b4d8c55c3beb29171618c6501cd831f",
+      "byte_count": 347
+    },
+    {
+      "id": "F04",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/plan-sha256.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "31645be83b57bdec7f1b4653b6322df919613c90708031fb621156956973840c",
+      "byte_count": 188
+    },
+    {
+      "id": "F05",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/pre-run-preparation-hash.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "e10000ff1527c675430303656e226f5f0d96fb5ad2ee8ea57bfaba3de99dae5a",
+      "byte_count": 498
+    },
+    {
+      "id": "F06",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/mcp-report.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "5a9111b7aa1e92aa831ce155733bacb4d7e572d73e7727e7c87220c375f7441b",
+      "byte_count": 14046
+    },
+    {
+      "id": "F07",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/float32/mcp-report.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "b616335d2d76aad1299c8701c75996233e3cbeb67e6e4058376af70190f1bcc4",
+      "byte_count": 849541
+    },
+    {
+      "id": "F08",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/float32/dft-mcp-parity.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "2f785a6581356f0c5c6bd03282860a4a90f0bde4b605e0093b073192a9719b9d",
+      "byte_count": 6468
+    },
+    {
+      "id": "F09",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/mechanism-controls.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "902727eb9116de85a808997b148d3232b5fac412936a742f02111446b63fd266",
+      "byte_count": 9496
+    },
+    {
+      "id": "F10",
+      "kind": "controlled_workspace",
+      "locator": "fft-peak-boundary-7a1d3e0/REPORT.txt",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "6d125a6853bf975f1d94b2c704d6eb71f764e8bbc0284489ebaab836d16c1488",
+      "byte_count": 11401
+    },
+    {
+      "id": "C01",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-evidence/SUMMARY.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "b45b04a5db399181a5125b83726f8438f9f1743aec0ede21a8f1fee480ce33b7",
+      "byte_count": 2986
+    },
+    {
+      "id": "C02",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-evidence/controlled-chain-summary.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "18e4a72be6aa65e93342b76d8f3562aef9278fbc2f52c631d4a5bc3ec5709374",
+      "byte_count": 2622
+    },
+    {
+      "id": "C03",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-evidence/controlled-truth.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "a16c76e6caefe93fc8ddf9f7f9ee4458fc8e5fce054e59a200b5befb5d2973d1",
+      "byte_count": 416
+    },
+    {
+      "id": "C04",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-evidence/agent-acceptance/freeze.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "653f94933ef0309c934b36af34169b4003a417dc7df952116e3b7d5ae4dbdf7a",
+      "byte_count": 3648
+    },
+    {
+      "id": "C05",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-evidence/agent-acceptance/AUDIT.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "2808f83b8cab1cdfdbb8e16c2d9ca4da7e3a5888b55a8002c482f68536c048f4",
+      "byte_count": 12669
+    },
+    {
+      "id": "C06",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-evidence/REPORT.md",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "4fb5e3c0f6427eb83dea12b6f3c69b484eb72f5141a158b375eedf038b851ae5",
+      "byte_count": 13734
+    },
+    {
+      "id": "B01",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/SUMMARY.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "083d97493f22684465b0ff4f5102f9d94a46e73002f28d053ba661318c488684",
+      "byte_count": 2821
+    },
+    {
+      "id": "B02",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/frozen-plan.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "9c344b6b3bdb5669d63f677365a6f269109300b20506e2362cadf078c4a1e981",
+      "byte_count": 35613
+    },
+    {
+      "id": "B03",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/comparison-status.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "ad7699084bc0149f3e5bd7c5913e984a8656e357189558b0c673e7682f1d88e3",
+      "byte_count": 1081
+    },
+    {
+      "id": "B04",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/mechanism-control-plan.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "e79e8d6aa5299ceee77b2303a75f4339610152fc71d903354c7dad27b70b8eed",
+      "byte_count": 609
+    },
+    {
+      "id": "B05",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/mechanism-controls.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "5d9250254d4b83e17975a61f658fb8ccaead8a4753cfc6bb9accfe80301faabc",
+      "byte_count": 109867
+    },
+    {
+      "id": "B06",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/explicit-dft-controls.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "b2cfce881dd968867d16cdd0a77069b73d4d4f0171602a82f27180a9e7ffdd39",
+      "byte_count": 4845
+    },
+    {
+      "id": "B07",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/plan-hash.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "11ed3a5b03a8a35032337600133b9eeba0f9fee3140cc898d8d985b6e4fdfafc",
+      "byte_count": 179
+    },
+    {
+      "id": "B08",
+      "kind": "controlled_workspace",
+      "locator": "core-cross-boundary-a83/REPORT.md",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "98c7297f777f1c2645c435944c560556742d48bc7a4d4e9dc21216e63cbc4246",
+      "byte_count": 9922
+    },
+    {
+      "id": "N01",
+      "kind": "controlled_workspace",
+      "locator": "navigation-ai-a83/materialization-status.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "7ef2e0dd5a02777a5eff249ae441f96f279ed2180e9d6e7cc50e68fa4a184dbf",
+      "byte_count": 1220
+    },
+    {
+      "id": "N02",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/SUMMARY.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "e841deef055785e8f25896ea578200b4b5818c603789b6c29fabd39462882b00",
+      "byte_count": 3832
+    },
+    {
+      "id": "N03",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/assessor/protocol.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "a68f10f96994949333f99d2bc649dd4ef99fed292e220b89436efd4d9dec7d17",
+      "byte_count": 6924
+    },
+    {
+      "id": "N04",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/freeze.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "3a88503b818048cc5a1f8bc114d9dccdc329708a38dc7bc36d07e46359aedf70",
+      "byte_count": 2708
+    },
+    {
+      "id": "N05",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/execution-freeze.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "9c3ce18b1b73d41a39a3bfe5e1caed55b721b793e6f73136f723e715f04c84ec",
+      "byte_count": 2419
+    },
+    {
+      "id": "N06",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/assessor/eligibility-audit.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "c0869d6065fd2eefacae3a0fa48ca0abde04d404bd3f9a4a45d55723c968f699",
+      "byte_count": 3079
+    },
+    {
+      "id": "N07",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/assessor/scores.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "dd73a0650bcac12ea7e64dc36148716b9fe85a355d7c94ed097f039654e9c782",
+      "byte_count": 168432
+    },
+    {
+      "id": "N08",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/assessor/scores.csv",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "aecc85e8c8f4c967fc60b6ef9cbbcd7628fe5b08c88310c069a479da884e9fbf",
+      "byte_count": 1023
+    },
+    {
+      "id": "N09",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/assessor/readout-scheduling.json",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "e9c70cb5cea5b2e3933c1a09f1ee7217dd31a926c052b7281520dcade5fc5495",
+      "byte_count": 359
+    },
+    {
+      "id": "N10",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/posthoc-readout.mjs",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "080c16bbb9fc297a468dcff51449fbe4108f83dd244d92bc208a090c3b139116",
+      "byte_count": 3976
+    },
+    {
+      "id": "N11",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/verify-package.py",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "10bbfd3eee4e8f5a3a18a7ebe4118932ad370af5eb883103b16e03ccfecebfa7",
+      "byte_count": 1932
+    },
+    {
+      "id": "N12",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/run-baselines.mjs",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "3bf4c554fc10300ead4eb072981ab8a1fe8423452a325a1f42d0c465f86ea5cd",
+      "byte_count": 2557
+    },
+    {
+      "id": "N13",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/run-models.py",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "16958d6bf507480e93d7f4ae148d105ba630e11159db5bf33405b67d073d18fd",
+      "byte_count": 7558
+    },
+    {
+      "id": "N14",
+      "kind": "controlled_workspace",
+      "locator": "navigation-local-a83-01/score.py",
+      "hash_scope": "Exact existing controlled evidence bytes; not copied into this note",
+      "sha256": "06f297f62381d9193df4fc88f23d55f3ae6e21f76f917e2d170ba4f9572b3674",
+      "byte_count": 9299
+    }
+  ],
+  "reproduction_notice": "入口是既有摘要/协议记载的复现路径，不能直接复用旧输出目录。此轮只整理与hash现有证据，未执行入口、生成新科学数组或新增PASS。Git sources为固定ref原字节；controlled_workspace sources为受控证据根下相对位置，原文件不随笔记公开。",
+  "source_manifest_checked_utc": "2026-11-04T23:47:59.679227+00:00",
+  "source_count": 46,
+  "note_verification": {
+    "json_parse": "PASS",
+    "source_reference_resolution": "PASS",
+    "source_sha256_computed": 46,
+    "independent_reader_hash_crosschecks": 22,
+    "absolute_machine_paths_in_note": "NONE",
+    "private_logs_or_internal_conversation_copied": false,
+    "new_scientific_execution": false,
+    "git_write_or_commit_by_this_subtask": false,
+    "retrospective_identity": "EXPLICIT; no historical protocol rewritten as preregistered",
+    "external_claim_primary_evidence": "PENDING; no source/hash invented"
+  },
+  "retrospective_notice": "本文件是事后研究历史补记，不是新的预注册。各路线仅在原来源明确记载冻结时间/版本时称其原协议已冻结；后验机制控制、共同readout与本次综合不追认为预注册。",
+  "external_pending_archive": [
+    {
+      "id": "EXT-S2",
+      "status": "EXTERNAL_STATEMENT_PENDING_PRIMARY_ARCHIVE",
+      "claim_scope": "S2材料的外部补充声明，本地未取得primary证据；不归入上述11条路线的本地验证计数。",
+      "reported_statement": "S2 244/245，缺C27；正式blind NOT_TESTED。",
+      "primary_manifest": null,
+      "primary_sha256": null,
+      "case_level_evidence": null,
+      "required_before_citation_as_result": "补齐受控primary manifest、完整case列表及文件hash，解释C27缺失与245分母；在此之前不得升级为完整资格通过或正式盲检结果。",
+      "local_verification": "NOT_VERIFIED_NO_PRIMARY_MATERIAL"
+    }
+  ],
+  "retrospective_compilation": true,
+  "recording_note": "Compiled retrospectively from preserved evidence. This compilation is not a contemporaneous preregistration or a new experiment.",
+  "engineering_baseline": {
+    "commit": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+    "main_parent": "c69424ac25a35efd816d68cacd5904f5381c7485",
+    "status": "LOCAL_CANDIDATE_NOT_MERGED"
+  }
+}

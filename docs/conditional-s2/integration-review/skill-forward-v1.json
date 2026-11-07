@@ -1,0 +1,35 @@
+{
+  "schema_version": "skill-forward-review-v1",
+  "actor": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "context": "Fresh child agent with no inherited conversation",
+    "agent": "/root/sol_final_skill_forward"
+  },
+  "scope": "Text-only Skill guidance check on candidate's installed-Skill resources. No provider measurement, physical experiment, optimizer, native Codex benchmark, or scientific qualification.",
+  "cases": [
+    {
+      "id": "A",
+      "request": "Observed raw 5x5 target-minus-reference-median; sourced count/geometry/width; proposed automatic S2 replacement.",
+      "response": "Select S0. It directly answers the observed-array question; supplied S2 prerequisites do not authorize automatic replacement or establish greater accuracy. Keep raw mean, reference rows, signed contrast, fitted total mean and central integral distinct. Occupancy and mechanism remain unknown.",
+      "assessment": "PASS"
+    },
+    {
+      "id": "B",
+      "request": "Latent expected total count mean in the same fixed 5x5; sourced counts/geometry and transferred Gaussian width; select from current evidence.",
+      "response": "Choose S0 as the current latent-totalmean estimator with noise limits; S2 may be considered conditionally, is not mandatory and cannot be guaranteed superior. Separate original all-S0 / S2-not-requested, revealed same-frame six-improved/two-worse exploration with two whole UNKNOWN, and new four-related-query blind in which S0 has lowest errors. Numeric CPE does not establish model validity. No universal superiority, causal framing or fresh integrated-physics claim.",
+      "assessment": "PASS"
+    },
+    {
+      "id": "C",
+      "request": "Target CPE with finite fitted total ROI mean and central integral; one requested reference UNKNOWN_NOT_CONVERGED, whole UNKNOWN_REQUIRED_SITE; ask local results, whole comparison, occupancy and unknown-write recovery with locator only.",
+      "response": "Report qualified local conditional target outputs with meanings and limits. Whole fitted contrast remains UNKNOWN; preserve all references and raw S0, do not discard failed references. Central integral is a Gaussian whole-plane extrapolation, not occupancy. Recover only the original request ID in retained provider/workspace locator; no replay/new ID/alternate workspace or tool. Unknown source/ROI can be explicit null.",
+      "assessment": "PASS"
+    }
+  ],
+  "assessment": "PASS",
+  "assessment_basis": "Root manually evaluated this independent agent response for correct use of current positive/negative evidence, distinct estimands, default/conditional policy, per-site versus whole availability and same-ID recovery. Not a scientific performance result or permissions-isolation proof.",
+  "response_provenance": "Exact natural-language response is retained in collaboration final answer from /root/sol_final_skill_forward; this JSON records a faithful concise summary, not raw scientific outputs.",
+  "candidate_observation": "Draft based on ebeadcd6a277a571c87bc492d52e65caab936a16 plus safe science-records-v1 integration; semantic Skill text held stable by engineering owner during the read.",
+  "scientific_reexecution": false
+}

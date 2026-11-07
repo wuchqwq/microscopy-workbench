@@ -1,0 +1,39 @@
+from pathlib import Path
+from datetime import datetime,timezone
+import hashlib,json,subprocess,sys
+import numpy as np,tifffile
+ROOT=Path(__file__).resolve().parent;OUT=ROOT/'navigation-local-a83-01';REPO=ROOT/'core-cross-ci-wiring'
+SHA='a83bf8aae5fcffc30adfb81059232b180e3000df'
+def dump(p,x):p.write_text(json.dumps(x,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+assert subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],text=True).strip()==SHA
+OUT.mkdir(exist_ok=False);(OUT/'assessor').mkdir();(OUT/'public').mkdir();(OUT/'episodes').mkdir();(OUT/'tmp').mkdir()
+q={name:[[.125*np.cos(np.deg2rad(angle)),.125*np.sin(np.deg2rad(angle))],[-.125*np.sin(np.deg2rad(angle)),.125*np.cos(np.deg2rad(angle))]] for name,angle in [('A',0),('B',30),('C',-27)]}
+fixed=[[x-32,y-32,x+32,y+32] for y in [64,192,320,448] for x in [64,192,320,448]]
+rng=np.random.default_rng(740231);random_rects=[]
+for _ in range(16):
+ x,y=map(int,rng.integers(0,449,size=2));random_rects.append([x,y,x+64,y+64])
+ids=['n057','n214','n663','n902'];permutation=np.random.default_rng(91371).permutation(4).tolist();truth=[];public=[];y,x=np.indices((512,512))
+for base_index,kind in enumerate(['junction','inclusion']):
+ rng=np.random.default_rng(211391+base_index);cx,cy=map(int,rng.integers(96,417,size=2));rotation=float(rng.uniform(-np.pi,np.pi));mask=np.zeros((512,512),dtype=np.uint8)
+ if kind=='junction':mask=np.floor(((np.arctan2(y-cy,x-cx)-rotation)%(2*np.pi))/(2*np.pi/3)).astype(np.uint8)
+ else:mask[(x>=cx-12)&(x<cx+12)&(y>=cy-12)&(y<cy+12)]=1
+ clean=np.zeros((512,512))
+ for j,name in enumerate(q):
+  wave=sum(amp*np.cos(2*np.pi*(v[0]*x+v[1]*y)+phase) for v,amp,phase in zip(q[name],[1,.8],[.37,.83]));clean[mask==j]=wave[mask==j]
+ clean-=clean.mean();clean/=np.std(clean)
+ boundary=np.zeros(mask.shape,dtype=bool);d=mask[:,1:]!=mask[:,:-1];boundary[:,1:]|=d;boundary[:,:-1]|=d;d=mask[1:,:]!=mask[:-1,:];boundary[1:,:]|=d;boundary[:-1,:]|=d
+ target=boundary if kind=='junction' else mask==1
+ for condition,noise_sigma in enumerate([0,.75]):
+  index=2*base_index+condition;case_id=ids[permutation[index]];folder=OUT/'public'/case_id;folder.mkdir();array=clean+noise_sigma*np.random.default_rng(80219+base_index).standard_normal(clean.shape);p=folder/'image.tiff';tifffile.imwrite(p,array.astype(np.float32),metadata=None,photometric='minisblack')
+  np.save(OUT/'assessor'/f'{case_id}-mask.npy',mask);np.save(OUT/'assessor'/f'{case_id}-target.npy',target)
+  truth.append({'case_id':case_id,'base_structure':kind,'base_index':base_index,'condition':condition,'noise_sigma':noise_sigma,'noise_seed':80219+base_index,'generator_seed':211391+base_index,'centre_xy':[cx,cy],'sector_rotation_radians':rotation,'mask':f'assessor/{case_id}-mask.npy','target':f'assessor/{case_id}-target.npy','input_sha256':sha(p),'q_cycles_per_pixel':q})
+  public.append({'case_id':case_id,'source_path':str(p),'shape_yx':[512,512],'dtype':'float32','sha256':sha(p)})
+public.sort(key=lambda c:c['case_id']);dump(OUT/'public/manifest.json',{'experiment':'Independent Windows-local dataset, not the previous Library package','cases':public})
+protocol={'schema_version':1,'frozen_utc':datetime.now(timezone.utc).isoformat(),'candidate':SHA,'dataset_identity':'navigation-local-a83-01; independently generated on Windows; NOT navigation_blind_inputs.zip','cases':len(public),'independent_base_structures':2,'paired_clean_noisy':True,'physical_scope':'Piecewise analytic cosine scalar textures. Not atomic/scattering/phase/interface physics; labels and carrier truth withheld from selectors.','initial_information':'Same512x512 full-frame MCP-rendered overview and frame metadata per case. No initial ROI measurements, truth, generator, labels or scores. Fixed/random definitions ignore semantic image content.','measurement':{'shape_yx':[64,64],'max_ROI_attempts':16,'max_FFT_input_pixels':65536,'max_batch':4,'repeat_overlap_charged':True,'no_padding_resizing':True,'parameters':{'window':'hann','subtract_mean':True,'max_peaks':8,'peak_options':{'min_separation_bins':3,'exclude_dc_radius_bins':3,'threshold_rel':.12,'refinement':'quadratic'},'max_size':256}},'selection':{'max_candidates':4,'must_be_measured_exact_ROI':True,'allowed_stop_with_zero_or_unknown':True},'strategies':{'fixed':{'rects':fixed},'random':{'PCG64_seed':740231,'rects':random_rects,'draws':16,'no_redraw_or_result_selection':True,'same_rects_for_all_four_cases':True},'AI':{'model':'gpt-6.1-sol','effort':'xhigh','sessions':4,'fresh_context_per_case':True,'relaunch_retries':0,'wall_seconds_per_case':1200,'tools':'Existing project MCP through declared receiving-client and budget proxy; no shell/web/filesystem/other Agent access','public_skill_documents':6}},'budget_errors':'Invalid shape/source/parameter or over-budget attempts are denied before product execution and retained. Any hard-budget/source/shape violation attempt makes the run NONCOMPARABLE; ordinary provider failures remain visible and do not grant free ROI attempts.','primary_navigation_metrics':['Any of up to16 measured supports meets predeclared target criterion','Union target pixel coverage by all measured supports','First measured qualifying query index'],'final_selection_metrics':['Apply same frozen readout to all three measurement sets','Separately audit AI final0..4 actual measured rectangles','No unmeasured midpoint or posthoc ROI accepted'],'target_qualification':{'junction':'ROI contains at least64 two-sided discrete boundary-mask pixels AND at least two generating domains eachoccupy>=10% ROI pixels','inclusion':'ROI contains>=50% of the24x24 generating inclusion pixels'},'common_readout':'Rank saved official feature_field family_count descending, then query index ascending; select up to4 actually measured supports with pairwise IoU<=0.25. This is an explicitly simple exploratory priority, not a physical detector; preserve per-window validity/cap/unknown.','scientific_metrics':'Carrier +/- one-to-one matches within0.5 anisotropic FFT bins are diagnostic only; record cap, finite arrays, pixel-only calibration and unassessed noise/localization/resolution. No phase confirmation success criterion.','failure_reporting':'All4 predetermined cases retained, including errors/timeouts/noncompliance. Do not drop failed cases or tune parameters. Navigation coverage is separate from physical interpretation correctness.','limits':['Two base structures only; clean/noisy paired cases are not four independent materials','One predeclared random drawset, not100-seed performance statistics','No negative image in this specific four-case head-to-head; cannot estimate physical false-positive rate','A fresh runtime experiment with project MCP is not GUI/default-client qualification']}
+dump(OUT/'assessor/truth.json',truth);dump(OUT/'assessor/protocol.json',protocol)
+skill_rel=[f'skills/scientific-agent/{n}/SKILL.md' for n in ['microscopy-router','microscopy-observe-revise','microscopy-automation','crystallography-compare']]+[f'skills/scientific-agent/microscopy-automation/references/{n}.md' for n in ['image-first','core-cross-windows']]
+skill_bundle='\n\n'.join('Public project Skill/reference: '+p+'\n'+(REPO/p).read_text(encoding='utf-8') for p in skill_rel)
+(OUT/'public/skill-bundle.txt').write_text(skill_bundle,encoding='utf-8')
+dump(OUT/'freeze.json',{'candidate':SHA,'protocol_sha256':sha(OUT/'assessor/protocol.json'),'truth_sha256':sha(OUT/'assessor/truth.json'),'generator_sha256':sha(Path(__file__)),'public_cases':public,'skill_hashes':{p:sha(REPO/p) for p in skill_rel},'skill_bundle_sha256':sha(OUT/'public/skill-bundle.txt'),'actual_model_calls_started':0})
+print(json.dumps({'experiment':str(OUT),'cases':[c['case_id'] for c in public],'protocol_frozen':True,'model_calls_started':0,'truth_not_in_public':True}))

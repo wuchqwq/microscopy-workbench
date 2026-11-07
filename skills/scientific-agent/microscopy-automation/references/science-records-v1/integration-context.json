@@ -1,0 +1,28 @@
+{
+  "requested_main_merge_abbrev": "31f4f014",
+  "verified_main_merge_commit": "31f4f014a4293d24de72402727b1efd084fc1022",
+  "observed_prepackage_candidate_head": "2ddab0cbafe4179f1ad820232a14863ea5ffd9fc",
+  "observed_branch": "review/conditional-s2-on-main-20261105",
+  "integration_owner": "Sol engineering, independent candidate clone",
+  "scientifically_tested_methods_commit": "2ed81e1564f2299c7d052bbb89c2f7f016714aa7",
+  "integrated_candidate_physically_tested": false,
+  "not_modified_by_packager": true,
+  "no_push_or_merge_performed": true,
+  "tested_manifest_scope": "The328file manifest binds the original scientifically tested2ed checkout/deployment, not raw-byte identity of the integrated candidate.",
+  "known_candidate_EOL_only_difference": {
+    "path": "tools/image_column_model.py",
+    "tested_raw_bytes": 4556,
+    "tested_raw_sha256": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+    "candidate_raw_bytes": 4646,
+    "candidate_raw_sha256": "9d2c32e83dd69a02313041f8b4254fc7007d14e50d948c42e4e09675b110285e",
+    "candidate_CRLF_count": 90,
+    "LF_normalized_sha256": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+    "LF_normalized_equal": true,
+    "raw_byte_equal": false,
+    "classification": "EOL_ONLY_CONTENT_EQUIVALENT_NOT_RAW_BYTE_EXACT",
+    "read_only": true,
+    "source_not_modified": true,
+    "new_physics_or_fit_or_model": false
+  },
+  "additional_build_outputs_not_in_tested_manifest": "NOT_COVERED, not mismatch; this applies to dist/tools/*.py absent from the328entry frozen manifest. Separate deployed-source inspection is required before any stronger identity claim."
+}

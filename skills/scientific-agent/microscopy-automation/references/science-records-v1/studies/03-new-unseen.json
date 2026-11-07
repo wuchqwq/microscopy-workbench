@@ -1,0 +1,399 @@
+{
+  "study_id": "03-new-unseen",
+  "design": "PROSPECTIVE_NEW_UNSEEN_LATENT_TOTALMEAN_COMPARISON",
+  "frames": 2,
+  "query_denominator": 4,
+  "primary_unit": "normalized_detector_fraction",
+  "methods": {
+    "S0": {
+      "n": 4,
+      "mae": 9.61603645160794e-05,
+      "rmse": 0.00011600184177375796
+    },
+    "AI_ROUTE": {
+      "queries": 4,
+      "S2_requested": 2,
+      "not_requested": 2,
+      "query_CPE": 2,
+      "coverage": 0.5,
+      "requested_query_UNKNOWN": 0,
+      "UNKNOWN_status_counts": {},
+      "S0": {
+        "n": 4,
+        "mae": 9.61603645160794e-05,
+        "rmse": 0.00011600184177375796
+      },
+      "routed_or_fixed_with_fallback": {
+        "n": 4,
+        "mae": 0.00012172393215263369,
+        "rmse": 0.00013339636618619008
+      },
+      "conditional_S2_accepted_subset": {
+        "n": 2,
+        "mae": 0.00014712700605210135,
+        "rmse": 0.00014712763000472074
+      },
+      "S0_on_same_accepted_subset": {
+        "n": 2,
+        "mae": 9.599987077899279e-05,
+        "rmse": 0.00011388684330182185
+      },
+      "hybrid_minus_S0_MAE": 2.5563567636554283e-05
+    },
+    "FIXED_S2": {
+      "queries": 4,
+      "S2_requested": 4,
+      "not_requested": 0,
+      "query_CPE": 4,
+      "coverage": 1.0,
+      "requested_query_UNKNOWN": 0,
+      "UNKNOWN_status_counts": {},
+      "S0": {
+        "n": 4,
+        "mae": 9.61603645160794e-05,
+        "rmse": 0.00011600184177375796
+      },
+      "routed_or_fixed_with_fallback": {
+        "n": 4,
+        "mae": 0.00016678023320437568,
+        "rmse": 0.00016793554236357714
+      },
+      "conditional_S2_accepted_subset": {
+        "n": 4,
+        "mae": 0.00016678023320437568,
+        "rmse": 0.00016793554236357714
+      },
+      "S0_on_same_accepted_subset": {
+        "n": 4,
+        "mae": 9.61603645160794e-05,
+        "rmse": 0.00011600184177375796
+      },
+      "hybrid_minus_S0_MAE": 7.061986868829627e-05
+    }
+  },
+  "points": [
+    {
+      "opaque_frame_id": "case-9f1b6682fb6df457",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 3.4728034771978845e-05,
+      "absolute_error_counts_per_pixel": 0.021705021732486784
+    },
+    {
+      "opaque_frame_id": "case-9f1b6682fb6df457",
+      "query_index": 1,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.00014669851923674758,
+      "absolute_error_counts_per_pixel": 0.09168657452296736,
+      "s2_requested": true,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE"
+    },
+    {
+      "opaque_frame_id": "case-9f1b6682fb6df457",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00015727170678600673,
+      "absolute_error_counts_per_pixel": 0.09829481674125418
+    },
+    {
+      "opaque_frame_id": "case-9f1b6682fb6df457",
+      "query_index": 4,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.00014755549286745513,
+      "absolute_error_counts_per_pixel": 0.09222218304215946,
+      "s2_requested": true,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE"
+    },
+    {
+      "opaque_frame_id": "case-0e033d43dfd110bc",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 2.8020537771284446e-05,
+      "absolute_error_counts_per_pixel": 0.017512836107052787
+    },
+    {
+      "opaque_frame_id": "case-0e033d43dfd110bc",
+      "query_index": 1,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 2.8020537771284446e-05,
+      "absolute_error_counts_per_pixel": 0.017512836107052787,
+      "s2_requested": false,
+      "target_status": "NOT_REQUESTED_ROUTE_S0",
+      "whole_comparison_status": "NOT_REQUESTED_ROUTE_S0"
+    },
+    {
+      "opaque_frame_id": "case-0e033d43dfd110bc",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.0001646211787350476,
+      "absolute_error_counts_per_pixel": 0.10288823670940472
+    },
+    {
+      "opaque_frame_id": "case-0e033d43dfd110bc",
+      "query_index": 4,
+      "method": "AI_ROUTE",
+      "absolute_error_detector_fraction": 0.0001646211787350476,
+      "absolute_error_counts_per_pixel": 0.10288823670940472,
+      "s2_requested": false,
+      "target_status": "NOT_REQUESTED_ROUTE_S0",
+      "whole_comparison_status": "NOT_REQUESTED_ROUTE_S0"
+    },
+    {
+      "opaque_frame_id": "case-9f1b6682fb6df457",
+      "query_index": 1,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00014669851923674758,
+      "absolute_error_counts_per_pixel": 0.09168657452296736,
+      "s2_requested": true,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE"
+    },
+    {
+      "opaque_frame_id": "case-9f1b6682fb6df457",
+      "query_index": 4,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00014755549286745513,
+      "absolute_error_counts_per_pixel": 0.09222218304215946,
+      "s2_requested": true,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE"
+    },
+    {
+      "opaque_frame_id": "case-0e033d43dfd110bc",
+      "query_index": 1,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00018728088382637554,
+      "absolute_error_counts_per_pixel": 0.11705055239148465,
+      "s2_requested": true,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE"
+    },
+    {
+      "opaque_frame_id": "case-0e033d43dfd110bc",
+      "query_index": 4,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00018558603688692446,
+      "absolute_error_counts_per_pixel": 0.11599127305432777,
+      "s2_requested": true,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE"
+    }
+  ],
+  "paired_absolute_error_change": {
+    "AI_ROUTE": {
+      "improved": 1,
+      "worsened": 1,
+      "equal": 2
+    },
+    "FIXED_S2": {
+      "improved": 1,
+      "worsened": 3,
+      "equal": 0
+    }
+  },
+  "top_fit_requests": 6,
+  "site_fit_calls": 30,
+  "optimizer_calls": 30,
+  "query_UNKNOWN": 0,
+  "reference_UNKNOWN_occurrences": 0,
+  "whole_comparison_UNKNOWN": 0,
+  "execution": {
+    "selectors": {
+      "cases": [
+        {
+          "opaque_case_id": "case-0e033d43dfd110bc",
+          "exit_code": 0,
+          "timed_out": false,
+          "seconds": 79.87401359999785,
+          "Job_quiescent": true,
+          "MCP_tool_calls": 3,
+          "tool_counts": {
+            "image_info": 1,
+            "image_statistics": 2
+          },
+          "S2_submitted_calls": 0,
+          "S2_forwarded_calls": 0,
+          "S2_submitted_not_forwarded": 0,
+          "original_fit_journal_states": {},
+          "all_forwarded_count_declarations_exact_public": true,
+          "native_visible_metadata": {
+            "native_visible_model": [
+              "gpt-6.1-sol"
+            ],
+            "native_visible_effort": [
+              "ultra"
+            ],
+            "native_visible_sandbox": [
+              "ReadOnly"
+            ],
+            "ChatGPT_mode_visible": true
+          }
+        },
+        {
+          "opaque_case_id": "case-9f1b6682fb6df457",
+          "exit_code": 0,
+          "timed_out": false,
+          "seconds": 141.7052274000016,
+          "Job_quiescent": true,
+          "MCP_tool_calls": 5,
+          "tool_counts": {
+            "image_info": 1,
+            "image_statistics": 2,
+            "image_column_fit": 2
+          },
+          "S2_submitted_calls": 2,
+          "S2_forwarded_calls": 2,
+          "S2_submitted_not_forwarded": 0,
+          "original_fit_journal_states": {
+            "completed": 2
+          },
+          "all_forwarded_count_declarations_exact_public": true,
+          "native_visible_metadata": {
+            "native_visible_model": [
+              "gpt-6.1-sol"
+            ],
+            "native_visible_effort": [
+              "ultra"
+            ],
+            "native_visible_sandbox": [
+              "ReadOnly"
+            ],
+            "ChatGPT_mode_visible": true
+          }
+        }
+      ],
+      "total_seconds": 221.57924099999946,
+      "totals": {
+        "MCP_tool_calls": 8,
+        "S2_submitted_calls": 2,
+        "S2_forwarded_calls": 2,
+        "S2_submitted_not_forwarded": 0
+      },
+      "reference_fit_status_occurrences": {
+        "CONDITIONAL_POINT_ESTIMATE": 8
+      },
+      "whole_comparison_status_counts": {
+        "NOT_REQUESTED_ROUTE_S0": 2,
+        "CONDITIONAL_POINT_ESTIMATE": 2
+      }
+    },
+    "fixed-s2": {
+      "cases": [
+        {
+          "opaque_case_id": "case-0e033d43dfd110bc",
+          "exit_code": 0,
+          "timed_out": false,
+          "seconds": 12.970874199992977,
+          "Job_quiescent": true,
+          "MCP_tool_calls": 4,
+          "tool_counts": {
+            "image_column_fit": 2,
+            "image_result": 2
+          },
+          "S2_submitted_calls": 2,
+          "S2_forwarded_calls": 2,
+          "S2_submitted_not_forwarded": 0,
+          "original_fit_journal_states": {
+            "completed": 2
+          },
+          "all_forwarded_count_declarations_exact_public": true,
+          "native_visible_metadata": null
+        },
+        {
+          "opaque_case_id": "case-9f1b6682fb6df457",
+          "exit_code": 0,
+          "timed_out": false,
+          "seconds": 13.113203299988527,
+          "Job_quiescent": true,
+          "MCP_tool_calls": 4,
+          "tool_counts": {
+            "image_column_fit": 2,
+            "image_result": 2
+          },
+          "S2_submitted_calls": 2,
+          "S2_forwarded_calls": 2,
+          "S2_submitted_not_forwarded": 0,
+          "original_fit_journal_states": {
+            "completed": 2
+          },
+          "all_forwarded_count_declarations_exact_public": true,
+          "native_visible_metadata": null
+        }
+      ],
+      "total_seconds": 26.084077499981504,
+      "totals": {
+        "MCP_tool_calls": 8,
+        "S2_submitted_calls": 4,
+        "S2_forwarded_calls": 4,
+        "S2_submitted_not_forwarded": 0
+      },
+      "reference_fit_status_occurrences": {
+        "CONDITIONAL_POINT_ESTIMATE": 16
+      },
+      "whole_comparison_status_counts": {
+        "CONDITIONAL_POINT_ESTIMATE": 4
+      }
+    }
+  },
+  "forward_scans": 11,
+  "forward_wall_seconds": 1508.543909800006,
+  "final_visible_reason_whitelist": [
+    {
+      "opaque_case_id": "case-0e033d43dfd110bc",
+      "query_index": 1,
+      "visible_route": "S0",
+      "latent_target_explicitly_recognized": true,
+      "brief_reason": "Uses raw S0 as an unbiased total-mean estimator under supplied Poisson counts; declines S2 because transferred shape and nominal geometry remain unverified.",
+      "source_final_sha256": "7e33833ba459b134770053a94ebefcd9c04e8ede68f676660cdf38e8e33c1a40",
+      "source_JSON_pointer": "/queries/0/reason"
+    },
+    {
+      "opaque_case_id": "case-0e033d43dfd110bc",
+      "query_index": 4,
+      "visible_route": "S0",
+      "latent_target_explicitly_recognized": true,
+      "brief_reason": "Uses raw S0 as an unbiased total-mean estimator under supplied Poisson counts; declines S2 because transferred shape and nominal geometry remain unverified.",
+      "source_final_sha256": "7e33833ba459b134770053a94ebefcd9c04e8ede68f676660cdf38e8e33c1a40",
+      "source_JSON_pointer": "/queries/1/reason"
+    },
+    {
+      "opaque_case_id": "case-9f1b6682fb6df457",
+      "query_index": 1,
+      "visible_route": "S2",
+      "latent_target_explicitly_recognized": true,
+      "brief_reason": "Precommits to conditional S2 for the same latent5x5 totalmean using fixed9x9 support, including background and modeled neighbours.",
+      "source_final_sha256": "19440182e29a8a23b40aad721c23e73e9fd95796ff32fa73005be148d0599e81",
+      "source_JSON_pointer": "/queries/0/reason"
+    },
+    {
+      "opaque_case_id": "case-9f1b6682fb6df457",
+      "query_index": 4,
+      "visible_route": "S2",
+      "latent_target_explicitly_recognized": true,
+      "brief_reason": "Precommits to conditional S2 for the same latent5x5 totalmean using fixed9x9 support, including background and modeled neighbours.",
+      "source_final_sha256": "19440182e29a8a23b40aad721c23e73e9fd95796ff32fa73005be148d0599e81",
+      "source_JSON_pointer": "/queries/1/reason"
+    }
+  ],
+  "physical_model_verified": false,
+  "physical_classification": "UNKNOWN",
+  "HRTEM": "NOT_TESTED",
+  "interpretation": "On these4 correlated unseen queries, S0 MAE/RMSE is lowest, AI-route is larger and independent fixedS2 larger again. AI requested2/4 and obtained2 CPE; other2 were genuinely not submitted, not rejected/solver failures. Fixed4/4 CPE. All numeric statuses pass but do not establish physical validity or error improvement. Both final reasons recognize latent goal. This is not paired prompt ablation; no causal framing or optimal-routing claim.",
+  "source_ids": [
+    "source-16",
+    "source-17",
+    "source-18",
+    "source-19",
+    "source-20",
+    "source-21",
+    "source-22",
+    "source-23",
+    "source-24",
+    "source-25",
+    "source-26",
+    "source-27",
+    "source-28"
+  ]
+}

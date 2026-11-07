@@ -1,0 +1,2055 @@
+[
+  {
+    "run_id": "candidate-attempt-1",
+    "status": "FAIL",
+    "tests": 5,
+    "failures": 59,
+    "errors": 0,
+    "fit_calls": 7,
+    "optimizer_calls": 0,
+    "raw_log_sha256": "d774f0974071263e840d559003a081139820e1d41e8a603acdd01bc505c5c8bb",
+    "redacted_log": "readback-p2-candidate-attempt-1.redacted.txt",
+    "redacted_log_sha256": "42c9f44b142bd9f06282b372e4b85cb527e666db1cbafbae15863384f2cd892e",
+    "source_snapshots_sha256": {
+      "image_column_fit.py": "9c2f973c5e1b41453e4fbcb1f58982b77bf783ff3642790767cdfd5567d8200c",
+      "image_column_fit_readback_test.py": "2d394448ed7e1602cc8ae8b6d39933ad4ee3a71a50d48d8412fbf6a3ab82e26a",
+      "image_column_model.py": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+      "image_numeric.py": "5b3d49290ca09c569edb466131d358d493195cb8ecb175af3006c818c5d25ee2",
+      "image_workspace.py": "bce86b5bf737f9fa0dd14eab06d86da268af8a379eee5c5945e7d53d6b4c2bc8",
+      "validate_conditional_s2_readback.py": "14af0377e049aa059659d1d4978cd000b5262cbc00b04981bc2c2f499343ca71"
+    },
+    "fixtures": [
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "object_id": "6bef91cbd6c547888848853040198cec",
+        "request_id": "readback-8",
+        "original_site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ],
+        "smallest_singular_ratios": [
+          null,
+          null
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "c972a7a5d9c8a62e8baba2310a625e04857f067881392eb7f939e8014f381535"
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "object_id": "b9d1ba8c038f4a3e8021dfa9264d423f",
+        "request_id": "readback-3",
+        "original_site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ],
+        "smallest_singular_ratios": [
+          null,
+          null
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "c972a7a5d9c8a62e8baba2310a625e04857f067881392eb7f939e8014f381535"
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "object_id": "73033450f4e54e0e92037060ecf7da0b",
+        "request_id": "readback-3",
+        "original_site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ],
+        "smallest_singular_ratios": [
+          null,
+          null
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "2ada7cdb02c2e651a0ca9f623ed5b99e5e92441e6f36e0e1286d86872515aef7"
+      }
+    ],
+    "outcomes": [
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dtype",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dtype",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dtype",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-xy_calibration",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-xy_calibration",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-xy_calibration",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-user_context",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-user_context",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-user_context",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_semantics",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_semantics",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_semantics",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_calibration_applied",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_calibration_applied",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_calibration_applied",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dm_called",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dm_called",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dm_called",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dtype",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dtype",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dtype",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-xy_calibration",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-xy_calibration",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-xy_calibration",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-user_context",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-user_context",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-user_context",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_semantics",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_semantics",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_semantics",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_calibration_applied",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_calibration_applied",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_calibration_applied",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dm_called",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dm_called",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dm_called",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "report-only-deleted-context",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "report-only-deleted-context",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "report-only-deleted-context",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "restored",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "restored",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "restored",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-cpe",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "CONDITIONAL_POINT_ESTIMATE",
+          "CONDITIONAL_POINT_ESTIMATE"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-cpe",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "CONDITIONAL_POINT_ESTIMATE",
+          "CONDITIONAL_POINT_ESTIMATE"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-cpe",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "CONDITIONAL_POINT_ESTIMATE",
+          "CONDITIONAL_POINT_ESTIMATE"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-wrong-unknown",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-wrong-unknown",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-wrong-unknown",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-xy_calibration",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-xy_calibration",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-xy_calibration",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-user_context",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-user_context",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-user_context",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "report-only-deleted-null-calibration",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "report-only-deleted-null-calibration",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "report-only-deleted-null-calibration",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "restored",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "restored",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "restored",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-wrong-unknown",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NOT_CONVERGED",
+          "UNKNOWN_NOT_CONVERGED"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-wrong-unknown",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NOT_CONVERGED",
+          "UNKNOWN_NOT_CONVERGED"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-wrong-unknown",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NOT_CONVERGED",
+          "UNKNOWN_NOT_CONVERGED"
+        ]
+      }
+    ],
+    "rank_fixture_gap": "Two columns per site at spacing1e-5 did not fail the rank gate; creation reached the optimizer mock and was refused before any optimizer executed. No P2-1 readback evidence from this group.",
+    "optimizer_mock_refusals": 1,
+    "historical_readback": [
+      {
+        "action": "get",
+        "kind": "export",
+        "object_id": "4287756901264db9901759fc62036d5e",
+        "status": "PASS"
+      },
+      {
+        "action": "result",
+        "kind": "export",
+        "object_id": "4287756901264db9901759fc62036d5e",
+        "status": "PASS"
+      },
+      {
+        "action": "export",
+        "kind": "export",
+        "object_id": "4287756901264db9901759fc62036d5e",
+        "status": "PASS"
+      },
+      {
+        "action": "get",
+        "kind": "column_fit",
+        "object_id": "8d1632abdcfb464a8950da2187337bf3",
+        "status": "PASS"
+      },
+      {
+        "action": "result",
+        "kind": "column_fit",
+        "object_id": "8d1632abdcfb464a8950da2187337bf3",
+        "status": "PASS"
+      },
+      {
+        "action": "column_fit",
+        "kind": "column_fit",
+        "object_id": "8d1632abdcfb464a8950da2187337bf3",
+        "status": "PASS"
+      },
+      {
+        "action": "get",
+        "kind": "discovery_review",
+        "object_id": "a64c17df506844969d7292f1a70a9774",
+        "status": "PASS"
+      },
+      {
+        "action": "result",
+        "kind": "discovery_review",
+        "object_id": "a64c17df506844969d7292f1a70a9774",
+        "status": "PASS"
+      },
+      {
+        "action": "discovery_review",
+        "kind": "discovery_review",
+        "object_id": "a64c17df506844969d7292f1a70a9774",
+        "status": "PASS"
+      }
+    ],
+    "historical_workspace_hash_unchanged_verified": true
+  },
+  {
+    "run_id": "candidate-rank-attempt-2",
+    "status": "FAIL",
+    "tests": 1,
+    "failures": 6,
+    "errors": 0,
+    "fit_calls": 2,
+    "optimizer_calls": 0,
+    "raw_log_sha256": "1ed40852f7079377e273deaef24baf8c5ba44964f74cc161232a21452ff9dd3d",
+    "redacted_log": "readback-p2-candidate-rank-attempt-2.redacted.txt",
+    "redacted_log_sha256": "8a1f50a0585572865e7ec3880f11bd4f41131abdf800ac6722a15265f06eb906",
+    "source_snapshots_sha256": {
+      "image_column_fit.py": "9c2f973c5e1b41453e4fbcb1f58982b77bf783ff3642790767cdfd5567d8200c",
+      "image_column_fit_readback_test.py": "3da6d76a557a5f4957aa88c34c14f2efcfec42599da791cadee7cd8a2cf39715",
+      "image_column_model.py": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+      "image_numeric.py": "5b3d49290ca09c569edb466131d358d493195cb8ecb175af3006c818c5d25ee2",
+      "image_workspace.py": "bce86b5bf737f9fa0dd14eab06d86da268af8a379eee5c5945e7d53d6b4c2bc8",
+      "validate_conditional_s2_readback.py": "4ad088f7041fd583fe67d5d8def7732d67d280315b0917bd69ccb28c27000ea1"
+    },
+    "fixtures": [
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "object_id": "134a52cb05104620b146a96b3ad3378a",
+        "request_id": "readback-3",
+        "original_site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ],
+        "smallest_singular_ratios": [
+          1.4279498711825025e-11,
+          1.4279473684711251e-11
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "2ada7cdb02c2e651a0ca9f623ed5b99e5e92441e6f36e0e1286d86872515aef7"
+      }
+    ],
+    "outcomes": [
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-background-cpe",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "CONDITIONAL_POINT_ESTIMATE",
+          "CONDITIONAL_POINT_ESTIMATE"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-background-cpe",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "CONDITIONAL_POINT_ESTIMATE",
+          "CONDITIONAL_POINT_ESTIMATE"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-background-cpe",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "CONDITIONAL_POINT_ESTIMATE",
+          "CONDITIONAL_POINT_ESTIMATE"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-wrong-unknown",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NOT_CONVERGED",
+          "UNKNOWN_NOT_CONVERGED"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-wrong-unknown",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NOT_CONVERGED",
+          "UNKNOWN_NOT_CONVERGED"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-wrong-unknown",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NOT_CONVERGED",
+          "UNKNOWN_NOT_CONVERGED"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "restored",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "restored",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "restored",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      }
+    ]
+  },
+  {
+    "run_id": "fixed-attempt-1",
+    "status": "PASS",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "fit_calls": 8,
+    "optimizer_calls": 0,
+    "raw_log_sha256": "f9ee4790d7595af1f3d31504fc2d01842ca788ebfe26743899315400e36ab11f",
+    "redacted_log": "readback-p2-fixed-attempt-1.redacted.txt",
+    "redacted_log_sha256": "f9ee4790d7595af1f3d31504fc2d01842ca788ebfe26743899315400e36ab11f",
+    "source_snapshots_sha256": {
+      "image_column_fit.py": "5bcd03e2481f9b5cffae70f8611ca9f8c81675c878d94b2fe68ef4bf59b86897",
+      "image_column_fit_readback_test.py": "3da6d76a557a5f4957aa88c34c14f2efcfec42599da791cadee7cd8a2cf39715",
+      "image_column_model.py": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+      "image_numeric.py": "5b3d49290ca09c569edb466131d358d493195cb8ecb175af3006c818c5d25ee2",
+      "image_workspace.py": "bce86b5bf737f9fa0dd14eab06d86da268af8a379eee5c5945e7d53d6b4c2bc8",
+      "validate_conditional_s2_readback.py": "4ad088f7041fd583fe67d5d8def7732d67d280315b0917bd69ccb28c27000ea1"
+    },
+    "fixtures": [
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "object_id": "a0c090c026e4441e99ec6c9da3c5fab0",
+        "request_id": "readback-3",
+        "original_site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ],
+        "smallest_singular_ratios": [
+          1.4279498711825025e-11,
+          1.4279473684711251e-11
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "2ada7cdb02c2e651a0ca9f623ed5b99e5e92441e6f36e0e1286d86872515aef7"
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "object_id": "90a52fafccb142ee96cc86cb62b4ed48",
+        "request_id": "readback-8",
+        "original_site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ],
+        "smallest_singular_ratios": [
+          null,
+          null
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "c972a7a5d9c8a62e8baba2310a625e04857f067881392eb7f939e8014f381535"
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "object_id": "de9af2e7b4304a59b54adc87468d6cf2",
+        "request_id": "readback-3",
+        "original_site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ],
+        "smallest_singular_ratios": [
+          null,
+          null
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "c972a7a5d9c8a62e8baba2310a625e04857f067881392eb7f939e8014f381535"
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "object_id": "c019474c6c544592b2fb620dbc7bc734",
+        "request_id": "readback-3",
+        "original_site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ],
+        "smallest_singular_ratios": [
+          null,
+          null
+        ],
+        "optimizer_calls": 0,
+        "source_array_sha256": "2ada7cdb02c2e651a0ca9f623ed5b99e5e92441e6f36e0e1286d86872515aef7"
+      }
+    ],
+    "outcomes": [
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-background-cpe",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-background-cpe",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-background-cpe",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-wrong-unknown",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-wrong-unknown",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "rank-wrong-unknown",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "restored",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "restored",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_rank_deficient_background_solution_and_wrong_unknown_are_refused",
+        "label": "restored",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN",
+          "UNKNOWN_NONIDENTIFIABLE_DESIGN"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dtype",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dtype",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dtype",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-xy_calibration",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-xy_calibration",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-xy_calibration",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-user_context",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-user_context",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-user_context",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_semantics",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_semantics",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_semantics",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_calibration_applied",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_calibration_applied",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-intensity_calibration_applied",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dm_called",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dm_called",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "changed-dm_called",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dtype",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dtype",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dtype",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-xy_calibration",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-xy_calibration",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-xy_calibration",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-user_context",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-user_context",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-user_context",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_semantics",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_semantics",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_semantics",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_calibration_applied",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_calibration_applied",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-intensity_calibration_applied",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dm_called",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dm_called",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "deleted-dm_called",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "report-only-deleted-context",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "report-only-deleted-context",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "report-only-deleted-context",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "restored",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "restored",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_source_metadata_matches_selected_revision_and_exact_json_types",
+        "label": "restored",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-cpe",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-cpe",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-cpe",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-wrong-unknown",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-wrong-unknown",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-wrong-unknown",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-false-evaluations",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-false-evaluations",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "zero-count-false-evaluations",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-xy_calibration",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-xy_calibration",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-xy_calibration",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-user_context",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-user_context",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "deleted-null-user_context",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "report-only-deleted-null-calibration",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "report-only-deleted-null-calibration",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "report-only-deleted-null-calibration",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Column-fit source metadata/meaning changed"
+        }
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "restored",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "restored",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_counts_precede_rank_and_cannot_be_forged_as_cpe",
+        "label": "restored",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_COUNTS",
+          "UNKNOWN_ZERO_COUNTS"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "original",
+        "action": "get",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "original",
+        "action": "result",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "original",
+        "action": "column_fit",
+        "ok": true,
+        "site_statuses": [
+          "UNKNOWN_ZERO_DESIGN_COLUMN",
+          "UNKNOWN_ZERO_DESIGN_COLUMN"
+        ]
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-cpe",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-cpe",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-cpe",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-wrong-unknown",
+        "action": "get",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-wrong-unknown",
+        "action": "result",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "zero-column-wrong-unknown",
+        "action": "column_fit",
+        "ok": false,
+        "error": {
+          "code": "CORRUPT_OBJECT",
+          "message": "Saved fit contradicts zero-count/design/rank admission"
+        }
+      },
+      {
+        "test": "test_zero_design_and_missing_optimizer_coefficients_are_refused",
+        "label": "full-rank-missing-coefficients",
+        "status": "CORRUPT_OBJECT"
+      }
+    ],
+    "historical_readback": [
+      {
+        "action": "get",
+        "kind": "export",
+        "object_id": "4287756901264db9901759fc62036d5e",
+        "status": "PASS"
+      },
+      {
+        "action": "result",
+        "kind": "export",
+        "object_id": "4287756901264db9901759fc62036d5e",
+        "status": "PASS"
+      },
+      {
+        "action": "export",
+        "kind": "export",
+        "object_id": "4287756901264db9901759fc62036d5e",
+        "status": "PASS"
+      },
+      {
+        "action": "get",
+        "kind": "column_fit",
+        "object_id": "8d1632abdcfb464a8950da2187337bf3",
+        "status": "PASS"
+      },
+      {
+        "action": "result",
+        "kind": "column_fit",
+        "object_id": "8d1632abdcfb464a8950da2187337bf3",
+        "status": "PASS"
+      },
+      {
+        "action": "column_fit",
+        "kind": "column_fit",
+        "object_id": "8d1632abdcfb464a8950da2187337bf3",
+        "status": "PASS"
+      },
+      {
+        "action": "get",
+        "kind": "discovery_review",
+        "object_id": "a64c17df506844969d7292f1a70a9774",
+        "status": "PASS"
+      },
+      {
+        "action": "result",
+        "kind": "discovery_review",
+        "object_id": "a64c17df506844969d7292f1a70a9774",
+        "status": "PASS"
+      },
+      {
+        "action": "discovery_review",
+        "kind": "discovery_review",
+        "object_id": "a64c17df506844969d7292f1a70a9774",
+        "status": "PASS"
+      }
+    ],
+    "historical_workspace_hash_unchanged_verified": true
+  }
+]

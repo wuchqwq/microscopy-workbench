@@ -1,0 +1,37 @@
+{
+  "run_id": "conditional-s2-diagnostic-reproduction-v1",
+  "not_original_attempt2": true,
+  "source_array_sha256": "cac99fd4c19fff589999c3e679d6b9089a82ec1bcc045de3a6711597a0b39b09",
+  "rows": [
+    {
+      "site_index": 0,
+      "status": "CONDITIONAL_POINT_ESTIMATE",
+      "analytic_truth_integral": 40000.0,
+      "analytic_truth_total_roi_mean": 1707.227674522411,
+      "raw_roi_mean": 1695.2,
+      "raw_mean_error": -12.027674522410962,
+      "accepted": {
+        "central_integral": 39726.183980242444,
+        "fitted_total_roi_mean": 1694.5248784331607
+      },
+      "accepted_central_integral_error": -273.8160197575562,
+      "accepted_total_roi_mean_error": -12.702796089250342
+    },
+    {
+      "site_index": 1,
+      "status": "UNKNOWN_NOT_CONVERGED",
+      "analytic_truth_integral": 60000.0,
+      "analytic_truth_total_roi_mean": 2487.480137298993,
+      "raw_roi_mean": 2486.68,
+      "raw_mean_error": -0.800137298993377,
+      "accepted": {
+        "central_integral": null,
+        "fitted_total_roi_mean": null
+      },
+      "accepted_central_integral_error": null,
+      "accepted_total_roi_mean_error": null
+    }
+  ],
+  "fit_calls_for_this_summary": 0,
+  "scope": "Independent erf truth for this fixed software fixture; failed reference remains unknown; not a specimen accuracy rate"
+}

@@ -125,6 +125,12 @@ def detect(values, parameters, need):
             selected.append((x, y))
             if len(selected) == maximum:
                 break
+    # A full cap alone does not prove omission. Check for at least one more
+    # thresholded local maximum not suppressed by the returned NMS selections.
+    # These remaining maxima can suppress one another: their count is NOT the
+    # number of independent reflections or the full unlimited NMS list.
+    remaining = sum(all((x-row[0])**2+(y-row[1])**2 >= separation**2 for row in selected)
+                    for y,x in (divmod(index,width) for index in ordered))
     rows = []
     for ordinal, (x, y) in enumerate(selected, 1):
         dx = dy = 0.
@@ -169,6 +175,12 @@ def detect(values, parameters, need):
     quality = {"local_maxima_above_threshold": len(indices), "returned_count": len(rows),
                "numerical_contrast": contrast,
                "selection_limit_reached": len(rows) == maximum,
+               "candidate_pool_truncation": {
+                   "status": "truncated" if remaining else "complete_under_current_filters",
+                   "remaining_local_maxima_not_suppressed_by_returned": remaining,
+                   "omitted_candidate_lower_bound": 1 if remaining else 0,
+                   "scope": "Current threshold/DC/local-max/NMS filters only; not physical reflection completeness",
+                   "independent_reflection_count": None},
                "detection_rect_xyxy": [0, 0, width, height],
                "display_selection_used": False,
                "threshold_amplitude": absolute_threshold, "strongest_outside_dc_amplitude": strongest,

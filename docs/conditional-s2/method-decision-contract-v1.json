@@ -1,0 +1,38 @@
+{
+  "contract_version": "method-decision-v1",
+  "method_index_version": "method-evidence-index-v1",
+  "scope": "Supplemental caller-declared choice record; existing provider receipts/source/request qualification remain authoritative",
+  "record_fields": ["version", "method_index_version", "decision_id", "selection_origin", "question", "reason", "choice", "method", "estimand", "locator", "source", "baseline_evidence", "premises", "prior_request", "next_request", "revision_of_request_id", "saved_result", "physical_status"],
+  "premises": ["counts", "geometry", "width_shape", "reference_equivalence"],
+  "premise_statuses": ["supplied", "missing", "unsupported", "conflicting"],
+  "physical_statuses": ["UNKNOWN", "NOT_ASSESSED", "HYPOTHESIS"],
+  "choices": {
+    "baseline_sufficient": {"methods": ["H0", "S0"], "meaning": "Existing baseline observable answers the present question, including a scoped unknown explanation"},
+    "conditional_s2": {"methods": ["S2"], "meaning": "Explicit available-premise S2 proposal or saved conditional result; numerical UNKNOWN is still possible"},
+    "save_s2_unknown": {"methods": ["S2"], "meaning": "Legal explicit request or saved raw + UNKNOWN when optional count/geometry/width prerequisites are unavailable; required MCP fields still apply"},
+    "retain_unknown": {"methods": ["H0", "S0", "S2"], "meaning": "Retain observations and state missing evidence or seek a scientific revision without dispatch"},
+    "research_only": {"methods": ["H1", "S1"], "meaning": "Research history, without production dispatch or default promotion"},
+    "recover_original": {"methods": ["H0", "S0", "S2"], "meaning": "Read image_result using the exact original request ID; no new scientific write"}
+  },
+  "estimands": {"H0": "core_frequency", "H1": "core_frequency", "S0": "raw_roi_contrast", "S1": "central_component", "S2": "central_component"},
+  "source_fields": ["object_id", "source_object_id", "frame_index", "rect", "calibration_object_id"],
+  "locator_fields": ["provider", "workspace", "session_id"],
+  "baseline_fields": ["kind", "object_id", "request_id"],
+  "premise_fields": ["status", "source_text"],
+  "request_fields": ["request_id", "outcome", "locator"],
+  "request_outcomes": ["completed", "failed", "unknown", "pending"],
+  "next_request_fields": ["tool", "request_id"],
+  "saved_result_fields": ["object_id", "request_id", "status", "comparison_status"],
+  "numerical_statuses": ["available", "unknown"],
+  "notes": [
+    "All fields are required, using explicit nulls where the record has no reference; null is not a guessed identity or a verified premise.",
+    "locator records the retained provider/workspace and session if known. prior_request has its original locator; a same-ID query or stopped unresolved write must retain that locator. These fields declare scope and do not authenticate it or inspect the filesystem.",
+    "Recovery or a stopped unknown/pending original write may have source=null or explicit nulls for unavailable source IDs/frame/ROI. Never fabricate placeholders to make recovery pass. New or saved measurements require full saved source IDs, frame and ROI; unknown calibration may remain null.",
+    "A supplied premise needs actual source_text but remains unverified. The checker cannot determine acquisition truth, shape adequacy, source closure or authenticated authorship.",
+    "width_shape supplied means the width/model declaration is provided. source_text may explicitly state that shape adequacy is NOT_ASSESSED; supplied never means physically verified.",
+    "A planned S2 request needs existing raw baseline evidence. A saved column-fit receipt may itself supply the raw baseline, represented by baseline_evidence.kind=column_fit_raw and the same saved object/request.",
+    "A missing optional count/geometry/width prerequisite S2 call is legal when required object/ROI/reference fields remain valid. Reference equivalence and shape adequacy are interpretation premises, not automatically verified worker gates. save_s2_unknown never labels that fit available. conditional_s2 can still save unknown due to numerical gates.",
+    "An unknown or pending original write blocks a new write; retain a stopped write or record a same-ID image_result query. A deliberate revision after completed/failed outcome uses a different request ID and revision_of_request_id equal to the prior ID.",
+    "Records and sidecars do not add an AnalysisContext role, Panel slot, provider journal or tool. Preserve source arrays, receipts and prior decisions."
+  ]
+}

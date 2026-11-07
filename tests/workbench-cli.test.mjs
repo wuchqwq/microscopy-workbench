@@ -34,6 +34,21 @@ test('unknown first outcome retains exact request; next invocation is query-only
  const f=fixture(t),calls=[],provider={async call(name,args){calls.push(name);if(name==='image_fft')throw Object.assign(new Error('lost response'),{code:'OUTCOME_UNKNOWN'});return reply({state:'unknown',request_id:args.request_id});},close(){}};const execution=new CliExecution(f.workspace,provider),args={object_id:id(1),request_id:'lost'};
  await assert.rejects(execution.call('image_fft',args),e=>e.request_id==='lost');assert.equal((await execution.call('image_fft',args)).state,'unknown');assert.deepEqual(calls,['image_fft','image_result']);assert.equal(cliError('tool',Object.assign(new Error('unknown'),{code:'OUTCOME_UNKNOWN',request_id:'lost'})).status,'outcome_unknown');
 });
+
+test('CLI forwards existing STEM observation tools under schema and original-intent recovery',async t=>{
+ const f=fixture(t),calls=[],provider={async call(name,args){calls.push({name,args});return reply({state:'completed',request_id:args.request_id,object_id:id(5)});},close(){}};
+ const execution=new CliExecution(f.workspace,provider),rect=[20,20,25,25];
+ const inputs=[['image_statistics',{object_id:id(1),rect,request_id:'stem-stats'}],
+  ['image_profile',{object_id:id(1),points:[[20.25,22.5],[24.25,22.5]],sample_count:5,request_id:'stem-profile'}],
+  ['image_discovery',{object_id:id(1),entry:'manual',regions:[{rect,reason:'Expected position question'}],request_id:'stem-discovery'}],
+  ['image_discovery_review',{object_id:id(2),candidate_id:id(3),evidence_ids:[id(4)],observation_text:'Retain raw evidence',include_site_continuation:true,
+   site_context:{question:'Compare the expected site',statistics_id:id(4),expected_position_xy:[22.25,22.5],position_source_text:'Supplied prior',modality:'haadf',signal_kind:'stored_scalar',signal_source_text:'Analytic fixture'},request_id:'stem-review'}]];
+ for(const [name,args] of inputs){await execution.call(name,args);await execution.call(name,args);}
+ assert.deepEqual(calls.map(c=>c.name),inputs.flatMap(([name])=>[name,'image_result']));
+ await assert.rejects(execution.call('image_profile',{object_id:id(1),points:[[1,2]],request_id:'invalid-line'}));
+ await assert.rejects(execution.call('image_column_fit',{request_id:'not-opened-by-this-change'}),/Unsupported/);
+ assert.equal(calls.length,8);
+});
 test('query never wraps a nonthrowing failed/pending/unknown/missing outcome as CLI success',async t=>{
  const f=fixture(t);for(const [state,status]of [['completed','completed'],['failed','failed'],['not_submitted','failed'],['pending','outcome_unknown'],['unknown','outcome_unknown'],['not_found','outcome_unknown']]){
   const calls=[],provider={async call(name,args){calls.push({name,args});return reply({state,request_id:'original-query'});},close(){}};
@@ -41,6 +56,61 @@ test('query never wraps a nonthrowing failed/pending/unknown/missing outcome as 
  }
  const mismatch=await runCli({command:'query',workspace:f.workspace,request_id:'original-query'},{provider:{async call(){return reply({state:'completed',request_id:'different-request'});},close(){}}});assert.equal(mismatch.status,'outcome_unknown');assert.equal(mismatch.request_id,'original-query');
 });
+function siteFollowupFixture(){
+ const context={question:'Why does the fixed expected site differ?',statistics_id:id(4),expected_position_xy:[22.25,22.5],position_source_text:'Declared expected site',modality:'haadf',signal_kind:'stored_scalar',signal_source_text:'Analytic scalar, no count claim'};
+ const science={frame_object_id:id(1),array_sha256:'a'.repeat(64),shape_yx:[64,64],dtype:'float32'};
+ const action={tool:'image_profile',arguments:{object_id:id(1),points:[[20.25,22.5],[24.25,22.5]],interpolation:'nearest',line_width:1,sample_count:5,request_id:'follow-profile'}};
+ const after={tool:'image_discovery_review',require_result_request_id:'follow-profile',require_result_kind:'profile',arguments:{object_id:id(2),candidate_id:id(3),evidence_ids:[id(4),id(5)],site_context:context,observation_text:'Keep raw evidence; physical unknown',previous_review_id:id(7),include_site_continuation:true,request_id:'follow-linked'}};
+ const review={state:'completed',kind:'discovery_review',request_id:'follow-review',object_id:id(7),evidence_refs:[{object_id:id(4)},{object_id:id(5)}],site_observation:{context},site_continuation:{version:2,status:'tool_proposed',source_review_id:id(7),source_review_request_id:'follow-review',source_science:science,action,after_success:after}};
+ const profile={state:'completed',kind:'profile',request_id:'follow-profile',object_id:id(6),parent_object_id:id(1),component:'raw',points:action.arguments.points,sampling:{interpolation:'nearest',line_width:1,sample_count:5},scientific_grid_identity:{source_grid_object_id:id(1),array_sha256:science.array_sha256,shape_yx:[64,64],dtype:'float32'}};
+ const calls=[];return {review,profile,calls,provider:{async call(name,args){calls.push({name,args});assert.equal(name,'image_result');return reply(structuredClone(args.request_id==='follow-review'?review:profile));},close(){}}};
+}
+
+test('site-followup requires explicit runtime and original review request ID',()=>{
+ const absolute=path.resolve('site followup fixture');
+ assert.equal(parseCliArgs(['site-followup','--workspace',absolute,'--python',process.execPath,'--request-id','follow-review']).command,'site-followup');
+ assert.throws(()=>parseCliArgs(['site-followup','--workspace',absolute,'--request-id','follow-review']),/python/);
+ assert.throws(()=>parseCliArgs(['site-followup','--workspace',absolute,'--python',process.execPath]),/request-id/);
+});
+test('site-followup prepares an existing review call from two original receipts without writes',async t=>{
+ const f=fixture(t),s=siteFollowupFixture(),original=structuredClone(s.review),before=readdirSync(f.workspace);
+ const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});
+ assert.equal(r.status,'completed');assert.equal(r.data.phase,'review_arguments_prepared');assert.equal(r.data.read_only,true);
+ assert.deepEqual(r.data.next_tool_call,{tool:'image_discovery_review',arguments:{...s.review.site_continuation.after_success.arguments,evidence_ids:[id(4),id(5),id(6)]}});
+ assert.deepEqual(s.review,original);assert.deepEqual(readdirSync(f.workspace),before);
+ assert.deepEqual(s.calls,[{name:'image_result',args:{request_id:'follow-review'}},{name:'image_result',args:{request_id:'follow-profile'}}]);
+});
+test('site-followup preserves failed/unknown original outcomes and never prepares a write',async t=>{
+ const f=fixture(t);
+ for(const [state,status] of [['failed','failed'],['pending','outcome_unknown'],['not_found','outcome_unknown'],['unknown','outcome_unknown']]){
+  const s=siteFollowupFixture();s.profile.state=state;
+  const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});
+  assert.equal(r.status,status);assert.equal(r.data.next_tool_call,null);assert.equal(r.data.original_outcome.request_id,'follow-profile');assert.equal(s.calls.length,2);
+ }
+ const thrown=siteFollowupFixture(),normal=thrown.provider.call;
+ thrown.provider.call=async(name,args)=>{if(args.request_id==='follow-profile')throw Object.assign(new Error('Original request not found; query only'),{diagnostic:{submission_state:'outcome_unknown'}});return normal(name,args);};
+ const absent=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:thrown.provider});
+ assert.equal(absent.status,'outcome_unknown');assert.equal(absent.data.next_tool_call,null);assert.match(absent.data.original_outcome.error.message,/Original request not found/);
+ const s=siteFollowupFixture();s.review.state='unknown';
+ const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});assert.equal(r.status,'outcome_unknown');assert.equal(s.calls.length,1);assert.equal(r.data.next_tool_call,null);
+});
+test('site-followup refuses a completed profile with changed original ID, source or sampling',async t=>{
+ const f=fixture(t);
+ for(const mutate of [s=>s.profile.request_id='other',s=>s.profile.kind='statistics',s=>s.profile.parent_object_id=id(8),s=>s.profile.points=[[20,20],[24,20]],s=>s.profile.sampling.sample_count=3,s=>s.profile.sampling.line_width=2,s=>s.profile.sampling.interpolation='linear',s=>s.profile.component='amplitude',s=>s.profile.scientific_grid_identity.array_sha256='b'.repeat(64),s=>s.profile.scientific_grid_identity.source_grid_object_id=id(8),s=>s.profile.scientific_grid_identity.shape_yx=[32,64],s=>s.profile.scientific_grid_identity.dtype='uint16']){
+  const s=siteFollowupFixture();mutate(s);const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});
+  assert.ok(['unavailable','outcome_unknown'].includes(r.status));assert.equal(r.data.next_tool_call,null);assert.equal(s.calls.length,2);
+ }
+});
+test('site-followup keeps historical and no-action decisions without querying or inventing a profile',async t=>{
+ const f=fixture(t);
+ for(const status of ['needs_reference_review','needs_information','needs_supported_profile','stop_at_observation']){
+  const s=siteFollowupFixture();s.review.site_continuation.status=status;s.review.site_continuation.reason='Keep unknown and inspect the original evidence';
+  const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});assert.equal(r.status,'completed');assert.equal(r.data.phase,status);assert.equal(r.data.next_tool_call,null);assert.equal(s.calls.length,1);
+ }
+ const s=siteFollowupFixture();s.review.site_continuation.version=1;
+ const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});assert.equal(r.status,'unavailable');assert.equal(r.data.next_tool_call,null);assert.equal(s.calls.length,1);
+});
+
 test('typed short metadata contention maps to conflict without generalizing every busy error',()=>{
  const error=Object.assign(new Error('workspace metadata gate is held'),{code:'WORKSPACE_METADATA_BUSY',submission_state:'not_submitted',request_id:'original-held'}),response=cliError('tool',error);assert.equal(response.status,'conflict');assert.equal(response.request_id,'original-held');assert.equal(response.error.submission_state,'not_submitted');assert.equal(cliError('tool',Object.assign(new Error('unrelated busy'),{code:'DETECTOR_BUSY'})).status,'failed');
 });

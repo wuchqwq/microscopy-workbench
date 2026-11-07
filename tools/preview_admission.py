@@ -183,10 +183,18 @@ def prepare(workspace, request, api):
                 acknowledged = acknowledged or (terminal[0] == "completed" and
                                 (_references(workspace, request["object_id"], terminal[1], api) or
                                  explicit and declared.get("object_id") == terminal[1])) or terminal[0] == "failed" and explicit
+            recovery = (" Read the original with image_result, then record its receipt using "
+                        "image_preview_acknowledge with a new acknowledgement request_id, preview_request_id=" + owner +
+                        (" and object_id=" + terminal[1] if terminal[0] == "completed" else " and no object_id") +
+                        ". This acknowledges receipt only, not visual inspection. Keep a full frame/calibration wrapper as the scientific composition input; "
+                        "do not substitute the display view. Calling image_preview with resolved_preview renders a NEW preview that needs its own receipt."
+                        if terminal else
+                        " Query image_result for the original request; preserve an unknown outcome without replay. Unknown originals cannot be acknowledged.")
             api.need(old_intent.get("state") == "not_submitted" or acknowledged,
                      "PREVIEW_OUTCOME_UNRESOLVED: original request_id=" + owner +
                      ("; saved object_id=" + terminal[1] if terminal and terminal[1] else "") +
-                     "; original_provider_state=" + (terminal[0] if terminal else "unknown") + "; read the original outcome. A new ID, Panel or display size is not recovery. Continue only by explicitly referencing the resolved original result.",
+                     "; original_provider_state=" + (terminal[0] if terminal else "unknown") +
+                     "; a new ID, Panel or display size is not recovery." + recovery,
                      "PREVIEW_OUTCOME_UNRESOLVED")
         # Reserve the SAME original request namespace before publishing a ticket.
         # Scientific writes and acknowledgement writes cannot race this ID.

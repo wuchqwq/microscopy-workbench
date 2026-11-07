@@ -74,10 +74,27 @@ class ScopeTests(unittest.TestCase):
             "tests/image-panel-data-inspector.test.mjs": {"node", "boundary"},
             "tests/image-panel-data-probes.test.mjs": {"node", "boundary"},
             "tests/image-panel-presentation-transport.test.mjs": {"node", "boundary"},
+            "tests/core-cross-window-contract.test.mjs": {"node"},
+            "tests/image_core_cross_test.py": {"spatial"},
+            "tests/image_point_observation_test.py": {"spatial"},
+            "tests/image_tiff_admission_test.py": {"spatial"},
+            "tests/panel-helper-launch.test.mjs": {"node"},
+            "tests/point-observation-contract.test.mjs": {"node"},
         }
         for path, expected in examples.items():
             with self.subTest(path=path):
                 self.assertEqual(groups_for_path(path), expected)
+
+    def test_point_observation_checks_are_in_actual_execution_lists(self):
+        root=Path(__file__).resolve().parents[1]
+        self.assertIn("- run: python -B tests/image_point_observation_test.py", (root/".github/workflows/quick.yml").read_text())
+        self.assertIn("- run: python -B tests/image_site_observation_test.py", (root/".github/workflows/quick.yml").read_text())
+        self.assertEqual(groups_for_path("tests/image_site_observation_test.py"), {"spatial"})
+        self.assertIn("- run: python -B tests/image_site_continuation_test.py", (root/".github/workflows/quick.yml").read_text())
+        self.assertEqual(groups_for_path("tests/image_site_continuation_test.py"), {"spatial"})
+        import json
+        command=json.loads((root/"package.json").read_text())["scripts"]["test"]
+        self.assertIn("dist/tests/point-observation-contract.test.mjs",command.split())
 
     def test_shared_unknown_and_unregistered_tests_expand(self):
         for path in ("scripts/build.mjs", "server.mts", "science-server.mts",

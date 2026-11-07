@@ -1,0 +1,113 @@
+{
+  "schema_version": "integration-validation-v1",
+  "main": "31f4f014a4293d24de72402727b1efd084fc1022",
+  "source_science_revision": "2ed81e1564f2299c7d052bbb89c2f7f016714aa7",
+  "candidate_branch": "review/conditional-s2-on-main-20261105",
+  "checked_scopes": [
+    {
+      "command": "npm run build",
+      "exit_code": 0,
+      "scope": "Three TS configs plus emitted standalone resources",
+      "logs": [
+        "logs/build-final.stdout.log",
+        "logs/build-final.stderr.log"
+      ]
+    },
+    {
+      "command": "node --check server.mjs",
+      "exit_code": 0
+    },
+    {
+      "command": "node --test --test-concurrency=2 dist/tests/{conditional-method-routing,column-fit-contract,point-observation-contract,plugin-package,runtime-stdio,runtime-registry,standalone-boundary}.test.mjs",
+      "exit_code": 0,
+      "tests": 25,
+      "passed": 24,
+      "failed": 0,
+      "skipped": 1,
+      "skip": "Existing plugin-package macOS /var aliases and symlink test skips win32: Symlink behavior qualified on Unix",
+      "logs": [
+        "logs/focused-node.stdout.log",
+        "logs/focused-node.stderr.log"
+      ]
+    },
+    {
+      "command": "python -B tests/ci_method_decision_test.py",
+      "exit_code": 0,
+      "tests": 20,
+      "passed": 20,
+      "scope": "Record invariants, exact mirrors, selected-Skill-only relocation, baseline/recovery/wrong-ID and copied safe verifier",
+      "logs": [
+        "logs/method-decisions-final.stdout.log",
+        "logs/method-decisions-final.stderr.log"
+      ]
+    },
+    {
+      "command": "node dist/tests/column-fit-stdio-smoke.mjs 901",
+      "exit_code": 0,
+      "seconds": 20.732,
+      "fit_calls": 2,
+      "optimizer_calls": 2,
+      "scope": "Same pre-existing synthetic TIFF; S0 equivalence, CPE, original-ID restart readback/info/export, discovery review remains nonverification",
+      "record": "../validation/stdio-attempt-901.json",
+      "logs": [
+        "logs/stdio-901.stdout.log",
+        "logs/stdio-901.stderr.log"
+      ]
+    },
+    {
+      "command": "python -B <docs-or-Skill>/science-records-v1/verify_package.py",
+      "exit_code": 0,
+      "copies": 2,
+      "payloads_verified_per_copy": 13,
+      "arithmetic_queries": [
+        8,
+        8,
+        4
+      ],
+      "scope": "Hash and safe-error arithmetic only"
+    },
+    {
+      "command": "python -X utf8 <skill-creator>/scripts/quick_validate.py <automation Skill>",
+      "exit_code": 0
+    },
+    {
+      "kind": "Independent fresh 6.1 Sol text-only forward",
+      "cases": 3,
+      "passed": 3,
+      "record": "skill-forward-v1.json",
+      "scope": "Guidance behavior only; no physical/model-isolation evidence"
+    }
+  ],
+  "first_failures": [
+    {
+      "command": "python -B tests/ci_method_decision_test.py",
+      "result": "Windows sandbox Temp AccessDenied (2 errors), retained; exact approved elevated rerun then exposed test assertion defect",
+      "log": "logs/method-decisions.log"
+    },
+    {
+      "result": "Initial new negative-case test attempted parsing stdout, while checker correctly emitted invalid JSON to stderr. Assertion corrected; checker science behavior unchanged. Final20/20 pass.",
+      "log": "logs/method-decisions-escalated.log"
+    }
+  ],
+  "evidence_reuse": {
+    "old8b_regular_node": {
+      "tests": 1145,
+      "passed": 1137,
+      "skipped": 8,
+      "failed": 0
+    },
+    "reason": "Unchanged solver/runtime Git blobs from tested2ed stack; main changes are documentation. New helper/packaging and integration boundaries are checked here.",
+    "full_suite_repeated": false,
+    "physics_repeated": false,
+    "model_repeated": false
+  },
+  "safe_package_manifest_sha256": "b741b575658269144fe44cb6dca522c0e99eea0c7dc40ae35ded5e55109ed9b4",
+  "limits": [
+    "No physical retest of integration candidate",
+    "No browser/Panel/DM qualification",
+    "Science package not self-contained physics reproduction",
+    "Working model.py raw CRLF differs from tested LF; normalized and Gitblob match. Dist Python NOT_COVERED by original physical deployment manifest.",
+    "One platform-specific Unix symlink test skipped on Windows"
+  ],
+  "canonical_main_final_readonly_observation": "31f4f014a4293d24de72402727b1efd084fc1022"
+}

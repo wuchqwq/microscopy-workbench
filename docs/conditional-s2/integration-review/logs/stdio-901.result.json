@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "dist/tests/column-fit-stdio-smoke.mjs",
+    "901"
+  ],
+  "cwd": "C:\\Users\\13471\\Documents\\Codex\\2026-11-04\\task-7\\integration-main-31f4f014-s2-review-v1",
+  "exit_code": 0,
+  "seconds": 20.732,
+  "scope": "Synthetic engineering/Skill validation only; no physical simulation or real model"
+}

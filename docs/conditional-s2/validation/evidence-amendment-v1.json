@@ -1,0 +1,32 @@
+{
+  "amendment_id": "conditional-s2-software-evidence-amendment-v1",
+  "original_attempt_1": "Sandbox temporary TIFF write denied; 0fits/0optimizers",
+  "original_attempt_2": "17tests/14PASS/3FAIL;16fit calls/13optimizers; all3 FAIL incorrectly required whole-row convergence on the same original fixture",
+  "original_diagnostic_status": "UNKNOWN_NO_SAVED_DIAGNOSTIC",
+  "evidence_retention_gap": "TemporaryDirectory teardown removed original per-test provider objects. The original logs, source snapshots, seed definitions and call counts remain. Original PG cannot be reconstructed from those logs.",
+  "authorized_followup": {
+    "run_id": "conditional-s2-diagnostic-reproduction-v1",
+    "new_calls_max": 2,
+    "same_original_fixture_seed": 202611051,
+    "new_output_is_original_attempt_2": false,
+    "persistence": "Keep full source/frame/request/object/patch records in a controlled output workspace, then reuse this one result for three corrected software assertions and read/export/review/tamper; no refit",
+    "transport_smoke": "After affected checks pass, copy the accepted target9x9 bytes by translation to reference geometry; at most2 new patch fits; repeated patches are not independent samples or accuracy evidence"
+  },
+  "changes_to_scientific_model_solver_thresholds_or_seed": false,
+  "rerun_legacy_8_or_node_6": false,
+  "original_logs": {
+    "python-attempt-1.txt": {
+      "original_sha256": "92bb8141fd16ff138a9c9067b5a6ba5086430676fab261f05386dbb8d74b267f",
+      "portable_redacted_copy": "python-attempt-1.redacted.txt"
+    },
+    "python-attempt-2.txt": {
+      "original_sha256": "48b491a2753fbc416d630acaf35ac4e4797181a96ed465825f8163b3e1214341",
+      "portable_redacted_copy": "python-attempt-2.redacted.txt"
+    }
+  },
+  "original_snapshots": {
+    "adapter-before-evidence-amendment.py": "a02fd0e397693cf3625e1ea7ad6a128891339f7f804a928e1a7099f6be83320b",
+    "runner-before-evidence-amendment.py": "338cf7319304ccef884dccb1208a77077e12b57eb8575fc299ac88eb4b0d9842",
+    "test-before-evidence-amendment.py": "32825fac6fd9382f2ebc861f1eddd9a8bd8ff3731521d8e0c100bbbc9c408e16"
+  }
+}

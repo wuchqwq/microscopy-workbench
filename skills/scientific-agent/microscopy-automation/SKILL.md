@@ -9,6 +9,12 @@ Before choosing tools, read [bounded automation scope](references/automation-sco
 Default to explicit ROI measurements and finite hypotheses; advanced scientific
 interpretations are not automatically validated by successful tool execution.
 
+For whether baseline H0/S0 is sufficient, when to propose conditional S2, and
+when to retain UNKNOWN or request a scientific revision, read
+[conditional method selection](references/conditional-methods.md). It links the
+versioned method evidence and decision-record contract; H1/S1 remain research
+history rather than silently added production methods.
+
 
 For autonomous, evidence-grounded choices and three-layer saved results, read
 [Route A decisions](references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
@@ -29,19 +35,40 @@ use [manual ROI to crystal evidence](references/manual-crystal.md). It shares on
 two-window atlas's FFT/measurements between manual reviews and general crystal
 comparison; no full-field scan or duplicate FFT is required.
 
-For a researcher saying "look here" or supplying an original-image ROI/reason,
+For a researcher saying "look here" or an Agent choosing an observed ROI/reason,
 read [manual image-first discovery](references/image-first.md). Explicitly use
 `image_discovery(entry="manual")`, choose existing scientific tools and bind
 their exact source/ROI results with `image_discovery_review`. Manual support is
 limited to synthetic software/numerical qualification; it does not establish a
 physical explanation or human GUI acceptance. A complete structural field is
 **not** an admission requirement. Unknown physical scale remains pixel-domain.
+Explicit-coordinate `entry="manual"` can come from an Agent or researcher;
+preserve caller-reported `selection_origin`. The Agent remains the analyser,
+with optional human attention/correction. For a core and directional context,
+read [one-core cross windows](references/core-cross-windows.md): it composes
+existing discovery/review, rectangular atlas, comparisons and saved context.
 Automatic real-space feature proposals are **EXPERIMENTAL**; use them only as
 an explicitly selected exploration option, not a required detector. No candidate
 does not mean normal structure. This is not a fixed automatic classifier.
 
 If a field or qualified GPA already answers the next question, continue it
 directly using the modes below; do not rebuild it just to enter image-first mode.
+
+For atomic-resolution STEM or a suspected missing/weak projected column, read
+[fixed-site real-space observations](references/point-observations.md). Reuse
+the same discovery/statistics/profile/review chain from either Agent-selected
+or researcher-selected attention. FFT peak positions alone cannot exclude a
+point defect. This is numerical observation, not a trained vacancy detector.
+That reference also describes explicit `image_column_fit` S2 decomposition when
+the caller supplies sourced count interpretation, fixed geometry and width.
+Keep raw ROI observation as default; unavailable premises remain UNKNOWN, and
+fitted components are not occupancy or defect classifications. This optional
+tool persists through the provider journal, without a new Panel editor or
+AnalysisContext role.
+For the raw expected-site question, that reference also connects an explicitly
+requested `site_continuation` to existing profile/review calls and original-ID
+recovery. Inspect/choose the proposal; a saved action is not executed science or
+proof of autonomous AI choice. Retain all references and old off-site profiles.
 
 ## Budgeted active follow-up
 

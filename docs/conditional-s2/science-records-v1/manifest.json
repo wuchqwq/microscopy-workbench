@@ -1,0 +1,88 @@
+{
+  "package_version": "integration-evidence-package-v1",
+  "status": "READY_FOR_INDEPENDENT_REVIEW",
+  "files": {
+    "code/frozen_metrics.py": {
+      "bytes": 3109,
+      "sha256": "d245b01bd830de063de96734a56f1b76a74cfdf2ce07986eb4efa434821c1573",
+      "content_type": "text/plain"
+    },
+    "execution-history-safe.json": {
+      "bytes": 1627,
+      "sha256": "531677fbf01774defe40409f77c8d507d1f653bd4db4fcf2a9a4827e7e8a3f19",
+      "content_type": "application/json"
+    },
+    "integration-context.json": {
+      "bytes": 1689,
+      "sha256": "359ad3c475d52af01a51aeaac89d8bf80cf74636f9adb6ad930b33371acba904",
+      "content_type": "application/json"
+    },
+    "interpretation.json": {
+      "bytes": 1804,
+      "sha256": "f9912f9c309fbddab88d756926b9eb81b0f23eedbcec931ed07b9cfa7a25111a",
+      "content_type": "application/json"
+    },
+    "protocol/essentials.json": {
+      "bytes": 2787,
+      "sha256": "6e2b157ca06a70a5d90cb4da9dc4eee408797a1388e521979ac60917c4f2a94f",
+      "content_type": "application/json"
+    },
+    "protocol/original-routing-prompt.txt": {
+      "bytes": 2917,
+      "sha256": "94854bd86faef0107811369c2ced7121cfd50b650c25d4e352300a7005829fba",
+      "content_type": "text/plain"
+    },
+    "protocol/unseen-latent-prompt.txt": {
+      "bytes": 3768,
+      "sha256": "013957476362a1eb436dac809fdb1279ae87a9b676f3ea52f2a84cf1e38cfaec",
+      "content_type": "text/plain"
+    },
+    "source-references.json": {
+      "bytes": 42052,
+      "sha256": "4892b51dfd6fded311f1d3b301424d6f9b4a2a336567876e49f7fbecfdefd1e0",
+      "content_type": "application/json"
+    },
+    "studies/01-original-blind.json": {
+      "bytes": 5709,
+      "sha256": "6359899848dc857f0859b8ef6a59b5cdc5ab13c3953772ce10b3b3e83c973ac6",
+      "content_type": "application/json"
+    },
+    "studies/02-revealed-same-frame.json": {
+      "bytes": 9040,
+      "sha256": "11e00259dcdfcb67bc0e9c8e979204461062ecb0a90837e7e2dffb968fc39b59",
+      "content_type": "application/json"
+    },
+    "studies/03-new-unseen.json": {
+      "bytes": 13656,
+      "sha256": "bc848d070e7384fa26d40b72db6284012009844a9ea1284b52c3b505ba2bf52d",
+      "content_type": "application/json"
+    },
+    "tested-methods-hashes.json": {
+      "bytes": 38505,
+      "sha256": "dd4386de5dc02ab64783f00320a9fffa796d609ef04d91e3059cd7839f0f8ac7",
+      "content_type": "application/json"
+    },
+    "verify_package.py": {
+      "bytes": 3936,
+      "sha256": "e1950eb59bd01921d4c8dbd0d2f452c99862bc45c9f3d308598571b0b257d2e4",
+      "content_type": "text/plain"
+    }
+  },
+  "total_payload_bytes": 130599,
+  "studies_are_separate_not_pooled": true,
+  "full_physics_reproduction_assets_bundled": false,
+  "verification_command": "python -B verify_package.py",
+  "verification_scope": "Included file hashes and aggregate arithmetic from safe opaque absolute errors only.",
+  "external_dependencies": "Full original studies/source Git repositories, local-only runtime artifacts, simulation arrays, provider journals and runtimes are not bundled. External absolute artifact links are audit pointers only.",
+  "source_reference_checks": {
+    "artifacts": 37,
+    "git_blob_available": 34,
+    "git_blob_byte_identical": 31,
+    "EOL_only_differences": 3,
+    "exact_raw_archive_available": 1,
+    "local_runtime_artifacts_not_Git": 3
+  },
+  "excluded": "No rawstderr/account/credentials, new sealed truth/groundtruth label mapping/raw true means/seeds, private specimen data or runtime caches.",
+  "source_code_or_experiments_modified": false,
+  "new_physics_model_fit_calls": 0
+}

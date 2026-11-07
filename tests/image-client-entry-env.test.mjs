@@ -25,3 +25,14 @@ test('panel client forwards its exact workspace/interpreter to legacy and indepe
     rmSync(directory,{recursive:true,force:true});
   }
 });
+
+test('explicit server arguments remain separate literal arguments without changing defaults',async()=>{
+ const directory=mkdtempSync(path.join(tmpdir(),'panel-entry-args-')),server=path.join(directory,'inspect.mjs');
+ writeFileSync(server,`process.stdin.setEncoding('utf8');let b='';process.stdin.on('data',c=>{b+=c;let n;while((n=b.indexOf('\\n'))>=0){const m=JSON.parse(b.slice(0,n));b=b.slice(n+1);process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:m.id,result:process.argv.slice(2)})+'\\n');}});`);
+ let client;
+ try{
+  const args=['--config',path.join(directory,'带 空格 config.json')];
+  client=new StdioImageClient({workspace:path.join(directory,'workspace'),python:process.execPath,serverPath:server,serverArgs:args});
+  assert.deepEqual((await client.rpc('inspect')).result,args);
+ }finally{if(client)await client.close();rmSync(directory,{recursive:true,force:true});}
+});

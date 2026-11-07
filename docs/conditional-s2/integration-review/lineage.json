@@ -1,0 +1,150 @@
+{
+  "canonical_main": "31f4f014a4293d24de72402727b1efd084fc1022",
+  "source_stack": "2ed81e1564f2299c7d052bbb89c2f7f016714aa7",
+  "integrated_stack": "2ddab0cbafe4179f1ad820232a14863ea5ffd9fc",
+  "merge_base": "c69424ac25a35efd816d68cacd5904f5381c7485",
+  "main_is_ancestor": true,
+  "content_conflicts": 0,
+  "commits": [
+    {
+      "source": "fe87838271c2b50e8c9172b13b34b44ad2448f0a",
+      "candidate": "8e1434aea65a96f94e937a2bc2aff0f56718da92",
+      "source_patch_id": "2242ff97d3dc67c387a9cf755c0947a867aa7f99",
+      "candidate_patch_id": "2242ff97d3dc67c387a9cf755c0947a867aa7f99"
+    },
+    {
+      "source": "c0c760277d008f92336a1c894c55913a94efd595",
+      "candidate": "c5b0002ce73bd8c3cbc9d20aaa2214cdb39c08de",
+      "source_patch_id": "e7e6beb968c80cfe1a794f4022fad07667115ae1",
+      "candidate_patch_id": "e7e6beb968c80cfe1a794f4022fad07667115ae1"
+    },
+    {
+      "source": "798de145247bf3e2b7fb3cd60fc5c142bfdd12c8",
+      "candidate": "b1643320d8ff95d9d5a9b2aa45616fa40d48312e",
+      "source_patch_id": "f3f37d1b19e636f3de04088cdf22a01e895f8610",
+      "candidate_patch_id": "f3f37d1b19e636f3de04088cdf22a01e895f8610"
+    },
+    {
+      "source": "41ac7757c1411d23602a605ee3ae5f618482a4e2",
+      "candidate": "b4608d8df2fcaf4f41eff6fcf2f4add47041bc53",
+      "source_patch_id": "6ed99a5ed4aed4fc308882a23afece00cbdd86a8",
+      "candidate_patch_id": "6ed99a5ed4aed4fc308882a23afece00cbdd86a8"
+    },
+    {
+      "source": "6ee1ca9f78b0f2d2f077a3500eabc0a47aff00d5",
+      "candidate": "eb21a6d44f6b1b8678f276fc1916c438d9496962",
+      "source_patch_id": "4cbd4177b2d50aafc6c6340b924dfa09533f9fb2",
+      "candidate_patch_id": "4cbd4177b2d50aafc6c6340b924dfa09533f9fb2"
+    },
+    {
+      "source": "224cd6a7c8e82e4a452711e770bf993ed76a531a",
+      "candidate": "94bf0fd2f9833a60f7a70c2549ac640e0ff79c63",
+      "source_patch_id": "6a4d1e8b54585ac5e0199e0b7341877dce396081",
+      "candidate_patch_id": "6a4d1e8b54585ac5e0199e0b7341877dce396081"
+    },
+    {
+      "source": "2ea60764324f4080aaebd3258afb4c40dcd69acc",
+      "candidate": "4707ac327a8ce23c7ed294f75db16602094bac3e",
+      "source_patch_id": "9df74b5a74efdeb84c9f34bfbc91e5bdbe3c448a",
+      "candidate_patch_id": "9df74b5a74efdeb84c9f34bfbc91e5bdbe3c448a"
+    },
+    {
+      "source": "db2d71383bb1d3b50e8dba4701553550d016e46e",
+      "candidate": "07b058e07068400ebfc881ae4f094409d4bb2052",
+      "source_patch_id": "f42da203b85972ee7b197eb399882adb7f0727b9",
+      "candidate_patch_id": "f42da203b85972ee7b197eb399882adb7f0727b9"
+    },
+    {
+      "source": "30ec5459faf2993571dc17b85e6a7a62843b8b0b",
+      "candidate": "fa6d882783fc1b3f95a86824543eeb699b06571a",
+      "source_patch_id": "16d8bcef27b613f1ce689053fce2e7d41b1fead8",
+      "candidate_patch_id": "16d8bcef27b613f1ce689053fce2e7d41b1fead8"
+    },
+    {
+      "source": "a0258f7cb3d108fb106da6cc929af6e769c0cebf",
+      "candidate": "f69c4c234cc3a252340ea7e6ebd593bed0f6fb91",
+      "source_patch_id": "e9f7e4b550eb0857a4d7e81ba27460c676c3e6ac",
+      "candidate_patch_id": "e9f7e4b550eb0857a4d7e81ba27460c676c3e6ac"
+    },
+    {
+      "source": "f0cc69ace5a539ab4f7a4283bca8f38281e595d4",
+      "candidate": "5bb5edeaa9badf9d492babb2e1074f6a8a8e651e",
+      "source_patch_id": "b02df8dc20ffa26c2463fc164b0d44d45ee03b3a",
+      "candidate_patch_id": "b02df8dc20ffa26c2463fc164b0d44d45ee03b3a"
+    },
+    {
+      "source": "2a0ea4333e596b3eaadf164b1e489d541d3bc52c",
+      "candidate": "88945998f46eaad34b3ecf185c7d76cacc5b121f",
+      "source_patch_id": "32318152457edef89757cc691d3fd519ee43cde8",
+      "candidate_patch_id": "32318152457edef89757cc691d3fd519ee43cde8"
+    },
+    {
+      "source": "7c0be096f19a0535a815840573b2c79036b51937",
+      "candidate": "ac1e82e445e0f1be74358c57ad84907add0f4beb",
+      "source_patch_id": "687b9eeedbfa570a1e8e390166536de93fe0773a",
+      "candidate_patch_id": "687b9eeedbfa570a1e8e390166536de93fe0773a"
+    },
+    {
+      "source": "af608332b246926c58db0591b66a51e54698dc79",
+      "candidate": "fdec3b7cdcf13ee91da0440b38757952962583ee",
+      "source_patch_id": "dce81d44e7d1da5fa0a3191aec9ac727c17e9953",
+      "candidate_patch_id": "dce81d44e7d1da5fa0a3191aec9ac727c17e9953"
+    },
+    {
+      "source": "3bb096f919a6521eda0dbc9a5def4f3c08f1181b",
+      "candidate": "3ccd09a693dd60f4f698c3b97e69cfa805424b2b",
+      "source_patch_id": "c4075abe5fdd0a2dd82ba5a65dff3d83f0ff4b3f",
+      "candidate_patch_id": "c4075abe5fdd0a2dd82ba5a65dff3d83f0ff4b3f"
+    },
+    {
+      "source": "8bff842bd084be2986f0bf99613da7b947fe0bae",
+      "candidate": "8ff527528383673265676f838b9edc53bfce8323",
+      "source_patch_id": "075372cfbcc1f17a12524cde7dfe9c3c96fba242",
+      "candidate_patch_id": "075372cfbcc1f17a12524cde7dfe9c3c96fba242"
+    },
+    {
+      "source": "2ed81e1564f2299c7d052bbb89c2f7f016714aa7",
+      "candidate": "2ddab0cbafe4179f1ad820232a14863ea5ffd9fc",
+      "source_patch_id": "2e313e8793fce43c9db068af9ac3ff896d80a181",
+      "candidate_patch_id": "2e313e8793fce43c9db068af9ac3ff896d80a181"
+    }
+  ],
+  "production_tree_comparison": {
+    "paths": [
+      "lib",
+      "tools",
+      "ui",
+      "scripts",
+      "tests",
+      "skills",
+      ".github",
+      "package.json",
+      "package-lock.json",
+      "server.mjs",
+      "science-server.mjs"
+    ],
+    "changed_git_blob_paths": [],
+    "same_git_blobs_before_standalone_fix": true
+  },
+  "working_model_bytes": {
+    "raw_sha256": "9d2c32e83dd69a02313041f8b4254fc7007d14e50d948c42e4e09675b110285e",
+    "raw_bytes": 4646,
+    "crlf_pairs": 90,
+    "lf_normalized_sha256": "6f60e322ba3378b20ea3983f09d21962a2cf56ec4e2336832db160a307bcae80",
+    "lf_normalized_bytes": 4556,
+    "meaning": "Scientific tested manifest is LF; candidate worktree has CRLF only. Git blob equivalence does not claim raw worktree byte equivalence. Dist Python bytes NOT_COVERED by tested deployment manifest."
+  },
+  "scope_vs_main": "126 files changed, 15250 insertions(+), 48 deletions(-)",
+  "source_minus_candidate_docs": [
+    "README.agent.md",
+    "README.agent.zh-CN.md",
+    "README.md",
+    "README.zh-CN.md",
+    "docs/CLIENT_SETUP.md",
+    "docs/CLIENT_SETUP.zh-CN.md",
+    "docs/DEVELOPMENT_STATUS.md",
+    "docs/DEVELOPMENT_STATUS.zh-CN.md",
+    "docs/WORKBENCH_WORKFLOW.md",
+    "docs/WORKBENCH_WORKFLOW.zh-CN.md"
+  ]
+}

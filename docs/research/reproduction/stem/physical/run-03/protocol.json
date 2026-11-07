@@ -1,0 +1,181 @@
+{
+  "protocol_version": "physical-stem-mos2-v2-numerical-refinement",
+  "candidate": "03ea9534c34e606295b851637d6e9e03b35bcab5",
+  "purpose": "CPU physical forward simulation and source-bound point-observation validation; not real-specimen qualification or inverse depth recovery",
+  "installation": {
+    "package": "abtem==1.0.11",
+    "source": "https://pypi.org/simple",
+    "binary_wheels_only": true,
+    "isolated_environment": true
+  },
+  "structure": {
+    "ase_builder": "ase.build.mx2",
+    "formula": "MoS2",
+    "kind": "2H",
+    "a_angstrom": 3.18,
+    "thickness_angstrom": 3.172,
+    "vacuum_angstrom": 2.0,
+    "orthogonalization": "abtem.orthogonalize_cell",
+    "repeat_xy": [
+      5,
+      3
+    ],
+    "geometry": "static ideal unrelaxed single S-Mo-S layer; lateral periodicity",
+    "vacancy": "remove exactly one upper-plane S atom from a projected S2 column; retain lower S",
+    "target_selection": "PCG64 seed48015 chooses among projected S2 sites at least1.25A inside the scan; before intensities",
+    "thermal_displacements": false,
+    "relaxation": false
+  },
+  "physics": {
+    "potential": "independent atom model; Lobato parametrization; finite projection",
+    "slice_thickness_angstrom": 0.5,
+    "beam_energy_ev": 80000,
+    "probe_semiangle_mrad": 20,
+    "defocus_angstrom": 0,
+    "Cs_angstrom": 0,
+    "detector": "AnnularDetector",
+    "detector_inner_mrad": 90,
+    "detector_outer_mrad": 200,
+    "device": "cpu",
+    "fft": "fftw",
+    "partial_coherence": false,
+    "beam_damage": false,
+    "potential_gpts_xy": [
+      400,
+      432
+    ],
+    "maximum_potential_sampling_angstrom": 0.04
+  },
+  "scan": {
+    "extent_angstrom_xy": [
+      10,
+      12
+    ],
+    "grid_points_xy": [
+      40,
+      48
+    ],
+    "endpoint": false,
+    "center": "center of orthogonal supercell",
+    "pixel_spacing_angstrom_xy": [
+      0.25,
+      0.25
+    ],
+    "interpolation": false,
+    "axis_export": "save original abTEM XY ndarray; transpose-copy to TIFF rowY/columnX without dtype conversion; verify nonsymmetric samples"
+  },
+  "controls": {
+    "primary_roi_pixels": [
+      5,
+      5
+    ],
+    "reference_count_max": 8,
+    "reference_count_min": 4,
+    "reference_selection": "closest nominal intact projected S2 columns by geometry, distinct from target, same ROI size, inside scan; never select by brightness",
+    "center_rounding": "floor(source_pixel_center+0.5)",
+    "known_truth_scope": "assessor supplied ROI controls; not blind detection",
+    "vacuum_probe_check": true,
+    "numerical_convergence": {
+      "same_physical_roi_samples": true,
+      "variants": [
+        {
+          "potential_gpts_xy": [
+            480,
+            512
+          ],
+          "slice_thickness_angstrom": 0.5
+        },
+        {
+          "potential_gpts_xy": [
+            400,
+            432
+          ],
+          "slice_thickness_angstrom": 0.25
+        },
+        {
+          "repeat_xy": [
+            7,
+            5
+          ],
+          "potential_gpts_xy": [
+            560,
+            720
+          ],
+          "slice_thickness_angstrom": 0.5,
+          "sampling": "exactly match main lateral grid spacing",
+          "coordinate_shift": "one orthogonal unit cell in each lateral axis"
+        }
+      ],
+      "gate": "paired vacancy-minus-pristine local contrast must keep sign and change by at most10 percent; unresolved near-zero effects remain unknown. This is a scoped numerical stability gate, not a physical detection threshold."
+    }
+  },
+  "poisson": {
+    "method": "official abTEM Images.poisson_noise; preserve its returned dtype and counts",
+    "dose_per_area_e_per_angstrom2": [
+      10000,
+      100000
+    ],
+    "expected_counts": "normalized annular intensity * scan_pixel_area_A2 * dose_e_per_A2; no minmax or image-sum normalization",
+    "seeds": {
+      "pristine_D10000": [
+        17661,
+        17662,
+        17663,
+        17664
+      ],
+      "pristine_D100000": [
+        27661,
+        27662,
+        27663,
+        27664
+      ],
+      "vacancy_D10000": [
+        19911,
+        19912,
+        19913,
+        19914
+      ],
+      "vacancy_D100000": [
+        29911,
+        29912,
+        29913,
+        29914
+      ]
+    },
+    "independent_noise_across_conditions": true,
+    "images": "two clean plus16 independent shot-noise draws; one structural counterfactual pair, not18 independent structures"
+  },
+  "blind_host": {
+    "model": "gpt-6.1-sol",
+    "effort": "ultra",
+    "attempts_per_case": 1,
+    "cases": "pristine clean, vacancy clean, pristine D100000 first seed, vacancy D100000 first seed; opaque IDs chosen before launch",
+    "input": "one anonymous TIFF and preview per fresh ephemeral session, same project Skill texts and common acquisition information; no paired image, GT, target coordinates, generator or labels",
+    "tools": "native project MCP; relevant tools include calibration, raw probe/statistics/profile, discovery/review, FFT/peaks and original-request recovery",
+    "budget": {
+      "top_level_MCP_calls": 40,
+      "new_FFT_windows": 4,
+      "wall_seconds": 780
+    },
+    "final_max_distinct_point_candidates": 3,
+    "eligible_primary_roi_width_height_pixels": [
+      4,
+      8
+    ],
+    "site_matching_tolerance_angstrom": 0.5,
+    "evaluation": "freeze raw model output before revealing labels; assess target location/ROI support, same-type reference assignment, raw numeric fidelity, negative-frame anomaly nominations, physical overclaim and unknowns separately. A pristine intensity nomination is not automatically a false physical vacancy identification. Context-only large ROIs are not point detections; multiple support sizes at one site are correlated.",
+    "failure_policy": "retain first errors, failed calls and timeout; no relaunch or parameter adjustment to force success"
+  },
+  "limitations": [
+    "Static IAM neglects bonding, thermal diffuse scattering, relaxation, source/scan aberrations and beam-induced evolution",
+    "Single S2-to-S projected-column change does not identify which physical S plane is absent",
+    "No training, fine-tuning, new multilayer inverse algorithm, private data or external paid model API",
+    "If returned TIFF dtype is unsupported by this exact candidate, preserve the failure and report the separate TIFF dependency; no silent precision conversion"
+  ],
+  "predecessor": {
+    "run": "run-02",
+    "status": "convergence_gate_failed_before_any_blind_model_launch",
+    "slice_relative_change": 0.10678125137850368,
+    "policy": "one bounded refinement only; if gate still fails stop and mark formal blind NOT_TESTED; no threshold change"
+  }
+}

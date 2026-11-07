@@ -66,6 +66,9 @@ npm run inspect -- --source /absolute/path/to/image.tiff \
 
 ### 选择入口
 
+本地未合并的 STEM 候选另见[原图观察基线与最小路径](docs/STEM_BASELINE.zh-CN.md)，其中区分
+正式 main、已复审候选、真实工具接续与尚未开展的真实材料验收。
+
 - **本地图像复核：**使用上述 Inspector，不要求 Agent。
 - **AI 协助分析：**连接 MCP provider，安装选定的 Skills 或 [MCP + Skills 插件](docs/AUTOMATION_PLUGIN.md)。Agent 使用同一套保存的科学记录和受保护的 Panel 操作；项目不会暗中选择模型、配置密钥或修改客户端审批策略。
 - **Windows 桌面开发试用：**参见[桌面配置](docs/DESKTOP.md)。Electron 运行时使用独立 lockfile，要求 Node 22.x 中的 22.12+ 或 24.x。这不是干净机器安装包。

@@ -8,7 +8,7 @@ import re
 import sys
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from ci_scope import GROUPS, QUICK_JOBS, F3B_JOBS
+from ci_scope import GROUPS, QUICK_JOBS, F3B_JOBS, registered_node_tests
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -62,6 +62,12 @@ class WorkflowTests(unittest.TestCase):
         for config in ("tsconfig.shared.json", "tsconfig.types.json", "tsconfig.node.json"):
             self.assertIn(config, build)
 
+    def test_core_cross_tests_reach_existing_runner_lists(self):
+        self.assertIn("tests/core-cross-window-contract.test.mjs", registered_node_tests())
+        quick = jobs(self.texts["quick"])
+        self.assertIn("- run: python -B tests/image_core_cross_test.py", quick["spatial-evidence"])
+        self.assertIn("- run: npm test", quick["node-smoke"])
+
     def test_science_smoke_preserved_and_supported_node_versions_selected(self):
         quick = jobs(self.texts["quick"])
         self.assertIn("npm run test:science", quick["science-boundary"])
@@ -76,6 +82,14 @@ class WorkflowTests(unittest.TestCase):
         f3b = jobs(self.texts["f3b"])["actual-diffsims-mcp"]
         for command in ("test_site_occupancy.py", "npm run test:twin", "npm run test:general-crystal", "npm run test:manual-crystal"):
             self.assertIn(command, f3b)
+
+    def test_existing_tiff_and_panel_regressions_reach_runner_lists(self):
+        self.assertIn("tests/panel-helper-launch.test.mjs", registered_node_tests())
+        quick = jobs(self.texts["quick"])
+        command = "- run: python -B tests/image_tiff_admission_test.py"
+        self.assertIn(command, quick["spatial-evidence"])
+        mac = (ROOT / ".github/workflows/macos-r3-light.yml").read_text()
+        self.assertIn("python -B tests/image_tiff_admission_test.py", mac)
 
     def test_classifier_and_gate_regressions_always_run(self):
         self.assertIn("-p 'ci_*_test.py'", jobs(self.texts["quick"])["changes"])

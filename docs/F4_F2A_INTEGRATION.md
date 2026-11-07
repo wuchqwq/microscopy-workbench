@@ -22,6 +22,10 @@ summary. The normal PR CI separately tests the final combined head.
   the five named F1a/F4 additions plus the three named GPA additions, and keeps
   the explicitly qualified optional compact/context fields. GPA catalog
   negative tests remain present; no unrestricted additions are allowed.
+  This describes the original integration contract. The later owner-authorized
+  [HRTEM export guidance exception](validation/hrtem-export-description-policy-20261106.md)
+  permits one exact `image_export.description` extension after checking its
+  unchanged entire schema and other metadata; it does not ignore descriptions.
 - F4 and GPA CI jobs coexist with the tested documentation-only change gate.
 - The packaged Skill contains both active follow-up and explicit single-domain
   GPA instructions. GPA still has no invented AnalysisContext role.

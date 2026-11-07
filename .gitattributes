@@ -17,3 +17,39 @@ docs/validation/panel-recovery/*.json -text whitespace=cr-at-eol
 # identity. Keep a Windows checkout of the same revision byte-identical; do not
 # normalize older validators or alter hashes in existing scientific records.
 tools/image_source_proof.py text eol=lf
+
+# Retrospective research records include byte-identified original generators and
+# protocols. Preserve archive and manifest bytes rather than normalizing them.
+docs/research/** -text whitespace=cr-at-eol
+# Keep copied decision/spec evidence byte-exact across checkouts.
+docs/conditional-s2/* -text whitespace=cr-at-eol
+docs/conditional-s2/** -text whitespace=cr-at-eol
+
+# Keep the new byte-identified core/adapter and regression sources stable.
+tools/image_column_fit.py text eol=lf
+tools/image_column_model.py text eol=lf
+scripts/validate_conditional_s2.py text eol=lf
+scripts/check_conditional_s2_read_guards.py text eol=lf
+tests/image_column_fit_test.py text eol=lf
+tests/column-fit-contract.test.mjs text eol=lf
+tests/column-fit-stdio-smoke.mjs text eol=lf
+
+# Preserve new readback proof sources and original unittest log formatting.
+scripts/validate_conditional_s2_readback.py text eol=lf
+tests/image_column_fit_readback_test.py text eol=lf
+docs/conditional-s2/validation/readback-p2-*.redacted.txt -text whitespace=cr-at-eol,-blank-at-eol
+
+# Self-contained conditional-method resources mirror byte-identified docs.
+skills/scientific-agent/microscopy-automation/references/method-*-v1.json -text whitespace=cr-at-eol
+skills/scientific-agent/microscopy-automation/references/research-selection-spec-v1.json -text whitespace=cr-at-eol
+skills/scientific-agent/microscopy-automation/references/READBACK-P2-BOUNDARY.md -text whitespace=cr-at-eol
+skills/scientific-agent/microscopy-automation/references/science-records-v1/** -text whitespace=cr-at-eol
+
+# New expected-site helper and bounded checks have byte-identified LF sources.
+# Do not renormalize existing helpers or historical scientific evidence.
+tools/image_site_observation.py text eol=lf
+tools/image_site_continuation.py text eol=lf
+tests/image_site_observation_test.py text eol=lf
+tests/image_site_continuation_test.py text eol=lf
+tests/site-observation-stdio-smoke.mjs text eol=lf
+tests/site-continuation-entry-smoke.mjs text eol=lf

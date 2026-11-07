@@ -1,0 +1,17 @@
+{
+  "python-attempt-1.txt": {
+    "raw_original_preserved_at": "outputs/conditional-s2-validation/raw-diagnostics/python-attempt-1.txt",
+    "sha256": "92bb8141fd16ff138a9c9067b5a6ba5086430676fab261f05386dbb8d74b267f",
+    "redacted_copy": "docs/conditional-s2/validation/python-attempt-1.redacted.txt"
+  },
+  "python-attempt-2.txt": {
+    "raw_original_preserved_at": "outputs/conditional-s2-validation/raw-diagnostics/python-attempt-2.txt",
+    "sha256": "48b491a2753fbc416d630acaf35ac4e4797181a96ed465825f8163b3e1214341",
+    "redacted_copy": "docs/conditional-s2/validation/python-attempt-2.redacted.txt"
+  },
+  "python-attempt-3.txt": {
+    "raw_original_preserved_at": "outputs/conditional-s2-validation/raw-diagnostics/python-attempt-3.txt",
+    "sha256": "5ea9e60a30a99b39b4e5644fd15a5edff4a71f2c4c4a50e15346b6176525af19",
+    "redacted_copy": "docs/conditional-s2/validation/python-attempt-3.redacted.txt"
+  }
+}

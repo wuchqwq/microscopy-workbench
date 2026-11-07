@@ -4,6 +4,24 @@ This is a host-independent tool-use contract, not a model launcher or a new
 workflow engine. Inspect actual advertised tools/schema. The host owns access
 and approvals; do not silently enable a global service or override policy.
 
+Keep three observations separate: the local server's advertised schemas, the
+host's actual registered/allowed tools, and successful calls from that model.
+An absent Codex CLI does not establish that another permitted host cannot act.
+If this host permits a local execution bridge to the existing Workbench CLI,
+record that route and the actual schemas/results; do not describe it as native
+MCP registration. If the model's instructions forbid shell, that bridge is not
+available; never override the restriction for a demonstration.
+
+For a read-only local advertisement check, the existing qualification launcher
+accepts `--preflight --config ABS_CONFIG --output ABS_FRESH_DIRECTORY` without
+Codex CLI. It only initializes the explicitly configured MCP server and lists
+tools, including explicit preview-receipt support needed by the manual loop.
+It does not invoke a model or scientific tool, register anything, prove host
+visibility, authorize a call or qualify a physical method. Keep its summary
+separate from actual model/host event records. Current-host developer-context
+choices are not independent fresh scientific-Agent acceptance. See
+[host surface and evidence scope](../../../../docs/validation/stem-host-surface-20261106.md).
+
 ## Choose the actual entry
 
 **An existing GUI/observation:** use the supplied/retained Panel ID with

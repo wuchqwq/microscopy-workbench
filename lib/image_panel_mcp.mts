@@ -24,6 +24,8 @@ interface InFlightPanelOperation {name:string;args:PanelMutationArguments;promis
 type PanelToolDefinition=ToolDefinition&{inputSchema:ToolInputSchema&{required:readonly string[]}};
 interface WrittenPanelRequest extends RawSlots {schema_version:1;request_id:string;name:string;arguments:PanelMutationArguments;panel_id:string;status:'submitted'|'completed'|'failed';response?:unknown;error?:unknown;}
 interface ThrownSlots {code?:unknown;httpStatus?:unknown;message?:unknown;}
+class PanelHelperLaunchError extends Error {}
+interface PanelLaunchObservation {error?:PanelHelperLaunchError;dispose:()=>void;}
 
 const objectId: ArgumentSchema={type:'string',pattern:'^[a-f0-9]{32}$',minLength:32,maxLength:32};
 const requestId: ArgumentSchema={type:'string',pattern:'^[A-Za-z0-9_-]+$',minLength:1,maxLength:64,description:'Save before submission. Reuse this original ID to query the same operation after cancellation; never invent another ID to retry an uncertain operation.'};
@@ -81,6 +83,7 @@ export class ImagePanelManager {
   declare readonly readyTimeoutMs:number;declare readonly requestTimeoutMs:number;
   declare readonly directory:string;declare readonly requests:string;declare readonly panels:string;declare readonly active:Map<string,InFlightPanelOperation>;
   declare readonly launch:(request:PanelLaunch)=>unknown|PromiseLike<unknown>;
+  private readonly launchObservations=new Map<string,PanelLaunchObservation>();
   // initialize() establishes this path before any public call accesses records.
   declare canonicalDirectory:string;
   constructor({workspace,python,inspect,inspectEvidence,launch,fetchImpl=fetch,readyTimeoutMs=120000,requestTimeoutMs=120000}:PanelManagerOptions={}){
@@ -92,8 +95,18 @@ export class ImagePanelManager {
     this.launch=launch??(async({panel_id,object_id,registration_file})=>{
       if(!path.isAbsolute(this.python))throw new Error('Panel launch requires an absolute DM_IMAGE_PYTHON executable; configure the independent image environment');
       const registration=registration_file??prepareOwnedPanelRegistration({workspace:this.workspace,panel_id}).registration_file;
-      const child=spawn(process.execPath,[fileURLToPath(new URL('../tools/image_panel.mjs',import.meta.url)),'--workspace',this.workspace,'--python',this.python,'--object',object_id,'--owned-registration',registration],{detached:true,windowsHide:true,stdio:'ignore'});
-      await new Promise<void>((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();
+      const child=spawn(process.execPath,[fileURLToPath(new URL('../tools/image_panel.mjs',import.meta.url)),'--workspace',this.workspace,'--python',this.python,'--object',object_id,'--owned-registration',registration],{detached:true,windowsHide:true,stdio:['ignore','ignore','pipe']});
+      // Observe startup only. Keep stderr bounded and expose only a machine code,
+      // never arbitrary helper output/paths. Exit does not prove no side effects.
+      let startupStderr='';
+      const stderr=child.stderr as (NonNullable<typeof child.stderr>&{unref?:()=>void})|null;
+      const onData=(chunk:Buffer)=>{if(startupStderr.length<8192)startupStderr+=chunk.toString('utf8').slice(0,8192-startupStderr.length);};
+      const onError=(error:Error&{code?:string})=>{observation.error=new PanelHelperLaunchError(`Panel helper failed to start (${error.code??'unknown error'}). Startup outcome remains unverified; no automatic relaunch.`);};
+      const onClose=(code:number|null,signal:string|null)=>{const reason=startupStderr.match(/\bWORKSPACE_[A-Z_]+\b/)?.[0];observation.error??=new PanelHelperLaunchError(`Panel helper exited before readiness (${code===null?'signal '+signal:'exit code '+code}${reason?'; '+reason:''}). Startup outcome remains unverified; no automatic relaunch.`);};
+      const observation:PanelLaunchObservation={dispose:()=>{child.removeListener('error',onError);child.removeListener('close',onClose);stderr?.removeListener('data',onData);stderr?.resume();stderr?.unref?.();}};
+      this.launchObservations.set(panel_id,observation);stderr?.on('data',onData);child.once('error',onError);child.once('close',onClose);
+      try{await new Promise<void>((resolve,reject)=>{const failed=(error:Error)=>{child.removeListener('spawn',spawned);reject(error);};const spawned=()=>{child.removeListener('error',failed);resolve();};child.once('spawn',spawned);child.once('error',failed);});child.unref();}
+      catch(error){observation.dispose();this.launchObservations.delete(panel_id);throw observation.error??error;}
     });
   }
   initialize(){mkdirSync(this.workspace,{recursive:true});this.canonicalDirectory=ordinaryWorkspaceMetadataDirectory(this.workspace,'panel-registry',{create:true});for(const relative of ['panel-registry/requests','panel-registry/panels'])ordinaryWorkspaceMetadataDirectory(this.workspace,relative,{create:true});}
@@ -164,9 +177,14 @@ export class ImagePanelManager {
     return this.currentResponse(panelId,await this.request(this.getConnection(panelId),'GET','/api/state'));
   }
   async waitForConnection(panelId:string,helperSession?:string){
-    const started=Date.now();
-    while(!existsSync(this.connectionFile(panelId))||helperSession&&this.getConnection(panelId).helper_session_id!==helperSession){if(Date.now()-started>this.readyTimeoutMs)throw new Error('Panel launch is unverified; query the original request_id. It will not be automatically relaunched.');await delay(40);}
-    return this.getConnection(panelId);
+    const started=Date.now(),observation=this.launchObservations.get(panelId);
+    try{
+      for(;;){
+        if(observation?.error)throw observation.error;
+        if(existsSync(this.connectionFile(panelId))&&(!helperSession||this.getConnection(panelId).helper_session_id===helperSession))return this.getConnection(panelId);
+        if(Date.now()-started>this.readyTimeoutMs)throw new Error('Panel launch is unverified; query the original request_id. It will not be automatically relaunched.');await delay(40);
+      }
+    }finally{observation?.dispose();this.launchObservations.delete(panelId);}
   }
   async recover(record:RawSlots):Promise<ToolResult>{
     if(record.status==='failed')throw new Error(record.error as string|undefined);
@@ -178,12 +196,13 @@ export class ImagePanelManager {
       }
       // A submitted/crashed resume is never another launch. Only the exact
       // already-published generation can establish its original outcome.
-      const conn=this.getConnection(record.panel_id);if(conn.schema_version!==2||conn.helper_session_id!==record.helper_session_id||conn.generation!==record.generation)throw new Error('Original resume remains unverified; no helper was relaunched');
+      if(!existsSync(this.connectionFile(record.panel_id))&&typeof record.launch_error==='string')throw new Error(record.launch_error);
+      const conn=this.getConnection(record.panel_id);if(conn.schema_version!==2||conn.helper_session_id!==record.helper_session_id||conn.generation!==record.generation)throw new Error(typeof record.launch_error==='string'?record.launch_error:'Original resume remains unverified; no helper was relaunched');
       const state=await this.request(conn,'GET','/api/state');record.status='completed';record.response=state;this.writeMetadata(this.requestFile(record.request_id),record);
       return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true,resumed:true,panel_generation:record.generation,helper_session_id:record.helper_session_id});
     }
     if(record.name==='image_panel_open'){
-      if(!existsSync(this.connectionFile(record.panel_id)))throw new Error('Original panel launch is still unverified. It will not be automatically relaunched.');
+      if(!existsSync(this.connectionFile(record.panel_id)))throw new Error(typeof record.launch_error==='string'?record.launch_error:'Original panel launch is still unverified. It will not be automatically relaunched.');
       const state=await this.request(this.getConnection(record.panel_id),'GET','/api/state');
       return this.response(record.panel_id as string,state,{request_id:record.request_id,recovered:true});
     }
@@ -250,6 +269,7 @@ export class ImagePanelManager {
       this.writeMetadata(file,record);
       return this.response(panelId,state,{request_id:args.request_id,recovered:false,...(name!=='image_panel_open'?{snapshot_semantics:'Original immutable presentation receipt; use image_panel_current for the latest view.'}:{})});
     }catch(error){
+      if(error instanceof PanelHelperLaunchError){record.launch_error=error.message;this.writeMetadata(file,record);}
       if((error as ThrownSlots).httpStatus&&((error as ThrownSlots).httpStatus as number)<500){record.status='failed';record.error=(error as ThrownSlots).message;this.writeMetadata(file,record);}
       throw new Error(`${(error as ThrownSlots).message} Original panel request_id: ${args.request_id}; query the same tool with the same arguments, never submit a new ID to retry.`);
     }
@@ -267,7 +287,7 @@ export class ImagePanelManager {
       const state=await this.request(await this.waitForConnection(args.panel_id as string,registration.helper_session_id),'GET','/api/state');
       record.status='completed';record.stage='completed';record.response=state;this.writeMetadata(file,record);
       return this.response(args.panel_id as string,state,{request_id:args.request_id,recovered:false,resumed:true,panel_generation:registration.generation,helper_session_id:registration.helper_session_id});
-    }catch(error){const message=`${error instanceof Error?error.message:String(error)} Original resume request_id: ${args.request_id}; query only this original ID; no automatic relaunch.`;if(!dispatched){record.status='failed';record.error=message;this.writeMetadata(file,record);}throw new Error(message);}
+    }catch(error){const message=`${error instanceof Error?error.message:String(error)} Original resume request_id: ${args.request_id}; query only this original ID; no automatic relaunch.`;if(error instanceof PanelHelperLaunchError){record.launch_error=message;this.writeMetadata(file,record);}if(!dispatched){record.status='failed';record.error=message;this.writeMetadata(file,record);}throw new Error(message);}
   }
   call(name:string,args:unknown={},signal?:AbortSignal):Promise<ToolResult>{
     validateArguments(name,args);this.initialize();

@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "run_id": "candidate-attempt-1",
+      "original_raw_files_verified": 151
+    },
+    {
+      "run_id": "candidate-rank-attempt-2",
+      "original_raw_files_verified": 23
+    },
+    {
+      "run_id": "fixed-attempt-1",
+      "original_raw_files_verified": 175
+    }
+  ],
+  "tested_source_bytes_unchanged": true,
+  "private_home_single_or_multiple_backslashes_found": false,
+  "checked_new_or_modified_files": 14
+}

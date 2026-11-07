@@ -1,0 +1,257 @@
+{
+  "study_id": "02-revealed-same-frame",
+  "design": "EXPLORATORY_NONBLIND_FIXED_S2_TRUTH_ALREADY_REVEALED",
+  "frames": 4,
+  "query_denominator": 8,
+  "primary_unit": "normalized_detector_fraction",
+  "methods": {
+    "S0": {
+      "n": 8,
+      "mae": 0.00017792607690729202,
+      "rmse": 0.00022242027141121935
+    },
+    "FIXED_S2": {
+      "requested": 8,
+      "not_requested": 0,
+      "query_CPE": 8,
+      "coverage": 1.0,
+      "requested_UNKNOWN": 0,
+      "baseline_S0": {
+        "n": 8,
+        "mae": 0.00017792607690729202,
+        "rmse": 0.00022242027141121935
+      },
+      "estimate_with_fallback": {
+        "n": 8,
+        "mae": 0.00015218365939249378,
+        "rmse": 0.00018034377095938205
+      },
+      "accepted_subset_S2": {
+        "n": 8,
+        "mae": 0.00015218365939249378,
+        "rmse": 0.00018034377095938205
+      },
+      "S0_on_same_accepted_subset": {
+        "n": 8,
+        "mae": 0.00017792607690729202,
+        "rmse": 0.00022242027141121935
+      },
+      "estimate_minus_S0_MAE": -2.5742417514798246e-05
+    }
+  },
+  "points": [
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.0004738778160437941,
+      "absolute_error_counts_per_pixel": 0.2961736350273714
+    },
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 1,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00033673688886724914,
+      "absolute_error_counts_per_pixel": 0.2104605555420307,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "UNKNOWN_REQUIRED_SITE",
+      "reference_statuses": [
+        "UNKNOWN_NOT_CONVERGED",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    },
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.0001021224470548331,
+      "absolute_error_counts_per_pixel": 0.0638265294092707
+    },
+    {
+      "opaque_frame_id": "case-32345b13295c6149",
+      "query_index": 4,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00012058859255551532,
+      "absolute_error_counts_per_pixel": 0.07536787034719705,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "UNKNOWN_REQUIRED_SITE",
+      "reference_statuses": [
+        "UNKNOWN_NOT_CONVERGED",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 4.4680245856940776e-05,
+      "absolute_error_counts_per_pixel": 0.2792515366058801
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 1,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 3.712192074555704e-05,
+      "absolute_error_counts_per_pixel": 0.23201200465973137,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE",
+      "reference_statuses": [
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 8.962890524342668e-05,
+      "absolute_error_counts_per_pixel": 0.5601806577714159
+    },
+    {
+      "opaque_frame_id": "case-44293b29b1c270b2",
+      "query_index": 4,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 8.14462994285284e-05,
+      "absolute_error_counts_per_pixel": 0.5090393714283028,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE",
+      "reference_statuses": [
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00010107513291016221,
+      "absolute_error_counts_per_pixel": 0.06317195806885134
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 1,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.000273717189039367,
+      "absolute_error_counts_per_pixel": 0.17107324314960437,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE",
+      "reference_statuses": [
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00030066728656738995,
+      "absolute_error_counts_per_pixel": 0.18791705410461867
+    },
+    {
+      "opaque_frame_id": "case-5427c4aa50b639ad",
+      "query_index": 4,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00016335148830157967,
+      "absolute_error_counts_per_pixel": 0.10209468018848722,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE",
+      "reference_statuses": [
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    },
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 1,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00012687864341214298,
+      "absolute_error_counts_per_pixel": 0.7929915213258933
+    },
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 1,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 7.284439746379481e-05,
+      "absolute_error_counts_per_pixel": 0.45527748414871816,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE",
+      "reference_statuses": [
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    },
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 4,
+      "method": "S0",
+      "absolute_error_detector_fraction": 0.00018447813816964637,
+      "absolute_error_counts_per_pixel": 1.15298836356029
+    },
+    {
+      "opaque_frame_id": "case-87689f12dfab595d",
+      "query_index": 4,
+      "method": "FIXED_S2",
+      "absolute_error_detector_fraction": 0.00013166249873835883,
+      "absolute_error_counts_per_pixel": 0.8228906171147425,
+      "target_status": "CONDITIONAL_POINT_ESTIMATE",
+      "whole_comparison_status": "CONDITIONAL_POINT_ESTIMATE",
+      "reference_statuses": [
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE",
+        "CONDITIONAL_POINT_ESTIMATE"
+      ]
+    }
+  ],
+  "paired_absolute_error_change": {
+    "improved": 6,
+    "worsened": 2,
+    "equal": 0
+  },
+  "descriptive_MAE_reduction": 0.14468040864078213,
+  "descriptive_RMSE_reduction": 0.18917565465085062,
+  "top_fit_requests": 8,
+  "site_fit_calls": 40,
+  "optimizer_calls": 40,
+  "query_UNKNOWN": 0,
+  "reference_UNKNOWN_occurrences": 2,
+  "unique_observed_failed_reference_ROIs": 1,
+  "whole_comparison_UNKNOWN": 2,
+  "retained_failure": {
+    "status": "UNKNOWN_NOT_CONVERGED",
+    "optimizer_success": true,
+    "projected_gradient": 1.4080319617414389e-05,
+    "unchanged_projected_gradient_limit": 5e-06,
+    "iterations": 20,
+    "function_evaluations": 24,
+    "occurrences": 2,
+    "note": "Same observed reference ROI repeated for two queries. Gradient qualification failed despite optimizer success; refs and whole UNKNOWN retained, query-local totalmean CPE remains eligible by predeclared rule."
+  },
+  "physical_model_verified": false,
+  "physical_classification": "UNKNOWN",
+  "HRTEM": "NOT_TESTED",
+  "interpretation": "All8 local query CPEs were scored; six absolute errors improved and two worsened. Same8 equals acceptedsubset. This is already-revealed same-frame exploration, not unseen validation or AI-route benefit; one counterfactual case aggregate also worsens. No selected-result substitution or refit.",
+  "source_ids": [
+    "source-9",
+    "source-10",
+    "source-11",
+    "source-12",
+    "source-13",
+    "source-14",
+    "source-15"
+  ]
+}

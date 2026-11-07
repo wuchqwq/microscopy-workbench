@@ -1,0 +1,58 @@
+test_duplicate_and_too_many_selected_coefficients_are_rejected_before_svd (image_column_fit_test.ConditionalColumnFit.test_duplicate_and_too_many_selected_coefficients_are_rejected_before_svd) ... ok
+test_finite_pixels_with_unsafe_total_or_model_range_do_not_reach_optimizer (image_column_fit_test.ConditionalColumnFit.test_finite_pixels_with_unsafe_total_or_model_range_do_not_reach_optimizer) ... ok
+test_historical_read_recovery_export_review_and_original_request_never_refit (image_column_fit_test.ConditionalColumnFit.test_historical_read_recovery_export_review_and_original_request_never_refit) ... FAIL
+test_independent_count_truth_raw_baseline_and_distinct_readouts (image_column_fit_test.ConditionalColumnFit.test_independent_count_truth_raw_baseline_and_distinct_readouts) ... FAIL
+test_missing_or_unsupported_scientific_prerequisites_preserve_raw_without_fit (image_column_fit_test.ConditionalColumnFit.test_missing_or_unsupported_scientific_prerequisites_preserve_raw_without_fit) ... ok
+test_readout_size_and_surrounding_fit_boundary_are_explicit (image_column_fit_test.ConditionalColumnFit.test_readout_size_and_surrounding_fit_boundary_are_explicit) ... ok
+test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence (image_column_fit_test.ConditionalColumnFit.test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence) ... FAIL
+test_zero_support_and_failed_reference_preserve_per_site_and_whole_eligibility (image_column_fit_test.ConditionalColumnFit.test_zero_support_and_failed_reference_preserve_per_site_and_whole_eligibility) ... ok
+test_zero_target_low_counts_and_wrong_width_do_not_become_classifications (image_column_fit_test.ConditionalColumnFit.test_zero_target_low_counts_and_wrong_width_do_not_become_classifications) ... ok
+test_coherently_rehashed_forged_numbers_are_refused_by_review (image_point_observation_test.PointObservations.test_coherently_rehashed_forged_numbers_are_refused_by_review) ... ok
+test_different_frame_and_calibration_fail_binding (image_point_observation_test.PointObservations.test_different_frame_and_calibration_fail_binding) ... ok
+test_invalid_reference_scope_and_fields_are_rejected (image_point_observation_test.PointObservations.test_invalid_reference_scope_and_fields_are_rejected) ... ok
+test_large_finite_values_remain_numerical_not_physical (image_point_observation_test.PointObservations.test_large_finite_values_remain_numerical_not_physical) ... ok
+test_original_values_and_signed_reference_difference (image_point_observation_test.PointObservations.test_original_values_and_signed_reference_difference) ... ok
+test_overlapping_context_references_are_explicit_not_independent (image_point_observation_test.PointObservations.test_overlapping_context_references_are_explicit_not_independent) ... ok
+test_realspace_review_exact_primary_and_profile_subset (image_point_observation_test.PointObservations.test_realspace_review_exact_primary_and_profile_subset) ... ok
+test_standalone_historical_stats_and_old_fft_review_still_work (image_point_observation_test.PointObservations.test_standalone_historical_stats_and_old_fft_review_still_work) ... ok
+
+======================================================================
+FAIL: test_historical_read_recovery_export_review_and_original_request_never_refit (image_column_fit_test.ConditionalColumnFit.test_historical_read_recovery_export_review_and_original_request_never_refit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 240, in test_historical_read_recovery_export_review_and_original_request_never_refit
+    self.assertEqual(result["whole_comparison"]["status"], "CONDITIONAL_POINT_ESTIMATE")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'UNKNOWN_REQUIRED_SITE' != 'CONDITIONAL_POINT_ESTIMATE'
+- UNKNOWN_REQUIRED_SITE
++ CONDITIONAL_POINT_ESTIMATE
+
+
+======================================================================
+FAIL: test_independent_count_truth_raw_baseline_and_distinct_readouts (image_column_fit_test.ConditionalColumnFit.test_independent_count_truth_raw_baseline_and_distinct_readouts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 121, in test_independent_count_truth_raw_baseline_and_distinct_readouts
+    self.assertEqual(result["whole_comparison"]["status"], "CONDITIONAL_POINT_ESTIMATE")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'UNKNOWN_REQUIRED_SITE' != 'CONDITIONAL_POINT_ESTIMATE'
+- UNKNOWN_REQUIRED_SITE
++ CONDITIONAL_POINT_ESTIMATE
+
+
+======================================================================
+FAIL: test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence (image_column_fit_test.ConditionalColumnFit.test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<user>\Documents\Codex\2026-11-05\task-2\conditional-s2-integration-v1\tests\image_column_fit_test.py", line 274, in test_source_and_coherently_rehashed_coefficients_cannot_change_saved_evidence
+    self.assertEqual(result["whole_comparison"]["status"], "CONDITIONAL_POINT_ESTIMATE")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'UNKNOWN_REQUIRED_SITE' != 'CONDITIONAL_POINT_ESTIMATE'
+- UNKNOWN_REQUIRED_SITE
++ CONDITIONAL_POINT_ESTIMATE
+
+
+----------------------------------------------------------------------
+Ran 17 tests in 10.807s
+
+FAILED (failures=3)

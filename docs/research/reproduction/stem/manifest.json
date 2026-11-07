@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "archive_kind": "Retrospective reproduction source staging; no execution",
+  "record_date_utc": "2026-11-04",
+  "scope": "Six original source/protocol/version files, copied byte-for-byte after manual review and restricted-content screening.",
+  "source_candidate": "03ea9534c34e606295b851637d6e9e03b35bcab5",
+  "scientific_code_or_parameter_changes": false,
+  "simulation_model_test_execution_performed": false,
+  "files": [
+    {
+      "source_relative": "stem-physical-03ea953/run-03/simulate-r3.py",
+      "staged_relative": "physical/run-03/simulate-r3.py",
+      "bytes": 11708,
+      "sha256": "e35499c9881d2fe0d1487a68c5f2d7b8c8699c5e50f30039ce75acd27bab83fb",
+      "byte_exact": true
+    },
+    {
+      "source_relative": "stem-physical-03ea953/run-03/protocol.json",
+      "staged_relative": "physical/run-03/protocol.json",
+      "bytes": 6828,
+      "sha256": "d04fcc2dd57b090ad97370edc605c95801554496d2371ccd42f115c9a99382d2",
+      "byte_exact": true
+    },
+    {
+      "source_relative": "stem-physical-03ea953/audit-physics.py",
+      "staged_relative": "physical/audit-physics.py",
+      "bytes": 4753,
+      "sha256": "515eec6a6ce0fd45af0e91c573fc04bb765a7dbb8aa983f17165ec332dba1050",
+      "byte_exact": true
+    },
+    {
+      "source_relative": "stem-physical-03ea953/versions.txt",
+      "staged_relative": "physical/versions.txt",
+      "bytes": 1166,
+      "sha256": "44723354b7f6b8e9394fe5c0cc3292b25dc21636c6826e86f0d01a858a4667a9",
+      "byte_exact": true
+    },
+    {
+      "source_relative": "point-observation-evidence/run-controls.py",
+      "staged_relative": "point/run-controls.py",
+      "bytes": 5725,
+      "sha256": "4bc55c84d2a09b5cfc0d101647af7926d6e1700140212eb8270e7d0eca9c6354",
+      "byte_exact": true
+    },
+    {
+      "source_relative": "point-observation-evidence/controls-plan.json",
+      "staged_relative": "point/frozen-protocol/controls-plan.json",
+      "bytes": 7566,
+      "sha256": "80fecb30eedde399cfb617b25b18ea68f45449a2e7cc0123c4613aaf9f002962",
+      "byte_exact": true
+    }
+  ],
+  "safety_review": {
+    "method": "Read full source/protocol text and independently review; screen for absolute user paths, conversation identifiers, private-log paths, credential/key material. Allow the official HTTPS PyPI URL.",
+    "result": "No restricted content identified in these six files.",
+    "caveat": "Future generated runtime records, request logs and exception tracebacks can contain paths or other environment details; not included in this safety conclusion and not automatically public.",
+    "copied_historical_outputs": false,
+    "copied_private_logs": false
+  },
+  "physical": {
+    "preserved_layout": "physical/audit-physics.py and physical/versions.txt; physical/run-03/{simulate-r3.py,protocol.json}",
+    "execution_policy": "Future execution only in a new writable copy of this layout. Never run inside the original evidence collection, this staged archive, a tracked checkout, or an existing output tree.",
+    "runtime": "Python 3.13.2; official PyPI binary wheels, independent environment. Exact 64-package freeze in physical/versions.txt.",
+    "direct_imports": [
+      "numpy",
+      "ase",
+      "abtem",
+      "dask",
+      "tifffile"
+    ],
+    "notable_exact_dependencies": {
+      "abTEM": "1.0.11",
+      "ase": "3.29.0",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pyFFTW": "0.15.1",
+      "dask": "2026.8.0",
+      "tifffile": "2026.10.15",
+      "pillow": "13.0.0"
+    },
+    "input_dependency": "protocol.json must remain beside simulate-r3.py; the script also contains frozen hard-coded scientific parameters. No original arrays are required for regeneration.",
+    "output_root": "Directory containing simulate-r3.py, independent of the shell working directory.",
+    "generator_outputs": [
+      "assessor/",
+      "raw/",
+      "potentials/",
+      "controls/",
+      "execution-start.json",
+      "simulation-events.jsonl",
+      "simulation-summary.json or simulation-failure.json"
+    ],
+    "overwrite_behavior": "Existing assessor/ causes explicit refusal; other existing created directories can fail mkdir. JSON results use replacement writes and event log uses append. Use a completely fresh run directory.",
+    "audit_behavior": "audit-physics.py defaults to the run-03 subdirectory beside itself, reads full generated outputs, and overwrites run-03/assessor/physical-audit.json without an overwrite guard. Run audit only in that new output copy.",
+    "model_calls": "Neither copied Python script calls a language model. protocol.json contains historical planned blind-host fields; the formal physical blind qualification remained NOT_TESTED after failed numerical gates.",
+    "qualification": "Preserve the original 225-point/10 percent stability gate and original failing interpretation. This staging neither executes nor validates regenerated outcomes."
+  },
+  "point": {
+    "preserved_source": "point/run-controls.py",
+    "frozen_plan": "point/frozen-protocol/controls-plan.json",
+    "reason_plan_separate": "The unchanged generator refuses if controls-plan.json already exists beside the script and creates its own identical-specification plan. Keeping the archived plan in a separate directory avoids making the source staging resemble a runnable old output tree.",
+    "fresh_layout": "In a new empty parent, place run-controls.py alone inside point-observation-evidence/ and a full repository checkout at03ea9534c34e606295b851637d6e9e03b35bcab5 inside sibling point-observation-fix/.",
+    "repository_imports": [
+      "tools/image_workspace.py",
+      "tests/preview_test_support.py",
+      "Their ordinary repository dependencies"
+    ],
+    "official_dependency_contract": {
+      "numpy": ">=1.23,<3",
+      "Pillow": ">=10.1,<13",
+      "tifffile": ">=2023.7.10,<2027",
+      "scipy": ">=1.10,<2"
+    },
+    "dependency_note": "Use the repository requirements-images.txt in a separate point environment; the physical freeze contains Pillow13 and is not a tested replacement for that contract. Exact original point interpreter/package freeze was not located in these six files.",
+    "outputs": [
+      "controls-plan.json",
+      "inputs/",
+      "assessor/",
+      "controlled-provider/",
+      "controlled-worker-calls.jsonl"
+    ],
+    "overwrite_behavior": "Refuses an existing controls-plan.json before creating data. inputs/ and assessor/ require fresh creation. Worker records include runtime workspace/source paths; review newly generated outputs before any publication.",
+    "scientific_scope": "Fixed-site scalar Gaussian proxies and raw-array worker checks, not physical STEM or blind detection.",
+    "omitted_sources": "No worker or test-support source is vendored; use the exact repository checkout. No model launch or model-audit scripts are copied."
+  },
+  "remaining_gaps": [
+    "No new regeneration or audit execution was performed; future outcomes require a new run record and environment capture.",
+    "The point generator needs the exact full repository checkout and its public test-support file; this six-file package is not a standalone product environment.",
+    "No exact original point environment lock was available in the selected files.",
+    "No complete historical outputs, private logs, model transcripts or model launch harness are copied.",
+    "This is a retrospective source archive, not preregistration or new physical qualification."
+  ]
+}
