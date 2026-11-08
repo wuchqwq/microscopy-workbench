@@ -78,8 +78,8 @@ export function prepareResearchHostImage(options:ResearchHostImageOptions):HostT
  need(ID.test(options.view_id)&&ID.test(options.frame_id)&&HASH.test(options.view_sha256),'Exact saved view/frame IDs and manifest SHA-256 required');
  const reader=readImageProviderRecords(options.workspace),saved=reader.object(options.view_id),view=saved.value;
  need(saved.manifest_sha256===options.view_sha256,'Selected view manifest changed');
- need(view.kind==='view'&&Array.isArray(view.panels)&&view.panels.length===1&&record(view.panels[0])&&view.panels[0].domain==='spatial_pixels','Only an existing single spatial PNG view is supported; annotated/composite/FFT views require separate qualification');
- need((view.annotations===undefined||Array.isArray(view.annotations)&&view.annotations.length===0)&&(view.annotation_reprojection===undefined||view.annotation_reprojection===false),'Annotated or reprojected displays are not qualified host input');
+ need(view.kind==='view'&&Array.isArray(view.panels)&&view.panels.length===1&&record(view.panels[0])&&view.panels[0].domain==='spatial_pixels','当前只支持准确保存的单幅空间图（Only an existing single spatial PNG view is supported）；带标注、拼图或 FFT 图不能作为这次输入。请保留原记录，通过“分析历史 → 全帧（新显示）”明确建立完整空间显示，再在新图重新应用问题；不会自动去除标注、替换图像或发送。');
+ need((view.annotations===undefined||Array.isArray(view.annotations)&&view.annotations.length===0)&&(view.annotation_reprojection===undefined||view.annotation_reprojection===false),'当前保存图带有标注或重投影，尚不能作为图像输入（Annotated or reprojected displays are not qualified host input）。请保留原图，明确选择无标注的保存空间图，再核对并重新应用问题；不会自动清除标注。');
  const operand=reader.operand(options.view_id),frames=operand.lineage.frames,panel=view.panels[0];
  need(frames.length===1&&frames[0].object_id===options.frame_id,'Selected image belongs to another or ambiguous frame');
  need(panel.source_object_id===options.frame_id&&operand.grid?.source_grid_object_id===options.frame_id,'Panel source does not match the verified frame');
