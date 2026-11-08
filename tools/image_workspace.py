@@ -175,11 +175,13 @@ def write_new(path, raw):
         os.fsync(output.fileno())
 
 
-def read_json(path):
+def read_json(path, with_raw=False):
     path = Path(path)
     need(path.is_file() and not path.is_symlink() and path.stat().st_size <= MAX_JSON_BYTES,
          "Missing, linked or oversized metadata", "CORRUPT_OBJECT")
-    return strict_json(path.read_text(encoding="utf-8"))
+    raw = path.read_bytes()
+    value = strict_json(raw.decode("utf-8"))
+    return (value, raw) if with_raw else value
 
 
 def stat_identity(path):
@@ -2047,12 +2049,27 @@ def _execute_core(request, preview_dispatch_authorized=False):
                 return admitted
         need(path.is_file(), "Original request not found", "REQUEST_NOT_FOUND")
         try:
-            saved = read_json(path)
+            saved, journal_raw = read_json(path, with_raw=True)
         except (OSError, ValueError, WorkspaceError):
             return pending(ident)
         if saved["state"] in ("completed", "failed", "not_submitted"):
             need(saved.get("request_id") == ident and saved.get("response", {}).get("request_id") == ident,
                  "Stored request/response belongs to another original ID", "CORRUPT_OBJECT")
+            # Read-only evidence of a terminal scalar-statistics failure. This
+            # receipt comes from the SAME strict-decoded byte snapshot; clients
+            # must not reinterpret a failed/unknown journal with a loose parser.
+            parameters, response = saved.get("parameters"), saved.get("response")
+            if (saved["state"] == "failed" and type(saved.get("schema_version")) is int and saved["schema_version"] == 1 and
+                    type(parameters) is dict and parameters.get("action") == "statistics" and
+                    parameters.get("request_id") == ident and response.get("ok") is False and
+                    response.get("state") == "failed" and response.get("backend") == BACKEND and
+                    saved.get("parameters_sha256") == hashlib.sha256(canonical(parameters)).hexdigest()):
+                code = response.get("error", {}).get("code") if type(response.get("error")) is dict else None
+                receipt = {"schema_version": 1, "request_id": ident, "parameters": parameters,
+                           "parameters_sha256": saved["parameters_sha256"],
+                           "journal_sha256": hashlib.sha256(journal_raw).hexdigest(),
+                           "error_code": code if code in ("INVALID_ARGUMENT", "BUDGET_EXCEEDED") else "PROVIDER_FAILURE"}
+                return {**response, "original_failure": receipt}
             if saved["state"] == "completed":
                 if saved.get("parameters", {}).get("action") != "preview_acknowledge":
                     workspace.object(saved["response"]["object_id"])
@@ -2064,7 +2081,10 @@ def _execute_core(request, preview_dispatch_authorized=False):
                 return {**saved["response"], "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
             elif saved.get("parameters", {}).get("action") in field_increment.FIELDS:
                 return {**saved["response"], "partial_results": field_increment.recovery(workspace, saved, sys.modules[__name__])}
-            return method_loop.summary_validation.feedback(workspace, gpa.assessment_validation.feedback(workspace, saved["response"]))
+            response = method_loop.summary_validation.feedback(workspace, gpa.assessment_validation.feedback(workspace, saved["response"]))
+            # Only this live strict read can issue a failure receipt. Never echo
+            # a caller/stored field as if the provider had just verified it.
+            return {key: value for key, value in response.items() if key != "original_failure"}
         if saved.get("parameters", {}).get("action") in spatial_domains.FIELDS:
             return {**pending(ident), "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
         if saved.get("parameters", {}).get("action") in field_increment.FIELDS:
@@ -2073,6 +2093,9 @@ def _execute_core(request, preview_dispatch_authorized=False):
             return {**pending(ident), "partial_results": joint.recovery(workspace, saved, sys.modules[__name__])}
         if saved.get("parameters", {}).get("action") == "spatial_atlas":
             return {**pending(ident), "partial_results": spatial_atlas.recovery(workspace, saved, sys.modules[__name__])}
+        if saved.get("parameters", {}).get("action") == "method_step":
+            need(saved.get("request_id") == ident, "Method recovery returned another parent", "CORRUPT_OBJECT")
+            return {**pending(ident), "partial_results": method_loop.journal.recovery(workspace, saved, sys.modules[__name__])}
         return pending(ident)
     normalized = {**request, "workspace": str(workspace.root)}
     fingerprint = hashlib.sha256(canonical(normalized)).hexdigest()
@@ -2130,6 +2153,8 @@ def _execute_core(request, preview_dispatch_authorized=False):
                 update()
             workspace.method_attempt_update = method_attempt_update
         try:
+            if action == "method_step":
+                method_loop.preflight_step(workspace, request, sys.modules[__name__])
             if action == "preview_acknowledge":
                 response = preview_admission.acknowledge(workspace, normalized, sys.modules[__name__])
                 record.update(state="completed", response=response, operational_receipt=True)

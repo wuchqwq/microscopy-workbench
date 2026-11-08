@@ -6,6 +6,8 @@ import {DesktopBackendClient} from '../lib/desktop_backend_client.mjs';
 import {DesktopCloseCoordinator} from '../lib/desktop_lifecycle.mjs';
 import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow,panelAddress,readDesktopOptions,desktopStartupError} from '../lib/desktop_contracts.mjs';
 import type {DesktopOptions,DesktopAction,DesktopActionReply} from '../lib/desktop_contracts.mjs';
+import {runSyntheticHostDemo} from '../lib/research_host_demo.mjs';
+import {SYNTHETIC_HOST_NOTICE} from '../lib/research_host.mjs';
 
 // A small structural port keeps the scientific Node 22/24 runtime independent
 // of Electron's separately installed development dependency.
@@ -20,7 +22,7 @@ interface DesktopWindow extends EventEmitter {
 }
 interface MenuItem {label?:string;role?:string;accelerator?:string;type?:'separator';click?:()=>void;submenu?:MenuItem[];}
 interface DesktopElectron {
- app:EventEmitter&{whenReady():Promise<void>;quit():void;exit(code:number):void;setName(name:string):void;setPath(name:'userData',path:string):void;};
+ app:EventEmitter&{whenReady():Promise<void>;quit():void;exit(code:number):void;setName(name:string):void;setPath(name:'userData'|'sessionData'|'crashDumps',path:string):void;setAppLogsPath(path:string):void;};
  BrowserWindow:new(options:unknown)=>DesktopWindow;
  Menu:{buildFromTemplate(items:MenuItem[]):unknown;setApplicationMenu(menu:unknown):void;};
  dialog:{showOpenDialog(options:unknown):Promise<{canceled:boolean;filePaths:string[]}>;showMessageBox(window:DesktopWindow|undefined,options:unknown):Promise<{response:number}>;showErrorBox(title:string,message:string):void;};
@@ -31,9 +33,10 @@ const {app,BrowserWindow,Menu,dialog,ipcMain}=electron;
 app.setName('Microscopy Workbench Prototype');
 // Optional task-local profile for isolated validation; no system/global setting
 // is changed and ordinary launches retain the application's own default profile.
-if(process.env.MWB_DESKTOP_PROFILE){if(!path.isAbsolute(process.env.MWB_DESKTOP_PROFILE))throw new Error('MWB_DESKTOP_PROFILE must be absolute');mkdirSync(process.env.MWB_DESKTOP_PROFILE,{recursive:true});app.setPath('userData',process.env.MWB_DESKTOP_PROFILE);}
-let options:DesktopOptions,window:DesktopWindow|undefined,backend:DesktopBackendClient|undefined,closing:DesktopCloseCoordinator|undefined,allowQuit=false,starting=false,nativeClosing=false;
+if(process.env.MWB_DESKTOP_PROFILE){const profile=process.env.MWB_DESKTOP_PROFILE;if(!path.isAbsolute(profile))throw new Error('MWB_DESKTOP_PROFILE must be absolute');mkdirSync(profile,{recursive:true});app.setPath('userData',profile);for(const name of ['sessionData','crashDumps'] as const){const directory=path.join(profile,name);mkdirSync(directory,{recursive:true});app.setPath(name,directory);}const logs=path.join(profile,'logs');mkdirSync(logs,{recursive:true});app.setAppLogsPath(logs);}
+let options:DesktopOptions,window:DesktopWindow|undefined,backend:DesktopBackendClient|undefined,closing:DesktopCloseCoordinator|undefined,allowQuit=false,starting=false,nativeClosing=false,replacing=false,jointReviewBusy=false;
 let address:ReturnType<typeof panelAddress>|undefined,nextAction=0;
+let nativeReviewDecision:((reviewed:'record'|'send'|false)=>void)|null=null;
 const pendingActions=new Map<number,{resolve:(reply:DesktopActionReply)=>void;timer:ReturnType<typeof setTimeout>}>();
 const report=async(message:string)=>{await dialog.showMessageBox(window,{type:'error',title:'Microscopy Workbench',message:'操作尚未完成',detail:message,buttons:['保持打开'],defaultId:0,cancelId:0});};
 const trustedSender=(event:unknown):boolean=>{
@@ -44,23 +47,60 @@ ipcMain.on('mwb:action-result',(event:unknown,value:unknown)=>{
  if(!trustedSender(event)||!isRow(value)||Object.keys(value).some(k=>!['id','ok','error','working_revision'].includes(k))||!Number.isSafeInteger(value.id)||typeof value.ok!=='boolean'||value.error!==undefined&&(typeof value.error!=='string'||value.error.length>1024)||value.working_revision!==undefined&&(!Number.isSafeInteger(value.working_revision)||(value.working_revision as number)<0))return;
  const pending=pendingActions.get(value.id as number);if(!pending)return;pendingActions.delete(value.id as number);clearTimeout(pending.timer);pending.resolve({ok:value.ok,...(typeof value.error==='string'?{error:value.error}:{}),...(value.working_revision!==undefined?{working_revision:value.working_revision as number}:{})});
 });
+ipcMain.on('mwb:open-image',(event:unknown,...args:unknown[])=>{
+ if(!trustedSender(event)||args.length||nativeClosing||starting)return;
+ void replaceWorkspace(false);
+});
+ipcMain.on('mwb:review-image',(event:unknown,...args:unknown[])=>{if(!trustedSender(event)||args.length||nativeClosing||starting||replacing||jointReviewBusy)return;void reviewImageScope();});
+ipcMain.on('mwb:stop-image-review',(event:unknown,...args:unknown[])=>{
+ if(!trustedSender(event)||args.length||nativeClosing||starting||replacing||jointReviewBusy||!backend)return;
+ const owned=backend;void (async()=>{try{const status=await owned.queryJointReview() as {status?:string;review_id?:string};if(status.status==='reviewing'&&status.review_id)await owned.cancelJointReview(status.review_id);else if(['starting','running','stopping','unknown'].includes(status.status??''))await owned.interruptJointReview();}catch(error){await report(String(error));}})();
+});
+async function reviewImageScope(){
+ const ownedWindow=window,ownedBackend=backend,ownedAddress=address;if(!ownedWindow||!ownedBackend||!ownedAddress)return;jointReviewBusy=true;let preview:DesktopWindow|undefined,receipt:{review_id:string;context_sha256:string;review_path:string;public_send_available?:boolean}|undefined,settled=false;
+ try{
+  const ready=await action('prepare-joint-review');if(!ready.ok||!Number.isSafeInteger(ready.working_revision))throw Error(ready.error??'先处理图像与问题的未同步输入。');
+  if(window!==ownedWindow||backend!==ownedBackend||ownedWindow.isDestroyed())throw Error('Owned workspace changed');
+  receipt=await ownedBackend.beginJointReview(ready.working_revision!);const url=ownedAddress.origin+receipt.review_path;
+  ownedWindow.setEnabled(false);preview=new BrowserWindow({title:'本次图像与工具范围 · 仅本地',width:1100,height:850,show:false,webPreferences:{...desktopSecurityPreferences,javascript:false}});
+  preview.webContents.setWindowOpenHandler(()=>({action:'deny'}));preview.webContents.session.setPermissionRequestHandler((_c,_p,reply)=>reply(false));preview.webContents.session.setPermissionCheckHandler(()=>false);
+  preview.webContents.on('will-navigate',(event:NativeEvent,target:string)=>{if(target!==url)event.preventDefault();});
+  const inspected=new Promise<'record'|'send'|false>(resolve=>{nativeReviewDecision=reviewed=>{nativeReviewDecision=null;resolve(reviewed);};});
+  preview.on('close',()=>nativeReviewDecision?.(false));
+  await preview.loadURL(url);preview.show();
+  const intent=await inspected;
+  if(intent==='send'&&!receipt.public_send_available)throw Error('当前图没有公开合成图发送入口；未发送。');
+  const sending=intent==='send';
+  const decision=intent&&!preview.isDestroyed()?await dialog.showMessageBox(preview,{type:'question',title:sending?'发送本次公开合成图':'核对本次范围 · 不发送',message:sending?'发送这一张保存图和这一个问题给 OpenAI gpt-6.1-sol？':'请查看本次准确保存图、问题、源坐标与受限工具',detail:sending?'请确认已核对预览中的准确PNG、问题、源范围和工具。本次仅公开合成64×64原图；不发送0059、源文件或科学数组。工作台提供统计与原请求查询，官方客户端采用只读配置并可能使用内部编排工具。运行期间锁定本图和问题，可查看结果或请求中断。':'本次只记录你核对了预览内容，不是图像外发授权；不会启动模型回合。',buttons:sending?['发送这一张图并分析','取消']:['已核对本次范围（不发送）','取消'],defaultId:1,cancelId:1}):{response:1};
+  if(!settled){settled=true;if(decision.response===0&&!preview.isDestroyed()){if(sending)await ownedBackend.sendPublicJoint(receipt.review_id,receipt.context_sha256);else await ownedBackend.recordJointReview(receipt.review_id,receipt.context_sha256);}else await ownedBackend.cancelJointReview(receipt.review_id);}
+
+ }catch(error){if(receipt&&!settled){settled=true;try{await ownedBackend.cancelJointReview(receipt.review_id);}catch{/* Query the original owner status; never repeat the preparation or confirmation. */}}await report(error instanceof Error?error.message:String(error));}
+ finally{nativeReviewDecision=null;preview?.destroy();if(!ownedWindow.isDestroyed()){if(window===ownedWindow&&backend===ownedBackend)await action('finish-joint-review');ownedWindow.setEnabled(true);ownedWindow.focus();}jointReviewBusy=false;}
+}
 function action(action:DesktopAction,closeFlow=false):Promise<DesktopActionReply>{
  if(nativeClosing&&!closeFlow)return Promise.resolve({ok:false,error:'正在核对退出操作；当前不接收新编辑或窗口操作。'});
  if(!window||window.isDestroyed()||!address||!isOwnedDesktopDocument(window.webContents.getURL(),address))return Promise.resolve({ok:false,error:'界面未就绪；窗口与工作编辑保持。'});
  return new Promise(resolve=>{const id=++nextAction,timer=setTimeout(()=>{pendingActions.delete(id);resolve({ok:false,error:'界面响应尚未确认；窗口保持打开，不自动重复操作。'});},15000);pendingActions.set(id,{resolve,timer});window!.webContents.send('mwb:action',{id,action});});
 }
 function menuAction(name:DesktopAction):()=>void{return ()=>{if(nativeClosing)return;void action(name).then(reply=>{if(!reply.ok)return report(reply.error??'操作未确认');}).catch(error=>report(String(error)));};}
+let hostDemoBusy=false;
+async function showSyntheticHostDemo(){
+ if(nativeClosing||starting||hostDemoBusy||!options)return;hostDemoBusy=true;
+ try{await runSyntheticHostDemo(options.node);if(!nativeClosing)await dialog.showMessageBox(window,{type:'info',title:'宿主适配 · 合成测试',message:SYNTHETIC_HOST_NOTICE,detail:'合成会话完成、接续后中断，并已关闭。权限请求未被执行；没有读取当前工作区、运行科学计算或接纳候选。',buttons:['关闭']});}
+ catch(error){if(!nativeClosing)await report('合成宿主测试未完成；真实 Codex 尚未连接。'+String(error));}finally{hostDemoBusy=false;}
+}
 const menus:MenuItem[]=[
  {label:'文件',submenu:[{label:'打开图像…',accelerator:'CmdOrCtrl+O',click:()=>{void replaceWorkspace(false);}},{label:'打开分析工作区…',accelerator:'CmdOrCtrl+Shift+O',click:()=>{void replaceWorkspace(true);}},{type:'separator'},{label:'保存分析工作区',accelerator:'CmdOrCtrl+S',click:menuAction('save')},{type:'separator'},{label:'退出',accelerator:'Alt+F4',click:()=>{void quitSafely();}}]},
  {label:'编辑',submenu:[{label:'撤销',accelerator:'CmdOrCtrl+Z',click:menuAction('undo')},{label:'重做',accelerator:'CmdOrCtrl+Shift+Z',click:menuAction('redo')},{type:'separator'},{label:'删除所选 ROI',click:menuAction('delete')},{role:'cut',label:'剪切文本'},{role:'copy',label:'复制文本'},{role:'paste',label:'粘贴文本'},{role:'selectAll',label:'全选文本'}]},
- {label:'分析',submenu:[{label:'选择 / 调整',click:menuAction('select')},{label:'绘制 ROI',click:menuAction('roi')},{label:'平移图像',click:menuAction('pan')},{type:'separator'},{label:'FFT',click:menuAction('fft')},{label:'测量',click:menuAction('measure')},{label:'返回空间观察',click:menuAction('return-spatial')}]},
+ {label:'分析',submenu:[{label:'预览本次图像与工具范围…',click:()=>{if(!nativeClosing&&!starting&&!replacing&&!jointReviewBusy)void reviewImageScope();}},{label:'记录已核对本次范围（不发送）',click:()=>nativeReviewDecision?.('record')},{label:'发送本次公开合成图并分析…',click:()=>nativeReviewDecision?.('send')},{label:'取消本次范围预览',click:()=>nativeReviewDecision?.(false)},{type:'separator'},{label:'选择 / 调整',click:menuAction('select')},{label:'绘制 ROI',click:menuAction('roi')},{label:'平移图像',click:menuAction('pan')},{type:'separator'},{label:'FFT',click:menuAction('fft')},{label:'测量',click:menuAction('measure')},{label:'返回空间观察',click:menuAction('return-spatial')}]},
  {label:'窗口',submenu:[{label:'平铺图像窗口',click:menuAction('tile')},{label:'探索执行历史',click:menuAction('history')},{role:'minimize',label:'最小化'},{role:'zoom',label:'最大化 / 还原'}]},
- {label:'帮助',submenu:[{label:'使用说明',accelerator:'F1',click:menuAction('help')},{label:'关于开发机试用版',click:()=>{void dialog.showMessageBox(window,{type:'info',title:'Microscopy Workbench',message:'Microscopy Workbench — 开发机试用版',detail:'MIT 开源软件。TypeScript 界面与既有科学服务共用记录。此版本仍需普通 Node 与指定 Python；尚未取得干净 Windows 安装或真实样品验收资格。',buttons:['关闭']});}}]}
+ {label:'帮助',submenu:[{label:'使用说明',accelerator:'F1',click:menuAction('help')},{label:'宿主适配（合成测试；非 AI）',click:()=>{void showSyntheticHostDemo();}},{label:'关于开发机试用版',click:()=>{void dialog.showMessageBox(window,{type:'info',title:'Microscopy Workbench',message:'Microscopy Workbench — 开发机试用版',detail:'MIT 开源软件。TypeScript 界面与既有科学服务共用记录。此版本仍需普通 Node 与指定 Python；尚未取得干净 Windows 安装或真实样品验收资格。',buttons:['关闭']});}}]}
 ];
 async function selectFile(title:string,extensions?:string[]):Promise<string|undefined>{const reply=await dialog.showOpenDialog({title,properties:['openFile'],...(extensions?{filters:[{name:title,extensions}]}:{})});return reply.canceled?undefined:reply.filePaths[0];}
 async function selectOptions(initial:DesktopOptions,forceNew=false):Promise<(DesktopOptions&{workspace:string;python:string})|undefined>{
  let workspace=initial.workspace,source=initial.source,python=initial.python;
- if(!workspace){const chosen=await dialog.showOpenDialog({title:forceNew?'选择新分析工作区目录':'选择分析工作区目录',properties:['openDirectory','createDirectory']});if(chosen.canceled)return;workspace=chosen.filePaths[0];}
+ if(forceNew){source=source??await selectFile('打开只读原始图像',['tif','tiff','dm3','dm4']);if(!source)return;}
+ if(!workspace){const chosen=await dialog.showOpenDialog({title:forceNew?'选择分析结果的工作区目录':'选择分析工作区目录',properties:['openDirectory','createDirectory']});if(chosen.canceled)return;workspace=chosen.filePaths[0];}
  if(!workspace)return;
  if(forceNew||!existsSync(path.join(workspace,'researcher-inspector','session.json'))){source=source??await selectFile('打开只读原始图像',['tif','tiff','dm3','dm4']);if(!source)return;}
  if(!python){python=await selectFile('选择科研 Python 可执行文件',['exe']);if(!python)return;}
@@ -101,14 +141,15 @@ async function closeWorkspace():Promise<boolean>{
  for(const pending of pendingActions.values()){clearTimeout(pending.timer);pending.resolve({ok:false,error:'工作区已关闭'});}pendingActions.clear();
  oldWindow?.destroy();return true;
 }
-async function quitSafely():Promise<void>{if(await closeWorkspace()){allowQuit=true;app.quit();}}
+async function quitSafely():Promise<void>{if(jointReviewBusy)return;if(await closeWorkspace()){allowQuit=true;app.quit();}}
 async function replaceWorkspace(existing:boolean):Promise<void>{
- if(nativeClosing)return;
+ if(nativeClosing||starting||replacing||jointReviewBusy||!options||!window)return;
+ const originalWindow=window;replacing=true;
  try{
   // Keep the current document alive while selecting paths. Cancel has no effect.
-  const selected=await selectOptions({node:options.node,python:options.python},!existing);if(!selected)return;
+  const selected=await selectOptions({node:options.node,python:options.python},!existing);if(!selected||window!==originalWindow||originalWindow.isDestroyed()||nativeClosing||starting)return;
   if(!await closeWorkspace())return;await startWorkspace(selected);
- }catch(error){await report(error instanceof Error?error.message:String(error));}
+ }catch(error){await report(error instanceof Error?error.message:String(error));}finally{replacing=false;}
 }
 app.on('before-quit',(event:NativeEvent)=>{if(!allowQuit){event.preventDefault();void quitSafely();}});
 app.on('window-all-closed',()=>{if(allowQuit)app.quit();});

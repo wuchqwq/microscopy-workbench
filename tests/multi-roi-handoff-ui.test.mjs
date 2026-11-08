@@ -52,3 +52,24 @@ test('ResearchWorkspace allows a fresh source handoff from FFT while refusing an
  ui.render(state);assert.equal(nodes.get('agent-continue').disabled,false);assert.throws(()=>ui.showHandoff(state),/先读取/);assert.notEqual(nodes.get('agent-handoff-dialog')?.open,true);
  ui.showHandoff(state,packet);assert.equal(nodes.get('agent-handoff-dialog').open,true);assert.match(nodes.get('agent-prompt').value,/ROI 3/);packet.draft_revision--;assert.throws(()=>ui.showHandoff(state,packet),/版本/);
 });
+
+function executionHistory(qualification='unavailable'){
+ return {schema_version:1,read_only:true,records:[{schema_version:1,kind:'gui_fft_input_v1',request_id:'panel-'+'a'.repeat(32)+'-1',input_relative_path:'panel-journals/public/exact.input.json',input_sha256:'b'.repeat(64),qualification,status:'completed',execution_status:'completed',fft_object_id:FFT,reason:qualification==='unavailable'?'Scientific source ancestry exceeds budget':undefined,input_snapshot:{schema_version:1,source_view_object_id:OLD,provider_input_object_id:F,frame_object_id:F,float_roi_xyxy:[1.5,2.5,20.5,21.5],processing_rect_xyxy:[1,2,21,22],recipe:{window:'hann',subtract_mean:true}}}]};
+}
+test('copyable summary separates validated relation, completed execution and unavailable frozen-input qualification (#121)',()=>{
+ const {state,packet}=fixture(),history=executionHistory(),before=structuredClone({packet,history});
+ const summary=qualifyMultiRoiHandoff(packet,state,history),fft=summary.fft_relations[0],text=agentContinuationText(roiObservationModel(state),P,undefined,summary);
+ assert.equal(fft.status,'validated');assert.equal(fft.execution_evidence.execution_status,'completed');assert.equal(fft.execution_evidence.frozen_input_qualification,'unavailable');assert.equal(fft.execution_evidence.reason,'Scientific source ancestry exceeds budget');assert.equal(fft.strict_reuse_eligibility,'unknown');assert.equal(fft.execution_evidence.request_id,history.records[0].request_id);assert.equal(fft.execution_evidence.input_sha256,history.records[0].input_sha256);assert.deepEqual(fft.execution_evidence.recipe,{window:'hann',subtract_mean:true});assert.match(text,/不代表实际执行状态或严格复用资格/);assert.match(text,/不能据此判断没有结果或重算/);assert.match(text,/不是独立重复实验/);assert.deepEqual({packet,history},before);
+});
+test('validated input, legacy missing execution status and missing history never imply strict reuse permission',()=>{
+ const {state,packet}=fixture(),history=executionHistory('validated');let fft=qualifyMultiRoiHandoff(packet,state,history).fft_relations[0];assert.equal(fft.execution_evidence.frozen_input_qualification,'validated');assert.equal(fft.strict_reuse_eligibility,'unknown');delete history.records[0].execution_status;fft=qualifyMultiRoiHandoff(packet,state,history).fft_relations[0];assert.equal(fft.execution_evidence.execution_status,'unknown');assert.equal(fft.execution_evidence.provider_record_status,'completed');
+ for(const unavailable of [undefined,null,{schema_version:1,read_only:true,records:[]}]){fft=qualifyMultiRoiHandoff(packet,state,unavailable).fft_relations[0];assert.equal(fft.status,'validated');assert.equal(fft.execution_evidence.execution_status,'unknown');assert.equal(fft.execution_evidence.frozen_input_qualification,'unknown');assert.equal(fft.strict_reuse_eligibility,'unknown');assert.ok(fft.execution_evidence.reason_code);}
+});
+test('unavailable relation or legacy unavailable status does not erase an independently completed original execution',()=>{
+ const {state,packet}=fixture(),history=executionHistory();packet.fft_relations[0].status='unavailable';packet.fft_relations[0].reason_code='saved_fft_input_unavailable';history.records[0].status='unavailable';const fft=qualifyMultiRoiHandoff(packet,state,history).fft_relations[0];assert.equal(fft.status,'unavailable');assert.equal(fft.reason_code,'saved_fft_input_unavailable');assert.equal(fft.execution_evidence.execution_status,'completed');assert.equal(fft.execution_evidence.frozen_input_qualification,'unavailable');assert.equal(fft.strict_reuse_eligibility,'unknown');
+});
+test('unbound, ambiguous or malformed execution history stays unknown instead of upgrading a validated relation',()=>{
+ for(const corrupt of [h=>h.records[0].fft_object_id=id(9),h=>h.records[0].input_snapshot.source_view_object_id=LATEST,h=>h.records[0].input_snapshot.frame_object_id=id(9),h=>h.records[0].input_snapshot.float_roi_xyxy=[2,2,21,22],h=>h.records[0].input_sha256='',h=>h.records.push(structuredClone(h.records[0])),h=>h.read_only=false]){
+  const {state,packet}=fixture(),history=executionHistory('validated');corrupt(history);const fft=qualifyMultiRoiHandoff(packet,state,history).fft_relations[0];assert.equal(fft.execution_evidence.execution_status,'unknown');assert.equal(fft.execution_evidence.frozen_input_qualification,'unknown');assert.equal(fft.strict_reuse_eligibility,'unknown');assert.equal(fft.execution_evidence.request_id,undefined);
+ }
+});

@@ -181,7 +181,7 @@ def _plan(workspace, request, metadata, api):
         attempted = [{**(row.get("method_attempt") or {}), "state": row["effective_state"]} for row in ledger["attempts"]]
         result = (peak_comparison.propose(workspace, gpas, information, api) if information["goal"] == peak_comparison.GOAL
                   else policy.propose(gpas, topology, information, ledger["remaining"], attempted))
-    metadata.update(kind="method_plan", policy_version=VERSION, root_plan_id=root["object_id"],
+    metadata.update(kind="method_plan", policy_version=VERSION, reference_text_revision=2, root_plan_id=root["object_id"],
                     seed_object_ids=root["seed_object_ids"], budget=budget, information=information,
                     plan_history=history, input_refs=refs, ledger=ledger, decision=result["decision"],
                     actions=_actions(result["actions"], root, ledger, api),
@@ -192,6 +192,15 @@ def _plan(workspace, request, metadata, api):
                     interpretation_status="hypothesized", material_dislocation_confirmed=False,
                     source_arrays_modified=False, fft_recomputed=False)
     return metadata
+
+
+def preflight_step(workspace, request, api):
+    """Validate child syntax before dispatch; refusal retains the parent slot."""
+    plan, _ = workspace.object(request.get("object_id"))
+    selected = [a for a in plan.get("actions", []) if a.get("action_id") == request.get("action_id")]
+    if len(selected) == 1 and selected[0].get("kind") == "gpa":
+        # Also protects saved revision1 plans without rewriting their actions.
+        api.gpa._parameters(selected[0]["parameters"], api)
 
 
 def _step(workspace, request, metadata, api):
@@ -268,6 +277,8 @@ def validate_references(workspace, metadata, api):
     validation = None
     api.need(metadata.get("policy_version") == VERSION, "Unknown cross-method policy version", "CORRUPT_OBJECT")
     if metadata["kind"] == "method_plan":
+        revision = metadata.get("reference_text_revision", 1)
+        api.need(type(revision) is int and revision in (1, 2), "Unknown method reference text revision", "CORRUPT_OBJECT")
         _cost(api, metadata["budget"]); _info(api, metadata["information"])
         original = api.read_json(workspace.root / "requests" / (metadata["request_id"] + ".json"))["parameters"]
         if original["action"] == "method_plan":
@@ -301,7 +312,8 @@ def validate_references(workspace, metadata, api):
             attempted = [{**(row.get("method_attempt") or {}), "state": row["effective_state"]} for row in ledger["attempts"]]
             expected = (peak_comparison.propose(workspace, expected_gpas, metadata["information"], api)
                         if metadata["information"]["goal"] == peak_comparison.GOAL else
-                        policy.propose(expected_gpas, topology, metadata["information"], ledger["remaining"], attempted))
+                        policy.propose(expected_gpas, topology, metadata["information"], ledger["remaining"], attempted,
+                                       reference_text_revision=revision))
             proposed = expected["actions"]
             if metadata['information']['goal'] == peak_comparison.GOAL:
                 try:

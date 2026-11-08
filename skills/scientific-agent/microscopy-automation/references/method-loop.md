@@ -45,10 +45,23 @@ or unknown child retains its full reservation, with observed time or explicit
 unknown time. Never subtract a failure to make another method fit.
 
 Recover a lost/late result by `image_result` with the original saved step request
-ID. If still unknown, inspect `image_method_next` from the saved plan/root for
-the recorded child request and budget; query that original child. The tools never
-replay unknown science. A later verified child outcome may be observed in a NEW
-proposal while the old unknown record remains historical. Unknown/unreadable
+ID. Its prepared-parent `partial_results` exposes the verified original child
+and reservation even when the execution claim blocks `image_method_next`.
+Query that exact child; completion is not permission to clear the parent's lock.
+Python's method-result read does not clear claims. The full Node/CLI query can
+attempt cleanup only for a verified completed request whose ID matches the
+current claim, under the metadata gate; it does not require owner close or match
+the nonce on this path. A child's completed query does not clear a different
+parent claim. Cleanup failure can retain a claim despite a readable completion.
+Normal owner-close cleanup is separate and checks its own nonce.
+An active owner may still finalize the parent. If the owner cannot finish/drain,
+this version requires lifecycle diagnosis and has no safe automatic reconciliation
+of a retained prepared-parent claim. Keep the claim and journals intact.
+If the original worker closes and its claim is normally released, a verified
+terminal child may be observed by image_method_next on the SAME saved root/plan,
+with a new metadata request ID. The old parent remains historical/prepared, full
+cost stays charged, and next actions are only proposals. Do not recreate the root
+or replace/replay the unknown parent/child IDs. Unknown/unreadable
 reservations block more science. Do not create a new root to evade that state or
 pretend it is a continuation. A genuinely new question has a new explicit budget.
 

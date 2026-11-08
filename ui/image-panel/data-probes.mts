@@ -3,10 +3,13 @@ import type {ProbeResult,ProfileResult,ProfileSamples,NumericReply,ProbeState,Pr
 export type {ProbeResult,ProfileResult,ProfileSamples,ProbeState} from './data-probe-contracts.mjs';
 declare const Blob:BrowserBlobConstructor;declare const URL:BrowserURL;declare const performance:{now():number};
 type Environment=typeof globalThis & BrowserEnvironment;
-export interface DataProbesOptions {getState?:()=>ProbeState|null|undefined;api?:(url:'/api/probe',body:Readonly<Record<string,unknown>>)=>Promise<ProbeResult>;readStatisticsHistory?:()=>Promise<unknown>;onOpenStatisticsHistory?:()=>BrowserElement|null;onError?:(error:unknown)=>unknown;document?:BrowserDocument|null;interval?:number;setTimer?:(callback:()=>void,ms:number)=>unknown;clearTimer?:(id:unknown)=>void;now?:()=>number;}
+export interface StatisticsInputNavigation {isCurrent?:()=>boolean;reference:StatisticsReference;context_object_id:string;display:{kind:'exact_saved_input'|'same_source_current_preview';object_id:string;manifest_sha256:string;};}
+export interface DataProbesOptions {getState?:()=>ProbeState|null|undefined;api?:(url:'/api/probe',body:Readonly<Record<string,unknown>>)=>Promise<ProbeResult>;readStatisticsHistory?:()=>Promise<unknown>;onOpenStatisticsHistory?:()=>BrowserElement|null;showStatisticsInput?:(objectId:string,navigation?:StatisticsInputNavigation)=>Promise<void>;useStatistics?:(reference:StatisticsReference,contextObjectId:string)=>Promise<void|boolean>;onError?:(error:unknown)=>unknown;document?:BrowserDocument|null;interval?:number;setTimer?:(callback:()=>void,ms:number)=>unknown;clearTimer?:(id:unknown)=>void;now?:()=>number;}
 // Scientific readouts from the same saved provider arrays used by MCP. Canvas
 // colors are never sampled and pointer motion creates no scientific records.
 import {tabularCell} from './measurement-workspace.mjs';
+import {referenceFromStatistics,statisticsReference,sameResearchValue} from './research-leads.mjs';
+import type {StatisticsReference} from './research-leads.mjs';
 const finite=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value);
 const componentNames:Partial<Record<string,string>>={raw:'原始数值',real:'实部',imag:'虚部',amplitude:'幅值',power:'功率 |z|²'};
 const componentName=(value:NumericReply|ProbeResult|null|undefined)=>{const name=componentNames[value?.component as string]??'未知分量';return value?.coordinate_space==='frequency_cycles_per_pixel'&&value.component!=='raw'?'FFT '+name.replace('|z|','|F|'):name;};
@@ -75,39 +78,62 @@ export function nearestProfileSample(result:ProfileResult,x:unknown){
 export class DataProbes {
  declare getState:DataProbesOptions['getState'];declare api:DataProbesOptions['api'];declare onError:NonNullable<DataProbesOptions['onError']>;declare document:BrowserDocument|null|undefined;declare interval:number;declare setTimer:DataProbesOptions['setTimer'];declare clearTimer:DataProbesOptions['clearTimer'];declare now:()=>number;declare el:(id:string)=>BrowserElement|null|undefined;
  declare pending:PendingProbe|null;declare inflight:boolean;declare timer:unknown;declare sequence:number;declare lastStart:number;declare lastSelection:ProbeSelection|null;declare currentBinding:ProbeBinding|null;declare statistics:ProfileResult|null;declare profile:ProfileResult|null;declare lastResult:ProbeResult;
- constructor({getState,api,readStatisticsHistory,onOpenStatisticsHistory,onError=()=>{},document:doc=(globalThis as Environment).document,interval=125,setTimer=(globalThis as Environment).setTimeout?.bind(globalThis),clearTimer=(globalThis as Environment).clearTimeout?.bind(globalThis),now=()=>performance.now()}:DataProbesOptions={}){
+ openStatisticsHistory:(reference?:StatisticsReference)=>Promise<void>=async()=>{throw Error('统计历史读取不可用');};
+ constructor({getState,api,readStatisticsHistory,onOpenStatisticsHistory,showStatisticsInput,useStatistics,onError=()=>{},document:doc=(globalThis as Environment).document,interval=125,setTimer=(globalThis as Environment).setTimeout?.bind(globalThis),clearTimer=(globalThis as Environment).clearTimeout?.bind(globalThis),now=()=>performance.now()}:DataProbesOptions={}){
   if(!finite(interval)||interval<100||interval>1000)throw new Error('Scientific probe throttle must be 100–1000 ms');
   Object.assign(this,{getState,api,onError,document:doc,interval,setTimer,clearTimer,now});this.el=(id:string)=>doc?.getElementById(id);this.pending=null;this.inflight=false;this.timer=null;this.sequence=0;this.lastStart=-Infinity;this.lastSelection=null;this.currentBinding=null;this.statistics=null;this.profile=null;
   if(this.el('probe-component'))this.el('probe-component')!.onchange=()=>{this.sequence++;this.pending=null;this.setProbeText('分量已切换；等待原数组采样');if(this.lastSelection)this.observe(this.lastSelection);};
   if(this.el('profile-csv')){this.el('profile-csv')!.disabled=true;this.el('profile-csv')!.onclick=()=>{try{if(!this.profile)throw new Error('先保存一条剖面');const url=URL.createObjectURL(new Blob(['\uFEFF',exportProfileCSV(this.profile)],{type:'text/csv;charset=utf-8'})),anchor=this.document!.createElement('a');anchor.href=url;anchor.download='mcp-dm-profile.csv';anchor.click();this.setTimer!(()=>URL.revokeObjectURL(url),1000);}catch(error){this.onError(error);}};}
   if(readStatisticsHistory&&doc){
    const dialog=this.el('statistics-history-dialog')!,status=this.el('statistics-history-status')!,host=this.el('statistics-history-rows')!;
-   let returnFocus:BrowserElement|null=null,reading=false;
+   let returnFocus:BrowserElement|null=null,reading=false,historyGeneration=0;
    const element=(tag:string,text:unknown)=>{const e=doc.createElement(tag);e.textContent=text;return e;};
    const row=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
    const text=(value:unknown)=>value===null||value===undefined?'未知':String(value);
-   const open=async()=>{
-    if(reading)return;reading=true;returnFocus=onOpenStatisticsHistory?.()??doc.activeElement??null;host.replaceChildren();status.textContent='正在只读核对已保存统计；不重新计算。';dialog.showModal();this.el('close-statistics-history')?.focus();
+   const open=async(reference?:StatisticsReference)=>{
+    const selected=reference?statisticsReference(reference):undefined,binding=objectBinding(getState?.());
+    if(reading)return;reading=true;historyGeneration++;returnFocus=onOpenStatisticsHistory?.()??doc.activeElement??null;host.replaceChildren();status.textContent='正在只读核对已保存统计；不重新计算。';dialog.showModal();this.el('close-statistics-history')?.focus();
     try{
      const response=row(await readStatisticsHistory());
      if(response.schema_version!==1||response.read_only!==true||response.scope!=='same_frame_source_pixels'||response.object_id!==getState?.()?.object?.object_id||!Array.isArray(response.entries))throw new Error('统计历史来源无法核对；请从当前图像重新打开。');
+     let entries=response.entries;
+     if(selected){
+      if(!sameBinding(getState?.(),binding)||response.frame_object_id!==selected.frame_id)throw Error('统计核查上下文已改变；未打开其他来源。');
+      entries=entries.filter(value=>sameResearchValue(referenceFromStatistics(value),selected));
+      if(entries.length!==1)throw Error('原统计引用未在本次历史清单中唯一核对，可能缺失、变化或清单截断；未使用另一条结果替代。');
+     }
      status.textContent=`同一帧的已保存实空间统计 ${response.entries.length} 条 / 共 ${text(response.total)} 条${response.truncated?'；仅显示最近记录，清单已截断':''}。帧 ID：${text(response.frame_object_id)}。只作历史数值对照，不代表当前选区、周期、方向、应变或物理解释。`;
-     if(!response.entries.length)status.textContent+=' 暂无可核对记录；不自动计算或借用其他帧。';
-     for(const value of response.entries){
+     if(selected)status.textContent='正在核查线索的准确原统计：结果 '+selected.result_id+' · 原请求 '+selected.request_id+'。仅显示这一条已核对引用；关系仍是研究者的提议，不代表当前问题已获证实。';
+     if(!response.entries.length)status.textContent+=' 暂无可核对记录；不自动计算或借用其他帧。如需新统计，关闭此窗口，在空间图中选中 ROI 后点击“统计当前 ROI”。';
+     for(const value of entries){
       const entry=row(value),stats=row(entry.statistics),matches=Array.isArray(entry.matching_input_annotations)?entry.matching_input_annotations.map(row):[],tr=element('tr','');
       const name=matches.length===1?text(matches[0].name):matches.length?'多个同边界标注；身份不唯一':'无可匹配的保存标注名';
       tr.append(element('td',`${name}\n保存 ROI：${JSON.stringify(entry.source_rect_xyxy)}\n源像素半开边界；名称仅按统计时输入中的同处理边界匹配，不绑定当前标注。`),
        element('td',`n=${numberText(stats.sample_count)}\n分量：${text(entry.component)}\ndtype：${text(entry.dtype)}\n强度单位未声明；不使用 XY 长度单位代替。`),
        element('td',`均值 ${numberText(stats.mean)}\n标准差 ${numberText(stats.stddev)}\n最小 ${numberText(stats.minimum)}\n最大 ${numberText(stats.maximum)}\n标准差约定：${text(entry.standard_deviation)}`),
        element('td',`保存时间（UTC）：${text(entry.created_utc)}\n来源：${text(row(entry.source_identity).path)}\n原始强度语义：${text(entry.intensity_semantics)}`));
-      const details=element('details','');details.append(element('summary','对象、请求与来源证据'),element('pre',JSON.stringify(entry,null,2)));const cell=element('td','');cell.append(details);tr.append(cell);host.append(tr);
+      const details=element('details','');details.append(element('summary','对象、请求与来源证据'),element('pre',JSON.stringify(entry,null,2)));const cell=element('td',''),explanationActions:BrowserElement[]=[];
+      if(useStatistics){
+       const contextObjectId=String(response.object_id),button=element('button','进一步整理解释（可选）');button.title='仅核对数值无需填写解释；先主动记录并应用同帧研究问题，再带入准确原统计。不会自动生成假设、关系或下一步。';
+       button.onclick=async()=>{if(button.disabled)return;button.disabled=true;try{if(getState?.()?.object?.object_id!==contextObjectId)throw Error('当前图像已切换；请从当前来源重新打开统计历史。');if(await useStatistics(referenceFromStatistics(entry),contextObjectId)===false)return;dialog.close();}catch(error){status.textContent='未带入线索：'+(error as Error).message+'；请重新选择统计。需要刷新时，关闭后重新打开统计历史。';onError(error);}finally{button.disabled=false;}};explanationActions.push(button);
+      }
+      if(showStatisticsInput&&typeof entry.input_object_id==='string'&&/^[a-f0-9]{32}$/.test(entry.input_object_id)){
+       const display=row(entry.input_display),qualified=['exact_saved_input','same_source_current_preview'].includes(String(display.kind))&&typeof display.object_id==='string'&&/^[a-f0-9]{32}$/.test(display.object_id)&&typeof display.manifest_sha256==='string'&&/^[a-f0-9]{64}$/.test(display.manifest_sha256),sameSource=qualified&&display.kind==='same_source_current_preview';
+       const navigation:StatisticsInputNavigation|undefined=qualified?{reference:referenceFromStatistics(entry),context_object_id:String(response.object_id),display:{kind:display.kind as StatisticsInputNavigation['display']['kind'],object_id:display.object_id as string,manifest_sha256:display.manifest_sha256 as string}}:undefined;
+       const inputId=navigation?.display.object_id??entry.input_object_id,button=element('button',sameSource?'查看同源当前预览（非历史显示）':'查看统计时的原图输入');button.title='打开准确绑定的保存显示；旧 raw 输入只能核对同源当前预览。统计区域见本行边界，不替换当前选区，不重新计算。';
+       if(entry.input_display!==undefined)cell.append(element('small',text(display.reason)));
+       if(entry.input_display!==undefined&&!qualified){button.disabled=true;button.title=text(display.reason);}
+       button.onclick=async()=>{if(button.disabled)return;button.disabled=true;const generation=historyGeneration,isCurrent=()=>dialog.open===true&&historyGeneration===generation;try{await showStatisticsInput(inputId,navigation?{...navigation,isCurrent}:undefined);if(isCurrent())dialog.close();}catch(error){if(isCurrent()){status.textContent='历史输入未打开：'+(error as Error).message;onError(error);}}finally{button.disabled=false;}};cell.append(button);
+      }
+      cell.append(details,...explanationActions);tr.append(cell);host.append(tr);
      }
     }catch(error){host.replaceChildren();status.textContent=(error as Error).message;onError(error);}finally{reading=false;}
    };
-   for(const id of ['open-statistics-history','open-statistics-history-inline','open-statistics-history-measurements'])if(this.el(id))this.el(id)!.onclick=open;
+   this.openStatisticsHistory=open;
+   for(const id of ['open-statistics-history','open-statistics-history-inline','open-statistics-history-measurements'])if(this.el(id))this.el(id)!.onclick=()=>open();
    this.el('close-statistics-history')!.onclick=()=>dialog.close();
    dialog.addEventListener('cancel',event=>{event.preventDefault();dialog.close();});
-   dialog.addEventListener('close',()=>{returnFocus?.focus();returnFocus=null;});
+   dialog.addEventListener('close',()=>{historyGeneration++;returnFocus?.focus();returnFocus=null;});
   }
  }
  component():string{return this.el('probe-component')?.value||'raw';}

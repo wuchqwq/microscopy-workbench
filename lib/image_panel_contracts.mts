@@ -73,6 +73,7 @@ export interface PanelMultiRoiHandoff {
 // Navigation availability only, never a scientific/evidence qualification.
 export interface PanelSpatialReturnState {version:1;status:'ready'|'unavailable';view_object_id?:string;frame_object_id?:string;reason_code?:string;}
 export interface PanelState {
+ joint_research?:import('./research_joint_owner.mjs').JointOwnerSnapshot;
  schema_version:1;panel_id:string|null;backend:'external-image-workspace';state_revision:number;
  helper_session_id?:string|null;panel_generation?:number|null;
  object:PanelMetadata;source_identity:PanelMetadata;effective_display:unknown;display_source_object_id:unknown;render_base_id:unknown;
@@ -81,6 +82,12 @@ export interface PanelState {
  source_recheck?:{status:'available'|'pending';reason_code:string;records_checked:number;request_id?:unknown};
  sequence_evidence:unknown;domain_evidence:unknown;numeric_results:Record<'statistics'|'profile',PanelMetadata|null>;
  crystal_evidence?:unknown;
+ research_question?:import('../ui/image-panel/research-question.mjs').ResearchQuestion;
+ research_lead_session_id?:string;
+ research_offline?:import('../ui/image-panel/offline-research.mjs').OfflineResearch;
+ research_leads?:import('../ui/image-panel/research-leads.mjs').ResearchLeads;
+ research_leads_reference_status?:'not_revalidated_by_state_read';
+ research_leads_semantics?:'caller_proposals_not_authenticated_or_scientifically_validated; next_step_is_unexecuted_plan; same_source_entries_are_not_independent_experiments; no_automatic_weighting_or_hypothesis_test';
  numeric_result_recovery:{state:string;results:Record<string,PanelMetadata>};
  tools:{name:unknown;inputSchema:unknown}[];selection:PanelSelection|null;last_operation:PanelMetadata|null;research_observation:PanelMetadata|null;
  draft_persistence:PanelDraftPersistence;edit_state:PanelEditState;pending_result:PanelPendingResult|null;

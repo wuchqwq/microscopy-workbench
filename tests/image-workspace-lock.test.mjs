@@ -8,6 +8,22 @@ import {EventEmitter} from 'node:events';
 import {acquireImageWorkspaceWrite,releaseCompletedImageWorkspaceWrite} from '../lib/image_workspace_lock.mjs';
 import {ImageWorkspace} from '../lib/image_workspace.mjs';
 async function fixture(run){const workspace=mkdtempSync(path.join(tmpdir(),'provider-entry-lock-'));try{await run(workspace);}finally{assert.equal(path.dirname(workspace),path.resolve(tmpdir()));rmSync(workspace,{recursive:true,force:true});}}
+
+test('a prepared method parent and a completed child query cannot release the active parent claim',()=>fixture(async workspace=>{
+ const lease=acquireImageWorkspaceWrite(workspace,'method-original-1');let spawned=0;
+ const spawnProcess=()=>{spawned++;const child=new EventEmitter();child.stdout=new EventEmitter();child.stderr=new EventEmitter();child.stdin=new EventEmitter();
+  child.stdin.end=input=>queueMicrotask(()=>{const query=JSON.parse(input),parent=query.query_request_id==='method-original-1';
+   const reply=parent?{ok:false,state:'unknown',backend:'external-image-workspace',request_id:'method-original-1',automatic_retry:false,
+    partial_results:{parent_request_id:'method-original-1',automatic_retry:false,release_authorized:false,children:[{request_id:'original-child',state:'completed'}]}}:
+    {ok:true,result:{backend:'external-image-workspace',state:'completed',request_id:'original-child',object_id:'a'.repeat(32)}};
+   child.stdout.emit('data',Buffer.from(JSON.stringify(reply)));child.emit('close',parent?1:0);});return child;};
+ const provider=new ImageWorkspace({workspace,python:'controlled-worker',spawnProcess});
+ try{for(const request_id of ['method-original-1','original-child']){const call=provider.call('image_result',{request_id});await call;await call.workerDone;}
+  assert.equal(JSON.parse(readFileSync(path.join(workspace,'provider-execution.lock'),'utf8')).request_id,'method-original-1');
+  await assert.rejects(provider.call('image_method_next',{object_id:'b'.repeat(32),request_id:'not-admitted'}),error=>error.code==='WORKSPACE_WRITE_CONFLICT');
+  assert.equal(spawned,2,'only original read queries, no child computation or next dispatch');
+ }finally{provider.close();lease.release();}
+}));
 test('GUI and CLI processes cannot concurrently submit different provider writes',()=>fixture(workspace=>{
  const lease=acquireImageWorkspaceWrite(workspace,'gui-original'),module=new URL('../lib/image_workspace_lock.mjs',import.meta.url).href,script=`import {acquireImageWorkspaceWrite} from ${JSON.stringify(module)};try{acquireImageWorkspaceWrite(process.argv[1],'cli-new');process.exit(10);}catch(error){process.stdout.write(JSON.stringify({code:error.code,original:error.original_request_id,submission:error.submission_state}));}`;
  const child=spawnSync(process.execPath,['--input-type=module','-e',script,workspace],{encoding:'utf8',windowsHide:true});assert.equal(child.status,0,child.stderr);assert.deepEqual(JSON.parse(child.stdout),{code:'WORKSPACE_WRITE_CONFLICT',original:'gui-original',submission:'not_submitted'});lease.release();assert.equal(existsSync(path.join(workspace,'provider-execution.lock')),false);

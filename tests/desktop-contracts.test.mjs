@@ -52,6 +52,27 @@ test('renderer permissions and bridge expose no arbitrary file, shell or generic
 test('Electron ready is scheduled after ESM entry completion instead of awaited at top level',()=>{
  const source=readFileSync(path.join(root,'tools/desktop_main.mjs'),'utf8');assert.match(source,/app\.whenReady\(\)\.then\(async/);assert.doesNotMatch(source,/await app\.whenReady\(\)/);
 });
+test('native open preload sends only its fixed no-argument intent, without a file or generic IPC capability',()=>{
+ let bridge;const sent=[];const electron={contextBridge:{exposeInMainWorld(name,value){assert.equal(name,'workbenchDesktop');bridge=value;}},ipcRenderer:{on(){},send(...args){sent.push(args);}}};
+ new vm.Script(readFileSync(path.join(root,'tools/desktop_preload.cjs'),'utf8')).runInNewContext({exports:{},require:name=>{assert.equal(name,'electron');return electron;}});
+ assert.deepEqual(Object.keys(bridge).sort(),['onAction','openImage','reviewImage','stopImageReview']);assert.equal(Object.isFrozen(bridge),true);bridge.openImage('/not-forwarded/private.tiff',{arbitrary:'ignored'});bridge.reviewImage({approved:true});bridge.stopImageReview('arbitrary');assert.deepEqual(sent,[['mwb:open-image'],['mwb:review-image'],['mwb:stop-image-review']]);
+});
+test('native open validates the owned main frame, serializes pickers, selects image first and preserves the old workspace on cancel/refused close',async()=>{
+ const app=new EventEmitter(),ipcMain=new EventEmitter(),pickers=[],reports=[];let owned,backendCount=0,closeCount=0;
+ Object.assign(app,{setName(){},setPath(){},whenReady:async()=>{},quit(){},exit(){assert.fail('Unexpected startup failure');}});
+ class Window extends EventEmitter {constructor(){super();owned=this;this.destroyed=false;this.webContents=new EventEmitter();Object.assign(this.webContents,{id:1,mainFrame:{},getURL:()=>this.url,send:(_channel,payload)=>queueMicrotask(()=>ipcMain.emit('mwb:action-result',{sender:this.webContents,senderFrame:this.webContents.mainFrame},{id:payload.id,ok:false,error:'Unapplied question retained'})),setWindowOpenHandler(){},session:{setPermissionRequestHandler(){},setPermissionCheckHandler(){}}});}async loadURL(url){this.url=url;}show(){}focus(){}setEnabled(){}isDestroyed(){return this.destroyed;}destroy(){this.destroyed=true;}}
+ class Backend {constructor(){backendCount++;this.ready=Promise.resolve({url:'http://127.0.0.1:12456/#'+'b'.repeat(48),node:process.version});}async queryDiscard(){return null;}async status(){assert.fail('Renderer refusal must keep the existing workspace');}async close(){closeCount++;}abnormalDetach(){}async abnormalDrain(){}}
+ const config={node:process.execPath,workspace:root,python:process.execPath,source:path.join(root,'public.tiff')};
+ const electron={app,ipcMain,BrowserWindow:Window,Menu:{buildFromTemplate:items=>items,setApplicationMenu(){}},dialog:{showOpenDialog(options){return new Promise(resolve=>pickers.push({options,resolve}));},async showMessageBox(_window,options){reports.push(options);return {response:0};},showErrorBox(){assert.fail('Unexpected startup error');}}};
+ const source=readFileSync(path.join(root,'tools/desktop_main.mjs'),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/const electronModule = 'electron', electron = await import\(electronModule\);/,'const electron = __electron;').replaceAll('import.meta.url',JSON.stringify(new URL('../tools/desktop_main.mjs',import.meta.url).href));
+ const context=vm.createContext({...desktopContracts,DesktopCloseCoordinator,DesktopBackendClient:Backend,path,fileURLToPath,URL,existsSync:()=>true,mkdirSync(){},readDesktopOptions:()=>config,__electron:electron,process:{env:{},argv:[],stdout:{write(){}},on(){}},setTimeout,clearTimeout,queueMicrotask,AggregateError});new vm.Script(source).runInContext(context);
+ const settle=async()=>{for(let i=0;i<24;i++)await Promise.resolve();};await settle();const owner={sender:owned.webContents,senderFrame:owned.webContents.mainFrame},original=owned;
+ for(const event of [{sender:{},senderFrame:owner.senderFrame},{sender:owner.sender,senderFrame:{}}])ipcMain.emit('mwb:open-image',event);
+ ipcMain.emit('mwb:open-image',owner,{path:'/not-admitted'});assert.equal(pickers.length,0);
+ ipcMain.emit('mwb:open-image',owner);ipcMain.emit('mwb:open-image',owner);assert.equal(pickers.length,1);assert.match(pickers[0].options.title,/只读原始图像/);assert.deepEqual([...pickers[0].options.properties],['openFile']);pickers[0].resolve({canceled:true,filePaths:[]});await settle();assert.equal(owned,original);assert.equal(original.destroyed,false);
+ ipcMain.emit('mwb:open-image',owner);pickers[1].resolve({canceled:false,filePaths:[config.source]});await settle();assert.equal(pickers.length,3);assert.match(pickers[2].options.title,/分析结果.*工作区/);assert.ok(pickers[2].options.properties.includes('openDirectory'));pickers[2].resolve({canceled:true,filePaths:[]});await settle();assert.equal(original.destroyed,false);assert.equal(closeCount,0);
+ ipcMain.emit('mwb:open-image',owner);pickers[3].resolve({canceled:false,filePaths:[config.source]});await settle();pickers[4].resolve({canceled:false,filePaths:[root]});await settle();assert.equal(backendCount,1);assert.equal(closeCount,0);assert.equal(original.destroyed,false);assert.ok(reports.some(r=>/Unapplied question/.test(r.detail??'')));
+});
 
 
 // Executes the actual emitted main entry with a native API port. No Electron,

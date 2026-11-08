@@ -3,6 +3,7 @@ import {readdirSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {readImageProviderRecords} from './image_measurement_records.mjs';
+import {readStatisticsDisplays} from './image_statistics_display.mjs';
 type Row=Record<string,unknown>;
 const row=(v:unknown):Row=>v&&typeof v==='object'&&!Array.isArray(v)?v as Row:{};
 const same=(a:unknown,b:unknown):boolean=>JSON.stringify(a,sort)===JSON.stringify(b,sort);
@@ -10,7 +11,7 @@ function sort(_key:string,v:unknown):unknown{return v&&typeof v==='object'&&!Arr
 function need(ok:unknown,message:string):asserts ok{if(!ok)throw new Error(message);}
 export function readImageStatisticsHistory({workspace,objectId,limit=256}:{workspace:string;objectId:string;limit?:number}){
  need(Number.isSafeInteger(limit)&&limit>=1&&limit<=512,'Statistics history limit must be 1..512');
- const r=readImageProviderRecords(workspace),current=r.operand(objectId),frames=current.lineage.frames;
+ const r=readImageProviderRecords(workspace),current=r.operand(objectId),frames=current.lineage.frames,displays=readStatisticsDisplays(r);
  const frame=frames.length===1?frames[0].object_id:null,entries:Row[]=[];
  const requests=readdirSync(path.join(r.root,'requests'),{withFileTypes:true});
  need(requests.length<=8192,'Statistics history exceeds bounded request budget');
@@ -39,11 +40,11 @@ export function readImageStatisticsHistory({workspace,objectId,limit=256}:{works
     Array.isArray(c)&&c.length===4&&c.every(v=>typeof v==='number'&&Number.isFinite(v))&&same([Math.floor(Math.min(c[0],c[2])),Math.floor(Math.min(c[1],c[3])),Math.ceil(Math.max(c[0],c[2])),Math.ceil(Math.max(c[1],c[3]))],rect);
   }).map(mark=>({annotation_id:mark.annotation_id,name:typeof mark.text==='string'?mark.text:null}));
   entries.push({object_id:s.object_id,request_id:s.request_id,input_object_id:s.parent_object_id,frame_object_id:frame,
-   created_utc:s.created_utc??null,source_identity:input.lineage.source_identity,source_rect_xyxy:rect,coordinate_space:s.coordinate_space,
+   input_display:displays.inputDisplay(String(s.parent_object_id),objectId),created_utc:s.created_utc??null,source_identity:input.lineage.source_identity,source_rect_xyxy:rect,coordinate_space:s.coordinate_space,
    component:s.component,dtype:s.dtype,statistics:stats,standard_deviation:s.standard_deviation??null,
    intensity_unit:null,intensity_semantics:s.intensity_semantics??null,intensity_calibration_applied:s.intensity_calibration_applied??null,
    matching_input_annotations:matches,label_basis:'saved_input_outward_roi_bounds_match_only',
-   manifest_sha256:saved.manifest_sha256,statistics_sha256:row(s.files_sha256)['statistics.json'],scientific_grid_identity:s.scientific_grid_identity});
+   manifest_sha256:saved.manifest_sha256,input_manifest_sha256:r.object(s.parent_object_id).manifest_sha256,statistics_sha256:row(s.files_sha256)['statistics.json'],scientific_grid_identity:s.scientific_grid_identity});
  }
  entries.sort((a,b)=>String(a.created_utc??'').localeCompare(String(b.created_utc??''))||String(a.object_id).localeCompare(String(b.object_id)));
  return {schema_version:1,read_only:true,object_id:objectId,frame_object_id:frame,scope:'same_frame_source_pixels',entries:entries.slice(-limit),total:entries.length,truncated:entries.length>limit};

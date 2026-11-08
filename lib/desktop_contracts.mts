@@ -2,7 +2,7 @@
 import path from 'node:path';
 import {existsSync,realpathSync,statSync} from 'node:fs';
 
-export const DESKTOP_ACTIONS=['prepare-close','inspect-close-state','save','undo','redo','delete','roi','select','pan','fft','measure','return-spatial','tile','history','help'] as const;
+export const DESKTOP_ACTIONS=['prepare-close','inspect-close-state','prepare-joint-review','finish-joint-review','save','undo','redo','delete','roi','select','pan','fft','measure','return-spatial','tile','history','help'] as const;
 export type DesktopAction=typeof DESKTOP_ACTIONS[number];
 export interface DesktopActionReply {ok:boolean;error?:string;working_revision?:number;}
 export interface DesktopOptions {node:string;workspace?:string;python?:string;source?:string;frame?:number;dataset?:number;component?:string;plane_axes?:number[];plane_indices?:(number|null)[];}

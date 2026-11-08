@@ -1,6 +1,13 @@
+import {JointResearchOwner} from '../lib/research_joint_owner.mjs';
 // Optional loopback gesture surface over the real image_* stdio MCP server.
 // It owns no scientific state: every saved revision is an existing tool object.
 import http from 'node:http';
+import {DesktopPublicResearch,PublicResearchRefused} from '../lib/desktop_public_research.mjs';
+import {readOfflineResearch,readOfflineBinding,readOfflineResponse,offlineLead} from '../ui/image-panel/offline-research.mjs';
+import {offlineContext,offlineLease} from '../lib/research_offline.mjs';
+import {readResearchQuestion} from '../ui/image-panel/research-question.mjs';
+import {readResearchLeads,readLeadDraft,sameResearchValue,referenceFromStatistics as referenceFromStatisticsOffline} from '../ui/image-panel/research-leads.mjs';
+import {validateLeadEvidence,resolveResearchLeads} from '../lib/research_lead_evidence.mjs';
 import {PanelRestoreReads} from '../lib/panel_restore_reads.mjs';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readImageFrameAncestry} from '../lib/image_frame_ancestry.mjs';
@@ -139,6 +146,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const token=randomBytes(24).toString('hex'),evidenceToken=randomBytes(32).toString('hex'),session=randomBytes(8).toString('hex'),fftInputNonce=randomBytes(32).toString('hex');
  let crystalEvidence=restoreCrystalEvidenceSnapshot(crystal_evidence_snapshot);
  const journal=journalDirectory??path.join(workspace!,'panel-journals',session);mkdirSync(journal,{recursive:true});
+ let publicResearch:DesktopPublicResearch|undefined;let jointOwner:JointResearchOwner|undefined;
  const client=givenClient??new StdioImageClient({workspace:workspace!,python:python!});let tools:Metadata[],current!:Metadata,png:unknown,cleanPng:unknown=null,cleanHash:string|null=null,renderBaseId:unknown=null,sequence=0,selection:PanelSelection|null=null,busy:Promise<unknown>=Promise.resolve(),lastOperation:Metadata|null=null,frameIdentity:PanelFrameIdentity|null=null,effectiveDisplay:unknown=null,displaySourceObjectId:unknown=null,stateRevision=0,pendingResult:PendingView|null=null,researchObservation:Metadata|null=null,selectionTimer:ReturnType<typeof setTimeout>|null=null,selectionPersistenceError:string|null=null;
  let sequenceEvidence:unknown=null;
  let domainEvidence:unknown=null;
@@ -159,6 +167,14 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  let editState:PanelEditState={draft_revision:0,dirty:false,gesture_active:false,selection:null,annotation_edit:null,base_object_id:null};
  let analysis:AnalysisWorkspace|undefined,analysisOwner:AnalysisWorkspaceOwner|undefined,workspaceDrafts:Metadata={},workingSelections:Metadata={},adoptedResults:unknown[]=structuredClone((checkpoint??explicitRestore)?.adopted_results??[]) as unknown[];
  const sourceProofScope=new AsyncLocalStorage<readonly SourceProofReference[]>(),sourceProofRecords=new Map<string,Metadata>();
+ let researchQuestion=readResearchQuestion((checkpoint??explicitRestore)?.research_question);
+ let researchLeads=readResearchLeads((checkpoint??explicitRestore)?.research_leads);
+  let researchOffline=readOfflineResearch((checkpoint??explicitRestore)?.research_offline);
+  const offlineActions=['stage-offline-candidate','accept-offline-candidate','reject-offline-candidate'];
+ // Exact per-helper transport receipts, never a provider/scientific journal.
+ const leadUpdateReceipts=new Map<string,{key:string;receipt:Metadata}>();
+ const leadCommandKey=(value:unknown)=>JSON.stringify(value,(_key,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+ const matchesLeadUpdate=(command:Metadata)=>{if(offlineActions.includes(String(command.action))){const c=researchOffline?.entries.find(c=>c.response.candidate_id===command.lead_id);if(!c)return false;if(command.action==='stage-offline-candidate')return sameResearchValue(c.binding,command.offline_binding)&&sameResearchValue(c.response,command.offline_response);if(command.action==='reject-offline-candidate')return c.status==='rejected'&&c.rejection_note===command.withdrawal_note;return c.status==='accepted'&&sameResearchValue(c.accepted_draft,offlineLead(readOfflineResponse(command.offline_response,c.binding),c.binding))&&researchLeads?.entries.some(e=>{const {created_utc,withdrawn_utc,withdrawal_note,...draft}=e;return sameResearchValue(draft,c.accepted_draft);})===true;}const ident=String(command.lead_id??(command.lead_draft as Metadata|undefined)?.lead_id??''),found=researchLeads?.entries.find(e=>e.lead_id===ident);if(!found)return false;if(command.action==='withdraw-research-lead')return Boolean(found.withdrawn_utc&&found.withdrawal_note===command.withdrawal_note);const {created_utc,withdrawn_utc,withdrawal_note,...saved}=found;void created_utc;void withdrawn_utc;void withdrawal_note;return sameResearchValue(saved,command.lead_draft);};
  const sourceProofRefs=()=>sourceProofScope.getStore()??readSourceProofReferences(adoptedResults);
  const rememberSourceProof=(proof:SourceProofProjection)=>{sourceProofRecords.set(proof.proof_object_id,{proof_object_id:proof.proof_object_id,manifest_sha256:proof.manifest_sha256,status:proof.status,purpose:proof.purpose,basis:proof.basis,original_qualification:proof.original_qualification,root_object_id:proof.root_object_id,frame_identity:proof.frame_identity,eligible_for_exact_scope:proof.eligible_for_exact_scope,eligible_for_strict_reuse:proof.eligible_for_strict_reuse,reason:proof.reason,last_checked_utc:new Date().toISOString()});return proof;};
  const sourceProofState=()=>({schema_version:1,records:[...sourceProofRecords.values()].map(record=>{const ref=sourceProofRefs().find(ref=>ref.object_id===record.proof_object_id),mismatch=Boolean(ref&&record.status==='verified'&&ref.manifest_sha256!==record.manifest_sha256);return {...record,...(mismatch?{status:'unavailable',eligible_for_exact_scope:false,eligible_for_strict_reuse:false,reason:'Adopted proof manifest differs from the currently observed proof; the original reference is retained'}:{}),adopted:Boolean(ref),adopted_manifest_sha256:ref?.manifest_sha256??null};}),references:sourceProofRefs()});
@@ -344,14 +360,14 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const sourceIdentity=()=>sources.get(current.object_id)??describeSource(current,(current.user_context as Metadata|undefined)?.data_meaning);
  const draftPersistence=()=>({pending:selectionTimer!==null,error:selectionPersistenceError});
  const draftAck=():PanelDraftAcknowledgment=>({schema_version:1,panel_id,object_id:current.object_id,state_revision:stateRevision,edit_state:structuredClone(editState),selection,research_observation:observationState(),draft_persistence:draftPersistence()});
- const state=():PanelState&{source_proofs:ReturnType<typeof sourceProofState>}=>{const value:PanelState={schema_version:1,panel_id,...(helper_session_id?{helper_session_id,panel_generation}:{}),sequence_evidence:sequenceEvidence,domain_evidence:domainEvidence,domain_png_base64:domainPng,numeric_results:numericResults,numeric_result_recovery:numericRecovery,backend:'external-image-workspace',state_revision:stateRevision,object:publicImageObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,...(frameIdentity===null&&lastFrameDiagnostic?.object_id===current.object_id?{frame_resolution:{...lastFrameDiagnostic!,...(sourceRecheckState()?{status:'recheck_required'}:{})}}:{}),...(sourceRecheckState()?{source_recheck:sourceRecheckState()!}:{}),png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),spatial_return:spatialReturnState(spatialReturnReference,current,frameIdentity,spatialReturnReason),window_collection:windowStore.snapshot(),panel_mapping_fingerprint:panelWindowMappingFingerprint(current),multi_roi_handoff_schema_version:1,...(analysis?{workspace_analysis:analysis.status(unresolvedRequest())}:{}),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:pendingResult.reason??'unsaved_draft',scientific_operation_complete:true}:null};return {...value,source_proofs:sourceProofState(),crystal_evidence:crystalEvidenceForState(crystalEvidence,value)};};
+ const state=():PanelState&{source_proofs:ReturnType<typeof sourceProofState>}=>{const value:PanelState={schema_version:1,...(jointOwner?{joint_research:jointOwner.snapshot()}:{}),panel_id,research_lead_session_id:session,...(researchOffline?{research_offline:structuredClone(researchOffline)}:{}),...(helper_session_id?{helper_session_id,panel_generation}:{}),sequence_evidence:sequenceEvidence,domain_evidence:domainEvidence,domain_png_base64:domainPng,numeric_results:numericResults,numeric_result_recovery:numericRecovery,backend:'external-image-workspace',state_revision:stateRevision,...(researchQuestion?{research_question:structuredClone(researchQuestion)}:{}),...(researchLeads?{research_leads:structuredClone(researchLeads),research_leads_reference_status:'not_revalidated_by_state_read' as const,research_leads_semantics:'caller_proposals_not_authenticated_or_scientifically_validated; next_step_is_unexecuted_plan; same_source_entries_are_not_independent_experiments; no_automatic_weighting_or_hypothesis_test' as const}:{}),object:publicImageObject(current),source_identity:sourceIdentity(),effective_display:effectiveDisplay,display_source_object_id:displaySourceObjectId,render_base_id:renderBaseId,clean_png_base64:cleanPng,clean_png_sha256:cleanHash,frame_identity:frameIdentity,...(frameIdentity===null&&lastFrameDiagnostic?.object_id===current.object_id?{frame_resolution:{...lastFrameDiagnostic!,...(sourceRecheckState()?{status:'recheck_required'}:{})}}:{}),...(sourceRecheckState()?{source_recheck:sourceRecheckState()!}:{}),png_base64:png,tools:tools.map(t=>({name:t.name,inputSchema:t.inputSchema})),selection,last_operation:lastOperation,research_observation:observationState(),draft_persistence:draftPersistence(),edit_state:structuredClone(editState),spatial_return:spatialReturnState(spatialReturnReference,current,frameIdentity,spatialReturnReason),window_collection:windowStore.snapshot(),panel_mapping_fingerprint:panelWindowMappingFingerprint(current),multi_roi_handoff_schema_version:1,...(analysis?{workspace_analysis:analysis.status(unresolvedRequest())}:{}),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,reason:pendingResult.reason??'unsaved_draft',scientific_operation_complete:true}:null};return {...value,source_proofs:sourceProofState(),crystal_evidence:crystalEvidenceForState(crystalEvidence,value)};};
  const sourceCheckPending=()=>lastOperation?.action==='recheck-source'&&lastOperation.state==='source_recheck_pending';
  const unresolvedRequest=()=>lastOperation?.state==='submitted'||sourceCheckPending()?String(lastOperation?.request_id??'unknown'):null;
  const sourceRecheckState=():PanelState['source_recheck']=>legacyNullSource&&legacyNullSource.object_id===current.object_id&&frameIdentity===null?{status:sourceCheckPending()?'pending':'available',reason_code:'legacy_terminal_not_evaluated',records_checked:legacyNullSource.records_checked,...(lastOperation?.action==='recheck-source'?{request_id:lastOperation.request_id}:{} )}:undefined;
  const checkpointSnapshot=():AnalysisSnapshot=>{
   const evidence=crystalEvidenceForState(crystalEvidence,state());
   const evidenceSnapshot=evidence?(()=>{const {image_png_base64,...payload}=evidence.payload;void image_png_base64;return {...evidence,payload};})():null;
-  return {schema_version:1,object_id:current.object_id,state_revision:stateRevision,frame_identity:frameIdentity,selection,edit_state:editState,spatial_return_reference:spatialReturnReference,window_collection:windowStore.checkpoint(),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,...(pendingResult.reason==='window_capacity'?{reason:'window_capacity'}:{}),...(pendingResult.inputViewContext!==undefined?{input_view_context:pendingResult.inputViewContext}:{}),...(pendingResult.viewContextRestore!==undefined?{view_context_restore:pendingResult.viewContextRestore}:{}),...(pendingResult.navigationLease?{navigation_lease:true}:{}),...(pendingResult.spatialReturnReference!==undefined?{spatial_return_reference:pendingResult.spatialReturnReference}:{} )}:null,last_operation:lastOperation,numeric_result_refs:numericResultRefs(),crystal_evidence:evidenceSnapshot,research_observation:observationState(),updated_utc:new Date().toISOString(),window_drafts:structuredClone(workspaceDrafts),working_selections:{...workingSelections,...(windowStore.snapshot().active_window_id?{[windowStore.snapshot().active_window_id!]:workingSelection()}:{})},adopted_results:structuredClone(adoptedResults)} as AnalysisSnapshot;
+  return {schema_version:1,object_id:current.object_id,state_revision:stateRevision,frame_identity:frameIdentity,selection,edit_state:editState,spatial_return_reference:spatialReturnReference,window_collection:windowStore.checkpoint(),pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id,...(pendingResult.reason==='window_capacity'?{reason:'window_capacity'}:{}),...(pendingResult.inputViewContext!==undefined?{input_view_context:pendingResult.inputViewContext}:{}),...(pendingResult.viewContextRestore!==undefined?{view_context_restore:pendingResult.viewContextRestore}:{}),...(pendingResult.navigationLease?{navigation_lease:true}:{}),...(pendingResult.spatialReturnReference!==undefined?{spatial_return_reference:pendingResult.spatialReturnReference}:{} )}:null,last_operation:lastOperation,numeric_result_refs:numericResultRefs(),crystal_evidence:evidenceSnapshot,research_observation:observationState(),updated_utc:new Date().toISOString(),window_drafts:structuredClone(workspaceDrafts),working_selections:{...workingSelections,...(windowStore.snapshot().active_window_id?{[windowStore.snapshot().active_window_id!]:workingSelection()}:{})},adopted_results:structuredClone(adoptedResults),...(researchQuestion?{research_question:structuredClone(researchQuestion)}:{}),...(researchLeads?{research_leads:structuredClone(researchLeads)}:{}),...(researchOffline?{research_offline:structuredClone(researchOffline)}:{})} as AnalysisSnapshot;
  };
  const workingSelectionFor=(picked:PanelSelection|null,value:Metadata=current)=>{
   if(!picked||picked.kind!=='rectangle')return null;
@@ -374,6 +390,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  const validateAnalysisSnapshot=async(value:AnalysisSnapshot,{allowDeferredNull=false}={})=>{
   const refs=new Set<string>();const visit=(raw:unknown)=>{if(Array.isArray(raw))raw.forEach(visit);else if(raw&&typeof raw==='object')for(const [key,item]of Object.entries(raw)){if((key==='object_id'||key.endsWith('_object_id')||key==='calibration_id')&&objectId.test(String(item)))refs.add(String(item));else visit(item);}};visit(value);
   for(const id of refs){const saved=await journalCall('image_info',{object_id:id});if(saved.data.object_id!==id)fail('Analysis reference changed during qualification',409);}
+  const questions=[readResearchQuestion(value.research_question),...(readResearchLeads(value.research_leads)?.entries.map(e=>e.question)??[]),...(readOfflineResearch(value.research_offline)?.entries.map(e=>e.binding.question)??[])],seenQuestions=new Set<string>();for(const question of questions){if(!question)continue;const key=question.context_object_id+':'+question.frame_object_id;if(seenQuestions.has(key))continue;seenQuestions.add(key);const context=await readWindowSaved(question.context_object_id,{includeFrameAncestry:true});if(context.frame?.frame_object_id!==question.frame_object_id)fail('Research question context differs from its exact saved source frame',409);}
   if(value.adopted_results!==undefined&&!Array.isArray(value.adopted_results))fail('Saved adopted-result references are invalid',409);
   for(const proof of readImageSourceProofs(workspace!,readSourceProofReferences(value.adopted_results??[]))){rememberSourceProof(proof);if(proof.status!=='verified'||!proof.eligible_for_exact_scope)fail('Adopted source proof is unavailable: '+String(proof.reason??proof.status),409);}
   for(const raw of (value.adopted_results??[]) as Metadata[]){if(raw.kind==='source_proof_reference_v1')continue;if(raw.kind!=='roi_lattice_comparison'||typeof raw.comparison_id!=='string'||typeof raw.report_sha256!=='string')fail('Unknown adopted-result reference',409);const module=await comparisonReports(),report=module.readRoiComparisonReport(workspace!,raw.comparison_id);if(createHash('sha256').update(JSON.stringify(report)).digest('hex')!==raw.report_sha256||report.source_save_id!==raw.source_save_id||report.source_revision!==raw.source_revision)fail('Adopted comparison no longer matches the exact saved reference',409);}
@@ -381,6 +398,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(!sameRecord(saved.frame,expected)&&!(allowDeferredNull&&legacyNullSource?.object_id===value.object_id&&emptyLegacyWindows(value.window_collection)&&expected===null&&sameRecord(saved.frame,legacyNullSource.frame)))fail('Analysis source frame differs from its saved provider object',409);
  };
  const prepareAnalysisRestore=async(value:AnalysisSnapshot,{allowDeferredNull=false}={})=>{
+  const restoredQuestion=readResearchQuestion(value.research_question),restoredLeads=readResearchLeads(value.research_leads);
   if(restoreReadScope.getStore())fail('Analysis restore qualification is already active',409);
   const reads=new PanelRestoreReads<NativeImageReply>(async id=>(await client.tool('image_info',{object_id:id})) as NativeImageReply,sameRecord);
   return sourceProofScope.run(readSourceProofReferences(value.adopted_results??[]),()=>restoreReadScope.run(reads,async()=>{
@@ -396,7 +414,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   const nextRevision=editState.draft_revision+1;if(!Number.isSafeInteger(nextRevision))fail('Draft revision exhausted',409);
   await reads.verify();
   // No asynchronous reads remain after this synchronous commit boundary.
-  return ()=>{commitCurrent(prepared);frameIdentity=frame;windowStore=candidate;selection=selected;editState={draft_revision:nextRevision,dirty:stored.dirty===true,gesture_active:false,selection:draftSelection,annotation_edit:structuredClone(stored.annotation_edit??null) as Metadata|null,base_object_id:current.object_id};workspaceDrafts=structuredClone(value.window_drafts??{}) as Metadata;workingSelections=structuredClone(value.working_selections??{}) as Metadata;adoptedResults=structuredClone(value.adopted_results??[]) as unknown[];researchObservation=restoredObservation;crystalEvidence=restoredEvidence;pendingResult=null;lastOperation=value.last_operation?structuredClone(value.last_operation) as Metadata:null;numericResults.statistics=restoredNumeric.statistics;numericResults.profile=restoredNumeric.profile;spatialReturnReference=restoredReference;spatialReturnReason=restoredReference?'':'no_saved_return';stateRevision++;};
+  return ()=>{commitCurrent(prepared);frameIdentity=frame;windowStore=candidate;selection=selected;editState={draft_revision:nextRevision,dirty:stored.dirty===true,gesture_active:false,selection:draftSelection,annotation_edit:structuredClone(stored.annotation_edit??null) as Metadata|null,base_object_id:current.object_id};workspaceDrafts=structuredClone(value.window_drafts??{}) as Metadata;workingSelections=structuredClone(value.working_selections??{}) as Metadata;adoptedResults=structuredClone(value.adopted_results??[]) as unknown[];researchQuestion=restoredQuestion;researchLeads=restoredLeads;researchOffline=readOfflineResearch(value.research_offline);researchObservation=restoredObservation;crystalEvidence=restoredEvidence;pendingResult=null;lastOperation=value.last_operation?structuredClone(value.last_operation) as Metadata:null;numericResults.statistics=restoredNumeric.statistics;numericResults.profile=restoredNumeric.profile;spatialReturnReference=restoredReference;spatialReturnReason=restoredReference?'':'no_saved_return';stateRevision++;};
   }));
  };
  const restoreAnalysisSnapshot=async(value:AnalysisSnapshot,options?:{allowDeferredNull?:boolean})=>{const commit=await prepareAnalysisRestore(value,options);commit();};
@@ -463,8 +481,106 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if(!analysis||!analysisOwner)fail('Proof operation requires an owned analysis workspace',409);analysisOwner.assertOwned();analysis.requireRevision(parameters.expected_working_revision);analysis.assertSemanticEditingAllowed();
   const status=analysis.status(unresolvedRequest());if(parameters.expected_state_revision!==stateRevision||parameters.collection_revision!==windowStore.snapshot().revision||!keepLocalDraft&&(editState.dirty||editState.annotation_edit||status.dirty)||editState.gesture_active||pendingResult||unresolvedRequest()||selectionTimer!==null||selectionPersistenceError||status.recovery_available||status.unresolved_save_id)fail('Proof input, current draft or saved analysis changed; local work is retained',409);
  };
- const workspaceAction=async(input:unknown)=>{
-  if(!analysis)fail('Analysis workspace has not been initialized',409);const body=input as Metadata;fields(body,['action','expected_working_revision','save_id','working_draft','comparison_id','proof_object_id','manifest_sha256','expected_object_id','expected_state_revision','draft_revision','collection_revision','replace_proof_id']);analysis.requireRevision(body.expected_working_revision);
+ const offlineReadGuard=()=>{
+  if(!analysis||!researchQuestion)fail('Apply a question in an analysis workspace first',409);
+  analysisOwner!.assertOwned();analysis.assertSemanticEditingAllowed();const gate=panelRoiHandoff(state() as unknown as PanelRoiSnapshot);
+  if(gate.interaction_gate.status!=='ready'||!gate.scientific_input.usable||!frameIdentity||selectionTimer!==null||selectionPersistenceError||unresolvedRequest()||analysis.status().unresolved_save_id||sourceProofState().records.some(p=>p.adopted&&p.status!=='verified'))fail('Offline review requires settled, qualified context; existing input retained',409);
+ };
+ const workspaceAction=async(input:unknown)=>{jointOwner?.assertMutable();
+  if(!analysis)fail('Analysis workspace has not been initialized',409);const body=input as Metadata;fields(body,['action','expected_working_revision','save_id','working_draft','comparison_id','proof_object_id','manifest_sha256','expected_object_id','expected_state_revision','draft_revision','collection_revision','replace_proof_id','question_text','lead_draft','lead_id','withdrawal_note','expected_panel_id','expected_lead_session_id','lead_attempt_id','original_update','offline_binding','offline_response','offline_review']);
+  if(body.action==='resolve-research-lead-update'){
+   // This command shares the serial workspace queue with the original POST.
+   // Absence alone is not terminal: fence its exact helper-scoped CAS first.
+   const original=body.original_update as Metadata;fields(original,['action','expected_panel_id','expected_lead_session_id','lead_attempt_id','expected_object_id','expected_state_revision','draft_revision','collection_revision','expected_working_revision','lead_draft','lead_id','withdrawal_note','offline_binding','offline_response','offline_review']);
+   if(!['create-research-lead','withdraw-research-lead',...offlineActions].includes(String(original.action))||original.expected_panel_id!==panel_id||original.expected_lead_session_id!==session||!objectId.test(String(original.lead_attempt_id))||!objectId.test(String(original.expected_object_id))||!['expected_state_revision','draft_revision','collection_revision','expected_working_revision'].every(k=>Number.isSafeInteger(original[k])&&(original[k] as number)>=0))fail('Exact original same-helper research update required',409);
+   analysisOwner!.assertOwned();if(analysisCloseConfirmed||workspaceTransition||selectionTimer!==null||selectionPersistenceError)fail('Original working persistence is unsettled; retain the original update',409);
+   const attempt=String(original.lead_attempt_id),known=leadUpdateReceipts.get(attempt);if(known&&known.key!==leadCommandKey(original))fail('Original research attempt ID has a different envelope; retained receipt cannot be replaced',409);
+   let leadId:string,matched=false;
+   if(offlineActions.includes(String(original.action))){if(!objectId.test(String(original.lead_id)))fail('Exact offline candidate ID required');leadId=String(original.lead_id);matched=matchesLeadUpdate(original);
+    }else if(original.action==='create-research-lead'){
+    if(original.lead_id!==undefined||original.withdrawal_note!==undefined)fail('Unexpected original creation fields');const draft=readLeadDraft(original.lead_draft);leadId=draft.lead_id;
+    const found=researchLeads?.entries.find(e=>e.lead_id===leadId);if(found){const {created_utc,withdrawn_utc,withdrawal_note,...saved}=found;void created_utc;void withdrawn_utc;void withdrawal_note;matched=sameResearchValue(saved,draft);}
+   }else{
+    if(original.lead_draft!==undefined||!objectId.test(String(original.lead_id))||typeof original.withdrawal_note!=='string'||!original.withdrawal_note.trim()||original.withdrawal_note.length>1000)fail('Exact original withdrawal required');leadId=original.lead_id as string;
+    const found=researchLeads?.entries.find(e=>e.lead_id===leadId);matched=Boolean(found?.withdrawn_utc&&found.withdrawal_note===original.withdrawal_note);
+   }
+   if(!Number.isSafeInteger(stateRevision)||(original.expected_state_revision as number)>stateRevision)fail('Original update has a future or invalid CAS; no terminal conclusion',409);
+   if(original.expected_state_revision===stateRevision){if(!Number.isSafeInteger(stateRevision+1))fail('State revision exhausted',409);stateRevision++;saveSelection();}
+   if((!known||known.receipt.state==='unknown')&&leadUpdateReceipts.size<256)leadUpdateReceipts.set(attempt,{key:leadCommandKey(original),receipt:{action:original.action,lead_id:leadId,attempt_id:attempt,state:'fenced'}});
+   // stateRevision never decreases in this helper. A request arriving after
+   // this receipt must fail its old CAS; a new helper has another research_lead_session_id.
+   return {...state(),research_lead_update:{schema_version:1,action:original.action,lead_id:leadId,state:matched?'applied':'not_present_fenced',terminal:true,basis:matched?'matching_record_and_original_cas_fenced':'original_cas_fenced_without_matching_record',fenced_state_revision:stateRevision,original_update:structuredClone(original)}};
+  }
+  if(body.action==='create-research-lead'||body.action==='withdraw-research-lead'||offlineActions.includes(String(body.action))){
+   let candidate=researchLeads,offlineCandidate=researchOffline,leadId=String(body.lead_id??(body.lead_draft as Metadata|undefined)?.lead_id??'');
+   if(!objectId.test(String(body.lead_attempt_id)))fail('Exact research attempt ID required',409);
+   const key=leadCommandKey(body),attempt=body.lead_attempt_id as string,previous=leadUpdateReceipts.get(attempt);
+   if(previous){
+    analysisOwner!.assertOwned();if(previous.key!==key)fail('Original research attempt ID has a different envelope; retained receipt cannot be replaced',409);
+    if(['unknown','fenced'].includes(String(previous.receipt.state))||previous.receipt.state==='applied'&&!matchesLeadUpdate(body))fail('Original update ran, was fenced or has unconfirmed persistence; reconcile its exact current record without replay',409);
+    return {...state(),research_lead_update:{...previous.receipt,duplicate_transport_receipt:true}};
+   }
+   // No eviction can turn an old terminal command into a newly admitted write.
+   // A fresh helper is required at the bounded receipt limit, with no pending input.
+   if(leadUpdateReceipts.size>=256)return {...state(),research_lead_update:{action:body.action,lead_id:leadId,attempt_id:body.lead_attempt_id,state:'not_applied',reason:'Research transport receipt limit reached; settle input and reopen the workspace'}};
+   leadUpdateReceipts.set(attempt,{key,receipt:{action:body.action,lead_id:leadId,attempt_id:body.lead_attempt_id,state:'unknown'}});
+   try{
+    if(body.expected_panel_id!==panel_id||body.expected_lead_session_id!==session||!objectId.test(String(body.lead_attempt_id)))fail('Research update belongs to a different helper or has no exact attempt ID',409);
+    analysis.requireRevision(body.expected_working_revision);analysis.assertSemanticEditingAllowed();analysisOwner!.assertOwned();
+    const gate=panelRoiHandoff(state() as unknown as PanelRoiSnapshot),proofs=sourceProofState().records;
+    if(body.expected_object_id!==current.object_id||body.expected_state_revision!==stateRevision||body.draft_revision!==editState.draft_revision||body.collection_revision!==windowStore.snapshot().revision||
+       gate.interaction_gate.status!=='ready'||!gate.scientific_input.usable||!frameIdentity||selectionTimer!==null||selectionPersistenceError||unresolvedRequest()||analysis.status().unresolved_save_id||proofs.some(p=>p.adopted&&p.status!=='verified'))
+     fail('Research metadata needs the exact settled and qualified current context',409);
+    if(offlineActions.includes(String(body.action))){
+     if(!objectId.test(String(body.lead_id))||body.lead_draft!==undefined)fail('Exact offline candidate ID required');
+     const existing=researchOffline?.entries.find(c=>c.response.candidate_id===body.lead_id);
+     if(body.action==='stage-offline-candidate'){
+      if(existing||(researchOffline?.entries.length??0)>=8)fail('Offline candidate already exists or history is full; retain the original record',409);
+      const binding=readOfflineBinding(body.offline_binding),response=readOfflineResponse(body.offline_response,binding);
+      if(response.candidate_id!==body.lead_id||!sameResearchValue(binding.lease,offlineLease(state())))fail('Offline response arrived for an old context version; explicitly prepare a new context',409);
+      offlineContext(workspace!,state(),binding.context_id,binding);
+      offlineCandidate={version:1,entries:[...(researchOffline?.entries??[]),{binding,response,status:'pending',accepted_draft:null,rejection_note:null}]};
+     }else{
+      if(!existing||existing.status!=='pending')fail('Offline candidate is missing or already settled; no duplicate acceptance',409);
+      if(body.action==='reject-offline-candidate'){
+       if(typeof body.withdrawal_note!=='string'||!body.withdrawal_note.trim()||body.withdrawal_note.length>1000)fail('Explicit offline rejection note required');
+       offlineCandidate={version:1,entries:researchOffline!.entries.map(c=>c===existing?{...c,status:'rejected',rejection_note:body.withdrawal_note as string}:c)};
+      }else{
+       const packet=offlineContext(workspace!,state(),existing.binding.context_id,existing.binding);
+       if(!sameResearchValue(body.offline_review,{scope_sha256:existing.binding.scope_sha256,lease:packet.binding.lease}))fail('Offline source review lease changed; retain candidate and recheck',409);
+       const response=readOfflineResponse(body.offline_response,existing.binding),draft=offlineLead(response,existing.binding);
+       if(response.candidate_id!==body.lead_id||(researchLeads?.entries.length??0)>=16||researchLeads?.entries.some(e=>e.lead_id===draft.lead_id))fail('Offline acceptance conflicts with existing lead identity/history',409);
+       validateLeadEvidence(workspace!,draft);candidate={version:1,entries:[...(researchLeads?.entries??[]),{...draft,created_utc:new Date().toISOString()}]};
+       offlineCandidate={version:1,entries:researchOffline!.entries.map(c=>c===existing?{...c,status:'accepted',accepted_draft:draft}:c)};
+      }
+     }
+    }else if(body.action==='create-research-lead'){
+     const draft=readLeadDraft(body.lead_draft);leadId=draft.lead_id;
+     if(!sameResearchValue(draft.question,researchQuestion)||draft.question.frame_object_id!==frameIdentity.frame_object_id)fail('Question changed or belongs to another frame; input retained',409);
+     if((researchLeads?.entries.length??0)>=16||researchLeads?.entries.some(e=>e.lead_id===leadId))fail('Lead identity already exists or bounded history is full; read original records',409);
+     validateLeadEvidence(workspace!,draft);candidate={version:1,entries:[...(researchLeads?.entries??[]),{...draft,created_utc:new Date().toISOString()}]};
+    }else{
+     if(!objectId.test(leadId)||typeof body.withdrawal_note!=='string'||!body.withdrawal_note.trim()||body.withdrawal_note.length>1000)fail('Exact lead and explicit withdrawal reason required');
+     const found=researchLeads?.entries.find(e=>e.lead_id===leadId);if(!found||found.withdrawn_utc)fail('Lead is missing or already withdrawn; read the original state',409);
+     candidate={version:1,entries:researchLeads!.entries.map(e=>e.lead_id===leadId?{...e,withdrawn_utc:new Date().toISOString(),withdrawal_note:body.withdrawal_note as string}:e)};
+    }
+   }catch(error){const receipt={action:body.action,lead_id:leadId,attempt_id:body.lead_attempt_id,state:'not_applied',reason:(error as Error).message};leadUpdateReceipts.set(attempt,{key,receipt});return {...state(),research_lead_update:receipt};}
+   // Only validation failures above are known not-applied. Any persistence
+   // failure below remains uncertain and must be read by the original lead ID.
+   researchLeads=readResearchLeads(candidate);researchOffline=readOfflineResearch(offlineCandidate);stateRevision++;saveSelection();
+   const receipt={action:body.action,lead_id:leadId,attempt_id:body.lead_attempt_id,state:'applied'};leadUpdateReceipts.set(attempt,{key,receipt});return {...state(),research_lead_update:receipt};
+  }
+  analysis.requireRevision(body.expected_working_revision);
+  if(body.action==='set-research-question'){
+   analysis.assertSemanticEditingAllowed();analysisOwner!.assertOwned();
+   const handoff=panelRoiHandoff(state() as unknown as PanelRoiSnapshot);
+   if(body.expected_object_id!==current.object_id||body.expected_state_revision!==stateRevision||body.draft_revision!==editState.draft_revision||body.collection_revision!==windowStore.snapshot().revision||
+      handoff.interaction_gate.status!=='ready'||unresolvedRequest()||['unknown','source_recheck_pending'].includes(String(lastOperation?.state))||!handoff.scientific_input.usable||!frameIdentity||selectionTimer!==null||selectionPersistenceError||analysis.status().unresolved_save_id)
+    fail('Research question needs the exact qualified context and settled draft; no question was applied',409);
+   if(typeof body.question_text!=='string'||body.question_text.length>2000)fail('Research question must be text of at most 2000 characters');
+   const candidate=body.question_text.trim()?readResearchQuestion({version:1,text:body.question_text,context_object_id:current.object_id,frame_object_id:frameIdentity.frame_object_id,recorded_utc:new Date().toISOString()}):undefined;
+   researchQuestion=candidate;stateRevision++;saveSelection();return state();
+  }
   if(body.action==='adopt-source-proof'){
    if(!objectId.test(String(body.proof_object_id))||typeof body.manifest_sha256!=='string'||!/^[a-f0-9]{64}$/.test(body.manifest_sha256))fail('Exact source-proof reference required');const replacing=body.replace_proof_id!==undefined,refs=sourceProofRefs();if(replacing&&(typeof body.replace_proof_id!=='string'||!objectId.test(body.replace_proof_id)||!refs.some(ref=>ref.object_id===body.replace_proof_id)))fail('Explicit replaced proof must be an exact adopted reference',409);proofGuard(body,replacing);
    const object=String(current.object_id),mapping=panelWindowMappingFingerprint(current),draft=editState.draft_revision,revision=stateRevision,collection=windowStore.snapshot().revision,working=body.expected_working_revision,save=analysis.status().save_id,beforeSelection=structuredClone(selection),beforeEdit=structuredClone(editState),beforeDirty=analysis.status().dirty;
@@ -546,7 +662,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   return target;
  };
  const checkSelection=(input:unknown,targetObject:Metadata=current):PanelSelection=>{const value=input as Metadata;fields(value,['kind','coordinate_space','source_object_id','coordinates','panel']);const lengths={point:2,line:4,arrow:4,rectangle:4,polygon:null},c=value.coordinates;if(!(((value as Metadata).kind as string) in lengths)||!Array.isArray(c)||!c.every(Number.isFinite)||!objectId.test(((value.source_object_id??'' as string) as string))||(value.kind==='polygon'?(c.length<6||c.length>64||c.length%2):c.length!==lengths[value.kind as keyof typeof lengths]))fail('Invalid scientific selection');const p=(targetObject.panels as Metadata[]|undefined)?.find(p=>p.source_object_id===value.source_object_id&&sameRecord(p,value.panel));if(!p)fail('Selection must use an exact current panel');const space=({frequency:'frequency_cycles_per_pixel',spatial_pixels:'source_pixels',source_array_indices:'source_array_indices'} as Metadata)[p.domain as string];if(value.coordinate_space!==space)fail('Selection coordinate domain mismatch');const edges=(['rectangle','polygon'] as readonly unknown[]).includes(value.kind);let bounds;if(p.domain==='frequency'){const [h,w]=p.fft_shape_yx as number[],[x0,y0,x1,y1]=(p.fft_rect_xyxy??[0,0,w,h]) as number[],margin=edges?.5:0;bounds=[(x0-Math.floor(w/2)-margin)/w,(y0-Math.floor(h/2)-margin)/h,(x1-1-Math.floor(w/2)+margin)/w,(y1-1-Math.floor(h/2)+margin)/h];}else{const [x0,y0,x1,y1]=p.source_rect_xyxy as number[];bounds=[x0,y0,edges?x1:x1-1,edges?y1:y1-1];}for(let i=0;i<c.length;i++)if(c[i]<bounds[i%2]-1e-12||c[i]>bounds[i%2+2]+1e-12)fail('Selection lies outside current source window');if(value.kind==='rectangle'&&(c[0]>=c[2]||c[1]>=c[3]))fail('Rectangle needs increasing nonempty edges');if((['line','arrow'] as readonly unknown[]).includes(value.kind)&&c[0]===c[2]&&c[1]===c[3])fail('Line needs distinct endpoints');return structuredClone(value) as PanelSelection;};
- const act=async(input:unknown)=>{const body=input as Metadata;
+ const act=async(input:unknown)=>{jointOwner?.assertMutable();const body=input as Metadata;
   if(workspaceTransition||analysisCloseConfirmed)fail('Workspace restore or close is in progress; existing edits are retained',409);
   fields(body,['expected_object_id','draft_revision','action','params','lightweight','client_batch_id']);if(body.client_batch_id!==undefined&&(!['mark','edit','edit-layout'].includes(String(body.action))||!panelBatchId(body.client_batch_id)))fail('Invalid Panel edit batch identity');if(body.lightweight!==undefined&&(body.action!=='draft'||typeof body.lightweight!=='boolean'))fail('lightweight is an explicit boolean for draft acknowledgments only');if(body.expected_object_id!==current.object_id)fail('Stale object revision; reload before editing',409);const p=body.params??{},startedRevision=body.draft_revision??editState.draft_revision;let r:NativeImageReply,figureRestore:Metadata|null=null,calibrationInput:Metadata|null=null;
   if(!Number.isSafeInteger(startedRevision)||(startedRevision as number)<0)fail('Invalid draft_revision');
@@ -898,7 +1014,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  };
  const presentationDirectory=path.join(journal,'presentations');mkdirSync(presentationDirectory,{recursive:true});
  const presentationReceipt=(id:unknown):unknown=>{if(!safeId.test(((id??'' as string) as string)))fail('Valid original request_id required');const response=path.join(presentationDirectory,`${id}.response.json`);if(existsSync(response))return JSON.parse(readFileSync(response,'utf8'));if(existsSync(path.join(presentationDirectory,`${id}.request.json`)))return {presentation:{request_id:id,status:'pending',limitation:'query original ID; never automatically resubmit'}};fail('Presentation request not found',404);};
- const present=async(input:unknown)=>{const body=input as Metadata;
+ const present=async(input:unknown)=>{jointOwner?.assertMutable();const body=input as Metadata;
   fields(body,['object_id','expected_object_id','draft_revision','request_id']);
   if(!objectId.test(((body.object_id??'' as string) as string))||!objectId.test(((body.expected_object_id??'' as string) as string))||!safeId.test(((body.request_id??'' as string) as string))||!Number.isSafeInteger(body.draft_revision)||((body as Metadata).draft_revision as number)<0)fail('Explicit object, expected view, draft revision and original request ID required');
   const file=path.join(presentationDirectory,`${body.request_id}.request.json`);
@@ -916,7 +1032,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  };
  const evidenceDirectory=path.join(journal,'crystal-presentations');mkdirSync(evidenceDirectory,{recursive:true});
  const evidenceReceipt=(id:unknown):unknown=>{if(!safeId.test(((id??'') as string)))fail('Valid original evidence request_id required');const response=path.join(evidenceDirectory,`${id}.response.json`);if(existsSync(response))return JSON.parse(readFileSync(response,'utf8'));if(existsSync(path.join(evidenceDirectory,`${id}.request.json`)))return {presentation:{request_id:id,status:'pending',limitation:'Query original ID; do not replay the attachment'}};fail('Evidence presentation request not found',404);};
- const presentEvidence=async(input:unknown)=>{const body=input as Metadata;
+ const presentEvidence=async(input:unknown)=>{jointOwner?.assertMutable();const body=input as Metadata;
   fields(body,['expected_object_id','draft_revision','request_id','evidence']);
   if(!objectId.test((body.expected_object_id??'') as string)||!safeId.test((body.request_id??'') as string)||!Number.isSafeInteger(body.draft_revision)||(body.draft_revision as number)<0)fail('Explicit evidence view, draft revision and original request identity required');
   const file=path.join(evidenceDirectory,`${body.request_id}.request.json`);
@@ -1035,6 +1151,11 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  staticFiles.set('/roi-observations.mjs',['roi-observations.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/observation-contract.mjs',['observation-contract.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/research-workspace.mjs',['research-workspace.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/public-research.mjs',['public-research.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/research-question.mjs',['research-question.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/research-leads.mjs',['research-leads.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/offline-research.mjs',['offline-research.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/research-leads-ui.mjs',['research-leads-ui.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/result-semantics.mjs',['result-semantics.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/gpa-evidence.mjs',['gpa-evidence.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/window-workspace.mjs',['window-workspace.mjs','text/javascript; charset=utf-8']);
@@ -1053,11 +1174,39 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   try{
    const origin=`http://127.0.0.1:${(server.address() as AddressInfo).port}`;if(req.headers.host!==`127.0.0.1:${(server.address() as AddressInfo).port}`)fail('Invalid Host',403);const url=new URL(req.url!,origin);
+   const reviewResource=/^\/joint-review\/([a-f0-9]{48})(\/image\.png)?$/.exec(url.pathname);
+   if(req.method==='GET'&&reviewResource){const resource=jointOwner?.resource(reviewResource[1],Boolean(reviewResource[2]));if(!resource)fail('Review resource unavailable',404);res.setHeader('Content-Security-Policy',"default-src 'none'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");res.setHeader('Content-Type',resource.type);res.end(resource.body);return;}
    if(req.method==='GET'&&url.pathname==='/favicon.ico'){res.statusCode=204;res.end();return;}
    if(req.method==='GET'&&staticFiles.has(url.pathname)){const [file,type]=staticFiles.get(url.pathname)!;res.setHeader('Content-Type',type);res.end(readFileSync(path.join(root,'ui','image-panel',file)));return;}
    const supplied=req.headers['x-panel-token'];if(typeof supplied!=='string'||Buffer.byteLength(supplied)!==Buffer.byteLength(token)||!timingSafeEqual(Buffer.from(supplied),Buffer.from(token)))fail('Panel token required',403);
    if(req.headers.origin&&req.headers.origin!==origin)fail('Cross-origin requests refused',403);
    res.setHeader('Content-Type','application/json');
+   if(req.method==='GET'&&url.pathname==='/api/public-research'){res.end(JSON.stringify(publicResearch?.snapshot()??{enabled:false}));return;}
+   if(req.method==='GET'&&['/api/offline-context','/api/offline-review','/api/offline-source'].includes(url.pathname)){
+    offlineReadGuard();const query=[...url.searchParams.keys()];
+    if(url.pathname==='/api/offline-context'){
+     if(query.length!==1||query[0]!=='context_id'||!objectId.test(String(url.searchParams.get('context_id'))))fail('Exact offline context ID required');
+     res.end(JSON.stringify(offlineContext(workspace!,state(),url.searchParams.get('context_id')!)));return;
+    }
+    if(query.some(k=>!['lead_id','result_id'].includes(k))||url.searchParams.getAll('lead_id').length!==1)fail('Exact offline candidate query required');
+    const entry=researchOffline?.entries.find(c=>c.response.candidate_id===url.searchParams.get('lead_id'));if(!entry)fail('Offline candidate not found',404);
+    if(url.pathname==='/api/offline-source'){
+     if(query.length!==2||url.searchParams.getAll('result_id').length!==1)fail('Exact offline result ID required');
+     const ref=entry.binding.references.find(r=>r.result_id===url.searchParams.get('result_id'));if(!ref)fail('Result not in original offline context',409);
+     const history=readImageStatisticsHistory({workspace:workspace!,objectId:entry.binding.view_id,limit:512}),observation=history.entries.find(e=>sameResearchValue(referenceFromStatisticsOffline(e),ref));
+     if(!observation)fail('Exact offline source reference unavailable',409);
+     const saved=await readWindowSaved(ref.input_view_id,{includeFrameAncestry:true});
+     if(typeof saved.png!=='string'||saved.png.length>4*1024*1024)fail('Bounded saved source PNG unavailable',409);
+     res.end(JSON.stringify({version:1,local_only:true,reference:ref,source_rect_xyxy:observation.source_rect_xyxy,statistics:observation.statistics,png_base64:saved.png,notice:'Explicit local saved input preview; no model delivery; active view and candidate binding unchanged'}));return;
+    }
+    if(query.length!==1||entry.status!=='pending')fail('Only exact pending candidate can be reviewed',409);
+    const packet=offlineContext(workspace!,state(),entry.binding.context_id,entry.binding);
+    res.end(JSON.stringify({version:1,original_binding:entry.binding,review:{scope_sha256:entry.binding.scope_sha256,lease:packet.binding.lease},observations:packet.observations}));return;
+   }
+   if(req.method==='GET'&&url.pathname==='/api/research-leads'){
+    const names=[...url.searchParams.keys()];if(names.length!==1||names[0]!=='object_id'||url.searchParams.get('object_id')!==current.object_id)fail('Research lead read needs the exact current object',409);
+    res.end(JSON.stringify({schema_version:1,read_only:true,object_id:current.object_id,question:researchQuestion??null,leads:resolveResearchLeads(workspace!,researchLeads,researchQuestion)}));return;
+   }
    if(req.method==='GET'&&(url.pathname==='/api/state'||url.pathname==='/api/workspace')){res.end(JSON.stringify(state()));return;}
    if(req.method==='GET'&&url.pathname==='/api/execution-history'){
     if([...url.searchParams.keys()].some(key=>key!=='request_id')||url.searchParams.getAll('request_id').length>1)fail('Only one optional original execution request_id is allowed');const request=url.searchParams.get('request_id'),records=request?[readPanelExecutionInput(workspace!,request)]:listPanelExecutionInputs(workspace!);res.end(JSON.stringify({schema_version:1,read_only:true,records}));return;
@@ -1094,13 +1243,20 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
     const records=readImageMeasurements({workspace,objectId:inspected as string});
     res.end(JSON.stringify({...records,object_id:inspected,state_revision:revision}));return;
    }
-   if(req.method==='GET'&&url.pathname==='/api/revision'){res.end(JSON.stringify({state_revision:stateRevision,object_id:current.object_id,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id}:null,edit_state:{draft_revision:editState.draft_revision,dirty:editState.dirty,gesture_active:editState.gesture_active}}));return;}
+   if(req.method==='GET'&&url.pathname==='/api/revision'){jointOwner?.query();res.end(JSON.stringify({joint_research:jointOwner?.snapshot(),state_revision:stateRevision,object_id:current.object_id,pending_result:pendingResult?{object_id:pendingResult.prepared.object.object_id,request_id:pendingResult.request_id}:null,edit_state:{draft_revision:editState.draft_revision,dirty:editState.dirty,gesture_active:editState.gesture_active}}));return;}
    if(req.method==='GET'&&url.pathname==='/api/present'){res.end(JSON.stringify(presentationReceipt(url.searchParams.get('request_id'))));return;}
    if(req.method==='GET'&&url.pathname==='/api/evidence'){res.end(JSON.stringify(evidenceReceipt(url.searchParams.get('request_id'))));return;}
-   if(req.method!=='POST'||!(['/api/action','/api/present','/api/evidence','/api/probe','/api/composition/resolve','/api/workspace'] as readonly unknown[]).includes(url.pathname))fail('Not found',404);if(req.headers.origin!==origin||!req.headers['content-type']?.startsWith('application/json'))fail('Same-origin JSON required',403);
+   if(req.method!=='POST'||!(['/api/public-research','/api/action','/api/present','/api/evidence','/api/probe','/api/composition/resolve','/api/workspace'] as readonly unknown[]).includes(url.pathname))fail('Not found',404);if(req.headers.origin!==origin||!req.headers['content-type']?.startsWith('application/json'))fail('Same-origin JSON required',403);
    if(url.pathname==='/api/evidence'){const supplied=req.headers['x-panel-evidence-key'];if(typeof supplied!=='string'||supplied.length!==evidenceToken.length||!timingSafeEqual(Buffer.from(supplied),Buffer.from(evidenceToken)))fail('Parent-only admitted evidence capability required',403);}
    const requestLimit=url.pathname==='/api/evidence'?4*1024*1024:url.pathname==='/api/composition/resolve'?512*1024:64*1024;
    let raw='',size=0;for await(const chunk of req){size+=chunk.length;if(size>requestLimit)fail('Request exceeds bounded JSON limit',413);raw+=chunk;}let decodedBody:unknown;try{decodedBody=JSON.parse(raw);}catch{fail('Invalid JSON');}const body=decodedBody as Metadata;
+   if(url.pathname==='/api/public-research'){
+    jointOwner?.assertMutable();if(!publicResearch)fail('仅专用公开合成样例可连接 Codex；普通图像入口未启用。',403);
+    fields(body,['action','id','question','approved','context_sha256']);
+    if(body.action==='interrupt'){fields(body,['action']);res.end(JSON.stringify(await publicResearch.interrupt()));return;}
+    if(body.action!=='question')fail('Unknown public research action');const {action,...question}=body;
+    try{res.end(JSON.stringify(publicResearch.submit(question)));}catch(error){if(!(error instanceof PublicResearchRefused))throw error;res.end(JSON.stringify({...publicResearch.snapshot(),public_research_refusal:error.receipt()}));}return;
+   }
    if(url.pathname==='/api/composition/resolve'){
     fields(body,['composition']);
     const readObject=async(id:string)=>(await journalCall('image_info',{object_id:id})).data;
@@ -1131,7 +1287,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   stateRevision=(checkpoint.state_revision as number)+1;lastOperation=checkpoint.last_operation&&typeof checkpoint.last_operation==='object'?structuredClone(checkpoint.last_operation) as Metadata:null;
   for(const key of ['window_drafts','working_selections'])if(checkpoint[key]!==undefined&&(!checkpoint[key]||typeof checkpoint[key]!=='object'||Array.isArray(checkpoint[key])))fail('Invalid owned working metadata map');
   if(checkpoint.adopted_results!==undefined&&!Array.isArray(checkpoint.adopted_results))fail('Invalid owned adopted-result references');
-  workspaceDrafts=structuredClone(checkpoint.window_drafts??{}) as Metadata;workingSelections=structuredClone(checkpoint.working_selections??{}) as Metadata;adoptedResults=structuredClone(checkpoint.adopted_results??[]) as unknown[];
+  workspaceDrafts=structuredClone(checkpoint.window_drafts??{}) as Metadata;workingSelections=structuredClone(checkpoint.working_selections??{}) as Metadata;adoptedResults=structuredClone(checkpoint.adopted_results??[]) as unknown[];researchQuestion=readResearchQuestion(checkpoint.research_question);researchLeads=readResearchLeads(checkpoint.research_leads);
   if(checkpoint.research_observation){
    const saved=checkpoint.research_observation as Metadata;fields(saved,['object_id','request_id','kind','source_text','authority','scope','base_object_id','base_state_revision','base_frame_identity','current_view_relation']);
    if(!objectId.test(String(saved.object_id))||!safeId.test(String(saved.request_id))||!objectId.test(String(saved.base_object_id)))fail('Saved research observation has no exact provider reference');
@@ -1154,14 +1310,18 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   analysisOwner=acquireAnalysisWorkspaceOwner(workspace!,{role:'gui',owner_id:helper_session_id??session});
   analysis=new AnalysisWorkspace(workspace!,checkpointSnapshot(),analysisOwner,{legacy:analysis_legacy});
   if(checkpoint&&!explicitRestore)analysis.resumeQualifiedWorkingCheckpoint(checkpoint);
+  jointOwner=new JointResearchOwner({workspace:workspace!,python:python!,getState:()=>{analysisOwner!.assertOwned();return state();}});
+  const publicRun=process.env.MWB_PUBLIC_RESEARCH_RUN;
+  if(publicRun&&path.resolve(workspace!)===path.join(path.resolve(publicRun),'workspace'))publicResearch=new DesktopPublicResearch(publicRun,workspace!,python!,String(frameIdentity?.frame_object_id),String(current.object_id));
   await new Promise<void>((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});saveSelection();
  }catch(caught){
   if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}const cleanupErrors:unknown[]=[];
   try{if(server.listening)await new Promise<void>(resolve=>{server.close(()=>resolve());server.closeIdleConnections?.();});}catch(error){cleanupErrors.push(error);}
-  try{await client.close();}catch(error){cleanupErrors.push(error);}try{analysisOwner?.release();}catch(error){cleanupErrors.push(error);}
+  try{await jointOwner?.close();await publicResearch?.close();await client.close();}catch(error){cleanupErrors.push(error);}try{analysisOwner?.release();}catch(error){cleanupErrors.push(error);}
   if(cleanupErrors.length)throw new AggregateError([caught,...cleanupErrors],'Panel initialization failed; resource cleanup also failed');throw caught;
  }
- return {server,client,url:`http://127.0.0.1:${(server.address() as AddressInfo).port}/#${token}`,token,evidenceToken,journal,state,async close({abnormal=true}:{abnormal?:boolean}={}){try{await new Promise<void>(resolve=>{server.close(resolve as (error?:Error)=>void);server.closeIdleConnections?.();});if(!analysisCloseConfirmed)saveSelection();if(!abnormal&&!analysisCloseConfirmed){analysis?.close(unresolvedRequest());analysisCloseConfirmed=true;}}finally{if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}await client.close();analysisOwner?.release();}}};
+ const jointCommand=async(action:'begin'|'query'|'cancel'|'record-review'|'send-public'|'interrupt',value:Metadata={})=>{if(!jointOwner)fail('Owner not ready',409);if(action==='query')return jointOwner.query();if(action==='interrupt')return jointOwner.interrupt();const run=busy.then(()=>{if(action==='begin'){if(publicResearch?.snapshot().active)fail('Existing public turn remains active',409);return jointOwner!.begin(value.expected_working_revision as number);}if(action==='cancel')return jointOwner!.cancel(value.review_id as string|undefined);if(action==='send-public')return jointOwner!.sendPublic(String(value.review_id),String(value.context_sha256));return jointOwner!.recordNativeReview(String(value.review_id),String(value.context_sha256));});busy=run.catch(()=>{});return run;};
+ return {jointCommand,server,client,url:`http://127.0.0.1:${(server.address() as AddressInfo).port}/#${token}`,token,evidenceToken,journal,state,async close({abnormal=true}:{abnormal?:boolean}={}){try{await new Promise<void>(resolve=>{server.close(resolve as (error?:Error)=>void);server.closeIdleConnections?.();});if(!analysisCloseConfirmed)saveSelection();if(!abnormal&&!analysisCloseConfirmed){analysis?.close(unresolvedRequest());analysisCloseConfirmed=true;}}finally{if(selectionTimer!==null){clearTimeout(selectionTimer);selectionTimer=null;}await jointOwner?.close();await publicResearch?.close();await client.close();analysisOwner?.release();}}};
 }
 if(isDirectInvocation(import.meta.url)){
  const options:Record<string,string>={};for(let i=2;i<process.argv.length;i+=2){const key=process.argv[i],value=process.argv[i+1];if(!(['--workspace','--python','--object','--port','--selection','--connection-file','--panel-id','--owned-registration'] as readonly unknown[]).includes(key)||!value)throw new Error('Usage: node tools/image_panel.mjs --workspace ABS --python ABS --object ID [--port 0]; --selection ABS_CURRENT_SELECTION_JSON');options[key.slice(2)]=value;}

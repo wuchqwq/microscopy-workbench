@@ -16,6 +16,8 @@ import * as knownLength from '../ui/image-panel/known-length-calibration.mjs';
 import {renderSequenceEvidence} from '../ui/image-panel/sequence-evidence.mjs';
 import {renderDomainEvidence} from '../ui/image-panel/domain-evidence.mjs';
 import {ResearchWorkspace} from '../ui/image-panel/research-workspace.mjs';
+import {panelRoiHandoff} from '../ui/image-panel/roi-observations.mjs';
+import {ResearchLeadsUI,matchStatisticsResult} from '../ui/image-panel/research-leads-ui.mjs';
 import {WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext} from '../ui/image-panel/window-workspace.mjs';
 import {WorkspaceControls} from '../ui/image-panel/workspace-controls.mjs';
 import {RoiComparisonPanel} from '../ui/image-panel/roi-comparison.mjs';
@@ -23,7 +25,9 @@ import {settleWorkspaceWindows} from '../ui/image-panel/settle-workspace.mjs';
 import {ExecutionHistoryPanel} from '../ui/image-panel/execution-history.mjs';
 import {SourceProofPanel} from '../ui/image-panel/source-proofs.mjs';
 import {SelectionFftRelations} from '../ui/image-panel/selection-fft-relations.mjs';
+import {PublicResearchUI} from '../ui/image-panel/public-research.mjs';
 import {readPanelActionPreflight} from '../ui/image-panel/panel-preflight.mjs';
+import {referenceFromStatistics} from '../ui/image-panel/research-leads.mjs';
 import {DataProbes as ProviderDataProbes} from '../ui/image-panel/data-probes.mjs';
 import {MeasurementWorkspace as ProviderMeasurementWorkspace,requiresMeasurementJump,measurementReadContext} from '../ui/image-panel/measurement-workspace.mjs';
 import {performance} from 'node:perf_hooks';
@@ -44,14 +48,53 @@ test('single image context: normal labels and hints leave coordinates and drafts
  const h=await harness(savedRectangleFixture());assert.equal(h.$('view-current').textContent,'空间图');assert.match(h.$('selection').textContent,/点击已有 ROI/);assert.equal(h.$('draft-status').hidden,true);const initial=h.inspect();
  selectSavedRoi(h);const selected=h.inspect();assert.match(h.$('current-roi').textContent,/当前 ROI/);assert.match(h.$('selection').textContent,/控制点/);assert.match(h.$('selection').title,/源像素坐标/);assert.equal(h.$('measure').hidden,true);assert.equal(h.$('fft').hidden,false);assert.deepEqual(selected.state.object,initial.state.object);assert.equal(h.calls.length,0);
 });
+test('research navigation: ordinary files keep Codex entry hidden and local questions available without dispatch',async()=>{
+ const h=await harness();const before=h.inspect(),writes=h.calls.length;
+ assert.equal(h.$('public-research-entry').hidden,true);await h.click('public-research-entry');assert.equal(h.bodyClasses.has('research-open'),false);
+ await h.click('toggle-research');assert.equal(h.bodyClasses.has('research-open'),true);assert.equal(h.$('research-panel').hidden,false);assert.equal(h.calls.length,writes);assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().draft,before.draft);
+});
+test('light exploration: saved statistics need no question or explanation and closing returns to the direct entry',async()=>{
+ const {s,entries}=leadUiFixture();delete s.research_question;const h=await harness(s,{statisticsHistory:entries});await h.finishWindows();const before=h.inspect(),writes=h.actionTrace.length;
+ h.$('open-statistics-history').focus();await h.click('open-statistics-history');
+ assert.equal(h.$('statistics-history-dialog').open,true);assert.equal(h.$('statistics-history-rows').children.length,2);assert.match(elementText(h.$('statistics-history-rows')),/均值 5/);
+ assert.equal(h.calls.length,0);assert.equal(h.actionTrace.length,writes);assert.equal(h.server().research_question,undefined);assert.equal(h.server().research_leads,undefined);assert.deepEqual(h.inspect().draft,before.draft);
+ await h.click('close-statistics-history');assert.equal(h.active().id,'open-statistics-history');
+ await h.click('toggle-research');assert.equal(h.$('research-panel').hidden,false);h.$('research-question').value='A deliberately chosen local question';h.$('research-question').oninput();
+ h.$('open-statistics-history').focus();await h.click('open-statistics-history');assert.equal(h.$('statistics-history-dialog').open,true);await h.click('close-statistics-history');
+ assert.equal(h.$('research-question').value,'A deliberately chosen local question');assert.equal(h.server().research_question,undefined);assert.equal(h.server().research_leads,undefined);assert.equal(h.calls.length,0);
+ await h.click('cancel-research-question');await h.click('open-statistics-history');const cell=h.$('statistics-history-rows').children[0].children.at(-1),explain=cell.children.find(n=>n.textContent==='进一步整理解释（可选）'),input=cell.children.find(n=>n.textContent==='查看统计时的原图输入');
+ assert.ok(cell.children.indexOf(input)<cell.children.indexOf(explain));await explain.onclick();assert.equal(h.$('statistics-history-dialog').open,true);assert.notEqual(h.$('research-lead-dialog').open,true);assert.equal(h.server().research_question,undefined);assert.ok(!h.actionTrace.some(a=>['set-research-question','create-research-lead'].includes(a)),'an absent question is not silently created to enter interpretation');assert.equal(h.calls.length,0);
+});
+test('native open entry requires its dedicated capability and forwards no source paths or scientific calls',async()=>{
+ const browser=await harness();assert.equal(browser.$('desktop-open-image').hidden,true);await browser.click('desktop-open-image');assert.equal(browser.calls.length,0);
+ const received=[],desktop=await harness(fixture(),{desktopOpen:(...args)=>received.push(args)}),before=desktop.inspect();assert.equal(desktop.$('desktop-open-image').hidden,false);await desktop.click('desktop-open-image');assert.deepEqual(received,[[]]);assert.equal(desktop.calls.length,0);assert.deepEqual(desktop.inspect().draft,before.draft);assert.deepEqual(desktop.inspect().state.object,before.state.object);
+});
+test('current spatial view statistics use the displayed source support and existing request without selecting a ROI or changing question/window',async()=>{
+ const s=questionWorkspaceFixture();s.research_question={version:1,text:'My selected local question',context_object_id:viewId,frame_object_id:sourceId,recorded_utc:'2026-11-06T20:00:00.000Z'};
+ const h=await harness(s);await h.finishWindows();const before=h.inspect(),range=s.object.panels[0].source_rect_xyxy;assert.equal(h.$('view-statistics').hidden,false);assert.match(h.$('view-statistics').textContent,new RegExp(range.join(',')));
+ h.$('probe-component').value='raw';h.actionResult(server=>({...server,last_operation:{kind:'statistics',object_id:'7'.repeat(32),request_id:'current-view-stats',parent_object_id:viewId,component:'raw',source_rect_xyxy:range,statistics:{sample_count:128*96,mean:1,stddev:0,minimum:1,maximum:1}}}));
+ await h.click('view-statistics');assert.deepEqual(h.calls.map(v=>v.action),['statistics']);assert.equal(h.calls[0].expected_object_id,viewId);assert.deepEqual(h.calls[0].params.selection,{kind:'rectangle',source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:range,panel:s.object.panels[0]});assert.equal(h.calls[0].params.component,'raw');assert.equal(h.inspect().draft,null);assert.equal(h.inspect().state.object.object_id,viewId);assert.deepEqual(h.server().research_question,s.research_question);assert.equal(h.inspect().state.window_collection?.active_window_id,before.state.window_collection?.active_window_id);assert.equal(h.$('results-tab-statistics').attributes['aria-selected'],'true');
+ const saved=await h.nativeAction('save');await h.finishWindows();assert.equal(saved.ok,true,saved.error);assert.equal(h.$('view-statistics').disabled,false);assert.deepEqual(h.calls.map(v=>v.action),['statistics']);
+});
+test('current view statistics abstain for unknown requests, unapplied questions, unresolved sources and a newer explicit ROI',async()=>{
+ for(const kind of ['unknown','question','frame','fft','roi']){
+  const s=questionWorkspaceFixture();if(kind==='unknown')s.last_operation={state:'unknown',request_id:'keep-original'};if(kind==='frame')s.frame_identity=null;if(kind==='fft')s.object.panels=[{domain:'frequency',source_object_id:sourceId,image_rect_xyxy:[0,0,128,96],fft_shape_yx:[96,128]}];
+  const h=await harness(s);if(kind==='question'){h.$('research-question').value='Do not auto-apply';h.$('research-question').oninput();}if(kind==='roi'){h.draw('rectangle');await h.settle();}
+  const writes=h.calls.length,before=h.inspect();await h.click('view-statistics');assert.equal(h.calls.length,writes,kind);assert.deepEqual(h.inspect().draft,before.draft,kind);assert.equal(h.server().research_question,undefined,kind);if(kind==='unknown')assert.equal(h.server().last_operation.request_id,'keep-original');
+ }
+});
+test('research navigation: admitted public entry opens the existing question pane without tool or model dispatch',async()=>{
+ const h=await harness(fixture(),{publicResearchEnabled:true}),before=h.inspect(),writes=h.calls.length;
+ assert.equal(h.$('public-research-entry').hidden,false);h.$('agent-menu').open=true;await h.click('public-research-entry');assert.equal(h.$('agent-menu').open,false);assert.equal(h.bodyClasses.has('research-open'),true);assert.equal(h.$('research-panel').hidden,false);assert.equal(h.active().id,'public-research-question');assert.equal(h.$('public-research').scrolledIntoView,true);assert.equal(h.calls.length,writes);assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().draft,before.draft);
+});
 const sourceId='a'.repeat(32),viewId='b'.repeat(32);
 const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:[20,12,148,108],image_rect_xyxy:[0,0,128,96]};
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
-async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,initialMeasurementRead=null,relationRead=null,draftLeaseAcks=false,editorTimers=false}={}){
- const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,waitMeasurementRead=initialMeasurementRead,measurementResponse=null,recoveryResponse=null;
- const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0;
- const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),layoutObservers=[],relationTimers=new Map(),fieldTimers=new Map();let probeTimerId=0,relationTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
+async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,initialMeasurementRead=null,relationRead=null,draftLeaseAcks=false,editorTimers=false,statisticsHistory=null,leadProjection=null,publicResearchEnabled=false,publicResearchPacket=null,desktopOpen=null,desktopReview=null,desktopStop=null}={}){
+ const calls=[],draftCalls=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,waitMeasurementRead=initialMeasurementRead,waitStatisticsHistory=null,measurementResponse=null,recoveryResponse=null;
+ const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0,lostQuestionReply=false,lostLeadReply=false,loseLeadBeforeApply=false,lateLeadCommand=null,loseLeadSettlement=false,waitLeadSettlement=null,echoAppliedTransport=false;const leadTransportReceipts=new Map();
+ const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),windowListeners=new Map(),layoutObservers=[],relationTimers=new Map(),fieldTimers=new Map();let probeTimerId=0,relationTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
  class Context{
   constructor(canvas){this.canvas=canvas;this.lastPixels=null;canvasContexts.push(this);}
   drawImage(image){stats.draws++;this.lastPixels=image.context?.lastPixels??null;}
@@ -73,13 +116,15 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
   showModal(){this.open=true;}
   close(){if(!this.open)return;this.open=false;this.listeners.close?.({target:this});}
   focus(){activeElement=this;}
+  scrollIntoView(){this.scrolledIntoView=true;}
  }
  const bodyClasses=new Set(),body={classList:{add:(...keys)=>keys.forEach(k=>bodyClasses.add(k)),remove:(...keys)=>keys.forEach(k=>bodyClasses.delete(k)),contains:key=>bodyClasses.has(key),toggle:(key,on)=>{const next=on??!bodyClasses.has(key);if(next)bodyClasses.add(key);else bodyClasses.delete(key);return next;}}};
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
  $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,SourceProofPanel,SelectionFftRelations,readPanelActionPreflight,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,measurementReadContext,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
-  workbenchDesktop:{onAction(handler){desktopAction=handler;}},
+ const sandbox={...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,ResearchLeadsUI,PublicResearchUI,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,SourceProofPanel,SelectionFftRelations,readPanelActionPreflight,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,measurementReadContext,referenceFromStatistics,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+  workbenchDesktop:{...(desktopReview?{reviewImage:desktopReview}:{}),...(desktopStop?{stopImageReview:desktopStop}:{}),...(desktopOpen?{openImage:desktopOpen}:{}),onAction(handler){desktopAction=handler;}},
+  addEventListener:(name,fn)=>windowListeners.set(name,fn),
   WindowWorkspace:class extends WindowWorkspace{noteCameraIntent(){cameraIntentCount++;super.noteCameraIntent();}},
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
@@ -91,8 +136,38 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
   ResizeObserver:class{constructor(callback){this.callback=callback;this.observed=[];layoutObservers.push(this);}observe(element){this.observed.push(element.id);}},
   requestAnimationFrame:fn=>{frames.set(++frameId,fn);return frameId;},cancelAnimationFrame:id=>frames.delete(id),
   fetch:async(url,options)=>{
-   if(!options.body){getCalls.push(url);if(relationRead&&(url.startsWith('/api/roi-handoff?')||url==='/api/execution-history')){const result=await relationRead(url,copy(server));return {ok:true,json:async()=>result};}if(url==='/api/state'&&stateFailure){stateFailure=false;throw new Error('Controlled current-state read failure');}if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/window-asset?')&&windowStates.length){const query=new URL(url,'http://panel.test').searchParams,entry=server.window_collection.windows.find(value=>value.window_id===query.get('window_id')),saved=entry&&savedWindowStates.get(entry.object_id);return {ok:Boolean(saved),json:async()=>saved?{schema_version:1,window_id:entry.window_id,object_id:entry.object_id,collection_revision:Number(query.get('revision')),object:copy(saved.object),panel_mapping_fingerprint:saved.panel_mapping_fingerprint,png_base64:saved.png_base64}:{error:'Window closed or saved asset missing'}};}if(url.startsWith('/api/measurements?')){const snapshot={current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false};if(waitMeasurementRead)await waitMeasurementRead;return {ok:true,json:async()=>snapshot};}if(url==='/api/revision')return {ok:true,json:async()=>({state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
+   if(!options.body){getCalls.push(url);
+    if(url==='/api/public-research')return {ok:true,json:async()=>publicResearchPacket?copy(publicResearchPacket):publicResearchEnabled?{enabled:true,notice:'公开合成测试；无真实模型',source:{frame_id:sourceId,shape_yx:[64,64],dtype:'uint16'},status:'idle',active:false,host:{},operations:[],tool_calls:[]}:{enabled:false}};
+    if(url.startsWith('/api/statistics-history?')&&statisticsHistory)return {ok:true,json:async()=>{if(waitStatisticsHistory)await waitStatisticsHistory;return {schema_version:1,read_only:true,scope:'same_frame_source_pixels',object_id:server.object.object_id,frame_object_id:sourceId,entries:copy(statisticsHistory),total:statisticsHistory.length,truncated:false};}};
+    if(url.startsWith('/api/research-leads?'))return {ok:true,json:async()=>leadProjection?leadProjection(copy(server)):({schema_version:1,read_only:true,object_id:server.object.object_id,question:server.research_question??null,leads:(server.research_leads?.entries??[]).map(record=>({record:copy(record),evidence:record.evidence.map(e=>({...copy(e),validation:'verified_saved_reference',observation:copy(statisticsHistory.find(r=>r.object_id===e.reference.result_id))}))}))})};
+if(relationRead&&(url.startsWith('/api/roi-handoff?')||url==='/api/execution-history')){const result=await relationRead(url,copy(server));return {ok:true,json:async()=>result};}if(url==='/api/state'&&stateFailure){stateFailure=false;throw new Error('Controlled current-state read failure');}if(url==='/api/state'&&waitState){const snapshot=copy(server);await waitState;return {ok:true,json:async()=>snapshot};}if(url.startsWith('/api/window-asset?')&&windowStates.length){const query=new URL(url,'http://panel.test').searchParams,entry=server.window_collection.windows.find(value=>value.window_id===query.get('window_id')),saved=entry&&savedWindowStates.get(entry.object_id);return {ok:Boolean(saved),json:async()=>saved?{schema_version:1,window_id:entry.window_id,object_id:entry.object_id,collection_revision:Number(query.get('revision')),object:copy(saved.object),panel_mapping_fingerprint:saved.panel_mapping_fingerprint,png_base64:saved.png_base64}:{error:'Window closed or saved asset missing'}};}if(url.startsWith('/api/measurements?')){const snapshot={current:{...copy(server.object),object_id:server.object.object_id},entries:copy(server.measurement_entries??[]),truncated:false};if(waitMeasurementRead)await waitMeasurementRead;return {ok:true,json:async()=>snapshot};}if(url==='/api/revision')return {ok:true,json:async()=>({joint_research:server.joint_research,state_revision:server.state_revision,object_id:server.object.object_id,pending_result:server.pending_result})};}
    if(options.body){const body=JSON.parse(options.body);actionTrace.push(body.action);
+    if(url==='/api/workspace'&&body.action==='resolve-research-lead-update'){
+     const original=body.original_update;assert.equal(original.expected_lead_session_id,server.research_lead_session_id);assert.equal(original.expected_panel_id,server.panel_id);assert.ok(server.state_revision>=original.expected_state_revision);
+     const record=server.research_leads?.entries.find(e=>e.lead_id===(original.lead_id??original.lead_draft.lead_id));let matched=false;
+     if(original.action==='create-research-lead'&&record){const {created_utc,withdrawn_utc,withdrawal_note,...draft}=record;matched=JSON.stringify(draft)===JSON.stringify(original.lead_draft);}else if(original.action==='withdraw-research-lead')matched=Boolean(record?.withdrawn_utc&&record.withdrawal_note===original.withdrawal_note);
+     if(server.state_revision===original.expected_state_revision)server.state_revision++;
+     if(loseLeadSettlement){loseLeadSettlement=false;throw Error('Controlled lost settlement reply after CAS fence');}
+     if(waitLeadSettlement)await waitLeadSettlement;
+     return {ok:true,json:async()=>({...copy(server),research_lead_update:{schema_version:1,terminal:true,action:original.action,lead_id:original.lead_id??original.lead_draft.lead_id,state:matched?'applied':'not_present_fenced',fenced_state_revision:server.state_revision,original_update:copy(original)}})};
+    }
+    if(url==='/api/workspace'&&['create-research-lead','withdraw-research-lead'].includes(body.action)){
+     if(loseLeadBeforeApply){loseLeadBeforeApply=false;lateLeadCommand=copy(body);throw Error('Controlled disconnect before lead application');}
+     const key=JSON.stringify(body),prior=leadTransportReceipts.get(key);if(prior)return {ok:true,json:async()=>({...copy(server),research_lead_update:{...prior,duplicate_transport_receipt:true}})};
+     if(body.expected_panel_id!==server.panel_id||body.expected_lead_session_id!==server.research_lead_session_id||body.expected_state_revision!==server.state_revision)return {ok:true,json:async()=>({...copy(server),research_lead_update:{action:body.action,lead_id:body.lead_id??body.lead_draft.lead_id,attempt_id:body.lead_attempt_id,state:'not_applied',reason:'Old helper or CAS fenced'}})};
+     assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);
+     if(body.action==='create-research-lead')server.research_leads={version:1,entries:[...(server.research_leads?.entries??[]),{...copy(body.lead_draft),created_utc:'2026-11-06T21:00:00.000Z'}]};
+     else server.research_leads.entries=server.research_leads.entries.map(e=>e.lead_id===body.lead_id?{...e,withdrawn_utc:'2026-11-06T21:01:00.000Z',withdrawal_note:body.withdrawal_note}:e);
+     server.workspace_analysis={...server.workspace_analysis,working_revision:server.workspace_analysis.working_revision+1,status:'dirty',dirty:true};server.state_revision++;
+     leadTransportReceipts.set(key,{action:body.action,lead_id:body.lead_id??body.lead_draft.lead_id,attempt_id:body.lead_attempt_id,state:'applied'});
+     if(lostLeadReply){lostLeadReply=false;throw Error('Controlled lost lead reply');}
+     if(echoAppliedTransport){echoAppliedTransport=false;return sandbox.fetch(url,options);}
+     return {ok:true,json:async()=>({...copy(server),research_lead_update:{action:body.action,lead_id:body.lead_id??body.lead_draft.lead_id,attempt_id:body.lead_attempt_id,state:'applied'}})};
+    }
+    if(url==='/api/workspace'&&body.action==='set-research-question'){
+     assert.equal(body.expected_object_id,server.object.object_id);assert.equal(body.expected_state_revision,server.state_revision);assert.equal(body.draft_revision,server.edit_state.draft_revision);assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);
+     server.research_question={version:1,text:body.question_text,context_object_id:body.expected_object_id,frame_object_id:server.frame_identity.frame_object_id,recorded_utc:'2026-11-06T20:00:00.000Z'};server.state_revision++;server.workspace_analysis={...server.workspace_analysis,working_revision:server.workspace_analysis.working_revision+1,status:'dirty',dirty:true};if(lostQuestionReply){lostQuestionReply=false;throw new Error('Controlled lost question apply response');}return {ok:true,json:async()=>copy(server)};
+    }
     if(url==='/api/workspace'&&body.action==='park-window'){
      assert.equal(body.expected_working_revision,server.workspace_analysis.working_revision);assert.equal(body.working_draft.object_id,server.object.object_id);assert.equal(body.working_draft.panel_mapping_fingerprint,server.panel_mapping_fingerprint);
      const active=server.window_collection.active_window_id;server.workspace_analysis.window_drafts??={};server.workspace_analysis.window_drafts[active]=copy(body.working_draft);server.workspace_analysis.active_window_draft=copy(body.working_draft);if(body.working_draft.content_dirty){server.workspace_analysis.status='dirty';server.workspace_analysis.working_revision++;}
@@ -141,8 +216,9 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
  const renderSource=readFileSync(new URL('../ui/image-panel/viewer-render.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
  const script=renderSource+'\n'+source.replace(/^import .*from '\.\/[^']+\.mjs';\r?\n/gm,'')
   .replace('refresh().then(','globalThis.ready=refresh().then(')
-  +'\nglobalThis.selectMeasurementUI=selectMeasurement;globalThis.pollUI=pollRevision;globalThis.activateWindowUI=activateWindow;globalThis.finishWindowMetadata=()=>windowWorkspace.awaitStableMetadata();globalThis.finishRoiSave=()=>typeof roiCreationSave===\'undefined\'?Promise.resolve():roiCreationSave??Promise.resolve();globalThis.finishSaves=async()=>{do{if(autoSaving)await autoSaving;await Promise.resolve();}while(autoSaving);};globalThis.inspectAnnotationLayout=()=>annotationLayout;globalThis.inspect=()=>({draft,drag,editCoordinates,state,pending,selectedId,undoCount:userHistory.undoItems.length,redoCount:userHistory.redoItems.length,dirty:dirty(),view,draftRevision:historyDraft.revision,queuedEdits:[...queuedEdits],autoFailed,busy,windowSwitch,roiCreationRecovery:typeof roiCreationRecovery===\'undefined\'?null:roiCreationRecovery,observationSavePhase});';
- vm.runInNewContext(script,sandbox,{filename:'ui/image-panel/app.mjs'});await sandbox.ready;
+  .replace('void pollPublicResearch();','globalThis.publicResearchReady=publicResearchUI.poll();')
+  +'\nglobalThis.publishDraftUI=publishDraft;globalThis.setQuestionDraftState=({dirty,phase})=>{researchWorkspace.questionDirty=dirty;researchWorkspace.questionPhase=phase;diagnostics();};globalThis.selectMeasurementUI=selectMeasurement;globalThis.pollUI=pollRevision;globalThis.activateWindowUI=activateWindow;globalThis.finishWindowMetadata=()=>windowWorkspace.awaitStableMetadata();globalThis.finishRoiSave=()=>typeof roiCreationSave===\'undefined\'?Promise.resolve():roiCreationSave??Promise.resolve();globalThis.finishSaves=async()=>{do{if(autoSaving)await autoSaving;await Promise.resolve();}while(autoSaving);};globalThis.inspectAnnotationLayout=()=>annotationLayout;globalThis.inspect=()=>({draft,drag,editCoordinates,state,pending,selectedId,undoCount:userHistory.undoItems.length,redoCount:userHistory.redoItems.length,dirty:dirty(),view,draftRevision:historyDraft.revision,queuedEdits:[...queuedEdits],autoFailed,busy,windowSwitch,roiCreationRecovery:typeof roiCreationRecovery===\'undefined\'?null:roiCreationRecovery,observationSavePhase});';
+ vm.runInNewContext(script,sandbox,{filename:'ui/image-panel/app.mjs'});await sandbox.ready;await sandbox.publicResearchReady;
  const flush=()=>{for(const [id,callback] of [...frames]){frames.delete(id);callback();}};
  const event=(type,x=10,y=10,extra={})=>{$('canvas').listeners[type]?.({clientX:x,clientY:y,pointerId:1,button:0,...extra});};
  const click=async id=>{await $(id).onclick();flush();};
@@ -152,16 +228,17 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,in
   flushRelations:async()=>{const pending=[...relationTimers.values()];relationTimers.clear();for(const callback of pending)callback();for(let i=0;i<100;i++)await Promise.resolve();flush();},
   flushEditorTimers:async()=>{const pending=[...fieldTimers.values()];fieldTimers.clear();for(const callback of pending)callback();for(let i=0;i<100;i++)await Promise.resolve();flush();},setTextCommand:fn=>{sandbox.document.execCommand=fn;},
   delayAction(promise){waitAction=promise;},delayWindowCamera(promise){waitWindowCamera=promise;},delayDecode(promise){waitDecode=promise;},delayState(promise){waitState=promise;},delayDraft(promise){waitDraft=promise;},selectMeasurement(entry){sandbox.selectMeasurementUI(entry);flush();},
-  nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),cameraIntents:()=>cameraIntentCount,
+  setQuestionDraftState:value=>sandbox.setQuestionDraftState(value),beforeUnload:()=>{let prevented=false;const event={preventDefault(){prevented=true;},returnValue:undefined};windowListeners.get('beforeunload')?.(event);return {prevented,returnValue:event.returnValue};},
+  publishDraft:options=>sandbox.publishDraftUI(options),nativeAction:action=>desktopAction(action),documentEvent:(name,target)=>documentListeners.get(name)?.({target}),cameraIntents:()=>cameraIntentCount,
   failAction(message='Synthetic save failure; query original request'){actionFailure=message;},
   failActionReply(reply){actionFailure=reply;},
   failDraft(message='Controlled draft delivery failure'){draftFailure=message;},
   actionResult(value){nextActionResult=typeof value==='function'?value:copy(value);},
-  measureResponse(value){measurementResponse=typeof value==='function'?value:copy(value);},delayMeasurement(promise){waitMeasurement=promise;},delayMeasurementRead(promise){waitMeasurementRead=promise;},
+  measureResponse(value){measurementResponse=typeof value==='function'?value:copy(value);},delayMeasurement(promise){waitMeasurement=promise;},delayMeasurementRead(promise){waitMeasurementRead=promise;},delayStatisticsHistory(promise){waitStatisticsHistory=promise;},
   recoverResponse(value){recoveryResponse=copy(value);},
   key:(key,extra={})=>documentListeners.get('keydown')?.({key,code:key===' '?'Space':'',target:activeElement??$('canvas'),ctrlKey:false,metaKey:false,preventDefault(){},...extra}),active:()=>activeElement,layout:()=>copy(sandbox.inspectAnnotationLayout()),
   resizeLayout(){for(const observer of layoutObservers)observer.callback();flush();},layoutObserved:()=>layoutObservers.flatMap(o=>o.observed),
-  activateWindow(id){const entry=sandbox.inspect().state.window_collection?.windows.find(value=>value.window_id===id);return sandbox.activateWindowUI(id,entry?.object_id);},finishWindows:()=>sandbox.finishWindowMetadata(),delayActivation(value){waitActivation=value;},loseActivationReply(){lostActivation=true;},activationFinished:()=>activationWork,waitActivationStarted:()=>activationStarted?Promise.resolve():new Promise(resolve=>activationListeners.push(resolve)),failImageDecode(){decodeFailure=true;},failStateRead(){stateFailure=true;},
+  activateWindow(id){const entry=sandbox.inspect().state.window_collection?.windows.find(value=>value.window_id===id);return sandbox.activateWindowUI(id,entry?.object_id);},finishWindows:()=>sandbox.finishWindowMetadata(),delayActivation(value){waitActivation=value;},loseActivationReply(){lostActivation=true;},activationFinished:()=>activationWork,waitActivationStarted:()=>activationStarted?Promise.resolve():new Promise(resolve=>activationListeners.push(resolve)),failImageDecode(){decodeFailure=true;},failStateRead(){stateFailure=true;},loseQuestionReply(){lostQuestionReply=true;},loseLeadReply(){lostLeadReply=true;},loseLeadBeforeApply(){loseLeadBeforeApply=true;},loseLeadSettlement(){loseLeadSettlement=true;},delayLeadSettlement(value){waitLeadSettlement=value;},echoAppliedTransport(){echoAppliedTransport=true;},lateLead:()=>copy(lateLeadCommand),async deliverLateLead(){const response=await sandbox.fetch('/api/workspace',{body:JSON.stringify(lateLeadCommand)});return response.json();},
   coalesceDrafts(){coalesceDrafts=true;},setServer(value){server=copy(value);},server:()=>copy(server)};
 }
 
@@ -1011,6 +1088,254 @@ function handoffFixture(){
  return s;
 }
 function emptyRoiFixture(){const s=handoffFixture();s.object.annotations=[];return s;}
+
+function questionWorkspaceFixture(){const s=emptyRoiFixture();s.workspace_analysis={schema_version:1,status:'clean',working_revision:3,save_id:'saved-a',saved_revision:1,dirty:false,recovery_available:false,unresolved_request_id:null};return s;}
+
+function leadUiFixture(){
+ const s=questionWorkspaceFixture();s.research_lead_session_id='d'.repeat(16);s.research_question={version:1,text:'What saved contrast observations differ?',context_object_id:viewId,frame_object_id:sourceId,recorded_utc:'2026-11-06T20:00:00.000Z'};
+ const entries=[['8',5],['9',8]].map(([id,mean])=>({object_id:id.repeat(32),request_id:'saved-'+id,input_object_id:viewId,frame_object_id:sourceId,manifest_sha256:id.repeat(64),input_manifest_sha256:'f'.repeat(64),statistics_sha256:'e'.repeat(64),source_rect_xyxy:[0,0,2,2],statistics:{sample_count:4,mean,stddev:mean/2},matching_input_annotations:[]}));
+ return {s,entries};
+}
+function fillLeadUi(h){
+ for(const [id,text]of [['lead-hypothesis','Descriptive spread hypothesis, not a material conclusion'],['lead-unknowns','Image formation is unknown'],['lead-next-step','Plan comparable observations; not executed']]){h.$(id).value=text;h.$(id).oninput();}
+ for(const [i,section]of h.$('lead-evidence-choices').children.entries()){const check=section.children[0].children[0];check.checked=true;check.oninput();section.children[1].value=i?'opposes':'supports';section.children[1].oninput();section.children[2].value='Explicit proposed relation to the exact old result';section.children[2].oninput();}
+}
+test('lead composer links exact saved observations to a question, cancels safely, saves/reopens and retains old-question history',async()=>{
+ const {s,entries}=leadUiFixture(),h=await harness(s,{statisticsHistory:entries});await h.click('open-research-lead');assert.equal(h.$('research-lead-dialog').open,true);assert.equal(h.beforeUnload().prevented,true);assert.equal((await h.nativeAction('inspect-close-state')).ok,false);await h.click('research-question-agent');assert.notEqual(h.$('agent-handoff-dialog').open,true);await h.click('cancel-research-lead');assert.equal(h.beforeUnload().prevented,false);assert.equal(h.server().research_leads,undefined);
+ await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');await h.settle();const record=h.server().research_leads.entries[0];assert.equal(record.question.text,s.research_question.text);assert.deepEqual(record.evidence.map(e=>e.reference.request_id),entries.map(e=>e.request_id));assert.deepEqual(record.evidence.map(e=>e.relation),['supports','opposes']);assert.equal(record.next_step,'Plan comparable observations; not executed');assert.equal(h.calls.length,0);
+ assert.match(elementText(h.$('research-lead-list')),/提议关系|非.*验证|不是.*验证/);const saved=await h.nativeAction('save');assert.equal(saved.ok,true,saved.error);
+ const html=readFileSync(new URL('../ui/image-panel/index.html',import.meta.url),'utf8');assert.match(html,/同帧 A\/B.*不是独立重复实验/);assert.match(html,/条目数量不增加结论权重/);
+ await h.click('research-question-agent');assert.equal(h.$('agent-handoff-dialog').open,true,h.$('message').textContent);assert.match(h.$('agent-prompt').value,/同帧 A\/B.*不是独立重复实验/);assert.match(h.$('agent-prompt').value,/没有实现证据独立性判断、自动加权或自动假设检验/);await h.click('close-agent-handoff');
+ const reopened=h.server();reopened.research_question={...reopened.research_question,text:'A different revised question',recorded_utc:'2026-11-06T22:00:00.000Z'};const h2=await harness(reopened,{statisticsHistory:entries});await h2.settle();assert.match(elementText(h2.$('research-lead-list')),/旧问题的历史线索|未自动转为当前问题/);assert.deepEqual(h2.server().research_leads.entries[0].question,s.research_question);
+ const withdraw=h2.$('research-lead-list').children[0].children.at(-1);await withdraw.onclick();await h2.click('cancel-research-lead');assert.equal(h2.server().research_leads.entries[0].withdrawn_utc,undefined);
+ await h2.$('research-lead-list').children[0].children.at(-1).onclick();h2.$('lead-withdrawal-note').value='Withdraw the interpretation, retain observations';h2.$('lead-withdrawal-note').oninput();await h2.click('apply-research-lead');assert.ok(h2.server().research_leads.entries[0].withdrawn_utc);assert.deepEqual(h2.server().research_leads.entries[0].evidence,record.evidence);
+});
+test('uncertain lead application only reads its original ID and never replays or discards input',async()=>{
+ const {s,entries}=leadUiFixture(),h=await harness(s,{statisticsHistory:entries});await h.click('open-research-lead');fillLeadUi(h);h.loseLeadReply();await h.click('apply-research-lead');assert.equal(h.$('check-research-lead').hidden,false);assert.equal(h.beforeUnload().prevented,true);assert.equal((await h.nativeAction('prepare-close')).ok,false);
+ await h.click('apply-research-lead');await h.click('cancel-research-lead');assert.equal(h.$('research-lead-dialog').open,true);assert.equal(h.actionTrace.filter(a=>a==='create-research-lead').length,1);
+ const pendingScience=h.server();pendingScience.last_operation={state:'submitted',request_id:'retained-original-science'};pendingScience.workspace_analysis.unresolved_request_id='retained-original-science';h.setServer(pendingScience);
+ const writes=h.actionTrace.length;await h.click('check-research-lead');assert.equal(h.actionTrace.length,writes+1);assert.equal(h.actionTrace.at(-1),'resolve-research-lead-update');assert.equal(h.$('research-lead-dialog').open,false);assert.equal(h.server().research_leads.entries.length,1);assert.equal(h.calls.length,0);assert.equal(h.inspect().state.last_operation.request_id,'retained-original-science');assert.equal((await h.nativeAction('prepare-close')).ok,false);
+});
+test('an applied original transport copy returns success to the UI instead of a false not-applied editor',async()=>{
+ const {s,entries}=leadUiFixture(),h=await harness(s,{statisticsHistory:entries});await h.click('open-research-lead');fillLeadUi(h);h.echoAppliedTransport();await h.click('apply-research-lead');assert.equal(h.$('research-lead-dialog').open,false);assert.equal(h.server().research_leads.entries.length,1);assert.equal(h.actionTrace.filter(a=>a==='create-research-lead').length,2,'two wire deliveries, one semantic application');assert.equal(h.$('check-research-lead').hidden,true);assert.equal(h.$('message').textContent.includes('未应用'),false);assert.equal(h.calls.length,0);
+});
+
+test('absent lead stays unknown until an acknowledged CAS fence; late original cannot apply and explicit revised attempt is distinct',async()=>{
+ const {s,entries}=leadUiFixture(),h=await harness(s,{statisticsHistory:entries});await h.click('open-research-lead');fillLeadUi(h);h.loseLeadBeforeApply();await h.click('apply-research-lead');const original=h.lateLead();assert.equal(h.server().research_leads,undefined);assert.equal((await h.nativeAction('prepare-close')).ok,false);
+ await h.click('reload');await h.click('cancel-research-lead');assert.equal(h.$('research-lead-dialog').open,true,'a successful plain absence read does not release the original');
+ h.loseLeadSettlement();await h.click('check-research-lead');assert.equal(h.$('cancel-research-lead').disabled,true,'a lost fence receipt is still unknown');assert.equal((await h.nativeAction('prepare-close')).ok,false);
+ let release;h.delayLeadSettlement(new Promise(resolve=>{release=resolve;}));const confirmation=h.click('check-research-lead');await h.settle();const queries=h.actionTrace.filter(a=>a==='resolve-research-lead-update').length;assert.equal(h.$('check-research-lead').disabled,true);await h.click('check-research-lead');assert.equal(h.actionTrace.filter(a=>a==='resolve-research-lead-update').length,queries,'a second direct handler cannot queue a stale confirmation');release();await confirmation;assert.equal(h.$('cancel-research-lead').disabled,false);assert.equal(h.$('apply-research-lead').disabled,false);assert.equal(h.$('lead-hypothesis').value,'Descriptive spread hypothesis, not a material conclusion');assert.match(h.$('lead-editor-status').textContent,/原版本已封存/);
+ const late=await h.deliverLateLead();assert.equal(late.research_lead_update.state,'not_applied');assert.equal(h.server().research_leads,undefined);await h.click('cancel-research-lead');assert.equal((await h.nativeAction('prepare-close')).ok,true);
+ await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');assert.equal(h.server().research_leads.entries.length,1);assert.notEqual(h.server().research_leads.entries[0].lead_id,original.lead_draft.lead_id);await h.deliverLateLead();assert.equal(h.server().research_leads.entries.length,1);assert.equal(h.calls.length,0);
+});
+
+test('failed lead reference revalidation removes prior numbers and prevents even direct source navigation',async()=>{
+ const {s,entries}=leadUiFixture();let unavailable=false;
+ const project=server=>({schema_version:1,read_only:true,object_id:server.object.object_id,question:server.research_question,leads:(server.research_leads?.entries??[]).map(record=>({record,evidence:record.evidence.map(e=>({...e,validation:unavailable?'unavailable':'verified_saved_reference',reason:unavailable?'Controlled changed saved reference':null,observation:unavailable?null:entries.find(r=>r.object_id===e.reference.result_id)}))}))});
+ const h=await harness(s,{statisticsHistory:entries,leadProjection:project});await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');await h.settle();assert.match(elementText(h.$('research-lead-list')),/均值 5/);const record=copy(h.server().research_leads);
+ unavailable=true;await h.click('refresh-research-leads');await h.settle();const text=elementText(h.$('research-lead-list'));assert.match(text,/不可用.*changed saved reference/);assert.doesNotMatch(text,/均值 5/);assert.deepEqual(h.server().research_leads,record);
+ const source=h.$('research-lead-list').children[0].children.find(e=>e.textContent==='返回准确原图输入');assert.equal(source.disabled,true);await source.onclick();assert.equal(h.calls.length,0);assert.deepEqual(h.server().research_leads,record);
+});
+function leadStatisticsButton(h,index=0){return h.$('research-lead-list').children[0].children.filter(e=>e.textContent==='核查这条原统计')[index];}
+test('lead statistics inspection opens only its exact original result and reuses the existing input navigation without adoption',async()=>{
+ const {s,entries}=leadUiFixture(),h=await harness(s,{statisticsHistory:entries});await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');await h.settle();
+ const saved=copy(h.server().research_leads),question=copy(h.server().research_question),selection=copy(h.inspect().draft),writes=h.actionTrace.length;
+ await leadStatisticsButton(h,1).onclick();assert.equal(h.$('statistics-history-dialog').open,true,h.$('message').textContent);assert.equal(h.$('statistics-history-rows').children.length,1);const text=elementText(h.$('statistics-history-rows'));
+ assert.match(text,/均值 8/);assert.match(text,/保存 ROI：\[0,0,2,2\]/);assert.match(text,/saved-9/);assert.match(text,new RegExp(entries[1].manifest_sha256));assert.doesNotMatch(text,/saved-8/);assert.match(h.$('statistics-history-status').textContent,/仅显示这一条.*提议/);assert.deepEqual(h.inspect().draft,selection);assert.equal(h.actionTrace.length,writes);
+ const row=h.$('statistics-history-rows').children[0],input=row.children.at(-1).children.find(e=>e.textContent==='查看统计时的原图输入');await input.onclick();assert.equal(h.$('statistics-history-dialog').open,false);assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'show');assert.equal(h.calls[0].params.object_id,entries[1].input_object_id);assert.deepEqual(h.server().research_leads,saved);assert.deepEqual(h.server().research_question,question);
+ await h.click('open-statistics-history');assert.equal(h.$('statistics-history-rows').children.length,2,'normal history remains unfiltered');
+});
+test('statistics input navigation keeps the exact refusal instead of inventing a pending view, including repeated attempts',async()=>{
+ for(const reason of ['PREVIEW_REQUIRED: open an explicitly saved preview object.','Controlled saved source identity mismatch']){
+  const {s,entries}=leadUiFixture();entries[0].input_object_id=sourceId;const h=await harness(s,{statisticsHistory:entries});await h.click('open-statistics-history');
+  const input=h.$('statistics-history-rows').children[0].children.at(-1).children.find(e=>e.textContent==='查看统计时的原图输入'),before=copy(h.inspect().state.object);
+  for(let attempt=1;attempt<=2;attempt++){
+   h.failActionReply(()=>({error:reason}));await input.onclick();
+   assert.equal(h.$('statistics-history-dialog').open,true);assert.equal(input.disabled,false);assert.equal(h.calls.length,attempt);assert.equal(h.calls.at(-1).action,'show');assert.deepEqual(h.calls.at(-1).params,{object_id:sourceId});
+   const text=h.$('statistics-history-status').textContent;assert.match(text,/历史输入未打开/);assert.doesNotMatch(text,/待查看|尚未接纳/);assert.deepEqual(h.inspect().state.object,before);assert.equal(h.inspect().pending,null);assert.ok(!h.inspect().state.pending_result);
+   if(reason.startsWith('PREVIEW_REQUIRED:')){assert.match(text,/PREVIEW_REQUIRED/);assert.match(text,new RegExp(sourceId));assert.match(text,/没有可直接打开的已保存显示预览/);assert.match(text,/未新建预览/);}else assert.ok(text.includes(reason));
+  }
+  await h.click('close-statistics-history');assert.equal(h.$('statistics-history-dialog').open,false);
+ }
+});
+test('statistics input navigation distinguishes a real pending view from an unsubmitted same-view refusal',async()=>{
+ for(const pending of [false,true]){
+  const {s,entries}=leadUiFixture();if(pending)s.pending_result={object_id:'f'.repeat(32),request_id:'retained-pending',reason:'window_capacity'};else s.last_operation={action:'source-proof',state:'submitted',request_id:'unresolved-proof'};
+  const h=await harness(s,{statisticsHistory:entries});await h.click('open-statistics-history');
+  const input=h.$('statistics-history-rows').children[0].children.at(-1).children.find(e=>e.textContent==='查看统计时的原图输入');await input.onclick();
+  assert.equal(h.calls.length,0);assert.equal(h.$('statistics-history-dialog').open,true,'an unsubmitted show must not close even when the requested object is current');
+  const text=h.$('statistics-history-status').textContent;if(pending)assert.match(text,/待查看/);else{assert.match(text,/历史输入未显示/);assert.doesNotMatch(text,/待查看/);}
+ }
+});
+test('legacy raw statistics reveal only the qualified current preview without replacing its identity, ROI or saved input',async()=>{
+ const {s,entries}=leadUiFixture();entries[0].input_object_id=sourceId;entries[0].input_display={kind:'same_source_current_preview',object_id:viewId,manifest_sha256:'c'.repeat(64),reason:'同源当前预览；不是统计时的历史显示。'};
+ const h=await harness(s,{statisticsHistory:entries});await h.click('open-statistics-history');const before=h.inspect(),reads=h.getCalls.length;
+ const input=h.$('statistics-history-rows').children[0].children.at(-1).children.find(e=>e.textContent==='查看同源当前预览（非历史显示）');assert.ok(input);await input.onclick();
+ assert.equal(h.$('statistics-history-dialog').open,false);assert.equal(h.calls.length,0);assert.ok(h.getCalls.length>reads,'revalidate exact result, source and display before revealing');assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().draft,before.draft);assert.deepEqual(h.inspect().view,before.view);assert.equal(entries[0].input_object_id,sourceId);assert.match(h.$('message').textContent,/非统计时的历史显示/);assert.match(h.$('message').textContent,new RegExp(sourceId));
+});
+test('statistics display inspection refuses stale results, changed display hashes and edits arriving during revalidation',async()=>{
+ for(const change of ['result','display','edit']){
+  const {s,entries}=leadUiFixture();entries[0].input_object_id=sourceId;entries[0].input_display={kind:'same_source_current_preview',object_id:viewId,manifest_sha256:'c'.repeat(64),reason:'Current only'};
+  const h=await harness(s,{statisticsHistory:entries});await h.click('open-statistics-history');const input=h.$('statistics-history-rows').children[0].children.at(-1).children.find(e=>e.textContent==='查看同源当前预览（非历史显示）');
+  if(change==='result')entries[0].statistics_sha256='0'.repeat(64);if(change==='display')entries[0].input_display.manifest_sha256='0'.repeat(64);
+  let release;if(change==='edit')h.delayStatisticsHistory(new Promise(resolve=>{release=resolve;}));const opening=input.onclick();if(release){await h.settle();h.draw('rectangle');release();}await opening;
+  assert.equal(h.$('statistics-history-dialog').open,true,change);assert.equal(h.calls.length,0);assert.match(h.$('statistics-history-status').textContent,/变化|改变/);assert.equal(h.inspect().state.object.object_id,viewId);if(change==='edit')assert.ok(h.inspect().draft);
+ }
+});
+test('closing and reopening statistics history cancels a late display revalidation without closing the newer dialog',async()=>{
+ const {s,entries}=leadUiFixture();entries[0].input_object_id=sourceId;entries[0].input_display={kind:'same_source_current_preview',object_id:viewId,manifest_sha256:'c'.repeat(64),reason:'Current only'};
+ const h=await harness(s,{statisticsHistory:entries});await h.click('open-statistics-history');const input=h.$('statistics-history-rows').children[0].children.at(-1).children.find(e=>e.textContent==='查看同源当前预览（非历史显示）');let release;h.delayStatisticsHistory(new Promise(resolve=>{release=resolve;}));const opening=input.onclick();await h.settle();await h.click('close-statistics-history');h.delayStatisticsHistory(null);await h.click('open-statistics-history');const before=h.$('statistics-history-status').textContent;release();await opening;
+ assert.equal(h.$('statistics-history-dialog').open,true);assert.equal(h.$('statistics-history-status').textContent,before);assert.equal(h.calls.length,0);assert.doesNotMatch(h.$('message').textContent,/正在查看同源/);
+});
+test('exact statistics navigation rechecks dismissal after draft persistence and before show dispatch without blocking an active valid request',async()=>{
+ for(const cancel of [true,false]){
+  const {s,entries}=leadUiFixture();entries[0].input_display={kind:'exact_saved_input',object_id:viewId,manifest_sha256:'c'.repeat(64),reason:'Exact saved display'};const h=await harness(s,{statisticsHistory:entries});let release;
+  h.delayDraft(new Promise(resolve=>{release=resolve;}));h.draw('rectangle');await h.settle();await h.click('open-statistics-history');const input=h.$('statistics-history-rows').children[0].children.at(-1).children.find(e=>e.textContent==='查看统计时的原图输入'),selection=copy(h.inspect().draft),opening=input.onclick();await h.settle();assert.equal(h.calls.length,0);assert.equal(h.inspect().busy,true,'show is waiting for draft persistence');
+  if(cancel)await h.click('close-statistics-history');release();await opening;assert.equal(h.inspect().busy,false);assert.equal(h.calls.length,cancel?0:1);if(cancel)assert.deepEqual(h.inspect().draft,selection);else assert.equal(h.calls[0].action,'show');assert.equal(h.$('statistics-history-dialog').open,false);
+ }
+});
+test('qualified exact statistics display uses the saved view ID while unavailable display stays inert',async()=>{
+ for(const kind of ['exact_saved_input','unavailable']){
+  const {s,entries}=leadUiFixture();entries[0].input_display={kind,object_id:kind==='unavailable'?null:viewId,manifest_sha256:kind==='unavailable'?null:'c'.repeat(64),reason:'Explicit qualification'};
+  const h=await harness(s,{statisticsHistory:entries});await h.click('open-statistics-history');const input=h.$('statistics-history-rows').children[0].children.at(-1).children.find(e=>e.textContent==='查看统计时的原图输入');await input.onclick();
+  if(kind==='unavailable'){assert.equal(input.disabled,true);assert.equal(h.calls.length,0);assert.equal(h.$('statistics-history-dialog').open,true);}else{assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'show');assert.equal(h.calls[0].params.object_id,viewId);assert.equal(h.$('statistics-history-dialog').open,false);}
+ }
+});
+test('historical lead inspection retains the old question and original statistic rather than adopting it for the revised question',async()=>{
+ const {s,entries}=leadUiFixture(),first=await harness(s,{statisticsHistory:entries});await first.click('open-research-lead');fillLeadUi(first);await first.click('apply-research-lead');
+ const reopened=first.server();reopened.research_question={...reopened.research_question,text:'A revised independent question'};const h=await harness(reopened,{statisticsHistory:entries});await h.settle();const saved=copy(h.server());await leadStatisticsButton(h).onclick();
+ assert.equal(h.$('statistics-history-rows').children.length,1);assert.match(elementText(h.$('statistics-history-rows')),/saved-8/);assert.match(elementText(h.$('research-lead-list')),/旧问题的历史线索/);assert.deepEqual(h.server().research_leads,saved.research_leads);assert.deepEqual(h.server().research_question,saved.research_question);assert.equal(h.calls.length,0);
+});
+test('lead statistics inspection refuses a missing or changed exact history reference instead of showing another same-frame result',async()=>{
+ for(const change of ['missing','request','hash','duplicate']){
+  const {s,entries}=leadUiFixture(),original=copy(entries),project=server=>({schema_version:1,read_only:true,object_id:server.object.object_id,question:server.research_question,leads:(server.research_leads?.entries??[]).map(record=>({record,evidence:record.evidence.map(e=>({...e,validation:'verified_saved_reference',observation:original.find(r=>r.object_id===e.reference.result_id)}))}))});
+  const h=await harness(s,{statisticsHistory:entries,leadProjection:project});await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');await h.settle();const saved=copy(h.server().research_leads);
+  if(change==='missing')entries.shift();else if(change==='request')entries[0].request_id='another-valid-request';else if(change==='hash')entries[0].statistics_sha256='0'.repeat(64);else entries.push(copy(entries[0]));
+  await leadStatisticsButton(h).onclick();assert.equal(h.$('statistics-history-dialog').open,true);assert.equal(h.$('statistics-history-rows').children.length,0,change);assert.match(h.$('statistics-history-status').textContent,/未使用另一条结果替代/,change);assert.equal(h.calls.length,0);assert.deepEqual(h.server().research_leads,saved);
+ }
+});
+test('lead statistics inspection preserves typed question drafts and refuses an unavailable reference even through saved handlers',async()=>{
+ const {s,entries}=leadUiFixture();let unavailable=false;const project=server=>({schema_version:1,read_only:true,object_id:server.object.object_id,question:server.research_question,leads:(server.research_leads?.entries??[]).map(record=>({record,evidence:record.evidence.map(e=>({...e,validation:unavailable?'unavailable':'verified_saved_reference',observation:unavailable?null:entries.find(r=>r.object_id===e.reference.result_id)}))}))});
+ const h=await harness(s,{statisticsHistory:entries,leadProjection:project});await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');await h.settle();const inspect=leadStatisticsButton(h),saved=copy(h.server().research_leads);
+ h.$('research-question').value='Keep this unsubmitted question';h.$('research-question').oninput();let reads=h.getCalls.length;await inspect.onclick();assert.equal(h.getCalls.length,reads);assert.notEqual(h.$('statistics-history-dialog').open,true);assert.equal(h.$('research-question').value,'Keep this unsubmitted question');await h.click('cancel-research-question');
+ unavailable=true;reads=h.getCalls.filter(url=>url.startsWith('/api/statistics-history?')).length;await inspect.onclick();assert.equal(h.getCalls.filter(url=>url.startsWith('/api/statistics-history?')).length,reads);assert.notEqual(h.$('statistics-history-dialog').open,true);assert.equal(h.calls.length,0);assert.deepEqual(h.server().research_leads,saved);
+});
+
+test('lead statistics inspection drops a late reference revalidation after the recorded question changes',async()=>{
+ const {s,entries}=leadUiFixture();let release=null,armed=false;
+ const project=async server=>{if(armed){armed=false;await new Promise(resolve=>{release=resolve;});}return {schema_version:1,read_only:true,object_id:server.object.object_id,question:server.research_question,leads:(server.research_leads?.entries??[]).map(record=>({record,evidence:record.evidence.map(e=>({...e,validation:'verified_saved_reference',observation:entries.find(r=>r.object_id===e.reference.result_id)}))}))};};
+ const h=await harness(s,{statisticsHistory:entries,leadProjection:project});await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');await h.settle();const before=h.getCalls.filter(url=>url.startsWith('/api/statistics-history?')).length,saved=copy(h.server().research_leads);
+ armed=true;const reading=leadStatisticsButton(h).onclick();for(let i=0;i<20&&!release;i++)await Promise.resolve();assert.ok(release,'revalidation is in flight');const changed=h.server();changed.state_revision++;changed.research_question={...changed.research_question,text:'An explicitly changed question'};h.setServer(changed);await h.poll();release();await reading;await h.settle();
+ assert.equal(h.getCalls.filter(url=>url.startsWith('/api/statistics-history?')).length,before);assert.notEqual(h.$('statistics-history-dialog').open,true);assert.equal(h.calls.length,0);assert.deepEqual(h.server().research_leads,saved);assert.equal(h.server().research_question.text,'An explicitly changed question');
+});
+
+test('a changed question cannot silently inherit an in-progress lead proposal',async()=>{
+ const {s,entries}=leadUiFixture(),h=await harness(s,{statisticsHistory:entries});await h.click('open-research-lead');fillLeadUi(h);const next=h.server();next.state_revision++;next.research_question={...next.research_question,text:'A newly changed question'};h.setServer(next);await h.poll();await h.settle();
+ await h.click('apply-research-lead');assert.equal(h.actionTrace.filter(a=>a==='create-research-lead').length,0);assert.equal(h.$('lead-hypothesis').value,'Descriptive spread hypothesis, not a material conclusion');assert.match(h.$('message').textContent,/问题已修改/);await h.click('cancel-research-lead');assert.equal(h.server().research_leads,undefined);
+});
+
+test('lead entry handler preserves recovery, pending and adopted-proof gates even when invoked directly',async()=>{
+ for(const mutate of [s=>{s.workspace_analysis={...s.workspace_analysis,status:'recovery_available',recovery_available:true};},s=>{s.pending_result={object_id:'f'.repeat(32),request_id:'retained-pending'};},s=>{s.source_proofs={records:[{proof_object_id:'7'.repeat(32),adopted:true,status:'unavailable',reason:'Exact source unavailable'}],references:[]};}]){
+  const {s,entries}=leadUiFixture();mutate(s);const h=await harness(s,{statisticsHistory:entries});await h.settle();const original=copy(h.inspect().state);
+  assert.equal(h.$('open-research-lead').disabled,true);await h.click('open-research-lead');assert.notEqual(h.$('research-lead-dialog').open,true);assert.equal(h.actionTrace.includes('create-research-lead'),false);assert.equal(h.calls.length,0);assert.deepEqual(h.inspect().state,original);
+ }
+});
+test('fresh invalid adopted proof refuses lead application before submission while retaining its exact input and proof',async()=>{
+ const {s,entries}=leadUiFixture(),proof={proof_object_id:'7'.repeat(32),manifest_sha256:'a'.repeat(64),status:'verified',adopted:true},reference={kind:'source_proof_reference_v1',object_id:proof.proof_object_id,manifest_sha256:proof.manifest_sha256};s.source_proofs={records:[proof],references:[reference]};const h=await harness(s,{statisticsHistory:entries});await h.click('open-research-lead');fillLeadUi(h);
+ const latest=h.server();latest.state_revision++;latest.source_proofs.records[0]={...proof,status:'unavailable',reason:'Controlled exact source unavailable'};h.setServer(latest);await h.click('apply-research-lead');assert.equal(h.actionTrace.includes('create-research-lead'),false);assert.equal(h.$('research-lead-dialog').open,true);assert.equal(h.$('lead-hypothesis').value,'Descriptive spread hypothesis, not a material conclusion');assert.equal(h.$('check-research-lead').hidden,true);assert.deepEqual(h.inspect().state.source_proofs,latest.source_proofs);assert.equal(h.$('open-research-lead').disabled,true);await h.click('cancel-research-lead');assert.equal(h.server().research_leads,undefined);
+});
+
+test('both Agent entry handlers refuse pending recovery even when invoked directly, then resume after explicit resolution',async()=>{
+ const s=questionWorkspaceFixture();s.workspace_analysis={...s.workspace_analysis,status:'recovery_available',recovery_available:true};const h=await harness(s);await h.settle();
+ const before={gets:h.getCalls.length,drafts:h.draftCalls.length,actions:h.actionTrace.length};
+ for(const entry of ['agent-continue','research-question-agent']){
+  assert.equal(h.$(entry).disabled,true,entry);await h.click(entry);assert.notEqual(h.$('agent-handoff-dialog').open,true,entry);assert.match(h.$('message').textContent,/恢复/);
+ }
+ assert.equal(h.getCalls.length,before.gets);assert.equal(h.draftCalls.length,before.drafts);assert.equal(h.actionTrace.length,before.actions);
+ await h.click('workspace-discard-recovery');await h.settle();assert.equal(h.inspect().state.workspace_analysis.recovery_available,false);
+ for(const entry of ['agent-continue','research-question-agent']){
+  assert.equal(h.$(entry).disabled,false,entry);await h.click(entry);assert.equal(h.$('agent-handoff-dialog').open,true,h.$('message').textContent);await h.click('close-agent-handoff');
+ }
+ assert.equal(h.calls.length,0);
+});
+
+test('both Agent handlers retain an invalid adopted proof and require its exact read revalidation before continuing',async()=>{
+ const f=sourceProofUiFixture(),proof={...sourceProofUiRecord(f),adopted:true,status:'unavailable',eligible_for_exact_scope:false,reason:'Controlled temporarily unavailable exact manifest'},reference={kind:'source_proof_reference_v1',object_id:proof.proof_object_id,manifest_sha256:proof.manifest_sha256};
+ f.source.source_proofs={schema_version:1,records:[proof],references:[reference]};const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();const original=copy(h.inspect().state.source_proofs),reads=h.getCalls.length,actions=h.actionTrace.length;
+ for(const entry of ['agent-continue','research-question-agent']){assert.equal(h.$(entry).disabled,true,entry);await h.click(entry);assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/来源证明失效/);}
+ assert.deepEqual(h.inspect().state.source_proofs,original);assert.equal(h.getCalls.length,reads);assert.equal(h.actionTrace.length,actions);
+ h.actionResult(server=>({...server,source_proofs:{...server.source_proofs,records:[{...proof,status:'verified',eligible_for_exact_scope:true,reason:'Controlled exact manifest revalidated'}]}}));await h.click('read-source-proofs');
+ assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'read-source-proofs');assert.deepEqual(h.inspect().state.source_proofs.references,[reference]);assert.equal(h.inspect().state.source_proofs.records[0].proof_object_id,proof.proof_object_id);assert.equal(h.inspect().state.source_proofs.records[0].adopted,true);
+ for(const entry of ['agent-continue','research-question-agent']){assert.equal(h.$(entry).disabled,false);await h.click(entry);assert.equal(h.$('agent-handoff-dialog').open,true,h.$('message').textContent);await h.click('close-agent-handoff');}
+ assert.equal(h.calls.length,1,'no new proof or scientific request');
+});
+
+test('a freshly read invalid adopted proof cannot hide behind a previously enabled Agent entry',async()=>{
+ const s=questionWorkspaceFixture(),proof={proof_object_id:'7'.repeat(32),manifest_sha256:'a'.repeat(64),status:'verified',adopted:true},reference={kind:'source_proof_reference_v1',object_id:proof.proof_object_id,manifest_sha256:proof.manifest_sha256};s.source_proofs={schema_version:1,records:[proof],references:[reference]};const h=await harness(s);
+ const latest=h.server();latest.state_revision++;latest.source_proofs.records[0]={...proof,status:'unavailable',reason:'Controlled fresh read: exact source unavailable'};h.setServer(latest);
+ await h.click('research-question-agent');assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/来源证明失效/);assert.equal(h.$('agent-continue').disabled,true);assert.equal(h.$('research-question-agent').disabled,true);assert.deepEqual(h.inspect().state.source_proofs,latest.source_proofs);assert.equal(h.calls.length,0);
+});
+
+test('fresh pending recovery discovered during handoff blocks the prompt and relocks both Agent entries',async()=>{
+ const h=await harness(questionWorkspaceFixture()),latest=h.server();latest.state_revision++;latest.workspace_analysis={...latest.workspace_analysis,status:'recovery_available',recovery_available:true};h.setServer(latest);
+ await h.click('research-question-agent');assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/恢复/);assert.equal(h.inspect().state.workspace_analysis.recovery_available,true);
+ for(const entry of ['agent-continue','research-question-agent'])assert.equal(h.$(entry).disabled,true,entry);assert.equal(h.calls.length,0);
+});
+
+test('question-only dirty, saving and unknown states block unload, readonly inspection and normal close without parking or replay',async()=>{
+ for(const local of [{dirty:true,phase:''},{dirty:false,phase:'saving'},{dirty:false,phase:'unknown'}]){
+  const h=await harness(questionWorkspaceFixture());await h.settle();assert.equal(h.beforeUnload().prevented,false);assert.equal((await h.nativeAction('inspect-close-state')).ok,true);
+  h.$('research-question').value='Keep this question locally';h.$('research-question').oninput();
+  // The lifecycle flag is independently significant even after text has been
+  // acknowledged. This controlled cross-state does not alter backend metadata.
+  h.setQuestionDraftState(local);assert.equal(h.inspect().dirty,false,'scientific anchors remain clean');
+  const before={gets:h.getCalls.length,actions:h.actionTrace.length,drafts:h.draftCalls.length};
+  assert.deepEqual(h.beforeUnload(),{prevented:true,returnValue:''});assert.equal((await h.nativeAction('inspect-close-state')).ok,false);
+  const close=await h.nativeAction('prepare-close');assert.equal(close.ok,false);assert.match(close.error,/研究问题/);
+  assert.equal(h.$('research-question').value,'Keep this question locally');assert.equal(h.getCalls.length,before.gets);assert.equal(h.actionTrace.length,before.actions);assert.equal(h.draftCalls.length,before.drafts);
+ }
+});
+
+test('withdrawing question input permits close; an uncertain apply is read-only checked once and must be saved before unload',async()=>{
+ const h=await harness(questionWorkspaceFixture());h.$('research-question').value='Withdraw me';h.$('research-question').oninput();await h.click('cancel-research-question');
+ assert.equal(h.beforeUnload().prevented,false);assert.equal((await h.nativeAction('inspect-close-state')).ok,true);assert.equal((await h.nativeAction('prepare-close')).ok,true);
+ h.$('research-question').value='Read back this exact intent';h.$('research-question').oninput();h.loseQuestionReply();await h.click('apply-research-question');
+ assert.equal(h.beforeUnload().prevented,true);assert.equal((await h.nativeAction('inspect-close-state')).ok,false);assert.equal((await h.nativeAction('prepare-close')).ok,false);
+ await h.click('apply-research-question');await h.click('cancel-research-question');assert.equal(h.$('research-question').value,'Read back this exact intent');assert.equal(h.actionTrace.filter(a=>a==='set-research-question').length,1);
+ const writes=h.actionTrace.length,reads=h.getCalls.length;await h.click('check-research-question');assert.equal(h.actionTrace.length,writes);assert.equal(h.getCalls.length,reads+1);assert.equal(h.actionTrace.filter(a=>a==='set-research-question').length,1);
+ assert.equal((await h.nativeAction('inspect-close-state')).ok,true);assert.equal(h.beforeUnload().prevented,true,'applied metadata is still unsaved');
+ const saved=await h.nativeAction('save');assert.equal(saved.ok,true,saved.error);assert.equal(h.beforeUnload().prevented,false);assert.equal((await h.nativeAction('prepare-close')).ok,true);assert.equal(h.actionTrace.filter(a=>a==='set-research-question').length,1);assert.equal(h.calls.length,0);
+});
+
+test('question workflow applies without ROI, preserves science draft semantics, and hands off exact saved intent',async()=>{
+ const html=readFileSync(new URL('../ui/image-panel/index.html',import.meta.url),'utf8');assert.match(html,/使用已核验的保存上下文与已应用研究意图/);assert.doesNotMatch(html,/只读取已保存观察。/);
+ const s=emptyRoiFixture();s.workspace_analysis={schema_version:1,status:'clean',working_revision:1,save_id:'saved-a',saved_revision:1,dirty:false,recovery_available:false,unresolved_request_id:null};
+ const h=await harness(s);assert.equal(h.$('agent-continue').disabled,false);
+ h.$('research-question').value='  衬度差异有哪些可核查的观察？ 😀\n';h.$('research-question').oninput();
+ assert.equal(h.inspect().dirty,false,'intent is not a dirty scientific anchor');assert.equal(h.$('agent-continue').disabled,true);
+ await h.click('agent-continue');assert.notEqual(h.$('agent-handoff-dialog').open,true);assert.match(h.$('message').textContent,/研究问题/);
+ await h.click('apply-research-question');assert.deepEqual(h.calls,[]);assert.equal(h.server().research_question.text,h.$('research-question').value);assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.inspect().state.research_question.context_object_id,viewId);assert.equal(h.$('agent-continue').disabled,false);
+ await h.click('research-question-agent');assert.equal(h.$('agent-handoff-dialog').open,true,h.$('message').textContent);assert.match(h.$('agent-prompt').value,/衬度差异有哪些/);assert.match(h.$('agent-prompt').value,/不要求研究者先画框/);assert.match(h.$('agent-prompt').value,/不会自动唤醒/);
+ assert.deepEqual(h.calls,[]);assert.ok(h.draftCalls.every(c=>c.params.dirty===false));assert.equal(h.actionTrace.filter(a=>a==='set-research-question').length,1);
+ h.$('research-question').value='Cancelled input';h.$('research-question').oninput();await h.click('cancel-research-question');assert.equal(h.$('research-question').value,s.research_question?.text??h.server().research_question.text);assert.equal(h.actionTrace.filter(a=>a==='set-research-question').length,1);
+});
+test('question source flow: explicit ROI view becomes a pending question context, then existing statistics open without recomputation',async()=>{
+ const s=questionWorkspaceFixture(),roiView='e'.repeat(32);s.research_question={version:1,text:'Same intensity question',context_object_id:viewId,frame_object_id:sourceId,recorded_utc:'2026-11-06T20:00:00.000Z'};const entries=[],h=await harness(s,{statisticsHistory:entries});roiStroke(h,'rectangle',[10.2,10.4],[40.7,35.6]);await h.settle();const picked=h.inspect().draft,support=picked.coordinates.map((v,i)=>i<2?Math.floor(v):Math.ceil(v));
+ h.actionResult(server=>({...server,object:{...server.object,object_id:roiView,panels:[{...panel,source_rect_xyxy:support}]},selection:null}));await h.click('question-roi');
+ assert.equal(h.inspect().state.object.object_id,roiView,h.$('message').textContent);assert.equal(h.bodyClasses.has('research-open'),true,h.$('message').textContent);assert.equal(h.active().id,'research-question');assert.equal(h.server().research_question.context_object_id,viewId,'not silently rewritten');assert.equal(h.$('research-question').value,'Same intensity question');assert.equal(h.beforeUnload().prevented,true);assert.match(h.$('research-question-context').textContent,new RegExp(support.join(', ')));assert.equal(h.calls.filter(c=>c.action==='roi').length,1);assert.deepEqual(h.calls.find(c=>c.action==='roi').params.selection.coordinates,picked.coordinates);
+ await h.click('apply-research-question');assert.equal(h.server().research_question.context_object_id,roiView);assert.equal(h.server().research_question.frame_object_id,sourceId);assert.equal(h.server().research_question.text,'Same intensity question');
+ entries.push({object_id:'9'.repeat(32),request_id:'original-stat',input_object_id:roiView,frame_object_id:sourceId,source_rect_xyxy:support,statistics:{sample_count:4,mean:5,stddev:1,minimum:4,maximum:6},matching_input_annotations:[]});entries.push({object_id:'8'.repeat(32),request_id:'other-original-stat',input_object_id:viewId,frame_object_id:sourceId,source_rect_xyxy:[20,12,22,14],statistics:{sample_count:4,mean:12,stddev:2},matching_input_annotations:[]});h.draw('rectangle');await h.settle();const currentSelection=h.inspect().draft,writes=h.calls.length;await h.click('research-question-statistics');assert.equal(h.$('statistics-history-dialog').open,true,h.$('message').textContent);assert.ok(h.getCalls.includes('/api/statistics-history?object_id='+roiView));assert.equal(h.calls.length,writes,'no show/write for already-current source');assert.deepEqual(h.inspect().draft,currentSelection,'same-source statistics does not replace the current selection');assert.match(h.$('statistics-history-status').textContent,/不代表当前选区/);assert.equal(h.$('statistics-history-rows').children.length,2,'same-frame history is not silently treated as this question ROI evidence');assert.equal(h.server().research_leads,undefined,'reading does not adopt evidence');
+});
+test('question source flow: statistics shortcut returns to exact saved question view and does not substitute the current view',async()=>{
+ const {s,entries}=leadUiFixture(),current='e'.repeat(32);s.object.object_id=current;const h=await harness(s,{statisticsHistory:entries});h.actionResult(server=>({...server,object:{...server.object,object_id:viewId}}));await h.click('research-question-statistics');assert.equal(h.inspect().state.object.object_id,viewId,h.$('message').textContent);assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'show');assert.equal(h.calls[0].params.object_id,viewId);assert.ok(h.getCalls.includes('/api/statistics-history?object_id='+viewId));assert.ok(!h.getCalls.includes('/api/statistics-history?object_id='+current));assert.equal(h.$('statistics-history-dialog').open,true);
+});
+test('question source flow: unadopted ROI result and pending question input never prepare or resend another question context',async()=>{
+ const h=await harness(questionWorkspaceFixture());h.draw('rectangle');await h.settle();h.actionResult(server=>({...server,pending_result:{object_id:'e'.repeat(32),request_id:'original-roi',reason:'window_capacity'}}));await h.click('question-roi');assert.equal(h.inspect().state.object.object_id,viewId);assert.notEqual(h.bodyClasses.has('research-open'),true);assert.equal(h.calls.filter(c=>c.action==='roi').length,1);assert.match(h.$('message').textContent,/待查看结果/);await h.click('question-roi');assert.equal(h.calls.filter(c=>c.action==='roi').length,1);
+ const {s,entries}=leadUiFixture(),draft=await harness(s,{statisticsHistory:entries});draft.draw('rectangle');await draft.settle();draft.$('research-question').value='Keep my unsaved question';draft.$('research-question').oninput();const before={writes:draft.calls.length,reads:draft.getCalls.length};await draft.click('question-roi');await draft.click('research-question-statistics');assert.equal(draft.calls.length,before.writes);assert.equal(draft.getCalls.length,before.reads);assert.equal(draft.$('research-question').value,'Keep my unsaved question');
+});
+test('question source flow: changed question during source navigation prevents statistics from being attached to the old intent',async()=>{
+ const {s,entries}=leadUiFixture();s.object.object_id='e'.repeat(32);const h=await harness(s,{statisticsHistory:entries});h.actionResult(server=>({...server,object:{...server.object,object_id:viewId},research_question:{...server.research_question,text:'Newer recorded intent'}}));await h.click('research-question-statistics');assert.ok(!h.getCalls.some(url=>url.startsWith('/api/statistics-history?')));assert.notEqual(h.$('statistics-history-dialog').open,true);assert.equal(h.server().research_question.text,'Newer recorded intent');assert.match(h.$('message').textContent,/问题已改变/);
+});
 function roiStroke(h,mode,start,end){h.$('mode').value=mode;h.event('pointerdown',...start);h.event('pointermove',...end);h.event('pointerup',...end);h.flush();}
 function savedRectangleFixture(){
  const s=handoffFixture();s.object.annotations=[{annotation_id:'roi-stable',kind:'rectangle',text:'ROI saved',note:'',color:'cyan',status:'hypothesized',purpose:'resumable_observation',observation_contract_version:1,selection_origin:'researcher',selection_origin_basis:'caller_reported_not_authenticated',presentation:{label:{visible:false}},anchor:{source_object_id:sourceId,coordinate_space:'source_pixels',coordinates:[40,32,120,92]}}];return s;
@@ -1773,4 +2098,155 @@ test('source proof UI: exact invalid-proof refusal permits metadata repair and n
 
 test('source proof UI: provider admission clears only its exact original tool receipt and never a plain state label',async()=>{
  const f=sourceProofUiFixture(),h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();h.failAction(new Error('Admission response lost'));await h.click('record-source-proof');const sent=h.calls[0],request_id=sent.params.request_id,admission={schema_version:1,kind:'image_operation_admission_failure',provider:'external-image-workspace',tool:'image_source_proof',code:'WORKSPACE_WRITE_CONFLICT',submission_state:'not_submitted',request_id,original_request_id:'other-owner',automatic_retry:false},receipt={schema_version:1,action:'source-proof',request_id,expected_object_id:sent.expected_object_id,draft_revision:sent.draft_revision,params:copy(sent.params),state:'not_submitted',phase:'provider_admission',scope:'exact_original_provider_request',provider_request_id:request_id,automatic_retry:false,admission_failure:admission};h.actionResult(server=>({...server,last_operation:{action:'source-proof',request_id,state:'not_submitted'},source_proof_query:{...receipt,admission_failure:{...admission,tool:'image_fft'}}}));await h.click('query-source-proof');assert.equal((await h.nativeAction('prepare-close')).ok,false,'a bare last_operation state or different tool cannot release the local original');h.actionResult(server=>({...server,source_proof_query:receipt}));await h.click('query-source-proof');assert.equal((await h.nativeAction('prepare-close')).ok,true);assert.deepEqual(h.calls.map(call=>call.action),['source-proof','query-source-proof','query-source-proof']);assert.equal(h.inspect().autoFailed,false);assert.equal(h.actionTrace.includes('adopt-source-proof'),false);
+});
+
+
+test('Agent summary reads existing execution history locally, retains #121 facts and marks a failed history read unknown',async()=>{
+ for(const mode of ['available','unreadable','late-edit','late-applied','late-applied-no-poll','late-applied-draft','late-source','late-unknown']){
+  const unavailable=mode==='unreadable',f=relationUiFixture();f.initial.research_question={version:1,text:'Original applied question',context_object_id:f.initial.object.object_id,frame_object_id:sourceId,recorded_utc:'2026-11-07T10:00:00.000Z'};let historyReads=0,releaseHistory;const h=await harness(f.initial,{windowStates:f.windowStates,relationRead:async(url,state)=>{
+   const source=state.window_collection.windows.find(w=>w.role==='fft').source_reference;
+   if(url==='/api/execution-history'){historyReads++;if(mode.startsWith('late-'))await new Promise(resolve=>{releaseHistory=resolve;});if(unavailable)throw Error('Controlled local history read failure');return {schema_version:1,read_only:true,records:[{schema_version:1,kind:'gui_fft_input_v1',request_id:'panel-'+'a'.repeat(32)+'-1',input_relative_path:'panel-journals/public/exact.input.json',input_sha256:'b'.repeat(64),qualification:'unavailable',status:'completed',execution_status:'completed',fft_object_id:source.raw_fft_object_id,reason:'Scientific source ancestry exceeds budget',input_snapshot:{schema_version:1,source_view_object_id:source.input_view_object_id,provider_input_object_id:sourceId,frame_object_id:sourceId,float_roi_xyxy:source.processing_rect_xyxy.map((v,i)=>i<2?v+.2:v-.2),processing_rect_xyxy:source.processing_rect_xyxy,recipe:{window:'hann',subtract_mean:true}}}]};}
+   const active=panelRoiHandoff(state);return {...emptyRelationRead(url,state),helper_session_id:state.helper_session_id,panel_generation:state.panel_generation,interaction_gate:active.interaction_gate,active_handoff:active,source_observations:[{object_id:state.object.object_id,roles:['active_spatial','fft_input'],status:'validated',frame_object_id:sourceId,handoff:active,observations:[]}],fft_relations:[{window_id:'saved-fft',display_object_id:state.window_collection.windows.find(w=>w.role==='fft').object_id,raw_fft_object_id:source.raw_fft_object_id,input_view_object_id:source.input_view_object_id,status:'validated',reason_code:null,calibration_relation:'unknown',processing_rect_xyxy:source.processing_rect_xyxy,input_float_coordinates:null,input_annotation_id:null,current_observation_matches:[]}]};
+  }});await h.finishWindows();const opening=h.click('agent-continue');
+  if(mode.startsWith('late-')){
+   for(let i=0;i<80&&!releaseHistory;i++)await Promise.resolve();assert.ok(releaseHistory);
+   if(mode==='late-edit'||mode==='late-applied-draft'){h.$('research-question').value='Retain this newer local intent';h.$('research-question').oninput();}
+   if(mode!=='late-edit'){const next=h.server();next.state_revision++;
+    if(mode==='late-source'){next.object.object_id='7'.repeat(32);}
+    else if(mode==='late-unknown')next.last_operation={action:'fft',state:'unknown',request_id:'exact-original-pending'};
+    else next.research_question={...next.research_question,text:'Newer applied intent',recorded_utc:'2026-11-07T12:00:00.000Z'};
+    h.setServer(next);if(mode!=='late-applied-no-poll'&&mode!=='late-unknown')await h.poll();
+   }
+   releaseHistory();await opening;assert.notEqual(h.$('agent-handoff-dialog').open,true,mode);assert.equal(h.$('agent-prompt').value,'',mode);assert.equal(h.calls.length,0,mode);
+   if(mode==='late-edit'||mode==='late-applied-draft'){assert.equal(h.$('research-question').value,'Retain this newer local intent');assert.equal(h.beforeUnload().prevented,true);}
+   if(mode==='late-applied'||mode==='late-applied-draft'){assert.equal(h.inspect().state.research_question.text,'Newer applied intent');assert.equal(h.inspect().state.state_revision,h.server().state_revision);}
+   continue;
+  }
+  await opening;assert.equal(h.$('agent-handoff-dialog').open,true,h.$('message').textContent);assert.equal(historyReads,1);const text=h.$('agent-prompt').value;assert.match(text,/strict_reuse_eligibility.*unknown/);assert.match(text,/不自动补算或重发/);if(unavailable)assert.match(text,/execution_history_unavailable/);else{assert.match(text,/Scientific source ancestry exceeds budget/);assert.match(text,/execution_status.*completed/);assert.match(text,/frozen_input_qualification.*unavailable/);assert.match(text,/panel-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1/);}assert.equal(h.calls.length,0);assert.equal(h.server().last_operation,null);
+ }
+});
+
+
+test('metadata question polling preserves expanded exact-result trace, ROI, camera and unsaved question',async()=>{
+ const f=relationUiFixture(),{s,entries}=leadUiFixture();Object.assign(f.initial,{research_question:s.research_question,workspace_analysis:s.workspace_analysis,research_lead_session_id:s.research_lead_session_id});
+ const h=await harness(f.initial,{windowStates:f.windowStates,statisticsHistory:entries});await h.finishWindows();await h.click('open-research-lead');fillLeadUi(h);await h.click('apply-research-lead');await h.settle();
+ h.draw('rectangle');await h.settle();h.$('zoom').value='1.8';h.$('zoom').oninput();h.$('mode').value='pan';h.event('pointerdown',30,20);h.event('pointermove',48,29);h.event('pointerup',48,29);await h.settle();await h.finishWindows();h.$('measurement-workspace').open=true;
+ h.$('research-question').value='Keep this local Δ question draft';h.$('research-question').oninput();
+ const trace=()=>h.$('research-lead-list').children[0].children.find(e=>e.children[0]?.textContent==='原结果、请求与哈希（只读）');trace().open=true;
+ const before=h.inspect(),saved=copy(h.server().research_leads),savepoint=copy(h.server().workspace_analysis),next=h.server();next.state_revision++;next.research_question={...next.research_question,text:'New remotely applied question',recorded_utc:'2026-11-07T13:00:00.000Z'};next.workspace_analysis={...next.workspace_analysis,working_revision:next.workspace_analysis.working_revision+1,status:'dirty',dirty:true};h.setServer(next);await h.poll();await h.settle();
+ assert.equal(h.inspect().state.research_question.text,'New remotely applied question');assert.equal(h.$('research-question').value,'Keep this local Δ question draft');assert.deepEqual(h.inspect().draft,before.draft);assert.deepEqual(h.inspect().view,before.view);assert.equal(h.inspect().selectedId,before.selectedId);assert.equal(h.$('measurement-workspace').open,true);assert.equal(trace().open,true,'question-only refresh must not collapse the exact result being inspected');assert.match(elementText(trace()),/saved-8/);assert.notEqual(h.$('research-lead-list').children[0].children.filter(e=>e.children[0]?.textContent==='原结果、请求与哈希（只读）')[1].open,true,'other result expansion is independent');assert.match(elementText(h.$('research-lead-list')),/旧问题的历史线索/);assert.deepEqual(h.server().research_leads,saved);
+ assert.match(h.$('research-question-status').textContent,/尚未应用/);assert.match(h.$('workspace-save-status').textContent,/未保存修改/);assert.equal(h.inspect().state.workspace_analysis.save_id,savepoint.save_id);assert.equal(h.inspect().state.workspace_analysis.saved_revision,savepoint.saved_revision);assert.equal(h.calls.length,0);assert.equal(h.actionTrace.includes('save'),false);
+});
+
+
+function publicResultLeadFixture(){
+ const {s,entries}=leadUiFixture();s.object.panels[0].source_rect_xyxy=[0,0,64,64];s.object.panels[0].image_rect_xyxy=[0,0,64,64];
+ for(const entry of entries){entry.request_id='text_tool_'+entry.object_id;entry.input_object_id=sourceId;}
+ const e=entries[0],output={status:'completed',request_id:e.request_id,object_id:e.object_id,frame_id:sourceId,manifest_sha256:e.manifest_sha256,input_manifest_sha256:e.input_manifest_sha256,statistics_sha256:e.statistics_sha256,source_rect_xyxy:e.source_rect_xyxy,statistics:e.statistics};
+ const packet={enabled:true,status:'completed',active:false,source:{frame_id:sourceId,shape_yx:[64,64],dtype:'uint16'},source_view_id:viewId,host:{thread_id:'public-ledger-thread'},operations:[{id:'public-op',question:'A separate public model question',thread_id:'public-ledger-thread',turn_id:'public-ledger-turn',state:'completed',messages:[{phase:'final_answer',text:'MODEL_INTERPRETATION_NOT_ADOPTED'}]}],tool_calls:[{phase:'completed',tool:'image_statistics',threadId:'public-ledger-thread',turnId:'public-ledger-turn',callId:'public-ledger-call',request_id:e.request_id,output}]};
+ return {s,entries,packet};
+}
+function publicResultUse(h){return h.$('public-research-results').children[0].children.find(e=>e.textContent==='用这条原统计整理线索');}
+test('public result handoff locates its ROI and enters the existing explicit lead workflow with exact original provenance',async()=>{
+ const {s,entries,packet}=publicResultLeadFixture(),h=await harness(s,{statisticsHistory:entries,publicResearchPacket:packet});h.$('public-research-question').value='Keep separate unsent public draft';
+ const card=h.$('public-research-results').children[0];await card.children.find(e=>e.textContent==='定位原图 ROI').onclick();await h.settle();assert.deepEqual(h.inspect().draft.coordinates,entries[0].source_rect_xyxy);const selection=copy(h.inspect().draft),question=copy(h.server().research_question);
+ assert.equal(publicResultUse(h).disabled,false);await publicResultUse(h).onclick();assert.equal(h.$('research-lead-dialog').open,true,h.$('public-research-source-status').textContent);assert.equal(h.server().research_leads,undefined);assert.equal(h.$('lead-hypothesis').value,'');assert.equal(h.$('lead-unknowns').value,'');assert.equal(h.$('lead-next-step').value,'');assert.match(h.$('lead-question-binding').textContent,new RegExp(question.text));assert.doesNotMatch(h.$('lead-question-binding').textContent,/separate public model question/);assert.deepEqual(h.inspect().draft,selection);assert.equal(h.$('public-research-question').value,'Keep separate unsent public draft');
+ const choices=h.$('lead-evidence-choices').children,first=choices[0];assert.equal(first.children[0].children[0].checked,true);assert.equal(first.children[1].value,'');assert.equal(first.children[2].value,'');assert.equal(choices[1].children[0].children[0].checked,false);assert.equal(h.calls.length,0);assert.equal(h.actionTrace.includes('question'),false);
+ for(const [id,value]of [['lead-hypothesis','A human contrast proposal'],['lead-unknowns','Formation and calibration remain unknown'],['lead-next-step','Plan a comparable observation']]){h.$(id).value=value;h.$(id).oninput();}first.children[1].value='unknown';first.children[1].oninput();first.children[2].value='Human-reviewed numerical observation; no material identification';first.children[2].oninput();await h.click('apply-research-lead');await h.settle();
+ const record=h.server().research_leads.entries[0];assert.deepEqual(record.question,question);assert.equal(record.evidence.length,1);assert.equal(record.evidence[0].reference.request_id,entries[0].request_id);assert.equal(record.evidence[0].reference.result_id,entries[0].object_id);assert.equal(record.evidence[0].reference.input_view_id,sourceId);assert.equal(record.evidence[0].reference.statistics_sha256,entries[0].statistics_sha256);assert.doesNotMatch(JSON.stringify(record),/MODEL_INTERPRETATION_NOT_ADOPTED/);assert.equal(h.actionTrace.filter(a=>a==='create-research-lead').length,1);assert.equal(h.actionTrace.includes('save'),false);assert.equal(h.calls.length,0);
+ const inspect=h.$('research-lead-list').children[0].children.find(e=>e.textContent==='核查这条原统计');await inspect.onclick();assert.equal(h.$('statistics-history-rows').children.length,1);assert.match(elementText(h.$('statistics-history-rows')),new RegExp(entries[0].request_id));assert.match(elementText(h.$('statistics-history-rows')),/保存 ROI：\[0,0,2,2\]/);assert.equal(h.calls.length,0);
+});
+test('new public result cards carry their explicit saved view through lead selection, application and inspection',async()=>{
+ const {s,entries,packet}=publicResultLeadFixture();for(const entry of entries)entry.input_object_id=viewId;packet.tool_calls[0].output.input_object_id=viewId;
+ const h=await harness(s,{statisticsHistory:entries,publicResearchPacket:packet});await publicResultUse(h).onclick();assert.equal(h.$('research-lead-dialog').open,true,h.$('public-research-source-status').textContent);assert.equal(h.$('lead-evidence-choices').children[0].children[0].children[0].checked,true);
+ h.$('lead-hypothesis').value='Explicit view-bound public result, not a material finding';h.$('lead-hypothesis').oninput();h.$('lead-next-step').value='Plan a comparable check without executing it';h.$('lead-next-step').oninput();h.$('lead-evidence-choices').children[0].children[1].value='supports';h.$('lead-evidence-choices').children[0].children[2].value='The original saved display input is retained';await h.click('apply-research-lead');await h.settle();
+ const reference=h.server().research_leads.entries[0].evidence[0].reference;assert.equal(reference.input_view_id,viewId);assert.equal(reference.frame_id,sourceId);assert.equal(reference.input_manifest_sha256,entries[0].input_manifest_sha256);assert.equal(h.calls.length,0);await leadStatisticsButton(h).onclick();assert.equal(h.$('statistics-history-dialog').open,true);assert.match(elementText(h.$('statistics-history-rows')),new RegExp(entries[0].request_id));
+});
+test('new public result explicit input and original manifest must both match the saved reference',async()=>{
+ for(const change of ['input','manifest','invalid-input']){
+  const {s,entries,packet}=publicResultLeadFixture();entries[0].input_object_id=viewId;packet.tool_calls[0].output.input_object_id=change==='input'?sourceId:change==='invalid-input'?'not-an-id':viewId;if(change==='manifest')entries[0].input_manifest_sha256='0'.repeat(64);
+  const h=await harness(s,{statisticsHistory:entries,publicResearchPacket:packet});await publicResultUse(h).onclick();assert.notEqual(h.$('research-lead-dialog').open,true,change);assert.equal(h.server().research_leads,undefined);assert.equal(h.calls.length,0);
+ }
+});
+test('public result handoff refuses missing, changed, ambiguous or wrong-input saved records without adopting substitutes',async()=>{
+ for(const change of ['missing','hash','request','duplicate','wrong-input']){
+  const {s,entries,packet}=publicResultLeadFixture();if(change==='missing')entries.shift();else if(change==='hash')entries[0].statistics_sha256='0'.repeat(64);else if(change==='request')entries[0].request_id='text_tool_'+'0'.repeat(32);else if(change==='duplicate')entries.push(copy(entries[0]));else entries[0].input_object_id=viewId;
+  const h=await harness(s,{statisticsHistory:entries,publicResearchPacket:copy(packet)});await publicResultUse(h).onclick();assert.notEqual(h.$('research-lead-dialog').open,true,change);assert.equal(h.server().research_leads,undefined);assert.equal(h.calls.length,0);assert.equal(h.actionTrace.includes('create-research-lead'),false);assert.match(h.$('public-research-source-status').textContent,/未整理线索/);
+ }
+});
+test('public result handoff requires a settled same-frame local question and retains its typed draft',async()=>{
+ for(const change of ['missing-question','different-frame','local-draft','unknown']){const {s,entries,packet}=publicResultLeadFixture();if(change==='missing-question')delete s.research_question;if(change==='different-frame')s.frame_identity.frame_object_id='7'.repeat(32);if(change==='unknown')s.last_operation={state:'unknown',action:'fft',request_id:'retained-original'};const h=await harness(s,{statisticsHistory:entries,publicResearchPacket:packet});if(change==='local-draft'){h.$('research-question').value='Preserve this unapplied local intent';h.$('research-question').oninput();}const reads=h.getCalls.filter(p=>p.startsWith('/api/statistics-history?')).length;
+  await publicResultUse(h).onclick();assert.notEqual(h.$('research-lead-dialog').open,true,change);assert.equal(h.server().research_leads,undefined);assert.equal(h.calls.length,0);assert.equal(h.getCalls.filter(p=>p.startsWith('/api/statistics-history?')).length,reads);if(change==='local-draft')assert.equal(h.$('research-question').value,'Preserve this unapplied local intent');if(change==='unknown')assert.equal(h.server().last_operation.request_id,'retained-original');
+ }
+});
+test('public result handoff drops a changed applied question during history read and coalesces duplicate clicks',async()=>{
+ const {s,entries,packet}=publicResultLeadFixture(),h=await harness(s,{statisticsHistory:entries,publicResearchPacket:packet});let release;h.delayStatisticsHistory(new Promise(resolve=>{release=resolve;}));const reads=h.getCalls.filter(p=>p.startsWith('/api/statistics-history?')).length,button=publicResultUse(h),opening=button.onclick();for(let i=0;i<30;i++)await Promise.resolve();await button.onclick();assert.equal(h.getCalls.filter(p=>p.startsWith('/api/statistics-history?')).length,reads+1);
+ const next=h.server();next.state_revision++;next.research_question={...next.research_question,text:'A newer applied intent'};h.setServer(next);await h.poll();release();await opening;assert.notEqual(h.$('research-lead-dialog').open,true);assert.equal(h.server().research_question.text,'A newer applied intent');assert.equal(h.server().research_leads,undefined);assert.equal(h.calls.length,0);
+});
+
+
+// Component-only delayed reads: no HTTP, provider, model, native UI or file writes.
+function delayedPublicLeadEditor(){
+ const {s,entries,packet}=publicResultLeadFixture(),elements=new Map();
+ const element=()=>({textContent:'',value:'',hidden:false,children:[],append(...items){this.children.push(...items);},replaceChildren(){this.children=[];},setAttribute(){},addEventListener(){},showModal(){this.open=true;},close(){this.open=false;}});
+ const document={getElementById(id){if(!elements.has(id))elements.set(id,element());return elements.get(id);},createElement:element};
+ const history={schema_version:1,read_only:true,scope:'same_frame_source_pixels',object_id:s.object.object_id,frame_object_id:sourceId,entries:copy(entries),total:entries.length};
+ let reads=0,writes=0,release,secondStarted;const second=new Promise(resolve=>{secondStarted=resolve;}),waiting=new Promise(resolve=>{release=resolve;});
+ const ui=new ResearchLeadsUI({document,getState:()=>s,allowEdit:()=>true,requestId:()=> '6'.repeat(32),history:async()=>{if(++reads===2){secondStarted();await waiting;}return copy(history);},read:async()=>{throw Error('Unexpected lead read');},resolve:async()=>{throw Error('Unexpected recovery');},commit:async()=>{writes++;throw Error('Unexpected write');},navigate:async()=>{throw Error('Unexpected navigation');},changed(){},paint(){},error(){}});
+ const output=packet.tool_calls[0].output,identity={result_id:output.object_id,request_id:output.request_id,frame_id:output.frame_id,manifest_sha256:output.manifest_sha256,input_manifest_sha256:output.input_manifest_sha256,statistics_sha256:output.statistics_sha256};
+ return {s,ui,elements,identity,entries,second,release,reads:()=>reads,writes:()=>writes};
+}
+test('public result handoff rejects every frozen context change during its second history read',async()=>{
+ const changes={
+  object:s=>{s.object.object_id='7'.repeat(32);},
+  frame:s=>{s.frame_identity.frame_object_id='7'.repeat(32);},
+  panel:s=>{s.panel_id='new-panel';},
+  helper:s=>{s.helper_session_id='new-helper';},
+  generation:s=>{s.panel_generation=(s.panel_generation??0)+1;},
+  revision:s=>{s.state_revision=(s.state_revision??0)+1;},
+  draft:s=>{s.edit_state={...s.edit_state,draft_revision:(s.edit_state?.draft_revision??0)+1};},
+  selection:s=>{s.selection={kind:'rectangle',coordinates:[10,10,12,12]};},
+  question:s=>{s.research_question.text='A newer applied question';}
+ };
+ for(const [name,change]of Object.entries(changes)){
+  const h=delayedPublicLeadEditor(),opening=h.ui.openPublicResult(h.identity);await h.second;assert.equal(h.reads(),2,name);assert.equal(h.elements.get('lead-create-fields').hidden,true,name);
+  change(h.s);const newer=copy(h.s),rejected=assert.rejects(opening,/问题或历史上下文已改变/,name);h.release();await rejected;
+  assert.notEqual(h.elements.get('research-lead-dialog').open,true,name);assert.equal(h.elements.get('lead-evidence-choices').children.length,0,name);assert.equal(h.ui.unsettled,false,name);assert.equal(h.writes(),0,name);assert.deepEqual(h.s,newer,name);
+ }
+});
+test('public result handoff completes a stable second history read with only its exact original selection',async()=>{
+ const h=delayedPublicLeadEditor(),opening=h.ui.openPublicResult(h.identity);await h.second;h.release();assert.equal(await opening,true);assert.equal(h.reads(),2);assert.equal(h.writes(),0);
+ const choices=h.elements.get('lead-evidence-choices').children;assert.equal(choices[0].children[0].children[0].checked,true);assert.equal(choices[1].children[0].children[0].checked,false);assert.match(elementText(choices[0]),new RegExp(h.entries[0].request_id));assert.equal(h.elements.get('lead-hypothesis').value,'');assert.equal(h.elements.get('lead-create-fields').hidden,false);
+});
+test('public result handoff late second read cannot close or overwrite a newer editor after cancellation',async()=>{
+ const h=delayedPublicLeadEditor(),opening=h.ui.openPublicResult(h.identity);await h.second;h.elements.get('cancel-research-lead').onclick();h.s.panel_generation=(h.s.panel_generation??0)+1;
+ assert.equal(await h.ui.open(),true);h.elements.get('lead-hypothesis').value='Keep this newer manual input';h.elements.get('lead-hypothesis').oninput();const choices=h.elements.get('lead-evidence-choices').children;
+ h.release();assert.equal(await opening,false);assert.equal(h.elements.get('research-lead-dialog').open,true);assert.equal(h.elements.get('lead-hypothesis').value,'Keep this newer manual input');assert.equal(h.elements.get('lead-evidence-choices').children,choices);assert.equal(h.ui.unsettled,true);assert.equal(h.writes(),0);
+});
+
+
+test('joint native preflight keeps unapplied question local and requires one applied saved-view question',async()=>{
+ const s=questionWorkspaceFixture(),sent=[],h=await harness(s,{desktopReview:(...args)=>sent.push(args)});await h.finishWindows();assert.equal(h.$('review-visual-input').hidden,false);assert.equal(h.$('review-visual-input').disabled,true);
+ h.$('research-question').value='Keep this explicit question local';h.$('research-question').oninput();assert.equal((await h.nativeAction('prepare-joint-review')).ok,false);assert.equal(h.server().research_question,undefined);assert.equal(h.calls.length,0);
+ await h.click('apply-research-question');await h.settle();const r=await h.nativeAction('prepare-joint-review');assert.equal(r.ok,true,r.error);assert.equal(r.working_revision,h.server().workspace_analysis.working_revision);assert.equal(h.$('review-visual-input').disabled,true);assert.equal((await h.nativeAction('finish-joint-review')).ok,true);await h.click('review-visual-input');assert.deepEqual(sent,[[]]);assert.equal(h.calls.length,0);
+});
+test('joint operational revision locks image and question without resetting either; saved statistics and stop remain available',async()=>{
+ const {s,entries}=leadUiFixture(),sent=[],h=await harness(s,{statisticsHistory:entries,desktopReview:()=>{},desktopStop:(...args)=>sent.push(args),desktopOpen:()=>{}});await h.finishWindows();const before=h.inspect(),next=h.server();next.joint_research={revision:1,status:'reviewing',locked:true,notice:'真实发送保持关闭；仅本地核对',confirmation:'none',results:[]};h.setServer(next);await h.poll();await h.settle();
+ for(const id of ['research-question','apply-research-question','cancel-research-question','workspace-save','view-statistics','desktop-open-image','review-visual-input'])assert.equal(h.$(id).disabled,true,id);assert.equal(h.$('stop-visual-review').hidden,false);assert.equal(h.$('stop-visual-review').disabled,false);assert.deepEqual(h.inspect().state.object,before.state.object);assert.deepEqual(h.inspect().state.research_question,before.state.research_question);
+ const writes=h.calls.length;await h.click('open-statistics-history');assert.equal(h.$('statistics-history-dialog').open,true);assert.equal(h.$('statistics-history-rows').children.length,2);await h.click('close-statistics-history');await h.click('stop-visual-review');assert.deepEqual(sent,[[]]);assert.equal(h.calls.length,writes);assert.equal((await h.nativeAction('save')).ok,false);
+ const unlocked=h.server();unlocked.joint_research={...next.joint_research,revision:2,status:'cancelled',locked:false};h.setServer(unlocked);await h.poll();await h.settle();assert.equal(h.$('research-question').disabled,false);assert.equal(h.$('stop-visual-review').hidden,true);assert.deepEqual(h.inspect().state.research_question,before.state.research_question);
+});
+
+test('native review preparation pauses automatic draft publication and camera gestures until its finish handshake',async()=>{
+ const s=questionWorkspaceFixture();s.research_question={version:1,text:'Local applied question',context_object_id:viewId,frame_object_id:sourceId,recorded_utc:'2026-11-08T00:00:00.000Z'};const h=await harness(s,{desktopReview:()=>{}});await h.finishWindows();assert.equal((await h.nativeAction('prepare-joint-review')).ok,true);const drafts=h.draftCalls.length,before=h.inspect();await h.publishDraft({includeSelection:true,urgent:true});h.draw('rectangle');await h.settle();await h.key('f');assert.equal(h.draftCalls.length,drafts);assert.equal(h.inspect().draft,null);assert.deepEqual(h.inspect().view,before.view);
+ const server=h.server();server.joint_research={revision:1,status:'reviewing',locked:true,notice:'local only',confirmation:'none'};server.state_revision++;h.setServer(server);await h.poll();await h.publishDraft({urgent:true});assert.equal(h.draftCalls.length,drafts);
+ const cancelled=h.server();cancelled.joint_research={...server.joint_research,revision:2,status:'cancelled',locked:false};h.setServer(cancelled);assert.equal((await h.nativeAction('finish-joint-review')).ok,true);await h.publishDraft({includeSelection:true,urgent:true});assert.ok(h.draftCalls.length>drafts);assert.doesNotMatch(h.$('message').textContent,/草稿交接未确认/);assert.equal((await h.nativeAction('prepare-close')).ok,true);
+});
+
+test('joint model answer and verified numeric results stay separate with query-scope correction',async()=>{
+ const s=questionWorkspaceFixture();s.joint_research={revision:1,review_id:'a'.repeat(32),status:'completed',locked:false,notice:'Public official model trial',confirmation:'native_public_send',review:{question:'Compare'},host:{agent_messages:[{text:'<script>not executable model text</script>',phase:'final_answer'}]},results:[{status:'completed',request_id:'text_tool_'+'1'.repeat(32),object_id:'2'.repeat(32),source_rect_xyxy:[4,4,28,60],statistics:{sample_count:1344,mean:110,stddev:10,minimum:100,maximum:120}},{status:'not_dispatched',code:'QUERY_OUTSIDE_SESSION',queried_request_outcome:'not_checked'}]};
+ const h=await harness(s,{desktopReview:()=>{}});await h.finishWindows();assert.equal(h.$('joint-research-answer').children[0].textContent,'<script>not executable model text</script>');assert.match(elementText(h.$('joint-research-statistics')),/均值=110/);assert.match(elementText(h.$('joint-research-statistics')),/text_tool_/);assert.match(h.$('joint-research-query-note').textContent,/不表示原记录失败或不存在/);assert.equal(h.$('joint-research-record').open,true);assert.equal(h.$('review-visual-input').disabled,true);assert.equal(h.calls.length,0);
+});
+test('reopened joint run renders saved answer without reconnecting or calculating',async()=>{
+ const s=questionWorkspaceFixture();s.joint_research={revision:0,status:'idle',locked:false,notice:'Local',confirmation:'none',review:null,history:[{review_id:'a'.repeat(32),status:'completed',question:'Saved comparison',frame_id:sourceId,source_view_id:viewId,notice:'已保存；仅查看，不重算',agent_messages:[{text:'Saved original answer'}],results:[]}]};const sent=[],h=await harness(s,{desktopReview:(...a)=>sent.push(a)});await h.finishWindows();assert.equal(h.$('joint-research-history').value,'a'.repeat(32));assert.equal(h.$('joint-research-answer').children[0].textContent,'Saved original answer');assert.match(h.$('joint-research-record-notice').textContent,/仅查看/);assert.equal(h.calls.length,0);assert.equal(sent.length,0);
 });

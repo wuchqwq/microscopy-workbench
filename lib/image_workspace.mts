@@ -120,7 +120,7 @@ const actions: Readonly<Record<string,string>>={...sourceProofActions,...discove
 export class ImageWorkerDiagnosticError extends Error {
  readonly diagnostic:Readonly<Record<string,unknown>>;
  readonly code?:string;readonly submission_state?:string;readonly request_id?:unknown;
- constructor(message:string,diagnostic:Record<string,unknown>){super(message+' '+JSON.stringify(diagnostic));this.name='ImageWorkerDiagnosticError';this.diagnostic=diagnostic;if(diagnostic.submission_state==='not_submitted'){this.code='IMAGE_WORKER_NOT_SUBMITTED';this.submission_state='not_submitted';this.request_id=diagnostic.request_id;}}
+ constructor(message:string,diagnostic:Record<string,unknown>){super(message+' '+JSON.stringify(diagnostic));this.name='ImageWorkerDiagnosticError';this.diagnostic=diagnostic;this.request_id=diagnostic.request_id;if(diagnostic.submission_state==='not_submitted'){this.code='IMAGE_WORKER_NOT_SUBMITTED';this.submission_state='not_submitted';}else if(diagnostic.submission_state==='read_only'&&typeof diagnostic.provider_error_code==='string'){this.code=diagnostic.provider_error_code;this.submission_state='read_only';}}
 }
 
 export class ImageWorkspace {
@@ -204,9 +204,12 @@ export class ImageWorkspace {
     const waiting=new Promise<ToolResult>((resolve,reject)=>{
       try {if(!['get','result','evidence','source_proof_info'].includes(payload.action))providerLease=acquireImageWorkspaceWrite(this.workspace,payload.request_id);child=this.spawnProcess(this.python,['-B',this.workerPath],{stdio:['pipe','pipe','pipe'],windowsHide:true});}
       catch(error){finishWorker();const code=(error as {code?:string}).code;if(code==='WORKSPACE_WRITE_CONFLICT'||code==='WORKSPACE_METADATA_BUSY'){reject(error);return;}reject(new ImageWorkerDiagnosticError('Image worker spawn failed; original request was not dispatched.',{phase:'spawn',submission_state:'not_submitted',request_id:payload.request_id??null,provider:'external-image-workspace',workspace:this.workspace,reason:String(error)}));return;}
-      let chunks: Buffer[]=[],bytes=0,stderr='',settled=false,exitCode:number|null=null,phase='worker_output';let reportedState:unknown;const stdoutHash=createHash('sha256');
-      const hint='Query image_result with original request_id='+String(payload.request_id??payload.query_request_id??'unknown')+'; do not automatically resubmit.';
-      const diagnostic=(error:unknown,state='outcome_unknown')=>new ImageWorkerDiagnosticError((error instanceof Error?error.message:String(error))+'. '+hint,{phase,preview_phase:payload._preview_phase??null,preview_dispatch_by_this_attempt:payload._preview_phase==='reserve'?'not_dispatched':'not_inferred',provider_reported_state:reportedState??null,submission_state:state,request_id:payload.request_id??payload.query_request_id??null,provider:'external-image-workspace',workspace:this.workspace,exit_code:exitCode,stdout_bytes:bytes,stdout_sha256:stdoutHash.copy().digest('hex'),stderr_tail:stderr.replace(/((?:token|secret|api[_-]?key|authorization)\s*[:=]\s*)\S+/gi,'$1[REDACTED]').slice(-1024)});
+      let chunks: Buffer[]=[],bytes=0,stderr='',settled=false,exitCode:number|null=null,phase='worker_output';let reportedState:unknown,originalFailure:unknown;const stdoutHash=createHash('sha256');
+      // Result queries keep the original write's recovery semantics; requestless
+      // inspections have no scientific write or request ID to recover.
+      const requestlessRead=['get','evidence','source_proof_info'].includes(payload.action);
+      const hint=requestlessRead?'Read-only inspection; no scientific write or recovery request was submitted.':'Query image_result with original request_id='+String(payload.request_id??payload.query_request_id??'unknown')+'; do not automatically resubmit.';
+      const diagnostic=(error:unknown,state='outcome_unknown',providerErrorCode?:string)=>new ImageWorkerDiagnosticError((error instanceof Error?error.message:String(error))+'. '+hint,{phase,preview_phase:payload._preview_phase??null,preview_dispatch_by_this_attempt:payload._preview_phase==='reserve'?'not_dispatched':'not_inferred',provider_reported_state:reportedState??null,submission_state:state,...(originalFailure?{original_failure:originalFailure}:{}),...(providerErrorCode?{provider_error_code:providerErrorCode}:{}),request_id:payload.request_id??payload.query_request_id??null,provider:'external-image-workspace',workspace:this.workspace,exit_code:exitCode,stdout_bytes:bytes,stdout_sha256:stdoutHash.copy().digest('hex'),stderr_tail:stderr.replace(/((?:token|secret|api[_-]?key|authorization)\s*[:=]\s*)\S+/gi,'$1[REDACTED]').slice(-1024)});
       const finish=<Value,>(fn: (value: Value)=>void,value: Value)=>{if(!settled){settled=true;fn(value);}};
       child!.stdout.on('data',chunk=>{bytes+=chunk.length;stdoutHash.update(chunk);if(bytes>4*1024*1024){try{child!.kill();}catch{}finish(reject,diagnostic('Image worker response exceeds 4 MiB'));}else chunks.push(chunk);});
       child!.stderr.on('data',chunk=>{stderr=(stderr+chunk.toString()).slice(-4096);});
@@ -249,6 +252,12 @@ export class ImageWorkspace {
              reply.backend!==undefined&&reply.backend!=='external-image-workspace')throw new Error('Invalid original partial recovery evidence');
           finish(resolve,{isError:true,content:[{type:'text',text:JSON.stringify(reply,null,2)}]});return;
         }
+        const issue=reply.error as Record<string,unknown>|null;
+        if(requestlessRead&&code===1&&reply.ok===false&&reply.state==='failed'&&reply.backend==='external-image-workspace'&&reply.request_id===null&&
+           issue&&typeof issue==='object'&&!Array.isArray(issue)&&typeof issue.code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(issue.code)&&typeof issue.message==='string'&&issue.message.length<=16384){
+          reportedState='failed';finish(reject,diagnostic(new Error(issue.code+': '+issue.message),'read_only',issue.code));return;
+        }
+        if(payload.action==='result'&&code===1&&reply.ok===false&&reply.state==='failed'&&reply.backend==='external-image-workspace'&&reply.request_id===payload.query_request_id)originalFailure=reply.original_failure;
         if(code!==0||reply.ok!==true)throw new Error(((typeof reply.error==='object' ? `${(reply.error as Record<string,unknown>).code}: ${(reply.error as Record<string,unknown>).message}` : reply.error)||stderr||'Image operation failed') as string);
         const outcome=reply.result;if(!outcome||typeof outcome!=='object'||Array.isArray(outcome))throw new Error('Invalid image result');
         const result=outcome as Record<string,unknown>;

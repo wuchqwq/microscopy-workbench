@@ -6,7 +6,7 @@ import {parseResearcherArgs,startResearcherInspector} from './researcher_inspect
 import type {DesktopDiscardOperation} from '../lib/desktop_contracts.mjs';
 import {isRow,panelAddress,readWorkspaceStatus,desktopStartupError} from '../lib/desktop_contracts.mjs';
 
-interface DesktopSessionPorts {request:(action:'status'|'discard'|'close',revision?:number)=>Promise<unknown>;close:()=>Promise<void>;reply:(value:unknown)=>void;}
+interface DesktopSessionPorts {request:(action:'status'|'discard'|'close',revision?:number)=>Promise<unknown>;close:()=>Promise<void>;reply:(value:unknown)=>void;joint?:(action:'begin'|'query'|'cancel'|'record-review'|'send-public'|'interrupt',value:Record<string,unknown>)=>Promise<unknown>;}
 // A single bounded in-memory lifecycle receipt. It is not a scientific journal
 // or a new save database; querying it can only read current workspace status.
 export class DesktopBackendSession {
@@ -18,6 +18,12 @@ export class DesktopBackendSession {
   let id:unknown=null;
   try{
    if(Buffer.byteLength(line)>8192)throw new Error('Desktop command exceeds bound');const value:unknown=JSON.parse(line);
+   if(isRow(value)&&typeof value.action==='string'&&value.action.startsWith('joint-')){
+    id=value.id;const name=value.action.slice(6),allowed=name==='begin'?['id','action','expected_working_revision']:['record-review','send-public'].includes(name)?['id','action','review_id','context_sha256']:name==='cancel'?['id','action','review_id']:['id','action'];
+    if(!this.ports.joint||this.finished||!Number.isSafeInteger(id)||(id as number)<1||!['begin','query','cancel','record-review','send-public','interrupt'].includes(name)||Object.keys(value).some(k=>!allowed.includes(k))||name==='begin'&&(!Number.isSafeInteger(value.expected_working_revision)||(value.expected_working_revision as number)<0)||['cancel','record-review','send-public'].includes(name)&&(typeof value.review_id!=='string'||!/^[a-f0-9]{32}$/.test(value.review_id))||['record-review','send-public'].includes(name)&&(typeof value.context_sha256!=='string'||!/^[a-f0-9]{64}$/.test(value.context_sha256)))throw Error('Invalid private owner review command');
+    if(name==='begin'&&this.discard&&['running','unknown'].includes(this.discard.state))throw Error('Original discard remains unresolved');
+    const work=this.queue.then(()=>this.ports.joint!(name as 'begin'|'query'|'cancel'|'record-review'|'send-public'|'interrupt',value));this.queue=work.then(()=>{},()=>{});this.ports.reply({id,ok:true,state:await work});return;
+   }
    if(!isRow(value)||Object.keys(value).some(k=>!['id','action','expected_working_revision','original_id'].includes(k))||!Number.isSafeInteger(value.id)||(value.id as number)<1||typeof value.action!=='string'||!['status','discard','close','query-discard'].includes(value.action))throw new Error('Invalid desktop command');
    id=value.id;const action=value.action;if(action!=='status'&&(!Number.isSafeInteger(value.expected_working_revision)||(value.expected_working_revision as number)<0))throw new Error('Exact working revision required');if(action!=='query-discard'&&value.original_id!==undefined)throw new Error('Original command ID is only valid for a discard query');
    if(action==='query-discard'||action==='discard'&&this.discard?.command_id===id){
@@ -47,7 +53,7 @@ export async function runDesktopBackend(argv:readonly string[]):Promise<void>{
  };
  reply({type:'ready',schema_version:1,url:address.url,pid:process.pid,node:process.version});
  const input=createInterface({input:process.stdin,crlfDelay:Infinity});
- const session=new DesktopBackendSession({request,reply,close:async()=>{await instance.close();input.close();process.stdin.pause();}});
+ const session=new DesktopBackendSession({request,reply,joint:(action,value)=>instance.panel.jointCommand(action,value),close:async()=>{await instance.close();input.close();process.stdin.pause();}});
  input.on('line',line=>{void session.dispatch(line);});
  input.once('close',()=>{void session.drain().then(async()=>{
   if(!session.finished){session.finished=true;await (instance.close as (options?:{abnormal?:boolean})=>Promise<void>)({abnormal:true});}

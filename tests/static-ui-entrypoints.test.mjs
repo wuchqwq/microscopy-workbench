@@ -14,6 +14,8 @@ test('every emitted browser import is served under the unchanged restrictive CSP
  try{
   const origin=new URL(panel.url).origin,queue=['/app.mjs'],seen=new Set();
   while(queue.length){const route=queue.pop();if(seen.has(route))continue;seen.add(route);const response=await fetch(origin+route);assert.equal(response.status,200,route+' must be a real static module');assert.match(response.headers.get('content-type'),/javascript/);assert.match(response.headers.get('content-security-policy'),/script-src 'self'; style-src 'self';/);const body=await response.text();for(const match of body.matchAll(/\bfrom\s+['"]\.\/([^'"]+\.mjs)['"]/g))queue.push('/'+match[1]);}
-  for(const name of ['workspace-controls','roi-comparison','settle-workspace','window-workspace'])assert.ok(seen.has('/'+name+'.mjs'));
+  const html=await (await fetch(origin+'/')).text(),css=await (await fetch(origin+'/style.css')).text();assert.doesNotMatch(html,/<(?:textarea|img)\b[^>]*id="offline-(?:response|source-image)"[^>]*\bstyle=/);assert.match(css,/#research-lead-dialog #offline-response\{min-height:240px/);assert.match(css,/#offline-source-image\{/);
+  assert.match(html,/<link[^>]*href="\/style.css"/);assert.match(css,/#offline-evidence-cards>section\{/);assert.match(html,/<textarea id="offline-response"[^>]*readonly/);assert.match(html,/id="offline-hypothesis"/);
+  for(const name of ['workspace-controls','roi-comparison','settle-workspace','window-workspace','offline-research'])assert.ok(seen.has('/'+name+'.mjs'));
  }finally{await panel.close({abnormal:true});assert.equal(path.dirname(workspace),path.resolve(tmpdir()));assert.ok(path.basename(workspace).startsWith('mwb-static-routes-'));rmSync(workspace,{recursive:true,force:true});}
 });

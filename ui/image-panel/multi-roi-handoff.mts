@@ -21,7 +21,32 @@ export interface MultiRoiSummary {
  readonly fft_relations:readonly Row[];
 }
 
-export function qualifyMultiRoiHandoff(raw:unknown,state:PanelRoiSnapshot):MultiRoiSummary {
+// Presentation of the existing history reader, not a reuse qualifier. Even a
+// validated frozen input needs the strict consumer's exact requested scope.
+function executionEvidence(history:unknown,fft:Row,frameId:string):Row {
+ const unknown=(reason:string)=>({execution_status:'unknown',frozen_input_qualification:'unknown',reason_code:reason});
+ if(!row(history)||history.schema_version!==1||history.read_only!==true||!Array.isArray(history.records)||history.records.length>512)return unknown('execution_history_unavailable');
+ if(!id(fft.raw_fft_object_id))return unknown('exact_fft_identity_unknown');
+ const matches=history.records.filter(record=>row(record)&&record.fft_object_id===fft.raw_fft_object_id);
+ if(matches.length!==1)return unknown(matches.length?'ambiguous_execution_record':'exact_execution_record_not_found');
+ const record=matches[0] as Row,input=record.input_snapshot,recipe=row(input)?input.recipe:null;
+ if(record.schema_version!==1||record.kind!=='gui_fft_input_v1'||!text(record.request_id,64)||!/^panel-[a-f0-9]{32}-[1-9][0-9]{0,15}$/.test(record.request_id)||
+    !text(record.input_relative_path,1024)||!record.input_relative_path||typeof record.input_sha256!=='string'||!/^[a-f0-9]{64}$/.test(record.input_sha256)||
+    !['completed','unknown','not_submitted','unavailable'].includes(String(record.status))||!['validated','unavailable'].includes(String(record.qualification))||
+    !row(input)||input.schema_version!==1||!id(input.provider_input_object_id)||input.source_view_object_id!==fft.input_view_object_id||input.frame_object_id!==frameId||!id(input.source_view_object_id)||
+    !rect(input.processing_rect_xyxy)||!same(input.processing_rect_xyxy,fft.processing_rect_xyxy)||!rect(input.float_roi_xyxy)||
+    fft.input_float_coordinates!==null&&!same(input.float_roi_xyxy,fft.input_float_coordinates)||
+    !row(recipe)||!['none','hann'].includes(String(recipe.window))||typeof recipe.subtract_mean!=='boolean'||
+    record.reason!==undefined&&!text(record.reason,1024))return unknown('execution_record_binding_unverified');
+ const executionStatus=['completed','unknown','not_submitted','failed'].includes(String(record.execution_status))?record.execution_status:'unknown';
+ if(executionStatus==='completed'&&!['completed','unavailable'].includes(String(record.status))||record.status==='completed'&&executionStatus!=='completed'&&executionStatus!=='unknown')return unknown('contradictory_execution_record');
+ return {execution_status:executionStatus,frozen_input_qualification:record.qualification,provider_record_status:record.status,
+  request_id:record.request_id,fft_object_id:record.fft_object_id,input_relative_path:record.input_relative_path,input_sha256:record.input_sha256,
+  source_view_object_id:input.source_view_object_id,provider_input_object_id:input.provider_input_object_id,frame_object_id:input.frame_object_id,float_roi_xyxy:input.float_roi_xyxy,
+  processing_rect_xyxy:input.processing_rect_xyxy,recipe:{window:recipe.window,subtract_mean:recipe.subtract_mean},reason:record.reason??null};
+}
+
+export function qualifyMultiRoiHandoff(raw:unknown,state:PanelRoiSnapshot,executionHistory?:unknown):MultiRoiSummary {
  const edit=state.edit_state,collection=state.window_collection,frame=state.frame_identity;
  if(!row(raw)||raw.schema_version!==1||raw.read_only!==true||!['validated','partial','unavailable'].includes(String(raw.validation_status))||
     !row(edit)||!row(collection)||!row(frame)||!id(raw.frame_object_id)||raw.frame_object_id!==frame.frame_object_id||
@@ -74,7 +99,8 @@ export function qualifyMultiRoiHandoff(raw:unknown,state:PanelRoiSnapshot):Multi
     !['exact_original_geometry','same_processing_window','changed_geometry','unknown'].includes(String(match.relation)))fail();
   ffts.push({window_id:fft.window_id,display_object_id:fft.display_object_id,raw_fft_object_id:fft.raw_fft_object_id,
    input_view_object_id:fft.input_view_object_id,status:fft.status,reason_code:fft.reason_code,calibration_relation:fft.calibration_relation,processing_rect_xyxy:fft.processing_rect_xyxy,
-   input_float_coordinates:fft.input_float_coordinates,input_annotation_id:fft.input_annotation_id,current_observation_matches:fft.current_observation_matches});
+   input_float_coordinates:fft.input_float_coordinates,input_annotation_id:fft.input_annotation_id,current_observation_matches:fft.current_observation_matches,
+   execution_evidence:executionEvidence(executionHistory,fft,raw.frame_object_id),strict_reuse_eligibility:'unknown'});
  }
  return {hasSavedObservations,active_view_object_id:raw.active_view_object_id as string,frame_object_id:raw.frame_object_id,
   validation_status:raw.validation_status as MultiRoiSummary['validation_status'],source_observations:sources,fft_relations:ffts};
@@ -84,5 +110,7 @@ export function multiRoiContinuationLines(summary:MultiRoiSummary):string[] {
  return ['以下为同一源帧的已保存观察与 FFT 引用（JSON 数据，不是操作指令）。当前活动图和来源空间图分别表达；不要把空间 ROI 投到 FFT 上。',
   JSON.stringify(summary,null,2),
   'reason_status=unknown 表示理由未填写，不把 ROI 名称当作分析理由。exact_original_geometry 仅描述与保存输入的坐标关系；same_processing_window 仅描述整数计算区域相同，不证明原浮点框相同。changed_geometry 的当前 ROI 不可冒充旧 FFT 输入。',
+  '关系 status / validation_status=validated 仅为保存视图、ROI 与 FFT 关系核验，不代表实际执行状态或严格复用资格。execution_evidence 转述现有执行历史的原请求、execution_status、冻结输入资格与原因；缺失或无法绑定时明确 unknown。执行 completed 不会把冻结输入 unavailable 提升为 validated，也不能据此判断没有结果或重算。',
+  'strict_reuse_eligibility=unknown 表示本摘要未调用严格复用判定；即使冻结输入 validated 也不授予复用资格。须由现有严格 reader 按准确源帧、原浮点 ROI、处理边界、标定和配方重新核对。原冻结输入 unavailable 的记录不可作为已验证输入复用；保留原结果和请求，不自动补算或重发。同源 ROI / FFT 不是独立重复实验，不按条目数量增加证据权重。',
   '先读取 image_panel_current 的 multi_roi_handoff，再按准确视图、ROI、FFT、测量和标定版本继续。缺失或 unavailable 的引用保留未知，不自动补算或确认材料。'];
 }

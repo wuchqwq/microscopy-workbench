@@ -39,6 +39,25 @@ BUDGET = {"method_calls": 2, "gpa_band_pixels": 131072, "topology_path_samples":
 
 
 class MethodPolicyTest(unittest.TestCase):
+    def test_followup_text_limit_is_lossless_and_downstream_consistent(self):
+        first, info = seed(), information()
+        original = copy.deepcopy((first, info))
+        prefix = first["parameters"]["reference_text"] + "\nFollow-up reciprocal-basis source/assumption: "
+        info["followup_basis"] = "b" * (2000-len(prefix))
+        action = self.run_policy([first], info=info)["actions"][0]
+        self.assertEqual(action["kind"], "gpa")
+        self.assertEqual(len(action["parameters"]["reference_text"]), 2000)
+        for length in (2001-len(prefix), 2000):
+            info["followup_basis"] = "b" * length
+            before = copy.deepcopy((first, info))
+            result = self.run_policy([first], info=info)
+            self.assertEqual(result["decision"]["reason"], "followup_reference_text_too_long")
+            self.assertEqual(result["actions"][0]["kind"], "request_information")
+            self.assertEqual((first, info), before)
+        legacy = propose([first], None, info, BUDGET, [], reference_text_revision=1)
+        self.assertEqual(legacy["actions"][0]["kind"], "gpa")
+        self.assertEqual(first, original[0])
+
     def run_policy(self, seeds=None, info=None, budget=None, attempts=None, result=None):
         return propose(seeds or [seed()], result, information() if info is None else info,
                        BUDGET if budget is None else budget, [] if attempts is None else attempts)
