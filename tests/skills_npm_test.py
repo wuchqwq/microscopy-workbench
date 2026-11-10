@@ -1,6 +1,7 @@
 """Real offline npm exec contract tests, isolated from actual client configuration."""
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -48,7 +49,14 @@ class SkillsNpmTests(unittest.TestCase):
         spec = importlib.util.spec_from_file_location('build', ROOT / 'tools/build_skills_npm.py')
         builder = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(builder)
-        self.assertEqual(ARCHIVE.read_bytes(), builder.build())
+        rebuilt = builder.build()
+        def archive_files(data):
+            with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+                return {member.name: hashlib.sha256(archive.extractfile(member).read()).hexdigest()
+                        for member in archive if member.isfile()}
+        # Name a differing resource instead of dumping a huge compressed-byte diff.
+        self.assertEqual(archive_files(ARCHIVE.read_bytes()), archive_files(rebuilt))
+        self.assertEqual(hashlib.sha256(ARCHIVE.read_bytes()).hexdigest(), hashlib.sha256(rebuilt).hexdigest())
         package = json.loads((self.pkg / 'package.json').read_text())
         self.assertTrue(package['private'])
         for key in ['dependencies', 'optionalDependencies', 'devDependencies', 'scripts']:

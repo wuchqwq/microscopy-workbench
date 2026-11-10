@@ -64,14 +64,14 @@ def skill_plan(root=ROOT):
             if target.is_dir() and target.is_relative_to(source):
                 continue
             if not target.is_file():
-                missing.add(str(path.relative_to(root)) + ' -> ' + match['url'])
+                missing.add(path.relative_to(root).as_posix() + ' -> ' + match['url'])
                 continue
             # Never follow linked files through symlinks into a private tree.
             lexical = path.parent / urllib.parse.unquote(urllib.parse.urlsplit(match['url']).path)
             if lexical.is_symlink():
                 raise ValueError('Linked symlink: ' + str(lexical))
             if not target.is_relative_to(source) and target.suffix.lower() != '.md':
-                missing.add(str(path.relative_to(root)) + ' -> ' + match['url'] + ' [artifact not bundled; see source checkout]')
+                missing.add(path.relative_to(root).as_posix() + ' -> ' + match['url'] + ' [artifact not bundled; see source checkout]')
                 continue
             if target not in files:
                 files.add(target)
