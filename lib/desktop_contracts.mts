@@ -2,9 +2,28 @@
 import path from 'node:path';
 import {existsSync,realpathSync,statSync} from 'node:fs';
 
-export const DESKTOP_ACTIONS=['prepare-close','inspect-close-state','save','undo','redo','delete','roi','select','pan','fft','measure','return-spatial','tile','history','help'] as const;
+export const DESKTOP_ACTIONS=['prepare-close','inspect-close-state','prepare-joint-review','finish-joint-review','save','undo','redo','delete','roi','select','pan','fft','measure','return-spatial','tile','history','help'] as const;
 export type DesktopAction=typeof DESKTOP_ACTIONS[number];
 export interface DesktopActionReply {ok:boolean;error?:string;working_revision?:number;}
+export interface DesktopJointSelection {measurement_ids?:string[];statistics_ids?:string[];}
+export interface DesktopJointReviewRequest {selection?:DesktopJointSelection;correction?:{text:string;original_thread_id:string;original_turn_id:string;};}
+// The renderer may nominate saved IDs for a local review. It cannot carry an
+// approval, path, image bytes, model setting or generic backend command.
+export function readDesktopJointReviewRequest(value:unknown):DesktopJointReviewRequest {
+ if(!isRow(value)||Object.keys(value).some(k=>!['selection','correction'].includes(k)))throw Error('Invalid bounded local image review input');
+ const result:DesktopJointReviewRequest={};
+ if(value.selection!==undefined){
+  const s=value.selection;if(!isRow(s)||Object.keys(s).some(k=>!['measurement_ids','statistics_ids'].includes(k)))throw Error('Saved evidence IDs required');
+  const selected:DesktopJointSelection={};
+  for(const key of ['measurement_ids','statistics_ids'] as const){const ids=s[key];if(ids===undefined)continue;if(!Array.isArray(ids)||ids.length>32||!ids.every(v=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v))||new Set(ids).size!==ids.length)throw Error('Bounded distinct saved evidence IDs required');selected[key]=[...ids];}
+  result.selection=selected;
+ }
+ if(value.correction!==undefined){
+  const c=value.correction;if(!isRow(c)||Object.keys(c).some(k=>!['text','original_thread_id','original_turn_id'].includes(k))||typeof c.text!=='string'||!c.text.trim()||Buffer.byteLength(c.text)>2000||![c.original_thread_id,c.original_turn_id].every(v=>typeof v==='string'&&v.length>0&&v.length<=128&&!/[\u0000-\u001f]/.test(v)))throw Error('Exact prior thread/turn and bounded correction text required');
+  result.correction={text:c.text,original_thread_id:c.original_thread_id as string,original_turn_id:c.original_turn_id as string};
+ }
+ return result;
+}
 export interface DesktopOptions {node:string;workspace?:string;python?:string;source?:string;frame?:number;dataset?:number;component?:string;plane_axes?:number[];plane_indices?:(number|null)[];}
 export interface DesktopWorkspaceStatus {schema_version:1;status:string;dirty:boolean;working_revision:number;can_close:boolean;unresolved_request_id:string|null;recovery_available:boolean;}
 export const DESKTOP_HELP='Microscopy Workbench — Windows desktop prototype\nUsage: npm run desktop -- [--workspace ABS_DIRECTORY] [--source ABS_TIFF_OR_DM3_OR_DM4] [--python ABS_PYTHON] [--frame 1] [--dataset 1]\nWithout a workspace, native file dialogs select a workspace, source and Python. The launcher uses its own ordinary Node executable for scientific helpers. Install the separately locked desktop runtime with npm run desktop:install after npm ci and npm run build. This is a development-machine prototype, not a clean-Windows installer.';
@@ -53,6 +72,7 @@ export const desktopSecurityPreferences={sandbox:true,contextIsolation:true,node
 // Startup IPC carries only fixed diagnostics. Never send arbitrary provider
 // error text, capability URLs, image bytes or source paths through this port.
 const desktopStartupMessages={
+ WORKSPACE_LOCATION_MISMATCH:'复制的工作区仍绑定原位置，原记录已保留。请打开原目录，或新建工作区重新导入原图；不会自动迁移或重写历史。',
  PANEL_CLAIM_RETAINED:'未发布或不匹配的工作区启动占用记录已保留。请核对原启动记录；本应用不会自动解锁或重放计算。',
  PREVIOUS_HELPER_RUNNING:'先前工作区后台仍在运行，已拒绝重复启动。请返回原窗口或核对原后台状态。',
  RECOVERY_CONFLICT:'检测到不同的未保存工作状态和恢复副本，原件均已保留。请核对恢复记录后再打开工作区。',
@@ -78,6 +98,11 @@ export function readDesktopStartupError(value:unknown):DesktopStartupError {
 export const DESKTOP_RESTORE_WAIT_MS=150000;
 export interface DesktopDiscardOperation {command_id:number;expected_working_revision:number;state:'running'|'unknown'|'completed'|'failed';}
 export interface DesktopDiscardQuery {operation:DesktopDiscardOperation;status:DesktopWorkspaceStatus;}
+export interface DesktopCloseOperation {command_id:number;expected_working_revision:number;state:'running'|'workspace_closed'|'completed'|'failed'|'unknown';}
+export function readDesktopCloseOperation(value:unknown,commandId:number,revision:number):DesktopCloseOperation {
+ if(!isRow(value)||Object.keys(value).some(key=>!['command_id','expected_working_revision','state'].includes(key))||value.command_id!==commandId||value.expected_working_revision!==revision||!['running','workspace_closed','completed','failed','unknown'].includes(String(value.state)))throw new Error('原退出记录身份不匹配；保留窗口，不重新提交。');
+ return {command_id:commandId,expected_working_revision:revision,state:value.state as DesktopCloseOperation['state']};
+}
 export function readDesktopDiscardOperation(value:unknown,commandId:number,revision:number):DesktopDiscardOperation {
  if(!isRow(value)||Object.keys(value).some(k=>!['command_id','expected_working_revision','state'].includes(k))||value.command_id!==commandId||value.expected_working_revision!==revision||typeof value.state!=='string'||!['running','unknown','completed','failed'].includes(value.state))throw new Error('Original desktop discard receipt is unavailable or mismatched; preserve the original command');
  return {command_id:commandId,expected_working_revision:revision,state:value.state as DesktopDiscardOperation['state']};

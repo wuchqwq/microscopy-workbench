@@ -1,5 +1,9 @@
 # Agent guide: researcher-guided crystallography
 
+## Install Skills before using them
+
+For this repository's four scientific Skills, use the [standalone npx installer](docs/SKILLS_INSTALL.md). It needs only Node 22/24, accepts an explicit client Skills directory, and refuses overwrites by default. Use the GitHub URL and pin its full commit SHA; no npm registry package is published. Install only with the user's permission. Skill installation is separate from workbench/MCP setup.
+
 [English](README.agent.md) · [简体中文](README.agent.zh-CN.md) · [Researcher workflow](docs/WORKBENCH_WORKFLOW.md)
 
 ## Your role in the loop
@@ -21,6 +25,13 @@ Use [owned Panel recovery](docs/INSPECTOR_PANEL_RECOVERY.md) only where its regi
 When source proof is needed, inspect the advertised `image_source_proof`, `image_source_proof_info` and `image_source_proof_revoke` contracts. Recording a proof, adopting a reference and saving a workspace are separate actions. A retrospective proof preserves the FFT's original qualification; it cannot make unavailable pre-execution input evidence strictly reusable. Hash records are not digital signatures.
 
 ## Scientific routes
+
+For HRTEM, use the [capability and evidence map](docs/HRTEM_BASELINE.zh-CN.md)
+to connect the research question to the smallest useful existing route. The
+[saved-band comparison](docs/hrtem-saved-band-task-a.md) describes ROI/reference
+amplitude and wrapped phase from one eligible saved GPA. It is not raw-image
+ingress or a reason to dispatch topology. Return usable per-band observations,
+missing support and a next analysis suggestion separately from material claims.
 
 To continue from two saved Panel regions into a finite structure comparison,
 use the [manual ROI → crystal route](docs/MANUAL_CRYSTAL_WORKFLOW.md). Read its

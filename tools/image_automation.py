@@ -51,6 +51,15 @@ def run_child(workspace, request, label, action, **parameters):
     else:
         result = module._execute(dict(action=action, workspace=str(workspace.root),
                                       request_id=request_id, **parameters))
+    # This guard is returned by preview.prepare BEFORE a child reservation or
+    # dispatch. Do not misdirect clients to a child journal that was never made.
+    # Absence alone is not a recovery proof for any other error/unknown outcome.
+    if (action == "view" and not result.get("ok") and
+            result.get("error", {}).get("code") == "PREVIEW_OUTCOME_UNRESOLVED" and not original_path.exists()):
+        module.need(False, "Batch child %s: child preview was not reserved or dispatched; admission rejected it before journal creation. "
+                    "Do not query this nonexistent child ID. Recover the blocking original preview named below. "
+                    "The parent failure remains historical; do not replay it. %s" % (request_id, result["error"]["message"]),
+                    "BATCH_CHILD_FAILED")
     module.need(result.get("ok"), "Batch child %s did not complete: %s. Query original child ID; do not replay unknown work" %
                 (request_id, result.get("error")), "BATCH_CHILD_FAILED")
     if action == "view":

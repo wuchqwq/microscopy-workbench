@@ -1,5 +1,7 @@
 # Microscopy Workbench
 
+**Just the four Skills?** Use the [zero-dependency npx installer](docs/SKILLS_INSTALL.md) (about 410 KiB, Node 22/24, Windows/macOS/Linux). No npm account, Git clone, Python, or workbench installation is needed to copy them.
+
 **An AI-assisted crystallography workbench, with the researcher in the loop.**
 
 [English](README.md) · [简体中文](README.zh-CN.md)
@@ -35,6 +37,8 @@ The local Image Panel, structured CLI and MCP provider share saved scientific ob
 The [current status](docs/DEVELOPMENT_STATUS.md) separates implemented functionality from the tests actually performed. Individual method and acceptance reports retain their original dates and limitations.
 
 ## Quick start
+
+**Convenient installer:** [macOS / Linux / Windows setup and standalone Skills installation](docs/INSTALL.md). Preview with `./install.sh --dry-run` or `install.cmd --dry-run`; no automatic MCP or authentication changes.
 
 Use **Node.js 22.x or 24.x** and an independent scientific Python environment. **Python 3.13 is recommended and is the CI reference**. Scientific tools still declare Python 3.10+, which is not continuously CI-qualified; the optional configuration registrar needs 3.11+. See [runtime support](docs/CI_SUPPORT.md).
 

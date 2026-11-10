@@ -14,6 +14,11 @@ const semantics=()=>({version:1,scope:'candidate_measurement_and_assisted_interp
 const object=()=>({object_id:A,kind:'fft',dtype:'complex128',result_semantics:semantics(),annotations:[],panels:[]});
 class Element{constructor(){this.children=[];this.textContent='';this.hidden=false;}append(...v){this.children.push(...v);}replaceChildren(...v){this.children=v;}set innerHTML(_){assert.fail('No HTML injection');}}
 const document={createElement:()=>new Element()},text=e=>[e.textContent,...e.children.map(text)].join('\n');
+
+test('unassessed messages name the saved object and exact aspect scope without emptying other evidence',()=>{
+ const v=object(),before=structuredClone(v),host=new Element();renderResultSemantics(host,v,document);const output=text(host);
+ assert.ok(output.includes(A));assert.match(output,/只针对上述保存对象及各项所述范围/);assert.match(output,/本项未评估范围：this saved peak table/);assert.match(output,/不表示其它统计、FFT 或计算检查为空/);assert.match(output,/不自动选择问题或安排新分析/);assert.match(output,/finite_fft/);assert.deepEqual(v,before);
+});
 test('known semantics copied exactly without modifying source; tiers remain separate',()=>{const v=object(),before=JSON.stringify(v),p=projectResultSemantics(v);assert.deepEqual(p.result_semantics,v.result_semantics);p.result_semantics.numerical.scope='local';assert.equal(JSON.stringify(v),before);const host=new Element();renderResultSemantics(host,v,document);assert.match(text(host),/数值计算与检查/);assert.match(text(host),/尚未评估（不等于失败）/);assert.match(text(host),/针对所述判断证据不足/);assert.match(text(host),/不等于测量已获资格/);});
 test('legacy statuses unchanged; missing semantics is not_recorded, unrelated frames have no invented assessment',()=>{const v={kind:'feature_field',status:'valid'},before=JSON.stringify(v);assert.deepEqual(projectResultSemantics(v),{});assert.equal(resultSemanticsModel(v).status,'not_recorded');assert.equal(JSON.stringify(v),before);assert.equal(resultSemanticsModel({kind:'frame'}),null);});
 test('unknown version preserved exactly but unavailable; no normalization or inferred pass',()=>{const v=object();v.result_semantics.version=99;v.result_semantics.extra='future';assert.deepEqual(projectResultSemantics(v).result_semantics,v.result_semantics);assert.equal(resultSemanticsModel(v).status,'unavailable');});

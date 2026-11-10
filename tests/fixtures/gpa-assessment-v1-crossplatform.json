@@ -1,0 +1,138 @@
+{
+  "origin": "Unmodified values projected from the transferred Task A positive GPA; not regenerated",
+  "projection_scope": "Only analytic assessment inputs are projected here. Full original provider integration uses HRTEM_HANDOFF_ROOT without rewriting any original file.",
+  "commit": "7620f4accf1bb1e5857cf6347da3d077ef55a11c",
+  "object_id": "7d5e0f3f49524593a05a9850f053e1eb",
+  "object_manifest_sha256": "2df911677bd3b486e5b202bfeb915237d135ad4aba96f7eaa1cfeb222fb65cbc",
+  "report": {
+    "mask": {
+      "kind": "isotropic_gaussian_truncated",
+      "sigma_cycles_per_pixel": [
+        0.025,
+        0.025
+      ],
+      "support_radius_cycles_per_pixel": [
+        0.07500000000000001,
+        0.07500000000000001
+      ],
+      "truncation_sigma": 3.0
+    },
+    "calibration_nm_xy": null,
+    "algorithm": "classical-two-g-gpa-finite-v1"
+  },
+  "assessment": {
+    "material_strain_status": "insufficient_evidence",
+    "material_strain_validated": null,
+    "numerical_field_status": "computed_conditional",
+    "reason_codes": [
+      "single_domain_displacement_origin_not_independently_established",
+      "signal_and_model_uncertainty_not_quantified",
+      "band_limited_field_cannot_exclude_out_of_band_deformation",
+      "physical_xy_calibration_missing"
+    ],
+    "semantics_version": 1,
+    "spatial_transfer": {
+      "aperture_cutoff_cycles_per_pixel": [
+        0.07500000000000001,
+        0.07500000000000001
+      ],
+      "aperture_sigma_cycles_per_pixel": [
+        0.025,
+        0.025
+      ],
+      "frequency_unit": "cycles/pixel",
+      "model": "small phase, constant amplitude, isolated carrier at aperture centre; 1D modulation and interior central differences",
+      "nominal_untruncated_gaussian_real_space_fwhm_pixels": [
+        14.991250010342206,
+        14.991250010342206
+      ],
+      "response_samples": [
+        {
+          "central_difference_gain_1d": 0.9003163161571061,
+          "first_order_strain_gain_1d_per_reflection": [
+            0.0,
+            0.0
+          ],
+          "modulation_period_pixels": 8.0,
+          "phase_gain_per_reflection": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "central_difference_gain_1d": 0.9744953584044327,
+          "first_order_strain_gain_1d_per_reflection": [
+            0.04281633787853418,
+            0.04281633787853418
+          ],
+          "modulation_period_pixels": 16.0,
+          "phase_gain_per_reflection": [
+            0.04393693362340741,
+            0.04393693362340741
+          ]
+        },
+        {
+          "central_difference_gain_1d": 0.9935868511442058,
+          "first_order_strain_gain_1d_per_reflection": [
+            0.4548972082714242,
+            0.4548972082714242
+          ],
+          "modulation_period_pixels": 32.0,
+          "phase_gain_per_reflection": [
+            0.45783336177161427,
+            0.45783336177161427
+          ]
+        },
+        {
+          "central_difference_gain_1d": 0.9983943930356184,
+          "first_order_strain_gain_1d_per_reflection": [
+            0.8212568261357331,
+            0.8212568261357331
+          ],
+          "modulation_period_pixels": 64.0,
+          "phase_gain_per_reflection": [
+            0.8225775623986645,
+            0.8225775623986645
+          ]
+        },
+        {
+          "central_difference_gain_1d": 0.9995984531496791,
+          "first_order_strain_gain_1d_per_reflection": [
+            0.951962388840359,
+            0.951962388840359
+          ],
+          "modulation_period_pixels": 128.0,
+          "phase_gain_per_reflection": [
+            0.9523447998951764,
+            0.9523447998951764
+          ]
+        },
+        {
+          "central_difference_gain_1d": 0.9998996042161418,
+          "first_order_strain_gain_1d_per_reflection": [
+            0.9877679946148881,
+            0.9877679946148881
+          ],
+          "modulation_period_pixels": 256.0,
+          "phase_gain_per_reflection": [
+            0.9878671723140003,
+            0.9878671723140003
+          ]
+        },
+        {
+          "central_difference_gain_1d": 0.9999749004870501,
+          "first_order_strain_gain_1d_per_reflection": [
+            0.9969278710349583,
+            0.9969278710349583
+          ],
+          "modulation_period_pixels": 512.0,
+          "phase_gain_per_reflection": [
+            0.9969528940670334,
+            0.9969528940670334
+          ]
+        }
+      ],
+      "scope": "analytic transfer approximation, not measured resolution, uncertainty, SNR or a corrected strain field; finite-grid, truncation tails, large phase and boundaries can differ"
+    }
+  }
+}

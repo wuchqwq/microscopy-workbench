@@ -52,3 +52,13 @@ evidence are separate scopes. No real-host qualification follows from a
 successful catalog or synthetic test. Never use private specimen data,
 credentials or vendor binaries as fixtures. Do not publish or merge without
 owner authorization.
+
+## Installing the scientific Skills
+
+When asked to install this repository's Skills, start with
+[the standalone npx instructions](docs/SKILLS_INSTALL.md) or
+[中文说明](docs/SKILLS_INSTALL.zh-CN.md). Use an explicit client Skills directory
+and a reviewed GitHub commit URL. The private, dependency-free tarball copies
+Skills only; it does not configure MCP or install the scientific runtime.
+See `packages/skills-installer/` for source and `tools/build_skills_npm.py` for
+reproducible packaging. Do not run an unqualified registry package name.

@@ -1,7 +1,7 @@
 {
   "name": "microscopy-workbench",
-  "version": "0.6.0",
-  "description": "Reusable microscopy with inspectable next-analysis proposals, incremental structural fields and bounded scientific recovery.",
+  "version": "0.6.1",
+  "description": "Question-driven microscopy observation, traceable corrections and bounded crystallographic hypothesis comparison.",
   "author": {
     "name": "wuchqwq"
   },
@@ -12,9 +12,9 @@
   "requires_local_executor": true,
   "interface": {
     "displayName": "Microscopy Workbench",
-    "shortDescription": "Reusable scientific image analysis and candidate comparisons",
+    "shortDescription": "Question-driven microscopy with traceable evidence",
     "defaultPrompt": [
-      "Use Microscopy Workbench to inspect my image, choose local FFT windows, measure reflections and compare explicit structural candidates."
+      "Use microscopy-router to inspect my image and question, choose a supported route, and revise conclusions when I correct the evidence."
     ]
   }
 }

@@ -39,7 +39,7 @@ export interface MeasurementScope {
 }
 export interface MeasurementRecord {
  readonly object_id?: string;readonly parent_object_id?: string;readonly request_id?: string;readonly points?: readonly (readonly number[])[];
- readonly coordinate_space?: string;readonly measurement_domain?: string;readonly dc_reference_point_index?: unknown;
+ readonly source_text?:unknown;readonly measurement_type?:string;readonly angle_image_degrees?:unknown;readonly angle_physical_degrees?:unknown;readonly physical_angle?:boolean;readonly coordinate_space?: string;readonly measurement_domain?: string;readonly dc_reference_point_index?: unknown;
  readonly physical_distance?: unknown;readonly distance_physical?: unknown;readonly physical_unit?: unknown;
  readonly physical_frequency_magnitude?: unknown;readonly physical_frequency_unit?: unknown;
  readonly d_spacing?: unknown;readonly d_spacing_unit?: unknown;readonly period?: unknown;readonly period_unit?: unknown;
@@ -86,7 +86,7 @@ export interface AnnotationLayoutItem {
 }
 export interface AnnotationLegend {key: string;label: string;color: string;shape: string;status: string;layer: string;dash: number[];}
 export interface AnnotationLayout {items: AnnotationLayoutItem[];legend: AnnotationLegend[];suggestedUpdates: {id: string | undefined;presentation: AnnotationPresentation}[];mode: string;preset: string;scale: number;width: number;height: number;}
-export interface AnnotationLayoutOptions {preset?: string;mode?: string;scale?: unknown;width?: unknown;height?: unknown;layers?: Readonly<Record<string,boolean>>;selectedId?: string;hoverId?: string;arrange?: boolean;}
+export interface AnnotationLayoutOptions {preset?: string;mode?: string;scale?: unknown;width?: unknown;height?: unknown;layers?: Readonly<Record<string,boolean>>;selectedId?: string;hoverId?: string;arrange?: boolean;quietRoiLabels?:boolean;}
 export interface FigureLayoutOptions {
  fontSize?: unknown;letter?: unknown;legend?: boolean;showLegend?: boolean;legendFontSize?: unknown;legendColumns?: number;legendX?: unknown;legendY?: unknown;
  scaleBar?: {readonly x: number;readonly y: number;readonly length: number;readonly color?: string;readonly font_size?: unknown;readonly label?: unknown} | null;

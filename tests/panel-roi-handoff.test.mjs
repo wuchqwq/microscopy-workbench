@@ -124,12 +124,16 @@ test('pair inspection is bounded and never claims a truncated or ambiguous ROI s
 test('Panel MCP response adds handoff while preserving old view and actual image content fields',()=>{
  const source=state(),png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
  source.png_base64=png;source.clean_png_base64=png;source.domain_png_base64=null;source.tools=[];
+ source.research_leads={version:1,entries:[]};source.research_leads_reference_status='not_revalidated_by_state_read';
+ source.research_question={version:1,text:'Observe whole image first',context_object_id:source.object.object_id,frame_object_id:A,recorded_utc:'2026-11-06T20:00:00.000Z'};
  source.window_collection={schema_version:1,revision:2,frame_object_id:A,active_window_id:'active-window',windows:[{window_id:'active-window',object_id:source.object.object_id,role:'source'},{window_id:'retained-window',object_id:'e'.repeat(32),role:'fft'}]};
  const manager=new ImagePanelManager({workspace:path.resolve('unused-readonly-panel-handoff'),python:'unused',inspect(){throw Error('No scientific inspection should run');}});
  manager.getConnection=()=>({schema_version:1,panel_id:P,port:12345,token:'unit-token',pid:1});
  const before=structuredClone(source),result=manager.response(P,source),data=JSON.parse(result.content[0].text);
  const {png_base64,clean_png_base64,domain_png_base64,tools,...expectedView}=source;
  assert.deepEqual(data.view,expectedView);assert.deepEqual(data.roi_handoff,panelRoiHandoff(source));
+ assert.equal(data.stem_handoff.read_only,true);assert.equal(data.stem_handoff.source_view_object_id,source.object.object_id);assert.equal(data.stem_handoff.region_catalog_reference,'roi_handoff.saved_rectangles');assert.equal(data.stem_handoff.regions,undefined);assert.equal(data.stem_handoff.s2.execution,'not_dispatched');
+ assert.deepEqual(data.view.research_question,source.research_question,'MCP reads the same workspace intent, not a duplicate scientific state');
  assert.equal(result.content[1].type,'image');assert.equal(result.content[1].data,png);
  assert.equal(result.content.filter(item=>item.type==='image').length,1,'Retained windows do not silently become extra active image inputs');
  assert.deepEqual(data.view.window_collection,source.window_collection);assert.deepEqual(data.view.selection,source.selection);

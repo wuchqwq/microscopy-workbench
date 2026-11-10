@@ -14,8 +14,10 @@ from PIL import Image, ImageDraw
 
 try:
     from . import image_gpa_core as core
+    from . import image_gpa_assessment_validation as assessment_validation
 except ImportError:
     import image_gpa_core as core
+    import image_gpa_assessment_validation as assessment_validation
 
 FIELDS = {
     "gpa": {"object_id", "source_domain", "source_domain_text", "g_vectors", "mask_sigma", "reference_rect", "reference_mode", "reference_text", "amplitude_floor_relative", "previous_gpa_id", "max_size"},
@@ -284,12 +286,22 @@ def validate_references(workspace, metadata, api):
              metadata["report"]["reference_rect_xyxy"] == parameters["reference_rect"] and
              metadata["report"]["g_vectors_cycles_per_pixel"] == parameters["g_vectors"],
              "GPA scientific contract differs from submitted parameters", "CORRUPT_OBJECT")
+    validation = None
     if "evidence_assessment" in metadata or "evidence_assessment" in metadata["report"]:
+        sigma = parameters["mask_sigma"]
+        api.need(assessment_validation._same(metadata["report"]["mask"], {"kind": "isotropic_gaussian_truncated",
+                 "sigma_cycles_per_pixel": [sigma, sigma], "truncation_sigma": 3.,
+                 "support_radius_cycles_per_pixel": [3.*sigma, 3.*sigma]}),
+                 "GPA report mask differs from submitted parameters", "CORRUPT_OBJECT")
         expected = core.evidence_assessment(metadata["report"])
-        api.need(metadata.get("evidence_assessment") == expected and metadata["report"].get("evidence_assessment") == expected,
-                 "GPA evidence semantics or analytic transfer changed", "CORRUPT_OBJECT")
+        try:
+            validation = assessment_validation.validate(metadata.get("evidence_assessment"),
+                metadata["report"].get("evidence_assessment"), expected, metadata["report"])
+        except (ValueError, TypeError, KeyError, ArithmeticError) as error:
+            api.need(False, "GPA evidence semantics or analytic transfer changed: "+str(error), "CORRUPT_OBJECT")
     api.need(len(metadata.get("history", [])) <= 8, "GPA history exceeds budget", "CORRUPT_OBJECT")
     for old in metadata.get("history", []):
         api.need(type(old.get("object_id")) is str and api.OBJECT_ID.fullmatch(old["object_id"]), "Invalid GPA historical identity", "CORRUPT_OBJECT")
         file = workspace.root / "objects" / old["object_id"] / "object.json"
         api.need(file.is_file() and not file.is_symlink() and api.sha_file(file) == old["manifest_sha256"], "Historical GPA manifest changed", "CORRUPT_OBJECT")
+    return validation

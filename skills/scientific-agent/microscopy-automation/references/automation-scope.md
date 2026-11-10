@@ -26,7 +26,7 @@ old request outcomes. A whole-image field is not a prerequisite.
 
 The Agent can propose ROIs and hypotheses; label them as Agent proposals, not
 human selections or confirmed defects. Ask for missing inputs when they affect
-physical interpretation. Do not fit the experiment's calibration to a candidate.
+physical interpretation. Do not present a scale fitted to a candidate as an independent experimental calibration. If the researcher explicitly asks for model-conditioned scale exploration, follow [conditional scale hypotheses](../../crystallography-compare/references/conditional-calibration.md); keep that side record conditional and separate from the fixed-scale provider comparison/registration route.
 
 Use existing notes, immutable results and evidence references to keep four things
 distinct: observed phenomena and sources; candidate explanations and reasons for

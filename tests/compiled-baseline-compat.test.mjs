@@ -39,6 +39,102 @@ function normalizeNamedFrameAncestryExtension(current,frozen){
  info.description=old.description;
 }
 
+const FROZEN_IMAGE_EXPORT_DESCRIPTION='Write scientific NPY or saved sparse feature JSON/CSV, available display PNG and provenance to a new output directory under an EXISTING parent. OUTPUT_PARENT_MISSING requires an existing parent, not merely another basename. Refuse overwrite; data handoff, not DM native SaveAs.';
+const REPORT_EXPORT_GUIDANCE=' Saved-band comparison exports also include method-decision.json and available peak-comparison.txt; candidate-review exports include discovery-review.json and available candidate-review.txt. Report export does not include its parent GPA arrays; export each GPA object separately for amplitude/masks.';
+function normalizeNamedReportExportGuidance(current,frozen){
+ const selected=current.filter(tool=>tool.name==='image_export'),original=frozen.filter(tool=>tool.name==='image_export');
+ assert.equal(selected.length,1,'Exactly one existing image_export retains its name');
+ assert.equal(original.length,1,'Exactly one original frozen image_export is required');
+ const tool=selected[0],old=original[0];
+ assert.equal(old.description,FROZEN_IMAGE_EXPORT_DESCRIPTION,'Never rewrite the original frozen description');
+ assert.equal(tool.description,FROZEN_IMAGE_EXPORT_DESCRIPTION+REPORT_EXPORT_GUIDANCE,
+  'Only the reviewed report-file guidance may extend image_export; all original refusal guidance remains');
+ const {description:currentDescription,...currentContract}=tool;
+ const {description:oldDescription,...oldContract}=old;
+ assert.deepEqual(currentContract,oldContract,'Report guidance changes no name, schema or other tool metadata');
+ tool.description=old.description;
+}
+
+// Fixed, reviewed Mac r5 deltas only. This is not a regenerated baseline:
+// each old value is checked against the original Git catalog, each new value
+// is checked in full, and all unlisted fields still face exact comparison.
+const MAC_R5_EXTENSIONS=JSON.parse(readFileSync(new URL('./fixtures/mac-r5-catalog-extensions.json',import.meta.url),'utf8'));
+function fieldAt(tool,field){
+ const keys=field.split('.'),key=keys.pop();
+ return {parent:keys.reduce((value,name)=>value[name],tool),key};
+}
+function normalizeNamedMacR5Extensions(current,frozen){
+ for(const {name,changes} of MAC_R5_EXTENSIONS){
+  const selected=current.filter(tool=>tool.name===name),original=frozen.filter(tool=>tool.name===name);
+  assert.equal(selected.length,1,`Exactly one current ${name}`);
+  assert.equal(original.length,1,`Exactly one frozen ${name}`);
+  for(const change of changes){
+   const {parent,key}=fieldAt(selected[0],change.path),old=fieldAt(original[0],change.path);
+   assert.equal(Object.hasOwn(old.parent,old.key),!change.added,`${name}.${change.path}: frozen field presence`);
+   assert.deepEqual(old.parent[old.key],change.before,`${name}.${change.path}: frozen value is immutable`);
+   assert.deepEqual(parent[key],change.after,`${name}.${change.path}: only the exact reviewed extension is allowed`);
+   if(change.added){
+    // A new property remains optional at its actual enclosing object level.
+    const container=fieldAt(selected[0],change.path.slice(0,change.path.lastIndexOf('.properties.')));
+    const schema=container.parent[container.key];
+    assert.ok(!(schema.required??[]).includes(key),`${name}.${change.path}: must remain optional`);
+    delete parent[key];
+   }else parent[key]=structuredClone(change.before);
+  }
+ }
+}
+
+test('named Mac r5 deltas reject changed limits, prose, requirements and unrelated legacy drift',()=>{
+ const frozen=MAC_R5_EXTENSIONS.map(({name,changes})=>{
+  const tool={name,description:'unchanged legacy description',inputSchema:{type:'object',additionalProperties:false,required:['object_id'],properties:{object_id:{type:'string'}}}};
+  for(const change of changes){
+   const keys=change.path.split('.'),key=keys.pop();let parent=tool;
+   for(const part of keys)parent=parent[part]??=(part==='properties'?{}:{type:'object',properties:{},required:[]});
+   if(!change.added)parent[key]=structuredClone(change.before);
+  }
+  return tool;
+ });
+ const original=structuredClone(frozen),current=structuredClone(frozen);
+ for(const {name,changes} of MAC_R5_EXTENSIONS)for(const change of changes){
+  const {parent,key}=fieldAt(current.find(tool=>tool.name===name),change.path);parent[key]=structuredClone(change.after);
+ }
+ const check=value=>{const copy=structuredClone(value);normalizeNamedMacR5Extensions(copy,frozen);assert.deepEqual(copy,frozen);};
+ check(current);
+ for(const {name,changes} of MAC_R5_EXTENSIONS){
+  for(const change of changes){
+   const changed=structuredClone(current),tool=changed.find(tool=>tool.name===name),{parent,key}=fieldAt(tool,change.path);
+   parent[key]=typeof change.after==='number'?change.after+1:typeof change.after==='string'?change.after+' unreviewed':{...change.after,unreviewed:true};
+   assert.throws(()=>check(changed),`${name}.${change.path}: altered extension must fail`);
+   delete parent[key];assert.throws(()=>check(changed),`${name}.${change.path}: missing extension must fail`);
+   if(change.after&&typeof change.after==='object'){
+    // Every nested limit, enum member, provenance sentence and required key
+    // is guarded, rather than merely checking the extension's outer shape.
+    const leaves=(value,prefix=[])=>Object.entries(value).flatMap(([key,item])=>item&&typeof item==='object'?leaves(item,[...prefix,key]):[[...prefix,key]]);
+    for(const keys of leaves(change.after)){
+     const nested=structuredClone(current),target=fieldAt(nested.find(tool=>tool.name===name),change.path);
+     const leaf=keys.slice(0,-1).reduce((value,key)=>value[key],target.parent[target.key]),key=keys.at(-1);
+     leaf[key]=typeof leaf[key]==='number'?leaf[key]+1:typeof leaf[key]==='boolean'?!leaf[key]:leaf[key]+' unreviewed';
+     assert.throws(()=>check(nested),`${name}.${change.path}.${keys.join('.')}: nested drift must fail`);
+    }
+   }
+   if(change.added){
+    const required=structuredClone(current),target=required.find(tool=>tool.name===name);
+    const container=fieldAt(target,change.path.slice(0,change.path.lastIndexOf('.properties.')));
+    (container.parent[container.key].required??=[]).push(key);
+    assert.throws(()=>check(required),`${name}.${change.path}: required extension must fail`);
+   }
+  }
+  for(const mutate of [tool=>tool.inputSchema.properties.object_id.type='number',tool=>tool.inputSchema.required=[],tool=>tool.inputSchema.additionalProperties=true,tool=>tool.inputSchema.properties.unreviewed={type:'boolean'}]){
+   const changed=structuredClone(current);mutate(changed.find(tool=>tool.name===name));assert.throws(()=>check(changed));
+  }
+  const missing=current.filter(tool=>tool.name!==name);assert.throws(()=>check(missing));
+  assert.throws(()=>check([...current,structuredClone(current.find(tool=>tool.name===name))]));
+ }
+ const changedFrozen=structuredClone(frozen);changedFrozen[0].description+=' rewritten history';
+ assert.throws(()=>normalizeNamedMacR5Extensions(structuredClone(current),changedFrozen));
+ assert.deepEqual(frozen,original,'The original baseline is never mutated');
+});
+
 test('additive GPA catalog still rejects removed/modified legacy tools and unexpected additions',()=>{
  const frozen=[{name:'image_fft',description:'frozen',inputSchema:{type:'object'}}];
  const current=[...GPA_ADDITIONS.map(name=>({name})),...frozen];
@@ -66,6 +162,33 @@ test('named optional frame ancestry normalization does not hide changes to froze
   value=>value[1].description='changed unrelated FFT description',
  ]){const changed=structuredClone(current);mutate(changed);assert.throws(()=>check(changed));}
  assert.deepEqual(frozen[0].description,FROZEN_IMAGE_INFO_DESCRIPTION,'Normalizing a copy never edits the frozen catalog');
+});
+
+test('named report export guidance preserves exact legacy contracts and rejects unreviewed prose',()=>{
+ const frozen=[{name:'image_export',description:FROZEN_IMAGE_EXPORT_DESCRIPTION,inputSchema:{type:'object',additionalProperties:false,required:['object_id','output_dir','request_id'],properties:{object_id:{type:'string'},output_dir:{type:'string',minLength:1},request_id:{type:'string'}}}},{name:'image_fft',description:'frozen FFT description',inputSchema:{type:'object',required:['object_id']}}];
+ const original=structuredClone(frozen),current=structuredClone(frozen);current[0].description+=REPORT_EXPORT_GUIDANCE;
+ const check=value=>{const retained=structuredClone(value);normalizeNamedReportExportGuidance(retained,frozen);assert.deepEqual(retained,frozen);};check(current);
+ assert.equal(current[0].description,FROZEN_IMAGE_EXPORT_DESCRIPTION+REPORT_EXPORT_GUIDANCE,'Normalization touches a comparison copy only');
+ for(const mutate of [
+  value=>value[0].description=REPORT_EXPORT_GUIDANCE,
+  value=>value[0].description=FROZEN_IMAGE_EXPORT_DESCRIPTION,
+  value=>value[0].description=value[0].description.replace('Refuse overwrite; ',''),
+  value=>value[0].description=value[0].description.replace('Report export does not include its parent GPA arrays','Report export includes its parent GPA arrays'),
+  value=>value[0].description+=' unreviewed promise',
+  value=>value[0].name='renamed_export',
+  value=>value.splice(0,1),
+  value=>value.push(structuredClone(value[0])),
+  value=>value[0].inputSchema.properties.output_dir.type='number',
+  value=>value[0].inputSchema.properties.object_id.type='number',
+  value=>value[0].inputSchema.required.pop(),
+  value=>value[0].inputSchema.properties.unexpected_flag={type:'boolean'},
+  value=>value[0].inputSchema.additionalProperties=true,
+  value=>value[0].outputSchema={type:'object'},
+  value=>value[1].description='changed unrelated FFT description',
+ ]){const changed=structuredClone(current);mutate(changed);assert.throws(()=>check(changed));}
+ const changedBaseline=structuredClone(frozen);changedBaseline[0].description+=' rewritten history';
+ assert.throws(()=>normalizeNamedReportExportGuidance(structuredClone(current),changedBaseline));
+ assert.deepEqual(frozen,original,'The entire frozen catalog remains unchanged');
 });
 
 function snapshot(directory,prefix=''){
@@ -166,7 +289,7 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // additive changes, never drop descriptions or weaken old scientific tests.
   // #126 authorizes exactly these three additive metadata tools; the frozen
   // catalog and every retained legacy tool/schema remain compared below.
-  const additions=['image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge','image_source_proof','image_source_proof_info','image_source_proof_revoke'];
+  const additions=['image_column_candidates','image_column_fit','image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge','image_source_proof','image_source_proof_info','image_source_proof_revoke'];
   assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
   const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
   // #70 intentionally changes preview admission, not old scientific arguments.
@@ -206,9 +329,13 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // extension. Validate its entire schema/guidance before normalizing only it;
   // every remaining frozen property and every other description stay exact.
   normalizeNamedFrameAncestryExtension(retainedSchema,schema);
+  // Owner-authorized HRTEM report guidance is one exact prose-only extension;
+  // validate it and the unchanged entire export contract before normalizing.
+  normalizeNamedReportExportGuidance(retainedSchema,schema);
+  normalizeNamedMacR5Extensions(retainedSchema,schema);
   const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
   for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
-  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except the named optional presentation/ancestry controls and additive F1a/F4 tools');
+  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except named presentation/ancestry controls, exact report export guidance, reviewed Mac r5 extensions and additive F1a/F4 tools');
   const unknown=await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}});
   const oldText=refused.result.content[0].text,newText=unknown.result.content[0].text;
   assert.ok(newText.startsWith(oldText+'. Query image_result with original request_id=unknown-original-request;'));

@@ -169,7 +169,7 @@ function interactionGate(state:PanelRoiSnapshot):PanelInteractionGate {
   if(save?.pending===true)reasons.push('draft_save_pending');
   if(typeof save?.error==='string')reasons.push('draft_save_failed');
  }
- if(slots(state.last_operation)?.state==='submitted')reasons.push('operation_unresolved');
+ if(['submitted','unknown','source_recheck_pending'].includes(String(slots(state.last_operation)?.state)))reasons.push('operation_unresolved');
  const unknown=reasons.some(r=>r==='draft_state_unknown'||r==='draft_persistence_unknown');
  const blocked=reasons.some(r=>r!=='draft_state_unknown'&&r!=='draft_persistence_unknown');
  return {status:blocked?'blocked':unknown?'unknown':'ready',reasons,requires_fresh_read:true};

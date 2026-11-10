@@ -28,13 +28,13 @@ export function savedWindowAnnotationLayout(object:unknown,imageSize:readonly nu
   if(candidates.length!==1)return null;
   try{const coordinates=transformCoordinates(anchor.coordinates as number[],candidates[0] as WirePanel,{edges:['rectangle','polygon'].includes(value.kind),inverse:true});if(!coordinates.every(Number.isFinite))return null;marks.push({...value,kind:value.kind,coordinates} as RenderedMark);}catch{return null;/* Keep the baked asset when a legacy anchor cannot be qualified. */}
  }
- return layoutAnnotations(marks,{width,height,scale,preset:object.array_domain==='frequency'||(object.panels[0] as Row|undefined)?.domain==='frequency'?'diffraction':'real-space',mode:'analysis'});
+ return layoutAnnotations(marks,{width,height,scale,preset:object.array_domain==='frequency'||(object.panels[0] as Row|undefined)?.domain==='frequency'?'diffraction':'real-space',mode:'analysis',quietRoiLabels:true});
 }
 
 export function createSavedAnnotationOverlay(document:BrowserDocument,object:unknown,imageSize:readonly number[],scale:number):BrowserElement|null {
  const layout=savedWindowAnnotationLayout(object,imageSize,scale);if(!layout)return null;
  const layer=document.createElement('div');layer.className='window-annotation-overlay';layer.setAttribute('aria-label','此保存版本的标注；激活图像后可编辑');layer.setAttribute('data-saved-object-id',(object as Row).object_id);
- layer.innerHTML=renderAnnotationsSVG(layout,{width:layout.width,height:layout.height,interactive:false});return layer;
+ layer.innerHTML=renderAnnotationsSVG(layout,{width:layout.width,height:layout.height,interactive:false,figureLayout:{legend:false}});return layer;
 }
 
 function spatialPanel(object:unknown,collection:unknown):WireSpatialPanel|null {
@@ -91,8 +91,8 @@ export function createSourceOverlay(document:BrowserDocument,object:unknown,coll
  if(imageSize.length!==2||!imageSize.every(n=>Number.isFinite(n)&&n>0&&n<=1e7)||!Number.isFinite(scale)||scale<1e-6||scale>1e4)return null;
  const panel=spatialPanel(object,collection),width=imageSize[0]!,height=imageSize[1]!;
  if(!panel||!inside(panel.image_rect_xyxy,[0,0,width,height]))return null;
- const frozen=activeFftInputOutline(object,collection,mappingFingerprint),outlines=[...sourceWindowOutlines(object,collection),...frozen?[frozen]:[]];if(!outlines.length)return null;
- const labels=sourceWindowLabelLayout(object,collection,imageSize,scale,mappingFingerprint);
+ const frozen=activeFftInputOutline(object,collection,mappingFingerprint),active=row(collection)?collection.active_window_id:null,outlines=[...sourceWindowOutlines(object,collection).filter(outline=>outline.window_id===active),...frozen?[frozen]:[]];if(!outlines.length)return null;
+ const allOutlines=sourceWindowOutlines(object,collection),allLabels=sourceWindowLabelLayout(object,collection,imageSize,scale,mappingFingerprint),labels=outlines.map(outline=>outline===frozen?allLabels[allOutlines.length]:allLabels[allOutlines.findIndex(value=>value.window_id===outline.window_id)]);
  const layer=document.createElement('div');layer.className='window-source-overlay';layer.setAttribute('style','pointer-events:none');
  const namespace='http://www.w3.org/2000/svg',svg=document.createElementNS(namespace,'svg');svg.setAttribute('class','window-source-svg');svg.setAttribute('width',width);svg.setAttribute('height',height);svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('role','img');svg.setAttribute('pointer-events','none');svg.setAttribute('aria-label',frozen?'FFT 整数计算区域与当前 FFT 经核对的冻结浮点原输入选区；均不是当前编辑选区':'FFT 整数计算区域；不是当前选区或原始浮点 ROI');
  const fontSize=11/scale,gap=3/scale,clamp=(value:number,low:number,high:number)=>Math.max(low,Math.min(high,value));

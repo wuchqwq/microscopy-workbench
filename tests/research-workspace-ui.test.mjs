@@ -6,9 +6,71 @@ import {roiObservationModel} from '../ui/image-panel/roi-observations.mjs';
 const A='a'.repeat(32),B='b'.repeat(32),C='c'.repeat(32),P='d'.repeat(32),E='e'.repeat(32);
 const mark=(id,x)=>({annotation_id:id,kind:'rectangle',text:id,note:`Why ${id}`,status:'hypothesized',anchor:{source_object_id:A,coordinate_space:'source_pixels',coordinates:[x,0,x+16,16]}});
 function state(){return {panel_id:P,object:{object_id:B,annotations:[mark('ROI 1',0),mark('ROI 2',16)],panels:[{domain:'spatial_pixels',source_object_id:A,source_rect_xyxy:[0,0,32,16],image_rect_xyxy:[0,0,320,160]}],xy_calibration:{calibration_id:C,revision:1,status:'active',coordinate_domain:'real_space',source:'user_statement_not_independently_verified',xy_scale:{x:.02,y:-.03,unit:'nm'}}},frame_identity:{frame_object_id:A,frame_index:0},source_identity:{filename:'public.tiff'},edit_state:{dirty:false,gesture_active:false},selection:null};}
-class Element{constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.value='';this.textContent='';this.disabled=false;this.hidden=false;}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=[...nodes];}querySelectorAll(selector){return this.children.flatMap(n=>[...(n.tagName===selector.toUpperCase()?[n]:[]),...n.querySelectorAll(selector)]);}showModal(){this.open=true;}set innerHTML(_){throw Error('Untrusted text must never become HTML');}}
+class Element{constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.value='';this.textContent='';this.disabled=false;this.hidden=false;}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=[...nodes];}querySelectorAll(selector){return this.children.flatMap(n=>[...(n.tagName===selector.toUpperCase()?[n]:[]),...n.querySelectorAll(selector)]);}focus(){this.focused=true;}showModal(){this.open=true;}set innerHTML(_){throw Error('Untrusted text must never become HTML');}}
 function setup(){const nodes=new Map(),actions=[];const doc={getElementById:id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);},createElement:tag=>new Element(tag)};const ui=new ResearchWorkspace({document:doc,onSave:reason=>actions.push(['save',reason]),onSelect:id=>actions.push(['select',id]),onNavigate:id=>actions.push(['navigate',id]),onError:error=>actions.push(['error',error]),onDraftChange:()=>actions.push(['draft'])});return {ui,nodes,actions};}
 const text=n=>[n.textContent,...n.children.map(text)].join(' ');
+test('question context: explicit ROI-context preparation keeps prior reference until apply, including unchanged wording',async()=>{
+ const {ui,nodes}=setup(),s=state();s.object.annotations=[];s.research_question={version:1,text:'Same research intent',context_object_id:B,frame_object_id:A,recorded_utc:'2026-11-06T20:00:00.000Z'};ui.render(s);
+ const next={...s,object:{...s.object,object_id:E,panels:[{...s.object.panels[0],source_rect_xyxy:[10,0,26,16]}]}};ui.render(next);assert.match(nodes.get('research-question-context').textContent,/另一保存图/);const writes=[];ui.options.onQuestionSave=async(text,context)=>{writes.push([text,context]);next.research_question={...s.research_question,context_object_id:context};};
+ ui.prepareQuestionHere(E);ui.render(next);assert.equal(ui.questionDirty,true);assert.equal(ui.questionReference().context_object_id,B);assert.equal(writes.length,0);assert.match(nodes.get('research-question-context').textContent,/10, 0, 26, 16/);const field=nodes.get('research-question');field.value+='!';field.oninput();field.value='Same research intent';field.oninput();assert.equal(ui.questionDirty,true,'context-only draft remains explicit');assert.throws(()=>ui.prepareQuestionHere(E),/研究输入/);await nodes.get('apply-research-question').onclick();ui.render(next);assert.deepEqual(writes,[['Same research intent',E]]);assert.equal(ui.questionReference().context_object_id,E);
+});
+test('question statistics uses the saved source reference and ignores a new unsaved question draft',async()=>{
+ const {ui,nodes}=setup(),s=state(),calls=[];s.research_question={version:1,text:'Original intent',context_object_id:E,frame_object_id:A,recorded_utc:'2026-11-06T20:00:00.000Z'};ui.options.onQuestionStatistics=async q=>{calls.push(q);};ui.render(s);await nodes.get('research-question-statistics').onclick();assert.equal(calls[0].context_object_id,E);assert.notEqual(calls[0].context_object_id,s.object.object_id);nodes.get('research-question').value='Unsaved replacement';nodes.get('research-question').oninput();await nodes.get('research-question-statistics').onclick();assert.equal(calls.length,1);
+});
+
+test('qualified full saved context starts Agent without a saved ROI or a manually entered question',()=>{
+ const {ui,nodes}=setup(),s=state();s.object.annotations=[];ui.render(s);
+ assert.equal(nodes.get('agent-continue').disabled,false);
+ ui.showHandoff(s);const prompt=nodes.get('agent-prompt').value;
+ assert.match(prompt,/不要求研究者先画框/);assert.match(prompt,/可先观察全图/);
+ assert.match(prompt,/支持、反对、未知及下一步/);assert.match(prompt,new RegExp(B));assert.match(prompt,new RegExp(A));
+ for(const patch of [{edit_state:{dirty:true,gesture_active:false}},{edit_state:null},{last_operation:{state:'unknown'}},{pending_result:{object_id:E}},{frame_identity:null}]){
+  const bad={...s,...patch};ui.render(bad);assert.equal(nodes.get('agent-continue').disabled,true,JSON.stringify(patch));assert.throws(()=>ui.showHandoff(bad));
+ }
+});
+
+test('question draft, cancel, uncertain apply and explicit read preserve text without replaying a mutation',async()=>{
+ const {ui,nodes,actions}=setup(),s=state();s.object.annotations=[];ui.render(s);let writes=0,reads=0;
+ ui.options.onQuestionSave=async()=>{writes++;throw Error('Controlled lost reply');};ui.options.onQuestionCheck=async()=>{reads++;};
+ const field=nodes.get('research-question');field.value='  有什么可观察差异？ 😀\n';field.oninput();ui.render(s);
+ assert.equal(ui.questionDirty,true);assert.equal(nodes.get('agent-continue').disabled,true);assert.throws(()=>ui.showHandoff(s),/研究问题/);
+ nodes.get('cancel-research-question').onclick();assert.equal(field.value,'');assert.equal(ui.questionDirty,false);
+ field.value='Keep exact intent';field.oninput();await nodes.get('apply-research-question').onclick();ui.render(s);
+ assert.equal(ui.questionPhase,'unknown');assert.equal(field.value,'Keep exact intent');assert.equal(nodes.get('apply-research-question').disabled,true);
+ await nodes.get('apply-research-question').onclick();assert.equal(writes,1);await nodes.get('check-research-question').onclick();assert.equal(reads,1);assert.equal(writes,1);assert.equal(field.value,'Keep exact intent');assert.equal(ui.questionDirty,true);
+ assert.ok(actions.some(([kind])=>kind==='error'));
+});
+
+test('saved question is intent with exact context; same-frame switch retains it and another frame cannot adopt it',()=>{
+ const {ui,nodes}=setup(),s=state();s.object.annotations=[];s.research_question={version:1,text:'<intent> 周期解释衬度？',context_object_id:E,frame_object_id:A,recorded_utc:'2026-11-06T20:00:00.000Z'};
+ ui.render(s);ui.showHandoff(s);assert.equal(nodes.get('research-question').value,s.research_question.text);
+ const prompt=nodes.get('agent-prompt').value;assert.match(prompt,/<intent>/);assert.match(prompt,/未被自动理解或验证/);assert.match(prompt,/同帧的另一保存图/);assert.match(prompt,/周期测量不能自动回答衬度成因/);
+ const other={...s,frame_identity:{frame_object_id:C}};ui.render(other);assert.equal(nodes.get('agent-continue').disabled,true);assert.throws(()=>ui.showHandoff(other),/另一源帧/);
+});
+
+test('a late question from a different context cannot acknowledge identical local text',()=>{
+ const {ui,nodes}=setup(),s=state();ui.render(s);const field=nodes.get('research-question');field.value='same words';field.oninput();
+ const remote={...s,research_question:{version:1,text:'same words',context_object_id:E,frame_object_id:A,recorded_utc:'2026-11-06T20:00:00.000Z'}};
+ ui.render(remote);assert.equal(ui.questionDirty,true);ui.reconcileQuestionRead(remote);assert.equal(ui.questionDirty,true);
+ nodes.get('cancel-research-question').onclick();assert.equal(field.value,'same words');assert.equal(ui.questionDirty,false);
+});
+
+test('FFT notice describes verified return relation without promising compare or immediate operation',()=>{
+ const {ui,nodes,actions}=setup(),s=state();s.object.annotations=[];s.object.panels=[{domain:'frequency',source_object_id:E,image_rect_xyxy:[0,0,32,32],fft_shape_yx:[32,32],fft_rect_xyxy:[0,0,32,32]}];s.spatial_return={version:1,status:'ready',view_object_id:B};
+ // A valid active FFT can have a separately verified return but no optional
+ // window comparison reference, including after restoring legacy metadata.
+ s.window_collection={schema_version:1,frame_object_id:A,active_window_id:C,windows:[{window_id:C,object_id:s.object.object_id,role:'fft'}]};
+ assert.equal(s.window_collection.windows[0].source_reference,undefined);
+ for(const [dirty,options] of [[false,{}],[true,{}],[false,{busy:true}],[false,{gesture:true}]]){
+  s.edit_state.dirty=dirty;const original=structuredClone(s);ui.render(s,options);const notice=nodes.get('roi-current').textContent+' '+text(nodes.get('roi-observations'));
+  assert.match(notice,/当前编辑域：FFT/);assert.match(notice,/空间 ROI 属于来源原图/);assert.match(notice,/来源返回关系已核对/);assert.match(notice,/按钮可用时/);assert.match(notice,/不代表当前操作可点击/);assert.doesNotMatch(notice,/原图与 FFT 对照/);assert.deepEqual(s,original);assert.deepEqual(actions,[]);
+ }
+ s.edit_state.dirty=false;
+ for(const relation of [{status:'unavailable'},{status:'unknown'},undefined]){
+  s.spatial_return=relation;ui.render(s);const notice=text(nodes.get('roi-observations'));assert.match(notice,/当前没有已核对的来源返回入口/);assert.doesNotMatch(notice,/来源返回关系已核对|按钮可用时|原图与 FFT 对照/);
+ }
+ const spatial=state();spatial.object.annotations=[];ui.render(spatial);assert.doesNotMatch(nodes.get('roi-current').textContent,/FFT/);assert.match(text(nodes.get('roi-observations')),/暂无已记录观察/);
+});
 test('continuation includes only saved exact observations, not current draft selection or a pretend wake',()=>{
  const s=state();s.selection={kind:'rectangle',source_object_id:A,coordinate_space:'source_pixels',coordinates:[1,1,8,8],panel:s.object.panels[0]};const model=roiObservationModel(s),prompt=agentContinuationText(model,P);
  assert.match(prompt,/Why ROI 1/);assert.match(prompt,/Why ROI 2/);assert.doesNotMatch(prompt,/1, 1, 8, 8/);assert.match(prompt,/不会自动唤醒/);assert.match(prompt,new RegExp(P));assert.doesNotMatch(prompt,/https?:/);

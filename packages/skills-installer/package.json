@@ -1,0 +1,11 @@
+{
+  "name": "microscopy-scientific-skills",
+  "version": "0.6.1-r2.1",
+  "private": true,
+  "description": "Offline, dependency-free installer for Microscopy Workbench scientific Skills",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "microscopy-skills": "install.mjs" },
+  "engines": { "node": "^22.0.0 || ^24.0.0" },
+  "files": ["install.mjs", "manifest.json", "bundle", "LICENSE"]
+}

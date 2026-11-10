@@ -26,7 +26,7 @@ export interface BrowserElement extends Omit<PresentationElement,'querySelector'
  querySelector(selector:string):BrowserElement|null;querySelectorAll(selector:string):Iterable<BrowserElement>;
  addEventListener(name:string,listener:(event:BrowserEvent)=>unknown,options?:unknown):void;
  getBoundingClientRect():{left:number;top:number;width:number;height:number};setPointerCapture(id:number):void;releasePointerCapture(id:number):void;
- scrollIntoView(options?:{block:string}):void;focus():void;showModal():void;close():void;decode():Promise<void>;
+ scrollTop:number;scrollIntoView(options?:{block:string}):void;focus():void;showModal():void;close():void;decode():Promise<void>;
  getContext(kind:'2d',options?:{willReadFrequently?:boolean}):CanvasContext|null;toBlob(callback:(blob:BlobPort|null)=>void,type:string):void;
 }
 export interface BrowserDocument extends Omit<PresentationDocument,'getElementById'|'createElement'> {

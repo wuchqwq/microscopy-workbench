@@ -1,0 +1,4 @@
+interface:
+  display_name: "Microscopy route"
+  short_description: "Choose a bounded microscopy route from a research question"
+  default_prompt: "Use $microscopy-router to inspect my image and question, explain what can be measured, and choose the smallest justified route with the available tools."

@@ -33,7 +33,7 @@ export function analysisStatusText(state:AnalysisSaveState|undefined,localDirty=
 // These controls only publish/check the application savepoint. Numerical work
 // and immutable scientific records remain owned by the existing provider.
 export class WorkspaceControls<S extends WorkspaceControlState> {
- private pendingSaveId:string|null=null;private busy=false;
+ private pendingSaveId:string|null=null;private busy=false;private activeOperation:Promise<void>|null=null;
  constructor(private readonly options:Options<S>){
   const bind=(id:string,action:()=>Promise<void>)=>{const element=options.document.getElementById(id);if(element)element.onclick=()=>{void action().catch(error=>options.onError((error as Error).message));};};
   bind('workspace-save',()=>this.save());bind('workspace-query-save',()=>this.querySave());
@@ -48,8 +48,9 @@ export class WorkspaceControls<S extends WorkspaceControlState> {
   const recover=d.getElementById('workspace-recover');if(recover){recover.hidden=!state?.recovery_available;recover.disabled=this.busy||this.options.blocked()||['saving','save_unknown'].includes(state?.status??'')||Boolean(state?.unresolved_request_id);}
   const discard=d.getElementById('workspace-discard-recovery');if(discard){discard.hidden=!state?.recovery_available;discard.disabled=this.busy||this.options.blocked()||this.options.localDirty()||Boolean(state?.dirty)||['saving','save_unknown'].includes(state?.status??'')||Boolean(state?.unresolved_request_id);}
  }
- private async run(action:()=>Promise<void>):Promise<void>{if(this.busy)throw new Error('工作区操作尚未完成，请先核对原结果。');this.busy=true;this.sync();try{await action();}finally{this.busy=false;this.sync();}}
+ private async run(action:()=>Promise<void>):Promise<void>{if(this.busy)throw new Error('工作区操作尚未完成，请先核对原结果。');this.busy=true;this.sync();const original=this.activeOperation=Promise.resolve().then(action);try{await original;}finally{if(this.activeOperation===original)this.activeOperation=null;this.busy=false;this.sync();}}
  async prepareClose():Promise<void>{
+  if(this.activeOperation){this.options.onMessage('正在核对已经发起的保存／工作区操作，完成后再确认关闭；不会重复提交。');await this.activeOperation;}
   if(this.busy||this.options.blocked())throw new Error('先结束手势或核对原执行请求，工作区保持打开。');
   await (this.options.prepare??this.options.settle)();
  }

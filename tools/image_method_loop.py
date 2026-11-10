@@ -7,13 +7,18 @@ request journals own attempt reservations, failed outcomes and recovery.
 import copy
 import hashlib
 import time
+import textwrap
 
 from PIL import Image, ImageDraw
 
 if __package__:
+    from . import image_peak_comparison as peak_comparison
+    from . import image_peak_summary_validation as summary_validation
     from . import image_method_policy as policy
     from . import image_method_journal as journal
 else:
+    import image_peak_comparison as peak_comparison
+    import image_peak_summary_validation as summary_validation
     import image_method_policy as policy
     import image_method_journal as journal
 
@@ -23,7 +28,7 @@ FIELDS = {
     "method_step": {"object_id", "root_plan_id", "action_id", "selection_reason"},
 }
 COST_KEYS = ("method_calls", "fft_pixels", "gpa_band_pixels", "topology_path_samples")
-INFO_KEYS = {"goal", "followup_g_vectors", "followup_basis", "loops", "model_assumption_text"}
+INFO_KEYS = {"goal", "followup_g_vectors", "followup_basis", "loops", "model_assumption_text", "roi_rect", "reference_rect", "reference_text"}
 VERSION = "gpa-topology-decisions-v1"
 
 
@@ -35,7 +40,9 @@ def _cost(api, value):
 
 
 def _info(api, value):
-    api.need(type(value) is dict and set(value) <= INFO_KEYS and value.get("goal") == "projected_topology",
+    if type(value) is dict and value.get("goal") == peak_comparison.GOAL:
+        return copy.deepcopy(peak_comparison.information(value, api))
+    api.need(type(value) is dict and set(value) <= (INFO_KEYS - {"roi_rect", "reference_rect", "reference_text"}) and value.get("goal") == "projected_topology",
              "First cross-method scope requires the explicit projected_topology question")
     for key in ("followup_basis", "model_assumption_text"):
         api.need(key not in value or type(value[key]) is str and 1 <= len(value[key].strip()) <= 2000,
@@ -159,6 +166,7 @@ def _plan(workspace, request, metadata, api):
         patch = request.get("information_patch", {})
         api.need(type(patch) is dict and set(patch) <= INFO_KEYS, "Unknown method information patch")
         information = _info(api, {**previous["information"], **patch})
+        api.need(information["goal"] == previous["information"]["goal"], "A method root cannot switch goals")
         history = [*previous.get("plan_history", []), previous["object_id"]]
         api.need(len(history) <= 16, "Method proposal history limit16 reached", "BUDGET_EXCEEDED")
         budget = root["budget"]
@@ -171,8 +179,9 @@ def _plan(workspace, request, metadata, api):
                   "reason": "Query original step/child IDs; unknown work is reserved and never replayed" if ledger["has_unknown"] else "User requested stop"}}
     else:
         attempted = [{**(row.get("method_attempt") or {}), "state": row["effective_state"]} for row in ledger["attempts"]]
-        result = policy.propose(gpas, topology, information, ledger["remaining"], attempted)
-    metadata.update(kind="method_plan", policy_version=VERSION, root_plan_id=root["object_id"],
+        result = (peak_comparison.propose(workspace, gpas, information, api) if information["goal"] == peak_comparison.GOAL
+                  else policy.propose(gpas, topology, information, ledger["remaining"], attempted))
+    metadata.update(kind="method_plan", policy_version=VERSION, reference_text_revision=2, root_plan_id=root["object_id"],
                     seed_object_ids=root["seed_object_ids"], budget=budget, information=information,
                     plan_history=history, input_refs=refs, ledger=ledger, decision=result["decision"],
                     actions=_actions(result["actions"], root, ledger, api),
@@ -183,6 +192,15 @@ def _plan(workspace, request, metadata, api):
                     interpretation_status="hypothesized", material_dislocation_confirmed=False,
                     source_arrays_modified=False, fft_recomputed=False)
     return metadata
+
+
+def preflight_step(workspace, request, api):
+    """Validate child syntax before dispatch; refusal retains the parent slot."""
+    plan, _ = workspace.object(request.get("object_id"))
+    selected = [a for a in plan.get("actions", []) if a.get("action_id") == request.get("action_id")]
+    if len(selected) == 1 and selected[0].get("kind") == "gpa":
+        # Also protects saved revision1 plans without rewriting their actions.
+        api.gpa._parameters(selected[0]["parameters"], api)
 
 
 def _step(workspace, request, metadata, api):
@@ -234,21 +252,33 @@ def action(workspace, name, request, metadata, directory, api):
     metadata = _step(workspace, request, metadata, api) if name == "method_step" else _plan(workspace, request, metadata, api)
     metadata["decision_or_step_wall_ms"] = (time.monotonic()-started)*1000
     # Small decision feedback, never a scientific image or a new viewer.
-    image = Image.new("RGB", (800, 240), "#151c23")
+    comparison = metadata.get("decision", {}).get("peak_comparison")
+    feedback = ([line for item in peak_comparison.preview_lines(comparison)
+                 for line in textwrap.wrap(item, width=110)] if comparison else [])
+    image = Image.new("RGB", (800, max(240, 65 + 22 * len(feedback))), "#151c23")
     draw = ImageDraw.Draw(image)
     title = metadata.get("decision", {}).get("status", metadata.get("selected_action", {}).get("kind", "method step"))
-    draw.text((16, 15), "Cross-method evidence | "+str(title), fill="#63dcdf")
-    draw.text((16, 45), "Conditional image evidence. No confirmed material defect or unique 3D interpretation.", fill="white")
-    for i, item in enumerate(metadata.get("actions", [])[:4]):
-        draw.text((16, 80+32*i), (item["kind"]+": "+str(item["reason"]))[:115], fill="white")
+    draw.text((16, 15), ("Saved-band ROI comparison | " if comparison else "Cross-method evidence | ")+str(title), fill="#63dcdf")
+    if comparison:
+        for i, line in enumerate(feedback):
+            draw.text((16, 48+22*i), line, fill="white")
+    else:
+        draw.text((16, 45), "Conditional image evidence. No confirmed material defect or unique 3D interpretation.", fill="white")
+        for i, item in enumerate(metadata.get("actions", [])[:4]):
+            draw.text((16, 80+32*i), (item["kind"]+": "+str(item["reason"]))[:115], fill="white")
     image.save(directory / "preview.png")
+    if "peak_comparison" in metadata.get("decision", {}):
+        api.write_new(directory / "peak-comparison.txt", peak_comparison.readable(metadata["decision"]["peak_comparison"]).encode("utf-8"))
     api.write_new(directory / "method-decision.json", api.canonical(metadata)+b"\n")
     return metadata
 
 
 def validate_references(workspace, metadata, api):
+    validation = None
     api.need(metadata.get("policy_version") == VERSION, "Unknown cross-method policy version", "CORRUPT_OBJECT")
     if metadata["kind"] == "method_plan":
+        revision = metadata.get("reference_text_revision", 1)
+        api.need(type(revision) is int and revision in (1, 2), "Unknown method reference text revision", "CORRUPT_OBJECT")
         _cost(api, metadata["budget"]); _info(api, metadata["information"])
         original = api.read_json(workspace.root / "requests" / (metadata["request_id"] + ".json"))["parameters"]
         if original["action"] == "method_plan":
@@ -260,7 +290,8 @@ def validate_references(workspace, metadata, api):
             api.need(original["action"] == "method_next", "Method plan has a different original action", "CORRUPT_OBJECT")
             root, previous = _root(workspace, original["object_id"], api)
             api.need(metadata["root_plan_id"] == root["object_id"] and metadata["seed_object_ids"] == root["seed_object_ids"] and
-                     metadata["budget"] == root["budget"] and metadata["information"] == {**previous["information"], **original.get("information_patch", {})} and
+                     metadata["budget"] == root["budget"] and metadata["information"]["goal"] == previous["information"]["goal"] and
+                     metadata["information"] == {**previous["information"], **original.get("information_patch", {})} and
                      metadata["plan_history"] == [*previous.get("plan_history", []), previous["object_id"]],
                      "Revised method proposal reset its budget/source/information history", "CORRUPT_OBJECT")
         # Reconstruct using the FROZEN observation of journals, not newer outcomes.
@@ -279,9 +310,19 @@ def validate_references(workspace, metadata, api):
             proposed = []
         else:
             attempted = [{**(row.get("method_attempt") or {}), "state": row["effective_state"]} for row in ledger["attempts"]]
-            expected = policy.propose(expected_gpas, topology, metadata["information"], ledger["remaining"], attempted)
+            expected = (peak_comparison.propose(workspace, expected_gpas, metadata["information"], api)
+                        if metadata["information"]["goal"] == peak_comparison.GOAL else
+                        policy.propose(expected_gpas, topology, metadata["information"], ledger["remaining"], attempted,
+                                       reference_text_revision=revision))
             proposed = expected["actions"]
-            api.need(metadata["decision"] == expected["decision"], "Method decision changed", "CORRUPT_OBJECT")
+            if metadata['information']['goal'] == peak_comparison.GOAL:
+                try:
+                    validation = summary_validation.validate(workspace, expected_gpas[0], metadata['information'],
+                                                             metadata['decision'], expected['decision'], api)
+                except (ValueError, TypeError, KeyError, ArithmeticError) as error:
+                    api.need(False, 'Method decision changed: '+str(error), 'CORRUPT_OBJECT')
+            else:
+                api.need(metadata["decision"] == expected["decision"], "Method decision changed", "CORRUPT_OBJECT")
         api.need(metadata["actions"] == _actions(proposed, root, ledger, api), "Method actions/costs differ from frozen evidence", "CORRUPT_OBJECT")
     else:
         plan, _ = workspace.object(metadata["plan_object_id"])
@@ -292,3 +333,4 @@ def validate_references(workspace, metadata, api):
             child, _ = workspace.object(receipt["object_id"])
             api.need(child["request_id"] == receipt["request_id"] and child["kind"] == metadata["selected_action"]["kind"],
                      "Method result differs from original child", "CORRUPT_OBJECT")
+    return validation

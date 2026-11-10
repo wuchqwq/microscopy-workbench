@@ -29,3 +29,13 @@ test('discard authorizes the starting draft only, never edits arriving during it
 test('pending recovery offers separate explicit discard while keeping Save and Recover available',async()=>{const h=harness();h.state.workspace_analysis={...h.state.workspace_analysis,status:'recovery_available',dirty:false,recovery_available:true};h.controls.sync();for(const id of ['workspace-recover','workspace-discard-recovery','workspace-save'])assert.equal(h.elements.get(id).disabled,false,id);assert.equal(h.elements.get('workspace-discard-recovery').hidden,false);assert.match(h.elements.get('workspace-save-status').textContent,/恢复或明确放弃/);await h.controls.discardRecovery();assert.deepEqual(h.calls,[{action:'discard',expected_working_revision:2}]);});
 test('discarding only a recovery copy never authorizes discarding newer local or server edits',async()=>{for(const remote of [false,true]){const h=harness();h.state.workspace_analysis.recovery_available=true;if(remote)h.state.workspace_analysis.dirty=true;else h.dirty=true;await assert.rejects(h.controls.discardRecovery(),/保留全部/);assert.equal(h.calls.length,0);}});
 test('new editing during recovery-copy discard keeps the new state and releases its protected input lock',async()=>{const h=harness();h.state.workspace_analysis.recovery_available=true;let finish;h.wait=new Promise(r=>finish=r);const pending=h.controls.discardRecovery();await new Promise(r=>setImmediate(r));h.edit();finish();await assert.rejects(pending,/新编辑/);assert.equal(h.installed.length,0);assert.equal(h.restoreLocked,false);});
+
+
+test('close near Save completion awaits the same durable save without submitting it again',async()=>{
+ const h=harness();let release,prepared=false;h.wait=new Promise(r=>release=r);const save=h.controls.save();await new Promise(r=>setImmediate(r));
+ const close=h.controls.prepareClose().then(()=>{prepared=true;});await new Promise(r=>setImmediate(r));assert.equal(prepared,false);assert.equal(h.calls.filter(c=>c.action==='save').length,1);
+ release();await Promise.all([save,close]);assert.equal(prepared,true);assert.equal(h.state.workspace_analysis.status,'clean');assert.equal(h.calls.filter(c=>c.action==='save').length,1);
+});
+test('close while the existing Save fails preserves its original save identity',async()=>{
+ const h=harness();let release;h.wait=new Promise(r=>release=r);h.failure=Error('original Save reply unknown');const save=h.controls.save();await new Promise(r=>setImmediate(r));const close=h.controls.prepareClose();const results=Promise.allSettled([save,close]);release();assert.ok((await results).every(x=>x.status==='rejected'));assert.equal(h.calls.filter(c=>c.action==='save').length,1);assert.match(h.elements.get('workspace-save-status').textContent,/原保存结果待核对/);
+});

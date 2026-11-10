@@ -203,3 +203,17 @@ test('legacy C plus independent D refuses prelaunch without retaining a new owne
   await assert.rejects(startResearcherInspector({workspace,python:process.execPath},{createClient:provider.createClient}),/Distinct.*recovery/);assert.deepEqual(readFileSync(workingFile),beforeWorking);assert.deepEqual(readFileSync(recoveryFile),beforeRecovery);assert.equal(provider.calls.length,calls);assert.equal(existsSync(path.join(directory,'owner.json')),false);assert.equal(existsSync(path.join(workspace,'panel-registry','panels',panelId+'.lock')),false);assert.equal(readOwnedPanelConnection(workspace,panelId).status,'closed');
  }finally{await instance?.close();assert.equal(path.dirname(workspace),path.resolve(tmpdir()));rmSync(workspace,{recursive:true,force:true});}
 });
+
+
+test('copied Inspector workspace reports its location mismatch before any client or journal change',async()=>{
+ const workspace=mkdtempSync(path.join(tmpdir(),'inspector-copied-binding-'));let clients=0;
+ try{
+  const directory=path.join(workspace,'researcher-inspector');mkdirSync(directory);
+  const session={schema_version:1,session_id:id(91),workspace:path.join(workspace,'original-location'),source_path:path.join(workspace,'unread-original.tiff'),initial_frame:1};
+  const file=path.join(directory,'session.json');writeFileSync(file,JSON.stringify(session));const before=readFileSync(file);
+  await assert.rejects(startResearcherInspector({workspace,python:process.execPath},{createClient(){clients++;assert.fail('Moved binding must not create a scientific client');}}),e=>e.code==='WORKSPACE_LOCATION_MISMATCH');
+  assert.equal(clients,0);assert.deepEqual(readFileSync(file),before);assert.deepEqual(readdirSync(directory),['session.json']);assert.equal(existsSync(path.join(workspace,'panel-registry')),false);
+  writeFileSync(file,JSON.stringify({...session,workspace:'relative-invalid'}));
+  await assert.rejects(startResearcherInspector({workspace,python:process.execPath},{createClient(){assert.fail('Malformed binding must not create a client');}}),e=>e.code===undefined&&/session binding is invalid/.test(e.message));
+ }finally{rmSync(workspace,{recursive:true,force:true});}
+});

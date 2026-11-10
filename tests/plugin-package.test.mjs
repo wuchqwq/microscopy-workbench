@@ -98,7 +98,7 @@ test('relocated plugin starts shared MCP and exposes image, context and optional
   try{
     const relocated=path.join(base,'relocated package');
     // Runtime assets only; no old checkout, science arrays, Python environment or config.
-    for(const name of ['lib','tools','ui','server.mjs','science-server.mjs'])cpSync(path.join(root,name),path.join(relocated,name),{recursive:true});
+    for(const name of ['lib','tools','ui','server.mjs','science-server.mjs','package.json'])cpSync(path.join(root,name),path.join(relocated,name),{recursive:true});
     const made=preparePlugin({python:process.execPath,workspace:path.join(base,'workspace'),output:path.join(base,'connection'),structures:true,pluginRoot:relocated});
     child=spawn(made.server.command,made.server.args,{cwd:base,stdio:['pipe','pipe','pipe'],windowsHide:true});
     let stdout='',stderr='';child.stdout.on('data',c=>stdout+=c);child.stderr.on('data',c=>stderr+=c);

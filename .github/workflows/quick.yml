@@ -124,6 +124,7 @@ jobs:
       - run: python -B tests/test_resumable_observations.py
       - run: python -B tests/image_source_proof_test.py
       - run: python -B tests/image_peaks_test.py
+      - run: python -B tests/test_annotation_text_rendering.py
       - run: python -B tests/test_flat_spectrum.py -v
       - run: python -B tests/test_fft_dc_roundoff.py -v
       - run: python -B tests/test_fft_preprocessing_oracle.py -v
@@ -240,6 +241,14 @@ jobs:
       - run: npm run build
       - run: python -m pip install -r requirements-gpa.txt
       - run: python -B -m unittest discover -s tests -p 'test_image_gpa_*.py' -v
+      # Portable HRTEM cases run explicitly. Original-handoff classes retain
+      # real skips without HRTEM_HANDOFF_ROOT; those skips are not qualification.
+      - name: HRTEM analytic compatibility and saved-band regressions
+        run: |
+          python -B -m unittest discover -s tests -p 'test_gpa_assessment_compatibility.py' -v
+          python -B -m unittest discover -s tests -p 'test_peak_comparison.py' -v
+          python -B -m unittest discover -s tests -p 'test_peak_comparison_feedback.py' -v
+          python -B -m unittest discover -s tests -p 'test_peak_summary_read_compatibility.py' -v
       - run: python -B tests/test_scientific_evidence_semantics.py
       - run: python -B tests/test_result_semantics.py
       - run: python -B tests/test_result_semantics_projection.py
@@ -279,6 +288,12 @@ jobs:
       - run: python -B tests/test_image_discovery_core.py
       - run: python -B tests/test_image_discovery_workspace.py
       - run: python -B tests/test_discovery_selection_origin.py
+      # Do not substitute regenerated inputs for original Task A/Task B
+      # archives. Historical classes explicitly skip if their roots are absent.
+      - name: HRTEM explicit candidate and export closeout regressions
+        run: |
+          python -B -m unittest discover -s tests -p 'test_hrtem_candidate_chain.py' -v
+          python -B -m unittest discover -s tests -p 'test_hrtem_baseline_closeout.py' -v
       - run: npm run test:topology
         env:
           MICROSCOPY_PYTHON: python

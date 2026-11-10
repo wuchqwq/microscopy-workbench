@@ -1,0 +1,4 @@
+interface:
+  display_name: "Observe and revise"
+  short_description: "Measure, test and revise evidence on a fixed image scope"
+  default_prompt: "Use $microscopy-observe-revise to test a limited explanation in my image, preserve sources, and revise the measurements when I correct the inputs."

@@ -14,3 +14,18 @@ export function readImageAdmissionFailure(value:unknown,tool?:unknown,requestId?
  if(!row(value)||value.schema_version!==1||value.kind!=='image_operation_admission_failure'||value.provider!=='external-image-workspace'||!write(value.tool)||typeof value.code!=='string'||!codes.has(value.code)||value.submission_state!=='not_submitted'||!id(value.request_id)||value.original_request_id!==null&&!id(value.original_request_id)||value.automatic_retry!==false||tool!==undefined&&value.tool!==tool||requestId!==undefined&&value.request_id!==requestId)return null;
  return value as unknown as ImageAdmissionFailure;
 }
+
+// A failed original is terminal, but is never a claim that nothing ran.
+// Accept this only from the provider's strict original-result decoder.
+export interface ImageOriginalFailure {schema_version:1;kind:'image_original_failure';provider:'external-image-workspace';request_id:string;state:'failed';automatic_retry:false;original_failure:Record<string,unknown>;}
+export function readImageOriginalFailure(value:unknown,requestId:unknown):ImageOriginalFailure|null {
+ if(!row(value)||value.schema_version!==1||value.kind!=='image_original_failure'||value.provider!=='external-image-workspace'||!id(requestId)||value.request_id!==requestId||value.state!=='failed'||value.automatic_retry!==false||!row(value.original_failure))return null;
+ const receipt=value.original_failure;
+ if(receipt.schema_version!==1||receipt.request_id!==requestId||!row(receipt.parameters)||receipt.parameters.request_id!==requestId||!['statistics','calibrate'].includes(String(receipt.parameters.action))||!['parameters_sha256','journal_sha256'].every(key=>typeof receipt[key]==='string'&&/^[a-f0-9]{64}$/.test(receipt[key] as string))||!['INVALID_ARGUMENT','BUDGET_EXCEEDED','PROVIDER_FAILURE'].includes(String(receipt.error_code)))return null;
+ return value as unknown as ImageOriginalFailure;
+}
+export function imageOriginalFailureFromError(error:unknown,tool:unknown,requestId:unknown):ImageOriginalFailure|null {
+ if(tool!=='image_result'||!row(error)||!row(error.diagnostic))return null;const d=error.diagnostic;
+ if(d.provider!=='external-image-workspace'||d.phase!=='response_validation'||d.request_id!==requestId||d.provider_reported_state!=='failed'||d.submission_state!=='provider_reported_failure')return null;
+ return readImageOriginalFailure({schema_version:1,kind:'image_original_failure',provider:'external-image-workspace',request_id:requestId,state:'failed',automatic_retry:false,original_failure:d.original_failure},requestId);
+}

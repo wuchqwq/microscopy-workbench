@@ -102,7 +102,7 @@ def _cost(kind, shape=None, loops=None):
     return value
 
 
-def propose(seed_gpas, topology_result, information, budget_remaining, attempted_actions):
+def propose(seed_gpas, topology_result, information, budget_remaining, attempted_actions, *, reference_text_revision=2):
     """Propose at most one finite next action; inputs are never mutated."""
     info = information if isinstance(information, dict) else {}
     attempts = attempted_actions if isinstance(attempted_actions, list) else []
@@ -237,6 +237,15 @@ def propose(seed_gpas, topology_result, information, budget_remaining, attempted
         if not _text(parameters["object_id"]):
             return finish("request_information", "exact_fft_selection_required", {"required_fields": ["saved GPA input_dependency.selected.object_id"]})
         parameters["reference_text"] += "\nFollow-up reciprocal-basis source/assumption: " + info["followup_basis"]
+        # Revision1 is used ONLY to validate immutable historical proposals.
+        # Retain both full texts in the plan; never truncate provenance to fit.
+        if reference_text_revision >= 2 and len(parameters["reference_text"]) > 2000:
+            return finish("request_information", "followup_reference_text_too_long", {
+                "required_fields": ["an explicitly revised followup_basis fitting the inherited reference plus separator within 2000 characters"],
+                "combined_length": len(parameters["reference_text"]), "maximum_length": 2000,
+                "available_followup_basis_characters": 2000-len(inherited["reference_text"])-len("\nFollow-up reciprocal-basis source/assumption: ")},
+                ["Original reference and full followup_basis remain saved unchanged; no child is executable",
+                 "Use information_patch with an explicit lossless source reference or stop; no automatic shortening"])
         return finish("gpa", "add_sourced_redundant_phase_direction", parameters,
                       ["Provider must validate unchanged exact FFT/metric, Fourier mask geometry and reference", "No source FFT or fitted-reference substitution"], _cost("gpa", shape))
     parameters = {"object_ids": [seed["object_id"] for seed in seed_gpas], "loops": copy.deepcopy(loops),

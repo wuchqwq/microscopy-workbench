@@ -94,7 +94,11 @@ export class StructureWorkspace {
     const raw=JSON.stringify(payload);if(Buffer.byteLength(raw)>256*1024)throw new Error('Structure request exceeds256KiB');
     let finishWorker!:()=>void;const workerDone=new Promise<void>(resolve=>finishWorker=resolve);
     const waiting=new Promise<ToolResult>((resolve,reject)=>{
-      let child:ChildProcessWithoutNullStreams;try{child=this.spawn(this.python,['-B',this.workerPath],{windowsHide:true,stdio:['pipe','pipe','pipe'],env:{...process.env,MPLBACKEND:'Agg',NUMBA_NUM_THREADS:'1',OPENBLAS_NUM_THREADS:'1'}});}catch(error){finishWorker();reject(error);return;}
+      // Optional scientific libraries create font/JIT caches during import.
+      // Keep those disposable files in this provider's output workspace, never
+      // in the signed application payload or the user's global Python cache.
+      const cacheRoot=path.join(this.workspace,'.runtime-cache');
+      let child:ChildProcessWithoutNullStreams;try{child=this.spawn(this.python,['-B',this.workerPath],{windowsHide:true,stdio:['pipe','pipe','pipe'],env:{...process.env,PYTHONHOME:'',PYTHONPATH:'',PYTHONNOUSERSITE:'1',PYTHONDONTWRITEBYTECODE:'1',MPLBACKEND:'Agg',MPLCONFIGDIR:path.join(cacheRoot,'matplotlib'),NUMBA_CACHE_DIR:path.join(cacheRoot,'numba'),XDG_CACHE_HOME:cacheRoot,NUMBA_NUM_THREADS:'1',OPENBLAS_NUM_THREADS:'1'}});}catch(error){finishWorker();reject(error);return;}
       let settled=false,bytes=0,stderr='';const chunks:Buffer[]=[],hint='Query structure_result with the original request_id; do not automatically resubmit.';
       const finish=<Value,>(fn:(value:Value)=>void,value:Value)=>{if(!settled){settled=true;fn(value);}};
       child.stdout.on('data',(part:Buffer)=>{bytes+=part.length;if(bytes>4*1024*1024)finish(reject,new Error('Structure response exceeds4MiB; '+hint));else chunks.push(part);});

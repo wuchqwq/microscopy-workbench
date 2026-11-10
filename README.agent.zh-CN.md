@@ -1,5 +1,9 @@
 # Agent 使用说明：研究者引导的晶体学分析
 
+## 先安装所需 Skills
+
+本仓库的四个科研 Skills 可使用 [独立 npx 安装器](docs/SKILLS_INSTALL.zh-CN.md)。只需 Node 22/24，明确指定客户端 Skills 目录，默认不覆盖已有内容。使用 GitHub URL 并固定完整 commit SHA；本项目没有发布 npm 注册表包。经用户授权后安装；安装 Skills 与安装工作台/连接 MCP 是独立步骤。
+
 [简体中文](README.agent.zh-CN.md) · [English](README.agent.md) · [研究者工作流程](docs/WORKBENCH_WORKFLOW.zh-CN.md)
 
 ## 循环中的职责

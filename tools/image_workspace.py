@@ -30,6 +30,8 @@ if __package__:
     from .image_annotation_updates import plan_annotation_updates
     from . import image_calibration as calibration
     from . import image_numeric as numeric
+    from . import image_column_fit as column_fit
+    from . import image_column_candidate_annotations as column_candidates
     from . import image_dm as dmfile
     from . import image_peaks as peaks
     from . import image_automation as automation
@@ -54,6 +56,8 @@ else:
     from image_annotation_updates import plan_annotation_updates
     import image_calibration as calibration
     import image_numeric as numeric
+    import image_column_fit as column_fit
+    import image_column_candidate_annotations as column_candidates
     import image_dm as dmfile
     import image_peaks as peaks
     import image_automation as automation
@@ -81,6 +85,8 @@ MAX_JSON_BYTES = 2 * 1024 * 1024
 REQUEST_ID = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 OBJECT_ID = re.compile(r"[a-f0-9]{32}\Z")
 FIELDS = {
+    **column_fit.FIELDS,
+    **column_candidates.FIELDS,
     **automation.FIELDS,
     **sequence.FIELDS,
     **joint.FIELDS,
@@ -105,8 +111,8 @@ FIELDS = {
     "fft": {"object_id", "rect", "window", "subtract_mean", "max_size"},
     "peaks": {"object_id", "max_peaks", "min_separation_bins", "exclude_dc_radius_bins", "threshold_rel", "refinement", "max_size"},
     "annotate": {"object_id", "annotations", "updates"}, "context": {"object_id", "metadata"},
-    "measure": {"object_id", "points", "coordinate_space"}, "export": {"object_id", "output_dir"},
-    "statistics": {"object_id", "rect", "frequency_rect", "component"},
+    "measure": {"object_id", "points", "coordinate_space", "source_text"}, "export": {"object_id", "output_dir"},
+    "statistics": {"object_id", "rect", "frequency_rect", "component", "reference_comparison"},
     "profile": {"object_id", "points", "coordinate_space", "component", "sample_count", "line_width", "interpolation"},
     "centre": {"object_id", "center_xy", "coordinate_space", "source_text"},
     "remeasure": {"object_id", "measurement_object_id", "points", "source_text"},
@@ -175,11 +181,13 @@ def write_new(path, raw):
         os.fsync(output.fileno())
 
 
-def read_json(path):
+def read_json(path, with_raw=False):
     path = Path(path)
     need(path.is_file() and not path.is_symlink() and path.stat().st_size <= MAX_JSON_BYTES,
          "Missing, linked or oversized metadata", "CORRUPT_OBJECT")
-    return strict_json(path.read_text(encoding="utf-8"))
+    raw = path.read_bytes()
+    value = strict_json(raw.decode("utf-8"))
+    return (value, raw) if with_raw else value
 
 
 def stat_identity(path):
@@ -218,9 +226,13 @@ def scalar_shape(shape, dtype):
 
 def page_info(page, index):
     shape, dtype = tuple(page.shape), np.dtype(page.dtype)
+    need(len(shape) == 2 and dtype in tuple(np.dtype(name) for name in
+         ("uint8", "uint16", "uint32", "int8", "int16", "int32", "float32", "float64")) and
+         page.samplesperpixel == 1 and int(page.photometric) in (0, 1),
+         "TIFF requires ordinary 2D grayscale uint8/16/32, int8/16/32 or float32/64 pages; "
+         "RGB, palette, complex, float16 and 64-bit integers are unsupported; no precision conversion is applied",
+         "UNSUPPORTED_LAYOUT")
     scalar_shape(shape, dtype)
-    need(dtype in (np.dtype("uint16"), np.dtype("float32")) and page.samplesperpixel == 1 and
-         int(page.photometric) in (0, 1), "TIFF requires ordinary 2D grayscale uint16/float32 pages; RGB/palette/other dtypes are unsupported", "UNSUPPORTED_LAYOUT")
     return {"frame_index": index, "shape_yx": list(shape), "dtype": str(dtype), "axes": ["y", "x"],
             "decoded_bytes": int(np.prod(shape)) * dtype.itemsize, "photometric_code": int(page.photometric),
             "compression_code": int(page.compression)}
@@ -346,7 +358,21 @@ def spectrum_filter_display(shown, specification):
 
 def render(values, settings, bound):
     low, high = settings["display_range"]
-    scaled = np.zeros(values.shape, dtype=np.float64) if low == high else np.clip((values.astype(np.float64) - low) / (high - low), 0, 1)
+    if low == high:
+        scaled = np.zeros(values.shape, dtype=np.float64)
+    else:
+        # Clip before subtracting: finite pixels outside an explicit display
+        # interval may otherwise overflow. Opposite-sign finite endpoints can
+        # also have an unrepresentable span; normalize those by a safe scale.
+        clipped = np.clip(values.astype(np.float64), low, high)
+        span = high - low
+        if math.isfinite(span):
+            scaled = (clipped - low) / span
+        else:
+            scale = max(abs(low), abs(high))
+            scaled = (clipped / scale - low / scale) / (high / scale - low / scale)
+        need(np.isfinite(scaled).all(), "Display normalization exceeds finite range")
+        scaled = np.clip(scaled, 0, 1)
     scaled = np.power(scaled, 1.0 / settings["gamma"])
     pixels = np.floor(scaled * 255 + 0.5).astype(np.uint8)
     image = Image.fromarray(pixels)
@@ -570,6 +596,8 @@ class Workspace:
     def object(self, ident):
         outer = getattr(self, "_qualification_depth", 0) == 0
         if outer:
+            self.gpa_read_validations = {}
+            self.peak_summary_read_validations = {}
             self._qualification_snapshots, self._qualification_bytes = {}, 0
             self._qualification_own_proofs, self._qualification_frames = {}, []
             self._qualification_rechecking = set()
@@ -611,11 +639,19 @@ class Workspace:
             if metadata.get("kind") in active_analysis.FIELDS:
                 active_analysis.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in gpa.FIELDS:
-                gpa.validate_references(self, metadata, sys.modules[__name__])
+                validation = gpa.validate_references(self, metadata, sys.modules[__name__])
+                if validation:
+                    self.gpa_read_validations[ident] = {**validation, "object_id": ident,
+                        "manifest_sha256": sha_file(directory / "object.json")}
             if metadata.get("kind") in method_loop.FIELDS:
-                method_loop.validate_references(self, metadata, sys.modules[__name__])
+                validation = method_loop.validate_references(self, metadata, sys.modules[__name__])
+                if validation:
+                    self.peak_summary_read_validations[ident] = {**validation, 'object_id': ident,
+                        'manifest_sha256': sha_file(directory / 'object.json')}
             if metadata.get("kind") in discovery.FIELDS:
                 discovery.validate_references(self, metadata, sys.modules[__name__])
+            if metadata.get("kind") in column_fit.FIELDS:
+                column_fit.validate_references(self, metadata, sys.modules[__name__])
             if metadata.get("kind") in topology.FIELDS:
                 topology.validate_references(self, metadata, sys.modules[__name__])
             # Cache completed qualifications only, bounded in count and bytes.
@@ -957,6 +993,17 @@ class Workspace:
                 pending_ids.append(metadata["overview_object_id"])
                 pending_ids.extend(row["object_id"] for row in metadata.get("evidence_refs", []))
                 pending_ids.extend(row["object_id"] for row in metadata.get("history", []))
+            if metadata.get("kind") == "method_plan":
+                pending_ids.append(metadata["root_plan_id"])
+                pending_ids.extend(row["object_id"] for row in metadata["input_refs"])
+                pending_ids.extend(metadata["plan_history"])
+                pending_ids.extend(row["object_id"] for row in metadata["ledger"]["attempts"] if row.get("object_id"))
+                if metadata.get("latest_topology_object_id"):
+                    pending_ids.append(metadata["latest_topology_object_id"])
+            if metadata.get("kind") == "method_step":
+                pending_ids.extend([metadata["root_plan_id"], metadata["plan_object_id"]])
+                if (metadata.get("child_receipt") or {}).get("object_id"):
+                    pending_ids.append(metadata["child_receipt"]["object_id"])
             record = metadata.get("xy_calibration")
             if record and record["calibration_id"] != current:
                 pending_ids.append(record["calibration_id"])
@@ -976,7 +1023,10 @@ class Workspace:
                                              "Pillow": PIL.__version__, "tifffile": tifffile.__version__,
                                              "worker_sha256": sha_file(Path(__file__)),
                                              "helper_modules_sha256": {name: sha_file(Path(__file__).with_name(name)) for name in
-                                                                       ("preview_admission.py", "result_semantics.py", "image_observation_contract.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py")}})
+                                                                       ("preview_admission.py", "result_semantics.py", "image_observation_contract.py", "image_annotation_updates.py", "image_calibration.py", "image_numeric.py", "image_column_fit.py", "image_column_candidates.py", "image_column_candidate_annotations.py", "image_column_model.py", "image_column_solver.py", "image_peaks.py", "image_automation.py", "image_sequence.py", "image_joint.py", "image_spatial_atlas.py", "image_domain_compare.py", "image_feature_field.py", "image_spatial_domains.py", "image_field_increment.py", "image_active_analysis.py", "image_gpa.py", "image_gpa_core.py", "image_topology.py", "image_topology_core.py", "image_topology_legacy_v1.py", "image_discovery.py", "image_discovery_core.py", "image_site_observation.py", "image_site_continuation.py")}})
+        metadata["software_provenance"]["helper_modules_sha256"]["image_gpa_assessment_validation.py"] = sha_file(Path(__file__).with_name("image_gpa_assessment_validation.py"))
+        metadata["software_provenance"]["helper_modules_sha256"]["image_peak_summary_validation.py"] = sha_file(Path(__file__).with_name("image_peak_summary_validation.py"))
+        metadata["software_provenance"]["helper_modules_sha256"]["image_candidate_assessment.py"] = sha_file(Path(__file__).with_name("image_candidate_assessment.py"))
         intent_path = self.root / "preview-admission-v1" / "intents" / (metadata["request_id"] + ".json")
         if intent_path.exists():
             admitted = preview_admission._intent(self.root / "preview-admission-v1", metadata["request_id"], sys.modules[__name__])
@@ -1109,6 +1159,9 @@ class Workspace:
                     page = tiff.pages[index]
                     need(page_info(page, index) == parent["pages"][index], "TIFF page metadata changed", "SOURCE_CHANGED")
                     values = page.asarray()
+                need(list(values.shape) == parent["pages"][index]["shape_yx"] and
+                     str(values.dtype) == parent["pages"][index]["dtype"],
+                     "TIFF decoded shape or precision differs from its catalog; no conversion is applied", "UNSUPPORTED_LAYOUT")
                 need(np.isfinite(values).all(), "TIFF scientific pixels must be finite", "NONFINITE_DATA")
                 scalar_shape(values.shape, values.dtype)
                 check_source(parent["source_identity"])
@@ -1194,11 +1247,15 @@ class Workspace:
                             next_step="image_preview on this wrapper to redraw physical scale/axes; image_measure to calculate geometry with the selected record")
         elif action == "peaks":
             metadata = peaks.run(self, request, ident, directory, metadata, sys.modules[__name__])
+        elif action == "column_fit":
+            metadata = column_fit.run(self, request, ident, directory, metadata, sys.modules[__name__])
         elif action in ("statistics", "profile"):
             metadata.update(parent_object_id=request["object_id"])
             if action == "statistics":
                 metadata.update(numeric.statistics(self, request))
                 write_new(directory / "statistics.json", canonical(metadata["statistics"])+b"\n")
+                if "reference_comparison" in metadata:
+                    write_new(directory / "statistics-comparison.json", canonical(metadata["reference_comparison"])+b"\n")
             else:
                 result, values = numeric.profile(self, request)
                 metadata.update(result)
@@ -1250,8 +1307,12 @@ class Workspace:
             if action == "measure":
                 metadata["scientific_grid_identity"] = self.measurement_grid(request["object_id"])
                 points = request.get("points")
-                need(type(points) is list and len(points) == 2 and all(type(p) is list and len(p) == 2 and all(number(v) for v in p) for p in points),
-                     "measure requires two explicit [x,y] coordinates")
+                source_text = request.get("source_text")
+                need(source_text is None or type(source_text) is str and 1 <= len(source_text) <= 4000, "Measurement source_text must be bounded text")
+                if source_text is not None:
+                    metadata["source_text"] = source_text
+                need(type(points) is list and len(points) in (2, 3) and all(type(p) is list and len(p) == 2 and all(number(v) for v in p) for p in points),
+                     "measure requires two distance endpoints, or vertex plus two angle endpoints")
                 reciprocal_array = not spectral_view and parent.get("array_domain") in ("frequency", "reciprocal")
                 expected_space = "frequency_cycles_per_pixel" if spectral_view else "source_array_indices" if reciprocal_array else "source_pixels"
                 space = request.get("coordinate_space", expected_space)
@@ -1268,42 +1329,47 @@ class Workspace:
                     bounds = current["source_rect_xyxy"]
                     need(all(bounds[0] <= p[0] <= bounds[2]-1 and bounds[1] <= p[1] <= bounds[3]-1 for p in points),
                          "Measurement points lie outside the selected source-pixel extent; no clipping")
-                dx, dy = points[1][0] - points[0][0], points[1][1] - points[0][1]
-                need((dx != 0 or dy != 0) or spectral_view and points[0] == [0, 0],
-                     "Distinct measurement points required, except explicit FFT DC inspection")
-                measured = calibration.geometry(dx, dy, record, frequency=spectral_view)
-                metadata.update(points=points, dx=dx, dy=dy, coordinate_space=space,
-                                coordinate_system="original fftshift cycles/pixel; no2pi" if spectral_view else "source array centres; x right,y down; current calibrated domain is explicit",
-                                source_rect_xyxy=bounds,
-                                measurement_domain=("reciprocal_space" if measured.get("physical_frequency_magnitude") is not None else
-                                                    "real_space" if measured.get("physical_distance") is not None else "pixel_geometry"), **measured)
-                if spectral_view:
-                    magnitude = math.hypot(dx, dy)
-                    metadata.update(frequency_distance_cycles_per_pixel=magnitude,
-                                    pixel_period=1. / magnitude if magnitude else None,
-                                    zero_frequency_reason="DC has no finite reciprocal period" if not magnitude else None,
-                                    image_coordinate_angle_degrees=math.degrees(math.atan2(dy, dx)) if magnitude else None,
-                                    d_spacing=measured.get("period") if [0, 0] in points else None,
-                                    d_spacing_unit=measured.get("period_unit") if [0, 0] in points else None,
-                                    dc_reference_point_index=points.index([0, 0]) if [0, 0] in points else None,
-                                    reciprocal_interpretation="geometric period of frequency difference; d_spacing only for a vector referenced to explicit DC, not an hkl/phase identification")
+                if len(points) == 3:
+                    measured = calibration.angle_geometry(points, record, frequency=spectral_view)
+                    metadata.update(points=points, coordinate_space=space, source_rect_xyxy=bounds,
+                                    measurement_domain=("reciprocal_space" if measured["physical_angle"] and (spectral_view or reciprocal_array) else "real_space" if measured["physical_angle"] else "pixel_geometry"), **measured)
                 else:
-                    metadata.update(distance_pixels=math.hypot(dx, dy),
-                                    image_coordinate_angle_degrees=math.degrees(math.atan2(dy, dx)))
-                    physical = calibration.physical_points(points, record)
-                    metadata.update(physical_points_xy=physical,
-                                    physical_points_unit=record["xy_scale"]["unit"] if physical else None)
-                    if reciprocal_array:
-                        # A frequency difference is a geometric period; d-spacing
-                        # requires one endpoint at the actual calibrated DC.
-                        # A recorded centre is a pixel/index identity even when
-                        # its physical scale is withdrawn. Keep the endpoint
-                        # role for later remeasurement, without a physical claim.
-                        at_dc = record is not None and record.get("dc_index_xy") in points
-                        metadata.update(d_spacing=measured.get("period") if at_dc else None,
-                                        d_spacing_unit=measured.get("period_unit") if at_dc else None,
-                                        dc_reference_point_index=points.index(record["dc_index_xy"]) if at_dc else None,
-                                        reciprocal_interpretation="calibrated reciprocal-array geometry; d_spacing only when an endpoint is explicit mathematical/calibrated DC; not an hkl or phase assertion")
+                    dx, dy = points[1][0] - points[0][0], points[1][1] - points[0][1]
+                    need((dx != 0 or dy != 0) or spectral_view and points[0] == [0, 0],
+                         "Distinct measurement points required, except explicit FFT DC inspection")
+                    measured = calibration.geometry(dx, dy, record, frequency=spectral_view)
+                    metadata.update(points=points, dx=dx, dy=dy, coordinate_space=space,
+                                    coordinate_system="original fftshift cycles/pixel; no2pi" if spectral_view else "source array centres; x right,y down; current calibrated domain is explicit",
+                                    source_rect_xyxy=bounds,
+                                    measurement_domain=("reciprocal_space" if measured.get("physical_frequency_magnitude") is not None else
+                                                        "real_space" if measured.get("physical_distance") is not None else "pixel_geometry"), **measured)
+                    if spectral_view:
+                        magnitude = math.hypot(dx, dy)
+                        metadata.update(frequency_distance_cycles_per_pixel=magnitude,
+                                        pixel_period=1. / magnitude if magnitude else None,
+                                        zero_frequency_reason="DC has no finite reciprocal period" if not magnitude else None,
+                                        image_coordinate_angle_degrees=math.degrees(math.atan2(dy, dx)) if magnitude else None,
+                                        d_spacing=measured.get("period") if [0, 0] in points else None,
+                                        d_spacing_unit=measured.get("period_unit") if [0, 0] in points else None,
+                                        dc_reference_point_index=points.index([0, 0]) if [0, 0] in points else None,
+                                        reciprocal_interpretation="geometric period of frequency difference; d_spacing only for a vector referenced to explicit DC, not an hkl/phase identification")
+                    else:
+                        metadata.update(distance_pixels=math.hypot(dx, dy),
+                                        image_coordinate_angle_degrees=math.degrees(math.atan2(dy, dx)))
+                        physical = calibration.physical_points(points, record)
+                        metadata.update(physical_points_xy=physical,
+                                        physical_points_unit=record["xy_scale"]["unit"] if physical else None)
+                        if reciprocal_array:
+                            # A frequency difference is a geometric period; d-spacing
+                            # requires one endpoint at the actual calibrated DC.
+                            # A recorded centre is a pixel/index identity even when
+                            # its physical scale is withdrawn. Keep the endpoint
+                            # role for later remeasurement, without a physical claim.
+                            at_dc = record is not None and record.get("dc_index_xy") in points
+                            metadata.update(d_spacing=measured.get("period") if at_dc else None,
+                                            d_spacing_unit=measured.get("period_unit") if at_dc else None,
+                                            dc_reference_point_index=points.index(record["dc_index_xy"]) if at_dc else None,
+                                            reciprocal_interpretation="calibrated reciprocal-array geometry; d_spacing only when an endpoint is explicit mathematical/calibrated DC; not an hkl or phase assertion")
             elif spectral_view:
                 need(values.dtype == np.dtype("complex128"), "FFT view requires the saved complex128 spectrum")
                 need(request.get("rect") is None,
@@ -1412,7 +1478,7 @@ class Workspace:
                         metadata["complex_semantics"] = parent.get("complex_semantics", {"kind":"ordinary_complex_array", "not_assumed_to_be_fft":True})
                     image = render(displayed, settings, (settings["max_size"], settings["max_size"]))
                     metadata.update(dtype=str(roi.dtype), shape_yx=list(roi.shape), axes=["y", "x"], display=settings,
-                                    array_domain=parent.get("array_domain", "spatial"),
+                                    array_domain=parent.get("array_domain", "unspecified_image"),
                                     scientific_semantics=parent.get("scientific_semantics"),
                                     scientific_context=parent.get("scientific_context"))
                 metadata["panels"] = ([frequency_panel(ident, spectrum.shape, [0, 0, image.width, image.height])]
@@ -1472,7 +1538,7 @@ class Workspace:
                             panel_calibrations=records,
                             display_calibration_id=records[0]["calibration_id"] if records[0] and all(r == records[0] for r in records) else None,
                             comparison_scope="same half-open pixel ROI and shared display mapping; no registration or physical alignment inferred")
-        elif action == "annotate":
+        elif action in ("annotate", "column_candidates"):
             parent, _, context = self.resolved(request.get("object_id"))
             need(parent["kind"] in ("view", "compare", "fft", "fft_view", "annotate"), "annotate requires a rendered view/compare/FFT object")
             base_id = parent.get("render_base_object_id", parent["object_id"])
@@ -1481,6 +1547,12 @@ class Workspace:
             need(render_base.get("display_calibration_id") == (current_record["calibration_id"] if current_record else None),
                  "The selected calibration differs from this PNG's render dependency; call image_preview on the calibrated wrapper before editing annotations",
                  "STALE_CALIBRATION_DISPLAY")
+            candidate_result = None
+            if action == "column_candidates":
+                annotations, candidate_result = column_candidates.append(self, request, ident, parent, sys.modules[__name__])
+                request = {**request, "annotations": annotations}
+                metadata.update(kind="annotate", column_candidates=candidate_result)
+                write_new(directory / "column-candidates.json", canonical(candidate_result) + b"\n")
             patch_mode = "updates" in request
             need(("annotations" in request) != patch_mode,
                  "Supply exactly one of annotations (replacement) or updates (existing IDs)")
@@ -1494,8 +1566,17 @@ class Workspace:
             need(type(annotations) is list and len(annotations) <= 128, "annotations must be an explicit list of at most128 items")
             base_file = "unannotated.png" if "unannotated.png" in render_base["files_sha256"] else "preview.png"
             with Image.open(base_directory / base_file) as unannotated:
-                image, validated = overlay(unannotated, annotations, render_base.get("panels", []), updates=updates,
-                                           previous_annotations=parent.get("annotations", []))
+                if candidate_result is not None:
+                    # Existing anchored annotations may lie outside a cropped view.
+                    # Preserve/reproject them as established marks; only new points
+                    # undergo new-input boundary validation. Never resurrect them.
+                    retained = parent.get("annotations", [])
+                    image, validated = overlay(unannotated, retained, render_base.get("panels", []), reproject=True)
+                    image, added = overlay(image, annotations[len(retained):], render_base.get("panels", []))
+                    validated.extend(added)
+                else:
+                    image, validated = overlay(unannotated, annotations, render_base.get("panels", []), updates=updates,
+                                               previous_annotations=parent.get("annotations", []))
             save_png(directory / "preview.png", image)
             metadata.update(parent_object_id=request["object_id"], render_base_object_id=base_id,
                             panels=render_base.get("panels", []), annotations=validated,
@@ -1508,15 +1589,21 @@ class Workspace:
                                                 "annotations replace the previous revision; empty list restores the original unannotated render"),
                             annotation_edit_mode="update" if patch_mode else "replace",
                             scientific_data_changed=False)
+            if candidate_result is not None:
+                metadata["revision_semantics"] = "append-only candidates; all previous manual additions, moves and retractions are retained"
         elif action == "context":
             previous, _ = self.object(request.get("object_id"))
             base, _, inherited = self.resolved(previous["object_id"])
             provided = request.get("metadata")
-            allowed = {"reconstruction_type", "data_meaning", "frame_meaning", "xy_scale", "source_text", "value_unit", "frame_scale", "research_observation"}
+            allowed = {"reconstruction_type", "data_meaning", "frame_meaning", "xy_scale", "source_text", "value_unit", "frame_scale", "research_observation", "input_origin", "modality"}
             need(type(provided) is dict and set(provided) <= allowed, "Only explicit versioned user-context fields are allowed")
             combined = dict(inherited or {})
             for key, value in provided.items():
-                if key == "research_observation":
+                if key == "input_origin":
+                    need(type(value) is str and value in ("unknown", "simulation", "experiment"), "input_origin is an explicit caller declaration, not an inferred source")
+                elif key == "modality":
+                    need(type(value) is str and value in ("unknown", "hrtem", "stem_haadf", "stem_bf", "stem_other", "other"), "modality must be an explicit supported caller declaration")
+                elif key == "research_observation":
                     need(type(value) is dict and set(value) == {"kind", "source_text", "authority"} and
                          value["kind"] == "twinning_present" and value["authority"] in ("user_confirmed", "synthetic_fixture") and
                          type(value["source_text"]) is str and bool(value["source_text"].strip()) and len(value["source_text"]) <= 1000,
@@ -1556,6 +1643,9 @@ class Workspace:
             source_directory = self.root / "objects" / scientific["object_id"]
             record = metadata.get("xy_calibration")
             feature_result = scientific["kind"] in ("feature_field", "spatial_field", "domain_map", "field_extend", "analysis_candidates", "discovery", "discovery_review")
+            saved_comparison = (scientific["kind"] == "method_plan" and
+                                scientific.get("information", {}).get("goal") == "peak_roi_comparison" and
+                                "peak_comparison" in scientific.get("decision", {}))
             gpa_result = scientific["kind"] in ("gpa", "gpa_read")
             topology_result = scientific["kind"] == "topology"
             if topology_result:
@@ -1569,8 +1659,19 @@ class Workspace:
                 need(scientific.get("display_calibration_id") == (record["calibration_id"] if record else None),
                      "The selected calibration differs from this PNG's render dependency; call image_preview before export",
                      "STALE_CALIBRATION_DISPLAY")
-            numeric_result = scientific["kind"] in ("statistics", "profile")
-            names = [name for name in scientific["files_sha256"] if name.endswith(".npy") or numeric_result and name in ("statistics.json", "profile.csv") or feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv", "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv", "discovery-report.json", "discovery-review.json") or gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or topology_result and name in ("topology-report.json", "topology-circuits.csv")]
+            numeric_result = scientific["kind"] in ("statistics", "profile", "column_fit")
+            names = [name for name in scientific["files_sha256"] if
+                     name.endswith(".npy") or
+                     numeric_result and (name in ("statistics.json", "statistics-comparison.json", "profile.csv") or
+                         scientific["kind"] == "column_fit" and name.startswith("column-fit") and name.endswith(".json")) or
+                     feature_result and name in ("feature-field.json", "feature-field.csv", "spatial-field.json", "spatial-field.csv",
+                         "domain-map.json", "domain-map.csv", "analysis-candidates.json", "analysis-candidates.csv",
+                         "discovery-report.json", "discovery-review.json", "candidate-review.txt") or
+                     scientific["kind"] == "discovery_review" and name in
+                         ("site-observation.json", "site-observation.txt", "site-continuation.json", "site-continuation.txt") or
+                     saved_comparison and name in ("method-decision.json", "peak-comparison.txt") or
+                     gpa_result and name in ("gpa-report.json", "gpa-summary.csv", "gpa-samples.json", "gpa-samples.csv") or
+                     topology_result and name in ("topology-report.json", "topology-circuits.csv")]
             need(names, "Export requires actual scientific arrays or a saved feature table; a TIFF metadata handle/context-only record is not scientific data")
             provenance = self.export_provenance(request["object_id"])
             output = absolute(request.get("output_dir"), "output_dir")
@@ -1675,6 +1776,11 @@ def spatial_panel(parent, rect, image_rect):
         old = parent["panels"][0]
         x, y = old["source_rect_xyxy"][:2]
         mapped = [rect[0] + x, rect[1] + y, rect[2] + x, rect[3] + y]
+        # An explicit unknown-image -> reciprocal declaration changes the
+        # coordinate-domain label, not the immutable source grid/crop mapping.
+        # Do not inherit the earlier display's spatial label after that choice.
+        if parent.get("domain_declaration") and parent.get("array_domain") == "reciprocal":
+            return panel(old["source_object_id"], mapped, image_rect, array_domain="reciprocal")
         return {**old, "source_rect_xyxy": mapped, "image_rect_xyxy": list(image_rect)}
     return panel(parent["object_id"], rect, image_rect, array_domain=parent.get("array_domain"))
 
@@ -1888,6 +1994,17 @@ def annotation(item, image_size, panels, reproject=False, previous=None, incomin
             "mapping_status": "one_source" if len(matches) == 1 else "not_a_single_source_region"}
 
 
+def annotation_text_font(text):
+    """Use an existing Windows CJK font for new labels; keep Latin rendering."""
+    if os.name == "nt" and any("\u2e80" <= char <= "\u9fff" or "\uf900" <= char <= "\ufaff" for char in text):
+        try:
+            return ImageFont.truetype("msyh.ttc", size=12)
+        except OSError:
+            # Do not add a font dependency or fail an otherwise valid export.
+            pass
+    return None
+
+
 def overlay(image, annotations, panels, reproject=False, updates=None, previous_annotations=None):
     image = image.convert("RGB")
     draw, result, seen = ImageDraw.Draw(image), [], set()
@@ -1906,6 +2023,7 @@ def overlay(image, annotations, panels, reproject=False, updates=None, previous_
             continue
         color = {"white": "#ffffff", "cyan": "#45e8ff", "orange": "#ff8c32", "amber": "#ffba30", "green": "#00e060"}[mark["color"]]
         coords, kind = mark["coordinates"], mark["kind"]
+        font = annotation_text_font(mark["text"])
         if kind == "arrow":
             coords = mark["arrow_render_coordinates"]
         if kind == "point":
@@ -1925,9 +2043,9 @@ def overlay(image, annotations, panels, reproject=False, updates=None, previous_
                 points = [(x1, y1)] + [(x1-size*math.cos(angle+a), y1-size*math.sin(angle+a)) for a in (-.5, .5)]
                 draw.polygon(points, fill=color)
         else:
-            draw.text(coords, mark["text"], fill=color)
+            draw.text(coords, mark["text"], fill=color, font=font)
         if mark["text"] and kind != "text":
-            draw.text(coords[:2], mark["text"], fill=color)
+            draw.text(coords[:2], mark["text"], fill=color, font=font)
     return image, result
 
 
@@ -1990,7 +2108,8 @@ def _execute_core(request, preview_dispatch_authorized=False):
         return {"ok": True, **evidence.detail(workspace, request, sys.modules[__name__])}
     if action == "get":
         metadata, _ = workspace.object(request.get("object_id"))
-        response = {"ok": True, "state": "completed", "backend": BACKEND, **metadata}
+        response = gpa.assessment_validation.feedback(workspace, {"ok": True, "state": "completed", "backend": BACKEND, **metadata})
+        response = method_loop.summary_validation.feedback(workspace, response)
         if request.get("include_frame_ancestry") is True:
             # Never let a persisted/legacy field masquerade as this read's proof,
             # including when a large projection falls back to the old path.
@@ -2009,12 +2128,27 @@ def _execute_core(request, preview_dispatch_authorized=False):
                 return admitted
         need(path.is_file(), "Original request not found", "REQUEST_NOT_FOUND")
         try:
-            saved = read_json(path)
+            saved, journal_raw = read_json(path, with_raw=True)
         except (OSError, ValueError, WorkspaceError):
             return pending(ident)
         if saved["state"] in ("completed", "failed", "not_submitted"):
             need(saved.get("request_id") == ident and saved.get("response", {}).get("request_id") == ident,
                  "Stored request/response belongs to another original ID", "CORRUPT_OBJECT")
+            # Read-only evidence of a terminal scalar-statistics failure. This
+            # receipt comes from the SAME strict-decoded byte snapshot; clients
+            # must not reinterpret a failed/unknown journal with a loose parser.
+            parameters, response = saved.get("parameters"), saved.get("response")
+            if (saved["state"] == "failed" and type(saved.get("schema_version")) is int and saved["schema_version"] == 1 and
+                    type(parameters) is dict and parameters.get("action") in ("statistics", "calibrate") and
+                    parameters.get("request_id") == ident and response.get("ok") is False and
+                    response.get("state") == "failed" and response.get("backend") == BACKEND and
+                    saved.get("parameters_sha256") == hashlib.sha256(canonical(parameters)).hexdigest()):
+                code = response.get("error", {}).get("code") if type(response.get("error")) is dict else None
+                receipt = {"schema_version": 1, "request_id": ident, "parameters": parameters,
+                           "parameters_sha256": saved["parameters_sha256"],
+                           "journal_sha256": hashlib.sha256(journal_raw).hexdigest(),
+                           "error_code": code if code in ("INVALID_ARGUMENT", "BUDGET_EXCEEDED") else "PROVIDER_FAILURE"}
+                return {**response, "original_failure": receipt}
             if saved["state"] == "completed":
                 if saved.get("parameters", {}).get("action") != "preview_acknowledge":
                     workspace.object(saved["response"]["object_id"])
@@ -2026,7 +2160,10 @@ def _execute_core(request, preview_dispatch_authorized=False):
                 return {**saved["response"], "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
             elif saved.get("parameters", {}).get("action") in field_increment.FIELDS:
                 return {**saved["response"], "partial_results": field_increment.recovery(workspace, saved, sys.modules[__name__])}
-            return saved["response"]
+            response = method_loop.summary_validation.feedback(workspace, gpa.assessment_validation.feedback(workspace, saved["response"]))
+            # Only this live strict read can issue a failure receipt. Never echo
+            # a caller/stored field as if the provider had just verified it.
+            return {key: value for key, value in response.items() if key != "original_failure"}
         if saved.get("parameters", {}).get("action") in spatial_domains.FIELDS:
             return {**pending(ident), "partial_results": spatial_domains.recovery(workspace, saved, sys.modules[__name__])}
         if saved.get("parameters", {}).get("action") in field_increment.FIELDS:
@@ -2035,6 +2172,9 @@ def _execute_core(request, preview_dispatch_authorized=False):
             return {**pending(ident), "partial_results": joint.recovery(workspace, saved, sys.modules[__name__])}
         if saved.get("parameters", {}).get("action") == "spatial_atlas":
             return {**pending(ident), "partial_results": spatial_atlas.recovery(workspace, saved, sys.modules[__name__])}
+        if saved.get("parameters", {}).get("action") == "method_step":
+            need(saved.get("request_id") == ident, "Method recovery returned another parent", "CORRUPT_OBJECT")
+            return {**pending(ident), "partial_results": method_loop.journal.recovery(workspace, saved, sys.modules[__name__])}
         return pending(ident)
     normalized = {**request, "workspace": str(workspace.root)}
     fingerprint = hashlib.sha256(canonical(normalized)).hexdigest()
@@ -2092,6 +2232,8 @@ def _execute_core(request, preview_dispatch_authorized=False):
                 update()
             workspace.method_attempt_update = method_attempt_update
         try:
+            if action == "method_step":
+                method_loop.preflight_step(workspace, request, sys.modules[__name__])
             if action == "preview_acknowledge":
                 response = preview_admission.acknowledge(workspace, normalized, sys.modules[__name__])
                 record.update(state="completed", response=response, operational_receipt=True)
@@ -2132,7 +2274,13 @@ def _execute_response(request):
         if response.get("ok") and detail == "compact":
             try:
                 readonly_workspace = Workspace(scientific["workspace"], False)
+                read_validation = response.get(gpa.assessment_validation.RECEIPT_KEY)
+                summary_validation = response.get(method_loop.summary_validation.RECEIPT_KEY)
                 response = {"ok": True, **evidence.summary(readonly_workspace, response, sys.modules[__name__])}
+                if read_validation is not None:
+                    response[gpa.assessment_validation.RECEIPT_KEY] = read_validation
+                if summary_validation is not None:
+                    response[method_loop.summary_validation.RECEIPT_KEY] = summary_validation
             except Exception as error:
                 if getattr(error, "code", None) != "EVIDENCE_BUDGET_EXCEEDED":
                     raise
