@@ -3,6 +3,11 @@ on:
   pull_request:
     paths:
       - 'tools/install_workbench.py'
+      - 'tools/build_skills_npm.py'
+      - 'tests/skills_npm_test.py'
+      - 'packages/skills*/**'
+      - 'README*.md'
+      - 'AGENTS.md'
       - 'install.*'
       - 'tests/install_workbench_test.py'
       - 'skills/**'
@@ -13,30 +18,38 @@ permissions:
   contents: read
 jobs:
   installer-contracts:
-    name: Installer / ${{ matrix.os }}
+    name: Installer / ${{ matrix.os }} / Node ${{ matrix.node }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22, 24]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: ${{ matrix.node }}
       - name: Isolated installer and skill-copy contracts
         run: python -B tests/install_workbench_test.py
+      - name: Reproducible npm package and offline installation contracts
+        run: python -B tests/skills_npm_test.py
+      - name: Install through the real GitHub URL for this exact commit
+        shell: bash
+        run: |
+          npm exec --yes --ignore-scripts --cache "${{ runner.temp }}/skills-npm-remote-cache" --package="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.event.pull_request.head.sha || github.sha }}/packages/skills/microscopy-scientific-skills.tgz" -- microscopy-skills --skills-dir "${{ runner.temp }}/remote Skill 空间"
       - name: Assemble portable scientific skills
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         run: python -B tools/install_workbench.py --skills-only --skills-dir "${{ runner.temp }}/microscopy-scientific-skills"
       - name: Save ready-to-copy skills artifact
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         uses: actions/upload-artifact@v4
         with:
           name: microscopy-scientific-skills-0.6.1-r2

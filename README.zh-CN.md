@@ -1,5 +1,7 @@
 # Microscopy Workbench
 
+**只装四个 Skills？** 使用 [零依赖 npx 安装器](docs/SKILLS_INSTALL.zh-CN.md)（约 410 KiB，Node 22/24，Windows/macOS/Linux）。复制技能不需要 npm 账号、克隆仓库、Python 或完整工作台。
+
 **由 AI 协助分析、研究者在循环中引导的晶体学工作台。**
 
 [简体中文](README.zh-CN.md) · [English](README.md)

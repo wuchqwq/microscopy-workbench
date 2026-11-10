@@ -108,10 +108,11 @@ test('composition preserves source anchors/status and editable vector geometry w
 });
 test('narrow 1x3 legends wrap complete candidate wording at the same 9pt font instead of clipping or shrinking',()=>{
  const input=composition('1x3');input.recipe.font_pt=9;input.recipe.slots[0].recipe.preferences.legend=true;input.panels[0].slot=clone(input.recipe.slots[0]);const before=clone(input);
+ // Keep a longer synthetic label to exercise wrapping independently of the neutral default.
  const narrow=compositionDimensions('1x3',9),wide=compositionDimensions('2x2',9),entry={label:'Experimental observation · candidate',shape:'circle',color:'#79d9ee'};
  const wrapped=compositionLegendLayout([entry],{width:narrow.cellWidth,fontSize:narrow.font}),unwrapped=compositionLegendLayout([entry],{width:wide.cellWidth,fontSize:wide.font});
  assert.ok(wrapped.rows[0].lines.length>1);assert.equal(wrapped.rows[0].lines.join(' '),entry.label);assert.deepEqual(unwrapped.rows[0].lines,[entry.label]);assert.equal(wrapped.fontSize,37.5);assert.ok(wrapped.height<narrow.bodyHeight*.65);
- const {svg}=renderCompositionSVG(input),labels=[...svg.matchAll(/<text data-part="legend-label"[^>]*font-size="([^"]+)"[^>]*>([\s\S]*?)<\/text>/g)];assert.equal(labels.length,1);assert.equal(labels[0][1],'37.5');assert.ok((labels[0][2].match(/<tspan/g)??[]).length>1);assert.match(labels[0][2],/candidate/);assert.match(labels[0][2],/Experimental observation/);assert.deepEqual(input,before);
+ const {svg}=renderCompositionSVG(input),labels=[...svg.matchAll(/<text data-part="legend-label"[^>]*font-size="([^"]+)"[^>]*>([\s\S]*?)<\/text>/g)];assert.equal(labels.length,1);assert.equal(labels[0][1],'37.5');assert.ok((labels[0][2].match(/<tspan/g)??[]).length>1);assert.match(labels[0][2],/candidate/);assert.match(labels[0][2],/Image observation/);assert.doesNotMatch(labels[0][2],/Experimental observation/);assert.equal([...labels[0][2].matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map(([,line])=>line).join(' '),'Image observation · candidate');assert.deepEqual(input,before);
 });
 test('hydration rejects source/calibration/anchor/asset mapping mismatch rather than substituting another view',()=>{
  const original=composition();

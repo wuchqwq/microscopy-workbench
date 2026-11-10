@@ -1,5 +1,7 @@
 # Convenient source installation
 
+**Only need Skills?** The [standalone npx route](SKILLS_INSTALL.md) downloads about 410 KiB and needs only Node, without Python or a source checkout. The Python installer below remains useful when you already have the checkout or want the full workbench.
+
 [简体中文](INSTALL.zh-CN.md) · [Manual setup](CLIENT_SETUP.md)
 
 The installer uses Python's standard library to orchestrate the existing venv,

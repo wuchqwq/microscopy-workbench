@@ -55,6 +55,86 @@ function normalizeNamedReportExportGuidance(current,frozen){
  tool.description=old.description;
 }
 
+// Fixed, reviewed Mac r5 deltas only. This is not a regenerated baseline:
+// each old value is checked against the original Git catalog, each new value
+// is checked in full, and all unlisted fields still face exact comparison.
+const MAC_R5_EXTENSIONS=JSON.parse(readFileSync(new URL('./fixtures/mac-r5-catalog-extensions.json',import.meta.url),'utf8'));
+function fieldAt(tool,field){
+ const keys=field.split('.'),key=keys.pop();
+ return {parent:keys.reduce((value,name)=>value[name],tool),key};
+}
+function normalizeNamedMacR5Extensions(current,frozen){
+ for(const {name,changes} of MAC_R5_EXTENSIONS){
+  const selected=current.filter(tool=>tool.name===name),original=frozen.filter(tool=>tool.name===name);
+  assert.equal(selected.length,1,`Exactly one current ${name}`);
+  assert.equal(original.length,1,`Exactly one frozen ${name}`);
+  for(const change of changes){
+   const {parent,key}=fieldAt(selected[0],change.path),old=fieldAt(original[0],change.path);
+   assert.equal(Object.hasOwn(old.parent,old.key),!change.added,`${name}.${change.path}: frozen field presence`);
+   assert.deepEqual(old.parent[old.key],change.before,`${name}.${change.path}: frozen value is immutable`);
+   assert.deepEqual(parent[key],change.after,`${name}.${change.path}: only the exact reviewed extension is allowed`);
+   if(change.added){
+    // A new property remains optional at its actual enclosing object level.
+    const container=fieldAt(selected[0],change.path.slice(0,change.path.lastIndexOf('.properties.')));
+    const schema=container.parent[container.key];
+    assert.ok(!(schema.required??[]).includes(key),`${name}.${change.path}: must remain optional`);
+    delete parent[key];
+   }else parent[key]=structuredClone(change.before);
+  }
+ }
+}
+
+test('named Mac r5 deltas reject changed limits, prose, requirements and unrelated legacy drift',()=>{
+ const frozen=MAC_R5_EXTENSIONS.map(({name,changes})=>{
+  const tool={name,description:'unchanged legacy description',inputSchema:{type:'object',additionalProperties:false,required:['object_id'],properties:{object_id:{type:'string'}}}};
+  for(const change of changes){
+   const keys=change.path.split('.'),key=keys.pop();let parent=tool;
+   for(const part of keys)parent=parent[part]??=(part==='properties'?{}:{type:'object',properties:{},required:[]});
+   if(!change.added)parent[key]=structuredClone(change.before);
+  }
+  return tool;
+ });
+ const original=structuredClone(frozen),current=structuredClone(frozen);
+ for(const {name,changes} of MAC_R5_EXTENSIONS)for(const change of changes){
+  const {parent,key}=fieldAt(current.find(tool=>tool.name===name),change.path);parent[key]=structuredClone(change.after);
+ }
+ const check=value=>{const copy=structuredClone(value);normalizeNamedMacR5Extensions(copy,frozen);assert.deepEqual(copy,frozen);};
+ check(current);
+ for(const {name,changes} of MAC_R5_EXTENSIONS){
+  for(const change of changes){
+   const changed=structuredClone(current),tool=changed.find(tool=>tool.name===name),{parent,key}=fieldAt(tool,change.path);
+   parent[key]=typeof change.after==='number'?change.after+1:typeof change.after==='string'?change.after+' unreviewed':{...change.after,unreviewed:true};
+   assert.throws(()=>check(changed),`${name}.${change.path}: altered extension must fail`);
+   delete parent[key];assert.throws(()=>check(changed),`${name}.${change.path}: missing extension must fail`);
+   if(change.after&&typeof change.after==='object'){
+    // Every nested limit, enum member, provenance sentence and required key
+    // is guarded, rather than merely checking the extension's outer shape.
+    const leaves=(value,prefix=[])=>Object.entries(value).flatMap(([key,item])=>item&&typeof item==='object'?leaves(item,[...prefix,key]):[[...prefix,key]]);
+    for(const keys of leaves(change.after)){
+     const nested=structuredClone(current),target=fieldAt(nested.find(tool=>tool.name===name),change.path);
+     const leaf=keys.slice(0,-1).reduce((value,key)=>value[key],target.parent[target.key]),key=keys.at(-1);
+     leaf[key]=typeof leaf[key]==='number'?leaf[key]+1:typeof leaf[key]==='boolean'?!leaf[key]:leaf[key]+' unreviewed';
+     assert.throws(()=>check(nested),`${name}.${change.path}.${keys.join('.')}: nested drift must fail`);
+    }
+   }
+   if(change.added){
+    const required=structuredClone(current),target=required.find(tool=>tool.name===name);
+    const container=fieldAt(target,change.path.slice(0,change.path.lastIndexOf('.properties.')));
+    (container.parent[container.key].required??=[]).push(key);
+    assert.throws(()=>check(required),`${name}.${change.path}: required extension must fail`);
+   }
+  }
+  for(const mutate of [tool=>tool.inputSchema.properties.object_id.type='number',tool=>tool.inputSchema.required=[],tool=>tool.inputSchema.additionalProperties=true,tool=>tool.inputSchema.properties.unreviewed={type:'boolean'}]){
+   const changed=structuredClone(current);mutate(changed.find(tool=>tool.name===name));assert.throws(()=>check(changed));
+  }
+  const missing=current.filter(tool=>tool.name!==name);assert.throws(()=>check(missing));
+  assert.throws(()=>check([...current,structuredClone(current.find(tool=>tool.name===name))]));
+ }
+ const changedFrozen=structuredClone(frozen);changedFrozen[0].description+=' rewritten history';
+ assert.throws(()=>normalizeNamedMacR5Extensions(structuredClone(current),changedFrozen));
+ assert.deepEqual(frozen,original,'The original baseline is never mutated');
+});
+
 test('additive GPA catalog still rejects removed/modified legacy tools and unexpected additions',()=>{
  const frozen=[{name:'image_fft',description:'frozen',inputSchema:{type:'object'}}];
  const current=[...GPA_ADDITIONS.map(name=>({name})),...frozen];
@@ -252,9 +332,10 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // Owner-authorized HRTEM report guidance is one exact prose-only extension;
   // validate it and the unchanged entire export contract before normalizing.
   normalizeNamedReportExportGuidance(retainedSchema,schema);
+  normalizeNamedMacR5Extensions(retainedSchema,schema);
   const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
   for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
-  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except named presentation/ancestry controls, exact report export guidance and additive F1a/F4 tools');
+  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except named presentation/ancestry controls, exact report export guidance, reviewed Mac r5 extensions and additive F1a/F4 tools');
   const unknown=await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}});
   const oldText=refused.result.content[0].text,newText=unknown.result.content[0].text;
   assert.ok(newText.startsWith(oldText+'. Query image_result with original request_id=unknown-original-request;'));

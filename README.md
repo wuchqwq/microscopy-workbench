@@ -1,5 +1,7 @@
 # Microscopy Workbench
 
+**Just the four Skills?** Use the [zero-dependency npx installer](docs/SKILLS_INSTALL.md) (about 410 KiB, Node 22/24, Windows/macOS/Linux). No npm account, Git clone, Python, or workbench installation is needed to copy them.
+
 **An AI-assisted crystallography workbench, with the researcher in the loop.**
 
 [English](README.md) · [简体中文](README.zh-CN.md)

@@ -1,5 +1,7 @@
 # 便捷源码安装
 
+**只需要 Skills？** [独立 npx 方式](SKILLS_INSTALL.zh-CN.md) 只下载约 410 KiB，只需 Node，不需要 Python 或源码 checkout。下面的 Python 安装器适用于已有源码或同时安装完整工作台的情况。
+
 [English](INSTALL.md) · [手动配置](CLIENT_SETUP.zh-CN.md)
 
 安装器仅使用 Python 标准库，复用现有 venv、`npm ci`、构建和配置生成工具。

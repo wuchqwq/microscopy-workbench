@@ -1,0 +1,184 @@
+[
+  {
+    "name": "image_statistics",
+    "reason": "Fixed reference ROI contrast; tests/image_point_observation_test.py",
+    "changes": [
+      {
+        "path": "description",
+        "before": "Save original-array ROI statistics: mean, population stddev(ddof0), minimum and maximum with binary64 reductions. Source rect and original FFT frequency_rect are distinct; complex component must be explicit. No display gamma/filter is applied.",
+        "after": "Save original-array ROI statistics: mean, population stddev(ddof0), minimum and maximum with binary64 reductions. Optional reference_comparison saves signed primary mean minus median of1..8 same-shape same-image fixed reference ROI means, with caller source text; requires explicit spatial scalar rect. Reference equivalence is unverified, overlap is reported, no occupancy/SNR/vacancy inference. Source rect and original FFT frequency_rect are distinct; complex component must be explicit. No display gamma/filter is applied."
+      },
+      {
+        "path": "inputSchema.properties.reference_comparison",
+        "added": true,
+        "after": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference_rects",
+            "source_text"
+          ],
+          "properties": {
+            "reference_rects": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "minItems": 4,
+                "maxItems": 4,
+                "description": "Half-open source pixel edges [x0,y0,x1,y1], no clipping."
+              }
+            },
+            "source_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "image_open",
+    "reason": "Ordinary scalar TIFF dtype admission; tests/image_tiff_admission_test.py",
+    "changes": [
+      {
+        "path": "description",
+        "before": "Open an explicit grayscale uint16/finite float32 TIFF, DM3 or DM4 read-only outside DM; inspect a lazy scientific catalog before bounded decoding. Omitted source_kind detects .dm3/.dm4 by extension, otherwise retains the TIFF path. DM3/DM4 needs optional RosettaSciIO 0.15.0; its actual stored XY dimension tags may activate sourced file calibration. Missing/ambiguous metadata remains pixel-only. Or import an existing verified DM numerical capture. No phase, intensity unit or frame depth is inferred.",
+        "after": "Open an explicit ordinary grayscale uint8/16/32, int8/16/32 or finite float32/64 TIFF, DM3 or DM4 read-only outside DM; inspect a lazy scientific catalog before bounded decoding. Omitted source_kind detects .dm3/.dm4 by extension, otherwise retains the TIFF path. DM3/DM4 needs optional RosettaSciIO 0.15.0; its actual stored XY dimension tags may activate sourced file calibration. Missing/ambiguous metadata remains pixel-only. Or import an existing verified DM numerical capture. No phase, intensity unit or frame depth is inferred."
+      }
+    ]
+  },
+  {
+    "name": "image_measure",
+    "reason": "Explicit angle endpoints and caller provenance; tests/angle-ruler-science.test.mjs",
+    "changes": [
+      {
+        "path": "description",
+        "before": "Measure two source pixel centres, reciprocal scalar-array indices or original saved FFT frequencies. Uses active sourced native/file/user calibration; otherwise returns pixel geometry only. Domains remain distinct: reciprocal-array measurement returns frequency/period, not real-space distance. No FFT recomputation or unique phase assertion.",
+        "after": "Measure two distance endpoints, or three points [vertex, endpoint A, endpoint B] for an unsigned angle, in source pixel centres, reciprocal scalar-array indices or original saved FFT frequencies. Uses active sourced native/file/user calibration; otherwise returns pixel geometry only. Domains remain distinct: reciprocal-array measurement returns frequency/period, not real-space distance. No FFT recomputation or unique phase assertion."
+      },
+      {
+        "path": "inputSchema.properties.points.maxItems",
+        "before": 2,
+        "after": 3
+      },
+      {
+        "path": "inputSchema.properties.source_text",
+        "added": true,
+        "after": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "description": "Optional caller provenance, kept with the exact request; it is not independent scientific verification."
+        }
+      }
+    ]
+  },
+  {
+    "name": "image_remeasure",
+    "reason": "Explicit angle continuation; tests/angle-ruler-science.test.mjs",
+    "changes": [
+      {
+        "path": "inputSchema.properties.points.maxItems",
+        "before": 2,
+        "after": 3
+      }
+    ]
+  },
+  {
+    "name": "image_context",
+    "reason": "Caller declarations, never pixel inference; tests/input_conditions_test.py",
+    "changes": [
+      {
+        "path": "inputSchema.properties.metadata.properties.input_origin",
+        "added": true,
+        "after": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "simulation",
+            "experiment"
+          ],
+          "description": "Caller-declared origin, not independently verified; no scientific units or material identity inferred."
+        }
+      },
+      {
+        "path": "inputSchema.properties.metadata.properties.modality",
+        "added": true,
+        "after": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "hrtem",
+            "stem_haadf",
+            "stem_bf",
+            "stem_other",
+            "other"
+          ],
+          "description": "Caller-declared imaging mode; not recognized from pixels."
+        }
+      }
+    ]
+  },
+  {
+    "name": "image_panel_show",
+    "reason": "Original provider FFT and saved ROI binding; tests/panel-saved-input-reference.test.mjs",
+    "changes": [
+      {
+        "path": "description",
+        "before": "Offer an existing result to an explicit panel. Save request_id first. expected_object_id and draft_revision bind the inspected view. Dirty/newer drafts queue the result for explicit user acceptance instead of overwriting them. Same ID returns the original presentation receipt, never repeats it; call image_panel_current for the latest view.",
+        "after": "Offer an existing result to an explicit panel. Saved statistics/profile results populate the existing numeric slots without replacing the canvas or recalculating. Use current view.object.object_id as the statistics/profile input (not the FFT frame recipe). The exact saved input or an explicitly equal scientific grid, frame and calibration must match. Numeric presentation refuses dirty/newer drafts or pending requests (it is not queued). Optional input_reference links an original provider FFT to an explicit saved ROI for source return/comparison; use its original request, saved spatial view and stable annotation IDs from image_panel_current. The FFT must use that ROI’s outward-rounded source edges, not PNG coordinates. Save request_id first. expected_object_id and draft_revision bind the inspected view. Image results queue for explicit user acceptance when drafts are dirty/newer, instead of overwriting them. Same ID returns the original presentation receipt, never repeats it; call image_panel_current for the latest view."
+      },
+      {
+        "path": "inputSchema.properties.input_reference",
+        "added": true,
+        "after": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "provider_fft"
+              ]
+            },
+            "request_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$",
+              "minLength": 1,
+              "maxLength": 64,
+              "description": "Save before submission. Reuse this original ID to query the same operation after cancellation; never invent another ID to retry an uncertain operation."
+            },
+            "source_view_object_id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "minLength": 32,
+              "maxLength": 32
+            },
+            "annotation_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$",
+              "minLength": 1,
+              "maxLength": 64,
+              "description": "Save before submission. Reuse this original ID to query the same operation after cancellation; never invent another ID to retry an uncertain operation."
+            }
+          },
+          "required": [
+            "kind",
+            "request_id",
+            "source_view_object_id",
+            "annotation_id"
+          ],
+          "description": "Explicit link to an original completed FFT and a saved ROI view that existed before it. Provider frame, arrays, outward-rounded ROI and calibration must agree. This does not assert that the GUI dispatched the FFT; no link is inferred from the latest ROI."
+        }
+      }
+    ]
+  }
+]
