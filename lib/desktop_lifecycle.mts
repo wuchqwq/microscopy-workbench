@@ -4,6 +4,7 @@ export interface DesktopClosePorts {
  action:(action:DesktopAction)=>Promise<DesktopActionReply>;
  status:()=>Promise<DesktopWorkspaceStatus>;
  queryDiscard?:()=>Promise<DesktopDiscardQuery|null>;
+ resumeClose?:()=>Promise<boolean|null>;
  acknowledgeDiscard?:(operation:DesktopDiscardOperation)=>void;
  freezeInput?:(frozen:boolean)=>void;
  choose:(state:DesktopWorkspaceStatus)=>Promise<'save'|'discard'|'cancel'>;
@@ -19,6 +20,9 @@ export class DesktopCloseCoordinator {
  private async run():Promise<boolean>{
   try{
    this.ports.freezeInput?.(true);
+   // An earlier close may already have committed and stopped HTTP listening.
+   // Query its receipt before renderer work/status; never submit close again.
+   const resumed=await this.ports.resumeClose?.();if(resumed!==undefined&&resumed!==null)return resumed;
    const prior=await this.ports.queryDiscard?.();if(prior){
     const operation=prior.operation,identity='原丢弃操作 command_id='+operation.command_id;
     if(['running','unknown'].includes(operation.state))throw new Error(identity+' 仍在执行或结果未知；窗口保持打开，请稍后查询原操作，不会重复提交。');

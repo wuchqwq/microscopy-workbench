@@ -1,0 +1,4 @@
+interface:
+  display_name: "Crystal hypotheses"
+  short_description: "Compare explicit crystal hypotheses without circular scales"
+  default_prompt: "Use $crystallography-compare to compare these structure hypotheses with my reflections, keeping model-conditioned scale exploration separate from independent validation."

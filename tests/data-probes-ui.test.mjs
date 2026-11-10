@@ -86,3 +86,10 @@ test('default host timers retain their browser receiver',()=>{
   value.observe(selection(1));value.clear();assert.equal(scheduled,1);assert.equal(cancelled,1);
  }finally{globalThis.setTimeout=set;globalThis.clearTimeout=clear;}
 });
+
+test('pointer status does not deny a saved profile read; clearing pointer sampling retains the profile',()=>{
+ const f=fixture(),p=profile();f.instance.refreshCurrent();assert.equal(f.instance.renderResult(p),true);f.instance.clear();
+ assert.match(f.elements.get('probe-value').textContent,/尚未读取光标点数值.*统计与剖面见各自结果/);
+ assert.equal(f.instance.profile,p);assert.match(f.elements.get('profile-summary').textContent,/4 点/);
+ assert.equal(f.calls.length,0);assert.match(probeText(null),/光标点/);
+});

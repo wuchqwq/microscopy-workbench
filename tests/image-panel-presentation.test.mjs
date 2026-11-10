@@ -131,3 +131,7 @@ test('scale bars retain dark contrast halos on a white image without moving endp
  }
  assert.deepEqual(bar,before);
 });
+
+test('internal trial observation legend does not declare simulated or unknown input experimental',()=>{
+ const marks=[point('input')];const before=structuredClone(marks);const layout=layoutAnnotations(marks,options);assert.ok(layout.legend.some(x=>x.label==='Image observation · candidate'));assert.equal(layout.legend.some(x=>/Experimental observation/.test(x.label)),false);assert.deepEqual(marks,before);
+});

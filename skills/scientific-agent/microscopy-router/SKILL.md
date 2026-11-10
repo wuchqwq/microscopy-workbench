@@ -1,75 +1,87 @@
 ---
 name: microscopy-router
-description: Choose composable microscopy observation, revision and crystallography tools for an ongoing research question, while keeping DM and external computation explicit. Use when a task crosses these domains; simple tool calls need no workflow session.
+description: Choose a minimal, evidence-grounded route for a microscopy image and research question, or continue after a scientific correction. Use when input conditions or competing analysis routes need resolving; a simple known tool call needs no workflow session.
 ---
 
-# Choose the next useful observation
+# Start from the research question
 
-For autonomous, evidence-grounded choices and three-layer saved results, read
-[Route A decisions](../microscopy-automation/references/route-a-decisions.md). This permits working hypotheses and scoped unknowns; it does not add a detector or require a fixed pipeline.
+Work from an image and a question in Codex; the workbench is optional. Choose the
+smallest useful check, explain its premises, execute only available and permitted
+operations, then return evidence and what it cannot decide. Do not turn every
+image into a HRTEM/STEM, GPA, reconstruction or phase-identification workflow.
 
+## Establish what can answer the question
 
-First apply [bounded automation scope](../microscopy-automation/references/automation-scope.md).
-Candidates may be proposed by either researcher or Agent from actual observations
-and stated material context. Discussion does not require a completed simulation;
-formal checks keep their input prerequisites. No automatic experimental planning.
-Both human-first and Agent-first entry remain supported. Do not automatically
-turn a general image-analysis request into field/GPA/topology or twin validation.
+- Identify the requested quantity or decision: a period/direction, a difference
+  between regions, a supplied site's contrast, a structure hypothesis, or a
+  correction to an existing result. Reuse the selected saved half-product.
+- Distinguish an accessible scientific original/array from an exported raster or
+  screenshot and from a transported preview. Retain the supplied source,
+  frame/page, ROI and relevant existing results. A preview's file path does not
+  prove that the actual model inspected it; do not make visual claims without
+  inspection. Rendered pixels are not the original intensity array.
+- Read available metadata and the actual tool catalog/schemas. Separate source
+  origin (experimental, simulated, unknown), modality, array/coordinate domain,
+  signed XY sampling and known acquisition/model conditions. Appearance, a file
+  name or a reconstruction label does not establish any of them. A 110° scan
+  rotation is an instrument/image angle, not the crystallographic zone axis
+  [110]; a zone-axis interpretation needs the actual cell and a stated basis.
+- Distinguish an advertised operation, its present dependencies, and a result
+  actually obtained. A missing tool, unsupported scientific premises, a denied
+  operation and an unknown original request require different responses.
 
-The host Agent chooses the scientific strategy. These tools do not require a
-fixed input-to-phase pipeline, an installed Skill or an analysis session.
+Before calculation, briefly state **what can be measured now, which missing
+condition limits the requested interpretation, and why this check is useful**.
+Ask only for conditions that change that answer; continue authorized pixel-domain
+work when it remains useful. No scale means pixels/cycles per source pixel,
+not a guessed nm/Å value. Image-coordinate angles do not establish physical
+angles when XY aspect or axis geometry is unknown. Record sourced corrections
+rather than adopting a convenient example calibration.
 
-Inspect the client's actual tool catalog before choosing a route. `dm_*` uses
-the explicitly selected DM backend; `image_*` works on fixed scientific image
-objects, including independent TIFF; `structure_*` reads structures and performs
-external ASE/diffsims work. A failed native call never authorizes an external
-replacement. A registered native tool does not qualify another GMS build/dtype.
+## Choose one useful route
 
-Continue from the researcher's selected half-product rather than starting over.
-When a user supplies a local TIFF path, open it and retain its IDs yourself; do
-not ask the researcher to type internal IDs, request IDs or tool JSON. For an
-interactive task, give them the loopback URL returned by `image_panel_open`.
-After “look here” or “continue”, read `image_panel_current`: this is the actual
-selection, not a cue to infer coordinates from the preview. A single live panel
-may be resolved without an ID; if several are open, use the retained panel ID
-instead of selecting by recency. The panel does not automatically wake Codex.
+| Researcher's task | Minimal route | Stop or qualify when |
+| --- | --- | --- |
+| View an image, compare local contrast or inspect a supplied site | Use [observe and revise](../microscopy-observe-revise/SKILL.md): inspect the exact input, choose a small explicit ROI/reference and obtain original-array statistics or a profile as needed. | A display stretch is not an intensity change; unknown detector units are not atom counts, occupancy or a defect. A supplied point is not an autonomous detection. |
+| Compare local periods or directions | Use the same observation loop; save a bounded ROI FFT only if needed, with window/mean/DC and coordinates explicit, then measure the relevant peaks. | No physical sampling means no physical spacing. One peak or PNG similarity cannot identify a phase or establish strain/resolution. |
+| Compare a few explicit structures or reflection/orientation hypotheses | Use [crystallography compare](../crystallography-compare/SKILL.md). Keep competing explanations and ask for only the missing premises of this check. | Separate independent-scale testing from model-conditioned scale exploration; fitting a candidate's scale cannot validate that candidate or an absolute scale. |
+| Revise scale, a point/centre, ROI, source or conditions | Use the observation loop's dependency review, retaining old evidence and explicitly remeasuring only affected geometry. | A scale correction does not require another FFT. A changed source/frame/ROI cannot inherit old anchors silently. |
+| Compare already saved fixed-g GPA bands | Read [cross-method continuation](../microscopy-automation/references/method-loop.md) only for this requested saved-result route; report amplitude, wrapped phase, support and unknowns separately. | This is not raw HRTEM ingress, automatic strain validation or a reason to force every image through GPA. |
 
-Bind the exact image/frame/ROI, scientific grid and reference structure. Reuse a
-current saved analysis when one is selected; historical review stays attached
-to its old immutable evidence. A live DM edit requires a new capture, never an
-old request query. Do not guess the newest window or globally newest object.
-When using AnalysisContext, retain the revision read before work. Scientific
-providers persist their results first; advancing current references is a separate
-CAS step. A lost CAS preserves a historical proposal, not permission to promote
-it blindly against a newer revision or roll back another provider's result.
-When the optional tools are enabled, `analysis_read` selects current or explicit
-historical references. `analysis_create` names a new task; `analysis_update`
-advances saved references against the previously read revision. Inspect a lost
-CAS with `analysis_proposal`. No context is required for an isolated tool call.
-For a task the user wants to continue later, choose a short human-readable name
-and tell them that name. On reconnection read that named analysis and the retained
-panel's current state before doing new work; do not recreate TIFF/FFT objects to
-rebuild chat memory. An original request query recovers its historical outcome,
-whereas an unqualified `analysis_read` reads current references.
+A supplied STEM expected site/reference or column-pair question may use
+[shared STEM objects](../microscopy-observe-revise/references/stem-shared-objects.md)
+when the corresponding tools and data conditions are present. Ordinary contrast
+or pixel geometry remains useful when atom localization/count interpretation is
+unsupported. A request about a reconstruction does not itself authorize running
+or changing that reconstruction; route from the accessible supplied result and
+its documented meaning.
 
-- For viewing, ROI, local FFT, display or a corrected scale/point, read
-  [microscopy-observe-revise](../microscopy-observe-revise/SKILL.md).
-- For automated multiscale regions, FFT peak tables and repeatable candidate
-  comparison, read [microscopy-automation](../microscopy-automation/SKILL.md).
-- For a CIF/XYZ, zone axis, reflection hypothesis or simulation comparison, read
-  [crystallography-compare](../crystallography-compare/SKILL.md).
+For a relevant, explicitly requested multiscale/field/topology/twin route, read
+[microscopy automation](../microscopy-automation/SKILL.md) and its
+[bounded scope](../microscopy-automation/references/automation-scope.md) rather
+than silently adding those computations. These specialized routes do not make
+same-source outputs independent observations.
 
-Ask only for scientific information that changes the requested result: a missing
-physical scale, ambiguous frame meaning, or a candidate/confirmed correspondence.
-Unknown scale still allows pixel-domain exploration. Do not substitute an example
-calibration or infer phase radians, physical slice depth or unique phase identity.
+## Capability gaps and continuation
 
-Save each write's request ID before submission. Identify recovery by its provider,
-workspace and session, as well as that ID. After timeout or cancellation query
-`image_result` or `structure_result`; an incomplete outcome never authorizes
-automatic replay. Optional `execution_list` / `execution_info` explain waiting
-and worker closure; their observations are not durable scientific receipts.
+Prefer the present provider and its scientific journals. If the required
+operation is genuinely unavailable, state the exact gap and consider a small
+permitted local script with declared inputs, dependencies, hashes and output
+limits; read the [narrow fallback contract](../microscopy-observe-revise/references/local-fallback.md)
+only for that gap. A script result is
+not a provider receipt. Never substitute a script, endpoint, model, case or
+session for a denied action, or use fallback to replay an unknown request.
 
-Use [schema-checked examples](examples.json) as isolated call shapes, not a required
-sequence or experimental answers. Report which values came from DM, external
-computation, the user, or a candidate interpretation.
+Keep internal IDs, schema JSON and dependency bookkeeping out of the researcher's
+input burden. Retain them in the record yourself. When a panel, saved task or
+interrupted request is involved, read
+[resume and interact](references/continuation.md); otherwise use the selected
+immutable objects directly without requiring a GUI or AnalysisContext session.
+The [call shapes](examples.json) are composable schema examples, not a mandatory
+sequence, actual execution evidence or scientific answers.
+
+Return the measured/image evidence, algorithm output, proposed explanation and
+remaining scientific premises distinctly. State the checks actually run and
+what supports, conflicts with, or cannot distinguish the candidates. A transport
+success, immutable receipt or deterministic residual is not independent material
+validation; leave insufficient and indistinguishable conclusions available.

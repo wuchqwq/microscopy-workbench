@@ -6,10 +6,12 @@ import {closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, rea
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {panelRoiHandoff} from './panel_roi_handoff.mjs';
+import {panelStemHandoff} from './panel_stem_handoff.mjs';
 import {attachCrystalEvidence} from './panel_crystal_evidence.mjs';
 import type {CrystalEvidencePayload} from './panel_crystal_evidence.mjs';
 import {prepareOwnedPanelRegistration,readOwnedPanelCheckpoint,assertOwnedPanelStopped,validateOwnedConnection} from './panel_ownership.mjs';
 import {ordinaryWorkspaceMetadataDirectory,ordinaryWorkspaceMetadataTarget} from './workspace_metadata_paths.mjs';
+import {parsePanelSavedInputReference} from './panel_saved_input_reference.mjs';
 
 import type {ArgumentSchema,ToolInputSchema} from './runtime/schema.mjs';
 import type {ToolContent,ToolDefinition,ToolResult} from './runtime/contracts.mjs';
@@ -27,15 +29,16 @@ interface ThrownSlots {code?:unknown;httpStatus?:unknown;message?:unknown;}
 
 const objectId: ArgumentSchema={type:'string',pattern:'^[a-f0-9]{32}$',minLength:32,maxLength:32};
 const requestId: ArgumentSchema={type:'string',pattern:'^[A-Za-z0-9_-]+$',minLength:1,maxLength:64,description:'Save before submission. Reuse this original ID to query the same operation after cancellation; never invent another ID to retry an uncertain operation.'};
+const providerFftInput:ArgumentSchema={type:'object',additionalProperties:false,properties:{kind:{type:'string',enum:['provider_fft']},request_id:requestId,source_view_object_id:objectId,annotation_id:requestId},required:['kind','request_id','source_view_object_id','annotation_id'],description:'Explicit link to an original completed FFT and a saved ROI view that existed before it. Provider frame, arrays, outward-rounded ROI and calibration must agree. This does not assert that the GUI dispatched the FFT; no link is inferred from the latest ROI.'};
 const make=(name:string,description:string,properties:Readonly<Record<string,ArgumentSchema>>,required:readonly string[]):PanelToolDefinition=>({name,description,inputSchema:{type:'object',additionalProperties:false,properties,required}});
 export const imagePanelTools: PanelToolDefinition[]=[
   make('image_panel_open','Open an explicitly saved preview/view object in an owned local browser panel; PREVIEW_REQUIRED means no rendering was dispatched. Recover any original preview request before creating another. Open the returned saved view and return its URL and saved PNG. No user path, script or arbitrary URL is accepted. The panel survives MCP client disconnect; same request ID recovers its original panel, never launches another.',{object_id:objectId,request_id:requestId},['object_id','request_id']),
   make('image_panel_current','Read exact current panel/object, source-coordinate selection, saved scoped research_observation reference and unsaved-draft status, plus the saved PNG. A twinning observation confirms only its explicitly recorded scope, not a twin law, orientation or HKL; synthetic_fixture is not human confirmation. With one live registered panel, panel_id may be omitted. This reads after the user says continue; it does not automatically wake the model. Unsaved browser tone/gesture drafts are described separately from the saved image.',{panel_id:objectId},[]),
-  make('image_panel_show','Offer an existing result to an explicit panel. Save request_id first. expected_object_id and draft_revision bind the inspected view. Dirty/newer drafts queue the result for explicit user acceptance instead of overwriting them. Same ID returns the original presentation receipt, never repeats it; call image_panel_current for the latest view.',{panel_id:objectId,object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId},['panel_id','object_id','expected_object_id','draft_revision','request_id']),
+  make('image_panel_show','Offer an existing result to an explicit panel. Saved statistics/profile results populate the existing numeric slots without replacing the canvas or recalculating. Use current view.object.object_id as the statistics/profile input (not the FFT frame recipe). The exact saved input or an explicitly equal scientific grid, frame and calibration must match. Numeric presentation refuses dirty/newer drafts or pending requests (it is not queued). Optional input_reference links an original provider FFT to an explicit saved ROI for source return/comparison; use its original request, saved spatial view and stable annotation IDs from image_panel_current. The FFT must use that ROI’s outward-rounded source edges, not PNG coordinates. Save request_id first. expected_object_id and draft_revision bind the inspected view. Image results queue for explicit user acceptance when drafts are dirty/newer, instead of overwriting them. Same ID returns the original presentation receipt, never repeats it; call image_panel_current for the latest view.',{panel_id:objectId,object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId,input_reference:providerFftInput},['panel_id','object_id','expected_object_id','draft_revision','request_id']),
 ];
 export const imagePanelResumeTool:PanelToolDefinition=make('image_panel_resume','Explicitly resume a stopped registered owned helper from its exact checkpoint. Save request_id first. Stable logical panel_id, new helper generation and capability; saved crystal evidence remains unvalidated until full image_panel_evidence admission. Never restarts a live, legacy, failed or unknown operation automatically.',{panel_id:objectId,request_id:requestId},['panel_id','request_id']);
 export const imagePanelEvidenceTool:PanelToolDefinition=make('image_panel_evidence','Attach an existing fully admitted general crystal comparison to an owned image Panel without replacing its scientific canvas. Requires the explicitly configured structure provider. Save request_id first; exact original arguments recover only the original attachment receipt, not a new calculation or current-state query. Stale frame/calibration/ROI or unsaved draft refuses; no model is awakened.',{panel_id:objectId,comparison_object_id:objectId,observation_view_object_id:objectId,expected_object_id:objectId,draft_revision:{type:'integer',minimum:0},request_id:requestId},['panel_id','comparison_object_id','expected_object_id','draft_revision','request_id']);
-export const IMAGE_PANEL_INSTRUCTIONS='Use image_panel_open to give the researcher a local shared view of an existing image object. Retain the returned panel_id internally. After the user circles a region and says continue, image_panel_current returns its exact source/frequency coordinates and unsaved draft state; use ordinary image_* tools for the chosen operation, then image_panel_show with the inspected object/draft revision. Do not claim automatic model wake. A queued result has not replaced the current view; the researcher explicitly accepts it without losing an unseen draft. Returned PNG is the saved immutable view, not a screenshot of unsaved local tone/gesture drafts. Panel connection records persist across MCP clients but are not a scientific state database; stopped panels are not automatically restarted.';
+export const IMAGE_PANEL_INSTRUCTIONS='Use image_panel_open to give the researcher a local shared view of an existing image object. Retain the returned panel_id internally. After the user circles a region and says continue, image_panel_current returns its exact source/frequency coordinates and unsaved draft state; use ordinary image_* tools for the chosen operation, then image_panel_show with the inspected object/draft revision. For statistics/profile, use current view.object.object_id as input and image_panel_show to restore the original numeric record without replacing the canvas; a changed/dirty draft refuses numeric presentation. Do not claim automatic model wake. A queued result has not replaced the current view; the researcher explicitly accepts it without losing an unseen draft. Returned PNG is the saved immutable view, not a screenshot of unsaved local tone/gesture drafts. Panel connection records persist across MCP clients but are not a scientific state database; stopped panels are not automatically restarted.';
 
 const delay=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const canonical=(value:unknown):unknown=>value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical((value as RawSlots)[key])])):Array.isArray(value)?value.map(canonical):value;
@@ -47,7 +50,8 @@ function validateArguments(name:string,args:unknown):asserts args is ValidatedPa
   if(!ownKeys(args,Object.keys(entry.inputSchema.properties)))throw new Error('Panel arguments contain unknown fields');
   for(const required of entry.inputSchema.required)if(!Object.hasOwn(args,required))throw new Error(`Missing ${required}`);
   for(const [key,value] of Object.entries(args)){
-    if(key==='draft_revision'){if(!Number.isSafeInteger(value)||(value as number)<0)throw new Error('Invalid draft_revision');}
+    if(key==='input_reference'){if(parsePanelSavedInputReference(value).kind!=='provider_fft')throw new Error('Expected explicit provider FFT input reference');}
+    else if(key==='draft_revision'){if(!Number.isSafeInteger(value)||(value as number)<0)throw new Error('Invalid draft_revision');}
     else validateId(value,key,key==='request_id');
   }
 }
@@ -128,8 +132,8 @@ export class ImagePanelManager {
     const crystal=crystal_evidence&&typeof crystal_evidence==='object'?crystal_evidence as RawSlots:null,payload=crystal?.payload&&typeof crystal.payload==='object'?crystal.payload as RawSlots:null;
     const {image_png_base64:crystalPng,...crystalMetadata}=payload??{};
     const view=crystal?{...baseView,crystal_evidence:{...crystal,payload:crystalMetadata}}:Object.hasOwn(checked,'crystal_evidence')?{...baseView,crystal_evidence}:baseView;
-    const conn=this.getConnection(panelId);
-    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:panelRoiHandoff(checked),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image. Window collection entries are retained saved-view references; object, selection and edit_state describe only the active scientific view. Other windows are read-only displays, not additional active inputs.',automatic_model_wake:false};
+    const conn=this.getConnection(panelId),roiHandoff=panelRoiHandoff(checked);
+    const data={schema_version:1,backend:'external-image-tools',panel_id:panelId,panel_url:`http://127.0.0.1:${conn.port}/#${conn.token}`,...extra,view,roi_handoff:roiHandoff,stem_handoff:panelStemHandoff(checked,roiHandoff),image_semantics:'Saved immutable PNG. Unsaved local display/gesture drafts are described by edit_state and are not baked into this image. Window collection entries are retained saved-view references; object, selection and edit_state describe only the active scientific view. Other windows are read-only displays, not additional active inputs.',automatic_model_wake:false};
     const content:ToolContent[]=[{type:'text',text:JSON.stringify(data,null,2)}];
     for(const image of [png_base64,domain_png_base64,crystalPng])if(image!==null&&image!==undefined){
       if(typeof image!=='string'||image.length>6*1024*1024)throw new Error('Invalid bounded saved panel PNG');
@@ -242,8 +246,8 @@ export class ImagePanelManager {
         await this.launch({panel_id:panelId,object_id:args.object_id as string,connection_file:this.connectionFile(panelId)});
         state=await this.request(await this.waitForConnection(panelId),'GET','/api/state');
       }else{
-        const {panel_id,request_id,object_id,expected_object_id,draft_revision}=args;
-        state=await this.request(this.getConnection(panel_id),'POST','/api/present',{request_id,object_id,expected_object_id,draft_revision});
+        const {panel_id,request_id,object_id,expected_object_id,draft_revision,input_reference}=args;
+        state=await this.request(this.getConnection(panel_id),'POST','/api/present',{request_id,object_id,expected_object_id,draft_revision,...(input_reference!==undefined?{input_reference}:{})});
         if(!(state as RawSlots).presentation||((state as RawSlots).presentation as RawSlots).request_id!==request_id||!['shown','queued'].includes(((state as RawSlots).presentation as RawSlots).status as string))throw new Error('Presentation response is unverified; query the original request_id.');
       }
       record.status='completed';if(name!=='image_panel_open')record.response=state;
@@ -273,11 +277,12 @@ export class ImagePanelManager {
     validateArguments(name,args);this.initialize();
     if(signal?.aborted)throw new Error('Cancelled before panel operation submission');
     if(name==='image_panel_current')return waitWithoutCancelling(this.current(args),signal);
-    const validated=args as PanelMutationArguments;
+    const validated=structuredClone(args) as PanelMutationArguments;
+    validateArguments(name,validated);
     const identity=validated.request_id;
     let operation=this.active.get(identity);
     if(operation){
-      if(!identical(operation.args,args)||operation.name!==name)throw new Error('Panel request_id conflicts with the in-flight operation');
+      if(!identical(operation.args,validated)||operation.name!==name)throw new Error('Panel request_id conflicts with the in-flight operation');
     }else{
       const promise=this.mutate(name,validated);operation={name,args:validated,promise};this.active.set(identity,operation);
       promise.then(()=>this.active.delete(identity),()=>this.active.delete(identity));

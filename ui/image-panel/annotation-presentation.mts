@@ -93,14 +93,15 @@ export function layoutAnnotations(marks: readonly RenderedMark[]=[],options: Ann
   const fontSize=bounded(lp.font_size,preset==='real-space'?12:11,1,256)/scale,extent=labelExtent(text,fontSize),important=lp.important===true||mark.kind==='text';
   const label: LabelLayout={text,x:anchor[0],y:anchor[1],...extent,fontSize,leader:lp.leader!==false,pinned:lp.pinned===true,visible:!hidden&&layerVisible&&lp.visible!==false&&Boolean(text),offset:hasManualOffset?[...lp.offset!]:null,important};
   if(mode==='figure'&&lp.figure_visible===false)label.visible=false;
+  if(mode==='analysis'&&options.quietRoiLabels&&mark.kind==='rectangle'&&!selected&&!hovered)label.visible=false;
   if(preset==='real-space'&&text.length>22&&!important&&!selected&&!hovered)label.visible=false;
   const item: AnnotationLayoutItem={id,mark,shape,color,radius,lineWidth,geometryVisible,selected,hovered,layer,category,anchor,coordinates:[...mark.coordinates],dash:layer==='experimental'?[]:[3/scale,2.5/scale],label};
   items.push(item);
   if(!hidden&&layerVisible){
    const status=mark.status==='user_confirmed'?'user_confirmed':mark.status==='hypothesized'||/\((?:hyp\.?|hypothesized|hypothesis)\)/i.test(String(originalText))?'hypothesized':'';
    const key=[category,category==='none'?layer:'',status].join(':');
-   const baseLabel=categoryStyle?.label??(layer==='experimental'?'Experimental observation':layer==='simulation_A'?'Simulation A':'Simulation B');
-   const labelText=baseLabel+(status==='hypothesized'?' · candidate':status==='user_confirmed'?' · confirmed':'');
+   const baseLabel=categoryStyle?.label??(layer==='experimental'?'Image observation':layer==='simulation_A'?'Simulation A':'Simulation B');
+   const labelText=baseLabel+(status==='hypothesized'?' · candidate':status==='user_confirmed'?' · user-confirmed':'');
    if(category!=='none'&&layer!=='experimental')categorySimulation=true;
    if((category!=='none'||layer!=='experimental'||status)&&(!legendMap.has(key)||layer==='experimental'))legendMap.set(key,{key,label:labelText,color,shape,status,layer,dash:category==='none'?item.dash:[]});
   }

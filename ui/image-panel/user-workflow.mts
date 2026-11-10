@@ -1,4 +1,5 @@
 import type {WorkflowState,ViewObject,PickedSelection,HistoryEntry,SavedViewEntry} from './presentation-contracts.mjs';
+import type {WireSelection} from './coordinates.mjs';
 // UI-only interaction policy. Scientific records and their recovery stay in the provider.
 const copy=<T,>(value: T): T=>JSON.parse(JSON.stringify(value)) as T;
 const canonical=(value: unknown)=>JSON.stringify(value??null,(_k: string,v: unknown)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,(v as Record<string,unknown>)[k]])):v);
@@ -62,8 +63,17 @@ export function measurementActionName(picked:PickedSelection|null|undefined,obje
 export function idleSelectionHint(object:ViewObject={}){
  if(object.panels?.some(panel=>panel.domain==='frequency'))return '点选峰位或按 L 绘制测量线。';
  if(['complex64','complex128'].includes(object.dtype??''))return '选择 ROI 或按 L 绘制测量线；复数原图暂不支持 FFT。';
- if(object.panels?.every(panel=>panel.domain==='spatial_pixels')&&object.panels.length)return object.annotations?.some(mark=>mark.kind==='rectangle'&&mark.status!=='retracted')?'点击已有 ROI；按 R 添加，按 L 绘制测量线。':'按 R 圈选 ROI，再点击 FFT；按 L 绘制测量线。';
+ if(object.panels?.every(panel=>panel.domain==='spatial_pixels')&&object.panels.length)return object.annotations?.some(mark=>mark.kind==='rectangle'&&mark.status!=='retracted')?'点击已有 ROI；按 R 添加，按 L 绘制测量线。':'按 R 选区后统计，按 L 测量；已有数值可直接查回，也可“记录研究问题”。';
  return '选择图中标记，或绘制区域／测量线。';
+}
+// Explicit complete saved spatial support, not a guessed ROI/question scope.
+// The existing provider still validates the exact input and mapping.
+export function currentViewStatisticsSelection(state:WorkflowState|null|undefined):WireSelection|null {
+ const object=state?.object,frame=state?.frame_identity?.frame_object_id,p=object?.panels?.length===1?object.panels[0]:null;
+ if(!object?.object_id||!frame||p?.domain!=='spatial_pixels'||p.source_object_id!==frame)return null;
+ const rect=p.source_rect_xyxy,image=p.image_rect_xyxy;
+ if(!Array.isArray(rect)||rect.length!==4||!rect.every(Number.isSafeInteger)||rect[0]<0||rect[1]<0||rect[2]<=rect[0]||rect[3]<=rect[1]||!Array.isArray(image)||image.length!==4||!image.every(Number.isFinite)||image[0]<0||image[1]<0||image[2]<=image[0]||image[3]<=image[1])return null;
+ return {kind:'rectangle',source_object_id:frame,coordinate_space:'source_pixels',coordinates:[...rect],panel:copy(p)};
 }
 // Frequency display ranges are not real-space intensities. Keep a fixed range
 // only for an already spatial view; returning via saved-view navigation uses
@@ -71,7 +81,7 @@ export function idleSelectionHint(object:ViewObject={}){
 export function framePreviewRecipe(object: ViewObject | null | undefined,display: Readonly<Record<string,unknown>> | null | undefined){
  const spatial=object?.panels?.length!>0&&object!.panels!.every(p=>p.domain==='spatial_pixels');
  if(!display)return {};
- return Object.fromEntries((spatial?['gamma','display_range','max_size','component']:['max_size',...(display.component!==undefined?['component']:[])]).filter(k=>display[k]!==undefined).map(k=>[k,copy(display[k])]));
+ return Object.fromEntries((spatial?['gamma','display_range','max_size','upscale','interpolation','component']:['max_size',...(display.component!==undefined?['component']:[])]).filter(k=>display[k]!==undefined).map(k=>[k,copy(display[k])]));
 }
 export class SavedViewHistory{
  declare limit: number;declare entries: SavedViewEntry[];declare index: number;

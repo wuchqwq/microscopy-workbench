@@ -91,7 +91,7 @@ test('selected historical measurement retains its state beside optional result s
 
 test('readable result: saved pixel period and frequency are summaries, raw IDs/qualification stay in evidence',()=>{
  const m=result({physical_frequency_magnitude:null,d_spacing:null,period:null,pixel_period:7.25264723197026,frequency_distance_cycles_per_pixel:.1378806893560076,name:'g1',scientific_grid_identity:{source_grid_object_id:C}});
- const summary=Object.fromEntries(measurementSummary(m,'FFT 1'));assert.match(summary['测得量'],/像素周期 7.252647 px.*频率差 0.1378807 cycles\/pixel/);assert.equal(summary['来源 FFT'],'FFT 1');assert.ok(!Object.keys(summary).some(key=>/原始请求|网格|资格/.test(key)));assert.match(Object.fromEntries(measurementDetails(m))['原精度数值'],/7.25264723197026/);assert.match(exportMeasurementTable([m]),/7.25264723197026/);
+ const summary=Object.fromEntries(measurementSummary(m,'FFT 1'));assert.match(summary['测得量'],/像素周期 7.252647 px.*频率差 0.1378807 cycles\/pixel/);assert.equal(summary['图像来源'],'FFT 1');assert.ok(!Object.keys(summary).some(key=>/原始请求|网格|资格/.test(key)));assert.match(Object.fromEntries(measurementDetails(m))['原精度数值'],/7.25264723197026/);assert.match(exportMeasurementTable([m]),/7.25264723197026/);
 });
 test('pending geometry: current summary hides old values while evidence/export keep original precision',()=>{
  const record=result({name:'g1',pixel_period:7.25264723197026}),copy=JSON.stringify(record),workspace=new MeasurementWorkspace({document:null,getState:()=>({object:{object_id:B}}),pendingAnnotations:()=>['g1']});workspace.current={object_id:B};const pending=workspace.displayEntry(record);
@@ -100,7 +100,7 @@ test('pending geometry: current summary hides old values while evidence/export k
 });
 test('empty results distinguish no measurements from a filter hiding history without changing disclosure',()=>{
  const elements=new Map(),element=id=>{if(!elements.has(id))elements.set(id,{hidden:false,open:true,textContent:'',children:[],dataset:{},classList:{toggle(){}},replaceChildren(){this.children=[];},append(...v){this.children.push(...v);},setAttribute(){}});return elements.get(id);};const workspace=new MeasurementWorkspace({document:{getElementById:element,createElement:()=>({children:[],dataset:{},classList:{toggle(){}},append(...v){this.children.push(...v);},setAttribute(){}})},getState:()=>({object:{object_id:B}})});
- workspace.render();assert.match(element('measurement-empty').textContent,/尚无保存测量/);workspace.entries=[result({status:'historical'})];workspace.render();assert.match(element('measurement-empty').textContent,/筛选隐藏.*历史/);assert.equal(element('measurement-workspace').open,true);element('measurement-history').checked=true;workspace.render();assert.equal(element('measurement-empty').hidden,true);assert.equal(element('measurement-workspace').open,true);
+ workspace.render();assert.match(element('measurement-empty').textContent,/尚无保存的峰位/);assert.match(element('measurement-empty').textContent,/不表示 ROI 统计或 FFT 为空/);assert.equal(element('measurement-count').textContent,'峰位/测量线：0 条');workspace.entries=[result({status:'historical'})];workspace.render();assert.match(element('measurement-empty').textContent,/筛选隐藏.*历史/);assert.equal(element('measurement-workspace').open,true);element('measurement-history').checked=true;workspace.render();assert.equal(element('measurement-empty').hidden,true);assert.equal(element('measurement-workspace').open,true);
 });
 
 
@@ -127,7 +127,7 @@ test('hidden-history summary action expands once without selecting, writing or c
 });
 
 test('history shortcut appears only when history filtering hides every result',async()=>{
- const h=historyDisclosureFixture([]);await h.workspace.refresh();assert.equal(h.el('measurement-show-history').hidden,true);assert.match(h.el('measurement-empty').textContent,/尚无保存测量/);
+ const h=historyDisclosureFixture([]);await h.workspace.refresh();assert.equal(h.el('measurement-show-history').hidden,true);assert.match(h.el('measurement-empty').textContent,/尚无保存的峰位/);
  h.workspace.entries=[result()];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true);
  h.workspace.entries.push(result({object_id:C,status:'historical'}));h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,true,'a visible current result keeps the normal result controls');
  h.workspace.entries=[result({status:'historical'})];h.workspace.render();assert.equal(h.el('measurement-show-history').hidden,false);assert.match(h.el('measurement-empty').textContent,/筛选隐藏.*历史/);
@@ -146,4 +146,17 @@ test('export selection keeps pending and checked historical records with origina
  for(const row of rows){assert.equal(row.pixel_period,'7.25264723197026');assert.equal(row.frequency_cycles_per_pixel,'0.1378806893560076');assert.equal(row.point_1_x,'0.125');assert.equal(row.point_1_y,'-0.25');assert.equal(row.source_frame,'10');assert.equal(row.source_roi,'[20,30,84,94]');assert.equal(row.input_object_id,B);assert.equal(row.request_id,'test-measure');assert.equal(row.manifest_sha256,'f'.repeat(64));assert.equal(row.calibration_source,'public synthetic scale');}
  assert.equal(rows[0].d_spacing,'0.20000000000000004');assert.equal(rows[1].d_spacing,'0.30000000000000004');assert.equal(rows[0].status,'待重测');assert.equal(rows[1].status,'历史');assert.equal(JSON.stringify(workspace.entries),before,'export leaves original records intact');
  const legacy={...original,physical_distance:null,distance_physical:.30000000000000004};assert.match(Object.fromEntries(measurementDetails(legacy))['原精度数值'],/"distance_physical":0\.30000000000000004/);assert.match(exportMeasurementTable([legacy]),/,0\.30000000000000004,/);
+});
+
+test('angle table distinguishes calibrated physical angle from image geometry and hides stale values',()=>{
+ const angle={kind:'measure',measurement_type:'angle',points:[[1,1],[3,1],[1,4]],status:'current',angle_image_degrees:90,angle_physical_degrees:null,physical_angle:false};
+ assert.equal(measurementType(angle),'两矢量夹角');assert.match(measurementValues(angle)[0].label,/图像/);assert.equal(measurementValues(angle)[0].value,90);assert.match(measurementValues(angle)[0].unit,/物理角未知/);assert.match(exportMeasurementTable([angle]),/angle_image_degrees,angle_physical_degrees,point_2_x,point_2_y,measurement_source/);assert.match(exportMeasurementTable([angle]),/90,,1,4,/);
+ assert.equal(measurementValues({...angle,physical_angle:true,angle_physical_degrees:126.869897645844})[0].value,126.869897645844);
+ assert.deepEqual(measurementValues({...angle,status:'needs_remeasurement'}),[]);
+});
+
+test('ordinary and reciprocal source rows identify their saved frame without calling it missing FFT provenance',()=>{
+ const table=new MeasurementWorkspace({document:null,getState:()=>({})});
+ assert.equal(table.sourceFftName(result({coordinate_space:'source_array_indices',scientific_grid_identity:{source_grid_object_id:C}})),'倒易标量图 · 帧 10');
+ assert.equal(table.sourceFftName(result({coordinate_space:'source_pixels',scientific_grid_identity:{source_grid_object_id:C}})),'原图 · 帧 10');
 });

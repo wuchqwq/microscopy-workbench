@@ -36,6 +36,8 @@ The [current status](docs/DEVELOPMENT_STATUS.md) separates implemented functiona
 
 ## Quick start
 
+**Convenient installer:** [macOS / Linux / Windows setup and standalone Skills installation](docs/INSTALL.md). Preview with `./install.sh --dry-run` or `install.cmd --dry-run`; no automatic MCP or authentication changes.
+
 Use **Node.js 22.x or 24.x** and an independent scientific Python environment. **Python 3.13 is recommended and is the CI reference**. Scientific tools still declare Python 3.10+, which is not continuously CI-qualified; the optional configuration registrar needs 3.11+. See [runtime support](docs/CI_SUPPORT.md).
 
 From a new checkout on macOS/Linux:

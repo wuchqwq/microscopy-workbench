@@ -7,10 +7,20 @@ import copy
 import hashlib
 from pathlib import Path
 import shutil
+try:
+    from . import image_site_observation as site_observation
+    from . import image_site_continuation as site_continuation
+except ImportError:
+    import image_site_observation as site_observation
+    import image_site_continuation as site_continuation
+if __package__:
+    from . import image_candidate_assessment as assessment
+else:
+    import image_candidate_assessment as assessment
 
 FIELDS = {
     "discovery": {"object_id", "entry", "selection_origin", "window_sizes", "max_candidates", "regions", "previous_discovery_id", "max_size"},
-    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id"},
+    "discovery_review": {"object_id", "candidate_id", "evidence_ids", "observation_text", "candidate_explanations", "unresolved", "previous_review_id", "site_context", "include_site_continuation", "candidate_assessment"},
 }
 LEGACY_VERSION = "image-first-discovery-v1"
 VERSION = "image-first-discovery-v2"
@@ -50,6 +60,27 @@ def _source(workspace, ident, api):
                "calibration_dependency": api.calibration.dependency(frame.get("xy_calibration"))}
     return {"selected": _dep(selected, selected_dir, api), "science": science,
             "source_context": api.automation.context_record(frame, context)}, values
+
+
+def _observation_science(workspace, observed, api):
+    """Qualify the full source grid behind a saved native view/annotation.
+
+    Numeric readback has already reconstructed the original request. Do not
+    demand that its selected presentation wrapper itself be a full frame, or
+    reinterpret a cropped/other-frame array as that frame. Calibration comes
+    from the reconstructed selected operand, never an older frame fallback.
+    """
+    grid = observed.get("scientific_grid_identity")
+    api.need(type(grid) is dict and grid.get("coordinate_space") == "source_pixels",
+             "Real-space evidence requires its original spatial grid", "DISCOVERY_SCOPE_MISMATCH")
+    origin, _ = _source(workspace, grid.get("source_grid_object_id"), api)
+    science = origin["science"]
+    height, width = science["shape_yx"]
+    api.need(all(grid.get(key) == science[key] for key in ("array_sha256", "shape_yx", "dtype")) and
+             grid.get("source_rect_xyxy") == [0, 0, width, height],
+             "Real-space evidence grid differs from the complete source frame; no cropped-grid promotion",
+             "DISCOVERY_SCOPE_MISMATCH")
+    return {**science, "calibration_dependency": api.calibration.dependency(observed.get("xy_calibration"))}
 
 
 def _parameters(request, shape, api, version=VERSION):
@@ -188,12 +219,50 @@ def _fft_scope(workspace, ident, source, rect, api):
     return fft, directory
 
 
-def _evidence(workspace, ids, source, rect, api):
+def _evidence(workspace, ids, source, rect, api, *, candidate_assessment=False):
     api.need(type(ids) is list and 1 <= len(ids) <= 8 and len(set(ids)) == len(ids), "Select1..8 distinct saved evidence IDs")
     refs, observations, ffts, gpas, gpa_scopes = [], [], {}, [], set()
     for ident in ids:
         record, directory = workspace.object(ident)
         kind = record["kind"]
+        if kind == "column_fit":
+            # object() has verified saved input/coefficient/result relations.
+            # This path must never execute the optimizer during a review/read.
+            api.need(_observation_science(workspace, record, api) == source["science"] and record["coordinate_space"] == "source_pixels" and
+                     record["source_rect_xyxy"] == rect and
+                     api.calibration.dependency(record.get("xy_calibration")) == source["science"]["calibration_dependency"],
+                     "Column-fit evidence has a different source/frame/ROI/calibration", "DISCOVERY_SCOPE_MISMATCH")
+            refs.append(_dep(record, directory, api))
+            observations.append(dict(object_id=ident, kind=kind, support="exact_candidate_readout_with_declared_9x9_fit_context",
+                coordinate_space=record["coordinate_space"], component="raw", scientific_grid_identity=record["scientific_grid_identity"],
+                numerical_evidence={k:copy.deepcopy(record[k]) for k in ("raw_baseline", "raw_baseline_status", "sites", "whole_comparison", "assumptions", "limitations")},
+                interpretation_status="hypothesized"))
+            continue
+        if kind in ("statistics", "profile"):
+            observed = api.numeric.committed_observation(workspace, record, api)
+            api.need(_observation_science(workspace, observed, api) == source["science"] and observed["coordinate_space"] == "source_pixels" and
+                     observed["component"] == "raw" and
+                     api.calibration.dependency(observed.get("xy_calibration")) == source["science"]["calibration_dependency"],
+                     "Real-space evidence has a different source/frame/calibration or array domain", "DISCOVERY_SCOPE_MISMATCH")
+            if kind == "statistics":
+                api.need(observed["source_rect_xyxy"] == rect, "Primary statistics ROI must equal the candidate ROI; references remain contextual", "DISCOVERY_SCOPE_MISMATCH")
+                numeric = {key:copy.deepcopy(observed[key]) for key in ("statistics", "source_rect_xyxy", "reference_comparison") if key in observed}
+                support = "exact_candidate_roi"
+            else:
+                points = observed["samples"]["sampled_coordinates_xy"]
+                api.need(all(rect[0] <= x < rect[2] and rect[1] <= y < rect[3] for x,y in points),
+                         "All profile samples must lie inside the candidate ROI; a line is not full-ROI evidence", "DISCOVERY_SCOPE_MISMATCH")
+                values = observed["samples"]["value"]
+                numeric = dict(points=observed["points"], sampling=observed["sampling"],
+                               sample_count=len(values), minimum=min(values), maximum=max(values),
+                               full_samples_in_saved_object=ident)
+                support = "line_subset_of_candidate_roi"
+            refs.append(_dep(record, directory, api))
+            observations.append(dict(object_id=ident, kind=kind, support=support,
+                                     coordinate_space=observed["coordinate_space"], component=observed["component"],
+                                     scientific_grid_identity=observed["scientific_grid_identity"],
+                                     numerical_evidence=numeric, interpretation_status="hypothesized"))
+            continue
         if kind == "measure":
             record, directory = workspace.committed_measurement(ident)
         targets = [ident]
@@ -202,6 +271,13 @@ def _evidence(workspace, ids, source, rect, api):
             targets = [r["fft_object_id"] for r in record["regions"] if r["rect"] == rect]
         elif kind == "peak_measurements":
             targets = [record["parent_object_id"]]
+        elif candidate_assessment and kind in ("topology", "method_plan"):
+            linked = assessment.gpa_ids(record, api)
+            # Reuse the same GPA/FFT/grid/calibration admission. No science is run.
+            _, _, linked_ffts, _ = _evidence(workspace, linked, source, rect, api)
+            for fft_ref in linked_ffts:
+                ffts[fft_ref["object_id"]] = fft_ref
+            targets = []
         elif kind == "gpa":
             targets = [record["input_dependency"]["selected"]["object_id"]]
             api.need(record.get("calibration_dependency") == source["science"]["calibration_dependency"], "GPA calibration is stale for this attention record", "DISCOVERY_SCOPE_MISMATCH")
@@ -209,7 +285,7 @@ def _evidence(workspace, ids, source, rect, api):
                 gpas.append(ident)
                 gpa_scopes.add(api.canonical({"fft":record["input_dependency"]["fft"], "mask_sigma":record["parameters"]["mask_sigma"]}))
         else:
-            api.need(kind in ("fft", "fft_view", "measure", "annotate", "calibration"), "Unsupported discovery evidence; use explicit saved FFT/peaks/measure/GPA", "UNSUPPORTED_OPERATION")
+            api.need(kind in ("fft", "fft_view", "measure", "annotate", "calibration"), "Unsupported discovery evidence; use explicit saved FFT/peaks/measure/GPA or spatial statistics/profile", "UNSUPPORTED_OPERATION")
         for target in targets:
             fft, fft_dir = _fft_scope(workspace, target, source, rect, api)
             ffts[fft["object_id"]] = {**_dep(fft, fft_dir, api), "shape_yx": fft["shape_yx"], "window": fft["window"], "subtract_mean": fft["subtract_mean"]}
@@ -227,19 +303,34 @@ def _evidence(workspace, ids, source, rect, api):
     return refs, observations, list(ffts.values()), gpas if len(gpa_scopes) <= 1 else []
 
 
+def _site_feedback(workspace, context, observations, rect, api, version=2):
+    # _evidence has already reconstructed each profile from its original request
+    # and array. Read its ACTUAL saved samples rather than inferring line coverage
+    # from an ROI, minimum/maximum, endpoints alone or a different sample density.
+    records = ({r["object_id"]: workspace.object(r["object_id"])[0]
+                for r in observations if r["kind"] == "profile"} if version == 2 else None)
+    return site_observation.derive(context, observations, rect, api, version=version, profile_records=records)
+
+
 def _review(workspace, request, metadata, directory, api):
+    include = request.get("include_site_continuation", False)
+    api.need(type(include) is bool and (not include or "site_context" in request), "include_site_continuation requires a boolean and an explicit site_context")
     discovery, discovery_dir = workspace.object(request["object_id"])
     api.need(discovery["kind"] == "discovery", "Select the exact saved image-first discovery record")
     matches = [r for r in discovery["candidates"] if r["candidate_id"] == request.get("candidate_id")]
     api.need(len(matches) == 1, "Select an actual source-bound candidate, not a region/peak number")
     candidate = matches[0]
-    refs, observations, ffts, gpas = _evidence(workspace, request.get("evidence_ids"), discovery["source_dependency"], candidate["rect"], api)
+    enabled = "candidate_assessment" in request
+    refs, observations, ffts, gpas = _evidence(workspace, request.get("evidence_ids"), discovery["source_dependency"], candidate["rect"], api, candidate_assessment=enabled)
+    candidate_result = assessment.result(workspace, request["candidate_assessment"], request["evidence_ids"], candidate["rect"], api) if enabled else None
     text = _text(request.get("observation_text"), api)
     explanations, unresolved = _texts(request.get("candidate_explanations", []), api), _texts(request.get("unresolved", []), api)
     history = _history(workspace, request, "previous_review_id", "discovery_review", discovery["source_dependency"]["science"], api)
     if history:
         old, _ = workspace.object(history[-1]["object_id"])
         api.need(old["candidate"]["rect"] == candidate["rect"], "Review revision must retain its exact scientific ROI", "DISCOVERY_SCOPE_MISMATCH")
+    site = (_site_feedback(workspace, request["site_context"], observations, candidate["rect"], api)
+            if "site_context" in request else None)
     overview, _ = workspace.object(discovery["overview_object_id"])
     visible = [overview]
     for ref in refs[:2]:
@@ -247,6 +338,9 @@ def _review(workspace, request, metadata, directory, api):
         if value.get("image_path"):
             visible.append(value)
     api.automation.contact_sheet(directory, [("Observation / saved evidence", r) for r in visible], api)
+    if site is not None:
+        site_observation.save(directory, site, api)
+        metadata["site_observation"] = site
     metadata.update(policy_version=VERSION, parent_object_id=request["object_id"], discovery_dependency=_dep(discovery, discovery_dir, api),
                     support_status=_support_status(discovery["parameters"]["entry"]),
                     source_dependency=discovery["source_dependency"], source_context=discovery["source_context"], candidate=candidate,
@@ -258,6 +352,13 @@ def _review(workspace, request, metadata, directory, api):
                     cost={"new_fft_pixels":0,"new_scientific_method_calls":0},
                     method_handoff=_handoff(gpas),
                     scientific_data_changed=False, fft_recomputed=False, limitations=LIMITS)
+    if include:
+        metadata["site_continuation"] = site_continuation.derive(metadata, request, api)
+        site_continuation.save(directory, metadata["site_continuation"], api)
+    if enabled:
+        metadata["candidate_result"] = candidate_result
+        assessment.append_preview(directory, candidate_result)
+        api.write_new(directory/"candidate-review.txt", assessment.readable(candidate_result).encode("utf-8"))
     api.write_new(directory/"discovery-review.json", api.canonical({k:v for k,v in metadata.items() if k not in ("created_utc",)})+b"\n")
     return metadata
 
@@ -320,7 +421,40 @@ def validate_references(workspace, metadata, api):
         candidate = next((r for r in discovery["candidates"] if r["candidate_id"] == original["candidate_id"]), None)
         api.need(candidate is not None and metadata["candidate"] == candidate and metadata["discovery_dependency"] == _dep(discovery,directory,api) and
                  metadata["source_dependency"] == discovery["source_dependency"], "Review has a different original discovery/ROI", "CORRUPT_OBJECT")
-        refs, observations, ffts, gpas = _evidence(workspace, original["evidence_ids"], discovery["source_dependency"], candidate["rect"], api)
+        enabled = "candidate_assessment" in original
+        refs, observations, ffts, gpas = _evidence(workspace, original["evidence_ids"], discovery["source_dependency"], candidate["rect"], api, candidate_assessment=enabled)
+        api.need(("site_observation" in metadata) == ("site_context" in original),
+                 "Site observation presence differs from original request", "CORRUPT_OBJECT")
+        if "site_context" in original:
+            api.need(type(metadata["site_observation"]) is dict, "Invalid saved site observation", "CORRUPT_OBJECT")
+            saved_version = metadata["site_observation"].get("version")
+            expected_site = _site_feedback(workspace, original["site_context"], observations, candidate["rect"], api, version=saved_version)
+            site_file = Path(metadata["manifest_path"]).parent / "site-observation.json"
+            api.need(metadata["site_observation"] == expected_site and api.read_json(site_file) == expected_site and
+                     site_file.with_suffix(".txt").read_text(encoding="utf-8") == site_observation.report_text(expected_site) and
+                     api.read_json(site_file.with_name("discovery-review.json")).get("site_observation") == expected_site,
+                     "Site observation differs from its original context/raw evidence", "CORRUPT_OBJECT")
+        include = original.get("include_site_continuation", False)
+        api.need(type(include) is bool and ("site_continuation" in metadata) == include and (not include or "site_context" in original),
+                 "Site continuation differs from the original explicit request", "CORRUPT_OBJECT")
+        if include:
+            api.need(type(metadata["site_continuation"]) is dict, "Invalid saved site continuation", "CORRUPT_OBJECT")
+            expected = site_continuation.derive(metadata, original, api, version=metadata["site_continuation"].get("version"))
+            folder = Path(metadata["manifest_path"]).parent
+            api.need(metadata["site_continuation"] == expected and api.read_json(folder/"site-continuation.json") == expected and
+                     (folder/"site-continuation.txt").read_text(encoding="utf-8") == site_continuation.report_text(expected) and
+                     api.read_json(folder/"discovery-review.json").get("site_continuation") == expected,
+                     "Site tool handoff differs from its bound review/evidence", "CORRUPT_OBJECT")
+        if enabled:
+            expected = assessment.result(workspace, original["candidate_assessment"], original["evidence_ids"], candidate["rect"], api,
+                                         version=metadata.get("candidate_result", {}).get("version"))
+            report_dir = Path(metadata["manifest_path"]).parent
+            report = api.read_json(report_dir/"discovery-review.json")
+            api.need(metadata.get("candidate_result") == report.get("candidate_result") == expected and
+                     (report_dir/"candidate-review.txt").read_text(encoding="utf-8") == assessment.readable(expected),
+                     "Candidate assessment differs from original supplied evidence or saved dependencies", "CORRUPT_OBJECT")
+        else:
+            api.need("candidate_result" not in metadata, "Historical review cannot acquire a new assessment", "CORRUPT_OBJECT")
         api.need(metadata["evidence_refs"] == refs and metadata["numerical_observations"] == observations and metadata["fft_refs"] == ffts and
                  metadata["observation_text"] == original["observation_text"] and metadata["candidate_explanations"] == original.get("candidate_explanations",[]) and
                  metadata["unresolved"] == original.get("unresolved",[]) and metadata["physical_conclusion"] is None,

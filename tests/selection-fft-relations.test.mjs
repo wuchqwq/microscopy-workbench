@@ -65,3 +65,7 @@ test('superseded reads and invalidation do not publish old models; GET errors ar
  const fail=new SelectionFftRelations({getState:()=>f.state,getSelection:()=>f.selected,api:async()=>{throw Error('controlled bounded read failure');}});assert.equal((await fail.refresh()).status,'unavailable');
  const historyFail=new SelectionFftRelations({getState:()=>f.state,getSelection:()=>f.selected,api:async url=>{if(url==='/api/execution-history')throw Error('history timeout');return f.packet;}});assert.match((await historyFail.refresh()).message,/执行历史读取未完成.*history timeout/);
 });
+
+test('external FFT recipe is projected from its validated saved raw spectrum without inventing legacy parameters',()=>{
+ const f=fixture();f.history.records=[];f.packet.fft_relations[0].recipe={window:'none',subtract_mean:false};assert.deepEqual(model(f).rows[0].recipe,{window:'none',subtract_mean:false});delete f.packet.fft_relations[0].recipe;assert.equal(model(f).rows[0].recipe,null);f.packet.fft_relations[0].recipe={window:'guessed',subtract_mean:'yes'};assert.equal(model(f).rows[0].recipe,null);
+});

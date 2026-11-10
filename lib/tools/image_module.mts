@@ -45,6 +45,19 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
     kind:'measurement-record-write',gates:['NumPy float64 finite reductions; ddof0; original scientific samples, never display values; complex component explicit'],
     budgets:['One admitted bounded plane/ROI; original request ID recovery and no source mutation'],
   },
+  image_column_candidates: {
+    inputs:['RenderedSpatialScalarView:original HAADF source array and explicit source ROI','CallerDeclaration:clear HAADF bright columns; not independently verified'],
+    outputs:['ImmutableAnnotatedView:append-only candidate points with editable source anchors','CandidateEvidence:saved detector version/parameters/noise floor/raw positions and suppressed repeats'],
+    kind:'write', gates:['Local bright maxima only; no model training, lattice fill, subpixel fitting or unresolved-pair splitting','Existing added/moved/retracted points and initial candidate anchors protect manual corrections on rerun','Robust adjacent-difference noise floor is a conservative heuristic, not significance or a count model','Read/recover/export never replay detection; original data stays unchanged'],
+    budgets:['At most128 total existing plus new annotations; reject instead of truncate; source pixel budget unchanged'],
+  },
+  image_column_fit: {
+    inputs:['ScientificArrayRef:exact saved spatial scalar plane','FixedReadouts:primary plus1..8 ordered same-image 5x5 reference ROIs','OptionalCallerAssumptions:fixed source-pixel column centres/common sigma and explicit count/noise source; neither is inferred or verified'],
+    outputs:['ColumnFitRef:saved raw ROI means, full fitted ROI means and central-column whole-plane integrals extrapolated by a unit-integral Gaussian, kept distinct','PerSiteEligibility and WholeComparisonEligibility:every requested site must qualify; saved UNKNOWN retains raw baseline evidence'],
+    kind:'measurement-record-write',
+    gates:['Explicit opt-in only; old statistics and HRTEM requests remain unchanged','Supported path requires caller-declared HAADF/ADF acquisition_context with source text and caller independent_poisson_counts interpretation and finite nonnegative integer-valued pixels; dtype alone does not establish counts; no gain/exposure conversion','Fixed pixel-integrated isotropic Gaussian columns plus four nonnegative bilinear backgrounds; all supplied neighbours with integrated support mass >=0.005; no centre or width refinement','Dimensions, duplicate geometry and coefficient budget checked before SVD/optimization; numerical rank and convergence do not establish statistical or physical identifiability','Immutable stored input/request/result verification on info, recovery and export; no optimizer replay or new Panel/AnalysisContext slot; no CI, occupancy, phase or defect classification'],
+    budgets:['At most256 supplied column centres; each design has Gaussian columns plus4 backgrounds strictly fewer than81 pixels before SVD','Primary plus1..8 references; at most9 patch fits, each fixed9x9 support with central5x5 readout; no boundary clipping','Existing research solver limits and gates; original request ID recovery without automatic retry'],
+  },
   image_profile: {
     inputs:['ScientificArrayRef:exact immutable plane','PointPair:domain-bound endpoints and explicit sampling'],
     outputs:['ProfileRef:saved NPY/CSV plus coordinates, original-array samples, calibration and component provenance'],
@@ -52,7 +65,7 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
     budgets:['2..4096 evenly spaced samples; exact immutable scientific input and original request ID recovery'],
   },
   image_open: {
-    inputs: ['ExplicitSourcePath:read-only uint16/float32 TIFF or validated schema-1 numerical capture'],
+    inputs: ['ExplicitSourcePath:read-only ordinary grayscale TIFF (uint8/16/32, int8/16/32, float32/64) or validated schema-1 numerical capture'],
     outputs: ['ScientificArrayRef:tiff_source or fixed capture frame', 'CalibrationRevisionRef:admitted native axes only; otherwise pixel-domain input'],
     kind: 'fixed-source-snapshot-write',
     gates: ['TIFF admission/page metadata or existing native-capture validator; domain and native calibration admission remain delegated'],

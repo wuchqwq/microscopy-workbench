@@ -1,0 +1,46 @@
+name: Portable installer contracts
+on:
+  pull_request:
+    paths:
+      - 'tools/install_workbench.py'
+      - 'install.*'
+      - 'tests/install_workbench_test.py'
+      - 'skills/**'
+      - 'docs/**'
+      - '.github/workflows/installers.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  installer-contracts:
+    name: Installer / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Isolated installer and skill-copy contracts
+        run: python -B tests/install_workbench_test.py
+      - name: Assemble portable scientific skills
+        if: matrix.os == 'ubuntu-latest'
+        run: python -B tools/install_workbench.py --skills-only --skills-dir "${{ runner.temp }}/microscopy-scientific-skills"
+      - name: Save ready-to-copy skills artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: microscopy-scientific-skills-0.6.1-r2
+          path: ${{ runner.temp }}/microscopy-scientific-skills/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: error

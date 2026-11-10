@@ -33,7 +33,7 @@ class FloatTiff(unittest.TestCase):
     def test_nonfinite_frame_refused_and_unsupported_precision_not_cast(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp); base={'workspace':str(root/'workspace')}
-            for i,values in enumerate([np.array([[0,np.nan],[1,2]],np.float32),np.array([[0,np.inf],[1,2]],np.float32),np.zeros((2,2),np.float64),np.zeros((2,2),np.complex64)]):
+            for i,values in enumerate([np.array([[0,np.nan],[1,2]],np.float32),np.array([[0,np.inf],[1,2]],np.float32),np.zeros((2,2),np.uint64),np.zeros((2,2),np.complex64)]):
                 source=root/f'bad{i}.tiff';tifffile.imwrite(source,values,photometric='minisblack')
                 opened=worker.execute({**base,'action':'open','source_path':str(source),'request_id':f'open{i}'})
                 if i<2:

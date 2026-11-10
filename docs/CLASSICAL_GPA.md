@@ -1,5 +1,13 @@
 # Classical single-domain geometric phase analysis (F2a)
 
+Saved v1 analytic assessments use the versioned
+[analytic read compatibility contract](GPA_ANALYTIC_READ_COMPATIBILITY.md).
+Exact reads remain the first path; only enumerated positive analytic floats
+can use an independently checked binary64 roundoff envelope. A compatibility
+get/result read returns a fresh `gpa_analytic_read_validation` receipt, including
+in compact evidence. Original metadata, arrays, IDs and hashes stay unchanged;
+ROI reductions and method decisions do not receive this compatibility rule.
+
 New saved GPA results include a versioned `evidence_assessment`; reads and views
 inherit their parent's assessment (including its absence on historical results).
 The numerical field remains available; `material_strain_status` is

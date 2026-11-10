@@ -17,7 +17,7 @@ interface Lineage {frames:Metadata[];sources:Metadata[];source_identity:unknown;
 export interface MeasurementReadOptions {workspace?:string;objectId?:string;limit?:number;}
 export interface MeasurementRecord extends Metadata {
  measurement_object_id:unknown;measurement_manifest_sha256:string;input_object_id:unknown;annotation_id:unknown;name:unknown;
- measurement_kind:'dc_to_peak'|'two_point';previous_measurement_object_id:unknown;status:'historical'|'needs_remeasurement'|'current';
+ measurement_kind:'dc_to_peak'|'two_point'|'three_point_angle';previous_measurement_object_id:unknown;status:'historical'|'needs_remeasurement'|'current';
  same_grid:boolean;same_frame:boolean;visible_in_current_view:boolean;annotation_matches_current:boolean;
  source:{source_identity:unknown;frame_index:unknown;source_rect_xyxy:unknown;source_object_id:unknown};
 }
@@ -77,12 +77,13 @@ function reader(workspace:unknown,options:{source_proof_refs?:readonly SourcePro
    value=object(next).value;record??=value.xy_calibration??null;
   }
   const spectral=(['fft','fft_view'] as readonly unknown[]).includes(value.kind),panel=(value.panels as Metadata[]|undefined)?.length===1?(value.panels as Metadata[])[0]:null;
+  const reciprocal=(['frequency','reciprocal'] as readonly unknown[]).includes(value.array_domain)||Boolean((record as Metadata|undefined)?.domain_declaration&&(record as Metadata).coordinate_domain==='reciprocal_space');
   let grid=null;
   if((['frame','view','fft','fft_view'] as readonly unknown[]).includes(value.kind)&&value.shape_yx&&(value.files_sha256 as Metadata|undefined)?.['data.npy'])grid={
    source_grid_object_id:spectral?(value.spectrum_object_id??value.object_id):(value.kind==='view'?panel?.source_object_id:value.object_id),
    shape_yx:value.shape_yx,dtype:value.dtype,array_sha256:(value.files_sha256 as Metadata)['data.npy'],
    source_rect_xyxy:spectral?null:(value.kind==='view'?panel?.source_rect_xyxy:[0,0,(value.shape_yx as unknown[])[1],(value.shape_yx as unknown[])[0]]),
-   coordinate_space:spectral?'frequency_cycles_per_pixel':(['frequency','reciprocal'] as readonly unknown[]).includes(value.array_domain)?'source_array_indices':'source_pixels'};
+   coordinate_space:spectral?'frequency_cycles_per_pixel':reciprocal?'source_array_indices':'source_pixels'};
   const sourceRect=value.source_rect_xyxy??(spectral&&value.spectrum_object_id?object(value.spectrum_object_id).value.source_rect_xyxy:null)??grid?.source_rect_xyxy??null;
   return {value,record,grid,lineage:lineage(ident),panel,sourceRect};
  }
@@ -136,7 +137,7 @@ export function readImageMeasurements({workspace,objectId,limit=256}:Measurement
   const record=r.object((saved.response as Metadata).object_id),measure=record.value,input=r.operand(measure.parent_object_id);
   need((['measure','remeasure'] as readonly unknown[]).includes(record.parameters.action)&&record.parameters.object_id===measure.parent_object_id,'Measurement original input identity disagrees');
   need(same(measure.scientific_grid_identity,input.grid),'Measurement grid differs from its saved input');
-  if(record.parameters.action==='measure')need(same(record.parameters.points,measure.points)&&(!record.parameters.coordinate_space||record.parameters.coordinate_space===measure.coordinate_space),'Measurement points differ from original request');
+  if(record.parameters.action==='measure')need(same(record.parameters.points,measure.points)&&same(record.parameters.source_text,measure.source_text)&&(!record.parameters.coordinate_space||record.parameters.coordinate_space===measure.coordinate_space),'Measurement points differ from original request');
   else need(record.parameters.measurement_object_id===(measure.remeasurement as Metadata|undefined)?.previous_measurement_object_id,'Remeasurement predecessor identity disagrees');
   if(!sharedSource(current.lineage,input.lineage))continue;
   const sourceFrame=singleFrame(input.lineage),sameGrid=same(current.grid,measure.scientific_grid_identity),sameFrame=!!frame&&frame.object_id===sourceFrame?.object_id;
@@ -168,7 +169,7 @@ export function readImageMeasurements({workspace,objectId,limit=256}:Measurement
   const {result_semantics:omittedSemantics,...boundedMeasure}=measure;
   records.push({...boundedMeasure,...projectResultSemantics(measure),measurement_object_id:measure.object_id,measurement_manifest_sha256:record.manifest_sha256,
    input_object_id:measure.parent_object_id,annotation_id:annotationId,name:link?.name??(typeof inferred?.text==='string'?inferred.text:null),
-   measurement_kind:typeof measure.dc_reference_point_index==='number'?'dc_to_peak':'two_point',
+   measurement_kind:measure.measurement_type==='angle'?'three_point_angle':typeof measure.dc_reference_point_index==='number'?'dc_to_peak':'two_point',can_remeasure:measure.measurement_type==='angle'?false:undefined,
    previous_measurement_object_id:(measure.remeasurement as Metadata|undefined)?.previous_measurement_object_id??null,
    status:!sameGrid?'historical':calibrationChanged||geometryChanged?'needs_remeasurement':'current',
    same_grid:sameGrid,same_frame:sameFrame,visible_in_current_view:sameGrid&&visible(measure,current),annotation_matches_current:matched,
@@ -178,6 +179,14 @@ export function readImageMeasurements({workspace,objectId,limit=256}:Measurement
  }
  const superseded=new Set(records.map(x=>x.previous_measurement_object_id).filter(Boolean));
  for(const record of records)if(superseded.has(record.object_id))record.status='historical';
+ for(const record of records){
+  if(record.measurement_type!=='angle'||typeof record.source_text!=='string')continue;let provenance:Metadata;try{provenance=JSON.parse(record.source_text) as Metadata;}catch{continue;}if(provenance?.method!=='workbench_two_vectors_v1')continue;
+  need(Object.keys(provenance).every(key=>['method','references'].includes(key))&&Array.isArray(provenance.references)&&provenance.references.length===2,'Invalid angle reference provenance');
+  const refs=(provenance.references as Metadata[]).map(ref=>{need(ref&&typeof ref==='object'&&Object.keys(ref).every(key=>['object_id','manifest_sha256'].includes(key))&&OBJECT.test(String(ref.object_id)),'Invalid angle input reference');const input=records.find(value=>value.object_id===ref.object_id);need(input&&input.measurement_manifest_sha256===ref.manifest_sha256,'Angle input measurement identity/hash changed');return input;});
+  const points=measurementAnglePoints(refs.map(ref=>({...ref,status:'current',same_grid:true})),refs.map(ref=>ref.object_id));need(same(points,record.points)&&same(refs[0]!.scientific_grid_identity,record.scientific_grid_identity)&&same((refs[0]!.xy_calibration as Metadata|undefined)?.calibration_id,(record.xy_calibration as Metadata|undefined)?.calibration_id),'Angle original endpoints/grid/calibration differ from its referenced vectors');
+  record.angle_input_measurements=(provenance.references as Metadata[]).map(ref=>({...ref}));if(record.status==='current'&&refs.some(ref=>ref.status!=='current')){record.status='needs_remeasurement';record.status_reason='原矢量点位、中心或标定已改变；夹角保留原输入，需明确重测。';}
+ }
+
  records.sort((a,b)=>((b.created_utc??'') as string).localeCompare((a.created_utc??'') as string)||(a.object_id as string).localeCompare(b.object_id as string));
  return {schema_version:1,backend:BACKEND,workspace:r.root,
   current:{object_id:objectId,scientific_grid_identity:current.grid,source_identity:current.lineage.source_identity,
@@ -207,4 +216,11 @@ export function writeMeasurementLink(workspace:unknown,link:unknown){
  const file=path.join(directory,measure.value.object_id+'.json');
  if(existsSync(file)){need(same(r.json(file).value,value),'Existing measurement link conflicts with original immutable reference','REQUEST_CONFLICT');return value;}
  const fd=openSync(file,'wx');try{writeFileSync(fd,JSON.stringify(value)+'\n');fsyncSync(fd);}finally{closeSync(fd);}return value;
+}
+
+export function measurementAnglePoints(entries:readonly Metadata[],ids:unknown):number[][] {
+ need(Array.isArray(ids)&&ids.length===2&&ids[0]!==ids[1]&&ids.every(id=>typeof id==='string'&&OBJECT.test(id)),'Select two distinct saved distance records','INVALID_ARGUMENT');
+ const rows=ids.map(id=>entries.filter(entry=>entry.measurement_object_id===id));need(rows.every(matches=>matches.length===1),'Exact saved distance identity required','INVALID_ARGUMENT');const [a,b]=rows.map(matches=>matches[0]!);
+ need([a,b].every(value=>value.status==='current'&&value.same_grid===true&&Array.isArray(value.points)&&value.points.length===2&&value.points.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>typeof n==='number'&&Number.isFinite(n))))&&a.coordinate_space===b.coordinate_space&&same(a.scientific_grid_identity,b.scientific_grid_identity)&&same((a.xy_calibration as Metadata|undefined)?.calibration_id,(b.xy_calibration as Metadata|undefined)?.calibration_id),'Use two current vectors on the exact same grid and calibration; remeasure old inputs first','INVALID_ARGUMENT');
+ const ap=a.points as number[][],bp=b.points as number[][],common=ap.filter(point=>bp.some(other=>same(point,other)));need(common.length===1,'The two vectors must share one exact explicit endpoint; no centre is guessed','INVALID_ARGUMENT');const centre=common[0]!,pa=ap.find(p=>!same(p,centre))!,pb=bp.find(p=>!same(p,centre))!;need(!same(pa,pb),'Angle arms must be distinct','INVALID_ARGUMENT');return [structuredClone(centre),structuredClone(pa),structuredClone(pb)];
 }

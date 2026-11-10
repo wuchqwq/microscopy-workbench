@@ -16,7 +16,7 @@ const rect=(v:unknown):v is number[]=>Array.isArray(v)&&v.length===4&&v.every(n=
 function error(message:string):never{throw Object.assign(new Error(message),{status:409});}
 export const PANEL_WINDOW_LIMIT=5;
 interface WindowRecord {entry:PanelWindowEntry;grid_key:string;asset_fingerprint:string;input_calibration:unknown;hidden?:boolean;latest_observation_asset_fingerprint?:string;latest_observation_grid_key?:string;}
-interface Descriptor {object_id:string;frame_id:string;grid_key:string;frequency:boolean;fingerprint:string;}
+interface Descriptor {object_id:string;frame_id:string;grid_key:string;frequency:boolean;scalarArray:boolean;fingerprint:string;}
 
 export function panelWindowFingerprint(value:Row):string {
  return createHash('sha256').update(JSON.stringify(canonical({object_id:value.object_id,panels:value.panels??[],scientific_grid_identity:value.scientific_grid_identity??null,xy_calibration:value.xy_calibration??null,files_sha256:value.files_sha256??null}))).digest('hex');
@@ -43,14 +43,16 @@ export function qualifyPanelWindowContext(raw:unknown,value:Row,checkSelection:(
 function describe(value:Row,frame:PanelFrameIdentity|null):Descriptor|null {
  if(!objectId.test(String(value.object_id))||!objectId.test(String(frame?.frame_object_id)))return null;
  const panels=value.panels;if(!Array.isArray(panels)||panels.length!==1||!isRow(panels[0]))return null;
- const panel=panels[0],frequency=panel.domain==='frequency';
- if(!frequency&&(panel.domain!=='spatial_pixels'||panel.source_object_id!==frame!.frame_object_id||!rect(panel.source_rect_xyxy)))return null;
+ const panel=panels[0],frequency=panel.domain==='frequency',scalarArray=panel.domain==='source_array_indices';
+ const derivedArray=value.array_domain===undefined&&value.kind==='annotate'&&objectId.test(String(value.render_base_object_id));
+ if(scalarArray&&!(['frequency','reciprocal'] as readonly unknown[]).includes(value.array_domain)&&!derivedArray)return null;
+ if(!frequency&&(!['spatial_pixels','source_array_indices'].includes(String(panel.domain))||panel.source_object_id!==frame!.frame_object_id||!rect(panel.source_rect_xyxy)))return null;
  // Historical annotation revisions intentionally do not invent array_domain.
  // Their saved render base/panels are verified by the Panel asset boundary.
  const derivedFrequency=value.array_domain===undefined&&value.kind==='annotate'&&objectId.test(String(value.render_base_object_id));
  if(frequency&&(!objectId.test(String(panel.source_object_id))||value.array_domain!=='frequency'&&!derivedFrequency||!Array.isArray(panel.fft_shape_yx)||panel.fft_shape_yx.length!==2||!panel.fft_shape_yx.every(n=>Number.isSafeInteger(n)&&n>0)||value.kind==='fft'&&panel.source_object_id!==value.object_id||value.spectrum_object_id!==undefined&&value.spectrum_object_id!==panel.source_object_id))return null;
- const grid_key=frequency?'fft:'+String(panel.source_object_id):'spatial:'+String(panel.source_object_id)+':'+JSON.stringify(panel.source_rect_xyxy);
- return {object_id:value.object_id as string,frame_id:frame!.frame_object_id as string,grid_key,frequency,fingerprint:panelWindowFingerprint(value)};
+ const grid_key=frequency?'fft:'+String(panel.source_object_id):(scalarArray?'array:':'spatial:')+String(panel.source_object_id)+':'+JSON.stringify(panel.source_rect_xyxy);
+ return {object_id:value.object_id as string,frame_id:frame!.frame_object_id as string,grid_key,frequency,scalarArray,fingerprint:panelWindowFingerprint(value)};
 }
 export function readPanelWindowLayout(value:unknown):PanelWindowLayout {
  if(!isRow(value)||Object.keys(value).some(k=>!['x','y','width','height','z'].includes(k)))error('Invalid window layout fields');
@@ -98,9 +100,9 @@ export class PanelWindowStore {
    if(this.records.filter(r=>!r.hidden).length>=PANEL_WINDOW_LIMIT)error('Five image windows are already open; close a display before accepting the saved result');
    if(this.records.length>=32)error('Retained display limit reached; saved scientific records remain available in history');
    const sourceWindow=!d.frequency&&!this.records.some(r=>r.entry.role==='source');
-   const role=d.frequency?'fft':sourceWindow?'source':'roi',prefix=role==='fft'?'FFT':'局部图',n=this.records.length;
+   const role=d.frequency?'fft':sourceWindow?'source':'roi',prefix=role==='fft'?'FFT':d.scalarArray?'倒易图':'局部图',n=this.records.length;
    let count=1;while(role!=='source'&&this.records.some(r=>r.entry.title===`${prefix} ${count}`))count++;
-   record={entry:{window_id:randomBytes(16).toString('hex'),object_id:d.object_id,role,title:role==='source'?'来源图像':role==='fft'?`FFT ${count}`:`局部图 ${count}`,layout:{x:(n%2)*.48,y:Math.floor(n/2)*.08,width:n?.52:1,height:n?.72:1,z:n}},grid_key:d.grid_key,asset_fingerprint:d.fingerprint,input_calibration:null};
+   record={entry:{window_id:randomBytes(16).toString('hex'),object_id:d.object_id,role,title:role==='source'?(d.scalarArray?'倒易图像':'来源图像'):`${prefix} ${count}`,layout:{x:(n%2)*.48,y:Math.floor(n/2)*.08,width:n?.52:1,height:n?.72:1,z:n}},grid_key:d.grid_key,asset_fingerprint:d.fingerprint,input_calibration:null};
    // Initial placement is bounded even at the fifth entry. Only display
    // metadata is generated here; this is not an inferred scientific relation.
    record.entry.layout.x=Math.min(record.entry.layout.x,1-record.entry.layout.width);

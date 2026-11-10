@@ -3,14 +3,14 @@
 import {createInterface} from 'node:readline';
 import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
 import {parseResearcherArgs,startResearcherInspector} from './researcher_inspector.mjs';
-import type {DesktopDiscardOperation} from '../lib/desktop_contracts.mjs';
-import {isRow,panelAddress,readWorkspaceStatus,desktopStartupError} from '../lib/desktop_contracts.mjs';
+import type {DesktopDiscardOperation,DesktopCloseOperation} from '../lib/desktop_contracts.mjs';
+import {isRow,panelAddress,readWorkspaceStatus,desktopStartupError,readDesktopJointReviewRequest} from '../lib/desktop_contracts.mjs';
 
-interface DesktopSessionPorts {request:(action:'status'|'discard'|'close',revision?:number)=>Promise<unknown>;close:()=>Promise<void>;reply:(value:unknown)=>void;}
+interface DesktopSessionPorts {request:(action:'status'|'discard'|'close',revision?:number)=>Promise<unknown>;close:()=>Promise<void>;reply:(value:unknown)=>void;joint?:(action:'begin'|'begin-correction'|'query-original'|'query'|'cancel'|'record-review'|'send-public'|'interrupt',value:Record<string,unknown>)=>Promise<unknown>;}
 // A single bounded in-memory lifecycle receipt. It is not a scientific journal
 // or a new save database; querying it can only read current workspace status.
 export class DesktopBackendSession {
- finished=false;private queue:Promise<void>=Promise.resolve();private discard:DesktopDiscardOperation|null=null;
+ finished=false;private queue:Promise<void>=Promise.resolve();private discard:DesktopDiscardOperation|null=null;private closing:DesktopCloseOperation|null=null;
  constructor(private readonly ports:DesktopSessionPorts){}
  drain():Promise<void>{return this.queue;}
  private state(value:unknown){return {workspace_analysis:readWorkspaceStatus(value)};}
@@ -18,20 +18,32 @@ export class DesktopBackendSession {
   let id:unknown=null;
   try{
    if(Buffer.byteLength(line)>8192)throw new Error('Desktop command exceeds bound');const value:unknown=JSON.parse(line);
-   if(!isRow(value)||Object.keys(value).some(k=>!['id','action','expected_working_revision','original_id'].includes(k))||!Number.isSafeInteger(value.id)||(value.id as number)<1||typeof value.action!=='string'||!['status','discard','close','query-discard'].includes(value.action))throw new Error('Invalid desktop command');
-   id=value.id;const action=value.action;if(action!=='status'&&(!Number.isSafeInteger(value.expected_working_revision)||(value.expected_working_revision as number)<0))throw new Error('Exact working revision required');if(action!=='query-discard'&&value.original_id!==undefined)throw new Error('Original command ID is only valid for a discard query');
+   if(isRow(value)&&typeof value.action==='string'&&value.action.startsWith('joint-')){
+    id=value.id;const name=value.action.slice(6),begin=['begin','begin-correction'].includes(name),allowed=name==='begin'?['id','action','expected_working_revision','selection']:name==='begin-correction'?['id','action','expected_working_revision','selection','text','original_thread_id','original_turn_id']:name==='query-original'?['id','action','request_id']:['record-review','send-public'].includes(name)?['id','action','review_id','context_sha256']:name==='cancel'?['id','action','review_id']:['id','action'];
+    if(!this.ports.joint||this.finished||!Number.isSafeInteger(id)||(id as number)<1||!['begin','begin-correction','query-original','query','cancel','record-review','send-public','interrupt'].includes(name)||Object.keys(value).some(k=>!allowed.includes(k))||begin&&(!Number.isSafeInteger(value.expected_working_revision)||(value.expected_working_revision as number)<0)||['cancel','record-review','send-public'].includes(name)&&(typeof value.review_id!=='string'||!/^[a-f0-9]{32}$/.test(value.review_id))||['record-review','send-public'].includes(name)&&(typeof value.context_sha256!=='string'||!/^[a-f0-9]{64}$/.test(value.context_sha256)))throw Error('Invalid private owner review command');
+    if(name==='query-original'&&(typeof value.request_id!=='string'||!value.request_id||value.request_id.length>128||/[\u0000-\u001f]/.test(value.request_id)))throw Error('Exact unresolved original request required');
+    if(begin){readDesktopJointReviewRequest({...(value.selection!==undefined?{selection:value.selection}:{}),...(name==='begin-correction'?{correction:{text:value.text,original_thread_id:value.original_thread_id,original_turn_id:value.original_turn_id}}:{})});if(this.discard&&['running','unknown'].includes(this.discard.state))throw Error('Original discard remains unresolved');if(this.closing&&this.closing.state!=='failed')throw Error('Original close remains unresolved or draining');}
+    const work=this.queue.then(()=>this.ports.joint!(name as 'begin'|'begin-correction'|'query-original'|'query'|'cancel'|'record-review'|'send-public'|'interrupt',value));this.queue=work.then(()=>{},()=>{});this.ports.reply({id,ok:true,state:await work});return;
+   }
+   if(!isRow(value)||Object.keys(value).some(k=>!['id','action','expected_working_revision','original_id'].includes(k))||!Number.isSafeInteger(value.id)||(value.id as number)<1||typeof value.action!=='string'||!['status','discard','close','query-discard','query-close'].includes(value.action))throw new Error('Invalid desktop command');
+   id=value.id;const action=value.action;if(action!=='status'&&(!Number.isSafeInteger(value.expected_working_revision)||(value.expected_working_revision as number)<0))throw new Error('Exact working revision required');if(!['query-discard','query-close'].includes(action)&&value.original_id!==undefined)throw new Error('Original command ID is only valid for a discard query');
+   if(action==='query-close'||action==='close'&&this.closing?.command_id===id){
+    const originalId=action==='query-close'?value.original_id:id,record=this.closing;if(!record||record.command_id!==originalId||record.expected_working_revision!==value.expected_working_revision)throw Error('Original close command identity/revision does not match');
+    this.ports.reply({id,ok:true,state:{close_operation:{...record}}});return;
+   }
    if(action==='query-discard'||action==='discard'&&this.discard?.command_id===id){
     const originalId=action==='query-discard'?value.original_id:id,record=this.discard;if(!record||record.command_id!==originalId||record.expected_working_revision!==value.expected_working_revision)throw new Error('Original discard command identity/revision does not match the retained receipt');
     // Do not wait behind, cancel, replay or re-enter the write queue.
     const before=record.state;let state=this.state(await this.ports.request('status'));if(record.state!==before)state=this.state(await this.ports.request('status'));this.ports.reply({id,ok:true,state:{...state,discard_operation:{...record}}});return;
    }
+   if(this.closing&&this.closing.state!=='failed')throw Error('Original close remains unresolved or draining; query its exact receipt');
    if(this.finished)throw new Error('Backend already closed');
    if(action==='status'){this.ports.reply({id,ok:true,state:this.state(await this.ports.request('status'))});return;}
    if(this.discard&&['running','unknown'].includes(this.discard.state))throw new Error('Original discard command_id='+this.discard.command_id+' remains unresolved; query it before another mutation');
-   const record:DesktopDiscardOperation|undefined=action==='discard'?{command_id:id as number,expected_working_revision:value.expected_working_revision as number,state:'running'}:undefined;if(record)this.discard=record;
+   const record:DesktopDiscardOperation|undefined=action==='discard'?{command_id:id as number,expected_working_revision:value.expected_working_revision as number,state:'running'}:undefined;if(record)this.discard=record;const closeRecord:DesktopCloseOperation|undefined=action==='close'?{command_id:id as number,expected_working_revision:value.expected_working_revision as number,state:'running'}:undefined;if(closeRecord)this.closing=closeRecord;
    const operation=this.queue.then(async()=>{
-    try{if(this.finished)throw new Error('Backend already closed');const state=this.state(await this.ports.request(action as 'discard'|'close',value.expected_working_revision as number));if(record)record.state='completed';if(action==='close'){this.finished=true;await this.ports.close();}this.ports.reply({id,ok:true,state});}
-    catch(error){if(record)record.state=(error as {code?:string}).code==='DESKTOP_WORKSPACE_REFUSED'?'failed':'unknown';throw error;}
+    try{if(this.finished)throw new Error('Backend already closed');const state=this.state(await this.ports.request(action as 'discard'|'close',value.expected_working_revision as number));if(record)record.state='completed';if(closeRecord){closeRecord.state='workspace_closed';this.finished=true;await this.ports.close();closeRecord.state='completed';}this.ports.reply({id,ok:true,state});}
+    catch(error){if(closeRecord&&closeRecord.state==='running')closeRecord.state=(error as {code?:string}).code==='DESKTOP_WORKSPACE_REFUSED'?'failed':'unknown';if(record)record.state=(error as {code?:string}).code==='DESKTOP_WORKSPACE_REFUSED'?'failed':'unknown';throw error;}
    });this.queue=operation.catch(()=>{});await operation;
   }catch(error){this.ports.reply({id,ok:false,error:error instanceof Error?error.message:String(error),...((error as {code?:string})?.code==='DESKTOP_WORKSPACE_REFUSED'?{code:'DESKTOP_WORKSPACE_REFUSED'}:{})});}
  }
@@ -47,7 +59,7 @@ export async function runDesktopBackend(argv:readonly string[]):Promise<void>{
  };
  reply({type:'ready',schema_version:1,url:address.url,pid:process.pid,node:process.version});
  const input=createInterface({input:process.stdin,crlfDelay:Infinity});
- const session=new DesktopBackendSession({request,reply,close:async()=>{await instance.close();input.close();process.stdin.pause();}});
+ const session=new DesktopBackendSession({request,reply,joint:(action,value)=>instance.panel.jointCommand(action,value),close:async()=>{await instance.close();input.close();process.stdin.pause();}});
  input.on('line',line=>{void session.dispatch(line);});
  input.once('close',()=>{void session.drain().then(async()=>{
   if(!session.finished){session.finished=true;await (instance.close as (options?:{abnormal?:boolean})=>Promise<void>)({abnormal:true});}

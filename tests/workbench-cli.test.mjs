@@ -5,8 +5,12 @@ import os from 'node:os';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,readdirSync,rmSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
+import {EventEmitter} from 'node:events';
+import {PassThrough} from 'node:stream';
+import {ImageWorkspace} from '../lib/image_workspace.mjs';
 import {fileURLToPath} from 'node:url';
-import {CliExecution,parseCliArgs,runCli,findReusableFft,cliError} from '../lib/workbench_cli.mjs';
+import {CliExecution,parseCliArgs,runCli,findReusableFft,cliError,CLI_EXIT} from '../lib/workbench_cli.mjs';
+import {ExecutionCoordinator} from '../lib/runtime/execution_coordinator.mjs';
 import {CliObjectReader,canonical,savedRois} from '../lib/workbench_cli_records.mjs';
 import {publishRoiComparisonReport,readRoiComparisonReport,listRoiComparisonReports} from '../lib/roi_comparison_reports.mjs';
 import {acquireAnalysisWorkspaceOwner,AnalysisWorkspace} from '../lib/analysis_workspace.mjs';
@@ -14,6 +18,7 @@ import {guiFftInputAssociation,frozenFftInput,fftRequestSuffix,verifyFftInputAss
 
 const id=n=>n.toString(16).padStart(32,'0'),hash=raw=>createHash('sha256').update(raw).digest('hex');
 const reply=data=>({content:[{type:'text',text:JSON.stringify(data)}]});
+function refusingWorker(workspace,answer){return new ImageWorkspace({workspace,spawnProcess:()=>{const child=new EventEmitter();child.pid=123;child.kill=()=>true;child.stdout=new PassThrough();child.stderr=new PassThrough();child.stdin=new PassThrough();let input='';child.stdin.on('data',chunk=>input+=chunk);child.stdin.on('finish',()=>{child.stdout.write(JSON.stringify(answer(JSON.parse(input))));child.emit('close',1);});return child;}});}
 function fixture(t){
  const workspace=mkdtempSync(path.join(os.tmpdir(),'mwb CLI 中文 ')),cleanup=[];t.after(()=>{for(const fn of cleanup.reverse())fn();rmSync(workspace,{recursive:true,force:true});});mkdirSync(path.join(workspace,'objects'));mkdirSync(path.join(workspace,'requests'));
  const object=(n,value,parameters={})=>{const objectId=id(n),request_id=value.request_id??'req-'+n,dir=path.join(workspace,'objects',objectId);mkdirSync(dir);const data=Buffer.from('bounded synthetic array '+n);writeFileSync(path.join(dir,'data.npy'),data);const v={schema_version:1,backend:'external-image-workspace',object_id:objectId,request_id,files_sha256:{'data.npy':hash(data)},...value},raw=JSON.stringify(v);writeFileSync(path.join(dir,'object.json'),raw);writeFileSync(path.join(workspace,'requests',request_id+'.json'),JSON.stringify({state:'completed',request_id,parameters:{workspace,request_id,...parameters},object_manifest_sha256:hash(raw),response:{ok:true,state:'completed',backend:'external-image-workspace',request_id,...v}}));return v;};
@@ -30,9 +35,84 @@ test('durable intent precedes provider submission; repeat queries original ID an
  const f=fixture(t),calls=[],provider={async call(name,args){calls.push({name,args});if(name!=='image_result')assert.ok(existsSync(path.join(f.workspace,'cli-requests','cli-first.json')));return reply({state:'completed',request_id:args.request_id,object_id:id(3)});},close(){}};
  const execution=new CliExecution(f.workspace,provider),args={object_id:id(1),rect:[2,3,21,23],request_id:'cli-first'};await execution.call('image_fft',args);await execution.call('image_fft',args);assert.deepEqual(calls.map(c=>c.name),['image_fft','image_result']);await assert.rejects(execution.call('image_fft',{...args,window:'none'}),/different/);assert.equal(calls.length,2);
 });
+test('CLI explicitly exposes statistics/profile writes and evidence reads with unchanged schema and request semantics',async t=>{
+ const f=fixture(t),calls=[],provider={async call(name,args){calls.push({name,args:structuredClone(args)});if(name!=='image_evidence'&&name!=='image_result')assert.ok(existsSync(path.join(f.workspace,'cli-requests',args.request_id+'.json')));return reply({state:'completed',request_id:args.request_id??'original-statistic',object_id:id(4)});},close(){}};
+ const cli=new CliExecution(f.workspace,provider),statistics={object_id:f.view.object_id,rect:[2,3,21,23],component:'raw',request_id:'cli-statistics'},profile={object_id:f.view.object_id,points:[[2,3],[20,22]],coordinate_space:'source_pixels',component:'raw',sample_count:8,line_width:1,interpolation:'nearest',request_id:'cli-profile'};
+ for(const [name,args]of [['image_statistics',statistics],['image_profile',profile]]){await cli.call(name,args);assert.deepEqual(calls.at(-1),{name,args});await cli.call(name,args);assert.deepEqual(calls.at(-1),{name:'image_result',args:{request_id:args.request_id}});await assert.rejects(cli.call(name,{...args,component:'power'}),/different arguments/);assert.deepEqual(JSON.parse(readFileSync(path.join(f.workspace,'cli-requests',args.request_id+'.json'),'utf8')).arguments,args);}
+ const before=readdirSync(path.join(f.workspace,'cli-requests')).sort(),evidence={object_id:f.view.object_id,manifest_sha256:hash(readFileSync(path.join(f.workspace,'objects',f.view.object_id,'object.json'))),section:'summary'};
+ await cli.call('image_evidence',evidence);await cli.call('image_evidence',evidence);assert.deepEqual(calls.slice(-2),[{name:'image_evidence',args:evidence},{name:'image_evidence',args:evidence}]);assert.deepEqual(readdirSync(path.join(f.workspace,'cli-requests')).sort(),before);assert.equal(existsSync(path.join(f.workspace,'cli-requests','.json')),false);
+});
+test('new CLI tools reject bad provider schema before creating an intent or invoking the provider',async t=>{
+ const f=fixture(t),cli=new CliExecution(f.workspace,{async call(){assert.fail('Invalid input must not reach provider');},close(){}});
+ for(const [name,args]of [['image_statistics',{object_id:f.view.object_id}],['image_statistics',{object_id:f.view.object_id,request_id:'bad-stat',extra:true}],['image_profile',{object_id:f.view.object_id,points:[[0,0]],request_id:'bad-profile'}],['image_profile',{object_id:f.view.object_id,points:[[0,0],[1,1]],sample_count:1,request_id:'bad-profile'}],['image_evidence',{object_id:f.view.object_id,manifest_sha256:'wrong',section:'summary'}],['image_evidence',{object_id:f.view.object_id,manifest_sha256:'a'.repeat(64),section:'summary',request_id:'not-a-read-id'}]])await assert.rejects(cli.call(name,args),e=>e.code==='INVALID_ARGUMENT');
+ assert.equal(existsSync(path.join(f.workspace,'cli-requests')),false);
+});
+test('GPA/read and finite method tools are explicit writes with exact provider schemas, original intents and query-only repeats',async t=>{
+ const f=fixture(t),calls=[],provider={async call(name,args){calls.push({name,args:structuredClone(args)});if(name!=='image_result')assert.ok(existsSync(path.join(f.workspace,'cli-requests',args.request_id+'.json')));return reply({state:'completed',request_id:args.request_id,object_id:id(4)});},close(){}},cli=new CliExecution(f.workspace,provider),root=id(45);
+ const cases=[['image_gpa',{object_id:f.fft.object_id,source_domain:'real_space_lattice',source_domain_text:'Public synthetic working assumption',g_vectors:[[.125,0],[0,.125]],mask_sigma:.012,reference_rect:[8,8,24,24],reference_mode:'fixed_g',reference_text:'Explicit local reference assumption',request_id:'cli-gpa'},{mask_sigma:.010}],['image_gpa_read',{object_id:id(4),points:[[8,8]],request_id:'cli-gpa-read'},{points:[[9,9]]}],['image_method_plan',{object_ids:[id(4)],budget:{method_calls:1,fft_pixels:0,gpa_band_pixels:131072,topology_path_samples:0},information:{goal:'projected_topology'},request_id:'cli-method-plan'},{information:{goal:'projected_topology',followup_basis:'Revised explicit source'}}],['image_method_next',{object_id:id(5),user_stop:false,request_id:'cli-method-next'},{user_stop:true}],['image_method_step',{object_id:id(5),root_plan_id:root,action_id:id(6),selection_reason:'Explicit controlled selection',request_id:'method-'+root+'-1'},{selection_reason:'Different selection reason'}]];
+ for(const [name,args,patch]of cases){const {request_id,...missing}=args;const before=calls.length;await assert.rejects(cli.call(name,missing),e=>e.code==='INVALID_ARGUMENT');assert.equal(calls.length,before);await cli.call(name,args);assert.deepEqual(calls.at(-1),{name,args});assert.deepEqual(JSON.parse(readFileSync(path.join(f.workspace,'cli-requests',request_id+'.json'),'utf8')).arguments,args);await cli.call(name,args);assert.deepEqual(calls.at(-1),{name:'image_result',args:{request_id}});await assert.rejects(cli.call(name,{...args,...patch}),/different arguments/);assert.equal(calls.length,before+2);}
+ await assert.rejects(cli.call('image_gpa_read',{object_id:id(4),points:[[1.5,2]],request_id:'fractional'}),e=>e.code==='INVALID_ARGUMENT');await assert.rejects(cli.call('image_method_plan',{...cases[2][1],budget:{...cases[2][1].budget,fft_pixels:65536}}),e=>e.code==='INVALID_ARGUMENT');await assert.rejects(cli.call('image_gpa_view',{object_id:id(4),component:'ux',request_id:'not-open'}),/Unsupported/);await assert.rejects(cli.call('image_topology',{}),/Unsupported/);
+});
+test('a lost GPA-read or method-step response preserves the original write identity and never dispatches again',async t=>{
+ const f=fixture(t);
+ for(const [name,args]of [['image_gpa_read',{object_id:id(4),points:[[8,8]],request_id:'lost-gpa-read'}],['image_method_step',{object_id:id(5),root_plan_id:id(45),action_id:id(6),selection_reason:'Controlled lost receipt',request_id:'method-'+id(45)+'-1'}]]){
+  const calls=[],cli=new CliExecution(f.workspace,{async call(tool,input){calls.push({tool,input:structuredClone(input)});if(tool!=='image_result')throw Object.assign(new Error('Controlled response loss'),{code:'OUTCOME_UNKNOWN'});return reply({state:'unknown',request_id:input.request_id});},close(){}});
+  await assert.rejects(cli.call(name,args),error=>{const response=cliError('tool',error);assert.equal(response.status,'outcome_unknown');assert.equal(response.request_id,args.request_id);return true;});assert.equal((await cli.call(name,args)).state,'unknown');assert.deepEqual(calls.map(c=>c.tool),[name,'image_result']);assert.equal(calls[1].input.request_id,args.request_id);
+ }
+});
+test('validated requestless provider refusals are readonly CLI failures with original codes, never fictitious recovery queries',async t=>{
+ const f=fixture(t),before=readdirSync(f.workspace).sort();
+ for(const [name,args,code]of [['image_evidence',{object_id:f.view.object_id,manifest_sha256:'0'.repeat(64),section:'summary'},'EVIDENCE_MANIFEST_MISMATCH'],['image_info',{object_id:f.view.object_id},'UNKNOWN_REFERENCE'],['image_source_proof_info',{proof_object_id:id(10)},'READ_REFUSED']]){
+  const provider=refusingWorker(f.workspace,()=>({ok:false,state:'failed',backend:'external-image-workspace',request_id:null,error:{code,message:'Exact saved reference refused'}})),execution=new CliExecution(f.workspace,provider);
+  try{await assert.rejects(execution.call(name,args),error=>{const out=cliError('tool',error);assert.equal(out.status,'failed');assert.equal(out.request_id,null);assert.equal(out.error.code,code);assert.equal(out.error.submission_state,'read_only');assert.match(out.error.message,/Exact saved reference refused/);assert.doesNotMatch(out.error.message,/Query image_result|request_id=unknown/);return true;});}finally{execution.close();}
+ }
+ assert.deepEqual(readdirSync(f.workspace).sort(),before);assert.equal(existsSync(path.join(f.workspace,'cli-requests')),false);
+});
+test('write or original-result uncertainty is never reclassified as readonly failure and retains the exact original ID',async t=>{
+ const f=fixture(t);
+ for(const state of ['missing_identity','unknown']){
+  const calls=[],request_id='write-'+state,args={object_id:f.view.object_id,request_id},provider=refusingWorker(f.workspace,payload=>{calls.push(payload);return {ok:false,state:payload.action==='result'?'unknown':state==='unknown'?'unknown':'failed',backend:'external-image-workspace',request_id:payload.action==='result'?payload.query_request_id:state==='unknown'?request_id:null,error:{code:'EVIDENCE_MANIFEST_MISMATCH',message:'Controlled ambiguous write response'}};}),execution=new CliExecution(f.workspace,provider);
+  try{for(let i=0;i<2;i++)await assert.rejects(execution.call('image_statistics',args),error=>{const out=cliError('tool',error);assert.equal(out.status,'outcome_unknown');assert.equal(out.request_id,request_id);assert.equal(out.error.submission_state,'outcome_unknown');assert.match(out.error.message,new RegExp('Query image_result with original request_id='+request_id));return true;});assert.deepEqual(calls.map(c=>c.action),['statistics','result']);assert.equal(calls[1].query_request_id,request_id);await assert.rejects(execution.call('image_statistics',{...args,rect:[0,0,2,2]}),/different arguments/);assert.equal(calls.length,2);}finally{execution.close();}
+ }
+});
 test('unknown first outcome retains exact request; next invocation is query-only',async t=>{
  const f=fixture(t),calls=[],provider={async call(name,args){calls.push(name);if(name==='image_fft')throw Object.assign(new Error('lost response'),{code:'OUTCOME_UNKNOWN'});return reply({state:'unknown',request_id:args.request_id});},close(){}};const execution=new CliExecution(f.workspace,provider),args={object_id:id(1),request_id:'lost'};
  await assert.rejects(execution.call('image_fft',args),e=>e.request_id==='lost');assert.equal((await execution.call('image_fft',args)).state,'unknown');assert.deepEqual(calls,['image_fft','image_result']);assert.equal(cliError('tool',Object.assign(new Error('unknown'),{code:'OUTCOME_UNKNOWN',request_id:'lost'})).status,'outcome_unknown');
+});
+test('an actual coordinator deadline on a started CLI write is unknown, retains its ID, and repeats only query the original',async t=>{
+ const f=fixture(t),coordinator=new ExecutionCoordinator(),calls=[],request_id='deadline-write',args={object_id:f.view.object_id,request_id},input=path.join(f.workspace,'deadline-input.json');writeFileSync(input,JSON.stringify(args));let finishWork,closeWork,waiting,starts=0,outcome='pending';
+ const provider={call(name,parameters){calls.push({name,parameters:structuredClone(parameters)});if(name==='image_result')return Promise.resolve(reply({state:outcome,request_id:parameters.request_id,object_id:f.fft.object_id}));starts++;assert.ok(existsSync(path.join(f.workspace,'cli-requests',request_id+'.json')));waiting=coordinator.invoke({operation:name,requestId:parameters.request_id,parameters,resourceKeys:['controlled-cli-write'],timeoutMs:5},{start:()=>({result:new Promise(r=>finishWork=r),closed:new Promise(r=>closeWork=r),requestStop:()=>false}),messages:{timeout:'Controlled wait budget ended'}});return waiting;},close(){}};
+ const options={command:'tool',workspace:f.workspace,name:'image_statistics',input};
+ try{
+  let caught;try{await runCli(options,{provider});}catch(error){caught=error;}
+  assert.equal(caught.executionCategory,'deadline');assert.equal(waiting.receipt().waitState,'timed_out');assert.equal(waiting.receipt().state,'running');assert.equal(waiting.receipt().closed,false);assert.equal(starts,1);
+  const failed=cliError('tool',caught);assert.equal(failed.status,'outcome_unknown');assert.equal(CLI_EXIT[failed.status],5);assert.equal(failed.request_id,request_id);assert.equal(failed.error.code,'deadline');
+  const pending=await runCli(options,{provider});assert.equal(pending.status,'outcome_unknown');assert.equal(CLI_EXIT[pending.status],5);assert.equal(pending.request_id,request_id);assert.equal(starts,1);
+  outcome='completed';finishWork(reply({state:'completed',request_id,object_id:f.fft.object_id}));closeWork();await waiting.workerDone;
+  const completed=await runCli(options,{provider});assert.equal(completed.status,'completed');assert.equal(completed.request_id,request_id);assert.deepEqual(calls.map(c=>c.name),['image_statistics','image_result','image_result']);assert.ok(calls.slice(1).every(c=>c.parameters.request_id===request_id));
+  writeFileSync(input,JSON.stringify({...args,rect:[0,0,2,2]}));await assert.rejects(runCli(options,{provider}),/different arguments/);assert.equal(starts,1);assert.equal(calls.length,3);
+ }finally{finishWork?.(reply({state:'completed',request_id}));closeWork?.();await waiting?.workerDone;}
+});
+test('deadline classification uses its structured category without generalizing messages or definitive failures',()=>{
+ assert.equal(cliError('tool',new Error('deadline timeout unknown words in a message only')).status,'failed');
+ const notSubmitted=cliError('tool',Object.assign(new Error('Explicitly not dispatched'),{code:'IMAGE_WORKER_NOT_SUBMITTED',submission_state:'not_submitted',executionCategory:'deadline',request_id:'not-dispatched'}));assert.equal(notSubmitted.status,'failed');assert.equal(CLI_EXIT[notSubmitted.status],4);assert.equal(notSubmitted.error.submission_state,'not_submitted');assert.equal(notSubmitted.request_id,'not-dispatched');
+ const read=cliError('tool',Object.assign(new Error('Verified readonly refusal'),{code:'EVIDENCE_MANIFEST_MISMATCH',submission_state:'read_only',executionCategory:'deadline'}));assert.equal(read.status,'failed');assert.equal(read.error.code,'EVIDENCE_MANIFEST_MISMATCH');assert.equal(read.error.submission_state,'read_only');assert.equal(CLI_EXIT[read.status],4);
+ assert.equal(cliError('tool',Object.assign(new Error('deadline wording'),{code:'INVALID_ARGUMENT'})).status,'invalid_arguments');assert.equal(cliError('tool',Object.assign(new Error('deadline wording'),{code:'REQUEST_CONFLICT'})).status,'conflict');
+});
+
+test('CLI forwards existing STEM observation tools under schema and original-intent recovery',async t=>{
+ const f=fixture(t),calls=[],provider={async call(name,args){calls.push({name,args});return reply({state:'completed',request_id:args.request_id,object_id:id(5)});},close(){}};
+ const execution=new CliExecution(f.workspace,provider),rect=[20,20,25,25];
+ const inputs=[['image_statistics',{object_id:id(1),rect,request_id:'stem-stats'}],
+  ['image_profile',{object_id:id(1),points:[[20.25,22.5],[24.25,22.5]],sample_count:5,request_id:'stem-profile'}],
+  ['image_discovery',{object_id:id(1),entry:'manual',regions:[{rect,reason:'Expected position question'}],request_id:'stem-discovery'}],
+  ['image_discovery_review',{object_id:id(2),candidate_id:id(3),evidence_ids:[id(4)],observation_text:'Retain raw evidence',include_site_continuation:true,
+   site_context:{question:'Compare the expected site',statistics_id:id(4),expected_position_xy:[22.25,22.5],position_source_text:'Supplied prior',modality:'haadf',signal_kind:'stored_scalar',signal_source_text:'Analytic fixture'},request_id:'stem-review'}]];
+ for(const [name,args] of inputs){await execution.call(name,args);await execution.call(name,args);}
+ assert.deepEqual(calls.map(c=>c.name),inputs.flatMap(([name])=>[name,'image_result']));
+ await assert.rejects(execution.call('image_profile',{object_id:id(1),points:[[1,2]],request_id:'invalid-line'}));
+ await assert.rejects(execution.call('image_auto_atoms',{request_id:'unsupported'}),/Unsupported/);
+ assert.equal(calls.length,8);
 });
 test('query never wraps a nonthrowing failed/pending/unknown/missing outcome as CLI success',async t=>{
  const f=fixture(t);for(const [state,status]of [['completed','completed'],['failed','failed'],['not_submitted','failed'],['pending','outcome_unknown'],['unknown','outcome_unknown'],['not_found','outcome_unknown']]){
@@ -41,6 +121,61 @@ test('query never wraps a nonthrowing failed/pending/unknown/missing outcome as 
  }
  const mismatch=await runCli({command:'query',workspace:f.workspace,request_id:'original-query'},{provider:{async call(){return reply({state:'completed',request_id:'different-request'});},close(){}}});assert.equal(mismatch.status,'outcome_unknown');assert.equal(mismatch.request_id,'original-query');
 });
+function siteFollowupFixture(){
+ const context={question:'Why does the fixed expected site differ?',statistics_id:id(4),expected_position_xy:[22.25,22.5],position_source_text:'Declared expected site',modality:'haadf',signal_kind:'stored_scalar',signal_source_text:'Analytic scalar, no count claim'};
+ const science={frame_object_id:id(1),array_sha256:'a'.repeat(64),shape_yx:[64,64],dtype:'float32'};
+ const action={tool:'image_profile',arguments:{object_id:id(1),points:[[20.25,22.5],[24.25,22.5]],interpolation:'nearest',line_width:1,sample_count:5,request_id:'follow-profile'}};
+ const after={tool:'image_discovery_review',require_result_request_id:'follow-profile',require_result_kind:'profile',arguments:{object_id:id(2),candidate_id:id(3),evidence_ids:[id(4),id(5)],site_context:context,observation_text:'Keep raw evidence; physical unknown',previous_review_id:id(7),include_site_continuation:true,request_id:'follow-linked'}};
+ const review={state:'completed',kind:'discovery_review',request_id:'follow-review',object_id:id(7),evidence_refs:[{object_id:id(4)},{object_id:id(5)}],site_observation:{context},site_continuation:{version:2,status:'tool_proposed',source_review_id:id(7),source_review_request_id:'follow-review',source_science:science,action,after_success:after}};
+ const profile={state:'completed',kind:'profile',request_id:'follow-profile',object_id:id(6),parent_object_id:id(1),component:'raw',points:action.arguments.points,sampling:{interpolation:'nearest',line_width:1,sample_count:5},scientific_grid_identity:{source_grid_object_id:id(1),array_sha256:science.array_sha256,shape_yx:[64,64],dtype:'float32'}};
+ const calls=[];return {review,profile,calls,provider:{async call(name,args){calls.push({name,args});assert.equal(name,'image_result');return reply(structuredClone(args.request_id==='follow-review'?review:profile));},close(){}}};
+}
+
+test('site-followup requires explicit runtime and original review request ID',()=>{
+ const absolute=path.resolve('site followup fixture');
+ assert.equal(parseCliArgs(['site-followup','--workspace',absolute,'--python',process.execPath,'--request-id','follow-review']).command,'site-followup');
+ assert.throws(()=>parseCliArgs(['site-followup','--workspace',absolute,'--request-id','follow-review']),/python/);
+ assert.throws(()=>parseCliArgs(['site-followup','--workspace',absolute,'--python',process.execPath]),/request-id/);
+});
+test('site-followup prepares an existing review call from two original receipts without writes',async t=>{
+ const f=fixture(t),s=siteFollowupFixture(),original=structuredClone(s.review),before=readdirSync(f.workspace);
+ const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});
+ assert.equal(r.status,'completed');assert.equal(r.data.phase,'review_arguments_prepared');assert.equal(r.data.read_only,true);
+ assert.deepEqual(r.data.next_tool_call,{tool:'image_discovery_review',arguments:{...s.review.site_continuation.after_success.arguments,evidence_ids:[id(4),id(5),id(6)]}});
+ assert.deepEqual(s.review,original);assert.deepEqual(readdirSync(f.workspace),before);
+ assert.deepEqual(s.calls,[{name:'image_result',args:{request_id:'follow-review'}},{name:'image_result',args:{request_id:'follow-profile'}}]);
+});
+test('site-followup preserves failed/unknown original outcomes and never prepares a write',async t=>{
+ const f=fixture(t);
+ for(const [state,status] of [['failed','failed'],['pending','outcome_unknown'],['not_found','outcome_unknown'],['unknown','outcome_unknown']]){
+  const s=siteFollowupFixture();s.profile.state=state;
+  const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});
+  assert.equal(r.status,status);assert.equal(r.data.next_tool_call,null);assert.equal(r.data.original_outcome.request_id,'follow-profile');assert.equal(s.calls.length,2);
+ }
+ const thrown=siteFollowupFixture(),normal=thrown.provider.call;
+ thrown.provider.call=async(name,args)=>{if(args.request_id==='follow-profile')throw Object.assign(new Error('Original request not found; query only'),{diagnostic:{submission_state:'outcome_unknown'}});return normal(name,args);};
+ const absent=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:thrown.provider});
+ assert.equal(absent.status,'outcome_unknown');assert.equal(absent.data.next_tool_call,null);assert.match(absent.data.original_outcome.error.message,/Original request not found/);
+ const s=siteFollowupFixture();s.review.state='unknown';
+ const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});assert.equal(r.status,'outcome_unknown');assert.equal(s.calls.length,1);assert.equal(r.data.next_tool_call,null);
+});
+test('site-followup refuses a completed profile with changed original ID, source or sampling',async t=>{
+ const f=fixture(t);
+ for(const mutate of [s=>s.profile.request_id='other',s=>s.profile.kind='statistics',s=>s.profile.parent_object_id=id(8),s=>s.profile.points=[[20,20],[24,20]],s=>s.profile.sampling.sample_count=3,s=>s.profile.sampling.line_width=2,s=>s.profile.sampling.interpolation='linear',s=>s.profile.component='amplitude',s=>s.profile.scientific_grid_identity.array_sha256='b'.repeat(64),s=>s.profile.scientific_grid_identity.source_grid_object_id=id(8),s=>s.profile.scientific_grid_identity.shape_yx=[32,64],s=>s.profile.scientific_grid_identity.dtype='uint16']){
+  const s=siteFollowupFixture();mutate(s);const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});
+  assert.ok(['unavailable','outcome_unknown'].includes(r.status));assert.equal(r.data.next_tool_call,null);assert.equal(s.calls.length,2);
+ }
+});
+test('site-followup keeps historical and no-action decisions without querying or inventing a profile',async t=>{
+ const f=fixture(t);
+ for(const status of ['needs_reference_review','needs_information','needs_supported_profile','stop_at_observation']){
+  const s=siteFollowupFixture();s.review.site_continuation.status=status;s.review.site_continuation.reason='Keep unknown and inspect the original evidence';
+  const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});assert.equal(r.status,'completed');assert.equal(r.data.phase,status);assert.equal(r.data.next_tool_call,null);assert.equal(s.calls.length,1);
+ }
+ const s=siteFollowupFixture();s.review.site_continuation.version=1;
+ const r=await runCli({command:'site-followup',workspace:f.workspace,request_id:'follow-review'},{provider:s.provider});assert.equal(r.status,'unavailable');assert.equal(r.data.next_tool_call,null);assert.equal(s.calls.length,1);
+});
+
 test('typed short metadata contention maps to conflict without generalizing every busy error',()=>{
  const error=Object.assign(new Error('workspace metadata gate is held'),{code:'WORKSPACE_METADATA_BUSY',submission_state:'not_submitted',request_id:'original-held'}),response=cliError('tool',error);assert.equal(response.status,'conflict');assert.equal(response.request_id,'original-held');assert.equal(response.error.submission_state,'not_submitted');assert.equal(cliError('tool',Object.assign(new Error('unrelated busy'),{code:'DETECTOR_BUSY'})).status,'failed');
 });
@@ -64,7 +199,18 @@ test('near-zero float roundoff retains the original ROI while shared support rem
  const f=fixture(t),coordinates=[-1e-13,3,20,22],view=f.object(5,{kind:'annotate',parent_object_id:f.frame.object_id,array_domain:'spatial',annotations:[{...f.mark,anchor:{...f.mark.anchor,coordinates}}]}),roi=savedRois(new CliObjectReader(f.workspace),{object_id:view.object_id})[0];assert.deepEqual(roi.float_roi_xyxy,coordinates);assert.deepEqual(roi.processing_rect_xyxy,[0,3,20,22]);
 });
 test('workspace inspect refuses legacy checkpoint guesses; explicit immutable handoff is allowed',async t=>{
- const f=fixture(t);await assert.rejects(runCli({command:'inspect',workspace:f.workspace}),/No explicit workspace savepoint/);const output=await runCli({command:'inspect',workspace:f.workspace,snapshot_object:f.view.object_id});assert.equal(output.data.state,'explicit_immutable_snapshot');assert.equal(output.data.working_gui_edits_read,false);assert.equal(output.data.rois[0].annotation_id,'roi-1');
+ const f=fixture(t);await assert.rejects(runCli({command:'inspect',workspace:f.workspace}),/No explicit workspace savepoint/);const output=await runCli({command:'inspect',workspace:f.workspace,snapshot_object:f.view.object_id});assert.equal(output.data.state,'explicit_immutable_snapshot');assert.equal(output.data.working_gui_edits_read,false);assert.equal(output.data.rois[0].annotation_id,'roi-1');assert.equal(output.data.research_question,null);assert.equal(output.data.research_leads,null);assert.equal(output.data.research_offline,null);assert.equal(output.data.research_state_scope,'object_only_no_research_metadata');
+});
+test('inspect projects only saved research metadata without provider calls or filesystem writes despite unsaved active edits',async t=>{
+ const f=fixture(t),question={version:1,text:'Saved synthetic observation question',context_object_id:f.view.object_id,frame_object_id:f.frame.object_id,recorded_utc:'2026-11-06T20:00:00.000Z'};
+ f.snapshot.research_question=question;f.snapshot.research_leads={version:1,entries:[]};f.snapshot.research_offline={version:1,entries:[]};const analysis=await saveFixture(f,'saved-research');analysis.update({...f.snapshot,research_question:{...question,text:'Active unsaved question'}});assert.equal(analysis.status().dirty,true);
+ const digest=directory=>Object.fromEntries(readdirSync(directory,{withFileTypes:true}).flatMap(e=>{const p=path.join(directory,e.name);return e.isDirectory()?Object.entries(digest(p)):[[path.relative(f.workspace,p),hash(readFileSync(p))]];})),before=digest(f.workspace),provider={async call(){assert.fail('inspect must not start a provider request');},close(){assert.fail('inspect must not manage a provider');}};
+ const output=await runCli({command:'inspect',workspace:f.workspace},{provider});assert.deepEqual(output.data.research_question,question);assert.deepEqual(output.data.research_leads,f.snapshot.research_leads);assert.deepEqual(output.data.research_offline,f.snapshot.research_offline);assert.equal(output.data.save_id,'saved-research');assert.equal(output.data.research_state_scope,'saved_workspace_metadata');assert.equal(output.data.working_gui_edits_read,false);assert.equal(output.data.working_gui_state,'not_queried_may_differ_from_saved');assert.match(output.data.research_state_meaning,/not fresh evidence validation/);assert.match(output.data.research_state_meaning,/not independent repeat experiments/);assert.deepEqual(digest(f.workspace),before);
+ const immutable=await runCli({command:'inspect',workspace:f.workspace,snapshot_object:f.view.object_id},{provider});assert.equal(immutable.data.research_question,null);assert.deepEqual(digest(f.workspace),before);
+});
+test('inspect preserves old saved records with absent optional research metadata',async t=>{
+ const f=fixture(t);await saveFixture(f,'legacy-research-absent');const before=readFileSync(path.join(f.workspace,'analysis-workspace','savepoints','legacy-research-absent.json'));
+ const output=await runCli({command:'inspect',workspace:f.workspace});for(const key of ['research_question','research_leads','research_offline'])assert.equal(output.data[key],null);assert.equal(output.data.state,'explicitly_saved');assert.deepEqual(readFileSync(path.join(f.workspace,'analysis-workspace','savepoints','legacy-research-absent.json')),before);
 });
 test('saved comparison reuses qualified FFT, preserves missing-measure uncertainty and publishes references only',async t=>{
  const f=fixture(t),owner=acquireAnalysisWorkspaceOwner(f.workspace,{role:'gui'});f.cleanup.push(()=>owner.release());const analysis=new AnalysisWorkspace(f.workspace,f.snapshot,owner);await analysis.save('explicit-A',0,async()=>{});

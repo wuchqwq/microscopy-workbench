@@ -1,3 +1,4 @@
+import {publicSyntheticPreviewRecipe} from '../lib/public_joint_runtime.mjs';
 // Direct researcher entry: the same local MCP/scientific backend, no model.
 import path from 'node:path';
 import {isDirectInvocation} from '../lib/runtime/direct_entry.mjs';
@@ -58,7 +59,8 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
  const sessionPath=path.join(directory,'session.json');let session:NativeRecord;
  if(existsSync(sessionPath)){
   session=fields(boundedJSON(inside(workspace,sessionPath)));
-  if(session.schema_version!==1||session.workspace!==realpathSync(workspace)||!objectId.test((session.session_id??'') as string))throw new Error('Inspector session binding is invalid');
+  if(session.schema_version!==1||typeof session.workspace!=='string'||!path.isAbsolute(session.workspace)||!objectId.test((session.session_id??'') as string))throw new Error('Inspector session binding is invalid');
+  if(session.workspace!==realpathSync(workspace))throw Object.assign(new Error('Inspector workspace location differs from its original absolute session binding; no automatic relocation or journal rewrite'),{code:'WORKSPACE_LOCATION_MISMATCH'});
   if(options.source!==undefined&&realpathSync(options.source)!==session.source_path)throw new Error('Workspace is bound to a different source file; use a new workspace');
   if(options.frame!==undefined&&options.frame!==session.initial_frame)throw new Error('Initial frame differs; resume the saved view and use its frame navigation');
   if(options.dataset!==undefined&&options.dataset-1!==session.initial_dataset_index)throw new Error('Dataset differs from the saved startup; reopen without a selector or use a new workspace');
@@ -130,7 +132,7 @@ export async function startResearcherInspector(options:ResearcherOptions,ports:I
    }else{
     const source=await call(bootstrap,'open','image_open',{source_path:session.source_path});
     const frame=await call(bootstrap,'frame','image_frame',{object_id:source.object_id,frame_index:(session.initial_frame as number)-1,...(session.initial_dataset_index!==undefined?{dataset_index:session.initial_dataset_index}:{}),...(session.initial_plane_axes!==undefined?{plane_axes:session.initial_plane_axes,plane_indices:session.initial_plane_indices}:{})});
-    selected=await call(bootstrap,'preview','image_preview',{object_id:frame.object_id,...(session.initial_component!==undefined?{component:session.initial_component}:{})});
+    selected=await call(bootstrap,'preview','image_preview',{object_id:frame.object_id,...publicSyntheticPreviewRecipe(frame),...(session.initial_component!==undefined?{component:session.initial_component}:{})});
    }
   }finally{await bootstrap?.close();}
   mkdirSync(runDirectory,{recursive:true});

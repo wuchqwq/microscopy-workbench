@@ -49,3 +49,25 @@ test('native Close freezes input before prepare and releases it after cancel, er
 test('terminal original discard stays fenced until readonly loaded revision matches, and its ack never continues Close',async()=>{
  for(const fresh of [false,true]){let acknowledged=0;const f=fixture({queryDiscard:async()=>({operation:{command_id:7,expected_working_revision:17,state:'completed'},status:clean}),action:async action=>{f.log.push(action);return {ok:true,working_revision:fresh?clean.working_revision:clean.working_revision-1};},acknowledgeDiscard:operation=>{assert.equal(operation.command_id,7);acknowledged++;}});assert.equal(await f.coordinator.request(),false);assert.deepEqual(f.log,['inspect-close-state']);assert.equal(acknowledged,fresh?1:0);assert.equal(f.errors.length,1);}
 });
+
+
+test('original close is queryable before workspace confirmation and during drain without HTTP replay',async()=>{
+ const replies=[],calls=[];let accept,drain;
+ const accepted=new Promise(r=>accept=r),drained=new Promise(r=>drain=r);
+ const session=new DesktopBackendSession({request:async(action,revision)=>{calls.push({action,revision});return action==='close'?await accepted:workspace(clean);},close:async()=>{calls.push({action:'drain'});await drained;},reply:value=>replies.push(value)});
+ const send=x=>session.dispatch(JSON.stringify(x)),first=send({id:1,action:'close',expected_working_revision:4});await tick();
+ await send({id:2,action:'query-close',original_id:1,expected_working_revision:4});assert.equal(replies.at(-1).state.close_operation.state,'running');
+ await send({id:3,action:'close',expected_working_revision:4});assert.equal(replies.at(-1).ok,false);assert.equal(calls.filter(x=>x.action==='close').length,1);
+ accept(workspace(clean));await tick();await send({id:4,action:'query-close',original_id:1,expected_working_revision:4});assert.equal(replies.at(-1).state.close_operation.state,'workspace_closed');
+ for(const other of [{original_id:2,expected_working_revision:4},{original_id:1,expected_working_revision:5}]){await send({id:5,action:'query-close',...other});assert.equal(replies.at(-1).ok,false);}
+ drain();await first;await send({id:6,action:'query-close',original_id:1,expected_working_revision:4});assert.equal(replies.at(-1).state.close_operation.state,'completed');assert.deepEqual(calls.map(x=>x.action),['close','drain']);
+});
+test('ambiguous original close retains its exact unknown receipt and never allows another mutation',async()=>{
+ const replies=[],calls=[],session=new DesktopBackendSession({request:async(action)=>{calls.push(action);throw Error('lost after dispatch');},close:async()=>assert.fail('unconfirmed workspace must not drain'),reply:value=>replies.push(value)});
+ await session.dispatch(JSON.stringify({id:1,action:'close',expected_working_revision:4}));await session.dispatch(JSON.stringify({id:2,action:'query-close',original_id:1,expected_working_revision:4}));assert.equal(replies.at(-1).state.close_operation.state,'unknown');
+ for(const action of ['close','discard'])await session.dispatch(JSON.stringify({id:3,action,expected_working_revision:4}));assert.deepEqual(calls,['close']);
+});
+test('native close resumes the original exit before any renderer, status, save or discard work',async()=>{
+ const f=fixture({resumeClose:async()=>true});assert.equal(await f.coordinator.request(),true);assert.deepEqual(f.log,[]);
+ const g=fixture({resumeClose:async()=>{throw Error('original close still unknown');}});assert.equal(await g.coordinator.request(),false);assert.deepEqual(g.log,[]);assert.deepEqual(g.errors,['original close still unknown']);
+});

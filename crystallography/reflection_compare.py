@@ -93,7 +93,7 @@ def load_measurement(path, _depth=0):
             journal.get("object_manifest_sha256") == sha(raw) and
             journal.get("response") == {"ok": True, "state": "completed", "backend": "external-image-workspace", "request_id": creator, **metadata},
             "Measurement manifest differs from its immutable original request")
-    allowed = {"workspace", "action", "request_id", "object_id", "points", "coordinate_space"}
+    allowed = {"workspace", "action", "request_id", "object_id", "points", "coordinate_space", "source_text"}
     if parameters["action"] == "remeasure":
         allowed = {"workspace", "action", "request_id", "object_id", "measurement_object_id", "points", "source_text"}
     require(set(parameters) <= allowed and
@@ -101,6 +101,10 @@ def load_measurement(path, _depth=0):
             metadata.get("parent_object_id") == parameters["object_id"],
             "Measurement parent object contradicts the saved original request")
     if parameters["action"] == "measure":
+        source_text = parameters.get("source_text")
+        require((source_text is None or type(source_text) is str and 1 <= len(source_text) <= 4000) and
+                metadata.get("source_text") == source_text,
+                "Measurement source text contradicts the saved original request")
         require(type(parameters.get("points")) is list and
                 canonical(parameters["points"]) == canonical(metadata.get("points")),
                 "Measurement points contradict the saved original request")

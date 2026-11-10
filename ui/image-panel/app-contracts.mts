@@ -8,12 +8,15 @@ import type {RectangleHandle} from './roi-editing.mjs';
 export interface AppAnchor extends ScientificAnchor {readonly coordinate_space:ScientificCoordinateSpace;readonly coordinates:readonly number[];}
 export interface AppMark extends FigureMark {readonly kind:SelectionKind;readonly anchor?:AppAnchor;}
 export interface AppDisplay extends Readonly<Record<string,unknown>> {readonly gamma?:number;readonly display_range?:readonly number[];readonly spectrum_axes?:boolean;readonly scale_bar?:boolean;readonly component?:string;}
-export interface AppCalibration extends CalibrationView {readonly scope?:string;readonly source_type?:string;readonly x?:unknown;readonly y?:unknown;readonly unit?:unknown;}
-export interface AppObject extends FigureObject {readonly annotations:readonly AppMark[];readonly panels:readonly DisplayPanel[];readonly display?:AppDisplay;readonly scale_bar?:import('./figure-contracts.mjs').ScaleBarRecord;readonly xy_calibration?:AppCalibration;readonly calibration_record?:AppCalibration;readonly calibration?:AppCalibration;}
+export interface AppCalibration extends CalibrationView {readonly scope?:string;readonly source_type?:string;readonly uncertainty_status?:unknown;readonly x?:unknown;readonly y?:unknown;readonly unit?:unknown;}
+export interface AppObject extends FigureObject {readonly user_context?:Readonly<Record<string,unknown>>;readonly annotations:readonly AppMark[];readonly panels:readonly DisplayPanel[];readonly display?:AppDisplay;readonly scale_bar?:import('./figure-contracts.mjs').ScaleBarRecord;readonly xy_calibration?:AppCalibration;readonly calibration_record?:AppCalibration;readonly calibration?:AppCalibration;}
 export interface AppOperation extends NumericReply,Omit<MeasurementRecord,'scientific_grid_identity'> {readonly annotation_id?:string;readonly annotation_ids?:readonly string[];readonly action?:string;readonly output_dir?:string;readonly state?:string;}
+export interface JointResearchHistory {readonly review_id:string;readonly status:string;readonly question?:string;readonly notice?:string;readonly source_view_id?:string;readonly frame_id?:string;readonly agent_messages?:readonly {readonly text:string;readonly phase?:string|null}[];readonly results?:readonly unknown[];readonly unresolved_request_ids?:readonly string[];}
+export interface JointResearchState {readonly review_id?:string|null;readonly revision:number;readonly status:string;readonly locked:boolean;readonly notice:string;readonly confirmation:string;readonly error?:string|null;readonly history?:readonly JointResearchHistory[];readonly host?:{readonly thread_id?:string|null;readonly turn_id?:string|null;readonly connection?:string;readonly turn_state?:string;readonly session_revision?:number;readonly agent_messages?:readonly {readonly text:string;readonly phase?:string|null}[]};readonly results?:readonly unknown[];readonly review?:unknown;readonly unresolved_request_ids?:readonly string[];}
 export interface AppState extends Omit<FigureState,'object'|'effective_display'> {
  workspace_analysis?:import('./workspace-controls.mjs').AnalysisSaveState & {active_window_draft?:Readonly<Record<string,unknown>>|null;window_drafts?:Readonly<Record<string,Readonly<Record<string,unknown>>>>};
  [key:string]:unknown;
+ joint_research?:JointResearchState;
  object:AppObject;state_revision:number;effective_display?:AppDisplay|null;selection?:AppSelection|null;last_operation?:AppOperation|null;
  source_identity?:{readonly label?:string;readonly filename?:string};tools:readonly {readonly name:string}[];
  frame_resolution?:{readonly status:string;readonly reason_code?:string;readonly records_checked?:number;readonly ancestor_reads?:number};
@@ -47,7 +50,7 @@ export interface ActionParams extends Readonly<Record<string,unknown>> {source_v
 export type CompositionDraft=Omit<CompositionRecipe,'slots'>&{slots:(CompositionSlot|ShallowCompositionSlot)[]};
 export interface StatefulActionRequest extends Readonly<Record<string,unknown>> {action:string;lightweight?:false;}
 export interface AppDraftAck {object_id?:string;state_revision?:number;edit_state?:AppState['edit_state'];selection?:AppSelection|null;}
-export interface AppRevision {state_revision:number;object_id:string;pending_result?:AppState['pending_result'];}
+export interface AppRevision {joint_research?:JointResearchState;state_revision:number;object_id:string;pending_result?:AppState['pending_result'];}
 // The same-server remote port describes UI metadata only; numerical/calibration
 // fields remain opaque and the existing runtime identity/grid guards still run.
 export interface PanelBrowserAPI {

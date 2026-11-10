@@ -349,3 +349,20 @@ def scale_bar_spec(panel, record):
             "image_endpoints_xyxy": [left + 12, bottom - 13, left + 12 + width, bottom - 13],
             "axis": "x", "signed_scale": scale["x"], "calibration_id": record["calibration_id"],
             "provenance": record.get("source", "user_statement_not_independently_verified"), "display_only": True}
+
+
+def angle_geometry(points, record, frequency=False):
+    """Unsigned angle of two explicit rays; reuse the sourced vector geometry."""
+    require(type(points) is list and len(points) == 3 and all(type(p) is list and len(p) == 2 and all(finite(v) for v in p) for p in points), "Angle requires explicit vertex, first endpoint and second endpoint")
+    vectors = [[p[0] - points[0][0], p[1] - points[0][1]] for p in points[1:]]
+    require(all(all(finite(v) for v in arm) and math.hypot(*arm) > 0 for arm in vectors), "Each angle arm must be finite and nonzero")
+    rays = [geometry(*arm, record, frequency=frequency) for arm in vectors]
+    image = abs(math.remainder(math.degrees(math.atan2(*reversed(vectors[1]))) - math.degrees(math.atan2(*reversed(vectors[0]))), 360.))
+    physical = all(ray["physical_angle"] and finite(ray["physical_angle_degrees"]) for ray in rays)
+    calibrated = abs(math.remainder(rays[1]["physical_angle_degrees"] - rays[0]["physical_angle_degrees"], 360.)) if physical else None
+    return {"measurement_type": "angle", "angle_vertex_index": 0, "angle_image_degrees": image,
+            "angle_physical_degrees": calibrated, "physical_angle": physical,
+            "angle_convention": "unsigned 0..180 degrees between explicit rays; image y down; physical metric only with sourced signed XY calibration",
+            "ray_geometry": rays, "calibration_dependency": dependency(record),
+            "measurement_uncertainty": None, "uncertainty_status": "unknown; localization uncertainty and scale covariance are not supplied",
+            "limitation": rays[0]["limitation"]}

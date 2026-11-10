@@ -1,9 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {UserActionHistory,SavedViewHistory,workflowScope,selectionActionReason,measurementLabel,framePreviewRecipe,currentViewLabel,measurementActionName,idleSelectionHint} from '../ui/image-panel/user-workflow.mjs';
+import {UserActionHistory,SavedViewHistory,workflowScope,selectionActionReason,measurementLabel,framePreviewRecipe,currentViewLabel,measurementActionName,idleSelectionHint,currentViewStatisticsSelection} from '../ui/image-panel/user-workflow.mjs';
 import {profileTicks,profileTickLabels,profileReadout,nearestProfileSample,DataProbes} from '../ui/image-panel/data-probes.mjs';
 const state=(id='a',domain='spatial_pixels')=>({frame_identity:{frame_object_id:'frame'},object:{object_id:id,panels:[{source_object_id:'frame',domain,source_rect_xyxy:[0,0,80,80]}]}});
+test('complete-view statistics retain offset source pixels independently of displayed resolution and abstain on ambiguous mappings',()=>{
+ const s=state('crop');s.object.panels[0]={domain:'spatial_pixels',source_object_id:'frame',source_rect_xyxy:[5,6,25,28],image_rect_xyxy:[0,0,200,220]};const original=structuredClone(s),picked=currentViewStatisticsSelection(s);
+ assert.deepEqual(picked.coordinates,[5,6,25,28]);assert.equal(picked.source_object_id,'frame');assert.equal(picked.coordinate_space,'source_pixels');assert.deepEqual(s,original);picked.coordinates[0]=99;assert.deepEqual(s,original);
+ for(const mutate of [v=>v.frame_identity=null,v=>v.object.panels[0].source_object_id='other-frame',v=>v.object.panels.push(structuredClone(v.object.panels[0])),v=>v.object.panels[0].domain='frequency',v=>v.object.panels[0].domain='source_array_indices',v=>v.object.panels[0].source_rect_xyxy=[5,6,5,28],v=>v.object.panels[0].source_rect_xyxy=[5.1,6,25,28],v=>v.object.panels[0].image_rect_xyxy=[0,0,0,220],v=>v.object.panels[0].source_rect_xyxy=[-1,6,25,28]]){const bad=structuredClone(original);mutate(bad);assert.equal(currentViewStatisticsSelection(bad),null);}
+});
 
 test('image type labels never turn a cropped saved view into a full original or explicit workspace save',()=>{
  const cropped=state('cropped').object,history=new SavedViewHistory();history.remember({object:cropped});const original=structuredClone(history.entries);
@@ -32,7 +37,7 @@ test('action availability rejects rectangles/real-space points before measure an
  assert.ok(selectionActionReason('measure',pick('rectangle','spatial_pixels')));assert.ok(selectionActionReason('measure',pick('point','spatial_pixels')));assert.equal(selectionActionReason('measure',pick('point','frequency')),'');assert.ok(selectionActionReason('fft',pick('rectangle','frequency')));assert.equal(selectionActionReason('statistics',pick('rectangle','frequency')),'');assert.equal(measurementLabel(pick('line','spatial_pixels'),1),'测距 1');
 });
 test('frequency gamma/range cannot be inherited by spatial frame navigation; spatial fixed range is preserved',()=>{
- const display={gamma:2,display_range:[2,15],max_size:600};assert.deepEqual(framePreviewRecipe(state('fft','frequency').object,display),{max_size:600});assert.deepEqual(framePreviewRecipe(state().object,display),display);assert.deepEqual(framePreviewRecipe({},display),{max_size:600});
+ const display={gamma:2,display_range:[2,15],max_size:600,upscale:true,interpolation:'nearest'};assert.deepEqual(framePreviewRecipe(state('fft','frequency').object,display),{max_size:600});assert.deepEqual(framePreviewRecipe(state().object,display),display);assert.deepEqual(framePreviewRecipe({},display),{max_size:600});
  const backend=readFileSync(new URL('../tools/image_panel.mjs',import.meta.url),'utf8');assert.match(backend,/framePreviewRecipe\(\s*current\s*,\s*effectiveDisplay\s*\)/);
 });
 test('view references return to saved objects, update same-grid annotations in place and retain back/forward',()=>{

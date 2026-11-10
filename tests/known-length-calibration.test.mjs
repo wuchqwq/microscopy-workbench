@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {knownLengthReference,knownLengthParameters,knownLengthAttemptRequest} from '../ui/image-panel/known-length-calibration.mjs';
+import {knownLengthReference,knownLengthParameters,knownLengthAttemptRequest,convertCalibrationScale} from '../ui/image-panel/known-length-calibration.mjs';
 const frameId='a'.repeat(32),panel={domain:'spatial_pixels',source_object_id:frameId,source_rect_xyxy:[100,200,600,700],image_rect_xyxy:[0,0,250,250]},object={object_id:'b'.repeat(32),panels:[panel]},line={kind:'line',coordinate_space:'source_pixels',source_object_id:frameId,coordinates:[110.25,210.5,170.25,290.5],panel},frame={frame_object_id:frameId};
 const referenceFor=(object,line)=>knownLengthReference(object,line,frame);
 test('known-length scale uses original floating-point source endpoints, not rendered pixels',()=>{
@@ -10,8 +10,20 @@ test('known-length reference rejects frequency, foreign mapping, zero line and o
  for(const s of [{...line,coordinate_space:'frequency_cycles_per_pixel'},{...line,panel:{...panel,domain:'frequency'}},{...line,kind:'rectangle'},{...line,coordinates:[110,220,110,220]},{...line,coordinates:[99,220,110,220]},{...line,panel:{...panel,image_rect_xyxy:[0,0,300,300]}}])assert.throws(()=>referenceFor(object,s));
  assert.throws(()=>knownLengthReference(object,line,null));assert.throws(()=>knownLengthReference(object,line,{frame_object_id:'c'.repeat(32)}));assert.throws(()=>referenceFor({...object,panels:[panel,panel]},line));assert.throws(()=>referenceFor({...object,panels:[{...panel,source_object_id:undefined}]},{...line,source_object_id:undefined,panel:{...panel,source_object_id:undefined}}));
 });
-test('one ruler cannot silently replace signed or anisotropic calibration',()=>{for(const xy_scale of [{x:.1,y:-.1},{x:.1,y:.2},{x:-.1,y:-.1}])assert.throws(()=>referenceFor({...object,xy_calibration:{status:'active',coordinate_domain:'real_space',xy_scale}},line));assert.doesNotThrow(()=>referenceFor({...object,xy_calibration:{status:'active',coordinate_domain:'real_space',xy_scale:{x:.1,y:.1,unit:'nm'}}},line));});
+test('anisotropic replacement requires explicit consent, while signed orientation still requires axes',()=>{
+ for(const xy_scale of [{x:.1,y:-.1},{x:-.1,y:-.1}])assert.throws(()=>referenceFor({...object,xy_calibration:{status:'active',coordinate_domain:'real_space',xy_scale}},line));
+ const old={status:'active',coordinate_domain:'real_space',calibration_id:'old-cal',revision:3,xy_scale:{x:.012000927901950438,y:.011314583333333333,unit:'nm'}},original=structuredClone(old),r=referenceFor({...object,xy_calibration:old},line);
+ assert.deepEqual(old,original);assert.throws(()=>knownLengthParameters(r,10,'nm',true),/明确确认/);
+ const p=knownLengthParameters(r,10,'nm',true,'','replace-consent',false,true);assert.deepEqual(p.xy_scale,{x:.1,y:.1,unit:'nm'});assert.deepEqual(JSON.parse(p.source_text).previous_calibration.xy_scale,old.xy_scale);assert.deepEqual(old,original);
+});
+test('unit conversions preserve dimensions and exact no-op precision',()=>{
+ const x=.012000927901950438,y=.011314583333333333;assert.equal(convertCalibrationScale(x,'nm','nm'),x);assert.equal(convertCalibrationScale(y,'nm','Å'),y*10);assert.equal(convertCalibrationScale(2,'um','nm'),2000);assert.equal(convertCalibrationScale(2,'Å','nm'),.2);assert.equal(convertCalibrationScale(2,'1/Å','1/nm'),20);assert.throws(()=>convertCalibrationScale(2,'nm','1/nm'));assert.throws(()=>convertCalibrationScale(0,'nm','Å'));
+});
 test('known-length original request binding requires the exact frozen source, parameters and nonce',()=>{
  const parameters=knownLengthParameters(referenceFor(object,line),10,'nm',true,'','nonce-one'),input={source_view_object_id:object.object_id,draft_revision:7,parameters},operation={tool:'image_preview',state:'completed',request_id:'original-preview',calibration_input:input};assert.equal(knownLengthAttemptRequest(operation,input,'old-request'),'original-preview');
  for(const changed of [{...operation,state:'submitted'},{...operation,calibration_input:undefined},{...operation,request_id:'old-request'},{...operation,tool:'image_measure'},{...operation,calibration_input:{...input,source_view_object_id:'c'.repeat(32)}},{...operation,calibration_input:{...input,draft_revision:8}},{...operation,calibration_input:{...input,parameters:{...parameters,xy_scale:{x:.2,y:.2,unit:'nm'}}}},{...operation,calibration_input:{...input,parameters:knownLengthParameters(referenceFor(object,line),10,'nm',true,'','nonce-two')}}])assert.equal(knownLengthAttemptRequest(changed,input,'old-request'),null);
+});
+
+test('diffraction ruler requires explicit unknown-domain declaration and inverse units, while FFT and known real space stay distinct',()=>{
+ const unknown={...object,array_domain:'unspecified_image'},r=knownLengthReference(unknown,line,frame,'reciprocal_space');assert.equal(r.coordinate_domain,'reciprocal_space');assert.equal(r.declare_reciprocal,true);assert.throws(()=>knownLengthParameters(r,2,'1/nm',true,'','n',false),/声明/);assert.throws(()=>knownLengthParameters(r,2,'nm',true,'','n',true));const p=knownLengthParameters(r,2,'1/nm',true,'Synthetic ED ruler','n',true);assert.equal(p.coordinate_domain,'reciprocal_space');assert.equal(p.declare_reciprocal,true);assert.deepEqual(p.xy_scale,{x:.02,y:.02,unit:'1/nm'});assert.throws(()=>knownLengthReference({...object,array_domain:'spatial'},line,frame,'reciprocal_space'));assert.throws(()=>knownLengthReference({...unknown,xy_calibration:{status:'active',coordinate_domain:'real_space',xy_scale:{x:1,y:1}}},line,frame,'reciprocal_space'));
 });

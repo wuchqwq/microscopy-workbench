@@ -36,6 +36,8 @@ Microscopy Workbench 是一个开源工作台，用于从显微图像建立可�
 
 ## 快速开始
 
+**便捷安装入口：**[macOS / Linux / Windows 安装与独立技能安装](docs/INSTALL.zh-CN.md)。先运行 `./install.sh --dry-run` 或 `install.cmd --dry-run` 预览；不会自动修改 MCP 或认证配置。
+
 使用 **Node.js 22.x 或 24.x**，以及独立的科学计算 Python 环境。**推荐 Python 3.13，也是 CI 参考版本**。科学工具仍声明支持 Python 3.10+，但该下限尚无持续 CI 验证；可选配置注册器需要 3.11+。参见[运行时支持](docs/CI_SUPPORT.md)。
 
 在 macOS/Linux 的新 checkout 中运行：

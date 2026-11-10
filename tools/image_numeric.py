@@ -138,14 +138,76 @@ def statistics(workspace, request):
     rect = request.get('frequency_rect' if spectral else 'rect', bounds)
     require(type(rect) is list and len(rect) == 4 and all(type(v) is int for v in rect) and
             bounds[0] <= rect[0] < rect[2] <= bounds[2] and bounds[1] <= rect[1] < rect[3] <= bounds[3], 'ROI must be valid half-open scientific array/source edges; no clipping')
+    result = roi_statistics(operand, rect)
+    comparison = {}
+    if 'reference_comparison' in request:
+        require('rect' in request and not spectral and operand['coordinate_space'] == 'source_pixels' and operand['component'] == 'raw',
+                'Reference comparison requires an explicit spatial scalar primary rect, not FFT/complex values')
+        supplied = request['reference_comparison']
+        require(type(supplied) is dict and set(supplied) == {'reference_rects', 'source_text'}, 'Reference comparison requires only reference_rects and actual source_text')
+        refs, text = supplied['reference_rects'], supplied['source_text']
+        require(type(text) is str and 1 <= len(text.strip()) <= 2000, 'Provide bounded reference selection/source text')
+        require(type(refs) is list and 1 <= len(refs) <= 8, 'Provide1..8 same-shape same-image reference rects')
+        for reference in refs:
+            require(type(reference) is list and len(reference) == 4 and all(type(v) is int for v in reference) and
+                    bounds[0] <= reference[0] < reference[2] <= bounds[2] and bounds[1] <= reference[1] < reference[3] <= bounds[3] and
+                    [reference[2]-reference[0], reference[3]-reference[1]] == [rect[2]-rect[0], rect[3]-rect[1]],
+                    'References must have the primary ROI shape and lie within the same scientific plane; no clipping')
+        require(len({tuple(r) for r in [rect, *refs]}) == len(refs)+1, 'Duplicate or primary reference rect is not a new comparison')
+        reference_stats = [roi_statistics(operand, r) for r in refs]
+        means = np.array([r['mean'] for r in reference_stats], dtype=np.float64)
+        median = float(np.median(means))
+        differences = [result['mean']-r['mean'] for r in reference_stats]
+        difference = result['mean']-median
+        require(all(math.isfinite(v) for v in [median, difference, *differences]), 'Reference difference exceeds finite binary64 range')
+        overlaps = lambda a,b: max(a[0],b[0]) < min(a[2],b[2]) and max(a[1],b[1]) < min(a[3],b[3])
+        all_rects = [rect, *refs]
+        comparison['reference_comparison'] = dict(
+            method='same_image_fixed_roi_mean_difference_v1', reference_rects=refs, source_text=text,
+            reference_statistics=reference_stats, reference_mean_median=median,
+            primary_mean_minus_reference_median=difference, primary_mean_minus_each_reference=differences,
+            overlapping_roi_pairs=[[i,j] for i,a in enumerate(all_rects) for j,b in enumerate(all_rects) if i<j and overlaps(a,b)],
+            same_type_reference_verified=False, independent_validation=False, physical_conclusion=None,
+            limitations=['Caller supplies expected site and equivalent reference assumptions; no atom finder or sublattice identification',
+                         'Signed raw scalar difference, not occupancy, electron counts, SNR, probability or vacancy confirmation',
+                         'Same-image sampling is correlated; contrast, scan/background, thickness and projection can imitate a deficit',
+                         'Fixed ROI support; no fitting or shift to a neighboring bright column'])
+    return dict(**common(operand), statistics=result, standard_deviation='population; NumPy ddof=0; binary64 reductions',
+                **({'frequency_rect': rect} if spectral else {'source_rect_xyxy': rect}), **comparison)
+
+
+def roi_statistics(operand, rect):
+    bounds = operand['bounds']
     x0, y0, x1, y1 = [v-bounds[i % 2] for i, v in enumerate(rect)]
     values = components(operand['values'][y0:y1, x0:x1], operand['component'])
     floating = values.astype(np.float64)
     result = dict(sample_count=int(values.size), dtype=str(values.dtype), minimum=float(np.min(floating)),
                   maximum=float(np.max(floating)), mean=float(np.mean(floating)), stddev=float(np.std(floating, ddof=0)))
     require(all(math.isfinite(v) for k, v in result.items() if k != 'dtype'), 'Statistics exceed finite binary64 range')
-    return dict(**common(operand), statistics=result, standard_deviation='population; NumPy ddof=0; binary64 reductions',
-                **({'frequency_rect': rect} if spectral else {'source_rect_xyxy': rect}))
+    return result
+
+
+def committed_observation(workspace, record, api):
+    """Reconstruct bounded saved numerical evidence from its original request.
+
+    Compare science fields, not the current helper hash: historical numerical
+    records must not become invalid merely because compatible code is updated.
+    """
+    journal = api.read_json(workspace.root/'requests'/(record['request_id']+'.json'))
+    request = journal.get('parameters')
+    kind = record['kind']
+    api.need(type(request) is dict and request.get('action') == kind and kind in ('statistics','profile') and
+             set(request) <= api.FIELDS[kind] | {'workspace','action','request_id'} and
+             request.get('object_id') == record.get('parent_object_id') and request.get('workspace') == str(workspace.root) and
+             request.get('request_id') == record['request_id'] and
+             journal.get('parameters_sha256') == hashlib.sha256(api.canonical(request)).hexdigest(),
+             'Numerical evidence original request identity changed', 'CORRUPT_OBJECT')
+    current = statistics(workspace, request) if kind == 'statistics' else profile(workspace, request)[0]
+    keys = [k for k in current if k not in ('software_provenance', 'computation')]
+    api.need(all(record.get(k) == current[k] for k in keys) and
+             ('reference_comparison' in record) == ('reference_comparison' in current),
+             'Saved numerical evidence differs from its original array/request', 'CORRUPT_OBJECT')
+    return current
 
 
 def profile(workspace, request):
