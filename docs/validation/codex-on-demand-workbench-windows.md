@@ -18,6 +18,8 @@ node tests/codex-on-demand-windows-smoke.mjs
 
 输出叶目录须尚未存在。脚本开启自己的 core stdio 进程，生成双帧合成 TIFF，使用隔离的 `images` 和 `contexts`，并打印界面操作提示。证据位于输出目录的 `calls.ndjson` 与 `report.json`。日志中的 Panel 能力令牌会被遮盖。运行的 Electron 窗口仍用工作台内的保存功能。只关闭窗口会保留同一个 helper，便于继续核对。
 
+若 `image_panel_current` 明确返回只读交接版本冲突，脚本最多尝试读取 12 次，重读间隔 200 毫秒。其他错误保留并立即终止。保存、计算、结果回传和结果未知的操作均沿用原请求处理。
+
 ## Codex 注册示例
 
 在受信任的 Windows 本地项目中，用新的完整 core 入口取代该项目内相同用途的注册。先用隔离的图像及上下文路径验证，或者在停用原 core 进程并确认无未决请求后复用原来的成对路径。科学工具、Panel 与 AnalysisContext 始终由下述同一 MCP 提供。结构或执行模块原有配置可按项目使用范围保留。
@@ -60,12 +62,13 @@ python -B tools/install_workbench.py --skills-only --skills-dir "$env:USERPROFIL
 
 ```powershell
 npm run build
+node --test tests/windows-smoke-panel-current.test.mjs
 node --test dist/tests/codex-on-demand-panel.test.mjs dist/tests/desktop-panel-activation.test.mjs dist/tests/runtime-registry.test.mjs dist/tests/runtime-stdio.test.mjs dist/tests/desktop-contracts.test.mjs dist/tests/desktop-lifecycle.test.mjs
 node --test --test-concurrency=2 dist/tests/image-panel-ownership.test.mjs dist/tests/image-panel-draft-transport.test.mjs dist/tests/analysis-workspace-panel.test.mjs dist/tests/image-panel-http-close.test.mjs
 node --test dist/tests/image-panel-ui.test.mjs dist/tests/scientific-skills-contract.test.mjs
 python -B tools/build_skills_npm.py --check
 python -B tests/skills_npm_test.py -v
-git -c core.whitespace=cr-at-eol diff --check
+git diff --check
 ```
 
 真实 loopback 传输测试需要 Windows 进程能够连接本机 `127.0.0.1`。纯 UI 状态测试核对主题改变时请求、ROI、草稿、viewport 和图像渲染操作没有变化。它们不替代 Electron 窗口与可见主题的验收。
@@ -78,10 +81,19 @@ git -c core.whitespace=cr-at-eol diff --check
 | 桌面、stdio、主题 UI、Skills 等定向自动测试 | P2 前 421 项 PASS。P2 最终构建的激活、保存点回读与 renderer 失效负例 11 项 PASS |
 | 本机 loopback 的 Panel 所有权、草稿、工作区保存与 HTTP 关闭 | 首次在沙箱中遇到 `connect EACCES 127.0.0.1`。获准后指定的 47 项 PASS。单独的静态 UI 图谱传输检查也遇到相同的沙箱限制，未计入通过数 |
 | Skills 安装器与可复现包 | 7 项 PASS，2 项 Windows symlink 场景按设计跳过。包可复现 |
-| Windows 实际 GUI | NOT_TESTED。原合成样本窗口启动审批仍未返回执行结果。可见窗口、双主题实际操作、ROI 保存接续、结果回传及恢复弹窗尚未实测 |
-| 实际 Codex 会话 | NOT_TESTED。新工具加载、真实模型自主选择与研究者实机操作仍待验收 |
+| Windows 实际 GUI，首次 smoke | FAIL。独立 Electron 窗口已显示，重复激活复用了原窗口。随后 `image_panel_current` 在只读交接期间遇到版本冲突，首次脚本将其视为终止错误 |
+| Windows 实际 GUI，同 Panel 接续 | PASS。通过隔离 core stdio 重连仍运行的原 Panel，完成双主题切换、ROI 保存、保存点回读、结果回传和未保存编辑保护 |
+| Windows 实际 GUI，干净关闭与重开 | PASS。明确保存第三个 ROI 后关闭窗口，再激活同一 Panel。窗口消失期间 helper 仍可读，重开后仍是原 helper、源帧、保存点与不可变科学资产 |
+| smoke 只读重试 | 4 项定向测试 PASS，覆盖成功重读、次数上限、非目标错误和计算与写操作只提交一次 |
+| 实际 Codex 会话与真人可用性 | NOT_TESTED。实际宿主加载、模型自主调用与真人可用性待验收 |
 | macOS | NOT_TESTED。此分支供后续 Mac 适配与验证使用 |
 
 早期 Skills 合约检查在 Windows checkout 的 CRLF 行尾上失败。测试读入时统一行尾后，该检查在定向自动测试中通过。
+
+Windows 实测用 Computer Use 操作了独立 Electron 窗口中的双帧合成 TIFF。灰黑与浅色主题显示同一帧和原 ROI，切换前后的图像对象、clean PNG 哈希和坐标映射一致。原窗口和 helper 在首次 smoke 退出后保持运行，接续只重连该 Panel。首次重连在沙箱中遇到 loopback EACCES，随后接续在可访问本机 loopback 的环境中通过。版本冲突来自产品的只读一致性检查，首次 FAIL 来自 smoke 把这一明确可重读的错误当作终止条件。
+
+在浅色主题新增并保存 ROI 2 后，`image_panel_current` 确认工作区为 `clean`，`image_panel_saved` 读回该确切保存点和对应的 immutable view。第 2 帧的 ROI 统计与独立合成数组真值一致。结果回到同一 Panel 后，当前工作态变为 `dirty`，保存点仍有效。
+
+在灰黑主题新增 ROI 3 后，基于旧 view/draft 的迟到结果被拒绝，新 ROI 和原保存点均保留。存在未保存编辑时，原生关闭提示阻止关闭，返回原窗口后 ROI 3 仍未保存。随后显式保存 ROI 3，确认工作区为 `clean`，再关闭并重开同一 Panel。三个 ROI、源 TIFF 与不可变资产哈希、provider 请求记录和 AnalysisContext 均保留。负例覆盖的是计算完成后、迟到展示前的编辑。数值计算与编辑重叠、helper 停止和 renderer 崩溃后的原生恢复弹窗均为 **NOT_TESTED**。
 
 注册方式参见 [OpenAI Codex MCP](https://learn.chatgpt.com/docs/extend/mcp)。
