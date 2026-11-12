@@ -53,6 +53,49 @@ test('single image context: normal labels and hints leave coordinates and drafts
  const h=await harness(savedRectangleFixture());assert.equal(h.$('view-current').textContent,'空间图');assert.match(h.$('selection').textContent,/点击已有 ROI/);assert.equal(h.$('draft-status').hidden,true);const initial=h.inspect();
  selectSavedRoi(h);const selected=h.inspect();assert.match(h.$('current-roi').textContent,/当前 ROI/);assert.match(h.$('selection').textContent,/控制点/);assert.match(h.$('selection').title,/源像素坐标/);assert.equal(h.$('measure').hidden,false);assert.equal(h.$('fft').hidden,false);assert.deepEqual(selected.state.object,initial.state.object);assert.equal(h.calls.length,0);
 });
+test('workbench themes preserve ROI, draft, viewport and rendered pixels, and remember the local choice',async()=>{
+ const values=new Map(),storage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};
+ const h=await harness(savedRectangleFixture(),{storage});
+ selectSavedRoi(h);await h.settle();
+ const before=h.inspect(),server=h.server(),actions=[...h.actionTrace],paint={...h.stats};
+ const toggle=h.$('workbench-theme-toggle');
+ assert.equal(h.theme(),'dark');
+ assert.equal(toggle.attributes['aria-label'],'切换到浅色主题');
+ let intercepted=false;
+ h.key(' ',{target:toggle,preventDefault(){intercepted=true;}});
+ assert.equal(intercepted,false,'Space must activate the native button, not pan the canvas');
+ await h.click(toggle.id);
+ assert.equal(h.theme(),'light');
+ assert.equal(toggle.attributes['aria-label'],'切换到深色主题');
+ assert.deepEqual(h.inspect(),before);
+ assert.deepEqual(h.server(),server);
+ assert.deepEqual(h.actionTrace,actions);
+ assert.deepEqual(h.stats,paint);
+ const reloaded=await harness(fixture(),{storage});
+ assert.equal(reloaded.theme(),'light');
+ await reloaded.click(toggle.id);
+ assert.equal(reloaded.theme(),'dark');
+ const blocked={getItem(){throw Error('Storage denied');},setItem(){throw Error('Storage denied');}};
+ const transient=await harness(fixture(),{storage:blocked});
+ assert.equal(transient.theme(),'dark');
+ await transient.click(toggle.id);
+ assert.equal(transient.theme(),'light');
+});
+test('viewer close uses the current server guard and keeps local drafts protected',async()=>{
+ for(const status of ['new','legacy','clean']){
+  const s=questionWorkspaceFixture();
+  s.workspace_analysis={...s.workspace_analysis,status,can_close:true};
+  const h=await harness(s);await h.finishWindows();
+  assert.equal(h.beforeUnload().prevented,false,status);
+  h.$('research-question').value='Unapplied local question';
+  h.$('research-question').oninput();
+  assert.equal(h.beforeUnload().prevented,true,status);
+ }
+ const s=questionWorkspaceFixture();
+ s.workspace_analysis.can_close=false;
+ const blocked=await harness(s);await blocked.finishWindows();
+ assert.equal(blocked.beforeUnload().prevented,true);
+});
 test('research navigation: ordinary files keep Codex entry hidden and local questions available without dispatch',async()=>{
  const h=await harness();const before=h.inspect(),writes=h.calls.length;
  assert.equal(h.$('public-research-entry').hidden,true);await h.click('public-research-entry');assert.equal(h.bodyClasses.has('research-open'),false);
@@ -96,7 +139,7 @@ const sourceId='a'.repeat(32),viewId='b'.repeat(32);
 const panel={domain:'spatial_pixels',source_object_id:sourceId,source_rect_xyxy:[20,12,148,108],image_rect_xyxy:[0,0,128,96]};
 function fixture(){return {object:{object_id:viewId,kind:'view',panels:[copy(panel)],annotations:[],display:{gamma:1,display_range:[0,255]}},tools:[],png_base64:'synthetic',clean_png_base64:'synthetic-clean',render_base_id:viewId,selection:null,last_operation:null};}
 function pixelBytes(w,h){return Uint8ClampedArray.from({length:w*h*4},(_,i)=>i%4===3?255:(i*17+31)%256);}
-async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,startupStatusGeometry=false,initialMeasurementRead=null,relationRead=null,draftLeaseAcks=false,editorTimers=false,statisticsHistory=null,leadProjection=null,publicResearchEnabled=false,publicResearchPacket=null,desktopOpen=null,desktopReview=null,desktopStop=null}={}){
+async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,startupStatusGeometry=false,initialMeasurementRead=null,relationRead=null,draftLeaseAcks=false,editorTimers=false,statisticsHistory=null,leadProjection=null,publicResearchEnabled=false,publicResearchPacket=null,desktopOpen=null,desktopReview=null,desktopStop=null,storage=null}={}){
  const calls=[],draftCalls=[],actionLeases=[],getCalls=[],frames=new Map(),stats={pow:0,draws:0,uploads:0};let server=copy(initial),frameId=0,waitAction=null,nextActionResult=null,actionSequence=0,actionFailure=null,draftFailure=null,waitDecode=null,waitState=null,waitDraft=null,waitMeasurement=null,waitMeasurementRead=initialMeasurementRead,waitStatisticsHistory=null,measurementResponse=null,recoveryResponse=null;
  const windowMetadataCalls=[],actionTrace=[],savedWindowStates=new Map([[initial.object.object_id,copy(initial)],...windowStates.map(value=>[value.object.object_id,copy(value)])]),activationListeners=[];let waitActivation=null,waitWindowCamera=null,lostActivation=false,activationWork=null,decodeFailure=false,stateFailure=false,activationStarted=0,lostQuestionReply=false,lostLeadReply=false,loseLeadBeforeApply=false,lateLeadCommand=null,loseLeadSettlement=false,waitLeadSettlement=null,echoAppliedTransport=false;const leadTransportReceipts=new Map();
  const canvasContexts=[],probeCalls=[],probeTimers=new Map(),documentListeners=new Map(),windowListeners=new Map(),layoutObservers=[],relationTimers=new Map(),fieldTimers=new Map();let probeTimerId=0,relationTimerId=0,coalesceDrafts=false,activeElement=null,desktopAction=null,cameraIntentCount=0;
@@ -135,7 +178,7 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,st
   MeasurementWorkspace:class extends ProviderMeasurementWorkspace{constructor(options){super({...options,document:sandbox.document});}},
   DataProbes:class extends ProviderDataProbes{constructor(options){super({...options,document:sandbox.document,setTimer:(fn,delay)=>{const id=++probeTimerId;probeTimers.set(id,{fn,delay});return id;},clearTimer:id=>probeTimers.delete(id)});}},
   document:{body,get activeElement(){return activeElement;},getElementById:$,createElement:tag=>new Element(tag),createElementNS:(_namespace,tag)=>new Element(tag),querySelector:selector=>selector==='dialog[open]'?[...elements].find(([id,element])=>id.endsWith('-dialog')&&element.open)?.[1]??null:null,querySelectorAll:()=>[],addEventListener:(name,fn)=>documentListeners.set(name,fn)},
-  sessionStorage:{getItem:()=> 'synthetic-token',setItem(){}},location:{hash:'',pathname:'/'},history:{replaceState(){}},
+  sessionStorage:{getItem:()=> 'synthetic-token',setItem(){}},localStorage:storage,location:{hash:'',pathname:'/'},history:{replaceState(){}},
   Option:class{constructor(text,value){this.text=text;this.value=value;}},
   Image:class{constructor(){this.width=128;this.height=96;}async decode(){if(waitDecode)await waitDecode;if(decodeFailure){decodeFailure=false;throw new Error('Controlled image decode failure');}}},
   ImageData:class{constructor(data,width,height){this.data=data;this.width=width;this.height=height;}},
@@ -229,7 +272,7 @@ if(relationRead&&(url.startsWith('/api/roi-handoff?')||url==='/api/execution-his
  const event=(type,x=10,y=10,extra={})=>{$('canvas').listeners[type]?.({clientX:x,clientY:y,pointerId:1,button:0,...extra});};
  const click=async id=>{await $(id).onclick();flush();};
  const draw=(kind='line')=>{$('mode').value=kind;event('pointerdown',10,10);event('pointermove',40,35);event('pointerup',40,35);flush();};
- return {$,bodyClasses,calls,draftCalls,actionLeases,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
+ return {$,bodyClasses,theme:()=>body.attributes['data-workbench-theme'],calls,draftCalls,actionLeases,getCalls,windowMetadataCalls,actionTrace,probeCalls,stats,frames,flush,event,click,draw,flushProbes:async()=>{const timers=[...probeTimers];probeTimers.clear();for(const [_id,timer]of timers)timer.fn();for(let i=0;i<8;i++)await Promise.resolve();},poll:()=>sandbox.pollUI(),inspect:()=>copy(sandbox.inspect()),contexts:canvasContexts,
   settle:async()=>{for(let i=0;i<80;i++)await Promise.resolve();flush();},finish:async()=>{await sandbox.finishSaves();flush();},finishRoi:async()=>{await sandbox.finishRoiSave();flush();},
   flushRelations:async()=>{const pending=[...relationTimers.values()];relationTimers.clear();for(const callback of pending)callback();for(let i=0;i<100;i++)await Promise.resolve();flush();},
   flushEditorTimers:async()=>{const pending=[...fieldTimers.values()];fieldTimers.clear();for(const callback of pending)callback();for(let i=0;i<100;i++)await Promise.resolve();flush();},setTextCommand:fn=>{sandbox.document.execCommand=fn;},

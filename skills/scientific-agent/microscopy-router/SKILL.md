@@ -73,10 +73,12 @@ not a provider receipt. Never substitute a script, endpoint, model, case or
 session for a denied action, or use fallback to replay an unknown request.
 
 Keep internal IDs, schema JSON and dependency bookkeeping out of the researcher's
-input burden. Retain them in the record yourself. When a panel, saved task or
-interrupted request is involved, read
-[resume and interact](references/continuation.md); otherwise use the selected
-immutable objects directly without requiring a GUI or AnalysisContext session.
+input burden. Retain them in the record yourself. When placing, revising or
+comparing an ROI or peak interactively would affect the answer, use
+[resume and interact](references/continuation.md) to open or focus the same
+workbench through the host's available tools. Use that reference for saved tasks
+and interrupted requests as well. For questions that can be answered directly,
+use the selected immutable objects with ordinary tools.
 The [call shapes](examples.json) are composable schema examples, not a mandatory
 sequence, actual execution evidence or scientific answers.
 

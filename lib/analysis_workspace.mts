@@ -8,6 +8,7 @@ import {readResearchLeads} from '../ui/image-panel/research-leads.mjs';
 import {randomBytes,createHash} from 'node:crypto';
 import {closeSync,existsSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,readdirSync,realpathSync,renameSync,statSync,unlinkSync,writeFileSync} from 'node:fs';
 import {withWorkspaceMetadataGate} from './workspace_metadata_gate.mjs';
+import {ordinaryWorkspaceMetadataTarget} from './workspace_metadata_paths.mjs';
 import {panelWindowFingerprint,panelWindowMappingFingerprint,readPanelWindowCamera,readPanelWindowLayout,readPanelWindowUiPanels} from './panel_window_collection.mjs';
 
 type Row=Record<string,unknown>;
@@ -67,12 +68,29 @@ export function analysisDisplaySnapshot(workspace:string,saved:AnalysisSnapshot,
 export function readAnalysisWorkspaceResumeSnapshot(workspace:string):AnalysisSnapshot|null {const point=readAnalysisWorkspace(workspace).savepoint,initial=point?.snapshot??readAnalysisWorkspaceInitial(workspace);if(!initial)return null;if(point)verifyAnalysisReferences(workspace,point);const root=rootOf(workspace),file=path.join(root,'analysis-workspace','working.json'),working=existsSync(file)?snapshot(read(file,root).snapshot):null;return analysisDisplaySnapshot(root,initial,working);}
 
 export interface AnalysisWorkspaceOwner {owner_id:string;assertOwned():void;release():void;}
+export class AnalysisWorkspaceOccupiedError extends Error {
+ readonly status=409;
+ readonly code='WORKSPACE_CONFLICT';
+ constructor(){super('Analysis workspace is owned by another entry; read an explicit saved snapshot instead');}
+}
+export function readAnalysisWorkspaceOwner(workspace:string):{owner_id:string;role:'gui'|'cli';pid:number}|null {
+ const root=rootOf(workspace);
+ try{
+  const file=ordinaryWorkspaceMetadataTarget(root,path.join(root,'analysis-workspace','owner.json'));
+  if(lstatSync(file).size>4096)throw new Error('Analysis workspace owner record exceeds bound');
+  const owner=read(file,root);
+  if(owner.schema_version!==1||!safeId(owner.owner_id)||(owner.role!=='gui'&&owner.role!=='cli')||!Number.isSafeInteger(owner.pid)||(owner.pid as number)<1)throw new Error('Invalid analysis workspace owner record');
+  return {owner_id:owner.owner_id,role:owner.role,pid:owner.pid as number};
+ }catch(error){if((error as {code?:string}).code==='ENOENT')return null;throw error;}
+}
 export function acquireAnalysisWorkspaceOwner(workspace:string,{role,owner_id=randomBytes(16).toString('hex')}:{role:'gui'|'cli';owner_id?:string}):AnalysisWorkspaceOwner {
  const root=rootOf(workspace),directory=ordinaryDirectory(root,path.join(root,'analysis-workspace'),true);const lock=path.join(directory,'owner.json');if(!safeId(owner_id))throw new Error('Invalid analysis owner identity');
  const claim={schema_version:1,owner_id,role,pid:process.pid,created_utc:new Date().toISOString()};
  // A dead owner is not automatically stolen. Existing owned-helper recovery can
  // explicitly release that exact claim after proving the previous process dead.
- try{withWorkspaceMetadataGate(root,()=>durable(lock,claim,true));}catch(error){if((error as {code?:string}).code==='EEXIST')conflict('Analysis workspace is owned by another entry; read an explicit saved snapshot instead');throw error;}
+ withWorkspaceMetadataGate(root,()=>{
+  try{durable(lock,claim,true);}catch(error){if((error as {code?:string}).code==='EEXIST')throw new AnalysisWorkspaceOccupiedError();throw error;}
+ });
  let released=false;const assertOwned=()=>{if(released||canonical(read(lock,root))!==canonical(claim))conflict('Analysis workspace owner changed');};
  return {owner_id,assertOwned,release(){withWorkspaceMetadataGate(root,()=>{assertOwned();unlinkSync(lock);released=true;});}};
 }

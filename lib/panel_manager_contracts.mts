@@ -1,5 +1,10 @@
 // Contracts for the owned loopback bridge. They do not qualify scientific JSON.
 import type {ToolResult} from './runtime/contracts.mjs';
+import type {DesktopPanelActivation,DesktopPanelActivationInput} from './desktop_panel_activation.mjs';
+
+// Emitted only by the owned helper entry after a refused owner acquisition.
+export const OWNED_PANEL_WORKSPACE_OCCUPIED_EXIT=73;
+export interface PanelLaunchExit {code:number|null;signal:NodeJS.Signals|null;}
 
 export interface OwnedPanelConnection {
   schema_version: 1|2; panel_id: string; port: number; token: string; pid: number;
@@ -16,6 +21,7 @@ export interface IdentityCheckedPanelState extends Record<string, unknown> {
 export interface PanelLaunch {
   panel_id: string; connection_file: string; object_id: string;
   registration_file?:string;helper_session_id?:string;generation?:number;
+  onExit?:(exit:PanelLaunchExit)=>void;
 }
 export interface PanelHttpResponse {
   readonly ok: boolean; readonly status: number;
@@ -29,6 +35,10 @@ export interface PanelManagerOptions {
   inspect?: (objectId: string) => unknown | PromiseLike<unknown>;
   inspectEvidence?: (objectId: string) => unknown | PromiseLike<unknown>;
   launch?: (request: PanelLaunch) => unknown | PromiseLike<unknown>;
+  desktopActivation?: {
+    activate(input:DesktopPanelActivationInput):Promise<DesktopPanelActivation>;
+    read(input:Omit<DesktopPanelActivationInput,'url'>):DesktopPanelActivation|null;
+  };
   fetchImpl?: PanelFetch; readyTimeoutMs?: number; requestTimeoutMs?: number;
 }
 export interface PanelManagerPort {

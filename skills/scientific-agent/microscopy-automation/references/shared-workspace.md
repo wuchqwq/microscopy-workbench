@@ -16,10 +16,11 @@ With more than one possible Panel and no retained identity, ask which one.
 accessible original file and the necessary frame/plane choice. A screenshot or
 chat thumbnail alone cannot supply the original array or calibration. Use
 `image_open` -> explicit `image_frame` -> `image_preview` -> `image_panel_open`
-with preserved new request IDs for new writes. Return the private owned URL and
-use the host's permitted browser opener; do not claim a GUI is visible from a
-successful tool result alone. Retain the Panel ID for the rest of the task.
-Do not fabricate two human observations to be allowed to show the initial image.
+when those objects still need to be created, with recorded request IDs for
+new writes. When the interaction is useful, follow the router's
+[open, activate and continue workflow](../../microscopy-router/references/continuation.md).
+Retain the Panel ID and initial save identity for the task. An initial view
+with no human observations is valid.
 
 The external Agent provider and Inspector must use the same exact image
 workspace (the plugin's `workspace_root/images`, not its parent). Structure

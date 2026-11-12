@@ -49,6 +49,7 @@ import type {DisplayParameters} from '../ui/image-panel/figure-export.mjs';
 import {resolveComposition} from '../lib/figure_composer_assets.mjs';
 import {attachCrystalEvidence,crystalEvidenceForState,restoreCrystalEvidenceSnapshot,rememberCrystalScienceEvent} from '../lib/panel_crystal_evidence.mjs';
 import {loadOwnedPanelRegistration,readOwnedPanelConnection,readOwnedPanelCheckpoint} from '../lib/panel_ownership.mjs';
+import {OWNED_PANEL_WORKSPACE_OCCUPIED_EXIT} from '../lib/panel_manager_contracts.mjs';
 import {projectResultSemantics} from '../ui/image-panel/result-semantics.mjs';
 import {checkObservationNote,checkResumableInputs} from '../ui/image-panel/observation-contract.mjs';
 import {projectGpaEvidence} from '../ui/image-panel/gpa-evidence.mjs';
@@ -56,7 +57,7 @@ import {readSpatialReturnReference,validateSpatialReturn,spatialReturnState,Spat
 import type {SpatialReturnReference} from '../lib/panel_spatial_return.mjs';
 import {PanelWindowStore,panelWindowMappingFingerprint,readPanelWindowCamera,readPanelWindowUiPanels,qualifyPanelWindowContext} from '../lib/panel_window_collection.mjs';
 import {panelRoiHandoff,roiObservationModel} from '../ui/image-panel/roi-observations.mjs';
-import {AnalysisWorkspace,acquireAnalysisWorkspaceOwner,readAnalysisWorkspace,readAnalysisWorkspaceInitial,readAnalysisWorkspaceResumeSnapshot,verifyAnalysisReferences} from '../lib/analysis_workspace.mjs';
+import {AnalysisWorkspace,AnalysisWorkspaceOccupiedError,acquireAnalysisWorkspaceOwner,readAnalysisWorkspace,readAnalysisWorkspaceInitial,readAnalysisWorkspaceResumeSnapshot,verifyAnalysisReferences} from '../lib/analysis_workspace.mjs';
 import type {AnalysisSnapshot,AnalysisWorkspaceOwner} from '../lib/analysis_workspace.mjs';
 import {writePanelExecutionInput,listPanelExecutionInputs,readPanelExecutionInput,panelJournalRelativePath} from '../lib/panel_execution_inputs.mjs';
 import {imageAdmissionFailureFromError,readImageAdmissionFailure,readImageOriginalFailure} from '../lib/runtime/image_admission_failure.mjs';
@@ -1549,9 +1550,17 @@ if(isDirectInvocation(import.meta.url)){
  if(options.selection){if(!path.isAbsolute(options.selection)||!existsSync(options.selection))throw new Error('Existing absolute selection record required');process.stdout.write(readFileSync(options.selection));}
  else if(options['owned-registration']){
   if(options['connection-file']||options['panel-id']||options.port)throw new Error('Owned registration supplies its own exact identity and fresh loopback port');
-  const owned=loadOwnedPanelRegistration(options.workspace,options['owned-registration']);const panel=await createImagePanel({workspace:options.workspace,python:options.python,object_id:options.object,panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,journalDirectory:owned.journalDirectory,...(owned.checkpoint?{resume_checkpoint:owned.checkpoint}:{})});
-  try{owned.publish(panel);}catch(error){await panel.close();throw error;}
-  process.stdout.write(JSON.stringify({url:panel.url,panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation})+'\n');let closing=false;const close=async()=>{if(!closing){closing=true;await owned.close(panel);}};process.on('SIGINT',close);process.on('SIGTERM',close);
+  const owned=loadOwnedPanelRegistration(options.workspace,options['owned-registration']);
+  const panel=await createImagePanel({workspace:options.workspace,python:options.python,object_id:options.object,panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation,journalDirectory:owned.journalDirectory,...(owned.checkpoint?{resume_checkpoint:owned.checkpoint}:{})}).catch(error=>{
+   if(!(error instanceof AnalysisWorkspaceOccupiedError))throw error;
+   // The exact owner-acquisition refusal happened before the helper could publish.
+   process.exitCode=OWNED_PANEL_WORKSPACE_OCCUPIED_EXIT;
+   return null;
+  });
+  if(panel){
+   try{owned.publish(panel);}catch(error){await panel.close();throw error;}
+   process.stdout.write(JSON.stringify({url:panel.url,panel_id:owned.panel_id,helper_session_id:owned.helper_session_id,panel_generation:owned.generation})+'\n');let closing=false;const close=async()=>{if(!closing){closing=true;await owned.close(panel);}};process.on('SIGINT',close);process.on('SIGTERM',close);
+  }
  }
  else {if(options['connection-file']&&(!path.isAbsolute(options['connection-file'])||!objectId.test(options['panel-id']??'')||existsSync(options['connection-file'])))throw new Error('Absolute new connection file and random panel ID required');const panel=await createImagePanel({workspace:options.workspace,python:options.python,object_id:options.object,port:Number(options.port??0),panel_id:options['panel-id']??null});if(options['connection-file']){if(!path.isAbsolute(options['connection-file'])||!objectId.test(options['panel-id']??''))throw new Error('Absolute new connection file and random panel ID required');const temporary=options['connection-file']+'.'+randomBytes(8).toString('hex')+'.tmp';try{writeJournal(temporary,{schema_version:1,panel_id:options['panel-id'],port:(panel.server.address() as AddressInfo).port,token:panel.token,evidence_token:panel.evidenceToken,pid:process.pid});linkSync(temporary,options['connection-file']);}finally{if(existsSync(temporary))unlinkSync(temporary);}}process.stdout.write(JSON.stringify({url:panel.url,selection_path:path.join(panel.journal,'current-selection.json')})+'\n');let closing=false;const close=async()=>{if(!closing){closing=true;await panel.close();}};process.on('SIGINT',close);process.on('SIGTERM',close);}
 }
