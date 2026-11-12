@@ -1,5 +1,6 @@
 // Contracts for the owned loopback bridge. They do not qualify scientific JSON.
 import type {ToolResult} from './runtime/contracts.mjs';
+import type {DesktopPanelActivation,DesktopPanelActivationInput} from './desktop_panel_activation.mjs';
 
 export interface OwnedPanelConnection {
   schema_version: 1|2; panel_id: string; port: number; token: string; pid: number;
@@ -29,6 +30,10 @@ export interface PanelManagerOptions {
   inspect?: (objectId: string) => unknown | PromiseLike<unknown>;
   inspectEvidence?: (objectId: string) => unknown | PromiseLike<unknown>;
   launch?: (request: PanelLaunch) => unknown | PromiseLike<unknown>;
+  desktopActivation?: {
+    activate(input:DesktopPanelActivationInput):Promise<DesktopPanelActivation>;
+    read(input:Omit<DesktopPanelActivationInput,'url'>):DesktopPanelActivation|null;
+  };
   fetchImpl?: PanelFetch; readyTimeoutMs?: number; requestTimeoutMs?: number;
 }
 export interface PanelManagerPort {

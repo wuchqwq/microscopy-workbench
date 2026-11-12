@@ -14,17 +14,72 @@ attachment can be opened. If only an exported raster is available, keep its
 limited display provenance; request the scientific original when the requested
 numerical interpretation depends on it.
 
-Use `image_panel_open` only when spatial interaction is useful, then give its
-returned loopback URL to the researcher. On “look here” or “continue”, inspect
-`image_panel_current`: retain its panel ID, saved view, exact source selection,
-domain and draft revision. With multiple panels, use the retained identity, not
-globally newest/most recent selection. A panel does not wake Codex automatically.
+## Open or focus the workbench when interaction matters
 
-Offer a computed immutable result through `image_panel_show` using the inspected
-view/draft binding. A queued result is not visible or accepted yet; do not erase
-newer user edits. The [observation skill](../../microscopy-observe-revise/SKILL.md)
-holds the source-ROI/FFT association and sparse annotation contracts. User-drawn
-or Agent-proposed ROIs retain that origin; neither implies physical confirmation.
+Use a Panel when the researcher needs to place, revise or compare an ROI or
+peak, or when an interactive comparison would materially affect the next
+scientific check. Use ordinary image tools for direct queries that can be
+answered from the available evidence.
+
+1. Inspect the tool catalog of the **same image provider** that owns the
+   scientific objects. For a task with an existing Panel, read
+   `image_panel_current` with the retained `panel_id`. When an existing Panel
+   is expected and its ID was lost, an ID-free read can identify exactly one
+   live registered Panel. Reuse it only if its saved view, source/frame and
+   applicable ROI match the task's retained references. Keep a mismatched
+   Panel intact and ask which analysis to continue if the choice matters.
+   For a new Panel, select the exact saved view with its saved ROI annotations,
+   then call `image_panel_open({object_id, request_id})`. A confirmed
+   `PREVIEW_REQUIRED`
+   calls for an explicit saved preview only after checking any prior preview
+   request. Reuse saved source, frame, view and result objects. Retain the
+   returned Panel ID, owned helper generation, active view, exact source/frame
+   and ROI identity, and the pre-interaction GUI save ID/revision. If the
+   provider lacks Panel tools, report the gap and continue applicable direct
+   analysis with its ordinary tools.
+2. When the same provider advertises `image_panel_activate`, proactively call
+   it with the retained `panel_id` and a recorded activation `request_id`.
+   This requests a local Windows viewer for that Panel. Read the activation
+   result for window readiness and observed focus. An intentional later focus
+   may use a new request ID once the earlier outcome is known. After a timeout
+   or cancellation, repeat the exact original activation arguments to query
+   the receipt. If activation is unavailable, use the host's permitted
+   same-Panel browser opener if available, or explain the exact capability gap.
+   Keep the private loopback capability and internal IDs out of ordinary
+   researcher instructions. Each provider/workspace has its own identities;
+   a different provider's Panel is outside this task's scope.
+3. Ask the researcher to save the intended edit in the workbench and then say
+   “继续” or “continue” in the same chat. That message initiates the next turn.
+   Read the same Panel with `image_panel_current({panel_id})`. Check its helper
+   generation, active view and exact source/frame, the GUI workspace
+   `save_id`/saved revision, current edit state and the available
+   `roi_handoff.interaction_gate`. When the workspace is clean and the gate
+   is ready, call `image_panel_saved({panel_id, save_id})` if advertised,
+   using the exact save ID just read. It verifies the persisted savepoint.
+   The savepoint's active view and ROI can differ from the current live
+   selection. Confirm the intended annotation or result in the immutable
+   saved view with `image_info` and the original provider receipt as needed.
+   A newer save is a reason to recheck the evidence and bindings. For an
+   unsaved edit, blocked or unknown handoff, or unresolved save or scientific
+   request, read the appropriate original state and let the researcher
+   settle the pending choice. If exact savepoint readback is unavailable,
+   describe which live or provider records you can verify.
+
+When the owned helper is confirmed stopped, use the exact registered Panel's
+advertised `image_panel_resume` path before reading again. Compare the returned
+generation and saved identity after recovery. A closed viewer can be activated
+again against its live helper. Keep the original source and observations if
+the active source, frame or ROI changes.
+
+Before offering a computed immutable result, reread the same live Panel and
+compare its source/frame, view, ROI and draft revision against the inputs used
+for the result. Retain a result from changed inputs as historical evidence.
+For applicable results, call `image_panel_show` with the freshly inspected
+`expected_object_id` and `draft_revision`. If a later edit causes queuing, the
+researcher decides whether to accept the pending result. The
+[observation skill](../../microscopy-observe-revise/SKILL.md) holds the
+source-ROI/FFT association and sparse annotation contracts. User-drawn or
+Agent-proposed ROIs retain that origin; neither implies physical confirmation.
 
 An explicitly selected live/native backend, when actually available and
 qualified, may supply a new capture. A saved `image_info` result or original
@@ -43,6 +98,12 @@ optional AnalysisContext tools exist, `analysis_create` names a new task and
 `analysis_read` selects current or explicit historical references. On reconnect,
 read that named task and any retained panel before submitting new work; do not
 recreate TIFF/FFT objects to reconstruct chat memory.
+
+Retain the AnalysisContext ID and revision separately from the GUI workspace
+save ID and revision. Read the named context again after a GUI save and compare
+the immutable references against the exact saved source, frame, ROI and
+calibration before proposing a promotion. The GUI save and the context update
+have their own recorded outcomes.
 
 Providers persist scientific results first. Advancing current references through
 `analysis_update` is a separate compare-and-swap against the revision read before

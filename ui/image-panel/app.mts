@@ -12,6 +12,7 @@ import type {ProbeResult} from './data-probe-contracts.mjs';
 declare const document:BrowserDocument;declare const Image:BrowserImageConstructor;declare const URL:BrowserURL;declare const Blob:BrowserBlobConstructor;
 declare const ImageData:{new(data:Uint8ClampedArray,width:number,height:number):ImagePixels};declare const Option:{new(text:string,value:string):BrowserElement};
 declare const location:{hash:string;pathname:string};declare const sessionStorage:{setItem(key:string,value:string):void;getItem(key:string):string|null};declare const history:{replaceState(value:unknown,title:string,url:string):void};
+declare const localStorage:typeof sessionStorage;
 declare const crypto:{randomUUID():string};declare const performance:{now():number};declare const innerHeight:number;
 declare function requestAnimationFrame(callback:()=>void):number;declare function cancelAnimationFrame(id:number):void;
 declare class ResizeObserver {constructor(callback:()=>void);observe(target:BrowserElement):void;}
@@ -52,6 +53,24 @@ import {checkObservationNote,observationReadback,observationPurpose} from './obs
 import type {PanelRoiSnapshot} from './roi-observations.mjs';
 const $=(id:string)=>document.getElementById(id)!,canvas=$('canvas'),ctx=canvas.getContext('2d')!,baseCanvas=$('base-canvas'),baseContext=baseCanvas.getContext('2d',{willReadFrequently:true})!,marksCanvas=$('marks-canvas'),marksContext=marksCanvas.getContext('2d')!,stage=$('image-stage'),viewport=$('viewport');
 installSidebarControls(document);
+// Theme preference belongs to this viewer origin and never enters an analysis save.
+const themeButton=$('workbench-theme-toggle');
+const themePreferenceKey='microscopy-workbench-theme';
+let theme:'dark'|'light'='dark';
+try{if(localStorage.getItem(themePreferenceKey)==='light')theme='light';}catch{/* Storage can be unavailable. */}
+function renderTheme(){
+ document.body.setAttribute('data-workbench-theme',theme);
+ const nextTheme=theme==='dark'?'浅色':'深色';
+ $('workbench-theme-label').textContent=nextTheme;
+ themeButton.title='切换到'+nextTheme+'主题';
+ themeButton.setAttribute('aria-label',themeButton.title);
+}
+themeButton.onclick=()=>{
+ theme=theme==='dark'?'light':'dark';
+ renderTheme();
+ try{localStorage.setItem(themePreferenceKey,theme);}catch{/* The displayed theme still works. */}
+};
+renderTheme();
 let measurementToolMode:'length'|'angle'|'diffraction'|null=null;
 let directAngle:{object_id:string;frame:unknown;calibration:unknown;panel:WirePanel|null;points:number[][];attempted:boolean}|null=null;
 type AngleEndpointReference={object_id:string;measurement_id:string;manifest_sha256:string;endpoint:0|1;point:readonly number[];panel:WirePanel};
@@ -62,7 +81,7 @@ function withinElement(target:BrowserElement|null,root:BrowserElement){for(let n
 function dismissMenus(restoreFocus=false){let closed=false;for(const menu of transientMenus)if(menu.open){menu.open=false;closed=true;if(restoreFocus)menu.querySelector('summary')?.focus();}return closed;}
 function openResultDialog(){dismissMenus();dismissRoiPicker();return $('research-more').querySelector('summary');}
 for(const menu of transientMenus)menu.addEventListener('click',event=>{for(let node:BrowserElement|null=event.target;node&&node!==menu;node=node.parentNode)if(node.tagName==='BUTTON'){menu.open=false;break;}});
-document.addEventListener('pointerdown',event=>{presentationInputEpoch++;windowWorkspace.notePresentationIntent();for(const menu of transientMenus)if(menu.open&&!withinElement(event.target,menu))menu.open=false;if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
+document.addEventListener('pointerdown',event=>{if(withinElement(event.target,themeButton))return;presentationInputEpoch++;windowWorkspace.notePresentationIntent();for(const menu of transientMenus)if(menu.open&&!withinElement(event.target,menu))menu.open=false;if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
 document.addEventListener('focusin',event=>{if(!withinElement(event.target,$('roi-pick-menu')))dismissRoiPicker();});
 $('roi-pick-menu').hidden=true;
 const cloneWorking=<T,>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
@@ -1001,7 +1020,7 @@ async function load(next:AppState,{keepDisplay=null,keepMark=null,role=null,forc
  $('calibration').hidden=!state.tools.some(t=>t.name==='image_calibrate');$('metadata').textContent=JSON.stringify({object_id:o.object_id,frame_identity:state.frame_identity,calibration:o.xy_calibration??o.calibration_record??o.calibration,effective_display:d,render_base_id:state.render_base_id,display_source_object_id:state.display_source_object_id},null,2);
  renderDomainEvidence($('domain-evidence'),state.domain_evidence,{png:state.domain_png_base64,show:object_id=>act('show',{object_id}),onError:error=>message((error as {message:string}).message,true)});renderMeasurement();renderObservation();renderSequenceEvidence($('sequence-evidence'),state.sequence_evidence,{show:object_id=>act('show',{object_id}),onError:error=>message((error as {message:string}).message,true)});
  image=decoded;decodedViewSnapshot=decoded&&typeof next.clean_png_base64==='string'&&next.clean_png_base64.length>0&&typeof next.panel_mapping_fingerprint==='string'&&/^[a-f0-9]{64}$/.test(next.panel_mapping_fingerprint)?{object_id:next.object.object_id,image:decoded,panel_mapping_fingerprint:next.panel_mapping_fingerprint,object:next.object}:null;cleanBase=Boolean(next.clean_png_base64);for(const c of [canvas,baseCanvas,marksCanvas]){c.width=image?.width??640;c.height=image?.height??160;}stage.style.width=canvas.width+'px';stage.style.height=canvas.height+'px';if(restoreContext||initialLoad)restoreUiPanels(context?.ui_panels);windowWorkspace.sync(state);syncDraftStatusVisibility();
- if(image){baseContext.drawImage(image,0,0);basePixels=baseContext.getImageData(0,0,canvas.width,canvas.height);if(restoreContext&&context?.camera_origin==='new_fit_preference'){fitView();message('已恢复经核对的原输入选区；此前没有保存相机，当前为新的适应画布视野。');}else if(restoreContext&&context){const box=viewport.getBoundingClientRect();view={scale:context.camera.scale,x:box.width/2-context.camera.center_image_xy[0]*context.camera.scale,y:box.height/2-context.camera.center_image_xy[1]*context.camera.scale};resize();}else if(!sameObject&&!continued)fitView();else{if(!sameObject)view=continued!;resize();}}else{basePixels=null;baseContext.clearRect(0,0,640,160);baseContext.fillStyle='#d4e4ef';baseContext.fillText('序列已打开。请选择一个帧。',20,40);}
+ if(image){baseContext.drawImage(image,0,0);basePixels=baseContext.getImageData(0,0,canvas.width,canvas.height);if(restoreContext&&context?.camera_origin==='new_fit_preference'){fitView();message('已恢复经核对的原输入选区；此前没有保存相机，当前为新的适应画布视野。');}else if(restoreContext&&context){const box=viewport.getBoundingClientRect();view={scale:context.camera.scale,x:box.width/2-context.camera.center_image_xy[0]*context.camera.scale,y:box.height/2-context.camera.center_image_xy[1]*context.camera.scale};resize();}else if(!sameObject&&!continued)fitView();else{if(!sameObject)view=continued!;resize();}}else{basePixels=null;baseContext.clearRect(0,0,640,160);}$('sequence-placeholder').hidden=Boolean(image);
  syncMarkFields(false);void refreshMeasurements();
  if(keepDisplay){$('gamma').value=keepDisplay.gamma;$('low').value=keepDisplay.low;$('high').value=keepDisplay.high;$('axes').checked=keepDisplay.axes;$('scale').checked=keepDisplay.scale;$('gamma-label').textContent=$('gamma').value;}
  if(keepMark){selectedId=keepMark.selectedId;editCoordinates=keepMark.editCoordinates;fieldDirty=keepMark.fieldDirty;$('existing').value=selectedId;for(const [id,field]of [['mark-id','id'],['mark-text','text'],['color','color'],['status','status']])$(id).value=keepMark.fields[field as keyof LocalSnapshot['fields']];}
@@ -1148,6 +1167,7 @@ function deleteSelectedRoi(){
  return true;
 }
 document.addEventListener('keydown',event=>{
+ if(event.target===themeButton&&(event.key==='Enter'||event.code==='Space'))return;
  presentationInputEpoch++;windowWorkspace.notePresentationIntent();
  if($('angle-dialog').open){if(event.key==='Escape'){event.preventDefault();$('angle-dialog').close();}return;}
  if($('known-length-dialog').open){if(event.key==='Escape'){event.preventDefault();$('known-length-dialog').close();}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s')event.preventDefault();return;}
@@ -1522,7 +1542,16 @@ async function pollRevision(){
  catch{/* A closed panel is not restarted and no scientific operation is retried. */}
  finally{if(typeof setTimeout==='function')setTimeout(pollRevision,1500);}
 }
-(globalThis as typeof globalThis & BrowserEnvironment).addEventListener?.('beforeunload',event=>{if(directAngle?.points.length||calibrationInputsChanged()||researchInputsUnsettled()||dirty()||sourceProofRequest()||drag||windowSwitch||workspaceRestoring||windowWorkspace.hasPendingMetadata()||state?.workspace_analysis&&state.workspace_analysis.status!=='clean'){event.preventDefault();event.returnValue='';}});
+(globalThis as typeof globalThis & BrowserEnvironment).addEventListener?.('beforeunload',event=>{
+ const workspace=state?.workspace_analysis;
+ const workspaceBlocked=workspace&&(workspace.can_close===undefined?workspace.status!=='clean':workspace.can_close!==true);
+ if(workspaceBlocked||directAngle?.points.length||calibrationInputsChanged()||researchInputsUnsettled()||dirty()||
+   sourceProofRequest()||drag||busy||windowSwitch||workspaceRestoring||windowWorkspace.hasPendingMetadata()||
+   pending||state?.pending_result||pendingOriginalStatus()){
+  event.preventDefault();
+  event.returnValue='';
+ }
+});
 interface DesktopActionBridge {openImage?:()=>void;reviewImage?:(input?:{selection?:{measurement_ids?:string[];statistics_ids?:string[]};correction?:{text:string;original_thread_id:string;original_turn_id:string}})=>void;stopImageReview?:()=>void;queryImageReview?:()=>void;onAction(handler:(action:string)=>Promise<{ok:boolean;error?:string;working_revision?:number}>):void;}
 const desktopBridge=(globalThis as typeof globalThis & {workbenchDesktop?:DesktopActionBridge}).workbenchDesktop;
 $('desktop-open-image').hidden=typeof desktopBridge?.openImage!=='function';

@@ -9,6 +9,7 @@ import {createImagePanelModule} from '../tools/image_panel_module.mjs';
 import {createStructureModule} from '../tools/structure_module.mjs';
 import {createExecutionModule} from '../tools/execution_module.mjs';
 import {createAnalysisContextModule} from '../tools/analysis_context_module.mjs';
+import {activateDesktopPanel,readDesktopPanelActivation} from '../desktop_panel_activation.mjs';
 import type {RegistryModule} from '../runtime/contracts.mjs';
 import type {Environment} from '../../tools/plugin_server.mjs';
 import type {ScientificProviders} from '../analysis_context_bindings.mjs';
@@ -37,6 +38,7 @@ export function createScienceRuntime({env=process.env,coordinator=new ExecutionC
   const contextDirectory=env.MICROSCOPY_CONTEXT_WORKSPACE
     ?absoluteDirectory(env.MICROSCOPY_CONTEXT_WORKSPACE,'MICROSCOPY_CONTEXT_WORKSPACE'):null;
   const panel=enabledFlag(env,'MICROSCOPY_PANEL','1');
+  const desktopPanel=panel&&enabledFlag(env,'MICROSCOPY_PANEL_DESKTOP')&&process.platform==='win32';
   const observer=enabledFlag(env,'MICROSCOPY_EXECUTION_OBSERVABILITY','0');
   const image=createImageModule({workspaceOptions:{
     workspace:imageDirectory,python:env.MICROSCOPY_PYTHON||'python3',coordinator,
@@ -51,7 +53,10 @@ export function createScienceRuntime({env=process.env,coordinator=new ExecutionC
     modules.push(structure);
     providers.structure=structure.workspace;
   }
-  if(panel)modules.splice(1,0,createImagePanelModule({imageWorkspace:image.workspace,structureWorkspace:providers.structure}));
+  if(panel)modules.splice(1,0,createImagePanelModule({
+    imageWorkspace:image.workspace,structureWorkspace:providers.structure,
+    ...(desktopPanel?{managerOptions:{desktopActivation:{activate:activateDesktopPanel,read:readDesktopPanelActivation}}}:{}),
+  }));
   if(observer)modules.push(createExecutionModule({coordinator,providers:Object.fromEntries(
     Object.entries(providers).map(([name,workspace])=>[name,workspace.requestScope]))}));
   if(contextDirectory)modules.push(createAnalysisContextModule({directory:contextDirectory,providers}));

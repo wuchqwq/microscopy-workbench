@@ -3,7 +3,7 @@ import type {BrowserDocument} from './browser-ports.mjs';
 export interface AnalysisSaveState {
  schema_version:1;status:'new'|'legacy'|'clean'|'dirty'|'saving'|'save_unknown'|'recovery_available';
  working_revision:number;save_id:string|null;saved_revision:number|null;recovery_available:boolean;unresolved_request_id:string|null;
- unresolved_save_id?:string|null;dirty?:boolean;
+ unresolved_save_id?:string|null;dirty?:boolean;can_close?:boolean;
 }
 export interface WorkspaceControlState {workspace_analysis?:AnalysisSaveState;}
 interface Options<S extends WorkspaceControlState> {

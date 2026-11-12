@@ -31,7 +31,7 @@ test('packaged entrypoints, progressive references, helpers and Codex metadata r
  assert.equal(plugin.version,'0.6.1');
  const base=path.resolve(root,plugin.skills);
  for(const name of names){
-  const directory=path.join(base,name),entry=readFileSync(path.join(directory,'SKILL.md'),'utf8');
+  const directory=path.join(base,name),entry=readFileSync(path.join(directory,'SKILL.md'),'utf8').replace(/\r\n/g,'\n');
   assert.ok(entry.startsWith(`---\nname: ${name}\n`));
   const metadata=readFileSync(path.join(directory,'agents/openai.yaml'),'utf8');
   assert.ok(metadata.includes('$'+name));

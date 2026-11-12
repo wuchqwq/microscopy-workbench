@@ -117,7 +117,7 @@ async function startWorkspace(config:DesktopOptions&{workspace:string;python:str
  try{
   backend=new DesktopBackendClient(config);const ready=await backend.ready;address=panelAddress(ready.url);
   const ownedBackend=backend;
-  window=new BrowserWindow({title:'Microscopy Workbench',width:1440,height:980,minWidth:720,minHeight:560,show:false,backgroundColor:'#101923',webPreferences:{...desktopSecurityPreferences,preload:fileURLToPath(new URL('./desktop_preload.cjs',import.meta.url))}});
+  window=new BrowserWindow({title:'Microscopy Workbench',width:1440,height:980,minWidth:720,minHeight:560,show:false,backgroundColor:'#171817',webPreferences:{...desktopSecurityPreferences,preload:fileURLToPath(new URL('./desktop_preload.cjs',import.meta.url))}});
   const ownedWindow=window;
   window.webContents.session.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));window.webContents.session.setPermissionCheckHandler(()=>false);
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
