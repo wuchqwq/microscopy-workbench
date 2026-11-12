@@ -101,6 +101,17 @@ class RawProbe(unittest.TestCase):
         self.assertEqual(output.read_bytes(), b'earlier writer')
         self.assertFalse(list(self.root.glob('.tiff-probe-*')))
 
+    def test_explicit_provider_layout_refusal_is_not_tool_absence(self):
+        args = self.args(capability_evidence=(
+            'The installed image_open provider rejected the original signed float32 TIFF '
+            'as UNSUPPORTED_LAYOUT, accepting uint16 pages only.'
+        ))
+        with patch.object(probe.tifffile, 'TiffFile') as open_tiff:
+            with self.assertRaisesRegex(ValueError, 'UNSUPPORTED_LAYOUT'):
+                probe.run(args)
+            open_tiff.assert_not_called()
+        self.assertFalse(Path(args.output).exists())
+
     def test_wrong_capability_or_profile_parameters_do_not_dispatch(self):
         for change in [dict(missing_tool='image_profile'), dict(capability_evidence=''),
                        dict(axis='x'), dict(operation='axis-profile', missing_tool='image_profile', axis='x', index=0)]:
