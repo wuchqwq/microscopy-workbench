@@ -9,6 +9,7 @@ import path from 'node:path';
 import {createInterface} from 'node:readline';
 import {setTimeout as delay} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
+import {readSmokePanelCurrent, SmokeToolError} from './helpers/windows-smoke-panel-current.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const server = path.join(root, 'dist', 'server.mjs');
@@ -130,7 +131,7 @@ class StdioPeer {
   async call(name, args, options) {
     const reply = await this.rpc('tools/call', {name, arguments: args}, options);
     const text = reply.content.find(item => item.type === 'text')?.text;
-    if (reply.isError) throw new Error(text);
+    if (reply.isError) throw new SmokeToolError(text);
     return JSON.parse(text);
   }
 
@@ -176,6 +177,10 @@ try {
   const startingContext = references.context;
   const open = await peer.call('image_panel_open', {object_id: view.object_id, request_id: 'smoke-panel-open'});
   const panel_id = open.panel_id;
+  const readCurrent = (record = true) => readSmokePanelCurrent(peer, panel_id, {
+    record,
+    onRetry: (attempt, error) => log({status: 'retrying_transient_read_only_conflict', panel_id, attempt, error: error.message}),
+  });
   assert.equal(open.view.object.object_id, view.object_id);
   assert.equal(open.view.frame_identity.frame_object_id, frame.object_id);
   assert.equal(open.view.frame_identity.frame_index, 1);
@@ -202,11 +207,11 @@ try {
   let current;
   const deadline = Date.now() + 300000;
   while (Date.now() < deadline) {
-    const inspected = await peer.call('image_panel_current', {panel_id}, {record: false});
+    const inspected = await readCurrent(false);
     const status = inspected.view.workspace_analysis;
     if (status?.save_id && status.save_id !== open.view.workspace_analysis?.save_id && status.status === 'clean' && status.dirty === false &&
         inspected.view.edit_state.dirty === false && inspected.view.object.object_id !== view.object_id) {
-      current = await peer.call('image_panel_current', {panel_id});
+      current = await readCurrent();
       break;
     }
     await delay(1250);
@@ -253,7 +258,7 @@ try {
 
   const presentation = {panel_id, object_id: stats.object_id, expected_object_id: saved.object_id, draft_revision: current.view.edit_state.draft_revision};
   await peer.call('image_panel_show', {...presentation, request_id: 'smoke-show-statistics'});
-  const shown = await peer.call('image_panel_current', {panel_id});
+  const shown = await readCurrent();
   assert.equal(shown.view.object.object_id, saved.object_id);
   assert.equal(shown.view.numeric_results.statistics.object_id, stats.object_id);
   assert.equal(shown.view.numeric_results.statistics.request_id, stats.request_id);
@@ -263,9 +268,9 @@ try {
   let changed;
   const later = Date.now() + 300000;
   while (Date.now() < later) {
-    const inspected = await peer.call('image_panel_current', {panel_id}, {record: false});
+    const inspected = await readCurrent(false);
     if (inspected.view.workspace_analysis.dirty === true && inspected.view.object.object_id !== saved.object_id && !inspected.view.edit_state.gesture_active) {
-      changed = await peer.call('image_panel_current', {panel_id});
+      changed = await readCurrent();
       break;
     }
     await delay(1250);
@@ -273,7 +278,7 @@ try {
   assert.ok(changed, 'No newer GUI ROI revision was observed');
   const late = {...presentation, draft_revision: shown.view.edit_state.draft_revision, request_id: 'smoke-late-statistics'};
   await assert.rejects(peer.call('image_panel_show', late), /stale|revision|expected|changed|dirty|draft|input/i);
-  const afterStale = await peer.call('image_panel_current', {panel_id});
+  const afterStale = await readCurrent();
   assert.equal(afterStale.view.object.object_id, changed.view.object.object_id);
   assert.equal(afterStale.view.workspace_analysis.save_id, save_id);
   assert.equal(afterStale.view.workspace_analysis.dirty, true);
