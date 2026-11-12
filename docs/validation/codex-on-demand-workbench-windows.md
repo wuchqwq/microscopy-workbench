@@ -62,8 +62,8 @@ python -B tools/install_workbench.py --skills-only --skills-dir "$env:USERPROFIL
 
 ```powershell
 npm run build
-node --test tests/windows-smoke-panel-current.test.mjs
-node --test dist/tests/codex-on-demand-panel.test.mjs dist/tests/desktop-panel-activation.test.mjs dist/tests/runtime-registry.test.mjs dist/tests/runtime-stdio.test.mjs dist/tests/desktop-contracts.test.mjs dist/tests/desktop-lifecycle.test.mjs
+npm run test:desktop
+node --test dist/tests/runtime-registry.test.mjs dist/tests/runtime-stdio.test.mjs
 node --test --test-concurrency=2 dist/tests/image-panel-ownership.test.mjs dist/tests/image-panel-draft-transport.test.mjs dist/tests/analysis-workspace-panel.test.mjs dist/tests/image-panel-http-close.test.mjs
 node --test dist/tests/image-panel-ui.test.mjs dist/tests/scientific-skills-contract.test.mjs
 python -B tools/build_skills_npm.py --check
@@ -72,6 +72,8 @@ git diff --check
 ```
 
 真实 loopback 传输测试需要 Windows 进程能够连接本机 `127.0.0.1`。纯 UI 状态测试核对主题改变时请求、ROI、草稿、viewport 和图像渲染操作没有变化。它们不替代 Electron 窗口与可见主题的验收。
+
+`npm test` 和 `npm run test:desktop` 都包含按需 Panel 契约、桌面激活契约和 smoke 只读重读测试。Standalone provider smoke 的 Node CI 通过 `npm test` 运行这三组回归。上面的 `node tests/codex-on-demand-windows-smoke.mjs` 是手工启动的原生 Windows 验收，需要操作者在窗口内编辑和保存 ROI。
 
 ## 本轮验证记录
 
@@ -84,7 +86,7 @@ git diff --check
 | Windows 实际 GUI，首次 smoke | FAIL。独立 Electron 窗口已显示，重复激活复用了原窗口。随后 `image_panel_current` 在只读交接期间遇到版本冲突，首次脚本将其视为终止错误 |
 | Windows 实际 GUI，同 Panel 接续 | PASS。通过隔离 core stdio 重连仍运行的原 Panel，完成双主题切换、ROI 保存、保存点回读、结果回传和未保存编辑保护 |
 | Windows 实际 GUI，干净关闭与重开 | PASS。明确保存第三个 ROI 后关闭窗口，再激活同一 Panel。窗口消失期间 helper 仍可读，重开后仍是原 helper、源帧、保存点与不可变科学资产 |
-| smoke 只读重试 | 4 项定向测试 PASS，覆盖成功重读、次数上限、非目标错误和计算与写操作只提交一次 |
+| smoke 只读重试 | `test:desktop` 的 61 项测试 PASS，其中 4 项覆盖成功重读、次数上限、非目标错误和计算与写操作只提交一次 |
 | 实际 Codex 会话与真人可用性 | NOT_TESTED。实际宿主加载、模型自主调用与真人可用性待验收 |
 | macOS | NOT_TESTED。此分支供后续 Mac 适配与验证使用 |
 
