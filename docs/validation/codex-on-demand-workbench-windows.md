@@ -50,7 +50,9 @@ python -B tools/install_workbench.py --skills-only --skills-dir "$env:USERPROFIL
 
 ## 恢复操作
 
+- 手边已经有研究工作台时，先用 `image_panel_current` 核对源图、帧和 ROI。确认它属于当前任务后，对原 Panel 调用 `image_panel_activate`。若新建返回 `PANEL_WORKSPACE_OCCUPIED`，该请求没有启动新 Panel。若错误给出注册的 owner Panel ID，先用 `image_panel_current` 验证；缺少匹配身份时，保留现有 owner 并核对原工作台或原恢复记录。
 - 请求失联时保留原工具、原参数、原 request_id。用同一个 ID 查询原激活或原 Panel 打开的结果。若仍未知，停在查询；可按实际桌面状态检查是否已有该窗口。原 Panel 状态用 `image_panel_current` 读回。
+- 新建进程明确未启动，或 owned helper 明确拒绝取得工作区 owner 时，原请求收敛为失败。等待期间若只观察到普通进程退出，原请求继续未确认。工具会停止等待并记录有限的退出码或信号，保留原注册与回查路径。
 - 窗口关掉且 helper 仍运行时，在已确认上一次激活结果后，用新 request_id 明确激活同一 panel_id。原生 viewer 只显示该 helper 的 UI，关闭或重开 viewer 不负责停止或启动科学 provider。
 - 若激活返回 `renderer_gone`，说明旧窗口的显示进程已失效。关闭旧窗口，在原生提示中确认退出，再显式激活同一运行中的 Panel。已写入工作区的记录继续可用，未落盘的界面编辑可能丢失。需要时由研究者选择原有恢复路径。
 - helper 停止时，根据已有 owned Panel 证据和 checkpoint 使用 `image_panel_resume`。若旧窗口提示原 helper 已确认停止，可在了解仅留在窗口内的编辑可能尚未落盘后，明确选择退出旧窗口。已写入工作区的记录由原恢复流程处理。确认新的 helper generation 后再激活。一次超时或暂时无法连接时，先核对状态并保留旧窗口。
@@ -87,7 +89,12 @@ git diff --check
 | Windows 实际 GUI，同 Panel 接续 | PASS。通过隔离 core stdio 重连仍运行的原 Panel，完成双主题切换、ROI 保存、保存点回读、结果回传和未保存编辑保护 |
 | Windows 实际 GUI，干净关闭与重开 | PASS。明确保存第三个 ROI 后关闭窗口，再激活同一 Panel。窗口消失期间 helper 仍可读，重开后仍是原 helper、源帧、保存点与不可变科学资产 |
 | smoke 只读重试 | `test:desktop` 的 61 项测试 PASS，其中 4 项覆盖成功重读、次数上限、非目标错误和计算与写操作只提交一次 |
-| 实际 Codex 会话与真人可用性 | NOT_TESTED。实际宿主加载、模型自主调用与真人可用性待验收 |
+| Windows 实际 Codex 会话 | 已验证同一项目的 core 工具加载。简单元数据问题未开窗口。空间任务中模型使用原 Panel，研究者新增并保存 ROI 4 后，在同一聊天说“继续”，模型回读保存点、计算统计并把结果放回同一 Panel |
+| Windows 实际 Codex 会话，保存后重开 | 原构建 PASS。保存统计展示后，旧窗口正常退出。同一聊天收到对照 ROI 4 与统计结果的请求后，实际调用 `image_panel_current`、`image_panel_saved`、`image_panel_activate`、`image_panel_current`。新独立窗口仍显示原帧、四个 ROI 和原统计，工作区为已保存 |
+| 实际 Codex 会话，已占用工作区的新建负例 | 原实现 FAIL。同工作区已有 Panel 时，新 preview 的 `image_panel_open` 约 122 秒后仍未确认；同 ID 回查也未确认。观察到初始化目录和既有 owner，但缺少新 helper 的退出证据。随后验证并激活原 Panel，旧 ROI 保留 |
+| 工作区占用修复 | 隔离构建 PASS。桌面回归 75 项、owner／工作区／stdio 回归 79 项 PASS。覆盖已占用的新请求终止、精确 owner 提示、原 unknown 不重放、普通退出保留 unknown 和已发布连接优先读取。原真实会话使用修复前的构建，修复后真实宿主验收为 NOT_TESTED |
+| 工作区占用修复，Windows 合成集成 | PASS。真实 core stdio 在本次样本中约 1.5 秒拒绝占用工作区的新建，未登记新 helper，同 ID 回查结果一致，原 Panel 可读。单独启动的受控 owned helper 明确拒绝取得 owner，退出码为 `73`，无原始输出、无新连接、无新检查点。原 owner、连接、科学对象和请求文件均保留 |
+| 真人可用性 | NOT_TESTED。本轮只记录特定研究任务和验收操作 |
 | macOS | NOT_TESTED。此分支供后续 Mac 适配与验证使用 |
 
 早期 Skills 合约检查在 Windows checkout 的 CRLF 行尾上失败。测试读入时统一行尾后，该检查在定向自动测试中通过。
