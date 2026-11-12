@@ -7,6 +7,11 @@ request, inaccessible original or missing scientific premise is not a missing
 capability. Do not route around it with this script. If the provider is available,
 use its `image_statistics` or `image_profile` records instead.
 
+When several providers are registered, choose one whose catalog supports both
+the original TIFF layout and the requested readout. Keep the source, frame and
+readout in that provider's workspace. An explicit `UNSUPPORTED_LAYOUT` in
+`--capability-evidence` stops the script before it decodes a TIFF page.
+
 `scripts/tiff_raw_probe.py` reads an explicitly selected original TIFF page and
 integer half-open source ROI. It provides either five raw ROI statistics or one
 horizontal/vertical raw array profile. It performs no FFT, peak detection,

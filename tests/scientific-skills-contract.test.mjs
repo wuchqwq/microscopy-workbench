@@ -31,7 +31,7 @@ test('packaged entrypoints, progressive references, helpers and Codex metadata r
  assert.equal(plugin.version,'0.6.1');
  const base=path.resolve(root,plugin.skills);
  for(const name of names){
-  const directory=path.join(base,name),entry=readFileSync(path.join(directory,'SKILL.md'),'utf8');
+  const directory=path.join(base,name),entry=readFileSync(path.join(directory,'SKILL.md'),'utf8').replace(/\r\n/g,'\n');
   assert.ok(entry.startsWith(`---\nname: ${name}\n`));
   const metadata=readFileSync(path.join(directory,'agents/openai.yaml'),'utf8');
   assert.ok(metadata.includes('$'+name));
@@ -47,4 +47,18 @@ test('packaged entrypoints, progressive references, helpers and Codex metadata r
  }
  assert.ok(existsSync(path.join(base,'microscopy-observe-revise/scripts/tiff_raw_probe.py')));
  assert.ok(existsSync(path.join(base,'crystallography-compare/scripts/conditional_dk.py')));
+});
+
+test('TIFF guidance chooses core from the live catalog and keeps original provider history',()=>{
+ const skills=path.join(root,'skills/scientific-agent');
+ const observe=readFileSync(path.join(skills,'microscopy-observe-revise/SKILL.md'),'utf8').replace(/\s+/g,' ');
+ const router=readFileSync(path.join(skills,'microscopy-router/SKILL.md'),'utf8').replace(/\s+/g,' ');
+ assert.match(router,/new original TIFF, follow the provider selection in \[observe and revise\]/);
+ assert.match(observe,/actual tool catalog, prefer `microscopy-core` over `microscopy-images` when core supports the original TIFF layout/);
+ assert.match(observe,/required core tools are absent.*?new session exposing those tools is needed/);
+ assert.match(observe,/source, frame, ROI and statistics in the same provider and workspace/);
+ assert.match(observe,/Never pass its `object_id` to a different provider/);
+ assert.match(observe,/`UNSUPPORTED_LAYOUT` does not establish a missing tool/);
+ assert.match(observe,/terminal `failed` and the new provider supports the original layout/);
+ assert.match(observe,/unknown, query it in the original provider\/workspace.*?Do not replay it or switch providers/);
 });

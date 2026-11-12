@@ -64,7 +64,9 @@ same-source outputs independent observations.
 
 ## Capability gaps and continuation
 
-Prefer the present provider and its scientific journals. If the required
+For a new original TIFF, follow the provider selection in
+[observe and revise](../microscopy-observe-revise/SKILL.md) before opening it.
+Continue saved results in their originating provider and workspace. If the required
 operation is genuinely unavailable, state the exact gap and consider a small
 permitted local script with declared inputs, dependencies, hashes and output
 limits; read the [narrow fallback contract](../microscopy-observe-revise/references/local-fallback.md)

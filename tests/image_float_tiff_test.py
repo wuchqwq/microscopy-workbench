@@ -30,6 +30,47 @@ class FloatTiff(unittest.TestCase):
             self.assertEqual(recovered['result']['object_id'],frame['object_id'])
             self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),digest)
 
+    def test_multipage_float32_retains_page_identity_and_signed_roi_values(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / 'signed-stack.tif'
+            values = np.array([[[5, 6, 7], [8, 9, 10]],
+                               [[-3.5, -0.0, 1.25], [2.5, -8.0, 4.125]]], dtype=np.float32)
+            tifffile.imwrite(source, values, photometric='minisblack', metadata={'axes': 'ZYX'})
+            source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+            workspace = root / 'images'
+            base = {'workspace': str(workspace)}
+
+            opened = worker.execute({**base, 'action': 'open', 'source_path': str(source), 'request_id': 'open'})
+            self.assertTrue(opened['ok'], opened)
+            tiff = opened['result']
+            self.assertEqual(tiff['page_count'], 2)
+            self.assertEqual(tiff['frame_axis_role'], 'unspecified_sequence')
+            self.assertEqual([page['dtype'] for page in tiff['pages']], ['float32', 'float32'])
+            self.assertEqual(tiff['source_identity']['sha256'], source_hash)
+
+            selected = worker.execute({**base, 'action': 'frame', 'object_id': tiff['object_id'],
+                                       'frame_index': 1, 'request_id': 'frame-1'})
+            self.assertTrue(selected['ok'], selected)
+            frame = selected['result']
+            self.assertEqual(frame['source_object_id'], tiff['object_id'])
+            self.assertEqual(frame['frame_index'], 1)
+            self.assertEqual(frame['calibration']['status'], 'unknown')
+            stored = np.load(workspace / 'objects' / frame['object_id'] / 'data.npy', allow_pickle=False)
+            self.assertEqual(stored.dtype, np.dtype('float32'))
+            np.testing.assert_array_equal(stored.view(np.uint32), values[1].view(np.uint32))
+
+            result = worker.execute({**base, 'action': 'statistics', 'object_id': frame['object_id'],
+                                     'rect': [1, 0, 3, 2], 'request_id': 'page-1-roi'})
+            self.assertTrue(result['ok'], result)
+            stats = result['result']['statistics']
+            self.assertEqual(stats['dtype'], 'float32')
+            self.assertEqual(stats['sample_count'], 4)
+            self.assertEqual(stats['minimum'], -8.0)
+            self.assertEqual(stats['maximum'], 4.125)
+            self.assertEqual(stats['mean'], -0.65625)
+            self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), source_hash)
+
     def test_nonfinite_frame_refused_and_unsupported_precision_not_cast(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp); base={'workspace':str(root/'workspace')}
