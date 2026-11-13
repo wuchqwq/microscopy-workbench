@@ -2,7 +2,7 @@
 
 ## Install Skills before using them
 
-For this repository's four scientific Skills, use the [standalone npx installer](docs/SKILLS_INSTALL.md). It needs only Node 22/24, accepts an explicit client Skills directory, and refuses overwrites by default. Use the GitHub URL and pin its full commit SHA; no npm registry package is published. Install only with the user's permission. Skill installation is separate from workbench/MCP setup.
+Use the [standalone npx installer](docs/SKILLS_INSTALL.md) for the five scientific Skills, including PtyRAD. It needs Node 22 or 24, accepts an explicit client Skills directory, and refuses overwrites by default. Use a local archive or a GitHub asset pinned to its full commit SHA. Install with the user's permission. Skill installation and workbench/MCP setup are separate steps.
 
 [English](README.agent.md) · [简体中文](README.agent.zh-CN.md) · [Researcher workflow](docs/WORKBENCH_WORKFLOW.md)
 

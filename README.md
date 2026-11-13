@@ -1,6 +1,6 @@
 # Microscopy Workbench
 
-**Just the four Skills?** Use the [zero-dependency npx installer](docs/SKILLS_INSTALL.md) (about 410 KiB, Node 22/24, Windows/macOS/Linux). No npm account, Git clone, Python, or workbench installation is needed to copy them.
+**Install the five scientific Skills, including PtyRAD.** The [zero-dependency npx installer](docs/SKILLS_INSTALL.md) copies the Skills on Windows, macOS, or Linux with Node.js 22 or 24. Use the tarball from a checkout or an asset pinned to a reviewed GitHub commit.
 
 **An AI-assisted crystallography workbench, with the researcher in the loop.**
 
@@ -9,10 +9,6 @@
 Microscopy Workbench is an open-source workbench for building traceable crystallographic evidence from microscopy images. An AI Agent uses the **Model Context Protocol (MCP)** and installable **Skills** to automate bounded analysis with explicit scientific tools. The researcher guides the question, selects or corrects regions and measurements, reviews alternatives, and decides what the evidence supports.
 
 The local Image Panel, structured CLI and MCP provider share saved scientific objects and request journals. You can also inspect images and measure them **without an AI model**. The core supports Windows, macOS and Linux without DigitalMicrograph, GMS or the separate `mcp-dm` repository. Native desktop and platform qualification have narrower, separately recorded scopes.
-
-![Local structural evidence in the Image Panel](docs/examples/r3/browser-field.png)
-
-*Public synthetic example of local structural evidence. The screenshot demonstrates a workflow, not accuracy on real specimens.*
 
 ## The working loop
 
@@ -74,12 +70,13 @@ Structure simulations need their separately documented [optional dependencies](d
 - **AI-assisted analysis:** connect the MCP provider and install the selected Skills or the [MCP + Skills plugin](docs/AUTOMATION_PLUGIN.md). The Agent uses the same saved science and guarded Panel operations. Model choice, credentials and client approval policy are not silently configured.
 - **Windows desktop development trial:** follow [desktop setup](docs/DESKTOP.md). Its Electron runtime has a separate lockfile and requires Node 22.12+ within 22.x, or 24.x. This is not a clean-machine installer.
 - **Headless analysis:** use the [structured CLI](docs/CLI.md) for explicit provider commands, saved-ROI comparisons, execution history and source-proof operations.
+- **PtyRAD reconstruction:** use the standalone Skill and its CPU CLI to inspect raw 4D-STEM diffraction, compare rotation candidates, and measure apparent tilt from phase slices. Prepare and run the reconstruction with a separately configured PtyRAD environment. [PtyRAD CLI guide (中文)](skills/scientific-agent/ptyrad-reconstruction/README.md)
 
 ## Status and scientific limits
 
-This overview was checked against merged `main` commit [c69424ac](https://github.com/wuchqwq/microscopy-workbench/commit/c69424ac25a35efd816d68cacd5904f5381c7485) on **2026-11-05**. [PR #131](https://github.com/wuchqwq/microscopy-workbench/pull/131) integrated the reviewed workbench stack through #130. Independent [PR #105](https://github.com/wuchqwq/microscopy-workbench/pull/105) and the separate STEM candidate are outside that merge. No GitHub Release was published at this check; a mainline merge is not a desktop or scientific release qualification.
+This checkout's Skills bundle includes PtyRAD diagnostics and a reconstruction workflow. For historical context, PR #131 integrated the reviewed workbench stack through #130, and PR #135 added the portable installer. Platform and real-specimen validation apply to the specific versions and workflows recorded in their acceptance reports. [Workbench integration](https://github.com/wuchqwq/microscopy-workbench/pull/131) · [Portable installer baseline](https://github.com/wuchqwq/microscopy-workbench/pull/135)
 
-This is **research software**. It does not provide universal automatic phase/twin/dislocation identification, ptychographic reconstruction or live microscope control. Missing calibration remains missing. A local spectral match or projected geometry does not prove chemical phase, a physical defect or unique three-dimensional structure.
+This is **research software** for guided microscopy analysis and standalone PtyRAD diagnostics. Use PtyRAD for reconstruction. Phase, twin, and dislocation claims require evidence beyond a local spectral match or compatible projected geometry. Live microscope control is outside this workflow.
 
 Original arrays, display images and annotations remain separate. Saved results preserve sources, assumptions, units, revisions and unknown/ambiguous states. Synthetic numerical tests, DOM/HTTP tests, Agent trials, native mouse interaction, platform support and real-specimen physical accuracy are different evidence scopes. Passing one does not imply the others passed.
 

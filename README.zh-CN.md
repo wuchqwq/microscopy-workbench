@@ -1,6 +1,6 @@
 # Microscopy Workbench
 
-**只装四个 Skills？** 使用 [零依赖 npx 安装器](docs/SKILLS_INSTALL.zh-CN.md)（约 410 KiB，Node 22/24，Windows/macOS/Linux）。复制技能不需要 npm 账号、克隆仓库、Python 或完整工作台。
+**安装包含 PtyRAD 的五个科研 Skills。** 在 Windows、macOS 或 Linux 上用 Node.js 22 或 24 运行[零依赖 npx 安装器](docs/SKILLS_INSTALL.zh-CN.md)。可以用克隆仓库里的压缩包，也可以指定已审阅的 GitHub 提交资产。
 
 **由 AI 协助分析、研究者在循环中引导的晶体学工作台。**
 
@@ -9,10 +9,6 @@
 Microscopy Workbench 是一个开源工作台，用于从显微图像建立可追溯的晶体学证据。AI Agent 通过 **MCP（模型上下文协议）**和可安装的 **Skills**，调用明确的科学工具，自动完成有边界的分析。研究者提出问题，选择或修正区域与测量，复核不同解释，并判断证据能够支持什么。
 
 本地 Image Panel、结构化 CLI 与 MCP provider 共用保存的科学对象和请求日志。**不用 AI 模型也能查看图像和测量。**核心支持 Windows、macOS 和 Linux，不依赖 DigitalMicrograph、GMS 或独立的 `mcp-dm` 仓库；原生桌面和各平台的实际验收范围更窄，分别记录。
-
-![Image Panel 中的局部结构证据](docs/examples/r3/browser-field.png)
-
-*公开合成数据上的局部结构证据示例。截图展示工作流程，不代表真实样品精度已经验证。*
 
 ## 如何一起工作
 
@@ -74,12 +70,13 @@ npm run inspect -- --source /absolute/path/to/image.tiff \
 - **AI 协助分析：**连接 MCP provider，安装选定的 Skills 或 [MCP + Skills 插件](docs/AUTOMATION_PLUGIN.md)。Agent 使用同一套保存的科学记录和受保护的 Panel 操作；项目不会暗中选择模型、配置密钥或修改客户端审批策略。
 - **Windows 桌面开发试用：**参见[桌面配置](docs/DESKTOP.md)。Electron 运行时使用独立 lockfile，要求 Node 22.x 中的 22.12+ 或 24.x。这不是干净机器安装包。
 - **无界面分析：**使用[结构化 CLI](docs/CLI.md)，执行明确的 provider 命令，比较保存的 ROI，读取执行历史和操作来源证明。
+- **PtyRAD 重构：**使用独立 Skill 及其 CPU CLI 检查原始 4D-STEM 衍射、比较旋转候选、从相位切片测量表观倾角。配置和运行重构需要另行准备 PtyRAD 环境。 [PtyRAD 中文 CLI 手册](skills/scientific-agent/ptyrad-reconstruction/README.md)
 
 ## 状态与科学边界
 
-本概览于 **2026-11-05** 对照已合并的 `main` 提交 [c69424ac](https://github.com/wuchqwq/microscopy-workbench/commit/c69424ac25a35efd816d68cacd5904f5381c7485)核实。[PR #131](https://github.com/wuchqwq/microscopy-workbench/pull/131)整合了至 #130 的已审查工作台栈；独立 [PR #105](https://github.com/wuchqwq/microscopy-workbench/pull/105)和另行开发的 STEM 候选不属于该次合并。核查时尚无 GitHub Release；合入主线不等于完成桌面发行或科学资格确认。
+当前代码的 Skill 包包含 PtyRAD 诊断工具和重构流程。历史上，PR #131 整合了至 #130 的已审查工作台功能，PR #135 加入了轻量安装器。各平台和真实样品的验证范围，以对应验收记录中的版本和操作为准。 [工作台整合](https://github.com/wuchqwq/microscopy-workbench/pull/131) · [轻量安装器基线](https://github.com/wuchqwq/microscopy-workbench/pull/135)
 
-本项目是**科研软件**，不提供通用自动判相、孪晶/位错确认、ptychography 重构或实时显微镜控制。缺失标定保持缺失；局部频谱匹配或投影几何相容，不能证明化学物相、真实缺陷或唯一三维结构。
+本项目是用于显微分析和独立 PtyRAD 诊断的**科研软件**。重构由单独配置的 PtyRAD 运行。物相、孪晶和位错判断需要超出局部频谱和投影几何的证据。实时显微镜控制在本流程范围之外。
 
 原始数组、显示图和标注保持独立。保存的结果保留来源、假设、单位、修订及未知/多解。合成数值测试、DOM/HTTP 测试、Agent 试验、原生鼠标操作、平台支持和真实样品物理准确性属于不同证据范围；其中一项通过不代表其余通过。
 

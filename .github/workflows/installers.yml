@@ -52,7 +52,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         uses: actions/upload-artifact@v4
         with:
-          name: microscopy-scientific-skills-0.6.1-r2
+          name: microscopy-scientific-skills-0.6.1-r3
           path: ${{ runner.temp }}/microscopy-scientific-skills/
           include-hidden-files: true
           retention-days: 30

@@ -1,38 +1,56 @@
-# 用 npx 轻量安装四个科研 Skills
+# 用 npx 安装五个科研 Skills
 
 [English](SKILLS_INSTALL.md) · [完整工作台安装](INSTALL.zh-CN.md)
 
-**不需要 npm 账号、发布 npm 包、Git、Python，也不必下载整个仓库。**
-只需要自带 npm 的 **Node.js 22.x 或 24.x**。仓库提供约 **410 KiB** 的可复现
-npm 压缩包，**零运行时依赖，没有安装生命周期脚本**。包设为 private，防止意外
-发布到 npm。当前仍是草稿 PR #135 的候选版本，不是正式 Release。
+复制 Skill 只需自带 npm 的 **Node.js 22.x 或 24.x**。仓库提供可复现的 npm
+压缩包，**零运行时依赖，没有安装生命周期脚本**。可以使用克隆后的本地包，
+也可以下载已审阅提交中的资产。该包通过仓库分发，npm 元数据设为 private。
 
-## macOS / Linux
+## 从克隆后的仓库安装
 
-先确认客户端实际使用的 Skills 目录。下面以 Codex 为例：
+在包含安装器 **0.6.1-r3.1** 的 checkout 根目录运行。需要克隆时，
+切换到同时包含本指南和压缩包的已审阅提交。确认客户端实际使用的
+Skills 目录。以下 macOS／Linux 命令以 Codex 为例。
 
 ```sh
-npx --yes --ignore-scripts --package="https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/publish/mac-r5-skills-r2-install/packages/skills/microscopy-scientific-skills.tgz" microscopy-skills --skills-dir "$HOME/.codex/skills" --dry-run
+asset="$PWD/packages/skills/microscopy-scientific-skills.tgz"
+npx --yes --ignore-scripts --offline --package="$asset" microscopy-skills --list
+npx --yes --ignore-scripts --offline --package="$asset" microscopy-skills --skills-dir "$HOME/.codex/skills" --dry-run
 ```
 
-检查目标路径后，**删掉 `--dry-run`** 再执行，就会安装。
-
-## Windows
-
-PowerShell 用 `npx.cmd`，避免 `npx.ps1` 被 PowerShell 脚本执行策略拦截：
+Windows PowerShell 用 `npx.cmd`，避免脚本执行策略拦截 `npx.ps1`。
 
 ```powershell
-npx.cmd --yes --ignore-scripts --package="https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/publish/mac-r5-skills-r2-install/packages/skills/microscopy-scientific-skills.tgz" microscopy-skills --skills-dir "$env:USERPROFILE\.codex\skills" --dry-run
+$asset = (Resolve-Path -LiteralPath '.\packages\skills\microscopy-scientific-skills.tgz').Path
+npx.cmd --yes --ignore-scripts --offline --package="$asset" microscopy-skills --list
+npx.cmd --yes --ignore-scripts --offline --package="$asset" microscopy-skills --skills-dir "$env:USERPROFILE\.codex\skills" --dry-run
 ```
 
-检查后删掉 `--dry-run` 安装。命令提示符 CMD 中，将路径写成
+确认 `--list` 包含 `ptyrad-reconstruction`，检查目标路径，再删掉 `--dry-run`
+执行安装命令。命令提示符 CMD 中，将目标目录写成
 `"%USERPROFILE%\.codex\skills"`。路径含空格时保留引号。安装后重启 Agent，
 或刷新它的技能发现。其他客户端使用它自己的 Skills 目录。
 
-**固定版本：** 上例指向会变化的开发分支。要可复现，将 URL 中的
-`publish/mac-r5-skills-r2-install` 替换为你已在 GitHub 审阅的 **40 位完整 commit SHA**。
-不要用没有来源限定的 `npx microscopy-scientific-skills`，本项目没有发布同名 npm 包。
-npx 会执行项目代码，请先审阅来源并固定可信版本。
+## 从固定 GitHub 提交安装
+
+在已审阅的提交上传到本仓库后，用该提交的 **40 位完整 SHA** 定位资产。
+如果本地已切换到这次提交，可以用 `git rev-parse HEAD` 读取 SHA。
+
+```sh
+commit=$(git rev-parse HEAD)
+asset="https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/$commit/packages/skills/microscopy-scientific-skills.tgz"
+npx --yes --ignore-scripts --package="$asset" microscopy-skills --skills-dir "$HOME/.codex/skills" --dry-run
+```
+
+```powershell
+$commit = (git rev-parse HEAD).Trim()
+$asset = "https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/$commit/packages/skills/microscopy-scientific-skills.tgz"
+npx.cmd --yes --ignore-scripts --package="$asset" microscopy-skills --skills-dir "$env:USERPROFILE\.codex\skills" --dry-run
+```
+
+没有本地仓库时，直接设置从 GitHub 核对过的 SHA。选择包含五技能包的提交。
+旧的 `publish/mac-r5-skills-r2-install` 资产只包含原来的四个 Skill。
+`npx` 会运行安装器，请明确指定本地包路径或已审阅的 URL。
 
 也可使用 `npm exec --yes --ignore-scripts --package="URL" -- microscopy-skills ...`。
 `--dry-run` 仅保证技能安装器不写目标目录，**npm 仍可能下载并缓存包**。
@@ -58,22 +76,23 @@ Windows 用 `npm.cmd` 和实际 Windows 路径。空 npm 缓存也可离线安�
 
 ## 安装内容与边界
 
-Skills 版本 **0.6.1-r2**，安装器版本 **0.6.1-r2.1**：
+Skills 版本 **0.6.1-r3**，安装器版本 **0.6.1-r3.1**。
 
 - `microscopy-router`
 - `microscopy-observe-revise`
 - `microscopy-automation`
 - `crystallography-compare`
-- `.microscopy-workbench-references`，仅参考文档，不是第五个技能
+- `ptyrad-reconstruction`
+- `.microscopy-workbench-references`，共享参考文档
 
-迁移时将五个目录一起移动。安装副本中的本地 Markdown 链接已改写；历史缺失文件和
+迁移时将六个目录一起移动。安装副本中的本地 Markdown 链接已改写。历史缺失文件和
 未打包的非 Markdown 文件会明确标注，并列在支持目录的 `install-report.json` 中。
 不包含可选 Materials Project Skill，也不会修改 MCP、模型、账号、认证、客户端
 配置、shell 配置或其他 Skills。
 
-**装 Skills 不等于装科研运行时。** 技能可以立即被发现，但调用 provider 的功能仍需
-[安装工作台和连接 MCP](INSTALL.zh-CN.md)。自带 Python 辅助脚本只在实际运行时才需要
-Python 及其声明的依赖。安装成功不代表原生桌面验收或真实材料精度验证。
+依赖 provider 的操作需要[安装工作台和连接 MCP](INSTALL.zh-CN.md)。
+PtyRAD 随附的 CPU CLI 用于检查衍射和相位，运行时按输入格式准备 Python 依赖。
+PtyRAD 重构引擎、GPU 环境和凭据在实际运行前另行准备。 [PtyRAD 中文 CLI 手册](../skills/scientific-agent/ptyrad-reconstruction/README.md)
 
 ## 升级、备份与恢复
 
@@ -85,6 +104,9 @@ Windows 继承父目录 ACL，请选择私有父目录。不会替换符号链�
 先关闭技能编辑器，不要并发安装。此安装器不是并发写锁。普通复制失败会尝试回滚，
 但强制结束进程或系统中断可能需要手动恢复；替换前会打印备份路径。恢复时停止客户端，
 移开受影响的新目录，将对应备份移回原位置，再刷新技能发现。确认可用前保留备份。
+
+仅卸载 PtyRAD 时，把已安装的 `ptyrad-reconstruction` 目录移到客户端的
+Skills 目录之外，再刷新技能发现。
 
 ## 维护与验证
 

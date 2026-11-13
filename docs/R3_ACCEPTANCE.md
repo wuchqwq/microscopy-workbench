@@ -191,7 +191,7 @@ unchanged; the five unedited ROI measurement-ID lists were unchanged. The
 public summary's `browser_revision` records these dependencies. The numerical
 atlas/field algorithms were unchanged by this GUI binding repair.
 
-![Actual browser field navigation with retained evidence](examples/r3/browser-field.png)
+[Archived screenshot of browser field navigation with retained evidence](https://github.com/wuchqwq/microscopy-workbench/blob/c77ba4f710bd6b85334ecef7c98e8045e51e71e0/docs/examples/r3/browser-field.png)
 
 ![Actual corrected-anchor remeasurement after binding repair](examples/r3/browser-remeasurement.png)
 

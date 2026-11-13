@@ -75,7 +75,7 @@ py -3 tools\install_workbench.py --skills-only --skills-dir "%USERPROFILE%\.code
 ```
 
 其他客户端请指定其真实技能目录；普通安装命令加 `--skills-dir` 可同时安装技能。
-复制四个科学技能及脚本、测试、示例，并把所需 Markdown 文档放在同级隐藏目录
+复制五个科研 Skill 及随附资源，并把所需 Markdown 文档放在同级隐藏目录
 `.microscopy-workbench-references`。只改安装副本中的相对链接，不改源码。
 搬移时一起移动这五个目录，即可保留离线相对引用。源码快照中已经缺失的历史文档
 会在安装文本中明确标为不可用，并列在支持目录的 `install-report.json`，不会虚构内容。文档链接中的非 Markdown 仓库产物不会复制进客户端技能目录，

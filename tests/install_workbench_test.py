@@ -12,6 +12,13 @@ import unittest
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_SKILLS = {
+    'crystallography-compare',
+    'microscopy-automation',
+    'microscopy-observe-revise',
+    'microscopy-router',
+    'ptyrad-reconstruction',
+}
 spec = importlib.util.spec_from_file_location('installer', ROOT / 'tools/install_workbench.py')
 installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
@@ -36,8 +43,7 @@ class InstallerTest(unittest.TestCase):
         installer.install_skills(self.destination)
         moved = self.destination.with_name('moved skills with spaces')
         self.destination.rename(moved)
-        for name in ['microscopy-automation', 'microscopy-router', 'microscopy-observe-revise', 'crystallography-compare']:
-            self.assertTrue((moved / name / 'SKILL.md').is_file())
+        self.assertEqual({p.parent.name for p in moved.glob('*/SKILL.md')}, EXPECTED_SKILLS)
         self.assertTrue((moved / 'microscopy-observe-revise/scripts/tiff_raw_probe.py').is_file())
         for document in moved.rglob('*.md'):
             for match in installer.LINK.finditer(document.read_text(encoding='utf-8')):
@@ -65,7 +71,7 @@ class InstallerTest(unittest.TestCase):
         backup_roots = list(self.destination.parent.glob('.' + self.destination.name + '.microscopy-backup-*'))
         self.assertEqual(len(backup_roots), 1)
         backups = [backup_roots[0] / 'microscopy-router']
-        self.assertEqual(len(list(self.destination.glob('*/SKILL.md'))), 4)
+        self.assertEqual({p.parent.name for p in self.destination.glob('*/SKILL.md')}, EXPECTED_SKILLS)
         if os.name != 'nt':
             self.assertEqual(backup_roots[0].stat().st_mode & 0o777, 0o700)
         self.assertEqual(len(backups), 1)
@@ -84,7 +90,7 @@ class InstallerTest(unittest.TestCase):
         with mock.patch.object(Path, 'rename', fail_one), self.assertRaisesRegex(OSError, 'injected'):
             installer.install_skills(self.destination, 'backup')
         self.assertEqual(sentinel.read_text(), 'previous')
-        self.assertEqual(len(list(self.destination.iterdir())), 5)
+        self.assertEqual({p.name for p in self.destination.iterdir()}, EXPECTED_SKILLS | {installer.SUPPORT})
 
     def test_existing_venv_refused_before_writes(self):
         venv = Path(self.temp.name) / 'existing env'

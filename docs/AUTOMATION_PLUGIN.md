@@ -35,7 +35,7 @@ science work. Retain the scientific workspace across sessions.
 ### Codex-compatible plugin
 
 The built package is a plugin root: [.codex-plugin/plugin.json](../.codex-plugin/plugin.json)
-declares the four scientific Skills and [.mcp.json](../.mcp.json) declares one
+declares the five scientific Skills and [.mcp.json](../.mcp.json) declares one
 local stdio provider. The included [marketplace](../.agents/plugins/marketplace.json)
 lets a compatible Codex client install it from the built package:
 
