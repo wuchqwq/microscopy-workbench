@@ -6,6 +6,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 
@@ -65,6 +66,8 @@ def run(args):
     require(args.missing_tool == expected_tool, "Missing capability must match requested operation; no generic replacement")
     require(type(args.capability_evidence) is str and 1 <= len(args.capability_evidence.strip()) <= 2000,
             "Record actual missing-capability evidence; a refusal/unknown outcome is not absence")
+    require(re.search(r"\bUNSUPPORTED_LAYOUT\b", args.capability_evidence, re.IGNORECASE) is None,
+            "UNSUPPORTED_LAYOUT is a provider input refusal; it does not establish a missing readout tool")
     require(type(args.source_notes) is str and 1 <= len(args.source_notes.strip()) <= 4000,
             "Explicit source/condition notes required")
     require(args.origin in {"unknown", "simulation", "experimental"}, "Explicit source declaration required")

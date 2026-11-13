@@ -19,14 +19,35 @@ does not prove the model saw it. If only a rendering is available, describe
 visible features provisionally and ask for the original only when the requested
 numerical claim needs it. Do not sample a rendered/exported PNG as if it were the original scientific array.
 
-For an original TIFF, use `image_open`, an explicit zero-based `image_frame`, and
-`image_info`; retain the original request and saved identities. “First frame”
-means index 0. Bind source hash/object, frame, dtype/axes, saved source-pixel ROI,
-scientific grid, calibration revision and conditions. Preserve unknown origin,
-modality, physical scale and uncertainty rather than guessing them from appearance
-or TIFF resolution tags. An unspecified image domain still permits qualified
-pixel-array exploration; it does not establish HRTEM, HAADF, reciprocal space or
-physical slice depth.
+### Choose the provider for a new original TIFF
+
+In the current session's actual tool catalog, prefer `microscopy-core` over
+`microscopy-images` when core supports the original TIFF layout and offers
+`image_open`, `image_frame`, `image_info` and the requested readout (for example,
+`image_statistics`). If the required core tools are absent, name the gap and
+report that a new session exposing those tools is needed. Keep ongoing work
+running with its existing approval settings.
+
+Use the original TIFF and retain its signed `float32` values, including negative
+samples, without quantizing to `uint16`. Select an explicit zero-based frame.
+Keep source, frame, ROI and statistics in the same provider and workspace. An
+existing object stays with its originating provider and workspace. Never pass
+its `object_id` to a different provider.
+
+A format refusal such as `UNSUPPORTED_LAYOUT` does not establish a missing tool.
+Keep the original request ID and receipt. After a refusal, import the original
+file in a different provider only when the original request is verifiably
+terminal `failed` and the new provider supports the original layout. Use new
+request IDs and obtain new source and frame identities there. If the original
+outcome is unknown, query it in the original provider/workspace and preserve
+that state until resolved. Do not replay it or switch providers while it is unknown.
+
+Bind source hash/object, frame, dtype/axes, saved source-pixel ROI, scientific
+grid, calibration revision and conditions. Preserve unknown origin, modality,
+physical scale and uncertainty rather than guessing them from appearance or TIFF
+resolution tags. An unspecified image domain still permits qualified pixel-array
+exploration; it does not establish HRTEM, HAADF, reciprocal space or physical
+slice depth.
 
 State what this input can measure, the missing premise that affects the answer,
 and the reason for the chosen next check. Missing scale permits pixel lengths and
