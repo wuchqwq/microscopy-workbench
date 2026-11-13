@@ -2,7 +2,7 @@
 
 ## 先安装所需 Skills
 
-本仓库的四个科研 Skills 可使用 [独立 npx 安装器](docs/SKILLS_INSTALL.zh-CN.md)。只需 Node 22/24，明确指定客户端 Skills 目录，默认不覆盖已有内容。使用 GitHub URL 并固定完整 commit SHA；本项目没有发布 npm 注册表包。经用户授权后安装；安装 Skills 与安装工作台/连接 MCP 是独立步骤。
+本仓库的五个科研 Skills 包含 PtyRAD，可用 Node 22 或 24 和独立安装器复制到客户端 Skills 目录。默认保留已有文件。使用本地压缩包或固定到完整提交 SHA 的 GitHub 资产。经用户授权后安装，工作台和 MCP 另行配置。 [独立 npx 安装](docs/SKILLS_INSTALL.zh-CN.md)
 
 [简体中文](README.agent.zh-CN.md) · [English](README.agent.md) · [研究者工作流程](docs/WORKBENCH_WORKFLOW.zh-CN.md)
 

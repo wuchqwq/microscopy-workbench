@@ -38,7 +38,7 @@ def local_link(source, url, root):
 
 
 def skill_plan(root=ROOT):
-    """Bundle all four skills and reachable local Markdown references/assets."""
+    """Bundle scientific Skills and reachable local Markdown references/assets."""
     root = root.resolve()
     source = root / SKILLS
     names = sorted(p.name for p in source.iterdir() if p.is_dir())
@@ -137,7 +137,7 @@ def install_skills(destination, policy='fail', dry_run=False, root=ROOT):
         (stage / SUPPORT).mkdir(exist_ok=True)
         (stage / SUPPORT / 'install-report.json').write_text(json.dumps({
             'skills': names, 'source_reference_notices': missing,
-            'note': 'Keep this directory beside the four skills when moving them.'
+            'note': 'Keep this directory beside the installed Skills when moving them.'
         }, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         backups, installed = [], []
         backup_root = None
@@ -186,7 +186,7 @@ def node_tools(desktop=False):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dry-run', '--check', dest='dry_run', action='store_true', help='Validate and print the plan without writes or downloads')
-    parser.add_argument('--skills-only', action='store_true', help='Copy four skills and references; skip Node, venv and build')
+    parser.add_argument('--skills-only', action='store_true', help='Copy scientific Skills and references; skip Node, venv and build')
     parser.add_argument('--skills-dir', type=Path, help='Explicit client skills directory (no implicit user-config writes)')
     parser.add_argument('--existing-skills', choices=['fail', 'backup'], default='fail')
     parser.add_argument('--venv', type=Path, default=ROOT / '.venv')

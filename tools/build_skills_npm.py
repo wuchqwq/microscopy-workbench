@@ -34,7 +34,7 @@ def build():
         files = {f'bundle/{p.relative_to(bundle).as_posix()}': source_bytes(p)
                  for p in bundle.rglob('*') if p.is_file()}
         manifest = {
-            'format': 1, 'skills_version': '0.6.1-r2', 'installer_version': package['version'],
+            'format': 1, 'skills_version': '0.6.1-r3', 'installer_version': package['version'],
             'skills': sorted(p.name for p in bundle.iterdir() if p.name != installer.SUPPORT),
             'files': [{'path': name.removeprefix('bundle/'), 'sha256': hashlib.sha256(data).hexdigest()}
                       for name, data in sorted(files.items())],

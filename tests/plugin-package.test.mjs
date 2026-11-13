@@ -54,7 +54,8 @@ test('packaged Skills reference present resources and discoverable tool names',(
       for(const match of text.matchAll(/`((?:image|structure|analysis|execution)_[a-z_]+)`/g))assert.ok(names.has(match[1]),`${folder.name}: unavailable ${match[1]}`);
       for(const match of text.matchAll(/\[[^\]]*\]\(([^\s)]+)\)/g)){
         if(/^[a-z]+:|^#/i.test(match[1]))continue;
-        assert.ok(existsSync(path.resolve(path.dirname(file),match[1])),`${folder.name}: missing ${match[1]}`);
+        const resource=fileURLToPath(new URL(match[1],pathToFileURL(file)));
+        assert.ok(existsSync(resource),`${folder.name}: missing ${match[1]}`);
       }
     }
   }finally{runtime.close();rmSync(base,{recursive:true,force:true});}

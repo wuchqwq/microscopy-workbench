@@ -13,6 +13,25 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / 'packages/skills/microscopy-scientific-skills.tgz'
+EXPECTED_SKILLS = [
+    'crystallography-compare',
+    'microscopy-automation',
+    'microscopy-observe-revise',
+    'microscopy-router',
+    'ptyrad-reconstruction',
+]
+PTYRAD_FILES = {
+    'README.md',
+    'SKILL.md',
+    'agents/openai.yaml',
+    'references/diagnostics.md',
+    'references/workflow.md',
+    'scripts/calibration_math.py',
+    'scripts/diffraction_check.py',
+    'scripts/phase_tilt.py',
+    'scripts/ptyrad_check.py',
+    'scripts/smoke_check.py',
+}
 
 
 class SkillsNpmTests(unittest.TestCase):
@@ -57,7 +76,13 @@ class SkillsNpmTests(unittest.TestCase):
         # Name a differing resource instead of dumping a huge compressed-byte diff.
         self.assertEqual(archive_files(ARCHIVE.read_bytes()), archive_files(rebuilt))
         self.assertEqual(hashlib.sha256(ARCHIVE.read_bytes()).hexdigest(), hashlib.sha256(rebuilt).hexdigest())
+        manifest = json.loads((self.pkg / 'manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(manifest['skills'], EXPECTED_SKILLS)
+        ptyrad_dir = self.pkg / 'bundle/ptyrad-reconstruction'
+        self.assertEqual({p.relative_to(ptyrad_dir).as_posix() for p in ptyrad_dir.rglob('*') if p.is_file()},
+                         PTYRAD_FILES)
         package = json.loads((self.pkg / 'package.json').read_text())
+        self.assertEqual(manifest['installer_version'], package['version'])
         self.assertTrue(package['private'])
         for key in ['dependencies', 'optionalDependencies', 'devDependencies', 'scripts']:
             self.assertFalse(package.get(key))
@@ -70,7 +95,7 @@ class SkillsNpmTests(unittest.TestCase):
                                  '--package=' + str(ARCHIVE), '--', 'microscopy-skills',
                                  '--skills-dir', str(self.dest)], capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(list(self.dest.glob('*/SKILL.md'))), 4)
+        self.assertEqual(sorted(p.parent.name for p in self.dest.glob('*/SKILL.md')), EXPECTED_SKILLS)
         self.assertFalse((self.dest / 'node_modules').exists())
         self.assert_bundle_bytes(self.dest)
 
@@ -82,14 +107,15 @@ class SkillsNpmTests(unittest.TestCase):
     def test_dry_run_and_argument_errors_never_create_destination(self):
         self.cli('--skills-dir', self.dest, '--dry-run')
         self.assertFalse(self.dest.parent.exists())
-        for args in [[], ['--help'], ['--version'], ['--list']]:
+        for args in [[], ['--help'], ['--version']]:
             self.cli(*args)
+        self.assertEqual(self.cli('--list').stdout.splitlines(), EXPECTED_SKILLS)
         for args in [['--unknown'], ['--skills-dir'], ['--skills-dir', self.dest, '--existing-skills', 'overwrite']]:
             self.cli(*args, ok=False)
         self.assertFalse(self.dest.exists())
 
     def test_conflict_fails_before_writes_and_backup_preserves_unrelated(self):
-        old = self.dest / 'microscopy-router'
+        old = self.dest / 'ptyrad-reconstruction'
         old.mkdir(parents=True)
         (old / 'SKILL.md').write_text('private local edits')
         other = self.dest / 'unrelated'
@@ -97,11 +123,12 @@ class SkillsNpmTests(unittest.TestCase):
         (other / 'SKILL.md').write_text('unrelated')
         result = self.cli('--skills-dir', self.dest, ok=False)
         self.assertIn('left untouched', result.stderr)
-        self.assertEqual(sorted(p.name for p in self.dest.iterdir()), ['microscopy-router', 'unrelated'])
+        self.assertEqual(sorted(p.name for p in self.dest.iterdir()), ['ptyrad-reconstruction', 'unrelated'])
+        self.assertEqual((old / 'SKILL.md').read_text(), 'private local edits')
         self.cli('--skills-dir', self.dest, '--existing-skills', 'backup')
         backups = list(self.dest.parent.glob('.skills.microscopy-backup-*'))
         self.assertEqual(len(backups), 1)
-        self.assertEqual((backups[0] / 'microscopy-router/SKILL.md').read_text(), 'private local edits')
+        self.assertEqual((backups[0] / 'ptyrad-reconstruction/SKILL.md').read_text(), 'private local edits')
         self.assertEqual((other / 'SKILL.md').read_text(), 'unrelated')
         self.assertFalse(list(self.dest.glob('.microscopy-stage-*')))
         self.assert_bundle_bytes(self.dest)
@@ -109,7 +136,7 @@ class SkillsNpmTests(unittest.TestCase):
     def test_corrupt_bundle_fails_before_destination_write(self):
         altered = self.dest.parent / 'corrupt package'
         shutil.copytree(self.pkg, altered)
-        (altered / 'bundle/microscopy-router/SKILL.md').write_text('corrupt')
+        (altered / 'bundle/ptyrad-reconstruction/SKILL.md').write_text('corrupt')
         result = self.cli('--skills-dir', self.dest, package=altered, ok=False)
         self.assertIn('checksum mismatch', result.stderr)
         self.assertFalse(self.dest.exists())
@@ -167,6 +194,19 @@ class SkillsNpmTests(unittest.TestCase):
         result = self.cli('--skills-dir', self.dest, package=altered, ok=False)
         self.assertIn('Unsafe', result.stderr)
         self.assertFalse(self.dest.exists())
+
+    def test_empty_duplicate_or_malformed_skill_list_refused(self):
+        altered = self.dest.parent / 'bad skill list'
+        shutil.copytree(self.pkg, altered)
+        manifest_path = altered / 'manifest.json'
+        manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+        for skills in ([], ['ptyrad-reconstruction', 'ptyrad-reconstruction'], 'ptyrad-reconstruction'):
+            with self.subTest(skills=skills):
+                manifest['skills'] = skills
+                manifest_path.write_text(json.dumps(manifest), encoding='utf-8')
+                result = self.cli('--skills-dir', self.dest, package=altered, ok=False)
+                self.assertIn('Invalid bundled Skill manifest', result.stderr)
+                self.assertFalse(self.dest.exists())
 
 
 if __name__ == '__main__':

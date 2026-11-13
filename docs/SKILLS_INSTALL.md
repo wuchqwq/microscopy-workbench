@@ -1,39 +1,64 @@
-# Install the four scientific Skills with npx
+# Install the five scientific Skills with npx
 
 [简体中文](SKILLS_INSTALL.zh-CN.md) · [Full workbench installer](INSTALL.md)
 
-**You do not need an npm account, an npm registry publication, Git, Python, or the
-full repository to copy these Skills.** Use Node.js **22.x or 24.x**, including npm.
-The checked-in, reproducible npm tarball is about **410 KiB** and has **zero runtime
-dependencies** and **no lifecycle scripts**. The npm package is private to prevent
-accidental registry publication. This is a candidate on draft PR #135, not a release.
+Use Node.js **22.x or 24.x**, including npm, to copy the Skills. The checked-in
+npm tarball has **zero runtime dependencies** and **no lifecycle scripts**.
+You can use the tarball from a checkout or download it from a reviewed commit.
+The npm package is private and distributed as a repository asset.
 
-## macOS / Linux
+## Install from a checkout
 
-Choose your client's actual Skills directory. This example uses Codex:
+Run from the root of a checkout containing installer **0.6.1-r3.1**. If you
+need to clone the repository, check out the reviewed commit that contains
+this guide and its accompanying tarball. Choose your client's actual Skills
+directory. The macOS/Linux example uses Codex.
 
 ```sh
-npx --yes --ignore-scripts --package="https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/publish/mac-r5-skills-r2-install/packages/skills/microscopy-scientific-skills.tgz" microscopy-skills --skills-dir "$HOME/.codex/skills" --dry-run
+asset="$PWD/packages/skills/microscopy-scientific-skills.tgz"
+npx --yes --ignore-scripts --offline --package="$asset" microscopy-skills --list
+npx --yes --ignore-scripts --offline --package="$asset" microscopy-skills --skills-dir "$HOME/.codex/skills" --dry-run
 ```
 
-Check the destination, then run the same command **without `--dry-run`** to install.
-For Windows PowerShell, use `npx.cmd` to avoid PowerShell's script-execution-policy
-restriction on `npx.ps1`:
+For Windows PowerShell, use `npx.cmd` to avoid the script execution policy
+restriction on `npx.ps1`.
 
 ```powershell
-npx.cmd --yes --ignore-scripts --package="https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/publish/mac-r5-skills-r2-install/packages/skills/microscopy-scientific-skills.tgz" microscopy-skills --skills-dir "$env:USERPROFILE\.codex\skills" --dry-run
+$asset = (Resolve-Path -LiteralPath '.\packages\skills\microscopy-scientific-skills.tgz').Path
+npx.cmd --yes --ignore-scripts --offline --package="$asset" microscopy-skills --list
+npx.cmd --yes --ignore-scripts --offline --package="$asset" microscopy-skills --skills-dir "$env:USERPROFILE\.codex\skills" --dry-run
 ```
 
-In Windows Command Prompt, use `%USERPROFILE%\.codex\skills` instead of the
-PowerShell environment-variable expression. Quote paths containing spaces.
-Restart the agent or refresh its skill discovery after installation.
+Check that `--list` includes `ptyrad-reconstruction` and verify the destination,
+then run the install command without `--dry-run`. In Windows Command Prompt,
+use `%USERPROFILE%\.codex\skills` as the destination. Quote paths containing
+spaces. Restart the agent or refresh its skill discovery after installation.
 
-**Pin for reproducibility:** the examples follow a movable development branch.
-Replace `publish/mac-r5-skills-r2-install` in the URL with the **full 40-character
-commit SHA** you reviewed on GitHub. The same command then selects that snapshot,
-not whichever code happens to be latest. Do not use an unqualified registry command
-such as `npx microscopy-scientific-skills`: no registry package is published by this
-project. `npx` executes project code, so review the source and choose a trusted SHA.
+## Install from a pinned GitHub asset
+
+Once the reviewed revision is available in this repository, set `commit` to
+its full 40-character SHA. From a checkout at that revision, `git rev-parse HEAD`
+prints the SHA. For macOS/Linux use:
+
+```sh
+commit=$(git rev-parse HEAD)
+asset="https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/$commit/packages/skills/microscopy-scientific-skills.tgz"
+npx --yes --ignore-scripts --package="$asset" microscopy-skills --skills-dir "$HOME/.codex/skills" --dry-run
+```
+
+For Windows PowerShell use:
+
+```powershell
+$commit = (git rev-parse HEAD).Trim()
+$asset = "https://raw.githubusercontent.com/wuchqwq/microscopy-workbench/$commit/packages/skills/microscopy-scientific-skills.tgz"
+npx.cmd --yes --ignore-scripts --package="$asset" microscopy-skills --skills-dir "$env:USERPROFILE\.codex\skills" --dry-run
+```
+
+Without a checkout, set the SHA directly from the reviewed GitHub commit.
+Use a revision that contains the five-Skill package. The older
+`publish/mac-r5-skills-r2-install` asset belongs to the four-Skill bundle.
+`npx` executes the installer, so use the explicit package path or reviewed
+URL each time.
 
 `npm exec --yes --ignore-scripts --package="URL" -- microscopy-skills ...` is
 an equivalent invocation. `--dry-run` prevents writes by the Skills installer;
@@ -60,27 +85,28 @@ cache because the package has no dependencies. Alternatively extract the archive
 and run `node package/install.mjs --skills-dir "/absolute/client/skills"`.
 `--help`, `--version`, and `--list` show the interface, installer version, and names.
 
-## What is installed and what is not
+## Installed Skills and dependencies
 
-Installed Skills **0.6.1-r2**, installer **0.6.1-r2.1**:
+Installed Skills **0.6.1-r3**, installer **0.6.1-r3.1**.
 
 - `microscopy-router`
 - `microscopy-observe-revise`
 - `microscopy-automation`
 - `crystallography-compare`
-- `.microscopy-workbench-references` (support documents, not a fifth Skill)
+- `ptyrad-reconstruction`
+- `.microscopy-workbench-references` (shared reference documents)
 
-Keep these five directories together. Relative Markdown links are rewritten in
+Keep these six directories together when moving the bundle. Relative Markdown links are rewritten in
 installed copies; omitted historical/non-Markdown references are labeled and listed
 in `.microscopy-workbench-references/install-report.json`. The optional Materials
 Project Skill is not included. The installer touches no MCP, model, authentication,
 client settings, shell profile, or unrelated Skills.
 
-**Copying Skills does not install the scientific runtime.** The four Skills can be
-discovered immediately, but their provider-dependent operations require the
-[workbench and MCP setup](INSTALL.md). The included Python helpers require Python
-and any dependencies their Skill declares when they are actually used. Skill
-installation alone is not native desktop or scientific-accuracy qualification.
+Provider-dependent operations require the [workbench and MCP setup](INSTALL.md).
+PtyRAD ships standalone CPU helpers for diffraction and phase checks. Set up
+Python and the dependencies required by the selected input format when running
+those helpers. Prepare PtyRAD, GPU dependencies and any credentials separately
+when running reconstruction. [PtyRAD CLI guide (中文)](../skills/scientific-agent/ptyrad-reconstruction/README.md)
 
 ## Upgrade and recovery
 
@@ -97,6 +123,10 @@ may require manual recovery. The backup path is printed before replacements. To
 recover, stop the client, move the affected new managed directories aside, restore
 the corresponding backup directories to their original locations, then refresh the
 client. Keep backups until you verify the installation.
+
+To remove only PtyRAD from skill discovery, move the installed
+`ptyrad-reconstruction` directory outside the client's Skills directory and
+refresh the client.
 
 ## Maintainers and verification scope
 

@@ -69,7 +69,7 @@ installer does not claim native desktop qualification on every OS. See
 
 ## Optional Skills, without touching MCP configuration
 
-The four scientific Skills can be installed independently:
+The five scientific Skills can be installed independently:
 
 ```sh
 python3 tools/install_workbench.py --skills-only --skills-dir "$HOME/.codex/skills" --dry-run
@@ -83,7 +83,7 @@ py -3 tools\install_workbench.py --skills-only --skills-dir "%USERPROFILE%\.code
 
 For another client, supply its actual Skills directory. To install runtime and
 Skills together, add `--skills-dir` to the ordinary installation command.
-This explicitly copies all four sibling Skills, their scripts/tests/examples,
+This copies all five sibling Skills and their bundled resources,
 and referenced Markdown documents into `.microscopy-workbench-references` beside
 them. Local Markdown links are rewritten **only in the installed copies**.
 Move all five directories together to preserve offline relative references.

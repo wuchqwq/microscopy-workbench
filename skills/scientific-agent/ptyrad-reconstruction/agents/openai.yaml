@@ -1,0 +1,4 @@
+interface:
+  display_name: "PtyRAD 4D-STEM 重构"
+  short_description: "从原始衍射数据核查几何并用少量试跑建立可用的重构参数"
+  default_prompt: "用 $ptyrad-reconstruction 按我的研究目标，在我授权的范围内检查数据、配置并实际试跑，交付参数与可回读结果，基本可用即停。"

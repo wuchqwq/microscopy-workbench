@@ -13,7 +13,7 @@ microscopy-skills --skills-dir "CLIENT_SKILLS_DIRECTORY" [--dry-run]
 microscopy-skills --skills-dir "CLIENT_SKILLS_DIRECTORY" --existing-skills backup
 microscopy-skills --list | --version | --help
 
-Copies four Skills and portable references only. It does not install the workbench,
+Copies bundled Skills and portable references only. It does not install the workbench,
 Python, Electron, or MCP settings. Existing entries are refused unless you explicitly
 request backup. Backups stay beside, not inside, the Skills directory. Close other
 installers/editors first. Restart or refresh your agent's skill discovery afterwards.
@@ -29,8 +29,11 @@ function safeParents(p) {
 function sha256(bytes) { return createHash('sha256').update(bytes).digest('hex'); }
 function loadBundle() {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
-  if (manifest.format !== 1 || manifest.skills.length !== 4 || new Set(manifest.skills).size !== 4 ||
-      manifest.skills.some(n => !/^[a-z][a-z0-9-]+$/.test(n))) throw new Error('Invalid bundled Skill manifest');
+  if (manifest.format !== 1 || !Array.isArray(manifest.skills) || manifest.skills.length === 0 ||
+      new Set(manifest.skills).size !== manifest.skills.length ||
+      manifest.skills.some(n => typeof n !== 'string' || !/^[a-z][a-z0-9-]+$/.test(n))) {
+    throw new Error('Invalid bundled Skill manifest');
+  }
   const entries = [...manifest.skills, support];
   const known = new Set();
   for (const f of manifest.files) {
