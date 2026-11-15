@@ -2,6 +2,10 @@
 
 在这个目录下运行示例。`scripts/ptyrad_check.py` 提供衍射盘、旋转候选和相位层间位移三个命令，输出可复查的 JSON。用户和 Skill 使用同一入口。原始数据、候选方向和相位数组由用户提供。具体怎样从测量结果选参数见[工作流](references/workflow.md)。
 
+## 官方入门工作区
+
+PtyRAD 自带 `ptyrad init` starter kit 和 Jupyter 运行、结果读取及 provenance notebook。先看[工作区使用与参数迁移](references/official-workspace.md)，再使用本目录的科学诊断 CLI。这里不另造重构 GUI，也不把作者的 zoner 带轴可视化当作 PtyRAD 重构器。
+
 ## 用现有安装器复制 Skill
 
 准备带 npm 的 Node.js 22 或 24，以及已经审阅并校验 SHA-256 的 `microscopy-scientific-skills` 本地压缩包。先用 `--list` 确认包里有 `ptyrad-reconstruction`。以下 Windows PowerShell 示例在压缩包所在目录运行，目标设为临时目录。路径变量可换成自己客户端实际使用的 Skills 目录。

@@ -26,6 +26,7 @@ PTYRAD_FILES = {
     'agents/openai.yaml',
     'references/diagnostics.md',
     'references/workflow.md',
+    'references/official-workspace.md',
     'scripts/calibration_math.py',
     'scripts/diffraction_check.py',
     'scripts/phase_tilt.py',
