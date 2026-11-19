@@ -8,6 +8,7 @@ import {createImageModule} from '../tools/image_module.mjs';
 import {createImagePanelModule} from '../tools/image_panel_module.mjs';
 import {createStructureModule} from '../tools/structure_module.mjs';
 import {createExecutionModule} from '../tools/execution_module.mjs';
+import {createScienceCapabilitiesModule} from '../tools/science_capabilities_module.mjs';
 import {createAnalysisContextModule} from '../tools/analysis_context_module.mjs';
 import type {RegistryModule} from '../runtime/contracts.mjs';
 import type {Environment} from '../../tools/plugin_server.mjs';
@@ -59,6 +60,7 @@ export function createScienceRuntime({env=process.env,coordinator=new ExecutionC
     'Independent microscopy-core does not provide '+name+'; DM tools belong to the separate mcp-dm provider, with no implicit fallback'});
   try{
     for(const module of modules)registry.register(module);
+    registry.register(createScienceCapabilitiesModule({listTools:()=>registry.listTools(),env}));
     registry.seal();
   }catch(error){registry.close();throw error;}
   return {registry,instructions:registry.instructions(),backend:'science',coordinator,providers,
