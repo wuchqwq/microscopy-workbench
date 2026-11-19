@@ -14,7 +14,7 @@
     "displayName": "Microscopy Workbench",
     "shortDescription": "Question-driven microscopy with traceable evidence",
     "defaultPrompt": [
-      "Use microscopy-router to inspect my image and question, choose a supported route, and revise conclusions when I correct the evidence."
+      "Use microscopy-router for the researcher's question. Before relying on optional GPA, topology, structure, or PtyRAD capabilities, inspect the live microscopy-core science_capabilities catalog and the relevant actual tool schemas; a registered tool is not a qualified scientific result. Preserve original provider identity, assumptions, and request IDs."
     ]
   }
 }
