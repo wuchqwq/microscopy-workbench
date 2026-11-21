@@ -6,6 +6,7 @@ import path from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
 import {desktopRuntimePath} from '../tools/desktop_launcher.mjs';
+import {bundledDesktopExecutable,bundledDesktopViewerSwitch} from './desktop_bundle.mjs';
 import {isRow,panelAddress} from './desktop_contracts.mjs';
 import {assertOwnedPanelStopped,readOwnedPanelCheckpoint,readOwnedPanelConnection} from './panel_ownership.mjs';
 import {withWorkspaceMetadataGate} from './workspace_metadata_gate.mjs';
@@ -166,9 +167,10 @@ export async function activateDesktopPanel(input:DesktopPanelActivationInput):Pr
   const owned=desktopPanelAddress(input);
   if(owned.url!==panelAddress(input.url).url)throw new Error('Desktop address changed before activation');
   assertDesktopPanelIntent(input);
-  const runtime=desktopRuntimePath();
+  const bundled=bundledDesktopExecutable(fileURLToPath(new URL('../../',import.meta.url)));
+  const runtime=bundled??desktopRuntimePath();
+  const entry=bundled?bundledDesktopViewerSwitch:fileURLToPath(new URL('../tools/desktop_panel_viewer.mjs',import.meta.url));
   withWorkspaceMetadataGate(input.workspace,()=>desktopPanelProfile(input,true));
-  const entry=fileURLToPath(new URL('../tools/desktop_panel_viewer.mjs',import.meta.url));
   const child=spawn(runtime,[entry,input.workspace,input.panelId,input.helperSessionId,String(input.generation),input.requestId],{
    detached:true,stdio:'ignore',windowsHide:false,env:{...process.env,ELECTRON_RUN_AS_NODE:undefined},
   });
