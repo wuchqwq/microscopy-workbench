@@ -1,5 +1,6 @@
 // The owned provider Panel remains the authority when this renderer detaches.
 import type {EventEmitter} from 'node:events';
+import {setTimeout as delay} from 'node:timers/promises';
 import {
  acknowledgeDesktopPanelActivation,assertDesktopPanelIntent,attachedDesktopPanelStopped,desktopPanelAddress,desktopPanelIdentity,
  desktopPanelProfile,readDesktopPanelActivation,showDesktopPanelWindow,
@@ -162,6 +163,8 @@ function checkHiddenViewer(input:DesktopPanelIdentity):void {
  app.dock?.hide();
  void app.whenReady().then(async()=>{
   const {window,address,rendererGone}=await createViewer(input,true);
+  // loadURL finishes before the renderer has restored its saved view metadata.
+  await delay(2000);
   if(window.isVisible()||window.isFocused()||rendererGone()||!isOwnedDesktopDocument(window.webContents.getURL(),address)){
    window.close();
    process.exitCode=1;

@@ -26,7 +26,7 @@ function fixture(platform='darwin',{hidden=false,veto=false}={}) {
  }
  const electron={app,BrowserWindow:Window,Menu:{buildFromTemplate:items=>items,setApplicationMenu:menu=>menus.push(menu)},dialog:{showMessageBoxSync:(_window,options)=>{dialogs.push(options);return choice;},showMessageBox:async(_window,options)=>{dialogs.push(options);return {response:0};}}};
  const contents=readFileSync(new URL('../tools/desktop_panel_viewer.mjs',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('const { app, BrowserWindow, Menu, dialog } = await import(electronModule);','const { app, BrowserWindow, Menu, dialog } = __electron;');
- const context=vm.createContext({__electron:electron,desktopPanelIdentity,showDesktopPanelWindow,desktopSecurityPreferences,isOwnedDesktopDocument,isRow,readWorkspaceStatus,
+ const context=vm.createContext({__electron:electron,delay:async()=>{},desktopPanelIdentity,showDesktopPanelWindow,desktopSecurityPreferences,isOwnedDesktopDocument,isRow,readWorkspaceStatus,
   desktopPanelProfile:()=>'/isolated-profile',assertDesktopPanelIntent(){},readDesktopPanelActivation:request=>receipts.get(request.requestId)??null,
   acknowledgeDesktopPanelActivation:(request,result)=>{receipts.set(request.requestId,result);calls.acks++;},attachedDesktopPanelStopped:()=>stopped,
   desktopPanelAddress:()=>({...address,url:current}),Buffer,AbortSignal,process:{platform,pid:42,stderr:{write(value){errors.push(value);}},stdout:{write(value,done){output.push(JSON.parse(value));done();}},argv:['electron','viewer',...(hidden?['--verify-hidden-start']:[]),input.workspace,panelId,helperSessionId,'1',input.requestId]},
