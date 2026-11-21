@@ -39,7 +39,7 @@ answered from the available evidence.
    analysis with its ordinary tools.
 2. When the same provider advertises `image_panel_activate`, proactively call
    it with the retained `panel_id` and a recorded activation `request_id`.
-   This requests a local Windows viewer for that Panel. Read the activation
+   This requests a local Windows/macOS viewer for that Panel. Read the activation
    result for window readiness and observed focus. An intentional later focus
    may use a new request ID once the earlier outcome is known. After a timeout
    or cancellation, repeat the exact original activation arguments to query

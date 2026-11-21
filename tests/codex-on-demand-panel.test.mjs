@@ -209,9 +209,9 @@ test('invalid Python is a known non-start and original open receipt stays failed
  await assert.rejects(openManager().call('image_panel_open',args),/absolute.*PYTHON/);
 }));
 
-test('Windows native tools are opt-in on the same core provider',t=>fixture(t,async({workspace})=>{
+test('Windows/macOS native tools are opt-in on the same core provider',t=>fixture(t,async({workspace})=>{
  for(const [flags,available] of [[{},false],[{MICROSCOPY_PANEL:'0',MICROSCOPY_PANEL_DESKTOP:'1'},false],
-  [{MICROSCOPY_PANEL:'1',MICROSCOPY_PANEL_DESKTOP:'1'},process.platform==='win32']]){
+  [{MICROSCOPY_PANEL:'1',MICROSCOPY_PANEL_DESKTOP:'1'},['win32','darwin'].includes(process.platform)]]){
   const runtime=createScienceRuntime({env:{MICROSCOPY_IMAGE_WORKSPACE:workspace,...flags}});
   try{
    const tools=runtime.registry.listTools().map(tool=>tool.name);

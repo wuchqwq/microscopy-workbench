@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import {
  activateDesktopPanel,acknowledgeDesktopPanelActivation,assertDesktopPanelIntent,attachedDesktopPanelStopped,desktopPanelProfile,
- DesktopPanelNotDispatched,readDesktopPanelActivation,showDesktopPanelWindow,
+ DesktopPanelNotDispatched,readDesktopPanelActivation,showDesktopPanelWindow,supportsDesktopPanel,
 } from '../lib/desktop_panel_activation.mjs';
 import {prepareOwnedPanelRegistration} from '../lib/panel_ownership.mjs';
 
@@ -14,6 +14,12 @@ function fixture(t) {
  t.after(()=>rmSync(workspace,{recursive:true,force:true}));
  return {workspace,panelId:'a'.repeat(32),helperSessionId:'b'.repeat(32),generation:2,requestId:'activation-1'};
 }
+
+test('native activation supports macOS and Windows only, without enabling other hosts',()=>{
+ assert.equal(supportsDesktopPanel('darwin'),true);
+ assert.equal(supportsDesktopPanel('win32'),true);
+ for(const platform of ['linux','freebsd','aix'])assert.equal(supportsDesktopPanel(platform),false);
+});
 
 test('activation receipt is immutable, exact-generation and safe to query without a helper',async t=>{
  const input=fixture(t);

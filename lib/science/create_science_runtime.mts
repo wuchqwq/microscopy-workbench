@@ -9,7 +9,7 @@ import {createImagePanelModule} from '../tools/image_panel_module.mjs';
 import {createStructureModule} from '../tools/structure_module.mjs';
 import {createExecutionModule} from '../tools/execution_module.mjs';
 import {createAnalysisContextModule} from '../tools/analysis_context_module.mjs';
-import {activateDesktopPanel,readDesktopPanelActivation} from '../desktop_panel_activation.mjs';
+import {activateDesktopPanel,readDesktopPanelActivation,supportsDesktopPanel} from '../desktop_panel_activation.mjs';
 import type {RegistryModule} from '../runtime/contracts.mjs';
 import type {Environment} from '../../tools/plugin_server.mjs';
 import type {ScientificProviders} from '../analysis_context_bindings.mjs';
@@ -38,7 +38,7 @@ export function createScienceRuntime({env=process.env,coordinator=new ExecutionC
   const contextDirectory=env.MICROSCOPY_CONTEXT_WORKSPACE
     ?absoluteDirectory(env.MICROSCOPY_CONTEXT_WORKSPACE,'MICROSCOPY_CONTEXT_WORKSPACE'):null;
   const panel=enabledFlag(env,'MICROSCOPY_PANEL','1');
-  const desktopPanel=panel&&enabledFlag(env,'MICROSCOPY_PANEL_DESKTOP')&&process.platform==='win32';
+  const desktopPanel=panel&&enabledFlag(env,'MICROSCOPY_PANEL_DESKTOP')&&supportsDesktopPanel();
   const observer=enabledFlag(env,'MICROSCOPY_EXECUTION_OBSERVABILITY','0');
   const image=createImageModule({workspaceOptions:{
     workspace:imageDirectory,python:env.MICROSCOPY_PYTHON||'python3',coordinator,

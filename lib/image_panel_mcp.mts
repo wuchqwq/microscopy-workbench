@@ -59,7 +59,7 @@ export const imagePanelTools: PanelToolDefinition[]=[
 ];
 export const imagePanelResumeTool:PanelToolDefinition=make('image_panel_resume','Explicitly resume a stopped registered owned helper from its exact checkpoint. Save request_id first. Stable logical panel_id, new helper generation and capability; saved crystal evidence remains unvalidated until full image_panel_evidence admission. Never restarts a live, legacy, failed or unknown operation automatically.',{panel_id:objectId,request_id:requestId},['panel_id','request_id']);
 export const imagePanelActivateTool:PanelToolDefinition=make('image_panel_activate',
-  'Show or focus the Windows native workbench for an exact owned live panel_id. Use for spatial research interaction. This attaches to the same Panel without changing its view or edits. Retain request_id before submitting. Repeat the exact original request only to recover its activation receipt; use a new request for a later intentional focus after the prior outcome is known. A visible window may not receive OS focus.',
+  'Show or focus the Windows/macOS native workbench for an exact owned live panel_id. Use for spatial research interaction. This attaches to the same Panel without changing its view or edits. Retain request_id before submitting. Repeat the exact original request only to recover its activation receipt; use a new request for a later intentional focus after the prior outcome is known. A visible window may not receive OS focus.',
   {panel_id:objectId,request_id:requestId},['panel_id','request_id']);
 export const imagePanelSavedTool:PanelToolDefinition=make('image_panel_saved',
   'Read back the exact current GUI savepoint for the retained panel_id and save_id observed by image_panel_current. Verifies workspace save and provider references, and returns the saved active view and selection. A draft, unresolved operation, or different save refuses. This does not advance AnalysisContext or start a Codex turn.',
@@ -353,7 +353,7 @@ export class ImagePanelManager {
     let dispatched=false;
     let activation:DesktopPanelActivation;
     try{
-      if(!this.desktopActivation)throw new Error('Windows native Panel activation is not enabled');
+      if(!this.desktopActivation)throw new Error('Native Panel activation is not enabled');
       const conn=this.getConnection(panelId);
       if(conn.schema_version!==2||!conn.helper_session_id||!conn.generation)
         throw new Error('Native activation requires a live owned Panel helper generation');

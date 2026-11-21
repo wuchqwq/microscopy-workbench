@@ -97,16 +97,17 @@ const menus:MenuItem[]=[
  {label:'编辑',submenu:[{label:'撤销',accelerator:'CmdOrCtrl+Z',click:menuAction('undo')},{label:'重做',accelerator:'CmdOrCtrl+Shift+Z',click:menuAction('redo')},{type:'separator'},{label:'删除所选 ROI',click:menuAction('delete')},{role:'cut',label:'剪切文本'},{role:'copy',label:'复制文本'},{role:'paste',label:'粘贴文本'},{role:'selectAll',label:'全选文本'}]},
  {label:'分析',submenu:[{label:'预览本次图像与工具范围…',click:()=>{if(!nativeClosing&&!starting&&!replacing&&!jointReviewBusy)void reviewImageScope();}},{label:'记录已核对本次范围（不发送）',click:()=>nativeReviewDecision?.('record')},{label:'真实模型发送停用（此候选未验收）',enabled:false},{label:'取消本次范围预览',click:()=>nativeReviewDecision?.(false)},{type:'separator'},{label:'选择 / 调整',click:menuAction('select')},{label:'绘制 ROI',click:menuAction('roi')},{label:'平移图像',click:menuAction('pan')},{type:'separator'},{label:'FFT',click:menuAction('fft')},{label:'测量',click:menuAction('measure')},{label:'返回空间观察',click:menuAction('return-spatial')}]},
  {label:'窗口',submenu:[{label:'平铺图像窗口',click:menuAction('tile')},{label:'探索执行历史',click:menuAction('history')},{role:'minimize',label:'最小化'},{role:'zoom',label:'最大化 / 还原'}]},
- {label:'帮助',submenu:[{label:'使用说明',accelerator:'F1',click:menuAction('help')},{label:'宿主适配（合成测试；非 AI）',click:()=>{void showSyntheticHostDemo();}},{label:'关于内部研究试用版',click:()=>{void dialog.showMessageBox(window,{type:'info',title:'Microscopy Workbench',message:'Microscopy Workbench — 内部研究试用版',detail:'Mac arm64 本地包，自带 Node/Python。原生入口：有限灰度 TIFF；DM3/DM4 解码器未随包提供。模拟数据只验证软件行为；物相、缺陷与仪器精度未认证。本地预览与核对可用；真实模型发送在此候选停用、未验收。内部试用，未公证或公开发布。',buttons:['关闭']});}}]}
+ {label:'帮助',submenu:[{label:'使用说明',accelerator:'F1',click:menuAction('help')},{label:'宿主适配（合成测试；非 AI）',click:()=>{void showSyntheticHostDemo();}},{label:'关于内部研究试用版',click:()=>{void dialog.showMessageBox(window,{type:'info',title:'Microscopy Workbench',message:'Microscopy Workbench — 内部研究试用版',detail:'Mac 本地开发候选，使用明确指定的 Node/Python。原生入口接受有限灰度 TIFF、DM3/DM4；DM 解码需要指定环境中的 RosettaSciIO 0.15.0，多数据集/高维需要明确选择，缺依赖或条件时停止。模拟数据只验证软件行为；物相、缺陷与仪器精度未认证。本地预览与核对可用；真实模型发送在此候选停用、未验收。内部试用，未公证或公开发布。',buttons:['关闭']});}}]}
 ];
 async function selectFile(title:string,extensions?:string[]):Promise<string|undefined>{const reply=await dialog.showOpenDialog({title,properties:['openFile'],...(extensions?{filters:[{name:title,extensions}]}:{})});return reply.canceled?undefined:reply.filePaths[0];}
 async function selectOptions(initial:DesktopOptions,forceNew=false):Promise<(DesktopOptions&{workspace:string;python:string})|undefined>{
  let workspace=initial.workspace,source=initial.source,python=initial.python;
- if(forceNew){source=source??await selectFile('打开只读原始图像',['tif','tiff']);if(!source)return;}
+ if(forceNew){source=source??await selectFile('打开只读原始图像',['tif','tiff','dm3','dm4']);if(!source)return;}
  if(!workspace){const chosen=await dialog.showOpenDialog({title:forceNew?'选择分析结果的工作区目录':'选择分析工作区目录',properties:['openDirectory','createDirectory']});if(chosen.canceled)return;workspace=chosen.filePaths[0];}
  if(!workspace)return;
- if(forceNew||!existsSync(path.join(workspace,'researcher-inspector','session.json'))){source=source??await selectFile('打开只读原始图像',['tif','tiff']);if(!source)return;}
- if(!python){python=await selectFile('选择科研 Python 可执行文件',['exe']);if(!python)return;}
+ if(forceNew||!existsSync(path.join(workspace,'researcher-inspector','session.json'))){source=source??await selectFile('打开只读原始图像',['tif','tiff','dm3','dm4']);if(!source)return;}
+ // POSIX Python executables are extensionless or versioned (for example python3.13).
+ if(!python){python=await selectFile('选择科研 Python 可执行文件',process.platform==='win32'?['exe']:undefined);if(!python)return;}
  // Validate native-dialog results through the same caller contract. No path is
  // interpolated into a shell, and selecting a source never overwrites it.
  const checked=readDesktopOptions(['--node',initial.node,'--workspace',workspace,'--python',python,...(source?['--source',source]:[])]);

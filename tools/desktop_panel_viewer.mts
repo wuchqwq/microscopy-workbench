@@ -40,7 +40,7 @@ interface ViewerElectron {
   quit():void;
  };
  BrowserWindow:new (options:unknown)=>AttachedWindow;
- Menu:{setApplicationMenu(menu:null):void};
+ Menu:{buildFromTemplate(template:unknown[]):unknown;setApplicationMenu(menu:unknown):void};
  dialog:{showMessageBox(window:AttachedWindow,options:unknown):Promise<unknown>;showMessageBoxSync(window:AttachedWindow,options:unknown):number};
 }
 
@@ -77,7 +77,11 @@ async function verifyHelper(input:DesktopPanelIdentity,address:ReturnType<typeof
 async function createViewer(input:DesktopPanelIdentity) {
  const address=desktopPanelAddress(input);
  await verifyHelper(input,address);
- Menu.setApplicationMenu(null);
+ // Standard macOS editing and Quit roles only; science remains in the Agent.
+ Menu.setApplicationMenu(process.platform==='darwin'?Menu.buildFromTemplate([
+  {label:'Microscopy Workbench',submenu:[{role:'about'},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{role:'quit'}]},
+  {label:'编辑',submenu:[{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'}]},
+ ]):null);
  const window=new BrowserWindow({title:'Microscopy Workbench',width:1440,height:980,minWidth:720,minHeight:560,show:false,backgroundColor:'#171817',
   // The existing renderer moves the capability into sessionStorage.
   webPreferences:{...desktopSecurityPreferences,devTools:false,partition:'mwb-attached-panel'},
@@ -172,6 +176,14 @@ function start(input:DesktopPanelIdentity):void {
   try{request=desktopPanelIdentity(input.workspace,data);}catch{return;}
   if(request.panelId!==panelId)return;
   void activate(request,true).catch(()=>{});
+ });
+ if(process.platform==='darwin')app.on('activate',()=>{
+  // A Dock click reveals only this verified viewer. It neither creates a Panel
+  // nor replays/acknowledges a model activation request or reloads its renderer.
+  void ready.then(async viewer=>{
+   if(desktopPanelAddress(input).url!==viewer.address.url||!isOwnedDesktopDocument(viewer.window.webContents.getURL(),viewer.address))return;
+   await showDesktopPanelWindow(viewer.window,true,viewer.rendererGone);
+  }).catch(()=>{});
  });
  app.on('window-all-closed',()=>{void ready.then(()=>app.quit(),()=>{});});
  void activate(input,false).catch(()=>{});
