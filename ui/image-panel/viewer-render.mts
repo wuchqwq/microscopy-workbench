@@ -1,13 +1,27 @@
+import {readTone,colorAt} from './display-tone.mjs';
 import type {CanvasContext} from './browser-ports.mjs';
 import type {RenderedMark} from './presentation-contracts.mjs';
 export interface PaintMark extends RenderedMark {readonly arrow_length?:number|null;readonly line_width?:number;readonly arrowhead_size?:number;readonly text?:string;}
 export const markColors: Partial<Record<string,string>> & {cyan:string}={white:'#ffffff',cyan:'#45e8ff',orange:'#ff8c32',amber:'#ffba30',green:'#00e060'};
-export function tonePixels(source: ArrayLike<number>,{oldGamma=1,gamma=1,range,low,high}: {oldGamma?:number;gamma?:number;range?:readonly number[];low?:number;high?:number}={}){
-  const result=new Uint8ClampedArray(source),adjust=range&&Number.isFinite(low)&&Number.isFinite(high)&&high!>low!;
-  if(oldGamma===gamma&&!adjust)return result;
-  // This cache runs only after display input changes, never while dragging.
-  const lut=new Uint8ClampedArray(256);for(let v=0;v<256;v++){let n=Math.pow(v/255,oldGamma);if(adjust)n=Math.max(0,Math.min(1,(range[0]+n*(range[1]-range[0])-low!)/(high!-low!)));lut[v]=255*Math.pow(n,1/gamma);}
-  for(let i=0;i<result.length;i+=4){result[i]=lut[result[i]];result[i+1]=lut[result[i+1]];result[i+2]=lut[result[i+2]];}return result;
+export function tonePixels(source:ArrayLike<number>,{oldGamma=1,gamma=1,range,low,high,oldTone,tone}: {oldGamma?:number;gamma?:number;range?:readonly number[];low?:number;high?:number;oldTone?:unknown;tone?:unknown}={}){
+ const result=new Uint8ClampedArray(source),before=readTone(oldTone),after=readTone(tone),adjust=range&&Number.isFinite(low)&&Number.isFinite(high)&&high!>low!&&(low!==range[0]||high!==range[1]);
+ if(oldGamma===gamma&&!adjust&&JSON.stringify(before)===JSON.stringify(after))return result;
+ if(before.colormap==='gray'&&after.colormap==='gray'){
+  const lut=new Uint8ClampedArray(256);
+  for(let v=0;v<256;v++){let n=Math.pow(before.reverse?1-v/255:v/255,oldGamma);n=before.contrast===0?.5:(n-.5-before.brightness)/before.contrast+.5;if(adjust)n=Math.max(0,Math.min(1,(range![0]+n*(range![1]-range![0])-low!)/(high!-low!)));n=Math.pow(Math.max(0,Math.min(1,(n-.5)*after.contrast+.5+after.brightness)),1/gamma);lut[v]=255*(after.reverse?1-n:n);}
+  for(let i=0;i<result.length;i+=4)for(let c=0;c<3;c++)result[i+c]=lut[result[i+c]];return result;
+ }
+ const colors=Array.from({length:256},(_,i)=>colorAt(i/255,before)),inverse=new Map<number,number>();
+ for(let i=0;i<result.length;i+=4){
+  const key=(result[i]<<16)|(result[i+1]<<8)|result[i+2];let raw=inverse.get(key);
+  if(raw===undefined){let n=result[i]/255;
+   if(before.colormap!=='gray'){let best=Infinity;for(let v=0;v<256;v++){const d=colors[v].reduce((sum,c,k)=>sum+(c-result[i+k])**2,0);if(d<best){best=d;n=v/255;}}}else if(before.reverse)n=1-n;
+   n=Math.pow(n,oldGamma);raw=before.contrast===0?.5:(n-.5-before.brightness)/before.contrast+.5;inverse.set(key,raw);
+  }
+  let n=raw;if(adjust)n=Math.max(0,Math.min(1,(range![0]+n*(range![1]-range![0])-low!)/(high!-low!)));
+  n=Math.pow(Math.max(0,Math.min(1,(n-.5)*after.contrast+.5+after.brightness)),1/gamma);
+  const rgb=colorAt(n,after);for(let k=0;k<3;k++)result[i+k]=Math.floor(rgb[k]+.5);
+ }return result;
 }
 export function drawMark(ctx: CanvasContext,mark: PaintMark,{selected=false,scale=1,draft=false}: {selected?:boolean;scale?:number;draft?:boolean}={}){
  if(mark.status==='retracted'||mark.visibility==='outside_view')return;

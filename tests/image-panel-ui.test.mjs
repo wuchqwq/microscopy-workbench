@@ -12,6 +12,7 @@ import {readFileSync} from 'node:fs';
 import * as coordinates from '../ui/image-panel/coordinates.mjs';
 import * as userWorkflow from '../ui/image-panel/user-workflow.mjs';
 import * as viewerState from '../ui/image-panel/viewer-state.mjs';
+import * as displayTone from '../ui/image-panel/display-tone.mjs';
 import * as viewerRender from '../ui/image-panel/viewer-render.mjs';
 import * as annotationPresentation from '../ui/image-panel/annotation-presentation.mjs';
 import * as figureExport from '../ui/image-panel/figure-export.mjs';
@@ -126,9 +127,9 @@ async function harness(initial=fixture(),{windowStates=[],panelGeometry=false,st
  }
  const bodyClasses=new Set(),body={attributes:{},setAttribute(key,value){this.attributes[key]=value;},style:{setProperty(key,value){this[key]=value;}},classList:{add:(...keys)=>keys.forEach(k=>bodyClasses.add(k)),remove:(...keys)=>keys.forEach(k=>bodyClasses.delete(k)),contains:key=>bodyClasses.has(key),toggle:(key,on)=>{const next=on??!bodyClasses.has(key);if(next)bodyClasses.add(key);else bodyClasses.delete(key);return next;}}};
  const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
- $('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
+ $('brightness').value='0';$('contrast').value='1';$('colormap').value='gray';$('tone-reverse').checked=false;$('zoom').value='1';$('mode').value='line';$('status').value='hypothesized';$('fft-window').value='hann';$('fft-mean').checked=true;
  const math=Object.create(Math);math.pow=(a,b)=>{stats.pow++;return Math.pow(a,b);};
- const sandbox={createJointResearchDialog,ResearchContinuation,CifCandidatesUI,installSidebarControls,...userWorkflow,...coordinates,...viewerState,...viewerRender,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,ResearchLeadsUI,PublicResearchUI,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,SourceProofPanel,SelectionFftRelations,LiveFftPreview,LiveFftInputChanged,readPanelActionPreflight,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,measurementReadContext,referenceFromStatistics,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
+ const sandbox={createJointResearchDialog,ResearchContinuation,CifCandidatesUI,installSidebarControls,...userWorkflow,...coordinates,...viewerState,...viewerRender,...displayTone,...annotationPresentation,...figureExport,...observationContract,...roiEditing,...knownLength,renderSequenceEvidence,renderDomainEvidence,ResearchWorkspace,ResearchLeadsUI,PublicResearchUI,WorkspaceControls,RoiComparisonPanel,settleWorkspaceWindows,ExecutionHistoryPanel,SourceProofPanel,SelectionFftRelations,LiveFftPreview,LiveFftInputChanged,readPanelActionPreflight,WindowWorkspace,readWindowCollection,readWindowCamera,readWindowViewContext,requiresMeasurementJump,measurementReadContext,referenceFromStatistics,console,Math:math,Uint8ClampedArray,performance,crypto:{randomUUID},
   workbenchDesktop:{...(desktopReview?{reviewImage:desktopReview}:{}),...(desktopStop?{stopImageReview:desktopStop}:{}),...(desktopOpen?{openImage:desktopOpen}:{}),onAction(handler){desktopAction=handler;}},
   addEventListener:(name,fn)=>windowListeners.set(name,fn),
   WindowWorkspace:class extends WindowWorkspace{noteCameraIntent(){cameraIntentCount++;super.noteCameraIntent();}},
@@ -219,7 +220,7 @@ if(relationRead&&(url.startsWith('/api/roi-handoff?')||url==='/api/execution-his
   }
  };
  if(relationRead||editorTimers){sandbox.setTimeout=(fn,delay)=>{const id=++relationTimerId;if(delay===180)relationTimers.set(id,fn);else if(editorTimers&&delay===350)fieldTimers.set(id,fn);else if(delay<1000)Promise.resolve().then(fn);return id;};sandbox.clearTimeout=id=>{relationTimers.delete(id);fieldTimers.delete(id);};}
- const renderSource=readFileSync(new URL('../ui/image-panel/viewer-render.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
+ const renderSource=readFileSync(new URL('../ui/image-panel/viewer-render.mjs',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export /gm,'');
  const script=renderSource+'\n'+source.replace(/^import .*from '\.\/[^']+\.mjs';\r?\n/gm,'')
   .replace('refresh().then(','globalThis.ready=refresh().then(')
   .replace('void pollPublicResearch();','globalThis.publicResearchReady=publicResearchUI.poll();')
@@ -2518,5 +2519,66 @@ test('startup status height is synchronized before saved camera restore while un
   const f=windowActivationFixture(),camera={scale:12.697916666666666,center_image_xy:[20.029532403609515,24.413453650533224]},panels={side:'properties',settings:false,results:false};Object.assign(f.source.window_collection.windows[0].view_context,{camera,ui_panels:panels});if(unresolved)f.source.last_operation={action:'fft',state:'unknown',request_id:'original-unresolved'};
   const h=await harness(f.source,{windowStates:[f.target],panelGeometry:true,startupStatusGeometry:true});await h.finishWindows();const height=unresolved?489.5:500;assert.equal(h.$('draft-status').hidden,!unresolved);assert.ok(Math.abs(h.inspect().view.y-(height/2-camera.center_image_xy[1]*camera.scale))<1e-9,'saved camera must use the final status-row height');assert.equal(h.inspect().view.scale,camera.scale);assert.equal(h.calls.length,0);
   const restored=h.server().window_collection.windows[0].view_context.camera;assert.ok(Math.abs(restored.center_image_xy[1]-camera.center_image_xy[1])<1e-12,'startup metadata must not accumulate a status-row offset');
+ }
+});
+
+test('display tone: rapid local changes are request-free, custom dialog invalid/cancel atomic, reset and undo preserve geometry',async()=>{
+ const h=await harness(savedRectangleFixture());await h.settle();const original=h.inspect().state.object,baseline=h.calls.length;
+ for(const v of ['0.1','0.2','0.3']){h.$('brightness').value=v;h.$('brightness').oninput();}
+ h.$('contrast').value='1.5';h.$('contrast').oninput();h.$('colormap').value='viridis';h.$('colormap').oninput();await h.settle();
+ assert.equal(h.calls.length,baseline);assert.equal(h.inspect().dirty,true);assert.deepEqual(h.inspect().state.object,original);
+ await h.click('tone-custom');h.$('tone-low-hex').value='invalid';await h.click('tone-confirm');assert.equal(h.$('tone-dialog').open,true);assert.match(h.$('tone-error').textContent,/无效/);assert.equal(h.$('colormap').value,'viridis');
+ await h.click('tone-cancel');assert.equal(h.$('tone-dialog').open,false);assert.equal(h.$('colormap').value,'viridis');
+ await h.click('tone-custom');h.$('tone-low-hex').value='#123456';h.$('tone-high-hex').value='#ABCDEF';await h.click('tone-confirm');assert.equal(h.$('colormap').value,'custom');assert.equal(h.$('tone-dialog').open,false);
+ h.$('gamma').value='2.345678901234567';h.$('gamma').oninput();
+ await h.click('reset-display');assert.equal(Number(h.$('brightness').value),0);assert.equal(Number(h.$('contrast').value),1);assert.equal(h.$('colormap').value,'gray');assert.deepEqual(h.inspect().state.object,original);assert.equal(h.$('gamma-label').textContent,'1');assert.equal(h.$('gamma-label').title,'1');
+});
+test('display tone: parked view restores the exact display recipe',async()=>{
+ const f=windowActivationFixture();f.source.workspace_analysis={schema_version:1,status:'clean',working_revision:1,save_id:'saved-a',saved_revision:1,recovery_available:false,unresolved_request_id:null};const h=await harness(f.source,{windowStates:[f.target]});await h.finishWindows();
+ h.$('brightness').value='0.25';h.$('brightness').oninput();h.$('colormap').value='magma';h.$('colormap').oninput();
+ await h.activateWindow(f.targetWindow);await h.activateWindow(f.sourceWindow);assert.equal(Number(h.$('brightness').value),.25);assert.equal(h.$('colormap').value,'magma');
+});
+test('display tone: late decoded state cannot overwrite a newer local palette/brightness draft',async()=>{
+ const h=await harness();let release;h.delayDecode(new Promise(resolve=>release=resolve));const next=fixture();next.object.object_id='c'.repeat(32);h.setServer(next);const reading=h.click('reload');await h.settle();
+ h.$('brightness').value='0.35';h.$('brightness').oninput();h.$('colormap').value='cividis';h.$('colormap').oninput();release();await reading;
+ assert.equal(Number(h.$('brightness').value),.35);assert.equal(h.$('colormap').value,'cividis');assert.equal(h.inspect().state.object.object_id,viewId);assert.equal(h.inspect().dirty,true);assert.equal(h.calls.length,0);
+});
+
+test('display tone: loading full-precision saved values does not round the draft recipe',async()=>{
+ const f=fixture();f.object.display.tone={...displayTone.defaultTone,brightness:.123456789012345,contrast:1.23456789012345};f.object.display.gamma=.123456789012345;
+ const h=await harness(f);assert.equal(Number(h.$('brightness').value),.123456789012345);assert.equal(Number(h.$('contrast').value),1.23456789012345);assert.equal(Number(h.$('gamma').value),.123456789012345);assert.equal(h.inspect().dirty,false);assert.equal(h.calls.length,0);
+});
+
+test('display tone: visual three-point dialog is staged, position persists, cancel and reset do not touch science',async()=>{
+ const h=await harness(fixture()),original=copy(h.inspect().state.object);await h.click('tone-custom');
+ h.$('tone-three').checked=true;h.$('tone-three').onchange();
+ h.$('tone-low-picker').value='#112233';h.$('tone-low-picker').oninput();
+ h.$('tone-mid-picker').value='#ff0000';h.$('tone-mid-picker').oninput();
+ h.$('tone-high-picker').value='#fedcba';h.$('tone-high-picker').oninput();
+ h.$('tone-mid-position').value='.27';h.$('tone-mid-position').oninput();
+ assert.match(h.$('tone-gradient').style.background,/#ff0000 27%/);assert.equal(h.$('tone-low-hex').value,'#112233');
+ assert.equal(h.calls.length,0);assert.equal(h.$('colormap').value,'gray');
+ await h.click('tone-cancel');assert.equal(h.$('colormap').value,'gray');
+ await h.click('tone-custom');h.$('tone-three').checked=true;h.$('tone-three').onchange();h.$('tone-mid-position').value='.27';h.$('tone-mid-position').oninput();await h.click('tone-confirm');
+ await h.click('tone-custom');assert.equal(h.$('tone-three').checked,true);assert.equal(Number(h.$('tone-mid-position').value),.27);
+ await h.click('tone-reset');assert.equal(h.$('tone-three').checked,false);assert.equal(h.$('tone-mid-position').hidden,true);assert.equal(h.$('tone-mid-picker').disabled,true);await h.click('tone-cancel');
+ assert.deepEqual(h.inspect().state.object,original);assert.equal(h.calls.length,0);
+});
+
+test('display tone: saved extreme middle stops survive native range sanitization, confirm, save and fresh UI load',async()=>{
+ const html=readFileSync(new URL('../ui/image-panel/index.html',import.meta.url),'utf8'),tag=html.match(/<input id="tone-mid-position"[^>]*>/)[0];
+ const min=Number(tag.match(/min="([^"]+)"/)[1]),max=Number(tag.match(/max="([^"]+)"/)[1]);
+ // The fixture's normal Element does not implement HTML range sanitization.
+ // Model that browser behavior here using the actual packaged bounds, so the
+ // old .01/.99 DOM fails before a no-edit confirmation can overwrite a recipe.
+ function nativeRange(h){let v='0.5';Object.defineProperty(h.$('tone-mid-position'),'value',{configurable:true,get:()=>v,set:x=>{v=String(Math.max(min,Math.min(max,Number(x))));}});}
+ for(const mid of [.001,.999]){
+  const initial=questionWorkspaceFixture(),tone={brightness:0,contrast:1,colormap:'custom',reverse:false,colors:['#102040','#f04010','#f8f0a0'],positions:[0,mid,1]};initial.object.display={...initial.object.display,tone};
+  const h=await harness(initial);nativeRange(h);await h.finishWindows();const original=copy(h.inspect().state.object);await h.click('tone-custom');assert.equal(Number(h.$('tone-mid-position').value),mid);
+  await h.click('tone-cancel');await h.click('tone-custom');assert.equal(Number(h.$('tone-mid-position').value),mid);await h.click('tone-confirm');
+  assert.deepEqual(h.inspect().state.object,original);assert.equal(h.calls.length,0,'no scientific redraw from merely confirming identical saved tone');
+  const saved=await h.nativeAction('save');assert.equal(saved.ok,true,saved.error);await h.finishWindows();assert.equal(h.calls.length,0);assert.equal(h.server().object.display.tone.positions[1],mid);
+  const fresh=await harness(copy(h.server()));nativeRange(fresh);await fresh.finishWindows();await fresh.click('tone-custom');assert.equal(Number(fresh.$('tone-mid-position').value),mid);await fresh.click('tone-confirm');
+  assert.equal(fresh.calls.length,0);assert.equal(fresh.server().object.display.tone.positions[1],mid);
  }
 });

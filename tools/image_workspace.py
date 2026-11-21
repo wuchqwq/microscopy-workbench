@@ -24,6 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 import tifffile
 
 if __package__:
+    from . import image_display
     from . import preview_admission
     from . import image_observation_contract as observation_contract
     from . import result_semantics
@@ -51,6 +52,7 @@ if __package__:
     from . import image_discovery as discovery
     from . import image_source_proof as source_proof
 else:
+    import image_display
     import preview_admission
     import image_observation_contract as observation_contract
     import result_semantics
@@ -109,8 +111,8 @@ FIELDS = {
     "import_capture": {"source_path"},
     "import_diffraction_roi": diffraction_roi.FIELDS,
     "preview_acknowledge": {"preview_request_id", "object_id"},
-    "view": {"resolved_preview", "object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar", "component"},
-    "compare": {"object_ids", "rect", "display_range", "gamma", "max_size"},
+    "view": {"tone", "resolved_preview", "object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar", "component"},
+    "compare": {"tone", "object_ids", "rect", "display_range", "gamma", "max_size"},
     "fft": {"object_id", "rect", "window", "subtract_mean", "max_size"},
     "peaks": {"object_id", "max_peaks", "min_separation_bins", "exclude_dc_radius_bins", "threshold_rel", "refinement", "max_size"},
     "annotate": {"object_id", "annotations", "updates"}, "context": {"object_id", "metadata"},
@@ -317,7 +319,7 @@ def display_options(request, values, inherited=None):
         low, high = map(float, supplied)
         range_source = "explicit"
     return {"display_range": [low, high], "range_source": range_source,
-            "gamma": float(gamma), "max_size": maximum, "upscale": upscale, "interpolation": interpolation, "constant_range": low == high,
+            "gamma": float(gamma), "tone": image_display.tone_options(request.get("tone", inherited.get("tone"))), "max_size": maximum, "upscale": upscale, "interpolation": interpolation, "constant_range": low == high,
             "display_only": True, "quantitative": False,
             "resampling": "Pillow {} display resizing; optional enlargement adds no measured detail; scientific array unchanged".format(interpolation.upper())}
 
@@ -376,8 +378,7 @@ def render(values, settings, bound):
             scaled = (clipped / scale - low / scale) / (high / scale - low / scale)
         need(np.isfinite(scaled).all(), "Display normalization exceeds finite range")
         scaled = np.clip(scaled, 0, 1)
-    scaled = np.power(scaled, 1.0 / settings["gamma"])
-    pixels = np.floor(scaled * 255 + 0.5).astype(np.uint8)
+    pixels = image_display.colorize(scaled, settings["gamma"], settings.get("tone"))
     image = Image.fromarray(pixels)
     sampling = Image.Resampling.NEAREST if settings.get("interpolation") == "nearest" else Image.Resampling.LANCZOS
     if settings.get("upscale"):

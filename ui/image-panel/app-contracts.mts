@@ -7,7 +7,7 @@ import type {WindowCollection} from './window-workspace.mjs';
 import type {RectangleHandle} from './roi-editing.mjs';
 export interface AppAnchor extends ScientificAnchor {readonly coordinate_space:ScientificCoordinateSpace;readonly coordinates:readonly number[];}
 export interface AppMark extends FigureMark {readonly kind:SelectionKind;readonly anchor?:AppAnchor;}
-export interface AppDisplay extends Readonly<Record<string,unknown>> {readonly gamma?:number;readonly display_range?:readonly number[];readonly spectrum_axes?:boolean;readonly scale_bar?:boolean;readonly component?:string;}
+export interface AppDisplay extends Readonly<Record<string,unknown>> {readonly tone?:import('./display-tone.mjs').ToneRecipe;readonly gamma?:number;readonly display_range?:readonly number[];readonly spectrum_axes?:boolean;readonly scale_bar?:boolean;readonly component?:string;}
 export interface AppCalibration extends CalibrationView {readonly scope?:string;readonly source_type?:string;readonly uncertainty_status?:unknown;readonly x?:unknown;readonly y?:unknown;readonly unit?:unknown;}
 export interface AppObject extends FigureObject {readonly diffraction_roi?:Readonly<Record<string,unknown>> & {readonly pattern_count?:number;readonly scan_roi_y0_y1_x0_x1_exclusive?:readonly number[]};readonly user_context?:Readonly<Record<string,unknown>>;readonly annotations:readonly AppMark[];readonly panels:readonly DisplayPanel[];readonly display?:AppDisplay;readonly scale_bar?:import('./figure-contracts.mjs').ScaleBarRecord;readonly xy_calibration?:AppCalibration;readonly calibration_record?:AppCalibration;readonly calibration?:AppCalibration;}
 export interface AppOperation extends NumericReply,Omit<MeasurementRecord,'scientific_grid_identity'> {readonly annotation_id?:string;readonly annotation_ids?:readonly string[];readonly action?:string;readonly output_dir?:string;readonly state?:string;}
@@ -35,7 +35,7 @@ export interface AppState extends Omit<FigureState,'object'|'effective_display'>
 }
 type EditableSelection<S extends WireSelection> = S extends WireSelection ? Omit<S,'coordinates'>&{coordinates:readonly number[];rendered?:readonly number[]}:never;
 export type AppSelection=EditableSelection<WireSelection>;
-export interface DisplayDraft {gamma:number;low:string;high:string;axes:boolean;scale:boolean;}
+export interface DisplayDraft {tone?:import('./display-tone.mjs').ToneRecipe;gamma:number;low:string;high:string;axes:boolean;scale:boolean;}
 export interface AnnotationEdit {annotation_id:string|undefined;coordinates?:readonly number[];text?:unknown;color?:string;status?:string;presentation?:AnnotationPresentation;presentation_replace?:boolean;note?:string;[key:string]:unknown;}
 export interface CompleteAnnotationEdit extends AnnotationEdit {coordinates:readonly number[];presentation:AnnotationPresentation;text:unknown;}
 export interface QueuedEdit {update:CompleteAnnotationEdit;sequence:number;geometryRevision:number;geometryChanged:boolean;numericLabel:AnnotationLabel|null|undefined;}

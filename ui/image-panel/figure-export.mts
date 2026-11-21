@@ -1,3 +1,4 @@
+import {readTone,defaultTone} from './display-tone.mjs';
 import type {FigureState,FigurePreferences,FigureRecipe,ScaleBarRecord} from './figure-contracts.mjs';
 import type {DisplayPanel,CalibrationView} from './presentation-contracts.mjs';
 import type {BrowserDocument,BrowserElement,BrowserBlobConstructor,BrowserURL,BrowserImageConstructor,BrowserTextEncoderConstructor,BlobPort} from './browser-ports.mjs';
@@ -21,7 +22,8 @@ export function figureDisplayParameters(input:unknown,panelInput:unknown){
  if(!display||typeof display!=='object'||Array.isArray(display)||!Array.isArray(panels)||!panels!.length)bad();
  const {gamma,display_range:range,max_size:maximum,upscale,interpolation}=display!;
  if(!Number.isFinite(gamma)||gamma!<.05||gamma!>20||!Array.isArray(range)||range.length!==2||!range.every(Number.isFinite)||range[0]>range[1]||!Number.isSafeInteger(maximum)||maximum!<32||maximum!>1024||typeof upscale!=='boolean'||!['nearest','lanczos'].includes(interpolation as string))bad();
- const params:DisplayParameters={gamma:gamma!,display_range:copy(range) as number[],max_size:maximum!,upscale:upscale!,interpolation:interpolation!},spectral=panels!.every(p=>p.domain==='frequency');
+ const tone=display!.tone===undefined?null:readTone(display!.tone);
+ const params:DisplayParameters={...(tone&&JSON.stringify(tone)!==JSON.stringify(defaultTone)?{tone}:{}),gamma:gamma!,display_range:copy(range) as number[],max_size:maximum!,upscale:upscale!,interpolation:interpolation!},spectral=panels!.every(p=>p.domain==='frequency');
  if(panels!.some(p=>p.domain==='frequency')&&!spectral)bad();
  if(spectral){
   if(display!.component!==undefined)bad();
