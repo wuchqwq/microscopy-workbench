@@ -11,6 +11,10 @@ import {assertOwnedPanelStopped,readOwnedPanelCheckpoint,readOwnedPanelConnectio
 import {withWorkspaceMetadataGate} from './workspace_metadata_gate.mjs';
 import {ordinaryWorkspaceMetadataDirectory,ordinaryWorkspaceMetadataTarget} from './workspace_metadata_paths.mjs';
 
+export function supportsDesktopPanel(platform:NodeJS.Platform=process.platform):boolean {
+ return platform==='win32'||platform==='darwin';
+}
+
 export interface DesktopPanelIdentity {
  workspace:string;
  panelId:string;
@@ -43,7 +47,7 @@ export async function showDesktopPanelWindow(window:DesktopPanelWindow,reused:bo
  if(window.isMinimized())window.restore();
  if(!window.isVisible())window.show();
  window.focus();
- // Windows can decline foreground focus. Observe the result after the event loop can apply it.
+ // The OS can decline foreground focus. Report the observed result, not a promise.
  if(!window.isFocused())await delay(300);
  if(window.isDestroyed()||!window.isVisible())return {status:'refused',reason:'viewer_closed'};
  if(rendererGone())return {status:'refused',reason:'renderer_gone'};
@@ -158,7 +162,7 @@ export async function activateDesktopPanel(input:DesktopPanelActivationInput):Pr
  const existing=readDesktopPanelActivation(input);
  if(existing)return existing;
  try{
-  if(process.platform!=='win32')throw new Error('Desktop Panel activation is available on Windows');
+  if(!supportsDesktopPanel())throw new Error('Desktop Panel activation is available on Windows and macOS');
   const owned=desktopPanelAddress(input);
   if(owned.url!==panelAddress(input.url).url)throw new Error('Desktop address changed before activation');
   assertDesktopPanelIntent(input);

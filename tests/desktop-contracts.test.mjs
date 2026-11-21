@@ -175,3 +175,58 @@ test('timed-out close queries only its original receipt and resumes verified dra
 test('late successful close receipt survives transport timeout and owned process exit',async()=>{
  const h=await discardClientHarness(),original=h.client.close(17),rejected=assert.rejects(original,/本次退出仍在等待/);try{await h.settle();[...h.timers.values()][0].callback();await rejected;h.reply({id:1,ok:true,state:{workspace_analysis:desktopClean}});h.finish(0);assert.equal(await h.client.resumeClose(),true);assert.deepEqual(h.commands.map(c=>c.action),['close']);}finally{h.finish();}
 });
+
+// Native Python picker wiring uses an Electron port, not a Cocoa or scientific runtime test.
+async function pythonSelectionFixture(platform,pythonName,{cancel=false,explicit=false}={}){
+ const directory=mkdtempSync(path.join(tmpdir(),'mwb Python 中文 '));
+ try{
+  const python=path.join(directory,pythonName),source=path.join(directory,'只读 原图.tiff');
+  writeFileSync(python,'non-executed Python selection fixture');writeFileSync(source,'non-executed image fixture');
+  const app=new EventEmitter(),dialogs=[],backends=[],errors=[];let quits=0;
+  Object.assign(app,{setName(){},whenReady:async()=>{},quit(){quits++;},exit(){}});
+  class Backend{constructor(options){backends.push(options);this.ready=new Promise(()=>{});}abnormalDetach(){}}
+  const electron={app,ipcMain:new EventEmitter(),BrowserWindow:class{constructor(){assert.fail('No native window is created by this contract fixture');}},Menu:{buildFromTemplate:items=>items,setApplicationMenu(){}},dialog:{async showOpenDialog(options){dialogs.push(options);return {canceled:cancel,filePaths:cancel?[]:[python]};},showErrorBox(title,message){errors.push({title,message});}}};
+  const text=readFileSync(new URL('../tools/desktop_main.mjs',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/const electronModule = 'electron', electron = await import\(electronModule\);/,'const electron = __electron;').replaceAll('import.meta.url',JSON.stringify(new URL('../tools/desktop_main.mjs',import.meta.url).href));
+  const argv=['node','desktop_main.mjs','--node',process.execPath,'--workspace',directory,'--source',source,...(explicit?['--python',python]:[])];
+  const context=vm.createContext({...desktopContracts,DesktopBackendClient:Backend,path,fileURLToPath,URL,existsSync,mkdirSync,__electron:electron,process:{env:{},argv,platform,stdout:{write(){}},on(){}},setTimeout,clearTimeout,AggregateError});
+  new vm.Script(text).runInContext(context);
+  for(let i=0;i<30;i++)await Promise.resolve();
+  assert.deepEqual(errors,[]);
+  return {dialogs,backends,quits,python,source};
+ }finally{rmSync(directory,{recursive:true,force:true});}
+}
+
+for(const [platform,name] of [['darwin','python'],['darwin','python3.13'],['linux','python3'],['win32','python.exe']]){
+ test(`${platform} native Python selection supports ${name} and preserves the selected path`,async()=>{
+  const h=await pythonSelectionFixture(platform,name);
+  assert.equal(h.dialogs.length,1);
+  const options=h.dialogs[0];assert.equal(options.title,'选择科研 Python 可执行文件');assert.equal(JSON.stringify(options.properties),JSON.stringify(['openFile']));
+  if(platform==='win32')assert.equal(JSON.stringify(options.filters),JSON.stringify([{name:'选择科研 Python 可执行文件',extensions:['exe']}]));
+  else assert.equal(Object.hasOwn(options,'filters'),false,'POSIX Python executables do not have a Windows .exe extension');
+  assert.equal(h.backends.length,1);assert.equal(h.backends[0].python,h.python);assert.equal(h.backends[0].source,h.source);assert.equal(h.quits,0);
+ });
+}
+for(const platform of ['darwin','win32']){
+ test(`${platform} cancelling Python selection exits without starting a backend`,async()=>{
+  const h=await pythonSelectionFixture(platform,'python',{cancel:true});assert.equal(h.dialogs.length,1);assert.equal(h.backends.length,0);assert.equal(h.quits,1);
+ });
+}
+test('an explicitly supplied Mac Python bypasses the native selector',async()=>{
+ const h=await pythonSelectionFixture('darwin','python3.13',{explicit:true});assert.equal(h.dialogs.length,0);assert.equal(h.backends.length,1);assert.equal(h.backends[0].python,h.python);
+});
+
+test('native original-image picker exposes TIFF and actual DM3/DM4 without changing explicit runtime',async()=>{
+ const directory=mkdtempSync(path.join(tmpdir(),'mwb DM picker '));
+ try{
+  const python=path.join(directory,'python');writeFileSync(python,'fixture');
+  const app=new EventEmitter(),dialogs=[],config={node:process.execPath,workspace:directory,python,source:path.join(directory,'first.tiff')};writeFileSync(config.source,'fixture');
+  Object.assign(app,{setName(){},whenReady:async()=>{},quit(){},exit(){}});
+  class Backend{constructor(){this.ready=new Promise(()=>{});}abnormalDetach(){}}
+  let picked=config.source;
+  const electron={app,ipcMain:new EventEmitter(),BrowserWindow:class{},Menu:{buildFromTemplate:x=>x,setApplicationMenu(){}},dialog:{async showOpenDialog(options){dialogs.push(options);return {canceled:false,filePaths:[picked]};},showErrorBox(){assert.fail('unexpected startup error');}}};
+  const text=readFileSync(new URL('../tools/desktop_main.mjs',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/const electronModule = 'electron', electron = await import\(electronModule\);/,'const electron = __electron;').replaceAll('import.meta.url',JSON.stringify(new URL('../tools/desktop_main.mjs',import.meta.url).href));
+  const context=vm.createContext({...desktopContracts,DesktopBackendClient:Backend,path,fileURLToPath,URL,existsSync,mkdirSync,__electron:electron,process:{env:{},argv:['node','desktop_main.mjs','--node',config.node,'--workspace',directory,'--source',config.source,'--python',python],platform:'darwin',stdout:{write(){}},on(){}},setTimeout,clearTimeout,AggregateError});
+  new vm.Script(text+';globalThis.selectForTest=selectOptions;').runInContext(context);for(let i=0;i<30;i++)await Promise.resolve();
+  for(const ext of ['tiff','dm3','dm4']){picked=path.join(directory,'public.'+ext);writeFileSync(picked,'fixture');const result=await context.selectForTest({...config,source:undefined},true);assert.equal(result.source,picked);assert.equal(result.python,python);assert.equal(JSON.stringify(dialogs.at(-1).filters[0].extensions),JSON.stringify(['tif','tiff','dm3','dm4']));}
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});

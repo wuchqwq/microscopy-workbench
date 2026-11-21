@@ -13,7 +13,7 @@ const recipes:Readonly<Record<string,PanelRecipe>> = {
     inputs:['PanelRef:explicit owned live helper generation','OperationReceipt:pre-saved activation request_id'],
     outputs:['NativeViewerReceipt:original show and observed focus outcome for the same owned Panel'],
     kind:'owned-panel-native-activation',requestId:'required',
-    gates:['Explicit Windows desktop opt-in, local Electron runtime and exact owned connection','Attach only, with no provider launch or view mutation'],
+    gates:['Explicit Windows/macOS desktop opt-in, local Electron runtime and exact owned connection','Attach only, with no provider launch or view mutation'],
     serialization:'Exclusive Panel request intent and native singleton scoped to the logical Panel',
     recovery:{method:'Call with exact original arguments to read its original activation receipt. No viewer is relaunched.',tool:'image_panel_activate',idField:'request_id',scope:'Exact workspace Panel registry and original helper generation'},
   },

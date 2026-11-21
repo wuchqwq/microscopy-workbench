@@ -1,4 +1,4 @@
-// Opt-in Windows acceptance. Starts only an isolated microscopy-core stdio peer.
+// Opt-in Windows/macOS acceptance. Starts only an isolated microscopy-core stdio peer.
 // The operator uses the displayed native window for the ROI edit and save.
 import assert from 'node:assert/strict';
 import {spawn, spawnSync} from 'node:child_process';
@@ -15,7 +15,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const server = path.join(root, 'dist', 'server.mjs');
 const output = process.env.MICROSCOPY_SMOKE_OUTPUT;
 const python = process.env.MICROSCOPY_PYTHON;
-assert.equal(process.platform, 'win32');
+assert.ok(['win32','darwin'].includes(process.platform), 'Native smoke supports Windows/macOS only');
 assert.ok(output && path.isAbsolute(output), 'Use a fresh absolute MICROSCOPY_SMOKE_OUTPUT directory');
 assert.ok(python && path.isAbsolute(python), 'Use an absolute MICROSCOPY_PYTHON executable');
 mkdirSync(output, {recursive: false});
@@ -29,9 +29,9 @@ const snapshot = directory => Object.fromEntries(readdirSync(directory).map(name
   const file = path.join(directory, name);
   return [file, hash(file)];
 }));
-const report = {scope: 'Windows, actual microscopy-core stdio, native Panel, isolated synthetic TIFF',
+const report = {scope: process.platform+' actual microscopy-core stdio, native Panel, isolated synthetic TIFF',
   source: 'Synthetic uint16, two frames, no calibration or material claim',
-  actual_codex_catalog: 'NOT_TESTED', actual_model_tool_selection: 'NOT_TESTED', human_usability: 'NOT_TESTED', macOS: 'NOT_TESTED', checks: []};
+  actual_codex_catalog: 'NOT_TESTED', actual_model_tool_selection: 'NOT_TESTED', human_usability: 'NOT_TESTED', other_platforms: 'NOT_TESTED', checks: []};
 const checked = detail => {
   report.checks.push(detail);
   console.log(detail);
@@ -145,7 +145,7 @@ class StdioPeer {
 const roi = {annotation_id: 'initial-roi', kind: 'rectangle', status: 'hypothesized', text: 'Initial synthetic ROI',
   purpose: 'resumable_observation', selection_origin: 'agent', coordinate_space: 'source_pixels', coordinates: [8, 8, 30, 30],
   note: 'Public synthetic ROI supplied by the harness. Review a different rectangle for continuation.'};
-const analysis_id = 'windows-smoke-analysis';
+const analysis_id = 'native-smoke-analysis';
 let peer;
 try {
   const fixture = 'import sys,numpy as np,tifffile;y,x=np.indices((64,80));a=(17*y+3*x+128*((x//8+y//8)%2)).astype(np.uint16);tifffile.imwrite(sys.argv[1],np.stack((a,a+1000)),photometric="minisblack",metadata=None)';
@@ -153,7 +153,7 @@ try {
   assert.equal(generated.status, 0, generated.stderr || generated.error?.message);
   report.source_sha256 = hash(source);
   peer = new StdioPeer();
-  const init = await peer.rpc('initialize', {protocolVersion: '2024-11-05', capabilities: {}, clientInfo: {name: 'isolated-windows-smoke', version: '1'}});
+  const init = await peer.rpc('initialize', {protocolVersion: '2024-11-05', capabilities: {}, clientInfo: {name: 'isolated-native-smoke', version: '1'}});
   assert.equal(init.serverInfo.name, 'microscopy-core');
   peer.child.stdin.write(JSON.stringify({jsonrpc: '2.0', method: 'notifications/initialized'}) + '\n');
   const catalog = (await peer.rpc('tools/list', {})).tools.map(tool => tool.name);
@@ -203,7 +203,7 @@ try {
   report.activation = {activation, recovered, focused};
   checked('PASS saved frame/ROI opened in one native Panel; same activation recovered and a new focus request reused the viewer');
 
-  console.log('GUI_READY: use R, drag a second ROI away from the initial ROI, then press Ctrl+S. Waiting up to five minutes.');
+  console.log('GUI_READY: use R, drag a second ROI away from the initial ROI, then use '+(process.platform==='darwin'?'Cmd+S':'Ctrl+S')+'. Waiting up to five minutes.');
   let current;
   const deadline = Date.now() + 300000;
   while (Date.now() < deadline) {
