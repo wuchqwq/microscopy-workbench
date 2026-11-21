@@ -1,3 +1,4 @@
+import {readTone} from '../ui/image-panel/display-tone.mjs';
 import {PanelResearchStages} from '../lib/panel_research_stages.mjs';
 import {listPanelResearchCatalog} from '../lib/panel_research_catalog.mjs';
 import {hrtemComparisonParameters,hrtemComparisonSummary} from '../lib/panel_hrtem_continuation.mjs';
@@ -58,7 +59,7 @@ import {PanelWindowStore,panelWindowMappingFingerprint,readPanelWindowCamera,rea
 import {panelRoiHandoff,roiObservationModel} from '../ui/image-panel/roi-observations.mjs';
 import {AnalysisWorkspace,acquireAnalysisWorkspaceOwner,readAnalysisWorkspace,readAnalysisWorkspaceInitial,readAnalysisWorkspaceResumeSnapshot,verifyAnalysisReferences} from '../lib/analysis_workspace.mjs';
 import type {AnalysisSnapshot,AnalysisWorkspaceOwner} from '../lib/analysis_workspace.mjs';
-import {writePanelExecutionInput,listPanelExecutionInputs,readPanelExecutionInput,panelJournalRelativePath} from '../lib/panel_execution_inputs.mjs';
+import {writePanelExecutionInput,listPanelExecutionInputs,matchingPanelFftInputs,readPanelExecutionInput,panelJournalRelativePath} from '../lib/panel_execution_inputs.mjs';
 import {imageAdmissionFailureFromError,readImageAdmissionFailure,readImageOriginalFailure} from '../lib/runtime/image_admission_failure.mjs';
 import {makePanelActionPreflight,panelBatchId} from '../ui/image-panel/panel-preflight.mjs';
 import type {PanelActionPreflight} from '../ui/image-panel/panel-preflight.mjs';
@@ -69,7 +70,7 @@ import type {PanelRoiSnapshot} from '../ui/image-panel/roi-observations.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const objectId=/^[a-f0-9]{32}$/;
 const safeId=/^[A-Za-z0-9_-]{1,64}$/;
-function publicImageObject(value:Metadata):Metadata{const fields=['source_file_format','source_reader','dm_dataset_index','dm_dataset','dm_catalog','calibration_admission','dm_plane_selection'];return {...publicObject(value),...projectGpaEvidence(value),...projectResultSemantics(value),...Object.fromEntries(fields.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]))};}
+function publicImageObject(value:Metadata):Metadata{const fields=['source_file_format','source_reader','dm_dataset_index','dm_dataset','dm_catalog','calibration_admission','dm_plane_selection','diffraction_roi','window','subtract_mean','source_rect_xyxy','spectrum_object_id'];return {...publicObject(value),...projectGpaEvidence(value),...projectResultSemantics(value),...Object.fromEntries(fields.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]))};}
 function fail(message:string,status=400):never{const e=new Error(message) as Error&{status:number};e.status=status;throw e;}
 function fields(value:unknown,allowed:readonly string[]):asserts value is Metadata{if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!allowed.includes(k)))fail('Unexpected action fields');}
 function presentationUpdate(value:Metadata){if(value.presentation!==undefined)validate(value.presentation,annotationPresentation,'presentation');if(value.presentation_replace!==undefined&&(typeof value.presentation_replace!=='boolean'||value.presentation===undefined))fail('presentation_replace requires an explicit boolean and presentation metadata');}
@@ -281,10 +282,11 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
  };
  const setCurrent=async(r:NativeImageReply)=>commitCurrent(await prepareCurrent(r));
  const describeSource=(value:Metadata,declared:unknown):Metadata=>{
+  if(value.diffraction_roi&&(value.source_identity as Metadata|undefined)?.path)return {kind:'diffraction_roi',label:'扫描 ROI 平均衍射图',filename:path.win32.basename(path.basename((value.source_identity as Metadata).path as string)),basis:'hashed scan source and saved detector intensity mean',diffraction_roi:value.diffraction_roi};
   if((['synthetic_demo','synthetic','合成演示'] as readonly unknown[]).includes(declared))return {kind:'synthetic',label:'合成演示',basis:'explicit user_context.data_meaning statement'};
   if((['digitalmicrograph','digitalmicrograph-native','saved digitalmicrograph-native READ numeric snapshot','saved digitalmicrograph-native PROFILE numeric snapshot','saved digitalmicrograph-native HISTOGRAM numeric snapshot'] as readonly unknown[]).includes(value.upstream_backend))return {kind:'dm_capture',label:'DM 捕获',basis:'validated imported capture backend'};
   if((value.source_identity as Metadata|undefined)?.path&&(['dm3','dm4'] as readonly unknown[]).includes(value.source_file_format))return {kind:value.source_file_format,label:((value as Metadata).source_file_format as string).toUpperCase()+' 外部只读',filename:path.win32.basename(path.basename(((value.source_identity as Metadata).path as string))),dataset_index:value.dm_dataset_index??null,reader:value.source_reader??null,basis:'hashed '+((value as Metadata).source_file_format as string).toUpperCase()+' file decoded by the explicit external reader; not a live DM capture'};
-  if((value.source_identity as Metadata|undefined)?.path)return {kind:'tiff',label:'用户指定 TIFF',filename:path.win32.basename(path.basename(((value.source_identity as Metadata).path as string))),basis:'fixed source TIFF provenance'};
+  if((value.source_identity as Metadata|undefined)?.path)return {kind:'tiff' ,label:'用户指定 TIFF',filename:path.win32.basename(path.basename(((value.source_identity as Metadata).path as string))),basis:'fixed source TIFF provenance'};
   return {kind:'unknown',label:'来源未声明',basis:'no supported explicit source declaration'};
  };
  const resolveFrame=async(value:Metadata,ancestry:Metadata[]|null=null,bundleAttempted=false)=>{
@@ -404,7 +406,16 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   for(const proof of readImageSourceProofs(workspace!,readSourceProofReferences(value.adopted_results??[]))){rememberSourceProof(proof);if(proof.status!=='verified'||!proof.eligible_for_exact_scope)fail('Adopted source proof is unavailable: '+String(proof.reason??proof.status),409);}
   for(const raw of (value.adopted_results??[]) as Metadata[]){if(raw.kind==='source_proof_reference_v1')continue;if(raw.kind!=='roi_lattice_comparison'||typeof raw.comparison_id!=='string'||typeof raw.report_sha256!=='string')fail('Unknown adopted-result reference',409);const module=await comparisonReports(),report=module.readRoiComparisonReport(workspace!,raw.comparison_id);if(createHash('sha256').update(JSON.stringify(report)).digest('hex')!==raw.report_sha256||report.source_save_id!==raw.source_save_id||report.source_revision!==raw.source_revision)fail('Adopted comparison no longer matches the exact saved reference',409);}
   const saved=await readWindowSaved(value.object_id,{includeFrameAncestry:true}),expected=value.frame_identity as PanelFrameIdentity|null;
-  if(!sameRecord(saved.frame,expected)&&!(allowDeferredNull&&legacyNullSource?.object_id===value.object_id&&emptyLegacyWindows(value.window_collection)&&expected===null&&sameRecord(saved.frame,legacyNullSource.frame)))fail('Analysis source frame differs from its saved provider object',409);
+  // Early scan-mean savepoints recorded a null frame and left the previous
+  // source's windows inactive. Reconstruct the expected identity only when
+  // this exact saved view's provenance matches the qualified terminal mean.
+  const oldWindows=value.window_collection as Metadata|null;
+  const scanClaim=saved.object.diffraction_roi as Metadata|undefined;
+  const oldScanMean=expected===null&&oldWindows?.schema_version===1&&oldWindows.active_window_id===null&&oldWindows.unavailable_reason==='unverified_frame'&&
+   objectId.test(String(scanClaim?.mean_object_id))&&oldWindows.frame_object_id!==scanClaim?.mean_object_id&&
+   sameRecord(scanClaim,sources.get(value.object_id)?.diffraction_roi);
+  const qualifiedExpected=oldScanMean?{frame_object_id:scanClaim!.mean_object_id,frame_index:null,source_object_id:null,origin:'scan_roi_mean_diffraction'}:expected;
+  if(!sameRecord(saved.frame,qualifiedExpected)&&!(allowDeferredNull&&legacyNullSource?.object_id===value.object_id&&emptyLegacyWindows(value.window_collection)&&expected===null&&sameRecord(saved.frame,legacyNullSource.frame)))fail('Analysis source frame differs from its saved provider object',409);
  };
  const prepareAnalysisRestore=async(value:AnalysisSnapshot,{allowDeferredNull=false}={})=>{
   const restoredQuestion=readResearchQuestion(value.research_question),restoredLeads=readResearchLeads(value.research_leads);
@@ -670,6 +681,22 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   if((calibration as Metadata|undefined)?.calibration_id&&(!newFrame||(calibration as Metadata).scope==='sequence'))target=(await journalCall('image_calibrate',{object_id:target,calibration_object_id:(calibration as Metadata).calibration_id})).data.object_id;
   return target;
  };
+ const matchingFft=(selected:PanelSelection,window:unknown,subtractMean:unknown,source=current,frame=frameIdentity)=>{
+  if(!frame)return [];
+  const rect=selectionRectangle(selected as unknown as Selection);
+  return matchingPanelFftInputs(workspace!,input=>input.source_view_object_id===source.object_id&&
+   input.frame_object_id===frame.frame_object_id&&sameRecord(input.float_roi_xyxy,selected.coordinates)&&
+   sameRecord(input.processing_rect_xyxy,rect)&&input.recipe?.window===window&&
+   input.recipe.subtract_mean===subtractMean&&sameRecord(input.calibration_snapshot??null,source.xy_calibration??null));
+ };
+ const liveResult=(reply:NativeImageReply,input:ReturnType<typeof readPanelExecutionInput>,reused:boolean)=>{
+  const frozen=input.input_snapshot;
+  if(input.status!=='completed'||input.qualification!=='validated'||input.fft_object_id!==reply.data.object_id||!frozen||!reply.png)
+   fail('Live FFT original result could not be qualified; query the original request before continuing',409);
+  return {schema_version:1,live_fft:{request_id:input.request_id,object_id:reply.data.object_id,png_base64:reply.png,
+   source_view_object_id:frozen.source_view_object_id,float_roi_xyxy:frozen.float_roi_xyxy,
+   processing_rect_xyxy:frozen.processing_rect_xyxy,recipe:frozen.recipe,reused},original_result_not_adopted:true};
+ };
  const researchStudies=()=>new PanelResearchStages(workspace!);
  const researchStudyList=()=>existsSync(path.join(workspace!,'panel-research-studies'))?researchStudies().list():[];
  const readResearchObject=async(id:unknown)=>{if(!objectId.test(String(id)))fail('准确保存对象缺失');return (await journalCall('image_info',{object_id:id})).data;};
@@ -865,20 +892,24 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    stateRevision++;saveSelection();return state();
   }
   if(unresolvedRequest()&&!['draft','select','recover','research-study-continue','research-study-query'].includes(String(body.action)))fail('Original scientific request remains unresolved; query original request_id='+unresolvedRequest()+' before another write',409);
-  const inactive=windowStore.snapshot();
-  if(!inactive.active_window_id&&(inactive.windows.length||(inactive.closed_windows?.length??0))&&!['show','activate-window','latest-observations','recover'].includes(String(body.action)))fail('No image editor is active; reopen an existing image window before editing or computing',409);
+  const inactive=windowStore.snapshot(),writeParams=p as Metadata,currentPanels=current.panels as Metadata[]|undefined;
+  // An out-of-grid GPA display can synchronize its clean navigation lease.
+  // Selections, annotations and actual draft edits still need an active editor.
+  const cleanGpaDraft=body.action==='draft'&&inactive.unavailable_reason==='unsupported_view'&&['gpa','gpa_view'].includes(String(current.kind))&&
+   !editState.dirty&&!editState.gesture_active&&!editState.annotation_edit&&writeParams.dirty===false&&writeParams.gesture_active===false&&writeParams.selection==null&&writeParams.annotation_edit==null;
+  if(!inactive.active_window_id&&(inactive.windows.length||(inactive.closed_windows?.length??0))&&!cleanGpaDraft&&!['show','activate-window','latest-observations','recover'].includes(String(body.action)))fail('No image editor is active; reopen an existing image window before editing or computing',409);
   // A pending result must not prevent saving the current observation. Such a
   // save can only adopt on the exact current grid, through the same guarded
   // path as an automatic annotation revision; the old pending entry survives.
   const pendingAnnotationSave=Boolean(pendingResult)&&(body.action==='mark'||body.action==='edit');
   if(pendingAnnotationSave&&lastOperation?.state==='submitted')fail('Original request is unresolved; query its original request_id before saving an annotation',409);
-  const writeParams=p as Metadata,currentPanels=current.panels as Metadata[]|undefined;
   const spatialRoiWrite=currentPanels?.length===1&&currentPanels[0].domain==='spatial_pixels'&&(body.action==='column-candidates'||body.action==='mark'&&(writeParams.selection as Metadata|undefined)?.kind==='rectangle'||body.action==='edit'&&Array.isArray(writeParams.updates)&&writeParams.updates.some((update:Metadata)=>((current.annotations??[]) as Metadata[]).some(mark=>mark.annotation_id===update?.annotation_id&&mark.kind==='rectangle')));
   if(spatialRoiWrite){const collection=windowStore.snapshot(),active=collection.windows.find(window=>window.window_id===collection.active_window_id);if(active?.latest_observation_view_object_id&&active.latest_observation_view_object_id!==current.object_id){const message='This is a historical ROI source; explicitly open the retained latest observation view before changing its ROIs',proof=startedRevision===editState.draft_revision?makePanelActionPreflight(body):null;if(proof){const error=Object.assign(new Error(message),{status:409});panelPreflightErrors.set(error,proof);throw error;}fail(message,409);}}
-  const opensImage=(['frame','roi','fft','column-candidates','centre','show','return-spatial','preview','calibrate','restore-figure-display','measurement-jump'] as readonly unknown[]).includes(body.action)||body.action==='edit-layout'&&(p as Metadata).auto_commit===false;
+  const opensImage=(['import-diffraction-roi','frame','roi','fft','gpa-prepare','gpa','column-candidates','centre','show','return-spatial','preview','calibrate','restore-figure-display','measurement-jump'] as readonly unknown[]).includes(body.action)||body.action==='edit-layout'&&(p as Metadata).auto_commit===false;
   if(pendingResult&&opensImage)fail('Resolve the pending saved result before opening another scientific view; close a read-only window if capacity is full',409);
   const scientificBefore=state();
-  const fftReturnSource=body.action==='fft'?{object:current,png,frame:frameIdentity,inputViewContext:null as PanelWindowViewContext|null}:null;
+  let fftReturnSource=body.action==='fft'?{object:current,png,frame:frameIdentity,inputViewContext:null as PanelWindowViewContext|null}:null;
+  let fftReturnRect:readonly number[]|undefined;
   const returnSelection=body.action==='return-spatial'?structuredClone(selection):null;
   if(body.action==='draft'){const previousDraft=editState;fields(p,['draft_revision','dirty','gesture_active','selection','annotation_edit','confirm_persistence']);if(p.confirm_persistence!==undefined&&typeof p.confirm_persistence!=='boolean')fail('confirm_persistence must be an explicit boolean');if(!Number.isSafeInteger(p.draft_revision)||((p as Metadata).draft_revision as number)<editState.draft_revision||typeof p.dirty!=='boolean'||typeof p.gesture_active!=='boolean')fail('Invalid or stale draft revision',409);const picked=p.selection==null?null:checkSelection(p.selection);let annotationEdit=editState.annotation_edit??null;if(p.annotation_edit!==undefined){annotationEdit=null;if(p.annotation_edit!==null){const u=p.annotation_edit;fields(u,['annotation_id','coordinates','text','color','status','presentation']);if(u.presentation!==undefined)validate(u.presentation,annotationPresentation,'presentation');const mark=((current.annotations??[]) as Metadata[]).find(m=>m.annotation_id===u.annotation_id);if(!mark?.anchor)fail('Draft annotation must name an existing anchored mark');if(u.text!==undefined&&(typeof u.text!=='string'||u.text.length>256)||u.color!==undefined&&!(['cyan','orange','white','amber','green'] as readonly unknown[]).includes(u.color)||u.status!==undefined&&!(['hypothesized','user_confirmed','retracted'] as readonly unknown[]).includes(u.status))fail('Invalid annotation draft fields');const panels=((current.panels??[]) as Metadata[]).filter(p=>p.source_object_id===((mark as Metadata).anchor as Metadata).source_object_id&&(({frequency:'frequency_cycles_per_pixel',spatial_pixels:'source_pixels',source_array_indices:'source_array_indices'} as Metadata)[p.domain as string])===((mark as Metadata).anchor as Metadata).coordinate_space);if(panels.length!==1)fail('Draft annotation requires one exact current panel');const anchor=checkSelection({...(mark!.anchor as Metadata),kind:mark!.kind,coordinates:u.coordinates??(mark.anchor as Metadata).coordinates,panel:panels[0]});annotationEdit={...structuredClone(u),kind:mark.kind,coordinate_space:anchor.coordinate_space,source_object_id:anchor.source_object_id,panel:anchor.panel};}}const candidateEdit:PanelEditState={draft_revision:p.draft_revision as number,dirty:p.dirty,gesture_active:p.gesture_active,selection:p.selection===undefined?editState.selection:picked,annotation_edit:annotationEdit,base_object_id:current.object_id};assertInteractionAllowed(p.selection===undefined?selection:picked,candidateEdit);editState=candidateEdit;if(p.selection!==undefined)selection=picked;saveSelection({coalesce:p.confirm_persistence!==true&&previousDraft.gesture_active===editState.gesture_active&&previousDraft.dirty===editState.dirty});return body.lightweight?draftAck():state();}
   if(body.action==='accept-result'){
@@ -904,13 +935,14 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    // panel state; neither swap the saved image nor consume a local draft.
    return saveResearchObservation(r.data,{baseObjectId,baseRevision,baseFrameIdentity});
   }
-  if(body.action==='preview'){fields(p,['gamma','display_range','max_size','upscale','interpolation','frequency_rect','spectrum_axes','scale_bar','component']);r=await journalCall('image_preview',{...p,object_id:current.object_id});}
+  if(body.action==='preview'){fields(p,['tone','gamma','display_range','max_size','upscale','interpolation','frequency_rect','spectrum_axes','scale_bar','component']);r=await journalCall('image_preview',{...p,object_id:current.object_id});}
   else if(body.action==='restore-figure-display'){
    fields(p,['recipe']);if(editState.dirty||editState.gesture_active||pendingResult)fail('Save or resolve the current draft/result before restoring a figure display',409);
    readFigureRecipe(p.recipe,state());
    const display=figureDisplayParameters(((p as Metadata).recipe as Metadata).display_recipe,(((p as Metadata).recipe as Metadata).source as Metadata).panels),saved=(await journalCall('image_info',{object_id:((p as Metadata).recipe as Metadata).source_object_id})),savedDisplay=await prepareCurrent(saved),savedFrame=await findFrameIdentity(saved.data);
    if(!sameRecord(recipeIdentity({object:saved.data,frame_identity:savedFrame}),((p as Metadata).recipe as Metadata).source)||!sameRecord(figureDisplayParameters(savedDisplay.display,saved.data.panels),display))fail('Figure recipe does not match its authoritative saved source/display version',409);
-   const args:Omit<DisplayParameters,'display_range'>&{display_range?:number[]}={...display},existing=figureDisplayParameters(effectiveDisplay,current.panels);
+   // Canonical identity may omit default tone, but a restore dispatch must reset it explicitly; omission inherits the current palette.
+   const args:Omit<DisplayParameters,'display_range'>&{display_range?:number[]}={...display,tone:readTone(display.tone)},existing=figureDisplayParameters(effectiveDisplay,current.panels);
    // Constant automatically ranged images have equal saved limits. The worker
    // admits those only through unchanged inherited range, never explicit limits.
    if(args.display_range![0]===args.display_range![1]){
@@ -922,15 +954,102 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    catch(caught){const error=caught as Error&{status?:number};lastOperation={...lastOperation,action:'restore-figure-display',figure_restore:figureRestore};saveSelection();throw error;}
   }
   else if(body.action==='frame'){fields(p,['frame_index']);r=await journalCall('image_frame',{object_id:await sourceForFrame(),frame_index:p.frame_index,...(Number.isInteger(frameIdentity?.dataset_index)?{dataset_index:frameIdentity!.dataset_index}:{}),...(frameIdentity?.plane_selection?{plane_axes:(frameIdentity.plane_selection as Metadata).plane_axes_yx,plane_indices:(frameIdentity.plane_selection as Metadata).indices_by_source_axis}:{})});const target=await withCurrentContext(r.data.object_id,{newFrame:true});r=await journalCall('image_preview',{object_id:target,...framePreviewRecipe(current,effectiveDisplay as Metadata|null|undefined)});}
+  else if(body.action==='import-diffraction-roi'){
+   fields(p,['source_path','layout','scan_shape_yx','scan_roi_y0_y1_x0_x1','dataset_key','source_text']);
+   const source=p as Metadata;
+   if(editState.dirty||editState.gesture_active||editState.annotation_edit)fail('Finish the current image draft before importing a scan ROI',409);
+   if(typeof source.source_path!=='string'||!path.isAbsolute(source.source_path)||!['.npy','.h5','.hdf5','.hdf'].includes(path.extname(source.source_path).toLowerCase()))fail('Select an absolute local NPY or HDF5 scan path');
+   r=await journalCall('image_import_diffraction_roi',source);
+  }
+  else if(body.action==='gpa-prepare'){
+   fields(p,['selection','subtract_mean']);
+   if(typeof p.subtract_mean!=='boolean')fail('Explicit mean subtraction choice required');
+   if(editState.dirty||editState.gesture_active||editState.annotation_edit||startedRevision!==editState.draft_revision)
+    fail('先完成当前编辑再准备 GPA 输入',409);
+   let source=current,sourcePng=png,frame=frameIdentity,target:unknown,selected:PanelSelection;
+   if(current.kind==='fft'||current.kind==='fft_view'){
+    const producer=current.kind==='fft'?{data:current,png}:await journalCall('image_info',{object_id:current.spectrum_object_id});
+    if(producer.data.window==='none'&&producer.data.dtype==='complex128'&&
+       producer.data.subtract_mean===p.subtract_mean){
+     if(current.kind==='fft')return state();
+     return state(); // Keep the selected view and its calibration.
+    }
+    if(!spatialReturnReference)fail('缺少已核对原空间输入；请回原图重选同一 ROI，再明确准备无窗频谱',409);
+    const original=await qualifySpatialReturn(spatialReturnReference!);
+    source=original.view.data;sourcePng=original.view.png;
+    frame=await findFrameIdentity(source);
+    const frozen=readPanelExecutionInput(workspace!,String(producer.data.request_id)).input_snapshot;
+    const panel=(source.panels as PanelSelection['panel'][]|undefined)?.find(entry=>entry.domain==='spatial_pixels');
+    if(!frame||!frozen||!panel||frozen.frame_object_id!==frame.frame_object_id||
+       frozen.source_view_object_id!==source.object_id||!sameRecord(source.xy_calibration??null,current.xy_calibration??null))
+     fail('历史 ROI 或标定未通过核对；请回准确原图重选',409);
+    selected={kind:'rectangle',coordinate_space:'source_pixels',source_object_id:frame!.frame_object_id,
+     coordinates:frozen!.float_roi_xyxy,panel:panel!} as PanelSelection;
+    target=producer.data.parent_object_id;
+   }else{
+    selected=checkSelection(p.selection);
+    if(selected.kind!=='rectangle'||selected.panel.domain!=='spatial_pixels'||!frame)
+     fail('请在准确空间源帧上选择一个矩形 ROI');
+   }
+   const rect=selectionRectangle(selected as unknown as Selection),candidates=matchingFft(selected,'none',p.subtract_mean,source,frame);
+   if(candidates.some(input=>input.status==='unknown'&&input.execution_status!=='failed'&&input.execution_status!=='not_submitted'))
+    fail('同范围的无窗原请求待核对；不重复提交',409);
+   const saved=candidates.find(input=>input.status==='completed'&&input.qualification==='validated'&&input.fft_object_id);
+   if(saved)r=await journalCall('image_info',{object_id:saved.fft_object_id});
+   else{
+    target??=await withCurrentContext(selected.source_object_id);
+    if(body.expected_object_id!==current.object_id||startedRevision!==editState.draft_revision)
+     fail('GPA 输入已改变；未提交频谱',409);
+    r=await journalCall('image_fft',{object_id:target,rect,window:'none',subtract_mean:p.subtract_mean},
+     {source_view_object_id:String(source.object_id),frame_object_id:String(frame!.frame_object_id),
+      selection:structuredClone(selected),annotation_id:null,calibration:structuredClone(source.xy_calibration??null)});
+   }
+   fftReturnSource={object:source,png:sourcePng,frame,inputViewContext:null};
+   fftReturnRect=rect;
+  }
+  else if(body.action==='gpa'){
+   fields(p,['reflections','reference_rect','reference_text','source_domain_text','mask_sigma']);
+   if(editState.dirty||editState.gesture_active||editState.annotation_edit||startedRevision!==editState.draft_revision)
+    fail('先完成当前编辑再提交 GPA',409);
+   if(!['fft','fft_view'].includes(String(current.kind)))fail('GPA 需要已保存的无窗频谱');
+   const producer=current.kind==='fft'?current:(await journalCall('image_info',{object_id:current.spectrum_object_id})).data;
+   if(producer.window!=='none'||producer.dtype!=='complex128')
+    fail('当前只有 Hann 或不合格频谱；请先明确准备无窗 complex128 频谱',409);
+   if(!Array.isArray(p.reflections)||p.reflections.length!==2)fail('请明确选择两条非共线反射');
+   const points=(p.reflections as unknown[]).map(value=>checkSelection(value));
+   if(points.some(point=>point.kind!=='point'||point.coordinate_space!=='frequency_cycles_per_pixel'))
+    fail('反射必须来自当前频谱上的两点');
+   if(body.expected_object_id!==current.object_id||startedRevision!==editState.draft_revision)
+    fail('GPA 输入已改变；未提交计算',409);
+   r=await journalCall('image_gpa',{object_id:current.object_id,source_domain:'real_space_lattice',
+    source_domain_text:p.source_domain_text,g_vectors:points.map(point=>point.coordinates),mask_sigma:p.mask_sigma,
+    reference_rect:p.reference_rect,reference_mode:'fixed_g',reference_text:p.reference_text});
+  }
   else if(body.action==='roi'||body.action==='fft'||body.action==='live-fft'){
    fields(p,body.action!=='roi'?['selection','window','subtract_mean']:['selection']);if(body.action!=='roi'&&(p.window!==undefined&&!(['hann','none'] as readonly unknown[]).includes(p.window)||p.subtract_mean!==undefined&&typeof p.subtract_mean!=='boolean'))fail('Invalid explicit FFT preprocessing');
    const selected=checkSelection(p.selection),rect=selectionRectangle(selected as unknown as Selection);
+   if(body.action==='live-fft'){
+    if(body.expected_object_id!==current.object_id||startedRevision!==editState.draft_revision||pendingResult)
+     fail('Live FFT input changed before dispatch; inspect current ROI',409);
+    if(selected.kind!=='rectangle'||selected.panel.domain!=='spatial_pixels'||!frameIdentity)
+     fail('Live FFT requires a rectangle on an exact spatial source frame');
+    const candidates=matchingFft(selected,p.window??'hann',p.subtract_mean??true);
+    if(candidates.some(input=>input.status==='unknown'&&input.execution_status!=='failed'&&input.execution_status!=='not_submitted'))
+     fail('An original FFT for this input is unresolved; query its request before continuing',409);
+    const saved=candidates.find(input=>input.status==='completed'&&input.qualification==='validated'&&input.fft_object_id);
+    if(saved){
+     const reply=await journalCall('image_info',{object_id:saved.fft_object_id});
+     if(body.expected_object_id!==current.object_id||startedRevision!==editState.draft_revision||pendingResult)
+      fail('Live FFT input changed while recovering the saved result',409);
+     return liveResult(reply,saved,true);
+    }
+   }
    if(body.action==='fft'&&fftReturnSource){
     const collection=windowStore.snapshot(),entry=collection.windows.find(w=>w.window_id===collection.active_window_id&&w.object_id===current.object_id),context=qualifyPanelWindowContext(entry?.view_context,current,checkSelection);
     if(context&&sameRecord(context.selection_candidate,selected))fftReturnSource.inputViewContext=structuredClone(context);
    }
    if(selected.panel.domain==='frequency'){if(body.action!=='roi')fail('FFT needs a spatial ROI, not a frequency crop');r=await journalCall('image_preview',{object_id:current.object_id,frequency_rect:rect});}
-   else{if(selected.panel.domain!=='spatial_pixels')fail('Imported frequency arrays have no spatial ROI mapping');const target=await withCurrentContext(selected.source_object_id),recipe:Metadata=Object.fromEntries(['gamma','display_range','max_size','upscale','interpolation','component'].filter(key=>(effectiveDisplay as Metadata)?.[key]!==undefined).map(key=>[key,(effectiveDisplay as Metadata)[key]]));const marks=((current.annotations??[]) as Metadata[]).filter(mark=>mark.kind==='rectangle'&&mark.status!=='retracted'&&mark.anchor&&sameRecord((mark.anchor as Metadata).coordinates,selected.coordinates)&&(mark.anchor as Metadata).source_object_id===selected.source_object_id&&(mark.anchor as Metadata).coordinate_space===selected.coordinate_space);if(body.action==='live-fft'&&(body.expected_object_id!==current.object_id||startedRevision!==editState.draft_revision||pendingResult))fail('Live FFT input changed before dispatch; inspect current ROI',409);const frozen=body.action!=='roi'?{source_view_object_id:String(current.object_id),frame_object_id:String(frameIdentity?.frame_object_id),selection:structuredClone(selected),annotation_id:marks.length===1?String(marks[0]!.annotation_id):null,calibration:structuredClone(current.xy_calibration??null)}:undefined;r=await journalCall(body.action!=='roi'?'image_fft':'image_preview',{object_id:target,rect,...(body.action!=='roi'?{window:p.window??'hann',subtract_mean:p.subtract_mean??true}:recipe)},frozen);}
+   else{if(selected.panel.domain!=='spatial_pixels')fail('Imported frequency arrays have no spatial ROI mapping');const target=await withCurrentContext(selected.source_object_id),recipe:Metadata=Object.fromEntries(['tone','gamma','display_range','max_size','upscale','interpolation','component'].filter(key=>(effectiveDisplay as Metadata)?.[key]!==undefined).map(key=>[key,(effectiveDisplay as Metadata)[key]]));const marks=((current.annotations??[]) as Metadata[]).filter(mark=>mark.kind==='rectangle'&&mark.status!=='retracted'&&mark.anchor&&sameRecord((mark.anchor as Metadata).coordinates,selected.coordinates)&&(mark.anchor as Metadata).source_object_id===selected.source_object_id&&(mark.anchor as Metadata).coordinate_space===selected.coordinate_space);if(body.action==='live-fft'&&(body.expected_object_id!==current.object_id||startedRevision!==editState.draft_revision||pendingResult))fail('Live FFT input changed before dispatch; inspect current ROI',409);const frozen=body.action!=='roi'?{source_view_object_id:String(current.object_id),frame_object_id:String(frameIdentity?.frame_object_id),selection:structuredClone(selected),annotation_id:marks.length===1?String(marks[0]!.annotation_id):null,calibration:structuredClone(current.xy_calibration??null)}:undefined;r=await journalCall(body.action!=='roi'?'image_fft':'image_preview',{object_id:target,rect,...(body.action!=='roi'?{window:p.window??'hann',subtract_mean:p.subtract_mean??true}:recipe)},frozen);}
   }
   else if(body.action==='mark'){fields(p,['selection','annotation_id','text','note','color','status','presentation','purpose','selection_origin']);if(p.note!==undefined)checkObservationNote(p.note,'note');if(p.presentation!==undefined)validate(p.presentation,annotationPresentation,'presentation');const selected=checkSelection(p.selection);if(p.annotation_id===undefined)p.annotation_id=`mark-${randomBytes(8).toString('hex')}`;if(!safeId.test((p.annotation_id as string)))fail('Invalid annotation_id');const old=current.annotations??[];if((old as Metadata[]).some(m=>m.annotation_id===p.annotation_id))fail('annotation_id already exists; choose it in the edit list');checkResumableInputs({annotations:[p]});const {panel,...anchor}=selected;r=await journalCall('image_annotate',{object_id:current.object_id,annotations:[...(old as Metadata[]).map(originalMark),{...anchor,annotation_id:p.annotation_id,...(p.purpose!==undefined?{purpose:p.purpose}:{}),...(p.selection_origin!==undefined?{selection_origin:p.selection_origin}:{}),text:p.text??'',...(p.note!==undefined?{note:p.note}:{}),color:p.color??'cyan',status:p.status??'hypothesized',...(p.presentation!==undefined?{presentation:p.presentation}:{})}]});}
   else if(body.action==='edit'){fields(p,['updates','auto_commit']);if(p.auto_commit!==undefined&&typeof p.auto_commit!=='boolean')fail('auto_commit must be an explicit boolean');if(!Array.isArray(p.updates)||p.updates.length!==1)fail('Edit exactly one existing annotation per gesture');const u=p.updates[0];fields(u,['annotation_id','coordinates','text','color','status','note','presentation','presentation_replace','purpose','selection_origin']);checkResumableInputs({updates:[u]});presentationUpdate(u);if(!((current.annotations??[]) as Metadata[]).some(m=>m.annotation_id===u.annotation_id))fail('Unknown annotation_id');r=await journalCall('image_annotate',{object_id:current.object_id,updates:p.updates});}
@@ -963,11 +1082,36 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
     fields(p,['input']);const provided=p.input as Metadata;
     if(!provided||provided.object_id!==current.object_id||provided.frame_object_id!==frameIdentity?.frame_object_id)fail('预期点输入不属于当前准确图像／帧',409);
     const frame=await read(frameIdentity?.frame_object_id),input=readStemStudyInput({...provided,shape_yx:frame.shape_yx});
+    let canvasRoles:Metadata[]|undefined;
+    if(provided.canvas_roles!==undefined){
+     const expected=[{role:'target',coordinates:input.target_rect},{role:'expected',coordinates:input.expected_position_xy},
+      ...input.reference_rects.map(coordinates=>({role:'reference',coordinates}))];
+     if(!Array.isArray(provided.canvas_roles)||provided.canvas_roles.length!==expected.length)
+      fail('画布角色必须与目标、原预期点和所有参考一一对应',409);
+     const views=new Map<unknown,Metadata>();
+     canvasRoles=[];
+     for(const [i,raw] of (provided.canvas_roles as Metadata[]).entries()){
+      fields(raw,['role','input_view_object_id','frame_object_id','drawn_coordinates']);
+      const role=expected[i]!;
+      if(raw.role!==role.role||raw.frame_object_id!==frame.object_id)fail('画布角色属于另一源帧',409);
+      let captured=views.get(raw.input_view_object_id);
+      if(!captured){captured=await read(raw.input_view_object_id);views.set(raw.input_view_object_id,captured);}
+      const panels=captured.panels as Metadata[]|undefined;
+      if(panels?.length!==1||panels[0]?.domain!=='spatial_pixels'||panels[0].source_object_id!==frame.object_id||
+         (await findFrameIdentity(captured))?.frame_object_id!==frame.object_id)
+       fail('画布角色的保存视图与源帧不一致',409);
+      const choice=checkSelection({kind:raw.role==='expected'?'point':'rectangle',coordinate_space:'source_pixels',
+       source_object_id:frame.object_id,coordinates:raw.drawn_coordinates,panel:panels![0]},captured);
+      const actual=raw.role==='expected'?choice.coordinates:selectionRectangle(choice as unknown as Selection);
+      if(!sameRecord(actual,role.coordinates))fail('画布角色与提交的坐标不一致；没有吸附或替换',409);
+      canvasRoles.push(structuredClone(raw));
+     }
+    }
     const unfinished=researchStudyList().find(study=>study.stages.some(stage=>stage.state!=='completed')&&!study.stages.some(stage=>stage.state==='failed'));
     if(unfinished)fail('已有冻结任务尚未完成；请在保存任务中明确查询／接续 '+unfinished.study_id+'，不会重新计算已完成步骤',409);
     const context=Object.fromEntries(Object.entries((current.user_context??{}) as Metadata).filter(([key])=>['reconstruction_type','data_meaning','frame_meaning','xy_scale','value_unit','frame_scale','source_text','input_origin','modality'].includes(key)));
     const calibrationId=(current.xy_calibration as Metadata|undefined)?.calibration_id??null,study_id='stem-'+randomBytes(16).toString('hex');
-    researchStudies().create({study_id,input:{study_type:'stem_site',frame_object_id:frame.object_id,researcher_input:input,context_metadata:context,calibration_object_id:calibrationId},stage_names:[...(Object.keys(context).length?['context']:[]),...(calibrationId?['calibration']:[]),'statistics','discovery','review']});
+    researchStudies().create({study_id,input:{study_type:'stem_site',frame_object_id:frame.object_id,researcher_input:input,...(canvasRoles?{canvas_roles:canvasRoles}:{}),context_metadata:context,calibration_object_id:calibrationId},stage_names:[...(Object.keys(context).length?['context']:[]),...(calibrationId?['calibration']:[]),'statistics','discovery','review']});
     return continueResearchStudy(study_id);
    }else if(body.action==='research-study-continue'||body.action==='research-study-query'){
     fields(p,['study_id']);if(!safeId.test(String(p.study_id)))fail('准确冻结任务身份缺失');return continueResearchStudy(String(p.study_id),body.action==='research-study-query');
@@ -1116,12 +1260,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
    }if(!r.data.object_id)fail('Original request has not returned an image object');if(String(operation?.action??'').startsWith('research-')){lastOperation={...operation,state:'completed',object_id:r.data.object_id,result_not_adopted:true};if(inheritedOperation?.request_id===original)inheritedOperation=null;stateRevision++;saveSelection();return {...state(),research_result:r.data};}if(r.data.kind==='source_proof'){const directory=inheritedOperation?.request_id===original&&inheritedJournal?inheritedJournal:journal,file=path.join(directory,String(original)+'.request.json'),request=JSON.parse(readFileSync(file,'utf8')) as Metadata,args=request.arguments as Metadata;if(request.name!=='image_source_proof'||args?.request_id!==original)fail('Original proof request identity is not journaled here',409);if(inheritedOperation?.request_id===original)inheritedOperation=null;return finishSourceProof(r,{action:'source-proof',request_id:original,proof_root_object_id:args.object_id,proof_purpose:args.purpose});}if(analysis?.status().recovery_available&&inheritedOperation?.request_id!==original){lastOperation={...operation,state:'completed',object_id:r.data.object_id,result_not_adopted:true};saveSelection();return state();}if(inheritedOperation?.request_id===original){const inherited=inheritedOperation;if(['measure','statistics','profile','export','context'].includes(String(r.data.kind))){lastOperation={...inherited,state:'completed',object_id:r.data.object_id,result_not_adopted:true};inheritedOperation=null;saveSelection();return state();}const display=await displayObject(r),prepared=await prepareCurrent(display),frame=await findFrameIdentity(display.data);pendingResult={prepared,frameIdentity:frame,request_id:original,reason:'unsaved_draft'};try{const input=readPanelExecutionInput(workspace!,String(original));if(input.qualification==='validated'&&input.status==='completed'&&input.fft_object_id===r.data.object_id&&input.input_snapshot){const frozen=input.input_snapshot,reference:SpatialReturnReference={version:1,view_object_id:frozen.source_view_object_id,frame_object_id:frozen.frame_object_id,fft_object_id:input.fft_object_id,source_rect_xyxy:frozen.processing_rect_xyxy};await qualifySpatialReturn(reference);pendingResult.spatialReturnReference=reference;pendingResult.spatialReturnReason='';}}catch{/* Old/unqualified execution has no invented spatial return identity. */}lastOperation={...inherited,state:'completed_pending_view',object_id:r.data.object_id,result_not_adopted:true};inheritedOperation=null;saveSelection();return state();}if(operation!.action==='figure-base'){if(operation!.figure_step==='scale'){figureBars.set(current.object_id,r.data.scale_bar??null);return {...state(),figure_base_recovery:{state:'scale_render_saved_clean_render_not_submitted',request_id:original,object_id:r.data.object_id}};}return figureAsset(r);}if(operation!.action==='restore-figure-display')figureRestore=operation!.figure_restore as Metadata|null;if(r.data.kind==='context'&&(r.data.user_context as Metadata|undefined)?.research_observation)return saveResearchObservation(r.data);if((['statistics','profile'] as readonly unknown[]).includes(r.data.kind)){numericResults[r.data.kind as 'statistics'|'profile']=r.data;lastOperation=r.data;saveSelection();return state();}if((['measure','export'] as readonly unknown[]).includes(r.data.kind)){if(r.data.kind==='measure')crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'measure',scientificBefore,r.data,{annotation_id:operation?.annotation_id});lastOperation=publicImageObject(r.data);saveSelection();return state();}if(r.data.kind==='annotate')crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'edit',scientificBefore,r.data);if(r.data.kind==='calibration')crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,'calibrate',scientificBefore,r.data);r=await displayObject(r);}
   else fail('Unknown panel action');
   if(body.action==='live-fft'){
-   // Preview completion never activates a window or consumes a newer draft.
-   // journalCall already froze the source, exact float ROI, recipe and request.
-   const input=readPanelExecutionInput(workspace!,String(r.data.request_id));
-   if(input.status!=='completed'||input.qualification!=='validated'||input.fft_object_id!==r.data.object_id||!input.input_snapshot||!r.png)fail('Live FFT original result could not be qualified; query the original request before continuing',409);
-   const frozen=input.input_snapshot;
-   return {schema_version:1,live_fft:{request_id:r.data.request_id,object_id:r.data.object_id,png_base64:r.png,source_view_object_id:frozen.source_view_object_id,float_roi_xyxy:frozen.float_roi_xyxy,processing_rect_xyxy:frozen.processing_rect_xyxy,recipe:frozen.recipe},original_result_not_adopted:true};
+   return liveResult(r,readPanelExecutionInput(workspace!,String(r.data.request_id)),false);
   }
   if((['edit','mark','calibrate'] as readonly unknown[]).includes(body.action))crystalEvidence=rememberCrystalScienceEvent(crystalEvidence,body.action as string,scientificBefore,r.data);
   const prepared=await prepareCurrent(r),nextFrame=await findFrameIdentity(r.data);
@@ -1129,7 +1268,7 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   let nextSpatialReturn:SpatialReturnReference|null|undefined,nextSpatialReason='no_saved_return';
   if(fftReturnSource){
    try{
-    nextSpatialReturn=readSpatialReturnReference({version:1,view_object_id:fftReturnSource.object.object_id,frame_object_id:fftReturnSource.frame?.frame_object_id,fft_object_id:r.data.object_id,source_rect_xyxy:selectionRectangle(p.selection as unknown as Selection)});
+    nextSpatialReturn=readSpatialReturnReference({version:1,view_object_id:fftReturnSource.object.object_id,frame_object_id:fftReturnSource.frame?.frame_object_id,fft_object_id:r.data.object_id,source_rect_xyxy:fftReturnRect??selectionRectangle(p.selection as unknown as Selection)});
     validateSpatialReturn(nextSpatialReturn,fftReturnSource.object,fftReturnSource.png,fftReturnSource.frame,r.data,nextFrame);
     windowInputCalibrations.set(nextSpatialReturn.view_object_id,structuredClone(fftReturnSource.object.xy_calibration??null));
     nextSpatialReason='';
@@ -1328,9 +1467,10 @@ export async function createImagePanel({workspace,python,object_id,port=0,panel_
   const validated=packet.source_observations.some(source=>source.status==='validated')||packet.fft_relations.some(relation=>relation.status==='validated'),incomplete=packet.source_observations.some(source=>source.status!=='validated')||packet.fft_relations.some(relation=>relation.status!=='validated');
   packet.validation_status=validated?incomplete?'partial':'validated':'unavailable';return packet;
  };
- const staticFiles=new Map([['/',['index.html','text/html; charset=utf-8']],['/app.mjs',['app.mjs','text/javascript; charset=utf-8']],['/coordinates.mjs',['coordinates.mjs','text/javascript; charset=utf-8']],['/style.css',['style.css','text/css; charset=utf-8']],['/viewer-state.mjs',['viewer-state.mjs','text/javascript; charset=utf-8']],['/viewer-render.mjs',['viewer-render.mjs','text/javascript; charset=utf-8']],['/annotation-presentation.mjs',['annotation-presentation.mjs','text/javascript; charset=utf-8']],['/figure-export.mjs',['figure-export.mjs','text/javascript; charset=utf-8']],['/measurement-workspace.mjs',['measurement-workspace.mjs','text/javascript; charset=utf-8']],['/data-probes.mjs',['data-probes.mjs','text/javascript; charset=utf-8']],['/user-workflow.mjs',['user-workflow.mjs','text/javascript; charset=utf-8']]]);
+ const staticFiles=new Map([['/display-tone.mjs',['display-tone.mjs','text/javascript; charset=utf-8']],['/',['index.html','text/html; charset=utf-8']],['/app.mjs',['app.mjs','text/javascript; charset=utf-8']],['/coordinates.mjs',['coordinates.mjs','text/javascript; charset=utf-8']],['/style.css',['style.css','text/css; charset=utf-8']],['/viewer-state.mjs',['viewer-state.mjs','text/javascript; charset=utf-8']],['/viewer-render.mjs',['viewer-render.mjs','text/javascript; charset=utf-8']],['/annotation-presentation.mjs',['annotation-presentation.mjs','text/javascript; charset=utf-8']],['/figure-export.mjs',['figure-export.mjs','text/javascript; charset=utf-8']],['/measurement-workspace.mjs',['measurement-workspace.mjs','text/javascript; charset=utf-8']],['/data-probes.mjs',['data-probes.mjs','text/javascript; charset=utf-8']],['/user-workflow.mjs',['user-workflow.mjs','text/javascript; charset=utf-8']]]);
  staticFiles.set('/cif-candidates.mjs',['cif-candidates.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/sidebar-controls.mjs',['sidebar-controls.mjs','text/javascript; charset=utf-8']);
+ staticFiles.set('/desktop-canvas-layout.mjs',['desktop-canvas-layout.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/live-fft.mjs',['live-fft.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/fft-window-status.mjs',['fft-window-status.mjs','text/javascript; charset=utf-8']);
  staticFiles.set('/figure-composer.mjs',['figure-composer.mjs','text/javascript; charset=utf-8']);

@@ -12,6 +12,11 @@ import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {readDesktopOptions,researcherArguments,panelAddress,isOwnedDesktopDocument,readWorkspaceStatus,desktopSecurityPreferences,desktopAction} from '../lib/desktop_contracts.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
+class MainIpc extends EventEmitter {
+ handlers=new Map();
+ handle(name,fn){assert.equal(this.handlers.has(name),false);this.handlers.set(name,fn);}
+ invoke(name,event,...args){return this.handlers.get(name)(event,...args);}
+}
 
 test('desktop help runs under ordinary Node without loading Electron or creating scientific state',()=>{
  const working=mkdtempSync(path.join(tmpdir(),'mwb-desktop-help-'));
@@ -52,13 +57,43 @@ test('renderer permissions and bridge expose no arbitrary file, shell or generic
 test('Electron ready is scheduled after ESM entry completion instead of awaited at top level',()=>{
  const source=readFileSync(path.join(root,'tools/desktop_main.mjs'),'utf8');assert.match(source,/app\.whenReady\(\)\.then\(async/);assert.doesNotMatch(source,/await app\.whenReady\(\)/);
 });
-test('native preload keeps fixed channels, no-argument open/query/stop, and explicit review input',()=>{
- let bridge;const sent=[];const electron={contextBridge:{exposeInMainWorld(name,value){assert.equal(name,'workbenchDesktop');bridge=value;}},ipcRenderer:{on(){},send(...args){sent.push(args);}}};
+test('native preload keeps fixed channels, no-argument pickers/query/stop, and explicit review input',async()=>{
+ let bridge;const sent=[],invoked=[];const electron={contextBridge:{exposeInMainWorld(name,value){assert.equal(name,'workbenchDesktop');bridge=value;}},ipcRenderer:{on(){},send(...args){sent.push(args);},async invoke(...args){invoked.push(args);return '/tmp/scan.npy';}}};
  new vm.Script(readFileSync(path.join(root,'tools/desktop_preload.cjs'),'utf8')).runInNewContext({exports:{},require:name=>{assert.equal(name,'electron');return electron;}});
- assert.deepEqual(Object.keys(bridge).sort(),['onAction','openImage','queryImageReview','reviewImage','stopImageReview']);assert.equal(Object.isFrozen(bridge),true);bridge.openImage('/not-forwarded/private.tiff',{arbitrary:'ignored'});bridge.reviewImage({approved:true});bridge.stopImageReview('arbitrary');bridge.queryImageReview({request_id:'not-forwarded'});assert.deepEqual(sent,[['mwb:open-image'],['mwb:review-image',{approved:true}],['mwb:stop-image-review'],['mwb:query-image-review']]);
+ assert.deepEqual(Object.keys(bridge).sort(),['chooseScanFile','onAction','openImage','queryImageReview','reviewImage','stopImageReview']);assert.equal(Object.isFrozen(bridge),true);bridge.openImage('/not-forwarded/private.tiff',{arbitrary:'ignored'});bridge.reviewImage({approved:true});bridge.stopImageReview('arbitrary');bridge.queryImageReview({request_id:'not-forwarded'});assert.deepEqual(sent,[['mwb:open-image'],['mwb:review-image',{approved:true}],['mwb:stop-image-review'],['mwb:query-image-review']]);
+ assert.equal(await bridge.chooseScanFile('/not-forwarded/private.h5'),'/tmp/scan.npy');assert.deepEqual(invoked,[['mwb:choose-scan-file']]);
+});
+test('close before the renderer registers keeps the workspace open and preserves work',async()=>{
+ let bridge,onAction,resolveReply,nextId=0;
+ const trace=[],errors=[];
+ const electron={
+  contextBridge:{exposeInMainWorld(_name,value){bridge=value;}},
+  ipcRenderer:{
+   on(channel,callback){assert.equal(channel,'mwb:action');onAction=callback;},
+   send(channel,reply){assert.equal(channel,'mwb:action-result');assert.equal(reply.id,nextId);resolveReply(reply);}
+  }
+ };
+ const preload=readFileSync(path.join(root,'tools/desktop_preload.cjs'),'utf8');
+ new vm.Script(preload).runInNewContext({exports:{},require:()=>electron});
+ const close=new DesktopCloseCoordinator({
+  action:action=>new Promise(resolve=>{resolveReply=resolve;trace.push(action);onAction({}, {id:++nextId,action});}),
+  freezeInput:frozen=>trace.push(frozen),
+  status:async()=>{trace.push('status');return {status:'clean',can_close:true,dirty:false,recovery_available:false,unresolved_request_id:null,working_revision:7};},
+  choose:async()=>assert.fail('An uninitialized renderer must not offer a save or discard choice'),
+  discard:async()=>assert.fail('Close readiness must not discard workspace edits'),
+  close:async revision=>trace.push(['close',revision]),
+  error:async message=>{errors.push(message);}
+ });
+ assert.equal(await close.request(),false);
+ assert.deepEqual(errors,['界面尚未准备好，窗口保持打开。']);
+ assert.deepEqual(trace,[true,'prepare-close',false]);
+ bridge.onAction(async action=>{assert.equal(action,'prepare-close');return {ok:true};});
+ assert.deepEqual(trace,[true,'prepare-close',false],'Registering the renderer must not retry the refused close');
+ assert.equal(await close.request(),true);
+ assert.deepEqual(trace,[true,'prepare-close',false,true,'prepare-close','status',['close',7],false]);
 });
 test('native open validates the owned main frame, serializes pickers, selects image first and preserves the old workspace on cancel/refused close',async()=>{
- const app=new EventEmitter(),ipcMain=new EventEmitter(),pickers=[],reports=[];let owned,backendCount=0,closeCount=0;
+ const app=new EventEmitter(),ipcMain=new MainIpc(),pickers=[],reports=[];let owned,backendCount=0,closeCount=0;
  Object.assign(app,{setName(){},setPath(){},whenReady:async()=>{},quit(){},exit(){assert.fail('Unexpected startup failure');}});
  class Window extends EventEmitter {constructor(){super();owned=this;this.destroyed=false;this.webContents=new EventEmitter();Object.assign(this.webContents,{id:1,mainFrame:{},getURL:()=>this.url,send:(_channel,payload)=>queueMicrotask(()=>ipcMain.emit('mwb:action-result',{sender:this.webContents,senderFrame:this.webContents.mainFrame},{id:payload.id,ok:false,error:'Unapplied question retained'})),setWindowOpenHandler(){},session:{setPermissionRequestHandler(){},setPermissionCheckHandler(){}}});}async loadURL(url){this.url=url;}show(){}focus(){}setEnabled(){}isDestroyed(){return this.destroyed;}destroy(){this.destroyed=true;}}
  class Backend {async resumeClose(){return null;}hasCloseIntent(){return false;}constructor(){backendCount++;this.ready=Promise.resolve({url:'http://127.0.0.1:12456/#'+'b'.repeat(48),node:process.version});}async queryDiscard(){return null;}async status(){assert.fail('Renderer refusal must keep the existing workspace');}async close(){closeCount++;}abnormalDetach(){}async abnormalDrain(){}}
@@ -72,13 +107,22 @@ test('native open validates the owned main frame, serializes pickers, selects im
  ipcMain.emit('mwb:open-image',owner);ipcMain.emit('mwb:open-image',owner);assert.equal(pickers.length,1);assert.match(pickers[0].options.title,/只读原始图像/);assert.deepEqual([...pickers[0].options.properties],['openFile']);pickers[0].resolve({canceled:true,filePaths:[]});await settle();assert.equal(owned,original);assert.equal(original.destroyed,false);
  ipcMain.emit('mwb:open-image',owner);pickers[1].resolve({canceled:false,filePaths:[config.source]});await settle();assert.equal(pickers.length,3);assert.match(pickers[2].options.title,/分析结果.*工作区/);assert.ok(pickers[2].options.properties.includes('openDirectory'));pickers[2].resolve({canceled:true,filePaths:[]});await settle();assert.equal(original.destroyed,false);assert.equal(closeCount,0);
  ipcMain.emit('mwb:open-image',owner);pickers[3].resolve({canceled:false,filePaths:[config.source]});await settle();pickers[4].resolve({canceled:false,filePaths:[root]});await settle();assert.equal(backendCount,1);assert.equal(closeCount,0);assert.equal(original.destroyed,false);assert.ok(reports.some(r=>/Unapplied question/.test(r.detail??'')));
+ assert.equal(await ipcMain.invoke('mwb:choose-scan-file',{...owner,senderFrame:{}}),null);
+ assert.equal(await ipcMain.invoke('mwb:choose-scan-file',owner,{path:'/not-admitted'}),null);
+ assert.equal(pickers.length,5);
+ const pending=ipcMain.invoke('mwb:choose-scan-file',owner);
+ assert.deepEqual([...pickers[5].options.filters[0].extensions],['npy','h5','hdf5','hdf']);
+ assert.equal(await ipcMain.invoke('mwb:choose-scan-file',owner),null);
+ ipcMain.emit('mwb:open-image',owner);assert.equal(pickers.length,6);
+ pickers[5].resolve({canceled:false,filePaths:['/tmp/test scan.h5']});
+ assert.equal(await pending,'/tmp/test scan.h5');assert.equal(owned,original);
 });
 
 
 // Executes the actual emitted main entry with a native API port. No Electron,
 // window, provider or user workspace is started by this lifecycle regression.
 test('desktop startup refusal exits nonzero after its owned backend drain',async()=>{
- const trace=[],app=new EventEmitter(),ipcMain=new EventEmitter();let finished;const exited=new Promise(resolve=>finished=resolve),config={node:process.execPath,workspace:path.dirname(process.execPath),python:process.execPath,source:path.join(path.dirname(process.execPath),'public.tiff')};
+ const trace=[],app=new EventEmitter(),ipcMain=new MainIpc();let finished;const exited=new Promise(resolve=>finished=resolve),config={node:process.execPath,workspace:path.dirname(process.execPath),python:process.execPath,source:path.join(path.dirname(process.execPath),'public.tiff')};
  Object.assign(app,{setName(){},setPath(){},whenReady:async()=>{},quit(){trace.push('quit');finished(0);},exit(code){trace.push('exit:'+code);finished(code);}});
  const failure=Object.assign(new Error('EEXIST: unpublished or foreign helper claim retained without replacement'),{code:'EEXIST'});
  class Backend {async resumeClose(){return null;}hasCloseIntent(){return false;}constructor(){this.ready=Promise.reject(failure);}async abnormalDrain(){trace.push('drain');}abnormalDetach(){trace.push('detach');}}
@@ -143,7 +187,7 @@ test('desktop explicitly refused HTTP close permits a later deliberate close wit
 });
 
 test('native complete close attempt blocks new canvas, Open, Save, analysis and window actions while discard waits',async()=>{
- const app=new EventEmitter(),ipcMain=new EventEmitter(),actions=[],dialogs=[],enabled=[];let menus,owned,finishRestore,discardEntered,exited;const waiting=new Promise(resolve=>finishRestore=resolve),entered=new Promise(resolve=>discardEntered=resolve),done=new Promise(resolve=>exited=resolve);let closeCount=0,localD=0;
+ const app=new EventEmitter(),ipcMain=new MainIpc(),actions=[],dialogs=[],enabled=[];let menus,owned,finishRestore,discardEntered,exited;const waiting=new Promise(resolve=>finishRestore=resolve),entered=new Promise(resolve=>discardEntered=resolve),done=new Promise(resolve=>exited=resolve);let closeCount=0,localD=0;
  Object.assign(app,{setName(){},setPath(){},whenReady:async()=>{},quit(){exited();},exit(){throw new Error('Unexpected startup failure');}});
  class Contents extends EventEmitter{constructor(){super();this.mainFrame={};this.session={setPermissionRequestHandler(){},setPermissionCheckHandler(){}};}getURL(){return this.url??'';}setWindowOpenHandler(){}reloadIgnoringCache(){}send(channel,value){actions.push(value.action);queueMicrotask(()=>ipcMain.emit('mwb:action-result',{sender:this,senderFrame:this.mainFrame},{id:value.id,ok:true}));}}
  class Window extends EventEmitter{constructor(){super();this.webContents=new Contents();this.enabled=true;owned=this;}async loadURL(url){this.webContents.url=url;}show(){}focus(){}isDestroyed(){return Boolean(this.destroyed);}setEnabled(value){this.enabled=value;enabled.push(value);}destroy(){this.destroyed=true;}attemptEdit(){if(this.enabled)localD++;}}

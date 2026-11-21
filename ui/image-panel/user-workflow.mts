@@ -81,7 +81,7 @@ export function currentViewStatisticsSelection(state:WorkflowState|null|undefine
 export function framePreviewRecipe(object: ViewObject | null | undefined,display: Readonly<Record<string,unknown>> | null | undefined){
  const spatial=object?.panels?.length!>0&&object!.panels!.every(p=>p.domain==='spatial_pixels');
  if(!display)return {};
- return Object.fromEntries((spatial?['gamma','display_range','max_size','upscale','interpolation','component']:['max_size',...(display.component!==undefined?['component']:[])]).filter(k=>display[k]!==undefined).map(k=>[k,copy(display[k])]));
+ return Object.fromEntries((spatial?['tone','gamma','display_range','max_size','upscale','interpolation','component']:['max_size',...(display.component!==undefined?['component']:[])]).filter(k=>display[k]!==undefined).map(k=>[k,copy(display[k])]));
 }
 export class SavedViewHistory{
  declare limit: number;declare entries: SavedViewEntry[];declare index: number;

@@ -59,12 +59,31 @@ function normalizeNamedReportExportGuidance(current,frozen){
 // each old value is checked against the original Git catalog, each new value
 // is checked in full, and all unlisted fields still face exact comparison.
 const MAC_R5_EXTENSIONS=JSON.parse(readFileSync(new URL('./fixtures/mac-r5-catalog-extensions.json',import.meta.url),'utf8'));
+const DISPLAY_TONE_SCHEMA={
+ type:'object',additionalProperties:false,
+ description:'Display only: normalize raw range, clamp((n-.5)*contrast+.5+brightness), pow(1/gamma), palette/reverse, round8bit; never changes arrays or quantitative results.',
+ properties:{
+  brightness:{type:'number',minimum:-1,maximum:1},
+  contrast:{type:'number',minimum:0,maximum:4},
+  colormap:{type:'string',enum:['gray','viridis','cividis','magma','custom']},
+  reverse:{type:'boolean'},
+  colors:{type:'array',minItems:2,maxItems:8,items:{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}},
+  positions:{type:'array',minItems:2,maxItems:8,items:{type:'number',minimum:0,maximum:1},description:'Optional explicit stops, strictly increasing from 0 to 1 and matching colors; omitted uses even spacing.'},
+ },
+};
+const NAMED_CATALOG_EXTENSIONS=structuredClone(MAC_R5_EXTENSIONS);
+for(const name of ['image_preview','image_compare']){
+ const change={path:'inputSchema.properties.tone',added:true,after:DISPLAY_TONE_SCHEMA};
+ const previous=NAMED_CATALOG_EXTENSIONS.find(tool=>tool.name===name);
+ if(previous)previous.changes.push(change);
+ else NAMED_CATALOG_EXTENSIONS.push({name,changes:[change]});
+}
 function fieldAt(tool,field){
  const keys=field.split('.'),key=keys.pop();
  return {parent:keys.reduce((value,name)=>value[name],tool),key};
 }
-function normalizeNamedMacR5Extensions(current,frozen){
- for(const {name,changes} of MAC_R5_EXTENSIONS){
+function normalizeNamedCatalogExtensions(current,frozen){
+ for(const {name,changes} of NAMED_CATALOG_EXTENSIONS){
   const selected=current.filter(tool=>tool.name===name),original=frozen.filter(tool=>tool.name===name);
   assert.equal(selected.length,1,`Exactly one current ${name}`);
   assert.equal(original.length,1,`Exactly one frozen ${name}`);
@@ -84,8 +103,8 @@ function normalizeNamedMacR5Extensions(current,frozen){
  }
 }
 
-test('named Mac r5 deltas reject changed limits, prose, requirements and unrelated legacy drift',()=>{
- const frozen=MAC_R5_EXTENSIONS.map(({name,changes})=>{
+test('named catalog deltas reject changed limits, prose, requirements and unrelated legacy drift',()=>{
+ const frozen=NAMED_CATALOG_EXTENSIONS.map(({name,changes})=>{
   const tool={name,description:'unchanged legacy description',inputSchema:{type:'object',additionalProperties:false,required:['object_id'],properties:{object_id:{type:'string'}}}};
   for(const change of changes){
    const keys=change.path.split('.'),key=keys.pop();let parent=tool;
@@ -95,12 +114,12 @@ test('named Mac r5 deltas reject changed limits, prose, requirements and unrelat
   return tool;
  });
  const original=structuredClone(frozen),current=structuredClone(frozen);
- for(const {name,changes} of MAC_R5_EXTENSIONS)for(const change of changes){
+ for(const {name,changes} of NAMED_CATALOG_EXTENSIONS)for(const change of changes){
   const {parent,key}=fieldAt(current.find(tool=>tool.name===name),change.path);parent[key]=structuredClone(change.after);
  }
- const check=value=>{const copy=structuredClone(value);normalizeNamedMacR5Extensions(copy,frozen);assert.deepEqual(copy,frozen);};
+ const check=value=>{const copy=structuredClone(value);normalizeNamedCatalogExtensions(copy,frozen);assert.deepEqual(copy,frozen);};
  check(current);
- for(const {name,changes} of MAC_R5_EXTENSIONS){
+ for(const {name,changes} of NAMED_CATALOG_EXTENSIONS){
   for(const change of changes){
    const changed=structuredClone(current),tool=changed.find(tool=>tool.name===name),{parent,key}=fieldAt(tool,change.path);
    parent[key]=typeof change.after==='number'?change.after+1:typeof change.after==='string'?change.after+' unreviewed':{...change.after,unreviewed:true};
@@ -131,7 +150,7 @@ test('named Mac r5 deltas reject changed limits, prose, requirements and unrelat
   assert.throws(()=>check([...current,structuredClone(current.find(tool=>tool.name===name))]));
  }
  const changedFrozen=structuredClone(frozen);changedFrozen[0].description+=' rewritten history';
- assert.throws(()=>normalizeNamedMacR5Extensions(structuredClone(current),changedFrozen));
+ assert.throws(()=>normalizeNamedCatalogExtensions(structuredClone(current),changedFrozen));
  assert.deepEqual(frozen,original,'The original baseline is never mutated');
 });
 
@@ -289,7 +308,8 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // additive changes, never drop descriptions or weaken old scientific tests.
   // #126 authorizes exactly these three additive metadata tools; the frozen
   // catalog and every retained legacy tool/schema remain compared below.
-  const additions=['image_column_candidates','image_column_fit','image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge','image_source_proof','image_source_proof_info','image_source_proof_revoke'];
+  // A measured scan ROI is its own additive import, with no change to the old FFT API.
+  const additions=['image_column_candidates','image_column_fit','image_spatial_field','image_domain_map','image_analysis_candidates','image_field_extend','image_evidence','image_discovery','image_discovery_review','image_gpa','image_gpa_read','image_gpa_view','image_method_next','image_method_plan','image_method_step','image_panel_resume','image_topology','image_preview_acknowledge','image_source_proof','image_source_proof_info','image_source_proof_revoke','image_import_diffraction_roi'];
   assert.deepEqual(currentSchema.filter(tool=>!schema.some(old=>old.name===tool.name)).map(tool=>tool.name).sort(),additions.slice().sort());
   const retainedSchema=structuredClone(currentSchema.filter(tool=>!additions.includes(tool.name)));
   // #70 intentionally changes preview admission, not old scientific arguments.
@@ -332,10 +352,10 @@ test('frozen JS workspace and schema survive a copied compiled plugin without FF
   // Owner-authorized HRTEM report guidance is one exact prose-only extension;
   // validate it and the unchanged entire export contract before normalizing.
   normalizeNamedReportExportGuidance(retainedSchema,schema);
-  normalizeNamedMacR5Extensions(retainedSchema,schema);
+  normalizeNamedCatalogExtensions(retainedSchema,schema);
   const contextProperties=retainedSchema.find(tool=>tool.name==='analysis_update').inputSchema.properties.selections.properties;
   for(const role of ['spatial_field','domains','active_plan']){assert.deepEqual(contextProperties[role],contextProperties.atlas,'New context selection retains the exact scoped-reference schema');delete contextProperties[role];}
-  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except named presentation/ancestry controls, exact report export guidance, reviewed Mac r5 extensions and additive F1a/F4 tools');
+  assert.deepEqual(retainedSchema,schema,'All existing schemas/descriptions remain exact except named presentation/ancestry controls, exact report export guidance, reviewed Mac r5 and display tone extensions and additive tools');
   const unknown=await current.rpc('tools/call',{name:'image_result',arguments:{request_id:'unknown-original-request'}});
   const oldText=refused.result.content[0].text,newText=unknown.result.content[0].text;
   assert.ok(newText.startsWith(oldText+'. Query image_result with original request_id=unknown-original-request;'));

@@ -1,13 +1,17 @@
 // A bounded, per-read projection of already provider-qualified ancestry.
 // It contains no arrays, rendered ancestor images, or new scientific identity.
-export const IMAGE_FRAME_ANCESTRY_FIELDS=['object_id','kind','parent_object_id','base_object_id','source_object_id','frame_index','dm_dataset_index','dm_plane_selection','source_identity','source_file_format','source_reader','upstream_backend','backend','state','image_path','evidence_format'] as const;
+const BASE_FIELDS=['object_id','kind','parent_object_id','base_object_id','source_object_id','frame_index','dm_dataset_index','dm_plane_selection','source_identity','source_file_format','source_reader','upstream_backend','backend','state','image_path','evidence_format'] as const;
+export const IMAGE_FRAME_ANCESTRY_FIELDS=[...BASE_FIELDS,'origin','array_domain','diffraction_roi'] as const;
 type Row=Record<string,unknown>;
 const row=(v:unknown):v is Row=>Boolean(v)&&typeof v==='object'&&!Array.isArray(v);
 const id=/^[a-f0-9]{32}$/;
 const canonical=(v:unknown):unknown=>Array.isArray(v)?v.map(canonical):row(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
 const same=(a:unknown,b:unknown)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
 function error():never{throw Object.assign(new Error('Invalid qualified frame ancestry projection'),{status:409});}
-export function frameAncestryProjection(value:Row):Row{return Object.fromEntries(IMAGE_FRAME_ANCESTRY_FIELDS.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]));}
+export function frameAncestryProjection(value:Row):Row {
+ const fields=value.kind==='frame'&&value.origin==='scan_roi_mean_diffraction'?IMAGE_FRAME_ANCESTRY_FIELDS:BASE_FIELDS;
+ return Object.fromEntries(fields.filter(key=>value[key]!==undefined).map(key=>[key,value[key]]));
+}
 export function readImageFrameAncestry(raw:unknown,root:Row):Row[]|null {
  if(raw===undefined)return null; // An older provider can keep the original reads.
  if(!row(raw)||Object.keys(raw).some(key=>!['schema_version','root_object_id','records'].includes(key))||raw.schema_version!==1||raw.root_object_id!==root.object_id||!Array.isArray(raw.records)||!raw.records.length||raw.records.length>65||Buffer.byteLength(JSON.stringify(raw))>512*1024)error();

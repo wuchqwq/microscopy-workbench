@@ -71,6 +71,13 @@ const recipes: Readonly<Record<string,CompositionRecipe>> = {
     gates: ['TIFF admission/page metadata or existing native-capture validator; domain and native calibration admission remain delegated'],
     budgets: ['TIFF metadata <=4096 pages; selected pages are decoded only by image_frame'],
   },
+  image_import_diffraction_roi: {
+    inputs: ['Explicit read-only scan path, dataset selector, declared storage axes and half-open scan ROI'],
+    outputs: ['Immutable reciprocal frame: float64 detector mean, source hash, selected scan and optional candidate disk fit'],
+    kind: 'scientific-array-write',
+    gates: ['Detector indices until separately sourced reciprocal calibration and centre; use other_diffraction for reflection comparison'],
+    budgets: ['4 GiB source hash budget, 512 MiB selected decoded samples, standard bounded detector plane'],
+  },
   image_info: {
     inputs: ['ScientificObjectRef:exact saved image/view/calibration/measurement'],
     outputs: ['SavedObjectMetadata:historical immutable metadata, not a fresh observation'],

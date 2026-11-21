@@ -27,7 +27,7 @@ interface DesktopElectron {
  BrowserWindow:new(options:unknown)=>DesktopWindow;
  Menu:{buildFromTemplate(items:MenuItem[]):unknown;setApplicationMenu(menu:unknown):void;};
  dialog:{showOpenDialog(options:unknown):Promise<{canceled:boolean;filePaths:string[]}>;showMessageBox(window:DesktopWindow|undefined,options:unknown):Promise<{response:number}>;showErrorBox(title:string,message:string):void;};
- ipcMain:EventEmitter;
+ ipcMain:EventEmitter&{handle(channel:string,handler:(event:unknown,...args:unknown[])=>Promise<unknown>):void;};
 }
 const electronModule='electron',electron=await import(electronModule) as unknown as DesktopElectron;
 const {app,BrowserWindow,Menu,dialog,ipcMain}=electron;
@@ -37,6 +37,7 @@ app.setName('Microscopy Workbench Prototype');
 if(process.env.MWB_DESKTOP_PROFILE){const profile=process.env.MWB_DESKTOP_PROFILE;if(!path.isAbsolute(profile))throw new Error('MWB_DESKTOP_PROFILE must be absolute');mkdirSync(profile,{recursive:true});app.setPath('userData',profile);for(const name of ['sessionData','crashDumps'] as const){const directory=path.join(profile,name);mkdirSync(directory,{recursive:true});app.setPath(name,directory);}const logs=path.join(profile,'logs');mkdirSync(logs,{recursive:true});app.setAppLogsPath(logs);}
 let options:DesktopOptions,window:DesktopWindow|undefined,backend:DesktopBackendClient|undefined,closing:DesktopCloseCoordinator|undefined,allowQuit=false,starting=false,nativeClosing=false,replacing=false,jointReviewBusy=false;
 let address:ReturnType<typeof panelAddress>|undefined,nextAction=0;
+let scanPickerOpen=false;
 let nativeReviewDecision:((reviewed:'record'|false)=>void)|null=null;
 const pendingActions=new Map<number,{resolve:(reply:DesktopActionReply)=>void;timer:ReturnType<typeof setTimeout>}>();
 const report=async(message:string)=>{const owned=window;if(nativeClosing&&owned&&!owned.isDestroyed())owned.setEnabled(true);try{await dialog.showMessageBox(owned,{type:'error',title:'Microscopy Workbench',message:'操作尚未完成',detail:message,buttons:['关闭提示'],defaultId:0,cancelId:0,noLink:true});}finally{if(nativeClosing&&owned&&!owned.isDestroyed())owned.setEnabled(false);}};
@@ -51,6 +52,14 @@ ipcMain.on('mwb:action-result',(event:unknown,value:unknown)=>{
 ipcMain.on('mwb:open-image',(event:unknown,...args:unknown[])=>{
  if(!trustedSender(event)||args.length||nativeClosing||starting)return;
  void replaceWorkspace(false);
+});
+ipcMain.handle('mwb:choose-scan-file',async(event,...args)=>{
+ if(!trustedSender(event)||args.length||nativeClosing||starting||replacing||jointReviewBusy||scanPickerOpen)return null;
+ const owner=window;scanPickerOpen=true;
+ try{
+  const selected=await selectFile('选择只读 4D-STEM 扫描数据',['npy','h5','hdf5','hdf']);
+  return window===owner&&!owner?.isDestroyed()&&!nativeClosing?selected??null:null;
+ }finally{scanPickerOpen=false;}
 });
 ipcMain.on('mwb:review-image',(event:unknown,...args:unknown[])=>{if(!trustedSender(event)||args.length>1||nativeClosing||starting||replacing||jointReviewBusy)return;let request:DesktopJointReviewRequest;try{request=readDesktopJointReviewRequest(args[0]??{});}catch{return;}void reviewImageScope(request);});
 ipcMain.on('mwb:query-image-review',(event:unknown,...args:unknown[])=>{
@@ -167,7 +176,7 @@ async function quitPreservingRecovery():Promise<void>{
 }
 
 async function replaceWorkspace(existing:boolean):Promise<void>{
- if(nativeClosing||starting||replacing||jointReviewBusy||!options||!window)return;
+ if(nativeClosing||starting||replacing||jointReviewBusy||scanPickerOpen||!options||!window)return;
  const originalWindow=window;replacing=true;
  try{
   // Keep the current document alive while selecting paths. Cancel has no effect.

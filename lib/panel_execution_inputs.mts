@@ -82,3 +82,16 @@ export function verifyPanelExecutionInput(workspace:string,input_relative_path:s
 function paths(workspace:string):string[]{const root=rootOf(workspace),parent=path.join(root,'panel-journals');if(!existsSync(parent))return [];ordinaryPath(root,parent,true);const dirs=readdirSync(parent);need(dirs.length<=512,'Panel journal directory listing exceeds budget');const files:string[]=[];let count=0;for(const name of dirs){if(!/^[A-Za-z0-9_-]{1,128}$/.test(name))continue;const dir=path.join(parent,name);ordinaryPath(root,dir,true);const entries=readdirSync(dir);count+=entries.length;need(count<=4096,'Panel request listing exceeds budget');for(const entry of entries){if(/^panel-[a-f0-9]{32}-[1-9][0-9]{0,15}\.input\.json$/.test(entry))files.push(path.join('panel-journals',name,entry).replaceAll('\\','/'));}need(files.length<=512,'Panel FFT history exceeds bounded listing; query an exact journal path');}return files.sort();}
 export function listPanelExecutionInputs(workspace:string):PanelExecutionInputHistory[]{let reader:ReturnType<typeof readImageProviderRecords>|undefined;try{reader=readImageProviderRecords(workspace);}catch{}return paths(workspace).map(relative=>{try{return inspect(workspace,relative,undefined,reader);}catch(error){return {schema_version:1,kind:'gui_fft_input_v1',request_id:path.basename(relative,'.input.json'),input_relative_path:relative,input_sha256:'',qualification:'unavailable',status:'unavailable',fft_object_id:null,input_snapshot:null,reason:(error as Error).message.slice(0,1024)};}});}
 export function readPanelExecutionInput(workspace:string,requestId:string):PanelExecutionInputHistory {need(requestPattern.test(requestId),'exact new GUI FFT request identity required');const matches=paths(workspace).filter(relative=>path.basename(relative)===requestId+'.input.json');need(matches.length===1,'original input association is absent or duplicated');return inspect(workspace,matches[0]!,undefined);}
+
+// Filter by the recorded proposal first; only the existing strict reader may
+// qualify a match for reuse. This avoids hashing unrelated scientific arrays.
+export function matchingPanelFftInputs(workspace:string,match:(input:PanelFrozenFftInput)=>boolean):PanelExecutionInputHistory[]{
+ const root=rootOf(workspace),reader=readImageProviderRecords(root),matches:PanelExecutionInputHistory[]=[];
+ for(const relative of paths(root)){
+  try{
+   const candidate=json(root,recordPath(root,relative)).value.input_snapshot as PanelFrozenFftInput;
+   if(candidate&&match(candidate))matches.push(inspect(root,relative,undefined,reader));
+  }catch{/* A corrupt/unavailable record provides no reusable result. */}
+ }
+ return matches;
+}

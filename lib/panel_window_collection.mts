@@ -232,7 +232,14 @@ export class PanelWindowStore {
    restored.push({entry,grid_key:d.grid_key,asset_fingerprint:d.fingerprint,input_calibration:inputCalibration,...(item.hidden?{hidden:true}:{}),...(latestFingerprint?{latest_observation_asset_fingerprint:latestFingerprint,latest_observation_grid_key:item.latest_observation_grid_key as string}:{})});used.add(entry.window_id);grids.add(d.grid_key);mappings.set(entry.window_id,panelWindowMappingFingerprint(saved.object));
   }catch{/* Omit an unavailable or malformed passive window. */}}
   const active=restored.find(r=>r.entry.object_id===current.object_id);
-  if(!active||raw.active_window_id!==active.entry.window_id&&!(raw.active_window_id===null&&active.hidden)||restored.filter(r=>!r.hidden).length>PANEL_WINDOW_LIMIT){if(minimumRevision!==undefined)this.revision=nextRevision;return;}
-  this.records=restored;this.mappingFingerprints=mappings;this.frameId=currentFrame!.frame_object_id as string;this.activeId=active.hidden?null:active.entry.window_id;this.unavailableReason=undefined;this.revision=Math.max(nextRevision,(raw.revision as number)+1);
+  // A qualified GPA result has its own display grid. Its independently
+  // verified source and FFT windows can be retained without an active editor.
+  const gpaDisplay=raw.active_window_id===null&&raw.unavailable_reason==='unsupported_view'&&
+   ['gpa','gpa_view'].includes(String(current.kind))&&!describe(current,currentFrame);
+  const admissibleActive=active&&(raw.active_window_id===active.entry.window_id||raw.active_window_id===null&&active.hidden);
+  if((!gpaDisplay&&!admissibleActive)||restored.filter(r=>!r.hidden).length>PANEL_WINDOW_LIMIT){if(minimumRevision!==undefined)this.revision=nextRevision;return;}
+  this.records=restored;this.mappingFingerprints=mappings;this.frameId=currentFrame!.frame_object_id as string;
+  this.activeId=gpaDisplay||active?.hidden?null:active!.entry.window_id;this.unavailableReason=gpaDisplay?'unsupported_view':undefined;
+  this.revision=Math.max(nextRevision,(raw.revision as number)+1);
  }
 }

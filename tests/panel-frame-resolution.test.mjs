@@ -23,6 +23,25 @@ test('terminal frame metadata is not manufactured from display or source hints',
  for(const frame_index of [-1,1.25,'0',false,NaN,Infinity]){const r=await resolvePanelFrame(record(1,'frame',{frame_index}),async()=>assert.fail());assert.equal(r.status,'corrupt');assert.equal(r.reason_code,'invalid_frame_index');assert.equal(r.frame,null);}
  const r=await resolvePanelFrame(record(1,'frame',{frame_index:0}),async()=>assert.fail());assert.equal(r.status,'found');assert.equal(r.frame.source_object_id,undefined,'unknown source metadata stays unknown');
 });
+test('qualified scan ROI mean has its own terminal identity on both read paths',async()=>{
+ const sha='a'.repeat(64),mean=record(2,'frame',{origin:'scan_roi_mean_diffraction',array_domain:'reciprocal',
+  source_identity:{sha256:sha},diffraction_roi:{mean_object_id:id(2),source_sha256:sha,layout:'scan4d',
+   input_axes:['scan_y','scan_x','detector_y','detector_x'],scan_shape_yx:[2,3],detector_shape_yx:[7,9],
+   scan_roi_y0_y1_x0_x1_exclusive:[0,1,1,3],pattern_count:2}});
+ const root=record(1,'view',{parent_object_id:id(2)});
+ const check=async terminal=>{
+  for(const ancestry of [null,bundled([root,terminal])]){
+   const r=await resolvePanelFrame(root,async()=>terminal,ancestry);
+   assert.deepEqual(r.frame,terminal===mean?{frame_object_id:id(2),frame_index:null,source_object_id:null,origin:'scan_roi_mean_diffraction'}:null);
+   assert.equal(r.status,terminal===mean?'found':'corrupt');
+  }
+ };
+ await check(mean);
+ await check({...mean,frame_index:0});
+ await check({...mean,diffraction_roi:{...mean.diffraction_roi,pattern_count:4}});
+ await check({...mean,diffraction_roi:{...mean.diffraction_roi,scan_roi_y0_y1_x0_x1_exclusive:[1,3,0,1]}});
+ await check({...mean,diffraction_roi:{...mean.diffraction_roi,source_sha256:'b'.repeat(64)}});
+});
 test('ordinary and bundled cycles stop on the already-qualified repeated record',async()=>{
  const a=record(1,'annotate',{parent_object_id:id(2)}),b=record(2,'view',{parent_object_id:id(1)}),fixture={root:a,records:[a,b,a],map:new Map([[id(1),a],[id(2),b]])};
  for(const bundle of [false,true]){const {result,calls}=await resolve(fixture,{bundle});assert.equal(result.status,'cycle');assert.equal(result.records_checked,3);assert.equal(result.ancestor_reads,2);assert.equal(result.frame,null);assert.deepEqual(calls,bundle?[]:[id(2),id(1)]);}
