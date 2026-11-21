@@ -279,6 +279,22 @@ test('real MCP restores gamma, range and exact clean PNG pixels over spatial and
    const initial=clone(panel.state()),recipe=makeFigureRecipe(initial,{...figurePreferences,preset:spectral?'diffraction':'real-space'}),originalArray=readFileSync(path.join(workspace,'objects',view.object_id,'data.npy')),clean=await act('figure-base'),cleanPixels=pixelDigest(clean.figure_base.clean_png_base64);
    await act('preview',{gamma:2});assert.equal(panel.state().effective_display.gamma,2);assert.notEqual(pixelDigest(panel.state().png_base64),pixelDigest(initial.png_base64));
    await act('restore-figure-display',{recipe});assert.equal(panel.state().effective_display.gamma,1);assert.equal(pixelDigest(panel.state().png_base64),pixelDigest(initial.png_base64));
+   // Real regression: canonical default omission must not inherit current Viridis.
+   for(const legacy of [false,true]){
+    await act('preview',{tone:{colormap:'viridis',brightness:.2,contrast:1.5,reverse:true}});
+    assert.equal(panel.state().effective_display.tone.colormap,'viridis');
+    const restoring=clone(recipe);if(legacy)delete restoring.display_recipe.tone;
+    await act('restore-figure-display',{recipe:restoring});
+    assert.deepEqual(panel.state().effective_display.tone,{brightness:0,contrast:1,colormap:'gray',reverse:false,colors:['#000000','#ffffff']});
+    assert.deepEqual(calls.filter(v=>v.name==='image_preview').at(-1).args.tone,panel.state().effective_display.tone);
+    assert.equal(pixelDigest(panel.state().png_base64),pixelDigest(initial.png_base64));
+    assert.deepEqual(readFileSync(path.join(workspace,'objects',view.object_id,'data.npy')),originalArray);
+    assert.deepEqual(readFileSync(source),sourceBytes);
+    if(process.env.DM_RECIPE_EVIDENCE_DIR){
+     const report={scope:'actual local core MCP + Panel HTTP, no GUI/model',domain:spectral?'frequency':'spatial',legacy_recipe_without_tone:legacy,restore_http_status_asserted:200,sent_tone:calls.filter(v=>v.name==='image_preview').at(-1).args.tone,restored_tone:panel.state().effective_display.tone,raw_source_sha256:createHash('sha256').update(sourceBytes).digest('hex'),source_unchanged:readFileSync(source).equals(sourceBytes),raw_array_unchanged:readFileSync(path.join(workspace,'objects',view.object_id,'data.npy')).equals(originalArray),original_pixels:pixelDigest(initial.png_base64),restored_pixels:pixelDigest(panel.state().png_base64)};
+     writeFileSync(path.join(process.env.DM_RECIPE_EVIDENCE_DIR,`${report.domain}-${legacy?'legacy':'explicit'}-default-tone.json`),JSON.stringify(report,null,2)+'\n',{flag:'wx'});
+    }
+   }
    await act('preview',{display_range:spectral?[2,15]:[500,3500]});assert.notDeepEqual(panel.state().effective_display.display_range,recipe.display_recipe.display_range);
    await act('edit-layout',{updates:[{annotation_id:'measured',presentation:{marker_shape:'diamond',label:{offset:[20,6]}}}],auto_commit:true});
    const count=calls.filter(v=>v.name==='image_preview').length;loseRestoreReply=true;
