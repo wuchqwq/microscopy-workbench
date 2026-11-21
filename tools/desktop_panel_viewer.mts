@@ -18,6 +18,7 @@ interface AttachedWindow extends EventEmitter {
  show():void;
  focus():void;
  destroy():void;
+ close():void;
  webContents:EventEmitter&{
   getURL():string;
   isCrashed():boolean;
@@ -38,6 +39,7 @@ interface ViewerElectron {
   whenReady():Promise<void>;
   exit(code:number):void;
   quit():void;
+  dock?:{hide():void};
  };
  BrowserWindow:new (options:unknown)=>AttachedWindow;
  Menu:{buildFromTemplate(template:unknown[]):unknown;setApplicationMenu(menu:unknown):void};
@@ -74,11 +76,11 @@ async function verifyHelper(input:DesktopPanelIdentity,address:ReturnType<typeof
  if(!isRow(state)||state.panel_id!==input.panelId||state.helper_session_id!==input.helperSessionId||state.panel_generation!==input.generation)throw new Error('Owned Panel helper identity mismatch');
 }
 
-async function createViewer(input:DesktopPanelIdentity) {
+async function createViewer(input:DesktopPanelIdentity,hiddenCheck=false) {
  const address=desktopPanelAddress(input);
  await verifyHelper(input,address);
  // Standard macOS editing and Quit roles only; science remains in the Agent.
- Menu.setApplicationMenu(process.platform==='darwin'?Menu.buildFromTemplate([
+ if(!hiddenCheck)Menu.setApplicationMenu(process.platform==='darwin'?Menu.buildFromTemplate([
   {label:'Microscopy Workbench',submenu:[{role:'about'},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{role:'quit'}]},
   {label:'编辑',submenu:[{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'}]},
  ]):null);
@@ -104,6 +106,7 @@ async function createViewer(input:DesktopPanelIdentity) {
   closeRequested=false;
   rendererCloseConfirmed=false;
   if(!rendererGone()){closeRequested=true;return;}
+  if(hiddenCheck){event.preventDefault();return;}
   const choice=dialog.showMessageBoxSync(window,{type:'warning',title:'Microscopy Workbench',message:'工作台界面进程已停止',
    detail:'关闭此窗口会保留已写入工作区的记录和恢复草稿。仅存在于界面的编辑已无法从此窗口取回。',
    buttons:['保持窗口','关闭此窗口'],defaultId:0,cancelId:0,noLink:true});
@@ -111,6 +114,7 @@ async function createViewer(input:DesktopPanelIdentity) {
   if(!rendererCloseConfirmed)event.preventDefault();
  });
  contents.on('will-prevent-unload',(event:NavigationEvent)=>{
+  if(hiddenCheck)return; // Leave renderer veto intact without opening a prompt.
   // Let the Panel's existing renderer guard refuse unload, including local drafts.
   if(rendererCloseConfirmed&&rendererGone()){
    rendererCloseConfirmed=false;
@@ -136,11 +140,35 @@ async function createViewer(input:DesktopPanelIdentity) {
  return {window,address,rendererGone};
 }
 
-function start(input:DesktopPanelIdentity):void {
+function useViewerProfile(input:DesktopPanelIdentity):void {
  app.setName('Microscopy Workbench');
  const profile=desktopPanelProfile(input);
  for(const name of ['userData','sessionData','crashDumps'] as const)app.setPath(name,profile);
  app.setAppLogsPath(profile);
+}
+
+// Uses the usual helper identity and hidden renderer and closes through the
+// renderer's existing unload guard. No activation receipt or Dock reveal.
+function checkHiddenViewer(input:DesktopPanelIdentity):void {
+ useViewerProfile(input);
+ if(!app.requestSingleInstanceLock({})){app.exit(1);return;}
+ app.dock?.hide();
+ void app.whenReady().then(async()=>{
+  const {window,address,rendererGone}=await createViewer(input,true);
+  if(window.isVisible()||window.isFocused()||rendererGone()||!isOwnedDesktopDocument(window.webContents.getURL(),address)){
+   window.close();
+   process.exitCode=1;
+   return;
+  }
+  window.once('closed',()=>{
+   process.stdout.write(JSON.stringify({viewer:'ready',close:'normal',pid:process.pid})+'\n',()=>app.quit());
+  });
+  window.close();
+ }).catch(()=>app.exit(1));
+}
+
+function start(input:DesktopPanelIdentity):void {
+ useViewerProfile(input);
  const {panelId,helperSessionId,generation,requestId}=input;
  if(!app.requestSingleInstanceLock({panelId,helperSessionId,generation,requestId})){app.exit(0);return;}
  // Do not await whenReady at Electron's ESM entry top level.
@@ -191,8 +219,12 @@ function start(input:DesktopPanelIdentity):void {
 
 let admitted:DesktopPanelIdentity|undefined;
 try{
- const input=readArguments(process.argv.slice(2));
- if(readDesktopPanelActivation(input))app.exit(0);
+ const args=process.argv.slice(2),hiddenCheck=args[0]==='--verify-hidden-start';
+ const input=readArguments(hiddenCheck?args.slice(1):args);
+ if(hiddenCheck){
+  assertDesktopPanelIntent(input);
+  checkHiddenViewer(input);
+ }else if(readDesktopPanelActivation(input))app.exit(0);
  else{
   assertDesktopPanelIntent(input);
   admitted=input;

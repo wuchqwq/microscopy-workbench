@@ -2,7 +2,7 @@
 
 已有工作台 Panel 时，可在原图及工作区仍可读取的前提下显示或聚焦其
 Electron 窗口。此功能需要显式设置 `MICROSCOPY_PANEL_DESKTOP=1`，保留
-`MICROSCOPY_PANEL=1`，并使用项目的 Electron 开发运行时。没有开启时，原
+`MICROSCOPY_PANEL=1`，并使用独立应用包内的 Electron，或源码检出的开发运行时。没有开启时，原
 Panel 工具保持原有入口。
 
 先用 `image_panel_current` 核对已登记的 Panel，再用其确切 ID 调用
