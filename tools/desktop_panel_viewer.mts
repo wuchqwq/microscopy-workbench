@@ -5,7 +5,7 @@ import {
  desktopPanelProfile,readDesktopPanelActivation,showDesktopPanelWindow,
 } from '../lib/desktop_panel_activation.mjs';
 import type {DesktopPanelActivation,DesktopPanelIdentity} from '../lib/desktop_panel_activation.mjs';
-import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow} from '../lib/desktop_contracts.mjs';
+import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow,readWorkspaceStatus} from '../lib/desktop_contracts.mjs';
 
 interface NavigationEvent {preventDefault():void;url?:string;}
 interface AttachedWindow extends EventEmitter {
@@ -56,7 +56,7 @@ function readArguments(argv:readonly string[]) {
  return desktopPanelIdentity(workspace!,{panelId,helperSessionId,generation:Number(generation),requestId});
 }
 
-async function verifyHelper(input:DesktopPanelIdentity,address:ReturnType<typeof desktopPanelAddress>) {
+async function verifyHelper(input:DesktopPanelIdentity,address:ReturnType<typeof desktopPanelAddress>,hiddenCheck:boolean) {
  const response=await fetch(address.origin+'/api/state',{
   headers:{'X-Panel-Token':address.token},redirect:'error',signal:AbortSignal.timeout(3000),
  });
@@ -74,11 +74,15 @@ async function verifyHelper(input:DesktopPanelIdentity,address:ReturnType<typeof
  }finally{await reader.cancel();}
  const state:unknown=JSON.parse(Buffer.concat(chunks,bytes).toString('utf8'));
  if(!isRow(state)||state.panel_id!==input.panelId||state.helper_session_id!==input.helperSessionId||state.panel_generation!==input.generation)throw new Error('Owned Panel helper identity mismatch');
+ if(hiddenCheck){
+  const status=readWorkspaceStatus(state);
+  if(status.status!=='clean'||status.dirty||!status.can_close)throw new Error('Hidden viewer verification requires an already saved, clean workspace');
+ }
 }
 
 async function createViewer(input:DesktopPanelIdentity,hiddenCheck=false) {
  const address=desktopPanelAddress(input);
- await verifyHelper(input,address);
+ await verifyHelper(input,address,hiddenCheck);
  // Standard macOS editing and Quit roles only; science remains in the Agent.
  if(!hiddenCheck)Menu.setApplicationMenu(process.platform==='darwin'?Menu.buildFromTemplate([
   {label:'Microscopy Workbench',submenu:[{role:'about'},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{role:'quit'}]},
@@ -114,7 +118,10 @@ async function createViewer(input:DesktopPanelIdentity,hiddenCheck=false) {
   if(!rendererCloseConfirmed)event.preventDefault();
  });
  contents.on('will-prevent-unload',(event:NavigationEvent)=>{
-  if(hiddenCheck)return; // Leave renderer veto intact without opening a prompt.
+  if(hiddenCheck){
+   process.stderr.write('Hidden viewer verification refused by the renderer close guard.\n');
+   return; // Leave renderer veto intact without opening a prompt.
+  }
   // Let the Panel's existing renderer guard refuse unload, including local drafts.
   if(rendererCloseConfirmed&&rendererGone()){
    rendererCloseConfirmed=false;
@@ -164,7 +171,10 @@ function checkHiddenViewer(input:DesktopPanelIdentity):void {
    process.stdout.write(JSON.stringify({viewer:'ready',close:'normal',pid:process.pid})+'\n',()=>app.quit());
   });
   window.close();
- }).catch(()=>app.exit(1));
+ }).catch(()=>{
+  process.stderr.write('Hidden viewer verification did not reach readiness.\n');
+  app.exit(1);
+ });
 }
 
 function start(input:DesktopPanelIdentity):void {

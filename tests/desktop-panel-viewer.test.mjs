@@ -5,14 +5,14 @@ import vm from 'node:vm';
 import {EventEmitter} from 'node:events';
 import {readFileSync} from 'node:fs';
 import {desktopPanelIdentity,showDesktopPanelWindow} from '../lib/desktop_panel_activation.mjs';
-import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow} from '../lib/desktop_contracts.mjs';
+import {desktopSecurityPreferences,isOwnedDesktopDocument,isRow,readWorkspaceStatus} from '../lib/desktop_contracts.mjs';
 
 function fixture(platform='darwin',{hidden=false,veto=false}={}) {
  const panelId='a'.repeat(32),helperSessionId='b'.repeat(32),token='c'.repeat(48);
  const input={workspace:'/isolated-task',panelId,helperSessionId,generation:1,requestId:'first'};
  const address={url:'http://127.0.0.1:12345/#'+token,origin:'http://127.0.0.1:12345',token};
  const app=new EventEmitter(),receipts=new Map(),menus=[],calls={loads:0,focus:0,quit:0,acks:0},dialogs=[];
- let window,stopped=false,choice=0,current=address.url;const output=[];
+ let window,stopped=false,choice=0,current=address.url;const output=[],errors=[];
  Object.assign(app,{setName(){},setPath(){},setAppLogsPath(){},requestSingleInstanceLock:()=>true,whenReady:async()=>{},dock:{hide(){calls.hide=(calls.hide??0)+1;}},exit:code=>{throw Error('Unexpected exit '+code);},quit:()=>{calls.quit++;}});
  class Window extends EventEmitter {
   constructor(options){super();window=this;this.options=options;this.destroyed=false;this.visible=false;this.focused=false;this.minimized=false;this.gone=false;
@@ -26,15 +26,15 @@ function fixture(platform='darwin',{hidden=false,veto=false}={}) {
  }
  const electron={app,BrowserWindow:Window,Menu:{buildFromTemplate:items=>items,setApplicationMenu:menu=>menus.push(menu)},dialog:{showMessageBoxSync:(_window,options)=>{dialogs.push(options);return choice;},showMessageBox:async(_window,options)=>{dialogs.push(options);return {response:0};}}};
  const contents=readFileSync(new URL('../tools/desktop_panel_viewer.mjs',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('const { app, BrowserWindow, Menu, dialog } = await import(electronModule);','const { app, BrowserWindow, Menu, dialog } = __electron;');
- const context=vm.createContext({__electron:electron,desktopPanelIdentity,showDesktopPanelWindow,desktopSecurityPreferences,isOwnedDesktopDocument,isRow,
+ const context=vm.createContext({__electron:electron,desktopPanelIdentity,showDesktopPanelWindow,desktopSecurityPreferences,isOwnedDesktopDocument,isRow,readWorkspaceStatus,
   desktopPanelProfile:()=>'/isolated-profile',assertDesktopPanelIntent(){},readDesktopPanelActivation:request=>receipts.get(request.requestId)??null,
   acknowledgeDesktopPanelActivation:(request,result)=>{receipts.set(request.requestId,result);calls.acks++;},attachedDesktopPanelStopped:()=>stopped,
-  desktopPanelAddress:()=>({...address,url:current}),Buffer,AbortSignal,process:{platform,pid:42,stdout:{write(value,done){output.push(JSON.parse(value));done();}},argv:['electron','viewer',...(hidden?['--verify-hidden-start']:[]),input.workspace,panelId,helperSessionId,'1',input.requestId]},
-  fetch:async()=>({ok:true,body:{getReader:()=>{let done=false;return {read:async()=>done?{done:true}:(done=true,{done:false,value:Buffer.from(JSON.stringify({panel_id:panelId,helper_session_id:helperSessionId,panel_generation:1}))}),cancel:async()=>{}};}}}),
+  desktopPanelAddress:()=>({...address,url:current}),Buffer,AbortSignal,process:{platform,pid:42,stderr:{write(value){errors.push(value);}},stdout:{write(value,done){output.push(JSON.parse(value));done();}},argv:['electron','viewer',...(hidden?['--verify-hidden-start']:[]),input.workspace,panelId,helperSessionId,'1',input.requestId]},
+  fetch:async()=>({ok:true,body:{getReader:()=>{let done=false;return {read:async()=>done?{done:true}:(done=true,{done:false,value:Buffer.from(JSON.stringify({panel_id:panelId,helper_session_id:helperSessionId,panel_generation:1,workspace_analysis:{schema_version:1,status:'clean',dirty:false,can_close:true,working_revision:1,unresolved_request_id:null,recovery_available:false}}))}),cancel:async()=>{}};}}}),
  });
  new vm.Script(contents).runInContext(context);
  const settle=async()=>{for(let i=0;i<35;i++)await Promise.resolve();};
- return {app,calls,menus,receipts,dialogs,output,input,settle,get window(){return window;},setStopped:v=>{stopped=v;},setChoice:v=>{choice=v;},setAddress:v=>{current=v;}};
+ return {app,calls,menus,receipts,dialogs,output,errors,input,settle,get window(){return window;},setStopped:v=>{stopped=v;},setChoice:v=>{choice=v;},setAddress:v=>{current=v;}};
 }
 
 test('Mac menu supplies standard editing and guarded Quit, not scientific actions',async()=>{
@@ -95,4 +95,5 @@ test('hidden bundle probe uses the same renderer, never focuses or reports activ
  assert.equal(protectedViewer.window.isDestroyed(),false);
  assert.equal(protectedViewer.calls.quit,0);assert.equal(protectedViewer.calls.acks,0);
  assert.deepEqual(protectedViewer.output,[]);assert.deepEqual(protectedViewer.dialogs,[]);
+ assert.match(protectedViewer.errors.join(''),/renderer close guard/);
 });
