@@ -25,7 +25,7 @@ def add_parser(subparsers):
 
 
 @contextmanager
-def open_source(args, np):
+def open_source(args, np, *, self_contained=False):
     suffix = args.source.suffix.lower()
     dm_file = suffix in (".dm3", ".dm4")
     hdf_file = suffix in (".h5", ".hdf5", ".hdf")
@@ -77,9 +77,21 @@ def open_source(args, np):
                 source.visititems(record)
                 yield entries
             else:
-                if args.key is None or not isinstance(source.get(args.key), h5py.Dataset):
+                if args.key is None:
                     raise ValueError("Select an existing HDF5 dataset with --key; use --list to see keys")
-                yield source[args.key]
+                if self_contained:
+                    item = source
+                    for part in args.key.strip("/").split("/"):
+                        if not isinstance(item, h5py.Group) or not isinstance(item.get(part, getlink=True), h5py.HardLink):
+                            raise ValueError("The HDF5 dataset must be reachable by local hard links")
+                        item = item[part]
+                else:
+                    item = source.get(args.key)
+                if not isinstance(item, h5py.Dataset):
+                    raise ValueError("Select an existing HDF5 dataset with --key; use --list to see keys")
+                if self_contained and (item.is_virtual or item.external):
+                    raise ValueError("Externally stored or virtual HDF5 datasets cannot be bound to one source hash")
+                yield item
     elif suffix == ".npy":
         array = np.load(args.source, mmap_mode="r", allow_pickle=False)
         yield [{"shape": list(array.shape), "dtype": str(array.dtype)}] if args.inventory else array
@@ -192,6 +204,44 @@ def disk_fit(np, image, seed, bounds, hint, sigma):
     return (center, radius), report
 
 
+def validate_roi(array, layout, declared_scan_shape, roi):
+    if layout not in ("scan4d", "flat3d"):
+        raise ValueError("Explicit scan4d or flat3d layout required")
+    if array.ndim != (4 if layout == "scan4d" else 3) or array.dtype.kind not in "biuf":
+        raise ValueError("Array rank or real-valued dtype does not match the declared layout")
+    scan_shape = tuple(array.shape[:2]) if layout == "scan4d" else tuple(declared_scan_shape or ())
+    if len(scan_shape) != 2 or min(scan_shape) < 1 or (
+        layout == "flat3d" and scan_shape[0] * scan_shape[1] != array.shape[0]
+    ) or (declared_scan_shape and tuple(declared_scan_shape) != scan_shape):
+        raise ValueError("--scan-shape must agree with scan4d axes or the flat3d pattern count")
+    y0, y1, x0, x1 = roi
+    if not (0 <= y0 < y1 <= scan_shape[0] and 0 <= x0 < x1 <= scan_shape[1]):
+        raise ValueError("ROI must be nonempty and inside the scan")
+    if min(array.shape[-2:]) < 1:
+        raise ValueError("Detector axes must be nonempty")
+    return scan_shape
+
+
+def average_roi(np, array, layout, scan_shape, roi, *, virtual=False):
+    y0, y1, x0, x1 = roi
+    ky, kx = array.shape[-2:]
+    sums = np.zeros((2, ky, kx), dtype=np.float64)
+    counts = [0, 0]
+    virtual_total = np.empty((y1 - y0, x1 - x0), dtype=np.float64) if virtual else None
+    for y, x_start, x_stop, block in roi_blocks(array, layout, scan_shape[1], roi):
+        if block.dtype.kind == "f" and not np.isfinite(block).all():
+            raise ValueError("ROI contains nonfinite measured pixels")
+        sums[y % 2] += block.sum(axis=0, dtype=np.float64)
+        counts[y % 2] += len(block)
+        if virtual_total is not None:
+            virtual_total[y, x_start:x_stop] = block.sum(axis=(-2, -1), dtype=np.float64)
+
+    mean = sums.sum(axis=0) / sum(counts)
+    if not np.isfinite(mean).all():
+        raise ValueError("Averaged intensity is outside the finite float64 range")
+    return mean, sums, counts, virtual_total
+
+
 def run(args):
     try:
         import numpy as np
@@ -210,16 +260,8 @@ def run(args):
                                 or not 0 <= annulus[0] < annulus[1]):
         raise ValueError("--virtual-annulus requires --arrays and finite 0 <= INNER < OUTER")
     with open_source(args, np) as array:
-        if array.ndim != (4 if args.layout == "scan4d" else 3) or array.dtype.kind not in "biuf":
-            raise ValueError("Array rank or real-valued dtype does not match the declared layout")
-        scan_shape = tuple(array.shape[:2]) if args.layout == "scan4d" else tuple(args.scan_shape or ())
-        if len(scan_shape) != 2 or min(scan_shape) < 1 or (
-            args.layout == "flat3d" and scan_shape[0] * scan_shape[1] != array.shape[0]
-        ) or (args.scan_shape and tuple(args.scan_shape) != scan_shape):
-            raise ValueError("--scan-shape must agree with scan4d axes or the flat3d pattern count")
+        scan_shape = validate_roi(array, args.layout, args.scan_shape, args.roi)
         y0, y1, x0, x1 = args.roi
-        if not (0 <= y0 < y1 <= scan_shape[0] and 0 <= x0 < x1 <= scan_shape[1]):
-            raise ValueError("ROI must be nonempty and inside the scan")
 
         ky, kx = array.shape[-2:]
         seed = tuple(args.center_xy or (kx // 2, ky // 2))
@@ -232,20 +274,7 @@ def run(args):
         ):
             raise ValueError("Invalid center seed, radius range, radius hint, or smoothing for this detector")
 
-        sums = np.zeros((2, ky, kx), dtype=np.float64)
-        counts = [0, 0]
-        virtual_total = np.empty((y1 - y0, x1 - x0), dtype=np.float64) if args.arrays else None
-        for y, x_start, x_stop, block in roi_blocks(array, args.layout, scan_shape[1], args.roi):
-            if block.dtype.kind == "f" and not np.isfinite(block).all():
-                raise ValueError("ROI contains nonfinite measured pixels")
-            sums[y % 2] += block.sum(axis=0, dtype=np.float64)
-            counts[y % 2] += len(block)
-            if virtual_total is not None:
-                virtual_total[y, x_start:x_stop] = block.sum(axis=(-2, -1), dtype=np.float64)
-
-        mean = sums.sum(axis=0) / sum(counts)
-        if not np.isfinite(mean).all():
-            raise ValueError("Averaged intensity is outside the finite float64 range")
+        mean, sums, counts, virtual_total = average_roi(np, array, args.layout, scan_shape, args.roi, virtual=bool(args.arrays))
         candidate, fit = disk_fit(np, mean, seed, bounds, args.radius_hint, args.sigma)
         center, radius = candidate if candidate is not None else (None, None)
         split = {"pattern_counts": counts, "scope": "Relative even/odd scan rows; internal repeatability only"}

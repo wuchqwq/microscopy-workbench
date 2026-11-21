@@ -7,7 +7,7 @@ export interface FigureObject extends ViewObject {
  readonly object_id:string;readonly kind?:string;readonly calibration_record?:CalibrationView;readonly calibration?:CalibrationView;
  readonly display?:Readonly<Record<string,unknown>>;readonly annotations?:readonly FigureMark[];readonly source_shape_yx?:readonly number[];
 }
-export interface FigureFrameIdentity {readonly frame_object_id?:string;readonly source_object_id?:string;readonly frame_index?:number;}
+export interface FigureFrameIdentity {readonly frame_object_id?:string;readonly source_object_id?:string|null;readonly frame_index?:number|null;readonly origin?:'scan_roi_mean_diffraction';}
 export interface FigureState {readonly object:FigureObject;readonly frame_identity?:FigureFrameIdentity|null;readonly effective_display?:Readonly<Record<string,unknown>>|null;readonly figure_base?:FigureBase;}
 export interface FigureBase {readonly object_id:string;readonly clean_png_sha256:string;readonly clean_png_base64?:string;readonly panels?:readonly DisplayPanel[];readonly scale_bar?:ScaleBarRecord|null;}
 export interface ScaleBarRecord {readonly calibration_id?:unknown;readonly signed_scale?:unknown;readonly visible?:boolean;readonly image_endpoints_xyxy?:readonly number[];readonly length?:unknown;readonly unit?:unknown;}

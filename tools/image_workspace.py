@@ -33,6 +33,7 @@ if __package__:
     from . import image_column_fit as column_fit
     from . import image_column_candidate_annotations as column_candidates
     from . import image_dm as dmfile
+    from . import image_diffraction_roi as diffraction_roi
     from . import image_peaks as peaks
     from . import image_automation as automation
     from . import image_sequence as sequence
@@ -59,6 +60,7 @@ else:
     import image_column_fit as column_fit
     import image_column_candidate_annotations as column_candidates
     import image_dm as dmfile
+    import image_diffraction_roi as diffraction_roi
     import image_peaks as peaks
     import image_automation as automation
     import image_sequence as sequence
@@ -105,6 +107,7 @@ FIELDS = {
     "open": {"source_path"}, "open_dm": {"source_path"},
     "frame": {"object_id", "frame_index", "dataset_index", "plane_axes", "plane_indices"},
     "import_capture": {"source_path"},
+    "import_diffraction_roi": diffraction_roi.FIELDS,
     "preview_acknowledge": {"preview_request_id", "object_id"},
     "view": {"resolved_preview", "object_id", "rect", "frequency_rect", "display_range", "gamma", "max_size", "interpolation", "representation", "spectrum_filter", "upscale", "spectrum_axes", "display_preset", "scale_bar", "component"},
     "compare": {"object_ids", "rect", "display_range", "gamma", "max_size"},
@@ -1090,6 +1093,8 @@ class Workspace:
             metadata = method_loop.action(self, action, request, metadata, directory, sys.modules[__name__])
         elif action in discovery.FIELDS:
             metadata = discovery.action(self, action, request, metadata, directory, sys.modules[__name__])
+        elif action == "import_diffraction_roi":
+            metadata = diffraction_roi.register(request, metadata, directory, sys.modules[__name__])
         elif action == "open":
             path = absolute(request.get("source_path"), "source_path")
             identity = source_identity(path)
@@ -1306,6 +1311,8 @@ class Workspace:
             record = metadata.get("xy_calibration")
             if action == "measure":
                 metadata["scientific_grid_identity"] = self.measurement_grid(request["object_id"])
+                if parent.get("diffraction_roi"):
+                    metadata["diffraction_roi_object_id"] = parent["diffraction_roi"]["mean_object_id"]
                 points = request.get("points")
                 source_text = request.get("source_text")
                 need(source_text is None or type(source_text) is str and 1 <= len(source_text) <= 4000, "Measurement source_text must be bounded text")
@@ -1432,6 +1439,7 @@ class Workspace:
                 roi = cut(values, rect)
                 metadata.update(source_rect_xyxy=rect, source_shape_yx=list(values.shape), rect_convention="half-open pixel edges [x0,y0,x1,y1]")
                 if action == "fft":
+                    need(not parent.get("diffraction_roi"), "A scan ROI diffraction mean already has detector reciprocal geometry; use image_measure", "UNSUPPORTED_OPERATION")
                     need(roi.dtype.kind != "c", "FFT of an imported complex image is not qualified; its imaginary part is never discarded or replaced by display amplitude", "UNSUPPORTED_OPERATION")
                     window, subtract = request.get("window", "none"), request.get("subtract_mean", False)
                     need(window in ("none", "hann") and type(subtract) is bool, "FFT requires window none/hann and boolean subtract_mean")
@@ -1485,6 +1493,8 @@ class Workspace:
                                       if action == "fft" else
                                       [spatial_panel(parent, rect, [0, 0, image.width, image.height])])
                 if action == "view":
+                    if parent.get("diffraction_roi"):
+                        metadata["diffraction_roi"] = parent["diffraction_roi"]
                     settings["scale_bar"] = request.get("scale_bar", (parent.get("display") or {}).get("scale_bar", True))
                     image, bar = spatial_scale_bar(image, metadata["panels"][0], record, settings["scale_bar"])
                     metadata["scale_bar"] = bar
@@ -2053,6 +2063,7 @@ FRAME_ANCESTRY_FIELDS = ("object_id", "kind", "parent_object_id", "base_object_i
                          "frame_index", "dm_dataset_index", "dm_plane_selection", "source_identity",
                          "source_file_format", "source_reader", "upstream_backend", "backend", "state",
                          "image_path", "evidence_format")
+SCAN_MEAN_ANCESTRY_FIELDS = FRAME_ANCESTRY_FIELDS + ("origin", "array_domain", "diffraction_roi")
 
 
 def frame_ancestry(workspace, initial, byte_budget=512 * 1024):
@@ -2066,7 +2077,9 @@ def frame_ancestry(workspace, initial, byte_budget=512 * 1024):
     for step in range(65):
         reply = {"ok": True, "state": "completed", "backend": BACKEND, **value}
         need(reply.get("ok"), "Ancestor image_info did not return a successful result", "CORRUPT_OBJECT")
-        records.append({key: reply[key] for key in FRAME_ANCESTRY_FIELDS if key in reply})
+        fields = (SCAN_MEAN_ANCESTRY_FIELDS if value.get("kind") == "frame" and
+                  value.get("origin") == "scan_roi_mean_diffraction" else FRAME_ANCESTRY_FIELDS)
+        records.append({key: reply[key] for key in fields if key in reply})
         projection = {"schema_version": 1, "root_object_id": initial["object_id"], "records": records}
         if len(canonical(projection)) > byte_budget:
             return None  # Optional optimization; caller retains original reads.

@@ -254,6 +254,8 @@ def compare(measurements, simulation, transform, tolerance, experimental_kind, c
             "Declare experimental_kind; FFT contrast and SAED intensities are different formation mechanisms")
     require(finite(tolerance) and 1e-12 <= tolerance <= 1, "max_residual_inv_angstrom must be explicit in [1e-12,1]")
     require(type(measurements) is list and 1 <= len(measurements) <= MAX_MEASUREMENTS, "Compare 1..32 explicit measurement records")
+    require(experimental_kind == "other_diffraction" or all(not item.get("diffraction_roi_object_id") for item in measurements),
+            "A scan ROI diffraction mean requires experimental_kind=other_diffraction")
     observations = [measurement_vector(item) for item in measurements]
     require(len({item["measurement_object_id"] for item in observations}) == len(observations), "Duplicate experimental measurement IDs")
     require(experimental_kind == "real_space_fft" or all(item["coordinate_space"] != "frequency_cycles_per_pixel" for item in observations),

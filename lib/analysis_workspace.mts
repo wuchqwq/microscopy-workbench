@@ -60,7 +60,14 @@ export function analysisDisplaySnapshot(workspace:string,saved:AnalysisSnapshot,
    entry.view_context=prior&&prior.object_id===entry.object_id&&prior.panel_mapping_fingerprint===mapping?{...prior,camera:checked}: {version:1,object_id:entry.object_id,panel_mapping_fingerprint:mapping,camera:checked,selection_candidate:null,selected_annotation_id:null};if(panels)(entry.view_context as Row).ui_panels=panels;delete (entry.view_context as Row).camera_origin;
   }catch{/* An unqualified preference is omitted; the exact saved analysis survives. */}
  }
- const visible=records.filter(record=>record.hidden!==true),old=visible.find(record=>row(record.entry).object_id===saved.object_id),current=old??visible[0];collection.windows=visible.map(record=>clone(record.entry));const hidden=records.filter(record=>record.hidden===true);if(hidden.length)collection.closed_windows=hidden.map(record=>clone(record.entry));else delete collection.closed_windows;collection.active_window_id=current?row(current.entry).window_id:null;
+ // GPA previews have a local scientific grid outside the source/FFT
+ // window collection. Keep an explicitly saved GPA active on reopen.
+ const outsideCollection=collection.active_window_id===null&&['unsupported_view','unverified_frame'].includes(String(collection.unavailable_reason));
+ const savedObject=outsideCollection?read(path.join(root,'objects',saved.object_id,'object.json'),root):null;
+ const scanClaim=savedObject?.diffraction_roi as Row|undefined;
+ const retainOutside=collection.unavailable_reason==='unsupported_view'&&['gpa','gpa_view'].includes(String(savedObject?.kind))
+  ||collection.unavailable_reason==='unverified_frame'&&saved.frame_identity===null&&objectId(scanClaim?.mean_object_id);
+ const visible=records.filter(record=>record.hidden!==true),old=visible.find(record=>row(record.entry).object_id===saved.object_id),current=old??(retainOutside?undefined:visible[0]);collection.windows=visible.map(record=>clone(record.entry));const hidden=records.filter(record=>record.hidden===true);if(hidden.length)collection.closed_windows=hidden.map(record=>clone(record.entry));else delete collection.closed_windows;collection.active_window_id=current?row(current.entry).window_id:null;
  if(current&&row(current.entry).object_id!==result.object_id){const entry=row(current.entry),context=entry.view_context?row(entry.view_context):null,edit=row(result.edit_state);if(edit.dirty===true||edit.annotation_edit!=null){collection.active_window_id=null;return result;}result.object_id=String(entry.object_id);result.selection=clone(context?.selection_candidate??null);result.edit_state={...edit,base_object_id:result.object_id,selection:clone(context?.selection_candidate??null),dirty:false,gesture_active:false,annotation_edit:null};const reference=entry.source_reference?row(entry.source_reference):null;result.spatial_return_reference=reference?{version:1,view_object_id:reference.input_view_object_id,frame_object_id:reference.frame_object_id,fft_object_id:reference.raw_fft_object_id,source_rect_xyxy:clone(reference.processing_rect_xyxy)}:null;}
  return result;
 }

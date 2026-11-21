@@ -12,6 +12,21 @@ export interface PanelFrameResolution {
 export type QualifiedFrameObjectReader=(object_id:string)=>Promise<PanelMetadata>;
 const row=(value:unknown):value is PanelMetadata=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
 const objectId=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{32}$/.test(value);
+const integers=(value:unknown,length:number,minimum:number):value is number[]=>Array.isArray(value)&&value.length===length&&value.every(n=>Number.isSafeInteger(n)&&n>=minimum);
+function scanMeanIdentity(value:PanelMetadata):PanelFrameIdentity|null {
+ const roi=value.diffraction_roi,source=value.source_identity;
+ if(!objectId(value.object_id)||value.frame_index!=null||value.source_object_id!=null||value.parent_object_id!=null||
+    value.array_domain!=='reciprocal'||!row(roi)||roi.mean_object_id!==value.object_id||
+    !row(source)||typeof source.sha256!=='string'||!/^[a-f0-9]{64}$/.test(source.sha256)||roi.source_sha256!==source.sha256||
+    !integers(roi.scan_shape_yx,2,1)||!integers(roi.detector_shape_yx,2,1)||!integers(roi.scan_roi_y0_y1_x0_x1_exclusive,4,0))return null;
+ const axes=roi.layout==='scan4d'?['scan_y','scan_x','detector_y','detector_x']:
+  roi.layout==='flat3d'?['scan_y*scan_width+scan_x','detector_y','detector_x']:null;
+ const [y0,y1,x0,x1]=roi.scan_roi_y0_y1_x0_x1_exclusive as [number,number,number,number];
+ const count=(y1-y0)*(x1-x0);
+ if(!axes||!Array.isArray(roi.input_axes)||roi.input_axes.length!==axes.length||!axes.every((axis,i)=>axis===(roi.input_axes as unknown[])[i])||
+    y0>=y1||x0>=x1||y1>roi.scan_shape_yx[0]!||x1>roi.scan_shape_yx[1]!||!Number.isSafeInteger(count)||roi.pattern_count!==count)return null;
+ return {frame_object_id:value.object_id,frame_index:null,source_object_id:null,origin:'scan_roi_mean_diffraction'};
+}
 const needsParent=new Set(['view','annotate','fft','fft_view','calibration','context','measure','statistics','profile','export','peaks','centre','gpa','gpa_read','gpa_view','topology']);
 function failedReadStatus(error:unknown):PanelFrameResolutionStatus {
  if(!row(error))return 'read_failed';
@@ -37,6 +52,10 @@ export async function resolvePanelFrame(root:PanelMetadata,readObject:QualifiedF
   // still authoritative, exactly as on the original ordinary-read path.
   if(value.backend!==undefined&&value.backend!=='external-image-workspace'||value.state!==undefined&&value.state!=='completed')return result('corrupt','unqualified_object_state');
   if(value.kind==='frame'){
+   if(value.origin==='scan_roi_mean_diffraction'){
+    const frame=scanMeanIdentity(value);
+    return frame?result('found','scan_roi_mean_found',frame):result('corrupt','invalid_scan_roi_mean');
+   }
    if(value.frame_index===undefined||value.frame_index===null)return result('unsupported','frame_index_unavailable');
    if(!Number.isInteger(value.frame_index)||Number(value.frame_index)<0)return result('corrupt','invalid_frame_index');
    return result('found','frame_found',{

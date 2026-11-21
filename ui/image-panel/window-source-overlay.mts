@@ -93,7 +93,7 @@ export function createSourceOverlay(document:BrowserDocument,object:unknown,coll
  if(!panel||!inside(panel.image_rect_xyxy,[0,0,width,height]))return null;
  const frozen=activeFftInputOutline(object,collection,mappingFingerprint),active=row(collection)?collection.active_window_id:null,outlines=[...sourceWindowOutlines(object,collection).filter(outline=>outline.window_id===active),...frozen?[frozen]:[]];if(!outlines.length)return null;
  const allOutlines=sourceWindowOutlines(object,collection),allLabels=sourceWindowLabelLayout(object,collection,imageSize,scale,mappingFingerprint),labels=outlines.map(outline=>outline===frozen?allLabels[allOutlines.length]:allLabels[allOutlines.findIndex(value=>value.window_id===outline.window_id)]);
- const layer=document.createElement('div');layer.className='window-source-overlay';layer.setAttribute('style','pointer-events:none');
+ const layer=document.createElement('div');layer.className='window-source-overlay';
  const namespace='http://www.w3.org/2000/svg',svg=document.createElementNS(namespace,'svg');svg.setAttribute('class','window-source-svg');svg.setAttribute('width',width);svg.setAttribute('height',height);svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('role','img');svg.setAttribute('pointer-events','none');svg.setAttribute('aria-label',frozen?'FFT 整数计算区域与当前 FFT 经核对的冻结浮点原输入选区；均不是当前编辑选区':'FFT 整数计算区域；不是当前选区或原始浮点 ROI');
  const fontSize=11/scale,gap=3/scale,clamp=(value:number,low:number,high:number)=>Math.max(low,Math.min(high,value));
  for(const [index,outline]of outlines.entries()){

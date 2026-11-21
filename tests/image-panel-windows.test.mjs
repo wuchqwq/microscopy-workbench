@@ -125,8 +125,25 @@ async function fixture(run,{initialAnnotations=[],deepSource=false,ancestry=fals
  const get=async(route)=>{const r=await fetch(panel.url.split('/#')[0]+route,{headers:{'X-Panel-Token':panel.token}});return {status:r.status,data:await r.json()};};
  const cold=async()=>{await owned.close(panel);await start();};
  const hold=object_id=>{let release,entered;const wait=new Promise(r=>release=r),started=new Promise(r=>entered=r);holdInfo={object_id,wait,entered};return {release,started};};
- try{await start();await run({workspace,records,calls,save,act,post,get,cold,hold,state:()=>panel.state(),armAncestryFault:()=>{ancestryFaultActive=true;},unknownFFT:()=>{failFFT=true;},changeNextAnnotationGrid:()=>{changeAnnotationGrid=true;}});}finally{for(const entry of live.reverse()){try{await entry.owned.close(entry.panel);}catch{}}rmSync(workspace,{recursive:true,force:true});}
+ try{await start();await run({workspace,origin:new URL(panel.url).origin,records,calls,save,act,post,get,cold,hold,state:()=>panel.state(),armAncestryFault:()=>{ancestryFaultActive=true;},unknownFFT:()=>{failFFT=true;},changeNextAnnotationGrid:()=>{changeAnnotationGrid=true;}});}finally{for(const entry of live.reverse()){try{await entry.owned.close(entry.panel);}catch{}}rmSync(workspace,{recursive:true,force:true});}
 }
+
+test('the image panel serves its layout module to the renderer before requiring an API token',()=>fixture(async h=>{
+ const html=await fetch(h.origin+'/');
+ assert.equal(html.status,200);
+ assert.match(await html.text(),/<link[^>]+href="\/style\.css"/);
+ assert.match(html.headers.get('content-security-policy'),/style-src 'self'/);
+ const app=await fetch(h.origin+'/app.mjs');
+ assert.equal(app.status,200);
+ assert.match(await app.text(),/from ['"]\.\/desktop-canvas-layout\.mjs['"]/);
+ const layout=await fetch(h.origin+'/desktop-canvas-layout.mjs');
+ assert.equal(layout.status,200);
+ assert.match(layout.headers.get('content-type'),/^text\/javascript/);
+ assert.match(await layout.text(),/export function installDesktopCanvasLayout\(/);
+ const api=await fetch(h.origin+'/api/state');
+ assert.equal(api.status,403);
+ await api.text();
+}));
 
 test('two GUI FFTs retain source and immutable A/B windows; saved assets are bounded read-only and cold restore retains IDs',()=>fixture(async h=>{
  const source=h.state().object,first=await h.act('fft',{selection:select([2,3,20,25],source.panels[0])});assert.equal(first.status,200,first.data.error);const a=h.state().object.object_id;
@@ -292,6 +309,28 @@ test('asset read rejects tampering and a layout revision racing the read without
 test('restore drops a forged source relation but keeps the independently qualified active asset',async()=>{
  const store=new PanelWindowStore(),input=spatial(),raw=spectrum(id(10)),ref={version:1,view_object_id:V,frame_object_id:F,fft_object_id:raw.object_id,source_rect_xyxy:raw.source_rect_xyxy};store.admit(input,frame);store.admit(raw,frame,ref,null);const checkpoint=store.checkpoint();checkpoint.records[1].entry.source_reference.processing_rect_xyxy=[1,1,4,4];
  const restored=new PanelWindowStore();restored.admit(raw,frame);await restored.restore(checkpoint,raw,frame,async ident=>({object:ident===V?input:raw,frame,png}));assert.equal(restored.snapshot().windows.length,2);assert.equal(restored.snapshot().windows[1].object_id,raw.object_id);assert.equal(restored.snapshot().windows[1].source_reference,undefined);
+});
+
+test('GPA out-of-grid restore retains qualified source and FFT window IDs without an editor',async()=>{
+ const store=new PanelWindowStore(),input=spatial(),raw=spectrum(id(10));
+ const gpa={object_id:id(11),kind:'gpa_view',parent_object_id:raw.object_id,panels:[{domain:'gpa_local_pixels'}]};
+ const reference={version:1,view_object_id:input.object_id,frame_object_id:F,fft_object_id:raw.object_id,source_rect_xyxy:raw.source_rect_xyxy};
+ store.admit(input,frame);store.admit(raw,frame,reference,null);store.admit(gpa,frame);
+ const before=store.checkpoint(),objects=new Map([[input.object_id,input],[raw.object_id,raw]]);
+ const read=async id=>({object:objects.get(id),frame,png});
+ const restored=new PanelWindowStore();restored.admit(gpa,frame);
+ await restored.restore(before,gpa,frame,read);
+ const {revision,...snapshot}=restored.checkpoint();
+ assert.ok(revision>before.revision);
+ const {revision:oldRevision,...prior}=before;
+ assert.deepEqual(snapshot,prior);
+ assert.equal(snapshot.active_window_id,null);
+ assert.equal(snapshot.windows[1].source_reference.input_view_object_id,input.object_id);
+
+ const tampered=structuredClone(before);tampered.records[1].asset_fingerprint='forged';
+ await restored.restore(tampered,gpa,frame,read);
+ assert.deepEqual(restored.snapshot().windows.map(window=>window.object_id),[input.object_id]);
+ assert.equal(restored.snapshot().active_window_id,null);
 });
 
 test('bounded backend panel preferences reject coerced nonstring sides before metadata mutation',()=>{

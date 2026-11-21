@@ -15,7 +15,9 @@ export interface PanelSelection extends PanelMetadata {
  coordinates:number[];panel:PanelMetadata;
 }
 export interface PanelEditState {draft_revision:number;dirty:boolean;gesture_active:boolean;selection:PanelSelection|null;annotation_edit:PanelMetadata|null;base_object_id:unknown;}
-export interface PanelFrameIdentity {frame_object_id:unknown;frame_index:number;source_object_id:unknown;dataset_index?:number;plane_selection?:unknown;}
+export type PanelFrameIdentity =
+ | {frame_object_id:unknown;frame_index:number;source_object_id:unknown;dataset_index?:number;plane_selection?:unknown;origin?:never}
+ | {frame_object_id:string;frame_index:null;source_object_id:null;origin:'scan_roi_mean_diffraction';dataset_index?:never;plane_selection?:never};
 export interface PanelDraftPersistence {pending:boolean;error:string|null;}
 export interface PanelDraftAcknowledgment {schema_version:1;panel_id:string|null;object_id:unknown;state_revision:number;edit_state:PanelEditState;selection:PanelSelection|null;research_observation:PanelMetadata|null;draft_persistence:PanelDraftPersistence;}
 export interface PanelPendingResult {object_id:unknown;request_id:unknown;reason:'unsaved_draft'|'window_capacity';scientific_operation_complete:true;}

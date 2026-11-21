@@ -113,6 +113,8 @@ def main():
     for name in ['server.mjs', 'science-server.mjs', 'package.json', 'BUILD.json', 'LICENSE']:
         if (runtime/name).exists():
             copy(runtime/name, target_runtime/name)
+    scan_reader = Path('skills/scientific-agent/ptyrad-reconstruction/scripts/diffraction_check.py')
+    copy(runtime/scan_reader, target_runtime/scan_reader)
     node_target = app/'runtimes/node'
     copy(node/'bin/node', node_target/'bin/node')
     copy(node/'LICENSE', node_target/'LICENSE')
