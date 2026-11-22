@@ -88,6 +88,12 @@ without inventing a registration.
 Read the researcher's correction as new evidence, not an invitation to defend the
 old candidate. Preserve old records and explain which claims now need revision.
 
+Record the affected source/frame and region, the specific claim withdrawn or
+revised, and which captions or reports rely on it. Update those within scope, or
+flag them for revision if not editable. Keep the raw data and unaffected analysis.
+For example, if a rough edge is confirmed to be tungsten protection, withdraw
+that edge as evidence of a slip step, not unrelated evidence for slip.
+
 | Correction | What remains reusable | What must be checked or replaced |
 | --- | --- | --- |
 | Display range/gamma/zoom only | Original arrays and valid measurements | Appearance-based comparison; do not recompute science merely to redraw |
